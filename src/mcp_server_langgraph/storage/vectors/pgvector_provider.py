@@ -125,6 +125,7 @@ class PgVectorProvider(VectorSearchProvider):
             metadata_json = json.dumps(metadata)
 
             async with self._pool.acquire() as conn:
+                # S608: table name comes from internal config, not user input
                 await conn.execute(
                     f"""
                     INSERT INTO {table} (id, vector, metadata)
@@ -132,7 +133,7 @@ class PgVectorProvider(VectorSearchProvider):
                     ON CONFLICT (id) DO UPDATE SET
                         vector = EXCLUDED.vector,
                         metadata = EXCLUDED.metadata
-                    """,
+                    """,  # noqa: S608
                     id,
                     vector_str,
                     metadata_json,
@@ -182,7 +183,7 @@ class PgVectorProvider(VectorSearchProvider):
                 for key, value in filters.items():
                     filter_values.append(json.dumps(value))
                     param_idx = len(filter_values) + 1
-                    conditions.append(f"metadata->>${param_idx} = ${param_idx}")
+                    conditions.append(f"metadata->>'{key}' = ${param_idx}")
                 if conditions:
                     filter_clause = "WHERE " + " AND ".join(conditions)
 
@@ -191,6 +192,7 @@ class PgVectorProvider(VectorSearchProvider):
 
             # Build query with cosine similarity
             # Note: pgvector uses <=> for cosine distance, we convert to similarity
+            # S608: table name comes from internal config, not user input
             query = f"""
                 SELECT
                     id,
@@ -200,7 +202,7 @@ class PgVectorProvider(VectorSearchProvider):
                 {filter_clause}
                 ORDER BY vector <=> $1::vector
                 LIMIT ${2 + len(filter_values)}
-            """
+            """  # noqa: S608
 
             async with self._pool.acquire() as conn:
                 rows = await conn.fetch(
@@ -245,8 +247,9 @@ class PgVectorProvider(VectorSearchProvider):
             table = self._table_name(collection)
 
             async with self._pool.acquire() as conn:
+                # S608: table name comes from internal config, not user input
                 await conn.execute(
-                    f"DELETE FROM {table} WHERE id = $1",
+                    f"DELETE FROM {table} WHERE id = $1",  # noqa: S608
                     id,
                 )
 

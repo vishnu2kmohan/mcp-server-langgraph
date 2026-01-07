@@ -72,10 +72,7 @@ def span_to_broadcast_dict(span: ReadableSpan) -> dict[str, Any]:
         status = span.status.status_code.name
 
     # Convert attributes to dict (handle BoundedAttributes)
-    attributes: dict[str, Any] = {}
-    if span.attributes:
-        for key, value in span.attributes.items():
-            attributes[key] = value
+    attributes: dict[str, Any] = dict(span.attributes) if span.attributes else {}
 
     return {
         "trace_id": trace_id,
@@ -158,8 +155,9 @@ class BroadcastingSpanProcessor(SpanProcessor):
         """
         try:
             loop = asyncio.get_running_loop()
-            # Schedule async broadcast to WebSocket subscribers
-            loop.create_task(self._broadcaster.broadcast_span(span_data))
+            # Schedule async broadcast to WebSocket subscribers (fire-and-forget)
+            # Task reference intentionally not stored - best-effort broadcast
+            loop.create_task(self._broadcaster.broadcast_span(span_data))  # noqa: RUF006
         except RuntimeError:
             # No running event loop - that's fine, span is already queued
             pass

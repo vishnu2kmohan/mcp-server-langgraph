@@ -122,7 +122,7 @@ class QdrantVectorProvider(VectorSearchProvider):
             )
 
         except ImportError as e:
-            logger.error("qdrant-client not available: %s", e)
+            logger.exception("qdrant-client not available: %s", e)
             raise
         except Exception as e:
             logger.exception(
@@ -186,7 +186,7 @@ class QdrantVectorProvider(VectorSearchProvider):
             ]
 
         except ImportError as e:
-            logger.error("qdrant-client not available: %s", e)
+            logger.exception("qdrant-client not available: %s", e)
             return []
         except Exception as e:
             logger.exception(
@@ -216,7 +216,7 @@ class QdrantVectorProvider(VectorSearchProvider):
             )
 
         except ImportError as e:
-            logger.error("qdrant-client not available: %s", e)
+            logger.exception("qdrant-client not available: %s", e)
             raise
         except Exception as e:
             logger.exception(

@@ -324,7 +324,7 @@ def generate_qr_code(url: str) -> str:
     try:
         import io
 
-        import qrcode  # type: ignore[import-untyped]
+        import qrcode
 
         qr = qrcode.QRCode(
             version=1,

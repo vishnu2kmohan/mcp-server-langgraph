@@ -319,7 +319,7 @@ class PushNotificationSender:
 
         try:
             # Import pywebpush here to avoid circular imports and allow mocking
-            from pywebpush import webpush  # type: ignore[import-not-found]
+            from pywebpush import webpush
 
             subscription_info = {
                 "endpoint": subscription.endpoint,

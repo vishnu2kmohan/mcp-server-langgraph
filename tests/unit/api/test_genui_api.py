@@ -110,11 +110,12 @@ class TestGenUIAPIEndpoint:
         mock_flags.enable_genui = True
 
         with patch.object(studio_ai_module, "feature_flags", mock_flags):
-            with patch(
-                "mcp_server_langgraph.api.v1.studio_ai.get_genui_orchestrator",
-                return_value=mock_genui_orchestrator,
-            ):
-                result = await generate_ui(request, current_user={"sub": "user-123"})
+            # Pass orchestrator directly (bypasses Depends() which isn't resolved outside FastAPI)
+            result = await generate_ui(
+                request,
+                current_user={"sub": "user-123"},
+                orchestrator=mock_genui_orchestrator,
+            )
 
         mock_genui_orchestrator.execute.assert_called_once()
         assert result is not None
@@ -132,11 +133,12 @@ class TestGenUIAPIEndpoint:
         mock_flags.enable_genui = True
 
         with patch.object(studio_ai_module, "feature_flags", mock_flags):
-            with patch(
-                "mcp_server_langgraph.api.v1.studio_ai.get_genui_orchestrator",
-                return_value=mock_genui_orchestrator,
-            ):
-                result = await generate_ui(request, current_user={"sub": "user-123"})
+            # Pass orchestrator directly (bypasses Depends() which isn't resolved outside FastAPI)
+            result = await generate_ui(
+                request,
+                current_user={"sub": "user-123"},
+                orchestrator=mock_genui_orchestrator,
+            )
 
         assert "widgets" in result
         assert len(result["widgets"]) > 0

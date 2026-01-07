@@ -42,6 +42,7 @@ from mcp_server_langgraph.api.v1.user_preferences import user_preferences_router
 from mcp_server_langgraph.api.v1.session_export import session_export_router
 from mcp_server_langgraph.api.v1.project_context import project_context_router
 from mcp_server_langgraph.api.v1.vectors import router as vectors_router
+from mcp_server_langgraph.api.v1.kb import router as kb_router
 from mcp_server_langgraph.api.v1.workflow_bootstrap import workflow_bootstrap_router
 from mcp_server_langgraph.api.v1.workflows import workflows_router
 from mcp_server_langgraph.api.v1.workflow_executions import workflow_executions_router
@@ -70,6 +71,13 @@ from mcp_server_langgraph.api.v1.frontend_cache import frontend_cache_router
 
 # Session control endpoints
 from mcp_server_langgraph.api.v1.interrupt import router as interrupt_router
+
+# Plan management endpoints (execution plans and templates)
+from mcp_server_langgraph.api.v1.execution_plans import execution_plans_router
+from mcp_server_langgraph.api.v1.plan_templates import plan_templates_router
+
+# WebSocket metrics collection (frontend reconnection telemetry)
+from mcp_server_langgraph.api.v1.websocket_metrics import router as websocket_metrics_router
 
 # Note: marketplace_admin uses factory pattern (create_marketplace_router) requiring DI
 # It is registered separately during application bootstrap if marketplace feature is enabled
@@ -132,6 +140,9 @@ v1_router.include_router(mcp_aggregated_router)
 
 # Include vectors proxy endpoints (Qdrant with OpenFGA authorization - ADR-0068)
 v1_router.include_router(vectors_router, prefix="/vectors", tags=["vectors"])
+
+# Include KB (Knowledge Base) status endpoint (ADR-0094 - KB Focus Mode)
+v1_router.include_router(kb_router, prefix="/kb", tags=["kb"])
 
 # Include MCP connections CRUD endpoints
 v1_router.include_router(connections_router)
@@ -243,6 +254,21 @@ v1_router.include_router(frontend_cache_router, tags=["frontend-cache"])
 # =============================================================================
 # Session interrupt control (Claude Agent SDK pattern)
 v1_router.include_router(interrupt_router, tags=["interrupt"])
+
+# =============================================================================
+# Plan Management Endpoints
+# =============================================================================
+# Execution plans API (approval, rejection, listing)
+v1_router.include_router(execution_plans_router, prefix="/plans", tags=["execution-plans"])
+
+# Plan templates API (reusable templates for execution plans)
+v1_router.include_router(plan_templates_router, prefix="/plan-templates", tags=["plan-templates"])
+
+# =============================================================================
+# WebSocket Metrics Endpoints
+# =============================================================================
+# Frontend WebSocket reconnection metrics collection (Prometheus integration)
+v1_router.include_router(websocket_metrics_router, tags=["websocket-metrics"])
 
 # Note: Admin marketplace management (marketplace_admin) uses factory pattern
 # It is registered separately during application bootstrap if marketplace feature is enabled

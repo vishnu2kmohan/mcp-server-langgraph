@@ -18,7 +18,7 @@ Authorization:
 from __future__ import annotations
 
 import uuid
-from typing import Annotated, Any, Literal, cast
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -46,12 +46,7 @@ CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 def _get_user_id(user: dict[str, Any]) -> str:
     """Extract user ID from authenticated user dict."""
-    return (
-        user.get("sub")
-        or user.get("user_id")
-        or user.get("preferred_username")
-        or "anonymous"
-    )
+    return user.get("sub") or user.get("user_id") or user.get("preferred_username") or "anonymous"
 
 
 # ============================================================================
@@ -354,9 +349,7 @@ async def save_as_template(
         "complicated": "medium",
         "complex": "deep",
     }
-    thinking_budget: Literal["none", "light", "medium", "deep"] = thinking_budget_map.get(
-        plan.complexity, "light"
-    )
+    thinking_budget: Literal["none", "light", "medium", "deep"] = thinking_budget_map.get(plan.complexity, "light")
 
     # Map risk level to critique_rounds
     critique_rounds_map = {

@@ -15,7 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-import jsonschema  # type: ignore[import-untyped]
+import jsonschema
 from jsonschema import Draft7Validator, ValidationError
 
 if TYPE_CHECKING:

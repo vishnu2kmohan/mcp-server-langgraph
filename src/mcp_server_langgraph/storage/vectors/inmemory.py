@@ -42,7 +42,7 @@ def _cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
     if len(vec1) != len(vec2):
         return 0.0
 
-    dot_product = sum(a * b for a, b in zip(vec1, vec2))
+    dot_product = sum(a * b for a, b in zip(vec1, vec2, strict=True))
     magnitude1 = math.sqrt(sum(a * a for a in vec1))
     magnitude2 = math.sqrt(sum(b * b for b in vec2))
 
@@ -119,14 +119,9 @@ class InMemoryVectorProvider(VectorSearchProvider):
         key = (collection, id)
         self._vectors.pop(key, None)
 
-    def _matches_filters(
-        self, metadata: dict[str, Any], filters: dict[str, Any]
-    ) -> bool:
+    def _matches_filters(self, metadata: dict[str, Any], filters: dict[str, Any]) -> bool:
         """Check if metadata matches all filters (exact match)."""
-        for key, value in filters.items():
-            if metadata.get(key) != value:
-                return False
-        return True
+        return all(metadata.get(key) == value for key, value in filters.items())
 
     def clear(self) -> None:
         """Clear all stored vectors (testing utility)."""

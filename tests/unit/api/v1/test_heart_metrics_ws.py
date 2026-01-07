@@ -8,6 +8,7 @@ TDD: RED phase - tests written before implementation.
 """
 
 import gc
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -27,7 +28,7 @@ class TestHeartMetricsWebSocketHandler:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_handler_exists(self) -> None:
+    def test_handler_class_exists_on_import(self) -> None:
         """GIVEN the module WHEN importing THEN handler class exists."""
         from mcp_server_langgraph.api.v1.heart_metrics_ws import (
             HeartMetricsWebSocketHandler,
@@ -164,7 +165,7 @@ class TestHeartMetricsRouter:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_router_exists(self) -> None:
+    def test_router_exists_on_import(self) -> None:
         """GIVEN the module WHEN importing THEN router exists."""
         from mcp_server_langgraph.api.v1.heart_metrics_ws import router
 
@@ -176,3 +177,74 @@ class TestHeartMetricsRouter:
 
         routes = router.routes
         assert len(routes) > 0
+
+
+@pytest.mark.xdist_group(name="heart_metrics_ws")
+class TestHeartMetricsServiceIntegration:
+    """Tests for HeartMetricsServiceAdapter integration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_get_snapshot_uses_service_adapter(self) -> None:
+        """GIVEN handler WHEN get_snapshot THEN uses HeartMetricsServiceAdapter.
+
+        TDD: This test verifies the handler delegates to the actual service
+        rather than using inline mock data.
+        """
+        from mcp_server_langgraph.api.v1.heart_metrics_ws import (
+            HeartMetricsWebSocketHandler,
+        )
+        from mcp_server_langgraph.websocket.types import MessageEnvelope
+
+        # Mock the service to verify it's called
+        mock_snapshot = {
+            "happiness": {"score": 99, "trend": "up", "change": 1.0},
+            "engagement": {"score": 88, "trend": "stable", "change": 0.0},
+            "adoption": {"score": 77, "trend": "down", "change": -1.0},
+            "retention": {"score": 66, "trend": "stable", "change": 0.0},
+            "task_success": {"score": 55, "trend": "up", "change": 2.0},
+            "time_range": "24h",
+            "last_updated": "2025-01-01T00:00:00Z",
+        }
+
+        with patch("mcp_server_langgraph.api.v1.heart_metrics_ws.get_websocket_heart_metrics_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.get_current_snapshot.return_value = mock_snapshot
+            mock_get_service.return_value = mock_service
+
+            handler = HeartMetricsWebSocketHandler()
+
+            message = MessageEnvelope(
+                type="get_snapshot",
+                payload={"time_range": "24h"},
+            )
+
+            response = await handler.handle_message(message)
+
+            # Verify service was called
+            mock_service.get_current_snapshot.assert_called_once_with("24h")
+
+            # Verify response uses service data
+            assert response is not None
+            assert response.type == "metrics_snapshot"
+            assert response.payload["snapshot"]["happiness"]["score"] == 99
+
+    @pytest.mark.asyncio
+    async def test_handler_initializes_with_service(self) -> None:
+        """GIVEN handler WHEN initialized THEN has service attribute."""
+        from mcp_server_langgraph.api.v1.heart_metrics_ws import (
+            HeartMetricsWebSocketHandler,
+        )
+
+        with patch("mcp_server_langgraph.api.v1.heart_metrics_ws.get_websocket_heart_metrics_service") as mock_get_service:
+            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_get_service.return_value = mock_service
+
+            handler = HeartMetricsWebSocketHandler()
+
+            # Verify handler has service reference
+            assert hasattr(handler, "_metrics_service")
+            assert handler._metrics_service is mock_service

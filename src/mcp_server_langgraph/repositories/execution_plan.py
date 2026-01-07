@@ -98,7 +98,6 @@ class InMemoryExecutionPlanRepository(ExecutionPlanRepository):
 
     def __init__(self) -> None:
         """Initialize empty plan storage."""
-        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
 
         self._plans: dict[str, ExecutionPlan] = {}
 
@@ -125,14 +124,8 @@ class InMemoryExecutionPlanRepository(ExecutionPlanRepository):
 
     async def list_by_session(self, session_id: str) -> list[ExecutionPlan]:
         """List all plans for a session."""
-        return [
-            plan for plan in self._plans.values() if plan.session_id == session_id
-        ]
+        return [plan for plan in self._plans.values() if plan.session_id == session_id]
 
     async def list_pending(self) -> list[ExecutionPlan]:
         """List all plans awaiting approval."""
-        return [
-            plan
-            for plan in self._plans.values()
-            if plan.status == "awaiting_approval"
-        ]
+        return [plan for plan in self._plans.values() if plan.status == "awaiting_approval"]

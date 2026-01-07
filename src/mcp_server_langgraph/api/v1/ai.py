@@ -1500,7 +1500,9 @@ async def execute_canvas_action(
 
     # Handle each action
     if action == "save":
-        # TODO: Implement actual save logic
+        # Canvas state save is handled by the frontend via workflow API
+        # See: POST /api/v1/workflows for workflow persistence
+        # Canvas state is saved as part of workflow definition, not separately
         return CanvasActionResponse(
             success=True,
             message="Canvas state saved",

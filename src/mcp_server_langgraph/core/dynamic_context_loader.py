@@ -587,7 +587,8 @@ class DynamicContextLoader:
                 if ref_type_filter:
                     must_conditions.append(FieldCondition(key="ref_type", match=MatchValue(value=ref_type_filter)))
 
-                search_filter = Filter(must=must_conditions) if must_conditions else None
+                # list is invariant but runtime accepts list[FieldCondition] for Filter.must
+                search_filter = Filter(must=must_conditions) if must_conditions else None  # type: ignore[arg-type]
 
                 # Search Qdrant using async client
                 client = await self._get_client()

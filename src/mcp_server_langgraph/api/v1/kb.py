@@ -110,10 +110,8 @@ async def get_kb_status() -> dict[str, Any]:
         )
 
         client = await get_shared_async_qdrant_client()
-        if client is None:
-            result["status"] = KBStatus.UNAVAILABLE.value
-            result["message"] = f"Unable to connect to Qdrant at {qdrant_url}"
-            return result
+        # get_shared_async_qdrant_client() raises RuntimeError if unavailable
+        # (never returns None), so client is always valid here
 
         result["qdrant_connected"] = True
 

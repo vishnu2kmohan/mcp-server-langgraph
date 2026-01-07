@@ -25,15 +25,16 @@ Message Types (Server → Client):
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from fastapi import APIRouter, WebSocket
 
 from mcp_server_langgraph.websocket.base import WebSocketBase
+from mcp_server_langgraph.websocket.services.heart_metrics import (
+    HeartMetricsServiceAdapter,
+    get_websocket_heart_metrics_service,
+)
 from mcp_server_langgraph.websocket.types import AuthUser, MessageEnvelope, WebSocketConfig
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +79,9 @@ class HeartMetricsWebSocketHandler(WebSocketBase):
         # Subscription state
         self._subscribed_dimensions: set[str] = set()
         self._time_range: str = "24h"
+
+        # Initialize metrics service adapter (integrates with Prometheus/Mimir)
+        self._metrics_service: HeartMetricsServiceAdapter = get_websocket_heart_metrics_service()
 
     async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
         """
@@ -175,18 +179,12 @@ class HeartMetricsWebSocketHandler(WebSocketBase):
 
     async def _get_metrics_snapshot(self, time_range: str) -> dict[str, Any]:
         """
-        Get current HEART metrics snapshot.
+        Get current HEART metrics snapshot from the metrics service.
 
-        TODO: Integrate with actual HEART metrics service.
+        Delegates to HeartMetricsServiceAdapter which queries Prometheus/Mimir
+        for actual metrics when available, falling back to stub data for development.
         """
-        # Mock implementation - will be replaced with real service integration
-        return {
-            "happiness": {"score": 0.85, "trend": "up", "samples": 1250},
-            "engagement": {"score": 0.72, "trend": "stable", "samples": 1180},
-            "adoption": {"score": 0.65, "trend": "up", "samples": 890},
-            "retention": {"score": 0.78, "trend": "stable", "samples": 2100},
-            "task_success": {"score": 0.91, "trend": "up", "samples": 3400},
-        }
+        return await self._metrics_service.get_current_snapshot(time_range)
 
     async def on_connect(self, user: AuthUser) -> None:
         """Called when connection is established."""

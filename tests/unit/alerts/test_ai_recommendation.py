@@ -694,10 +694,10 @@ class TestFewShotPromptEnhancement:
         )
 
         alert = create_test_alert()
-        prompt = await build_recommendation_prompt_with_feedback(alert, feedback_store)
+        result = await build_recommendation_prompt_with_feedback(alert, feedback_store)
 
-        assert "Previously Successful Remediations" in prompt
-        assert "CircuitBreakerOpen" in prompt
+        assert "Previously Successful Remediations" in result.prompt
+        assert "CircuitBreakerOpen" in result.prompt
 
     @pytest.mark.asyncio
     async def test_build_prompt_without_feedback_store(self) -> None:
@@ -711,10 +711,10 @@ class TestFewShotPromptEnhancement:
         )
 
         alert = create_test_alert()
-        prompt = await build_recommendation_prompt_with_feedback(alert, None)
+        result = await build_recommendation_prompt_with_feedback(alert, None)
 
-        assert "CircuitBreakerOpen" in prompt
-        assert "Previously Successful Remediations" not in prompt
+        assert "CircuitBreakerOpen" in result.prompt
+        assert "Previously Successful Remediations" not in result.prompt
 
     @pytest.mark.asyncio
     async def test_build_prompt_with_rejection_constraints(self) -> None:
@@ -752,10 +752,10 @@ class TestFewShotPromptEnhancement:
             )
 
         alert = create_test_alert()
-        prompt = await build_recommendation_prompt_with_feedback(alert, feedback_store)
+        result = await build_recommendation_prompt_with_feedback(alert, feedback_store)
 
-        assert "Important Constraints" in prompt
-        assert "high-risk" in prompt.lower() or "risky" in prompt.lower()
+        assert "Important Constraints" in result.prompt
+        assert "high-risk" in result.prompt.lower() or "risky" in result.prompt.lower()
 
     @pytest.mark.asyncio
     async def test_build_prompt_limits_few_shot_examples(self) -> None:
@@ -794,10 +794,10 @@ class TestFewShotPromptEnhancement:
             )
 
         alert = create_test_alert()
-        prompt = await build_recommendation_prompt_with_feedback(alert, feedback_store)
+        result = await build_recommendation_prompt_with_feedback(alert, feedback_store)
 
         # Count example occurrences (should be max 3)
-        example_count = prompt.count("### Example")
+        example_count = result.prompt.count("### Example")
         assert example_count <= 3
 
 
@@ -1294,7 +1294,7 @@ class TestRedisCaching:
         # Generate recommendation (patch metrics functions at their source)
         with patch("mcp_server_langgraph.alerts.metrics.record_recommendation_request"):
             with patch("mcp_server_langgraph.alerts.metrics.record_recommendation_generated"):
-                recommendation = await service.generate_recommendation(alert)
+                _ = await service.generate_recommendation(alert)
 
         # Should have called cache.get first
         mock_cache.get.assert_called_with(cache_key)

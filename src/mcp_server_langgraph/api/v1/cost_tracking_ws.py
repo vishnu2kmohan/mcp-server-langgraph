@@ -25,15 +25,16 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from fastapi import APIRouter, WebSocket
 
 from mcp_server_langgraph.websocket.base import WebSocketBase
+from mcp_server_langgraph.websocket.services.cost_tracking import (
+    CostTrackingServiceAdapter,
+    get_websocket_cost_service,
+)
 from mcp_server_langgraph.websocket.types import AuthUser, MessageEnvelope, WebSocketConfig
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,9 @@ class CostTrackingWebSocketHandler(WebSocketBase):
         # Subscription state
         self._subscribed_sessions: set[str] = set()
         self._subscribed_user_id: str | None = None
+
+        # Initialize cost tracking service adapter (integrates with Redis + database)
+        self._cost_service: CostTrackingServiceAdapter = get_websocket_cost_service()
 
     async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
         """
@@ -172,30 +176,32 @@ class CostTrackingWebSocketHandler(WebSocketBase):
 
     async def _get_session_total(self, session_id: str) -> dict[str, Any]:
         """
-        Get cost total for a session.
+        Get cost total for a session from the cost tracking service.
 
-        TODO: Integrate with actual cost tracking service.
+        Delegates to CostTrackingServiceAdapter which queries Redis cache
+        and database for actual cost data when available.
         """
-        # Mock implementation - will be replaced with real service integration
+        session_cost = await self._cost_service.get_session_cost(session_id)
         return {
-            "total_cost": str(Decimal("0.0542")),
+            "total_cost": str(Decimal(str(session_cost.get("total_cost", 0.0)))),
             "currency": "USD",
-            "token_count": 12500,
-            "request_count": 8,
-            "last_updated": datetime.now(UTC).isoformat(),
+            "token_count": session_cost.get("token_count", 0),
+            "request_count": 0,  # Would need request count tracking
+            "last_updated": session_cost.get("updated_at", datetime.now(UTC).isoformat()),
         }
 
     async def _get_user_budget(self, user_id: str) -> dict[str, Any]:
         """
-        Get budget status for a user.
+        Get budget status for a user from the cost tracking service.
 
-        TODO: Integrate with actual budget service.
+        Delegates to CostTrackingServiceAdapter which queries the budget storage
+        and calculates current usage from cost records.
         """
-        # Mock implementation - will be replaced with real service integration
+        user_budget = await self._cost_service.get_user_budget(user_id)
         return {
-            "budget_limit": str(Decimal("100.00")),
-            "budget_used": str(Decimal("23.45")),
-            "budget_remaining": str(Decimal("76.55")),
+            "budget_limit": user_budget.get("budget_limit", 100.0),
+            "current_usage": user_budget.get("current_usage", 0.0),
+            "remaining": user_budget.get("remaining", 100.0),
             "currency": "USD",
             "period": "monthly",
             "period_start": datetime.now(UTC).replace(day=1).isoformat(),

@@ -24,11 +24,31 @@ pytestmark = [
 
 @pytest.fixture
 def test_app() -> FastAPI:
-    """Create a test app with the observability router."""
+    """Create a test app with the observability router.
+
+    Includes dependency overrides for authentication to allow unit tests
+    to run without real auth infrastructure.
+    """
     from mcp_server_langgraph.api.v1.observability import observability_router
+    from mcp_server_langgraph.auth.dependencies import (
+        require_observability_admin,
+        require_observability_viewer,
+    )
 
     app = FastAPI()
     app.include_router(observability_router, prefix="/api/v1")
+
+    # Mock user for auth dependency overrides
+    mock_user = {
+        "sub": "test-user-id",
+        "username": "testuser",
+        "email": "testuser@example.com",
+        "roles": ["admin"],
+        "realm_access": {"roles": ["admin"]},
+    }
+    app.dependency_overrides[require_observability_viewer] = lambda: mock_user
+    app.dependency_overrides[require_observability_admin] = lambda: mock_user
+
     return app
 
 

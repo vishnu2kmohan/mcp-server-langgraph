@@ -25,7 +25,7 @@ Usage:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 from uuid import uuid4
@@ -38,12 +38,12 @@ if TYPE_CHECKING:
 
 def _now() -> datetime:
     """Get current UTC time."""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _default_expiry() -> datetime:
     """Get default expiry time (1 hour from now)."""
-    return datetime.now(timezone.utc) + timedelta(hours=1)
+    return datetime.now(UTC) + timedelta(hours=1)
 
 
 class ExecutionPlan(BaseModel):
@@ -92,9 +92,7 @@ class ExecutionPlan(BaseModel):
     # Optional fields
     critic_model: str | None = None
     actual_cost: Decimal | None = None
-    suggested_orchestrator: Literal["standard", "swarm", "studio", "ux", "alert"] = (
-        "standard"
-    )
+    suggested_orchestrator: Literal["standard", "swarm", "studio", "ux", "alert"] = "standard"
     critique_rounds: int = Field(default=0, ge=0, le=3)
     thinking_budget: Literal["none", "light", "medium", "deep"] = "none"
     tools_needed: list[str] = Field(default_factory=list)
@@ -115,7 +113,7 @@ class ExecutionPlan(BaseModel):
     @property
     def is_expired(self) -> bool:
         """Check if plan has expired."""
-        return datetime.now(timezone.utc) > self.expires_at
+        return datetime.now(UTC) > self.expires_at
 
     @property
     def requires_approval(self) -> bool:

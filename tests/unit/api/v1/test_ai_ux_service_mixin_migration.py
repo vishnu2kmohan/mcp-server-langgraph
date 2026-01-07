@@ -492,17 +492,38 @@ class TestAIUXServiceDuplicateCodeRemoved:
         gc.collect()
 
     def test_no_duplicate_response_cache_initialization(self, mock_settings):
-        """AIUXService should not create its own TTLCache."""
+        """AIUXService should not create its own TTLCache.
+
+        After migration, AIUXService should use mixin's _cache_get/_cache_set
+        instead of maintaining a separate _response_cache TTLCache.
+
+        The mixin provides:
+        - _cache_get(key) -> L1 TTLCache via CacheService -> L2 Redis
+        - _cache_set(key, value) -> L1 + L2
+
+        TODO: Uncomment assertion after full migration is complete.
+        """
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         import inspect
 
-        _source = inspect.getsource(AIUXService.__init__)
+        _ = inspect.getsource(AIUXService.__init__)
 
         # After migration, should not contain direct TTLCache instantiation
         # The mixin handles L1 cache via CacheService
-        # Note: This test will fail until migration is complete
-        # After migration, uncomment this assertion:
-        # assert "TTLCache(" not in source or "# DEPRECATED" in source
+        #
+        # Migration status: IN PROGRESS
+        # The legacy _response_cache is still used in multiple methods.
+        # Once all callers migrate to _cache_get/_cache_set, remove:
+        # 1. self._response_cache initialization (lines 476-481)
+        # 2. self.redis_cache initialization (lines 483-487)
+        # 3. Update _get_cached_response to async using _cache_get
+        # 4. Update _cache_response to async using _cache_set
+        #
+        # Uncomment this assertion when migration is complete:
+        # assert "self._response_cache" not in source, (
+        #     "AIUXService still initializes legacy _response_cache. "
+        #     "Migrate to mixin methods: _cache_get, _cache_set"
+        # )
 
     def test_mixin_provides_cache_methods(self, mock_settings):
         """Mixin should provide all necessary cache methods."""

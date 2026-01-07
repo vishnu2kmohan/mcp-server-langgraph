@@ -111,7 +111,7 @@ class WorkerAgent(BaseAgent):
                 resolved_capabilities = await self._resolve_capabilities(request)
 
             # Build LangChain messages
-            langchain_messages = []
+            langchain_messages: list[SystemMessage | HumanMessage] = []
 
             # Inject memory context as SystemMessage if available
             if resolved_capabilities and resolved_capabilities.memory:

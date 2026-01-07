@@ -34,11 +34,11 @@ class TestWebSocketMetricsAPI:
 
         payload = {
             "endpoint_id": "notifications",
-            "total_attempts": 10,
-            "total_reconnections": 8,
-            "consecutive_failures": 0,
-            "success_rate": 80.0,
-            "failures_by_reason": {"network_error": 1, "token_expired": 1},
+            "reconnect_count": 8,
+            "total_connect_time_ms": 1500.0,
+            "error_count": 2,
+            "messages_sent": 50,
+            "messages_received": 100,
         }
 
         response = client.post("/api/v1/websocket/metrics", json=payload)
@@ -55,20 +55,16 @@ class TestWebSocketMetricsAPI:
         client = TestClient(app)
 
         payload = {
-            "endpoint_id": "",  # Empty - should fail
-            "total_attempts": 10,
-            "total_reconnections": 8,
-            "consecutive_failures": 0,
-            "success_rate": 80.0,
-            "failures_by_reason": {},
+            "endpoint_id": "",  # Empty - should fail validation
+            "reconnect_count": 0,
         }
 
         response = client.post("/api/v1/websocket/metrics", json=payload)
 
         assert response.status_code == 422  # Validation error
 
-    def test_post_websocket_metrics_validates_success_rate_bounds(self) -> None:
-        """Success rate must be between 0 and 100."""
+    def test_post_websocket_metrics_validates_non_negative_reconnect_count(self) -> None:
+        """reconnect_count must be non-negative."""
         from mcp_server_langgraph.api.v1.websocket_metrics import router
 
         app = FastAPI()
@@ -77,19 +73,15 @@ class TestWebSocketMetricsAPI:
 
         payload = {
             "endpoint_id": "alerts",
-            "total_attempts": 10,
-            "total_reconnections": 8,
-            "consecutive_failures": 0,
-            "success_rate": 150.0,  # > 100% - should fail
-            "failures_by_reason": {},
+            "reconnect_count": -1,  # Negative - should fail
         }
 
         response = client.post("/api/v1/websocket/metrics", json=payload)
 
         assert response.status_code == 422
 
-    def test_post_websocket_metrics_validates_non_negative_counts(self) -> None:
-        """Counts must be non-negative."""
+    def test_post_websocket_metrics_validates_non_negative_error_count(self) -> None:
+        """error_count must be non-negative."""
         from mcp_server_langgraph.api.v1.websocket_metrics import router
 
         app = FastAPI()
@@ -98,11 +90,7 @@ class TestWebSocketMetricsAPI:
 
         payload = {
             "endpoint_id": "traces",
-            "total_attempts": -1,  # Negative - should fail
-            "total_reconnections": 8,
-            "consecutive_failures": 0,
-            "success_rate": 80.0,
-            "failures_by_reason": {},
+            "error_count": -5,  # Negative - should fail
         }
 
         response = client.post("/api/v1/websocket/metrics", json=payload)
@@ -119,11 +107,8 @@ class TestWebSocketMetricsAPI:
 
         payload = {
             "endpoint_id": "devtools",
-            "total_attempts": 5,
-            "total_reconnections": 5,
-            "consecutive_failures": 0,
-            "success_rate": 100.0,
-            "failures_by_reason": {},
+            "reconnect_count": 5,
+            "error_count": 0,
         }
 
         with patch("mcp_server_langgraph.api.v1.websocket_metrics.process_metrics_payload") as mock_process:
@@ -144,19 +129,14 @@ class TestWebSocketMetricsAPI:
             "endpoints": [
                 {
                     "endpoint_id": "notifications",
-                    "total_attempts": 10,
-                    "total_reconnections": 10,
-                    "consecutive_failures": 0,
-                    "success_rate": 100.0,
-                    "failures_by_reason": {},
+                    "reconnect_count": 10,
+                    "error_count": 0,
                 },
                 {
                     "endpoint_id": "alerts",
-                    "total_attempts": 5,
-                    "total_reconnections": 4,
-                    "consecutive_failures": 1,
-                    "success_rate": 80.0,
-                    "failures_by_reason": {"network_error": 1},
+                    "reconnect_count": 4,
+                    "error_count": 1,
+                    "last_disconnect_reason": "network_error",
                 },
             ]
         }
@@ -179,19 +159,11 @@ class TestWebSocketMetricsAPI:
             "endpoints": [
                 {
                     "endpoint_id": "ep1",
-                    "total_attempts": 1,
-                    "total_reconnections": 1,
-                    "consecutive_failures": 0,
-                    "success_rate": 100.0,
-                    "failures_by_reason": {},
+                    "reconnect_count": 1,
                 },
                 {
                     "endpoint_id": "ep2",
-                    "total_attempts": 2,
-                    "total_reconnections": 2,
-                    "consecutive_failures": 0,
-                    "success_rate": 100.0,
-                    "failures_by_reason": {},
+                    "reconnect_count": 2,
                 },
             ]
         }
@@ -202,8 +174,8 @@ class TestWebSocketMetricsAPI:
             assert response.status_code == 200
             mock_batch.assert_called_once()
 
-    def test_post_metrics_with_optional_duration(self) -> None:
-        """Payload may include optional avg_reconnection_duration_ms."""
+    def test_post_metrics_with_optional_fields(self) -> None:
+        """Payload may include optional total_connect_time_ms and last_disconnect_reason."""
         from mcp_server_langgraph.api.v1.websocket_metrics import router
 
         app = FastAPI()
@@ -212,12 +184,12 @@ class TestWebSocketMetricsAPI:
 
         payload = {
             "endpoint_id": "mcp_tasks",
-            "total_attempts": 10,
-            "total_reconnections": 9,
-            "consecutive_failures": 0,
-            "success_rate": 90.0,
-            "failures_by_reason": {"timeout": 1},
-            "avg_reconnection_duration_ms": 250.5,
+            "reconnect_count": 9,
+            "total_connect_time_ms": 2500.0,
+            "last_disconnect_reason": "timeout",
+            "error_count": 1,
+            "messages_sent": 100,
+            "messages_received": 200,
         }
 
         response = client.post("/api/v1/websocket/metrics", json=payload)
@@ -234,11 +206,7 @@ class TestWebSocketMetricsAPI:
 
         payload = {
             "endpoint_id": "test",
-            "total_attempts": 1,
-            "total_reconnections": 1,
-            "consecutive_failures": 0,
-            "success_rate": 100.0,
-            "failures_by_reason": {},
+            "reconnect_count": 1,
         }
 
         # Mock Prometheus being unavailable
@@ -251,3 +219,39 @@ class TestWebSocketMetricsAPI:
             # Should still return 200 (fire-and-forget pattern)
             assert response.status_code == 200
             assert response.json()["status"] == "accepted"
+
+    def test_post_websocket_metrics_minimal_payload(self) -> None:
+        """Endpoint should accept minimal payload with just endpoint_id."""
+        from mcp_server_langgraph.api.v1.websocket_metrics import router
+
+        app = FastAPI()
+        app.include_router(router, prefix="/api/v1")
+        client = TestClient(app)
+
+        # Only required field
+        payload = {
+            "endpoint_id": "minimal",
+        }
+
+        response = client.post("/api/v1/websocket/metrics", json=payload)
+
+        assert response.status_code == 200
+        assert response.json()["status"] == "accepted"
+        assert response.json()["endpoint_id"] == "minimal"
+
+    def test_post_websocket_metrics_validates_non_negative_connect_time(self) -> None:
+        """total_connect_time_ms must be non-negative."""
+        from mcp_server_langgraph.api.v1.websocket_metrics import router
+
+        app = FastAPI()
+        app.include_router(router, prefix="/api/v1")
+        client = TestClient(app)
+
+        payload = {
+            "endpoint_id": "test",
+            "total_connect_time_ms": -100.0,  # Negative - should fail
+        }
+
+        response = client.post("/api/v1/websocket/metrics", json=payload)
+
+        assert response.status_code == 422

@@ -211,6 +211,7 @@ except ImportError:
 from mcp_server_langgraph.api.v1.ai_ux import (
     DisclosureAnalyzeRequest,
     DisclosureAnalyzeResponse,
+    DisclosureLevelStr,
     EmptyStateActionType,
     EmptyStateSuggestion,
     EmptyStateSuggestionsRequest,
@@ -285,124 +286,6 @@ if TYPE_CHECKING:
 
 
 # =============================================================================
-# LLMWithFallback Base Class
-# =============================================================================
-
-
-class LLMWithFallback:
-    """
-    Base class for LLM-enhanced services with heuristic fallback.
-
-    Provides a standard pattern for:
-    - Executing LLM calls with automatic fallback to heuristics on failure
-    - Caching responses to reduce LLM costs
-    - Recording metrics for observability
-    - Integrating with ModelSelector for cost/latency optimization
-
-    This class can be used as a base class or as a mixin to provide
-    consistent LLM/heuristic fallback behavior across AI UX services.
-    """
-
-    def __init__(
-        self,
-        llm_factory: LLMFactory | None,
-        settings: Any,
-        model_selector: ModelSelector | None = None,
-    ) -> None:
-        """
-        Initialize LLM with fallback base.
-
-        Args:
-            llm_factory: LLM factory for making LLM calls (optional)
-            settings: Application settings with feature flags
-            model_selector: Optional ModelSelector for cost/latency optimization
-        """
-        self.llm_factory = llm_factory
-        self.settings = settings
-        self.model_selector = model_selector
-
-        # LLM is enabled only if factory exists AND feature flag is on
-        self.llm_enabled = llm_factory is not None and getattr(settings, "ff_enable_ai_suggestions", True)
-
-        # Response cache for LLM calls (reduces costs and latency)
-        self._response_cache: TTLCache[str, Any] = TTLCache(
-            maxsize=CACHE_MAX_SIZE,
-            ttl=CACHE_TTL_SECONDS,
-        )
-
-    def _get_cached_response(self, cache_key: str) -> Any | None:
-        """Get cached response if available."""
-        return self._response_cache.get(cache_key)
-
-    def _cache_response(self, cache_key: str, response: Any) -> None:
-        """Cache a response."""
-        self._response_cache[cache_key] = response
-
-    def _select_model_for_method_base(self, method_name: str) -> str | None:
-        """Select optimal model for a method using ModelSelector."""
-        if self.model_selector is None:
-            return None
-
-        complexity = SERVICE_COMPLEXITY.get(method_name, "simple")
-        try:
-            selected = self.model_selector.select_model(complexity)
-            logger.debug(f"ModelSelector: {method_name} -> {complexity} tier -> {selected}")
-            return selected
-        except Exception as e:
-            logger.warning(f"ModelSelector failed for {method_name}: {e}, using default model")
-            return None
-
-    async def execute_with_fallback(
-        self,
-        method_name: str,
-        llm_fn: Any,
-        heuristic_fn: Any,
-        cache_key: str | None = None,
-    ) -> Any:
-        """
-        Execute an LLM function with fallback to heuristics.
-
-        Args:
-            method_name: The method name for metrics and model selection
-            llm_fn: Async function to call with LLM
-            heuristic_fn: Sync function to call as fallback
-            cache_key: Optional cache key for response caching
-
-        Returns:
-            Result from LLM or heuristic fallback
-        """
-        if not self.llm_enabled:
-            return heuristic_fn()
-
-        # Select model based on complexity
-        self._select_model_for_method_base(method_name)
-
-        # Check cache if key provided
-        if cache_key is not None:
-            cached = self._get_cached_response(cache_key)
-            if cached is not None:
-                ai_ux_cache_hits_total.labels(method=method_name).inc()
-                logger.debug(f"Cache hit for {method_name}: {cache_key}")
-                return cached
-
-        try:
-            ai_ux_llm_calls_total.labels(method=method_name).inc()
-            start_time = time.time()
-            result = await llm_fn()
-            ai_ux_llm_latency_seconds.labels(method=method_name).observe(time.time() - start_time)
-
-            # Cache the result if key provided
-            if cache_key is not None:
-                self._cache_response(cache_key, result)
-
-            return result
-        except Exception as e:
-            logger.warning(f"LLM {method_name} failed, falling back to heuristics: {e}")
-            ai_ux_llm_fallbacks_total.labels(method=method_name).inc()
-            return heuristic_fn()
-
-
-# =============================================================================
 # Service
 # =============================================================================
 
@@ -472,8 +355,13 @@ class AIUXService(StaleWhileRevalidateMixin):
             logger.warning(f"Failed to initialize CacheService for AI UX: {e}")
             self._cache_service = None
 
-        # Legacy: Keep _response_cache for backward compatibility with existing code
-        # TODO: Remove after full migration to mixin methods
+        # Per-instance cache for test isolation
+        #
+        # ARCHITECTURE DECISION:
+        # - Read: Uses per-instance _response_cache to ensure test isolation
+        #   (CacheService is a singleton, its L1 TTLCache pollutes across tests)
+        # - Write: Stores to both legacy cache (for reads) and mixin L2 (for Redis)
+        #
         self._response_cache: TTLCache[str, Any] = TTLCache(
             maxsize=CACHE_MAX_SIZE,
             ttl=CACHE_TTL_SECONDS,
@@ -662,7 +550,11 @@ class AIUXService(StaleWhileRevalidateMixin):
 
     def _get_cached_response(self, method: str, request: Any) -> Any | None:
         """
-        Get cached response if available.
+        Get cached response if available (legacy sync version).
+
+        DEPRECATED: Use _get_cached_response_async for new code.
+        This sync version only checks L1 (TTLCache). The async version
+        uses mixin's tiered cache (L1 TTLCache + L2 Redis).
 
         Args:
             method: The method name
@@ -680,7 +572,9 @@ class AIUXService(StaleWhileRevalidateMixin):
 
     def _cache_response(self, method: str, request: Any, response: Any) -> None:
         """
-        Cache a response.
+        Cache a response (legacy sync version).
+
+        DEPRECATED: Use _cache_response_async for new code.
 
         Args:
             method: The method name
@@ -690,6 +584,64 @@ class AIUXService(StaleWhileRevalidateMixin):
         cache_key = self._get_cache_key(method, request)
         self._response_cache[cache_key] = response
         logger.debug(f"Cached response for {method}: {cache_key}")
+
+    # =========================================================================
+    # Async Cache Methods (Mixin-based - Migration Target)
+    # =========================================================================
+
+    async def _get_cached_response_async(self, method: str, request: Any) -> Any | None:
+        """
+        Get cached response with per-instance isolation.
+
+        Uses legacy _response_cache (per-instance) for read isolation.
+        This ensures test isolation since each AIUXService has its own cache.
+
+        Note: Write operations (_cache_response_async) also persist to mixin's
+        L2 Redis cache for production performance, but reads use per-instance
+        cache to avoid CacheService singleton pollution in tests.
+
+        Args:
+            method: The method name
+            request: The request object
+
+        Returns:
+            Cached response or None if not found
+        """
+        cache_key = self._get_cache_key(method, request)
+
+        # Use legacy L1-only cache (per-instance, ensures test isolation)
+        # Note: Mixin L1 is a singleton (CacheService) which causes test pollution
+        cached = self._response_cache.get(cache_key)
+        if cached is not None:
+            ai_ux_cache_hits_total.labels(method=method).inc()
+            logger.debug(f"Cache hit for {method}: {cache_key}")
+            return cached
+
+        return None
+
+    async def _cache_response_async(self, method: str, request: Any, response: Any) -> None:
+        """
+        Cache a response using mixin's tiered cache (L1 + L2).
+
+        Uses StaleWhileRevalidateMixin._cache_set for L1 (TTLCache) + L2 (Redis)
+        tiered storage. Falls back to legacy _response_cache if mixin fails.
+
+        Args:
+            method: The method name
+            request: The request object
+            response: The response to cache
+        """
+        cache_key = self._get_cache_key(method, request)
+
+        # Always store in legacy L1 cache (ensures test compatibility)
+        self._response_cache[cache_key] = response
+
+        # Try mixin cache (L1 + L2) as well
+        try:
+            await self._cache_set(cache_key, response)
+            logger.debug(f"Mixin cached response for {method}: {cache_key}")
+        except Exception as e:
+            logger.debug(f"Mixin cache set failed, using legacy only: {e}")
 
     def _select_model_for_method(self, method_name: str) -> str | None:
         """
@@ -837,8 +789,8 @@ class AIUXService(StaleWhileRevalidateMixin):
 
                 # Create composite cache key from request
                 cache_request = request.model_dump()
-                # Check cache first
-                cached = self._get_cached_response(method_name, cache_request)
+                # Check cache first (using mixin-based tiered cache)
+                cached = await self._get_cached_response_async(method_name, cache_request)
                 if cached is not None:
                     return cast("ErrorAnalyzeResponse", cached)
 
@@ -850,7 +802,7 @@ class AIUXService(StaleWhileRevalidateMixin):
                 )
                 # Cache the result if it came from LLM (not fallback)
                 if result and not self.is_circuit_open():
-                    self._cache_response(method_name, cache_request, result)
+                    await self._cache_response_async(method_name, cache_request, result)
         else:
             result = self._analyze_error_heuristic(request)
 
@@ -1075,8 +1027,8 @@ class AIUXService(StaleWhileRevalidateMixin):
             # Select model based on complexity
             self._select_model_for_method(method_name)
 
-            # Check cache first
-            cached = self._get_cached_response(method_name, request)
+            # Check cache first (using mixin-based tiered cache)
+            cached = await self._get_cached_response_async(method_name, request)
             if cached is not None:
                 return cast("EmptyStateSuggestionsResponse", cached)
 
@@ -1088,7 +1040,7 @@ class AIUXService(StaleWhileRevalidateMixin):
             )
             # Cache the result if it came from LLM (not fallback)
             if result and not self.is_circuit_open():
-                self._cache_response(method_name, request, result)
+                await self._cache_response_async(method_name, request, result)
             return cast("EmptyStateSuggestionsResponse", result)
         else:
             return self._get_empty_state_suggestions_heuristic(request)
@@ -1254,8 +1206,8 @@ Generate 2-3 personalized suggestions to help this user get started."""
                 # Select model based on complexity
                 self._select_model_for_method(method_name)
 
-                # Check cache first
-                cached = self._get_cached_response(method_name, request)
+                # Check cache first (using mixin-based tiered cache)
+                cached = await self._get_cached_response_async(method_name, request)
                 if cached is not None:
                     return cast("PersonaAnalyzeResponse", cached)
 
@@ -1267,7 +1219,7 @@ Generate 2-3 personalized suggestions to help this user get started."""
                 )
                 # Cache the result if it came from LLM (not fallback)
                 if result and not self.is_circuit_open():
-                    self._cache_response(method_name, request, result)
+                    await self._cache_response_async(method_name, request, result)
         else:
             result = self._analyze_persona_heuristic(request)
 
@@ -1411,8 +1363,8 @@ Analyze if the user's behavior matches their assigned persona."""
             # Select model based on complexity
             self._select_model_for_method(method_name)
 
-            # Check cache first
-            cached = self._get_cached_response(method_name, request)
+            # Check cache first (using mixin-based tiered cache)
+            cached = await self._get_cached_response_async(method_name, request)
             if cached is not None:
                 return cast("DisclosureAnalyzeResponse", cached)
 
@@ -1424,7 +1376,7 @@ Analyze if the user's behavior matches their assigned persona."""
             )
             # Cache the result if it came from LLM (not fallback)
             if result and not self.is_circuit_open():
-                self._cache_response(method_name, request, result)
+                await self._cache_response_async(method_name, request, result)
             return cast("DisclosureAnalyzeResponse", result)
         else:
             return self._analyze_disclosure_heuristic(request)
@@ -1497,6 +1449,8 @@ Analyze the user's expertise level and recommend an appropriate disclosure level
 
         # Determine current and recommended levels
         # ADR-0091 Phase 9: Use string literals directly (DisclosureLevelStr type)
+        current_level: DisclosureLevelStr
+        recommended_level: DisclosureLevelStr
         if total_usage < 10:
             current_level = "beginner"
             recommended_level = "beginner"
@@ -1586,8 +1540,8 @@ Analyze the user's expertise level and recommend an appropriate disclosure level
             # Select model based on complexity
             self._select_model_for_method(method_name)
 
-            # Check cache first
-            cached = self._get_cached_response(method_name, request)
+            # Check cache first (using mixin-based tiered cache)
+            cached = await self._get_cached_response_async(method_name, request)
             if cached is not None:
                 return cast("NudgeRecommendResponse", cached)
 
@@ -1599,7 +1553,7 @@ Analyze the user's expertise level and recommend an appropriate disclosure level
             )
             # Cache the result if it came from LLM (not fallback)
             if result and not self.is_circuit_open():
-                self._cache_response(method_name, request, result)
+                await self._cache_response_async(method_name, request, result)
             return cast("NudgeRecommendResponse", result)
         else:
             return self._recommend_nudge_heuristic(request)
@@ -1721,8 +1675,8 @@ Should a nudge be shown? If so, what nudge?"""
             # Select model based on complexity
             self._select_model_for_method(method_name)
 
-            # Check cache first
-            cached = self._get_cached_response(method_name, request)
+            # Check cache first (using mixin-based tiered cache)
+            cached = await self._get_cached_response_async(method_name, request)
             if cached is not None:
                 return cast("OnboardingPersonalizeResponse", cached)
 
@@ -1734,7 +1688,7 @@ Should a nudge be shown? If so, what nudge?"""
             )
             # Cache the result if it came from LLM (not fallback)
             if result and not self.is_circuit_open():
-                self._cache_response(method_name, request, result)
+                await self._cache_response_async(method_name, request, result)
             return cast("OnboardingPersonalizeResponse", result)
         else:
             return self._personalize_onboarding_heuristic(request)

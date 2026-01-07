@@ -21,7 +21,7 @@ Usage:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -29,7 +29,7 @@ from pydantic import BaseModel, Field
 
 def _now() -> datetime:
     """Get current UTC time."""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class PlanTemplate(BaseModel):
@@ -77,7 +77,7 @@ class PlanTemplate(BaseModel):
     # Organization
     tags: list[str] = Field(default_factory=list)
 
-    def record_use(self, success: bool) -> "PlanTemplate":
+    def record_use(self, success: bool) -> PlanTemplate:
         """Record a template usage and update metrics.
 
         Args:

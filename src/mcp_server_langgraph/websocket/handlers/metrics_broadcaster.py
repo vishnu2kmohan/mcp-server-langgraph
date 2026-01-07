@@ -204,9 +204,7 @@ class MetricsBroadcaster:
 
         # Metric history for sparkline/trend (keyed by metric name)
         # For session-scoped: keyed by (metric_name, session_id)
-        self._metric_history: dict[str, MetricHistory] = defaultdict(
-            lambda: MetricHistory(max_points=max_sparkline_points)
-        )
+        self._metric_history: dict[str, MetricHistory] = defaultdict(lambda: MetricHistory(max_points=max_sparkline_points))
 
         # Current metric values (for snapshots)
         # Keyed by metric_name, then by session_id (or "global")
@@ -459,7 +457,6 @@ class MetricsHandler:
         metrics: Any = None,  # WebSocketMetrics
     ) -> None:
         """Initialize the metrics handler."""
-        from mcp_server_langgraph.websocket.base import WebSocketBase
 
         # Create a wrapper that uses WebSocketBase
         self._config = config
@@ -472,7 +469,6 @@ class MetricsHandler:
 
     async def run(self, websocket: Any) -> None:
         """Run the WebSocket handler."""
-        from mcp_server_langgraph.websocket.base import WebSocketBase
 
         # Create inner handler that delegates to WebSocketBase
         handler = _MetricsInnerHandler(

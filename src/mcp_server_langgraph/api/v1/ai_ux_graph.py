@@ -372,10 +372,10 @@ def create_ux_analysis_graph(
     # Note: LangGraph StateGraph.add_node() has complex type overloads that don't
     # match our async node functions returning dict[str, Any]. This is a known
     # limitation - the nodes work correctly at runtime.
-    graph.add_node("persona_analysis", persona_node)  # type: ignore[call-overload]
-    graph.add_node("disclosure_analysis", disclosure_node)  # type: ignore[call-overload]
-    graph.add_node("error_analysis", error_node)  # type: ignore[call-overload]
-    graph.add_node("cross_insights", cross_insights_node)  # type: ignore[call-overload]
+    graph.add_node("persona_analysis", persona_node)  # type: ignore[arg-type,call-overload]
+    graph.add_node("disclosure_analysis", disclosure_node)  # type: ignore[arg-type,call-overload]
+    graph.add_node("error_analysis", error_node)  # type: ignore[arg-type,call-overload]
+    graph.add_node("cross_insights", cross_insights_node)  # type: ignore[arg-type,call-overload]
 
     # Add a router node that dispatches to appropriate analyses
     async def router(state: UXAnalysisState) -> dict[str, Any]:

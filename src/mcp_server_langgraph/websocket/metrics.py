@@ -10,7 +10,31 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pydantic import BaseModel, Field
+
 logger = logging.getLogger(__name__)
+
+
+# Pydantic models for frontend metrics payloads
+class WebSocketMetricsPayload(BaseModel):
+    """Payload for single endpoint WebSocket metrics from frontend."""
+
+    endpoint_id: str = Field(..., min_length=1, description="WebSocket endpoint identifier")
+    reconnect_count: int = Field(0, ge=0, description="Number of reconnections")
+    total_connect_time_ms: float = Field(0, ge=0, description="Total time spent connecting in ms")
+    last_disconnect_reason: str | None = Field(None, description="Last disconnect reason")
+    error_count: int = Field(0, ge=0, description="Number of errors")
+    messages_sent: int = Field(0, ge=0, description="Messages sent count")
+    messages_received: int = Field(0, ge=0, description="Messages received count")
+
+
+class WebSocketBatchMetricsPayload(BaseModel):
+    """Payload for batch WebSocket metrics from frontend."""
+
+    endpoints: list[WebSocketMetricsPayload] = Field(
+        default_factory=list,
+        description="List of endpoint metrics",
+    )
 
 
 def get_meter(name: str) -> Any:
@@ -376,3 +400,56 @@ class WebSocketMetrics:
         self._connections_rejected = 0
         self._token_expirations = 0
         self._latencies = []
+
+
+# Global metrics registry (must be after WebSocketMetrics class)
+_metrics_registry: dict[str, WebSocketMetrics] = {}
+
+
+def _get_or_create_metrics(endpoint_id: str) -> WebSocketMetrics:
+    """Get or create metrics instance for an endpoint."""
+    if endpoint_id not in _metrics_registry:
+        _metrics_registry[endpoint_id] = WebSocketMetrics(endpoint_name=endpoint_id)
+    return _metrics_registry[endpoint_id]
+
+
+def process_metrics_payload(payload: WebSocketMetricsPayload) -> None:
+    """
+    Process metrics payload from frontend and record to Prometheus.
+
+    Args:
+        payload: Single endpoint metrics payload
+    """
+    metrics = _get_or_create_metrics(payload.endpoint_id)
+
+    # Record reconnections
+    for _ in range(payload.reconnect_count):
+        metrics.record_connection()
+        metrics.record_disconnect()
+
+    # Record errors
+    for _ in range(payload.error_count):
+        metrics.record_error(error_type=payload.last_disconnect_reason or "unknown")
+
+    # Record messages
+    for _ in range(payload.messages_sent):
+        metrics.record_message_sent()
+
+    for _ in range(payload.messages_received):
+        metrics.record_message_received()
+
+    # Record average connect latency if available
+    if payload.reconnect_count > 0 and payload.total_connect_time_ms > 0:
+        avg_latency = payload.total_connect_time_ms / payload.reconnect_count
+        metrics.record_latency(avg_latency, message_type="connect")
+
+
+def process_batch_metrics(payload: WebSocketBatchMetricsPayload) -> None:
+    """
+    Process batch metrics payload from frontend.
+
+    Args:
+        payload: Batch of endpoint metrics
+    """
+    for endpoint_metrics in payload.endpoints:
+        process_metrics_payload(endpoint_metrics)

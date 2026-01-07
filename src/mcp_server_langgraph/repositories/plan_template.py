@@ -37,7 +37,7 @@ def _cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
     if len(vec1) != len(vec2):
         return 0.0
 
-    dot_product = sum(a * b for a, b in zip(vec1, vec2))
+    dot_product = sum(a * b for a, b in zip(vec1, vec2, strict=True))
     magnitude1 = math.sqrt(sum(a * a for a in vec1))
     magnitude2 = math.sqrt(sum(b * b for b in vec2))
 
@@ -208,9 +208,7 @@ class InMemoryPlanTemplateRepository(PlanTemplateRepository):
     async def find_by_tags(self, tags: list[str]) -> list[PlanTemplate]:
         """Find templates by tags."""
         tag_set = set(tags)
-        return [
-            t for t in self._templates.values() if tag_set.intersection(set(t.tags))
-        ]
+        return [t for t in self._templates.values() if tag_set.intersection(set(t.tags))]
 
     async def find_by_orchestrator(self, orchestrator: str) -> list[PlanTemplate]:
         """Find templates by orchestrator type."""
@@ -229,9 +227,7 @@ class InMemoryPlanTemplateRepository(PlanTemplateRepository):
             if template.description_embedding is None:
                 continue
 
-            similarity = _cosine_similarity(
-                query_embedding, template.description_embedding
-            )
+            similarity = _cosine_similarity(query_embedding, template.description_embedding)
             if similarity >= min_similarity:
                 results.append((similarity, template))
 
