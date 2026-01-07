@@ -4,6 +4,16 @@
 
 This runbook covers alerts related to infrastructure dependencies (PostgreSQL, Redis, LGTM stack).
 
+## Symptoms
+
+When these alerts fire, you may observe:
+- Database connection failures
+- Cache operations timing out
+- Logs not being ingested
+- Traces not being recorded
+- Metrics unavailable in dashboards
+- High resource utilization
+
 ---
 
 ## PostgreSQLDown

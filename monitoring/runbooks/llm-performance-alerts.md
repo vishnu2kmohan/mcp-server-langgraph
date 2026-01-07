@@ -4,6 +4,15 @@
 
 This runbook covers alerts related to LLM (Large Language Model) performance and availability.
 
+## Symptoms
+
+When these alerts fire, you may observe:
+- Slow response times from agent
+- LLM API errors or timeouts
+- Rate limiting from LLM providers
+- High token consumption
+- Provider failover events
+
 ---
 
 ## SlowLLMResponses

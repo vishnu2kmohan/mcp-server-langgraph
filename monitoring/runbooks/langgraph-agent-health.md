@@ -4,6 +4,15 @@
 
 This runbook covers alerts related to the core LangGraph Agent service health.
 
+## Symptoms
+
+When these alerts fire, you may observe:
+- Service unavailability
+- High error rates in API responses
+- Slow response times
+- Pod restarts or crashes
+- User-facing errors
+
 ---
 
 ## LangGraphAgentDown

@@ -8,6 +8,15 @@ This runbook covers alerts related to LLM streaming performance metrics:
 - Streaming duration
 - Streaming error rates
 
+## Symptoms
+
+When these alerts fire, you may observe:
+- Long wait before first response chunk appears
+- Choppy or stuttering streaming responses
+- Incomplete streaming responses
+- Connection drops during streaming
+- High inter-chunk delays
+
 ---
 
 ## SLAStreamingTTFCBreach

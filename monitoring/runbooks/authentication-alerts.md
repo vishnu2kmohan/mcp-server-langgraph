@@ -4,6 +4,15 @@
 
 This runbook covers alerts related to authentication (Keycloak SSO) and authorization (OpenFGA).
 
+## Symptoms
+
+When these alerts fire, you may observe:
+- Users unable to log in or authenticate
+- Token validation failures (401 Unauthorized)
+- Authorization check failures (403 Forbidden)
+- High rate of failed login attempts
+- Session management issues
+
 ---
 
 ## KeycloakDown

@@ -10,6 +10,15 @@ This runbook covers alerts related to conversation token usage, message counts, 
 - Phase 4.1 Audit: Full Conversation in LangGraph State
 - ADR-0094: KB Focus Mode
 
+## Symptoms
+
+When these alerts fire, you may observe:
+- Conversations approaching context window limits
+- Higher than expected token consumption
+- Unusual message role distribution
+- Context truncation issues
+- Increased LLM costs
+
 ---
 
 ## ConversationTokenUsageHigh
