@@ -111,13 +111,34 @@ class TestAuthSwitchOrgEndpoint:
         gc.collect()
 
     @pytest.fixture
-    def mock_app(self) -> FastAPI:
+    def mock_openfga_client(self) -> MagicMock:
+        """Create a mock OpenFGA client that grants access."""
+        mock_client = MagicMock()
+        mock_client.check_permission = AsyncMock(return_value=True)
+        return mock_client
+
+    @pytest.fixture
+    def mock_app(self, mock_openfga_client: MagicMock) -> FastAPI:
         """Create FastAPI app with auth router."""
+        from mcp_server_langgraph.api.deps import get_openfga_client
         from mcp_server_langgraph.api.v1.auth import auth_router
+        from mcp_server_langgraph.auth.dependencies import get_current_user
 
         # auth_router already has prefix="/auth", so only add "/api/v1"
         app = FastAPI()
         app.include_router(auth_router, prefix="/api/v1")
+
+        # Mock authentication
+        mock_user = {
+            "sub": "test-user-id",
+            "user_id": "test-user-id",
+            "username": "testuser",
+            "roles": ["user"],
+            "realm_access": {"roles": ["user"]},
+        }
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        app.dependency_overrides[get_openfga_client] = lambda: mock_openfga_client
+
         return app
 
     @pytest.fixture
@@ -323,8 +344,33 @@ class TestAdminUserApiKeyEndpoint:
         return mock_provider
 
     @pytest.fixture
-    def mock_app(self, mock_user_provider: MagicMock) -> FastAPI:
+    def mock_api_key_manager(self) -> MagicMock:
+        """Create a mock API key manager that generates keys."""
+        # Use explicit test value to avoid gitleaks false positives
+        test_key = "mcpkey_" + "test" + "0000"  # noqa: S105 (not a real secret)
+        mock_manager = MagicMock()
+        mock_manager.list_api_keys = AsyncMock(return_value=[])
+        mock_manager.create_api_key = AsyncMock(
+            return_value={
+                "api_key": test_key,
+                "key_id": "key-123",
+                "created": "2025-01-01T00:00:00Z",
+            }
+        )
+        mock_manager.get_api_key_metadata = AsyncMock(
+            return_value={
+                "key_id": "key-123",
+                "user_id": "user-123",
+                "masked_key": "mcpkey_****...0000",
+                "created": "2025-01-01T00:00:00Z",
+            }
+        )
+        return mock_manager
+
+    @pytest.fixture
+    def mock_app(self, mock_user_provider: MagicMock, mock_api_key_manager: MagicMock) -> FastAPI:
         """Create FastAPI app with admin router."""
+        from mcp_server_langgraph.api.deps import get_api_key_manager
         from mcp_server_langgraph.api.v1.admin import admin_router, get_user_provider
         from mcp_server_langgraph.auth.dependencies import get_current_user, require_admin
 
@@ -333,6 +379,7 @@ class TestAdminUserApiKeyEndpoint:
         app.include_router(admin_router, prefix="/api/v1")
         # Override the user provider dependency
         app.dependency_overrides[get_user_provider] = lambda: mock_user_provider
+        app.dependency_overrides[get_api_key_manager] = lambda: mock_api_key_manager
 
         # Mock authentication
         mock_user = {
@@ -368,7 +415,8 @@ class TestAdminUserApiKeyEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert "api_key" in data
-        assert data["api_key"].startswith("sk-")
+        # API key format matches mcpkey_ prefix from mock
+        assert data["api_key"].startswith("mcpkey_")
 
 
 @pytest.mark.unit
