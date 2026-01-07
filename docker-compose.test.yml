@@ -1229,7 +1229,11 @@ services:
       # Vector Database (Qdrant)
       # -----------------------------------------------------------------------
       - QDRANT_URL=http://qdrant-test:6333
+      # OpenTelemetry configuration for distributed tracing
+      # Alloy receives OTLP telemetry and forwards to Tempo (traces), Mimir (metrics), Loki (logs)
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
+      - OTEL_SERVICE_NAME=mcp-server-langgraph
+      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=mcp-test,deployment.environment=test
       # LGTM Stack configuration (Loki, Grafana, Tempo, Mimir)
       # Backend selection for observability query clients (concrete implementations, not stubs)
       - OBSERVABILITY_TRACING_BACKEND=tempo
@@ -2111,8 +2115,11 @@ services:
       # OpenFGA server validates these tokens (authn=oidc)
       # Note: OPENFGA_OIDC_CLIENT_ID and OPENFGA_OIDC_CLIENT_SECRET come from .env.test
       - OPENFGA_PLAYGROUND_URL=http://openfga-test:3000
+      # OpenTelemetry configuration for distributed tracing
+      # Alloy receives OTLP telemetry and forwards to Tempo (traces), Mimir (metrics), Loki (logs)
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
       - OTEL_SERVICE_NAME=authz-proxy-test
+      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=mcp-test,deployment.environment=test
       - LOG_FORMAT=json
       # Disable console span/metric export (send to OTLP only, reduces log noise)
       - ENABLE_CONSOLE_EXPORT=false
