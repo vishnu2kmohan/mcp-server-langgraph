@@ -78,6 +78,7 @@ def edit_file(
     old_string: Annotated[str, Field(description="Exact text to find and replace")],
     new_string: Annotated[str, Field(description="Replacement text")],
     replace_all: Annotated[bool, Field(description="Replace all occurrences (default: replace only first)")] = False,
+    create_backup: Annotated[bool, Field(description="Create .bak backup before editing")] = False,
 ) -> str:
     """
     Make precise edits to an existing file by replacing text in the sandbox.
@@ -86,6 +87,10 @@ def edit_file(
     - Make targeted code changes
     - Update configuration values
     - Fix specific text in files
+
+    Security controls:
+    - Path must be relative to workspace (no path traversal)
+    - Optionally creates backup of file before editing
 
     SECURITY: Delegated to the sandbox runner (Docker/K8s).
     """
@@ -115,6 +120,24 @@ def edit_file(
         if not is_valid:
             logger.warning("Path validation failed", extra={"file_path": file_path, "error": error_msg})
             return error_msg
+
+        # Resolve the file path for backup
+        path = Path(file_path)
+        resolved_path = path.resolve() if path.is_absolute() else (workspace_root / path).resolve()
+
+        # Create backup if requested and file exists
+        if create_backup and resolved_path.exists():
+            try:
+                backup_path = resolved_path.with_suffix(resolved_path.suffix + ".bak")
+                original_content = resolved_path.read_text(encoding="utf-8")
+                backup_path.write_text(original_content, encoding="utf-8")
+                logger.info(
+                    "Created backup before edit",
+                    extra={"original": str(resolved_path), "backup": str(backup_path)},
+                )
+            except Exception as e:
+                logger.warning(f"Failed to create backup: {e}", extra={"file_path": file_path})
+                # Continue with edit even if backup fails - backup is optional safety feature
 
         try:
             runner = get_sandbox_runner()

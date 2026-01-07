@@ -157,6 +157,7 @@ def write_file(
     file_path: Annotated[str, Field(description="Relative path within workspace to create or overwrite")],
     content: Annotated[str, Field(description="Content to write to the file")],
     create_directories: Annotated[bool, Field(description="Create parent directories if they don't exist")] = True,
+    create_backup: Annotated[bool, Field(description="Create .bak backup before overwriting existing files")] = False,
 ) -> str:
     """
     Create a new file or overwrite an existing file with the given content.
@@ -165,7 +166,7 @@ def write_file(
     - Path must be relative to workspace (no path traversal)
     - Content size limited to 1MB by default
     - Dangerous extensions (.exe, .sh, etc.) are blocked
-    - Creates backup of existing files before overwriting
+    - Optionally creates backup of existing files before overwriting
 
     Use this to:
     - Create new configuration files
@@ -204,6 +205,20 @@ def write_file(
         if not is_valid:
             logger.warning("Content size validation failed", extra={"file_path": file_path, "error": error_msg})
             return error_msg
+
+        # Create backup if requested and file exists
+        if create_backup and resolved_path.exists():
+            try:
+                backup_path = resolved_path.with_suffix(resolved_path.suffix + ".bak")
+                original_content = resolved_path.read_text(encoding="utf-8")
+                backup_path.write_text(original_content, encoding="utf-8")
+                logger.info(
+                    "Created backup before overwrite",
+                    extra={"original": str(resolved_path), "backup": str(backup_path)},
+                )
+            except Exception as e:
+                logger.warning(f"Failed to create backup: {e}", extra={"file_path": file_path})
+                # Continue with write even if backup fails - backup is optional safety feature
 
         try:
             runner = get_sandbox_runner()
