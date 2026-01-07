@@ -153,13 +153,75 @@ All services accessible via Traefik gateway at `http://localhost/`:
 
 - [ADR-0003: Dual Observability (OpenTelemetry + LangSmith)](/architecture/adr-0003-dual-observability)
 
+## Post-Implementation Enhancements (2026-01-07)
+
+### JSON Structured Logging
+
+All LGTM stack and infrastructure services now output JSON-formatted logs for improved parsing in Loki:
+
+| Service | Configuration | Purpose |
+|---------|--------------|---------|
+| Loki | `log_format: json` | Internal log parsing |
+| Tempo | `log_format: json` | Trace correlator logs |
+| Mimir | `log_format: json` | Metrics backend logs |
+| Alloy | `format = "json"` | Collector agent logs |
+| Traefik | `--log.format=json` | Gateway access logs |
+| PostgreSQL | `log_destination=jsonlog` | Database query logs |
+| Redis | redis_exporter | Metrics exporter logs |
+| OpenFGA | `OPENFGA_LOG_FORMAT=json` | Authorization logs |
+| Qdrant | `QDRANT__LOGGER__FORMAT=json` | Vector DB logs |
+| Grafana | `GF_LOG_CONSOLE_FORMAT=json` | Dashboard service logs |
+| MCP Server | `LOG_FORMAT=json` + uvicorn config | Application logs |
+
+### OTEL Resource Attributes
+
+Services now include OTEL resource attributes for trace correlation:
+
+```yaml
+OTEL_SERVICE_NAME: "service-name"
+OTEL_RESOURCE_ATTRIBUTES: "service.namespace=agent-studio,deployment.environment=test"
+```
+
+### Alert-Runbook Integration
+
+Comprehensive runbook coverage for all alert rules:
+
+| Runbook File | Sections Added | Key Alerts |
+|--------------|----------------|------------|
+| `authentication-alerts.md` | AuthzProxyDown | Authorization proxy health |
+| `langgraph-agent-health.md` | MCPServerDown | MCP service availability |
+| `resilience-alerts.md` | 8 sections | Circuit breakers, bulkheads, fallbacks |
+| `sla-alerts.md` | URL fix | SLAUptimeBreach typo corrected |
+
+### Runbook Anchor Validation
+
+New test `test_runbook_anchors_exist` in `tests/unit/scripts/test_alert_consolidation.py`:
+- Validates all `runbook_url` annotations reference existing sections
+- Prevents broken runbook links in alerts
+- Enforces 100% runbook anchor coverage
+
+### Alert-Runbook Dashboard
+
+New Grafana dashboard: `Operations/alert-runbook-matrix.json`
+- Active alerts table with clickable runbook links
+- Runbook quick reference guide
+- Alert history by severity
+- LGTM stack health overview
+
 ## Files Changed
 
-- `docker-compose.test.yml` - New LGTM services
-- `docker/alloy/alloy-config.alloy` - Unified collector config
-- `docker/tempo/tempo-config.yaml` - Trace storage config
-- `docker/mimir/mimir-config.yaml` - Metrics storage config
-- `docker/loki/loki-config.yaml` - Log storage config (updated)
+- `docker-compose.test.yml` - New LGTM services + JSON logging + OTEL attributes
+- `docker/alloy/alloy-config.alloy` - Unified collector config + authz-proxy scrape
+- `docker/tempo/tempo-config.yaml` - Trace storage config + JSON logging
+- `docker/mimir/mimir-config.yaml` - Metrics storage config + JSON logging
+- `docker/loki/loki-config.yaml` - Log storage config + JSON logging + retention
+- `docker/uvicorn-log-config.yaml` - New uvicorn JSON logging config
 - `monitoring/grafana/datasources.yml` - Grafana data source config
+- `monitoring/grafana/dashboards/Operations/alert-runbook-matrix.json` - New dashboard
+- `monitoring/prometheus/rules/lgtm-alerts.yaml` - AuthzProxyDown alert + runbook URLs
+- `monitoring/runbooks/authentication-alerts.md` - AuthzProxyDown section
+- `monitoring/runbooks/langgraph-agent-health.md` - MCPServerDown section
+- `monitoring/runbooks/resilience-alerts.md` - 8 new resilience pattern sections
+- `tests/unit/scripts/test_alert_consolidation.py` - Runbook anchor validation test
 - `.claude/CLAUDE.md` - Updated observability reference
 - `.claude/memory/distroless-container-healthchecks.md` - New lessons learned
