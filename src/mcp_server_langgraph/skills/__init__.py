@@ -53,6 +53,12 @@ from mcp_server_langgraph.skills.auto_update import (
 )
 from mcp_server_langgraph.skills.models import SandboxConfig, SecretVolume, Skill
 from mcp_server_langgraph.skills.registry import SkillRegistry
+from mcp_server_langgraph.skills.search import SkillSearchResult, SkillSearchTool
+from mcp_server_langgraph.skills.adapters import (
+    EmbeddingServiceAdapter,
+    VectorProviderAdapter,
+    create_skill_search_tool,
+)
 
 __all__ = [
     # Models
@@ -90,4 +96,11 @@ __all__ = [
     "SkillVersion",
     "SkillUpdate",
     "compare_versions",
+    # Search
+    "SkillSearchTool",
+    "SkillSearchResult",
+    # Adapters
+    "VectorProviderAdapter",
+    "EmbeddingServiceAdapter",
+    "create_skill_search_tool",
 ]
