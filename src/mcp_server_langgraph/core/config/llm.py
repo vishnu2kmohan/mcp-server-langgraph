@@ -87,11 +87,11 @@ class LLMSettings(DomainSettings):
     verification_model_max_tokens: int = 1000
 
     # Fallback Models (for resilience)
+    # Uses Vertex AI models to avoid requiring separate Anthropic/OpenAI API keys
     enable_fallback: bool = True
     fallback_models: list[str] = [
-        "claude-haiku-4-5-20251001",
-        "claude-sonnet-4-5-20250929",
-        "gpt-5.1",
+        "vertex_ai/gemini-2.5-flash",
+        "vertex_ai/claude-sonnet-4-5@20250929",
     ]
 
     # Embedding Configuration

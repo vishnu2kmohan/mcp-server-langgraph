@@ -209,13 +209,12 @@ class Settings(BaseSettings):
     verification_model_max_tokens: int = 1000  # Smaller output for verification feedback
 
     # Fallback Models (for resilience)
-    # Using latest production Claude 4.5 models as of October 2025
-    # Verified against https://docs.claude.com/en/docs/about-claude/models
+    # Uses Vertex AI models to avoid requiring separate Anthropic/OpenAI API keys
+    # Provides cross-model resilience within Vertex AI (Gemini + Claude)
     enable_fallback: bool = True
     fallback_models: list[str] = [
-        "claude-haiku-4-5-20251001",  # Claude Haiku 4.5 (fast, cost-effective)
-        "claude-sonnet-4-5-20250929",  # Claude Sonnet 4.5 (balanced performance)
-        "gpt-5.1",  # OpenAI GPT-5.1 (cross-provider resilience)
+        "vertex_ai/gemini-2.5-flash",  # Gemini 2.5 Flash (fast, cost-effective)
+        "vertex_ai/claude-sonnet-4-5@20250929",  # Claude Sonnet 4.5 via Vertex AI
     ]
 
     # Agent

@@ -36,6 +36,11 @@ from mcp_server_langgraph.monitoring.litellm_cost_callback import CostTrackingCa
 # Uses LiteLLM's response_cost as authoritative source (no manual pricing table needed)
 # Reference: Plan Phase 1 - LiteLLM Cost Integration via Custom Callback
 litellm.callbacks = [CostTrackingCallback()]
+
+# Enable drop_params to gracefully handle model-specific parameter constraints
+# Example: GPT-5 models only support temperature=1, this prevents UnsupportedParamsError
+# Reference: https://docs.litellm.ai/docs/completion/drop_params
+litellm.drop_params = True
 from mcp_server_langgraph.core.exceptions import (
     LLMModelNotFoundError,
     LLMOverloadError,
