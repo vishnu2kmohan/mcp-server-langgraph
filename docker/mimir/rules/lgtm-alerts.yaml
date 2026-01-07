@@ -345,6 +345,18 @@ groups:
           description: "Traefik API Gateway has been down for more than 2 minutes."
           runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/infrastructure-alerts.md"
 
+      # Authz Proxy down
+      - alert: AuthzProxyDown
+        expr: up{job=~".*authz.*proxy.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: authz-proxy
+        annotations:
+          summary: "Authorization Proxy is down"
+          description: "Authz Proxy (OpenFGA authorization middleware) has been down for more than 2 minutes."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/authentication-alerts.md#authzproxydown"
+
   # ===========================================================================
   # Traefik Gateway Alerts
   # ===========================================================================
