@@ -199,6 +199,85 @@ def validate_timepicker(dashboard: dict[str, Any]) -> list[str]:
     return warnings
 
 
+# Valid datasource UIDs configured in monitoring/grafana/datasources.yml
+# Using hardcoded UIDs (not ${datasource} variables) must match these values
+VALID_DATASOURCE_UIDS = {
+    "mimir",  # Prometheus-compatible metrics (replaces "prometheus")
+    "tempo",  # Tracing
+    "loki",  # Logging
+    "-- Grafana --",  # Built-in Grafana datasource for annotations
+}
+
+# Deprecated datasource UIDs that should be migrated
+DEPRECATED_DATASOURCE_UIDS = {
+    "prometheus": "mimir",  # Prometheus was replaced by Mimir
+}
+
+
+def validate_datasource_uids(dashboard: dict[str, Any]) -> list[str]:
+    """Check for deprecated or invalid hardcoded datasource UIDs.
+
+    Validates that dashboards use correct datasource UIDs.
+    Variable-based datasources (${datasource}) are allowed as they
+    are resolved at runtime from the templating section.
+
+    Returns a list of errors for invalid datasources.
+    """
+    errors = []
+    deprecated_count: dict[str, int] = {}
+
+    def check_datasource(ds: dict[str, Any], path: str) -> None:
+        """Check a single datasource reference."""
+        uid = ds.get("uid", "")
+
+        # Skip variable-based datasources (resolved at runtime)
+        if isinstance(uid, str) and uid.startswith("${"):
+            return
+
+        # Check for deprecated UIDs
+        if uid in DEPRECATED_DATASOURCE_UIDS:
+            replacement = DEPRECATED_DATASOURCE_UIDS[uid]
+            deprecated_count[uid] = deprecated_count.get(uid, 0) + 1
+            # Only report first occurrence to avoid spam
+            if deprecated_count[uid] == 1:
+                errors.append(
+                    f"Deprecated datasource UID '{uid}' at {path}. Use '{replacement}' instead (from datasources.yml)"
+                )
+
+    def scan_for_datasources(obj: Any, path: str = "") -> None:
+        """Recursively scan for datasource references."""
+        if isinstance(obj, dict):
+            # Check if this is a datasource reference
+            if "uid" in obj and "type" in obj:
+                check_datasource(obj, path)
+
+            # Check nested 'datasource' key
+            if "datasource" in obj and isinstance(obj["datasource"], dict):
+                check_datasource(obj["datasource"], f"{path}/datasource")
+
+            # Recurse into all values
+            for key, value in obj.items():
+                scan_for_datasources(value, f"{path}/{key}" if path else key)
+
+        elif isinstance(obj, list):
+            for i, item in enumerate(obj):
+                scan_for_datasources(item, f"{path}[{i}]")
+
+    # Scan the entire dashboard
+    scan_for_datasources(dashboard)
+
+    # Add summary if multiple deprecated UIDs found
+    for uid, count in deprecated_count.items():
+        if count > 1:
+            replacement = DEPRECATED_DATASOURCE_UIDS[uid]
+            errors.append(
+                f"  -> Found {count} occurrences of deprecated '{uid}'. "
+                f'Run: sed -i \'s/"uid": "{uid}"/"uid": "{replacement}"/g\' <file>'
+            )
+
+    return errors
+
+
 def validate_dashboard(filepath: Path) -> ValidationResult:
     """Validate a single dashboard file."""
     result: ValidationResult = {
@@ -223,6 +302,7 @@ def validate_dashboard(filepath: Path) -> ValidationResult:
     # Run validations
     result["errors"].extend(validate_required_fields(dashboard))
     result["errors"].extend(validate_grid_compliance(dashboard))
+    result["errors"].extend(validate_datasource_uids(dashboard))  # Datasource UID consistency
     result["warnings"].extend(validate_graph_tooltip(dashboard))
     result["warnings"].extend(validate_description(dashboard))
     result["warnings"].extend(validate_links(dashboard))

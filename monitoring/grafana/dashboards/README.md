@@ -2,9 +2,9 @@
 
 This directory contains pre-built Grafana dashboards for monitoring the MCP Server with LangGraph.
 
-## Folder Structure (v2.3.0)
+## Folder Structure (v2.4.0)
 
-Dashboards are organized into 8 logical folders (36 dashboards total):
+Dashboards are organized into 9 logical folders (37 dashboards total):
 
 ```
 dashboards/
@@ -38,6 +38,8 @@ dashboards/
 │   ├── audit-compliance.json
 │   ├── sla-monitoring.json
 │   └── soc2-compliance.json
+├── HEART/                 # User Experience metrics (1 dashboard)
+│   └── heart-metrics.json
 ├── Infrastructure/        # Infrastructure metrics (5 dashboards)
 │   ├── lgtm-stack.json
 │   ├── postgresql.json
@@ -385,6 +387,25 @@ The folder structure is provisioned via `foldersFromFilesStructure: true` in `da
 - Capacity planning
 - Replication health tracking
 - Connection pool tuning
+
+### 16. `heart-metrics.json` - HEART Framework Dashboard (NEW in v2.4.0)
+
+**Google HEART framework user experience metrics:**
+
+- **Happiness Score** - User satisfaction gauge (NPS, feedback sentiment)
+- **Engagement Rate** - User activity levels (DAU/MAU ratio, session duration)
+- **Adoption Rate** - New user success (onboarding completion, feature discovery)
+- **Retention Rate** - Return visits (D1/D7/D30 retention)
+- **Task Success Rate** - Goal completion (completion rate, error rate)
+- **All Dimensions Over Time** - Time series of all HEART metrics
+- **Dimension Detail Panels** - Individual trend graphs with thresholds
+
+**Use Cases:**
+- User experience monitoring
+- Product health tracking
+- Feature adoption analysis
+- Retention optimization
+- Goal completion tracking
 
 ## Installation
 
