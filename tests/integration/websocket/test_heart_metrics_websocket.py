@@ -389,7 +389,7 @@ class TestHeartMetricsUnsubscribe:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_unsubscribe_dimension(self, test_client: TestClient) -> None:
+    def test_unsubscribe_dimension_removes_subscription(self, test_client: TestClient) -> None:
         """Test unsubscribing from a dimension."""
         with test_client.websocket_connect("/api/v1/ws/heart-metrics?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial snapshot

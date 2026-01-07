@@ -95,7 +95,7 @@ class TestWebSocketMetricsRecording:
         metrics.record_message_sent(message_type="pong")
         assert metrics.messages_sent == 1
 
-    def test_record_error(self) -> None:
+    def test_record_error_increments_counter(self) -> None:
         """
         GIVEN a WebSocketMetrics instance
         WHEN record_error() is called
@@ -155,7 +155,7 @@ class TestWebSocketMetricsLatency:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_record_latency(self) -> None:
+    def test_record_latency_stores_histogram_value(self) -> None:
         """
         GIVEN a WebSocketMetrics instance
         WHEN record_latency() is called with a latency value

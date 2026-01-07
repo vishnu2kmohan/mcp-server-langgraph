@@ -241,7 +241,7 @@ class TestAlertGroupingScalability:
         """Force GC to prevent memory accumulation."""
         gc.collect()
 
-    def test_linear_scalability(self) -> None:
+    def test_linear_scalability_with_increasing_alerts(self) -> None:
         """Test that grouping scales approximately linearly with alert count.
 
         Uses absolute time thresholds instead of ratios to avoid flakiness

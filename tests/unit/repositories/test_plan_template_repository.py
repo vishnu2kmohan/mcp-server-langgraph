@@ -55,7 +55,7 @@ class TestInMemoryPlanTemplateRepository:
         self,
         template_id: str = "tmpl-123",
         name: str = "Code Review Template",
-    ) -> "PlanTemplate":
+    ) -> PlanTemplate:
         """Create a sample template for testing."""
         from mcp_server_langgraph.core.models.plan_template import PlanTemplate
 
