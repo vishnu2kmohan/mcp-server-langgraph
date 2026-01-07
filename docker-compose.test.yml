@@ -224,6 +224,10 @@ services:
     image: prometheuscommunity/postgres-exporter:v0.16.0
     # RESILIENCE: Auto-restart on failure for observability infrastructure
     restart: unless-stopped
+    # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+    # Reference: https://github.com/prometheus-community/postgres_exporter
+    command:
+      - "--log.format=json"
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -956,6 +960,9 @@ services:
     environment:
       - QDRANT_ALLOW_RECOVERY_MODE=true
       - QDRANT__LOG_LEVEL=WARN  # Reduced logging
+      # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+      # Reference: https://qdrant.tech/documentation/guides/configuration/
+      - QDRANT__LOGGER__FORMAT=json
       - TESTING=true
     healthcheck:
       # HTTP healthcheck using bash TCP socket pattern (no wget/curl in Qdrant image)
@@ -1558,6 +1565,10 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+      # Reference: https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#log
+      - GF_LOG_MODE=console
+      - GF_LOG_CONSOLE_FORMAT=json
       # Allow OAuth users to be auto-provisioned (required for SSO)
       - GF_USERS_ALLOW_SIGN_UP=true
       # Subpath configuration for gateway routing
