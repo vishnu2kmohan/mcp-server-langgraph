@@ -1,8 +1,8 @@
 # Code Patterns Context
 
-**Last Updated**: 2025-10-20
+**Last Updated**: 2026-01-06
 **Purpose**: Common code patterns and conventions in mcp-server-langgraph
-**Codebase Size**: ~100 source files, 25 ADRs, 77 doc pages
+**Codebase Size**: ~100 source files, 81 ADRs, 77 doc pages
 
 ---
 
@@ -610,6 +610,104 @@ async def get_user(user_id: str) -> APIResponse[UserData]:
 
 ---
 
+## 🌐 Frontend Patterns (TypeScript/React)
+
+### Pattern 11: Type-Safe WebSocket Message Handlers
+
+**Location**: `src/mcp_server_langgraph/studio/frontend/src/hooks/useAlertWebSocket.ts`
+
+WebSocket message handlers receive `unknown` data that must be validated at runtime. Use **type guard functions** instead of type assertions for runtime safety.
+
+**✅ Best Practice - Type Guard Functions:**
+```typescript
+// Define message type
+interface AlertMessage {
+  type: "alert";
+  payload: {
+    alertId: string;
+    name: string;
+    severity: "critical" | "warning" | "info";
+    state: "active" | "resolved";
+    startedAt: string;
+  };
+}
+
+// Type guard function with runtime validation
+function isAlertMessage(data: unknown): data is AlertMessage {
+  if (typeof data !== "object" || data === null) return false;
+  const msg = data as Record<string, unknown>;
+
+  if (msg.type !== "alert") return false;
+  if (typeof msg.payload !== "object" || msg.payload === null) return false;
+
+  const payload = msg.payload as Record<string, unknown>;
+  return (
+    typeof payload.alertId === "string" &&
+    typeof payload.name === "string" &&
+    typeof payload.severity === "string" &&
+    typeof payload.state === "string"
+  );
+}
+
+// Usage in WebSocket hook
+const handleMessage = useCallback((data: unknown) => {
+  if (isAlertMessage(data)) {
+    // TypeScript now knows data is AlertMessage
+    dispatch(addAlert(data.payload));
+  } else if (isAlertBatchMessage(data)) {
+    // Handle batch message
+    dispatch(setAlerts(data.payload.alerts));
+  } else {
+    console.warn("Unknown message type:", data);
+  }
+}, [dispatch]);
+```
+
+**❌ Anti-Pattern - Unsafe Type Assertions:**
+```typescript
+// AVOID: No runtime validation
+const handleMessage = useCallback((data: unknown) => {
+  const message = data as AlertMessage;  // ❌ No runtime check!
+  dispatch(addAlert(message.payload));   // ❌ May crash if data is invalid
+}, [dispatch]);
+```
+
+**Key Benefits:**
+- **Runtime safety**: Type guard validates structure before use
+- **Type narrowing**: TypeScript infers correct type after `if` check
+- **Graceful degradation**: Invalid messages logged instead of crashing
+- **ADR-0091 alignment**: Apply `transformSnakeToCamel()` after validation
+
+**Hooks Using This Pattern (Gold Standard):**
+- `useAlertWebSocket.ts` - `isAlertMessage`, `isAlertBatchMessage`
+- `useBudgetAlertsWebSocket.ts` - `isBudgetAlertMessage`
+- `useNotificationWebSocket.ts` - `isNotificationMessage`
+
+**Hooks That Could Benefit:**
+- `useAISuggestionsWebSocket.ts`
+- `useConnectionHealthWebSocket.ts`
+- `useCostTrackingWebSocket.ts`
+- `useHeartMetricsWebSocket.ts`
+
+**With ADR-0091 Transform:**
+```typescript
+import { transformSnakeToCamel } from "../api/transforms";
+
+function isAlertMessage(data: unknown): data is AlertMessageRaw {
+  // ... validation for snake_case fields
+}
+
+const handleMessage = useCallback((data: unknown) => {
+  if (isAlertMessage(data)) {
+    // Transform snake_case to camelCase after validation
+    const alert = transformSnakeToCamel(data.payload);
+    dispatch(addAlert(alert));
+  }
+}, [dispatch]);
+```
+
+---
+
 ## 🎨 Coding Conventions
 
 ### Imports
@@ -731,4 +829,4 @@ else:
 ---
 
 **Auto-Update**: Review and update when new patterns emerge
-**Last Review**: 2025-10-20
+**Last Review**: 2026-01-06

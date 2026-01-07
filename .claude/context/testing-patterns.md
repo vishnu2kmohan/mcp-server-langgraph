@@ -1165,6 +1165,75 @@ describe("Component", () => {
 
 ---
 
+## 🔄 ADR-0091 API Response Transformation Pattern
+
+**Purpose**: Consistent testing of snake_case → camelCase transformations per ADR-0091.
+
+**Pattern**: Maintain **two mock data objects** in tests:
+1. `mockDataRaw` - Raw API response with `snake_case` keys (what MSW handlers return)
+2. `mockData` - Expected transformed data with `camelCase` keys (what components receive)
+
+**Example** (from `ConnectionTemplateSelector.test.tsx`):
+```typescript
+// Mock data - raw API response format (snake_case per ADR-0091)
+const mockTemplatesRaw = [
+  {
+    id: "github",
+    name: "GitHub",
+    description: "Access GitHub repositories",
+    icon: "github",
+    auth_type: "oauth2",        // snake_case from backend
+    default_url: "https://api.github.com/mcp",
+    category: "development",
+  },
+];
+
+// Expected transformed data (camelCase for frontend)
+const mockTemplates = [
+  {
+    id: "github",
+    name: "GitHub",
+    description: "Access GitHub repositories",
+    icon: "github",
+    authType: "oauth2",         // camelCase for frontend
+    defaultUrl: "https://api.github.com/mcp",
+    category: "development",
+  },
+];
+
+// MSW handler returns raw snake_case
+server.use(
+  http.get("/api/v1/connection-templates", () => {
+    return HttpResponse.json({ templates: mockTemplatesRaw });
+  }),
+);
+
+// Test assertions use camelCase expected data
+it("should call onSelect with transformed template", async () => {
+  const onSelect = vi.fn();
+  render(<ConnectionTemplateSelector onSelect={onSelect} />);
+
+  await waitFor(() => screen.getByText("GitHub"));
+  fireEvent.click(screen.getByText("GitHub"));
+
+  expect(onSelect).toHaveBeenCalledWith(
+    expect.objectContaining(mockTemplates[0]),
+  );
+});
+```
+
+**Key Points**:
+1. **MSW handlers return `snake_case`** - Simulates real API responses
+2. **Component transforms via `transformSnakeToCamel()`** - Centralized in `api/transforms.ts`
+3. **Assertions verify `camelCase`** - Confirms transformation works correctly
+4. **Use `expect.objectContaining()`** - Handles optional fields from transform
+
+**Related Files**:
+- Transform utility: `src/studio/frontend/src/api/transforms.ts`
+- ADR: `adr/adr-0091-api-response-transformation-strategy.md`
+
+---
+
 ## 📝 Test Markers
 
 **Available Markers** (defined in `pyproject.toml`):

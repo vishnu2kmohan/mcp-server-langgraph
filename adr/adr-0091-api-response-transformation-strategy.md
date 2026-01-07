@@ -1,8 +1,8 @@
 # ADR-0091: API Response Transformation Strategy
 
-| Status | Implemented (Phase 5, 6, 8 & 9 Complete) |
+| Status | Implemented (Phase 5, 6, 6.1, 7, 8, 9, 10 Complete + Bridge Functions Removed) |
 |--------|----------|
-| Date | 2026-01-05 |
+| Date | 2026-01-06 |
 | Authors | Claude Opus 4.5 |
 | Deciders | Engineering Team |
 | Consulted | Frontend Architecture |
@@ -116,6 +116,21 @@ Phase 5 added `transformResponse` to RTK Query endpoints and `transformCamelToSn
 Phase 6 migrated all 16 component directories from snake_case property access to camelCase,
 leveraging the RTK Query transformations established in Phase 5.
 
+### Phase 6.1: Transform Consolidation & Type Safety (2026-01-06)
+
+**Transform Consolidation:**
+- `ConnectionTemplateSelector` now uses centralized `transformSnakeToCamel()` instead of manual `transformTemplate()` function
+- `ConnectionTemplate` type now derived via `SnakeToCamelCaseDeep<ConnectionTemplateRaw>` for automatic type safety
+
+**WebSocket Endpoint Type Safety:**
+- Added `WS_ENDPOINTS.LLM_STREAMING` and `WS_ENDPOINTS.METRICS_SESSION` to `utils/websocket.ts`
+- `useLLMStreamingWebSocket` and `useMetricsSessionWebSocket` now use typed endpoint constants
+- Removed `as never` type assertions that were workarounds for missing endpoint types
+
+**Test Data Pattern Documentation:**
+- Added "ADR-0091 API Response Transformation Pattern" section to `.claude/context/testing-patterns.md`
+- Documents dual mock data pattern: `mockDataRaw` (snake_case) + `mockData` (camelCase expected)
+
 ### Components Migrated (50+ files)
 
 | Directory | Key Files Updated |
@@ -183,23 +198,159 @@ leveraging the RTK Query transformations established in Phase 5.
 
 ---
 
-## Phase 7: Future Enhancements (Low Priority)
+## Phase 7: WebSocket HITL Transformation (Complete)
 
-### Admin HITL Types
+### Overview
 
-The Admin HITL types (`ApproveAgentRequestParams`, `RejectAgentRequestParams`, etc.) currently
-use snake_case to match the backend API contract. Migration assessed as **LOW PRIORITY** because:
+WebSocket payloads for Human-in-the-Loop (HITL) flows (approval requests, clarification requests)
+are now transformed from snake_case to camelCase at the WebSocket handler boundary, consistent
+with the RTK Query pattern established in Phase 5.
 
-1. Types are tightly coupled to backend WebSocket payloads
-2. Changes would require coordinated backend/frontend updates
-3. Current implementation is internally consistent
-4. ESLint override for `layout/*.tsx` appropriately scopes exceptions
+### Implementation Pattern
 
-If migration is desired in the future:
-1. Add CamelCase type aliases (e.g., `ApproveAgentRequestParamsCamelCase`)
-2. Apply transforms in `useAgentRequestWebSocket` hook
-3. Update `StudioShellLayout` callback types
-4. Remove `layout/*.tsx` ESLint override
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     WebSocket Backend                                        │
+│                  (snake_case payloads)                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│               useAgentRequestWebSocket Hook                                  │
+│                                                                              │
+│   handleMessage(data) {                                                      │
+│     const message = parseAgentRequestMessage(data);  // snake_case parsing   │
+│     switch (message.type) {                                                  │
+│       case "approval_required":                                              │
+│         const camelPayload = transformSnakeToCamel(message.payload);         │
+│         setPendingApprovals(prev => [...prev, camelPayload]);                │
+│         callbacks.onApprovalRequired?.(camelPayload);                        │
+│         break;                                                               │
+│     }                                                                        │
+│   }                                                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                   useHITLDialogs Hook                                        │
+│               (camelCase state & callbacks)                                  │
+│                                                                              │
+│   - pendingApprovals: ApprovalRequiredPayloadCamelCase[]                     │
+│   - activeApproval?.requestId (not request_id)                               │
+│   - handleApprove(requestId: string, reason?: string)                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│           Dialog Components (camelCase - Phase 10 Complete)                  │
+│                                                                              │
+│   - AgentApprovalDialog: request.requestId, request.agentName                │
+│   - ClarificationDialog: request.clarificationType                           │
+│   - BatchApprovalPanel: request.requestId, request.proposedAction            │
+│                                                                              │
+│   Direct camelCase pass-through - no bridge functions needed.                │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Types Added to `types/hitl.ts`
+
+| Type | Purpose | Status |
+|------|---------|--------|
+| `ApprovalRequiredPayloadCamelCase` | WebSocket approval payload after transformation | ✅ Active |
+| `ClarificationRequiredPayloadCamelCase` | WebSocket clarification payload after transformation | ✅ Active |
+| `AgentApprovalRequestCamelCase` | Dialog prop type (Phase 10) | ✅ Active |
+| `AgentClarificationRequestCamelCase` | Dialog prop type (Phase 10) | ✅ Active |
+| `convertApprovalPayloadCamelCaseToRequest()` | ~~Bridge function~~ | ❌ Removed (2026-01-06) |
+| `convertClarificationPayloadCamelCaseToRequest()` | ~~Bridge function~~ | ❌ Removed (2026-01-06) |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `hooks/useAgentRequestWebSocket.ts` | Transform payloads before storing/calling callbacks |
+| `hooks/useHITLDialogs.ts` | Use camelCase types for state and callbacks |
+| `layout/StudioShellLayout.tsx` | Use camelCase converters for dialog props |
+| `types/hitl.ts` | Add camelCase payload types and bridge functions |
+
+### Test Updates
+
+Tests updated to expect camelCase payloads in callbacks and state:
+
+```typescript
+// Callback receives camelCase (transformed at WebSocket boundary)
+expect(onApprovalRequired).toHaveBeenCalledWith({
+  requestId: "req-001",      // not request_id
+  sessionId: "session-001",  // not session_id
+  agentName: "Test Agent",   // not agent_name
+  // ...
+});
+
+// State uses camelCase
+expect(result.current.pendingApprovals[0].requestId).toBe("req-001");
+```
+
+---
+
+## Phase 10: Dialog Component Migration (Complete)
+
+### Summary
+
+Phase 10 migrated all HITL dialog components from snake_case to camelCase types,
+completing the frontend type standardization effort.
+
+### Components Migrated
+
+| Component | Previous Type | Updated Type | Status |
+|-----------|--------------|--------------|--------|
+| `AgentApprovalDialog` | `AgentApprovalRequest` | `AgentApprovalRequestCamelCase` | ✅ Complete |
+| `ClarificationDialog` | `AgentClarificationRequest` | `AgentClarificationRequestCamelCase` | ✅ Complete |
+| `BatchApprovalPanel` | `AgentApprovalRequest[]` | `AgentApprovalRequestCamelCase[]` | ✅ Complete |
+| `AgentApprovalAuditLog` | `AuditEntry` (snake_case) | `AuditEntry` (camelCase) | ✅ Complete |
+
+### Changes Made
+
+**Type Imports Updated:**
+- Dialog components now import `AgentApprovalRequestCamelCase`, `AgentClarificationRequestCamelCase`
+- Response types use `ClarificationUIResponseCamelCase` instead of snake_case versions
+
+**Property Access Updated:**
+- `request.request_id` → `request.requestId`
+- `request.agent_name` → `request.agentName`
+- `request.proposed_action` → `request.proposedAction`
+- `request.trigger_reason` → `request.triggerReason`
+- `request.requested_at` → `request.requestedAt`
+- `request.ai_explanation` → `request.aiExplanation`
+- AI explanation nested fields also converted to camelCase
+
+**Callback Data Structures:**
+- `onApprove({ requestId, approvedBy, reason })` - now camelCase
+- `onReject({ requestId, rejectedBy, reason })` - now camelCase
+- `onRespond({ requestId, value, selectedOptionId, respondedBy })` - now camelCase
+
+**StudioShellLayout Simplified:**
+- Removed bridge conversion at dialog invocation sites
+- Direct pass-through of camelCase payloads to dialogs
+- Uses `convertUIResponseCamelCaseToAPIResponse()` for API submission
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `components/Admin/AgentApprovalDialog.tsx` | Props type, all property access, callback signatures |
+| `components/Admin/AgentApprovalDialog.test.tsx` | Mock data, assertions updated to camelCase |
+| `components/Admin/ClarificationDialog.tsx` | Props type, all property access, callback signatures |
+| `components/Admin/BatchApprovalPanel.tsx` | Array item type, property access |
+| `components/Admin/AgentApprovalAuditLog.tsx` | Audit entry type, property access |
+| `components/Admin/index.ts` | Type re-exports updated |
+| `layout/StudioShellLayout.tsx` | Removed bridge functions, direct camelCase pass-through |
+| `types/hitl.ts` | Added deprecation notes for snake_case bridge functions |
+
+### Migration Benefits Achieved
+
+- ✅ Eliminates bridge conversion functions at callsites
+- ✅ Removes runtime conversion overhead
+- ✅ Aligns with ADR-0091 consistency goals (camelCase everywhere in frontend)
+- ✅ Simplified data flow in StudioShellLayout
 
 ### Implementation Pattern
 
@@ -351,11 +502,100 @@ if disclosure_result.current_level == "beginner":
 ### Validation Results
 
 ```
-================== 243 passed, 2 xfailed in 154.50s ==================
+================== 245 passed in 151.03s ==================
 ```
 
-- **243 tests pass** across all AI UX test files
-- **2 xfailed** (TDD placeholders for future error_analysis session storage feature)
+- **245 tests pass** across all AI UX test files (2 formerly xfailed tests now implemented)
+
+---
+
+## Deprecated Models Migration Guide
+
+### Overview
+
+As part of the Phase 9 schema alignment, several legacy models were marked as deprecated. These models
+will emit `DeprecationWarning` when instantiated and will be removed in **v4.0 (scheduled: 2025-06-01)**.
+
+### Deprecated Models and Replacements
+
+| Deprecated Model | Replacement | Migration Notes |
+|------------------|-------------|-----------------|
+| `ErrorInfo` | `ErrorAnalyzeRequest` | Flatten `message`/`name` → `error_message`/`error_code` |
+| `UserContext` | `ErrorAnalyzeRequest.context` | Use dict in `context` field instead of model |
+| `ErrorClassification` | `ErrorAnalyzeResponse.error_type` | Use `error_type` string instead of nested model |
+| `RecoverySuggestion` | `RecoveryStep` | Use `RecoveryStep` with `action_type` enum |
+| `SimilarIssue` | N/A | Not used in aligned schema - remove usage |
+| `LegacyMetricInsight` | `MetricInsight` | Use `MetricInsight` with typed enums |
+| `MetricPrediction` | N/A | Not used in aligned schema - remove usage |
+
+### Migration Examples
+
+**Error Analysis Migration:**
+
+```python
+# DEPRECATED (will emit DeprecationWarning)
+from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo, UserContext
+error = ErrorInfo(name="TimeoutError", message="Request timed out")
+context = UserContext(persona="bob", session_id="session-123")
+
+# RECOMMENDED (Phase 9 aligned)
+from mcp_server_langgraph.api.v1.ai_ux import ErrorAnalyzeRequest
+request = ErrorAnalyzeRequest(
+    error_code="TimeoutError",
+    error_message="Request timed out",
+    context={"persona": "bob", "session_id": "session-123"},
+)
+```
+
+**Metric Insights Migration:**
+
+```python
+# DEPRECATED (will emit DeprecationWarning)
+from mcp_server_langgraph.api.v1.ai_ux import LegacyMetricInsight
+insight = LegacyMetricInsight(
+    type="anomaly",
+    dimension="engagement",
+    message="Spike detected",
+    severity="warning",
+)
+
+# RECOMMENDED (Phase 9 aligned)
+from mcp_server_langgraph.api.v1.ai_ux import (
+    MetricInsight,
+    MetricsInsightCategory,
+    MetricsInsightTrend,
+    MetricsInsightPriority,
+)
+insight = MetricInsight(
+    category=MetricsInsightCategory.ENGAGEMENT,
+    title="Session Duration Increase",
+    description="Spike detected in engagement metrics",
+    trend=MetricsInsightTrend.IMPROVING,
+    priority=MetricsInsightPriority.MEDIUM,
+)
+```
+
+### Handling Deprecation Warnings
+
+To detect deprecated model usage in tests:
+
+```python
+import warnings
+with warnings.catch_warnings(record=True) as w:
+    warnings.simplefilter("always")
+    from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
+    _ = ErrorInfo(name="Test", message="test")
+    assert len(w) == 1
+    assert "deprecated" in str(w[0].message).lower()
+```
+
+### Timeline
+
+| Milestone | Date | Action |
+|-----------|------|--------|
+| v3.0 (Current) | 2026-01-06 | Deprecation warnings added |
+| v3.5 | 2025-03-01 | Documentation-only deprecation notices |
+| v4.0 | 2025-06-01 | Deprecated models removed |
 
 ---
 

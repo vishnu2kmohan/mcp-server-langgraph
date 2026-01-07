@@ -37,11 +37,16 @@ EMBEDDING_TASK_TYPE=RETRIEVAL_DOCUMENT
 **File**: `src/mcp_server_langgraph/core/dynamic_context_loader.py`
 - New `_create_embeddings()` factory function supporting multiple providers
 - Updated to use LangChain `Embeddings` interface
-- Supports both `google` (Gemini API) and `local` (sentence-transformers) providers
+- Supports 5 embedding providers (see below)
 
 **File**: `src/mcp_server_langgraph/core/config.py`
 - Added `embedding_provider`, `embedding_model_name`, `embedding_dimensions`, `embedding_task_type` settings
 - Kept `embedding_model` for backwards compatibility (deprecated)
+
+**File**: `src/mcp_server_langgraph/skills/adapters.py` (NEW)
+- `VectorProviderAdapter`: Bridges VectorSearchProvider to VectorProviderProtocol
+- `EmbeddingServiceAdapter`: Bridges LangChain Embeddings to EmbeddingServiceProtocol
+- `create_skill_search_tool()`: Factory for creating SkillSearchTool with adapters
 
 ## Migration Steps
 
@@ -171,14 +176,191 @@ Ensure `EMBEDDING_DIMENSIONS` matches your model:
 
 Recreate Qdrant collection with correct dimensions.
 
+## Auto-Detection Feature
+
+The project includes automatic embedding provider detection based on available API keys. This simplifies configuration for most deployments.
+
+### Usage
+
+```python
+from mcp_server_langgraph.core.dynamic_context_loader import (
+    auto_detect_embedding_provider,
+    get_default_embedding_model,
+)
+
+# Auto-detect provider based on environment
+provider = auto_detect_embedding_provider()
+model = get_default_embedding_model(provider)
+
+print(f"Using {provider} with model {model}")
+```
+
+### Detection Priority
+
+The auto-detection checks for API keys in this order:
+
+| Priority | Environment Variable | Provider | Default Model |
+|----------|---------------------|----------|---------------|
+| 1 | `GOOGLE_API_KEY` | `google` | `models/text-embedding-004` |
+| 2 | `OPENAI_API_KEY` | `openai` | `text-embedding-3-small` |
+| 3 | `HF_TOKEN` or `HUGGINGFACE_TOKEN` | `huggingface` | `sentence-transformers/all-MiniLM-L6-v2` |
+| 4 | (none required) | `local` | `all-MiniLM-L6-v2` |
+
+### Zero-Configuration Example
+
+```bash
+# Just set your API key - provider auto-detected
+export GOOGLE_API_KEY="your-key"
+
+# Start using embeddings - no EMBEDDING_PROVIDER needed
+python -c "
+from mcp_server_langgraph.core.dynamic_context_loader import auto_detect_embedding_provider
+print(f'Provider: {auto_detect_embedding_provider()}')  # Output: google
+"
+```
+
+## Supported Embedding Providers
+
+The project supports 5 embedding providers. Choose based on your deployment needs:
+
+> **Note**: The project defaults to `google_vertex` (Vertex AI) which uses GCP Workload Identity Federation
+> and requires no API key when running on GKE. For local development without GCP, use `google` with an API key
+> or let auto-detection choose based on available environment variables.
+
+### 1. Google Gemini API (`google`) - **Recommended**
+
+Lightweight API-based embeddings using Google Gemini.
+
+```bash
+# Installation (already in core deps)
+pip install langchain-google-genai>=3.0.0
+
+# Configuration
+EMBEDDING_PROVIDER=google
+EMBEDDING_MODEL_NAME=models/text-embedding-004
+EMBEDDING_DIMENSIONS=768
+GOOGLE_API_KEY=your-key
+```
+
+**Pros**: No model hosting, high quality, task optimization, affordable
+**Cons**: Requires internet, API key required
+
+### 2. Google Vertex AI (`google_vertex`)
+
+Enterprise Google Cloud embeddings with Workload Identity Federation.
+
+```bash
+# Installation
+pip install 'mcp-server-langgraph[embeddings-vertex]'
+
+# Configuration
+EMBEDDING_PROVIDER=google_vertex
+EMBEDDING_MODEL_NAME=textembedding-gecko@latest
+# Uses GCP OAuth (no API key needed with WIF)
+```
+
+**Pros**: Enterprise support, GKE integration, no API key with WIF
+**Cons**: Requires GCP project setup
+
+### 3. OpenAI (`openai`)
+
+OpenAI's embedding API with latest models.
+
+```bash
+# Installation
+pip install 'mcp-server-langgraph[embeddings-openai]'
+
+# Configuration
+EMBEDDING_PROVIDER=openai
+EMBEDDING_MODEL_NAME=text-embedding-3-small  # or text-embedding-3-large
+EMBEDDING_DIMENSIONS=1536  # or 3072 for large
+OPENAI_API_KEY=your-key
+```
+
+**Pros**: High quality, well-documented, wide adoption
+**Cons**: Higher cost than Google
+
+### 4. HuggingFace (`huggingface`)
+
+HuggingFace Inference API for access to thousands of models.
+
+```bash
+# Installation
+pip install 'mcp-server-langgraph[embeddings-huggingface]'
+
+# Configuration
+EMBEDDING_PROVIDER=huggingface
+EMBEDDING_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
+EMBEDDING_DIMENSIONS=384
+HF_TOKEN=your-token  # Optional, for private models
+```
+
+**Pros**: Wide model selection, flexible, community models
+**Cons**: Variable quality depending on model
+
+### 5. Local Sentence Transformers (`local`)
+
+Self-hosted embeddings with full ML stack (~800MB overhead).
+
+```bash
+# Installation
+pip install 'mcp-server-langgraph[embeddings-local]'
+
+# Configuration
+EMBEDDING_PROVIDER=local
+EMBEDDING_MODEL_NAME=all-MiniLM-L6-v2
+EMBEDDING_DIMENSIONS=384
+```
+
+**Pros**: Air-gapped deployments, data residency, no API costs
+**Cons**: Large download, requires GPU for best performance
+
+## Skill Search Integration
+
+The `SkillSearchTool` provides semantic skill discovery using the configured embedding provider.
+
+### Setup
+
+```python
+from mcp_server_langgraph.skills import create_skill_search_tool
+
+# Create tool with configured adapters
+tool = create_skill_search_tool()
+if tool is not None:
+    # Index skills
+    from mcp_server_langgraph.skills import Skill
+    skill = Skill(
+        name="code-review",
+        description="Review code for quality and best practices",
+        tags=["code", "review"]
+    )
+    await tool.index_skill(skill, skill_id="skill-001")
+
+    # Search for skills
+    results = await tool.search("find code quality tools", limit=5)
+    for result in results:
+        print(f"{result.name}: {result.score:.2f}")
+```
+
+### Vector Provider Compatibility
+
+The `VectorProviderAdapter` works with all vector providers:
+
+| Provider | Collection Support | Metadata Filtering | Use Case |
+|----------|-------------------|-------------------|----------|
+| Qdrant | ✅ | ✅ | Production (recommended) |
+| PgVector | ✅ | ✅ | PostgreSQL-based deployments |
+| InMemory | ✅ | ✅ | Testing and development |
+
 ## Why Not Claude/Anthropic?
 
 **Anthropic does not provide dedicated embedding models**. Claude is a conversational LLM only. For embeddings, the recommended alternatives are:
 1. **Google Gemini** (recommended, already integrated)
 2. OpenAI (text-embedding-3-small, text-embedding-3-large)
-3. Amazon Bedrock (Titan, Cohere)
+3. HuggingFace (wide model selection)
+4. Local (air-gapped deployments)
 
-We chose Google Gemini because:
+We chose Google Gemini as default because:
 - Already using Google API in this project
 - High quality embeddings
 - Good pricing
