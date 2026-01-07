@@ -97,6 +97,7 @@ groups:
         annotations:
           summary: "LGTM Stack health degraded"
           description: "Less than 80% of LGTM stack components are healthy."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#lgtmstackdegraded"
 
   # ===========================================================================
   # Loki Alerts
@@ -115,6 +116,7 @@ groups:
         annotations:
           summary: "Loki high request latency"
           description: "Loki p99 request latency is above 5 seconds for route {{ $labels.route }}."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#lokihighrequestlatency"
 
       # Ingestion rate too high
       - alert: LokiHighIngestionRate
@@ -126,6 +128,7 @@ groups:
         annotations:
           summary: "Loki high ingestion rate"
           description: "Loki is receiving more than 10MB/s of logs."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#lokihighingestionrate"
 
       # Active streams too high
       - alert: LokiTooManyActiveStreams
@@ -139,6 +142,7 @@ groups:
         annotations:
           summary: "Loki has too many active streams"
           description: "Loki has more than 10,000 active log streams."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#lokitoomanyactivestreams"
 
   # ===========================================================================
   # Tempo Alerts
@@ -156,6 +160,7 @@ groups:
         annotations:
           summary: "Tempo high span ingestion rate"
           description: "Tempo is receiving more than 10,000 spans/second."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#tempohighspanrate"
 
       # Query latency too high
       - alert: TempoHighQueryLatency
@@ -168,6 +173,7 @@ groups:
         annotations:
           summary: "Tempo high query latency"
           description: "Tempo p95 query latency is above 10 seconds."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#tempohighquerylatency"
 
   # ===========================================================================
   # Mimir Alerts
@@ -185,6 +191,7 @@ groups:
         annotations:
           summary: "Mimir high active time series count"
           description: "Mimir has more than 500,000 active time series."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#mimirhighactiveseries"
 
       # Query latency too high
       - alert: MimirHighQueryLatency
@@ -197,6 +204,7 @@ groups:
         annotations:
           summary: "Mimir high query latency"
           description: "Mimir p99 query latency is above 30 seconds."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#mimirhighquerylatency"
 
       # Ingestion rate limit approaching
       - alert: MimirIngestionRateHigh
@@ -209,6 +217,7 @@ groups:
         annotations:
           summary: "Mimir ingestion rate approaching limit"
           description: "Mimir sample ingestion rate is above 80,000/s (limit is 100,000/s)."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#mimiringestionratehigh"
 
   # ===========================================================================
   # Alloy Alerts
@@ -229,6 +238,7 @@ groups:
         annotations:
           summary: "Alloy is refusing telemetry data"
           description: "Alloy OTLP receiver is refusing more than 100 data points/second."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#alloydatarefused"
 
       # Exporter failures
       - alert: AlloyExporterFailures
@@ -243,6 +253,7 @@ groups:
         annotations:
           summary: "Alloy failing to export telemetry"
           description: "Alloy is failing to export more than 10 data points/second to backends."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#alloyexporterfailures"
 
   # ===========================================================================
   # Application Service Alerts
@@ -352,6 +363,7 @@ groups:
         annotations:
           summary: "Traefik high error rate"
           description: "Traefik 5xx error rate is above 5%."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#traefikhigherrorrate"
 
       # High latency
       - alert: TraefikHighLatency
@@ -364,6 +376,7 @@ groups:
         annotations:
           summary: "Traefik high latency"
           description: "Traefik p95 request latency is above 2 seconds."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#traefikhighlatency"
 
       # Backend service down
       - alert: TraefikBackendDown
@@ -375,3 +388,4 @@ groups:
         annotations:
           summary: "Traefik backend service down"
           description: "Backend service {{ $labels.service }} is not reachable through Traefik."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/lgtm-alerts.md#traefikbackenddown"
