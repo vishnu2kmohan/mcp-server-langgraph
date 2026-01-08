@@ -95,9 +95,9 @@ function SortableHeader({
         <span>{label}</span>
         {isActive &&
           (currentSortOrder === "asc" ? (
-            <ArrowUp className="w-3 h-3 text-blue-500" />
+            <ArrowUp className="w-3 h-3 text-primary-500" />
           ) : (
-            <ArrowDown className="w-3 h-3 text-blue-500" />
+            <ArrowDown className="w-3 h-3 text-primary-500" />
           ))}
       </div>
     </th>
@@ -356,7 +356,7 @@ export function ProjectsPage() {
       <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <FolderKanban className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <FolderKanban className="w-6 h-6 text-primary-600 dark:text-primary-400" />
             <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
               Projects
             </h1>
@@ -387,8 +387,8 @@ export function ProjectsPage() {
                 onClick={() => setViewMode("grid")}
                 className={`p-2 transition-colors ${
                   viewMode === "grid"
-                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                 }`}
                 title="Grid view"
                 aria-label="Grid view"
@@ -400,8 +400,8 @@ export function ProjectsPage() {
                 onClick={() => setViewMode("table")}
                 className={`p-2 transition-colors ${
                   viewMode === "table"
-                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                 }`}
                 title="Table view"
                 aria-label="Table view"
@@ -413,7 +413,7 @@ export function ProjectsPage() {
             <button
               onClick={handleRefresh}
               disabled={isFetching}
-              className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg disabled:opacity-50"
+              className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg disabled:opacity-50"
               title="Refresh"
             >
               <RefreshCw
@@ -422,7 +422,7 @@ export function ProjectsPage() {
             </button>
             <button
               onClick={() => setShowCreateDialog(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
               <Plus className="w-4 h-4" />
               Create Project
@@ -445,7 +445,7 @@ export function ProjectsPage() {
         {projects.length === 0 ? (
           // Empty state
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <FolderKanban className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" />
+            <FolderKanban className="w-16 h-16 text-gray-300 dark:text-gray-600 dark:text-gray-300 mb-4" />
             <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
               No projects yet
             </h2>
@@ -456,7 +456,7 @@ export function ProjectsPage() {
             </p>
             <button
               onClick={() => setShowCreateDialog(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
               <Plus className="w-5 h-5" />
               Create Project
@@ -487,8 +487,8 @@ export function ProjectsPage() {
                       <span
                         className={`px-2 py-0.5 text-xs rounded-full ${
                           project.status === "active"
-                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                            : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                            ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                         }`}
                       >
                         {project.status}
@@ -527,7 +527,7 @@ export function ProjectsPage() {
                     <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
                       <button
                         onClick={() => handleOpenProject(project.id)}
-                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded"
                         aria-label="Open project"
                       >
                         <ExternalLink className="w-4 h-4" />
@@ -537,7 +537,7 @@ export function ProjectsPage() {
                         onClick={() =>
                           handleDeleteProject(project.id, project.name)
                         }
-                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
                         aria-label="Delete project"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -552,14 +552,14 @@ export function ProjectsPage() {
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                 {/* Bulk action bar */}
                 {selectedProjects.size > 0 && (
-                  <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 flex items-center justify-between">
-                    <span className="text-sm text-blue-700 dark:text-blue-300">
+                  <div className="px-4 py-2 bg-primary-50 dark:bg-primary-900/20 border-b border-primary-200 dark:border-primary-800 flex items-center justify-between">
+                    <span className="text-sm text-primary-700 dark:text-primary-300">
                       {selectedProjects.size} project
                       {selectedProjects.size > 1 ? "s" : ""} selected
                     </span>
                     <button
                       onClick={handleBulkDelete}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-error-600 text-white rounded hover:bg-error-700 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                       Delete Selected
@@ -578,7 +578,7 @@ export function ProjectsPage() {
                             selectedProjects.size === projects.length
                           }
                           onChange={handleSelectAll}
-                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                          className="w-4 h-4 text-primary-600 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
                           aria-label="Select all projects"
                         />
                       </th>
@@ -638,7 +638,7 @@ export function ProjectsPage() {
                         key={project.id}
                         className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${
                           selectedProjects.has(project.id)
-                            ? "bg-blue-50 dark:bg-blue-900/10"
+                            ? "bg-primary-50 dark:bg-primary-900/10"
                             : ""
                         }`}
                       >
@@ -648,7 +648,7 @@ export function ProjectsPage() {
                             type="checkbox"
                             checked={selectedProjects.has(project.id)}
                             onChange={() => handleSelectProject(project.id)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                            className="w-4 h-4 text-primary-600 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
                             aria-label={`Select ${project.name}`}
                           />
                         </td>
@@ -676,8 +676,8 @@ export function ProjectsPage() {
                           <span
                             className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
                               project.status === "active"
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                                ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400"
+                                : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                             }`}
                           >
                             {project.status}
@@ -710,7 +710,7 @@ export function ProjectsPage() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => handleOpenProject(project.id)}
-                              className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                              className="p-1.5 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded"
                               aria-label="Open project"
                               title="Open"
                             >
@@ -720,7 +720,7 @@ export function ProjectsPage() {
                               onClick={() =>
                                 handleDeleteProject(project.id, project.name)
                               }
-                              className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                              className="p-1.5 text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
                               aria-label="Delete project"
                               title="Delete"
                             >
@@ -764,7 +764,7 @@ export function ProjectsPage() {
               </h2>
               <button
                 onClick={() => setShowCreateDialog(false)}
-                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-200"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -784,7 +784,7 @@ export function ProjectsPage() {
                   id="projectName"
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="My Project"
                   autoFocus
                 />
@@ -800,7 +800,7 @@ export function ProjectsPage() {
                   id="projectDescription"
                   value={newProjectDescription}
                   onChange={(e) => setNewProjectDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                   placeholder="Describe your project..."
                   rows={3}
                 />
@@ -811,14 +811,14 @@ export function ProjectsPage() {
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => setShowCreateDialog(false)}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateProject}
                 disabled={!newProjectName.trim() || isCreating}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreating ? "Creating..." : "Create"}
               </button>

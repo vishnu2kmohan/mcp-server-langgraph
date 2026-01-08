@@ -66,12 +66,19 @@ function JSONTreeNode({
 
   const indentSize = depth * 20;
 
-  const keyColor = theme === "dark" ? "text-blue-400" : "text-blue-600";
-  const stringColor = theme === "dark" ? "text-green-400" : "text-green-600";
-  const numberColor = theme === "dark" ? "text-orange-400" : "text-orange-600";
-  const booleanColor = theme === "dark" ? "text-purple-400" : "text-purple-600";
-  const nullColor = theme === "dark" ? "text-gray-400" : "text-gray-500";
-  const bracketColor = theme === "dark" ? "text-gray-300" : "text-gray-700";
+  const keyColor = theme === "dark" ? "text-primary-400" : "text-primary-600";
+  const stringColor =
+    theme === "dark" ? "text-success-400" : "text-success-600";
+  const numberColor =
+    theme === "dark" ? "text-grafana-400" : "text-grafana-600";
+  const booleanColor =
+    theme === "dark" ? "text-insight-400" : "text-insight-600";
+  const nullColor =
+    theme === "dark"
+      ? "text-gray-400 dark:text-gray-400"
+      : "text-gray-500 dark:text-gray-400";
+  const bracketColor =
+    theme === "dark" ? "text-gray-300" : "text-gray-700 dark:text-gray-200";
 
   // Primitive values
   if (!isObject(value) && !isArray(value)) {
@@ -221,7 +228,7 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
   const themeClasses =
     theme === "dark"
       ? "bg-gray-900 text-gray-100 border-gray-700"
-      : "bg-gray-50 text-gray-900 border-gray-200";
+      : "bg-gray-50 text-gray-900 border-gray-200 dark:border-gray-700";
 
   return (
     <div
@@ -235,7 +242,7 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
         className={`flex items-center justify-between px-4 py-2 border-b ${
           theme === "dark"
             ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 bg-gray-100"
+            : "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800"
         }`}
       >
         <div className="flex items-center gap-3">
@@ -244,7 +251,7 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
             className={`text-xs font-mono px-2 py-1 rounded ${
               theme === "dark"
                 ? "bg-gray-700 text-gray-300"
-                : "bg-gray-200 text-gray-700"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
             }`}
           >
             JSON
@@ -256,14 +263,14 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
             className={`flex items-center gap-2 px-3 py-1 text-sm rounded transition-colors ${
               theme === "dark"
                 ? "hover:bg-gray-700 text-gray-300"
-                : "hover:bg-gray-200 text-gray-700"
+                : "hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
             }`}
             aria-label="Copy JSON"
           >
             {copied ? (
               <>
-                <Check className="w-4 h-4 text-green-500" />
-                <span className="text-green-500">Copied!</span>
+                <Check className="w-4 h-4 text-success-500" />
+                <span className="text-success-500">Copied!</span>
               </>
             ) : (
               <>
@@ -277,7 +284,7 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
             className={`p-1.5 rounded transition-colors ${
               theme === "dark"
                 ? "hover:bg-gray-700 text-gray-300"
-                : "hover:bg-gray-200 text-gray-700"
+                : "hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
             }`}
             aria-label="Download JSON"
           >

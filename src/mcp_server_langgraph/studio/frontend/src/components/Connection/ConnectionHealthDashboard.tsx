@@ -28,21 +28,25 @@ import type { ConnectionHealth } from "../../hooks/useConnectionHealthWebSocket"
 // Status colors for badges
 const statusColors: Record<string, string> = {
   connected:
-    "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  disconnected: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
-  connecting: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  error: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+    "bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-300",
+  disconnected:
+    "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+  connecting:
+    "bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-300",
+  error: "bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-300",
   auth_required:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+    "bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-300",
 };
 
 // Status icons
 const statusIcons: Record<string, React.ReactNode> = {
-  connected: <CheckCircle className="w-4 h-4 text-green-500" />,
-  disconnected: <XCircle className="w-4 h-4 text-gray-400" />,
-  connecting: <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />,
-  error: <AlertCircle className="w-4 h-4 text-red-500" />,
-  auth_required: <AlertCircle className="w-4 h-4 text-yellow-500" />,
+  connected: <CheckCircle className="w-4 h-4 text-success-500" />,
+  disconnected: (
+    <XCircle className="w-4 h-4 text-gray-400 dark:text-gray-400" />
+  ),
+  connecting: <Loader2 className="w-4 h-4 text-primary-500 animate-spin" />,
+  error: <AlertCircle className="w-4 h-4 text-error-500" />,
+  auth_required: <AlertCircle className="w-4 h-4 text-warning-500" />,
 };
 
 interface ConnectionHealthDashboardProps {
@@ -82,7 +86,7 @@ export function ConnectionHealthDashboard({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Activity className="w-5 h-5 text-blue-600" />
+          <Activity className="w-5 h-5 text-primary-600" />
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             Connection Health
           </h2>
@@ -96,15 +100,15 @@ export function ConnectionHealthDashboard({
           >
             {isConnected ? (
               <>
-                <Wifi className="w-4 h-4 text-green-500" />
-                <span className="text-green-600 dark:text-green-400">
+                <Wifi className="w-4 h-4 text-success-500" />
+                <span className="text-success-600 dark:text-success-400">
                   Connected
                 </span>
               </>
             ) : (
               <>
-                <WifiOff className="w-4 h-4 text-red-500" />
-                <span className="text-red-600 dark:text-red-400">
+                <WifiOff className="w-4 h-4 text-error-500" />
+                <span className="text-error-600 dark:text-error-400">
                   Disconnected
                 </span>
               </>
@@ -115,7 +119,7 @@ export function ConnectionHealthDashboard({
           {isConnected ? (
             <button
               onClick={refresh}
-              className="p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded-md"
+              className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 rounded-md"
               aria-label="Refresh"
             >
               <RefreshCw className="w-4 h-4" />
@@ -123,7 +127,7 @@ export function ConnectionHealthDashboard({
           ) : (
             <button
               onClick={reconnect}
-              className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-3 py-1 text-sm bg-primary-600 text-white rounded-md hover:bg-primary-700"
               aria-label="Reconnect"
             >
               Reconnect
@@ -134,8 +138,8 @@ export function ConnectionHealthDashboard({
 
       {/* Error Message */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <div className="mb-4 p-3 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-md">
+          <p className="text-sm text-error-600 dark:text-error-400">{error}</p>
         </div>
       )}
 
@@ -150,9 +154,9 @@ export function ConnectionHealthDashboard({
 
         <div
           data-testid="summary-connected"
-          className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center"
+          className="bg-success-50 dark:bg-success-900/20 rounded-lg p-3 text-center"
         >
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+          <div className="text-2xl font-bold text-success-600 dark:text-success-400">
             {summary.connected}
           </div>
           <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -174,9 +178,9 @@ export function ConnectionHealthDashboard({
 
         <div
           data-testid="summary-error"
-          className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 text-center"
+          className="bg-error-50 dark:bg-error-900/20 rounded-lg p-3 text-center"
         >
-          <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+          <div className="text-2xl font-bold text-error-600 dark:text-error-400">
             {summary.error}
           </div>
           <div className="text-sm text-gray-500 dark:text-gray-400">Error</div>
@@ -184,9 +188,9 @@ export function ConnectionHealthDashboard({
 
         <div
           data-testid="summary-auth-required"
-          className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center"
+          className="bg-warning-50 dark:bg-warning-900/20 rounded-lg p-3 text-center"
         >
-          <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+          <div className="text-2xl font-bold text-warning-600 dark:text-warning-400">
             {summary.authRequired}
           </div>
           <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -197,7 +201,7 @@ export function ConnectionHealthDashboard({
 
       {/* Last Heartbeat */}
       {isConnected && (
-        <div className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+        <div className="text-xs text-gray-400 dark:text-gray-400 mb-4">
           Last heartbeat: {lastHeartbeatText}
         </div>
       )}
@@ -205,7 +209,7 @@ export function ConnectionHealthDashboard({
       {/* Connection List */}
       {connections.length === 0 ? (
         <div className="text-center py-8">
-          <Server className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+          <Server className="w-12 h-12 text-gray-300 dark:text-gray-600 dark:text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 dark:text-gray-400">
             No connections configured
           </p>
@@ -271,7 +275,7 @@ function ConnectionHealthItem({
 
           {/* Error message */}
           {connection.lastError && (
-            <div className="text-xs text-red-500 dark:text-red-400 mt-0.5">
+            <div className="text-xs text-error-500 dark:text-error-400 mt-0.5">
               {connection.lastError}
             </div>
           )}
@@ -281,7 +285,7 @@ function ConnectionHealthItem({
       {/* Actions */}
       <button
         onClick={() => onCheckHealth(connection.id)}
-        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-md flex-shrink-0"
+        className="p-2 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/50 rounded-md flex-shrink-0"
         aria-label="Check health"
       >
         <Zap className="w-4 h-4" />

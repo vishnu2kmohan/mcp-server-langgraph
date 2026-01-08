@@ -25,8 +25,8 @@ export function AgentTraceToggleButton({
       onClick={onToggle}
       className={`p-1.5 rounded transition-colors ${
         isExpanded
-          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-          : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+          ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+          : "text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
       }`}
       aria-expanded={isExpanded}
       aria-label="Toggle agent execution trace"

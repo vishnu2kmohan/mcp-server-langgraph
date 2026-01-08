@@ -63,24 +63,26 @@ export interface FedRAMPPanelProps {
 function getStatusIcon(status: ControlStatus) {
   switch (status) {
     case "compliant":
-      return <CheckCircle size={14} className="text-green-500" />;
+      return <CheckCircle size={14} className="text-success-500" />;
     case "partial":
-      return <AlertCircle size={14} className="text-yellow-500" />;
+      return <AlertCircle size={14} className="text-warning-500" />;
     case "non-compliant":
-      return <XCircle size={14} className="text-red-500" />;
+      return <XCircle size={14} className="text-error-500" />;
     default:
-      return <AlertCircle size={14} className="text-gray-400" />;
+      return (
+        <AlertCircle size={14} className="text-gray-400 dark:text-gray-400" />
+      );
   }
 }
 
 function getStatusColor(status: ControlStatus): string {
   switch (status) {
     case "compliant":
-      return "text-green-600 dark:text-green-400";
+      return "text-success-600 dark:text-success-400";
     case "partial":
-      return "text-yellow-600 dark:text-yellow-400";
+      return "text-warning-600 dark:text-warning-400";
     case "non-compliant":
-      return "text-red-600 dark:text-red-400";
+      return "text-error-600 dark:text-error-400";
     default:
       return "text-gray-500 dark:text-gray-400";
   }
@@ -89,11 +91,11 @@ function getStatusColor(status: ControlStatus): string {
 function getImpactColor(impact: ImpactLevel): string {
   switch (impact) {
     case "high":
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+      return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
     case "moderate":
-      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+      return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400";
     case "low":
-      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+      return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
   }
 }
 
@@ -109,11 +111,11 @@ function formatDate(dateString: string): string {
 function getAuthLevelColor(level: AuthLevel): string {
   switch (level) {
     case "ATO":
-      return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      return "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400";
     case "P-ATO":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
+      return "bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-400";
     default:
-      return "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
+      return "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
   }
 }
 
@@ -147,7 +149,7 @@ export function FedRAMPPanel({
           className,
         )}
       >
-        <div className="flex items-center gap-2 text-gray-500">
+        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
           <Loader2 size={16} className="animate-spin" />
           <span>Loading FedRAMP controls...</span>
         </div>
@@ -167,7 +169,7 @@ export function FedRAMPPanel({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <BadgeCheck size={18} className="text-purple-600" />
+          <BadgeCheck size={18} className="text-insight-600" />
           <h3 className="font-semibold text-gray-900 dark:text-gray-100">
             FedRAMP
           </h3>
@@ -248,9 +250,11 @@ export function FedRAMPPanel({
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {control.name}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">{control.family}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
+                    {control.family}
+                  </p>
                   {control.poamId && (
-                    <div className="flex items-center gap-1 mt-2 text-xs text-orange-600 dark:text-orange-400">
+                    <div className="flex items-center gap-1 mt-2 text-xs text-grafana-600 dark:text-grafana-400">
                       <FileWarning size={12} />
                       <span>POA&M: {control.poamId}</span>
                     </div>

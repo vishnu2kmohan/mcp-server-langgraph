@@ -163,7 +163,7 @@ describe("AlertsPanel", () => {
       renderWithStore(<AlertsPanel {...defaultProps} />);
 
       const criticalBadge = screen.getByTestId("severity-badge-alert-001");
-      expect(criticalBadge).toHaveClass("bg-red-500");
+      expect(criticalBadge).toHaveClass("bg-error-500");
     });
 
     it("should show warning severity indicator", () => {
@@ -174,7 +174,7 @@ describe("AlertsPanel", () => {
       renderWithStore(<AlertsPanel {...defaultProps} />, warningStore);
 
       const warningBadge = screen.getByTestId("severity-badge-alert-002");
-      expect(warningBadge).toHaveClass("bg-yellow-500");
+      expect(warningBadge).toHaveClass("bg-warning-500");
     });
 
     it("should show firing state indicator", () => {
@@ -216,7 +216,7 @@ describe("AlertsPanel", () => {
       renderWithStore(<AlertsPanel {...defaultProps} />, storeWithSelection);
 
       const selectedItem = screen.getByTestId("alert-item-alert-001");
-      expect(selectedItem).toHaveClass("border-blue-500");
+      expect(selectedItem).toHaveClass("border-primary-500");
     });
   });
 
@@ -341,7 +341,7 @@ describe("AlertsPanel", () => {
       );
 
       expect(screen.getByTestId("connection-status")).toHaveClass(
-        "bg-green-500",
+        "bg-success-500",
       );
     });
 
@@ -350,7 +350,9 @@ describe("AlertsPanel", () => {
         <AlertsPanel {...defaultProps} connectionStatus="disconnected" />,
       );
 
-      expect(screen.getByTestId("connection-status")).toHaveClass("bg-red-500");
+      expect(screen.getByTestId("connection-status")).toHaveClass(
+        "bg-error-500",
+      );
     });
 
     it("should show connecting status indicator", () => {
@@ -359,7 +361,7 @@ describe("AlertsPanel", () => {
       );
 
       expect(screen.getByTestId("connection-status")).toHaveClass(
-        "bg-yellow-500",
+        "bg-warning-500",
       );
     });
   });
@@ -480,7 +482,7 @@ describe("AlertsPanel", () => {
       );
 
       expect(screen.getByTestId("connection-status")).toHaveClass(
-        "bg-yellow-500",
+        "bg-warning-500",
       );
     });
 
@@ -489,7 +491,9 @@ describe("AlertsPanel", () => {
         <AlertsPanel {...defaultProps} connectionStatus="error" />,
       );
 
-      expect(screen.getByTestId("connection-status")).toHaveClass("bg-red-500");
+      expect(screen.getByTestId("connection-status")).toHaveClass(
+        "bg-error-500",
+      );
     });
 
     it("should handle undefined connection status (defaults to connected)", () => {
@@ -500,7 +504,7 @@ describe("AlertsPanel", () => {
 
       // Default value is "connected" which shows green
       expect(screen.getByTestId("connection-status")).toHaveClass(
-        "bg-green-500",
+        "bg-success-500",
       );
     });
 

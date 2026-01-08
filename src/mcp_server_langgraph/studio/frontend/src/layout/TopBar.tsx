@@ -62,12 +62,12 @@ export interface TopBarProps {
 function getPersonaBadgeColor(persona: string): string {
   switch (persona) {
     case "admin":
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+      return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-300";
     case "developer":
-      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
+      return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300";
     case "user":
     default:
-      return "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
+      return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
   }
 }
 
@@ -130,7 +130,7 @@ export function TopBar({
           <>
             <span
               data-testid="section-separator"
-              className="text-gray-300 dark:text-gray-600"
+              className="text-gray-300 dark:text-gray-600 dark:text-gray-300"
               aria-hidden="true"
             >
               /
@@ -145,7 +145,7 @@ export function TopBar({
           >
             <span
               data-testid="section-separator"
-              className="text-gray-300 dark:text-gray-600"
+              className="text-gray-300 dark:text-gray-600 dark:text-gray-300"
               aria-hidden="true"
             >
               /
@@ -164,7 +164,7 @@ export function TopBar({
             data-testid="sub-persona-badge"
             className={cn(
               "ml-1 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap",
-              "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+              "bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-300",
             )}
           >
             {subPersonaBadge}
@@ -208,17 +208,17 @@ export function TopBar({
               aria-label={`${pendingApprovals} pending agent approval${pendingApprovals === 1 ? "" : "s"}`}
               className={cn(
                 "relative flex items-center gap-1 px-2 py-1 rounded",
-                "bg-amber-100 dark:bg-amber-900/30",
-                "hover:bg-amber-200 dark:hover:bg-amber-800/50",
+                "bg-warning-100 dark:bg-warning-900/30",
+                "hover:bg-warning-200 dark:hover:bg-warning-800/50",
                 "transition-colors",
               )}
             >
               <UserCheck
                 size={14}
-                className="text-amber-600 dark:text-amber-400"
+                className="text-warning-600 dark:text-warning-400"
                 aria-hidden="true"
               />
-              <span className="font-medium text-xs text-amber-700 dark:text-amber-300">
+              <span className="font-medium text-xs text-warning-700 dark:text-warning-300">
                 {pendingApprovals}
               </span>
             </button>

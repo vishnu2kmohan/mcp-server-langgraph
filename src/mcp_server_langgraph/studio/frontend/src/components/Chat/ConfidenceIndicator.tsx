@@ -29,11 +29,11 @@ function getConfidenceLevel(score: number): "high" | "medium" | "low" {
 function getColorClass(level: "high" | "medium" | "low"): string {
   switch (level) {
     case "high":
-      return "text-green-600";
+      return "text-success-600";
     case "medium":
-      return "text-yellow-600";
+      return "text-warning-600";
     case "low":
-      return "text-red-600";
+      return "text-error-600";
   }
 }
 
@@ -102,7 +102,7 @@ export function ConfidenceIndicator({
       </div>
 
       {showWarning && (
-        <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 rounded text-xs">
+        <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-warning-50 dark:bg-warning-900/20 text-warning-700 dark:text-warning-300 rounded text-xs">
           <AlertTriangle
             data-testid="warning-icon"
             className="w-3 h-3"

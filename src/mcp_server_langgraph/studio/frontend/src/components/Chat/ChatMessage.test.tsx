@@ -378,7 +378,7 @@ describe("ChatMessage", () => {
       );
 
       const link = screen.getByRole("link", { name: "Styled Link" });
-      expect(link).toHaveClass("text-blue-600");
+      expect(link).toHaveClass("text-primary-600");
     });
   });
 

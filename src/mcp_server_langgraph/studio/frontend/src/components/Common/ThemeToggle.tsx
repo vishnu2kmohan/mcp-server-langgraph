@@ -128,7 +128,7 @@ export function ThemeToggle({
         aria-expanded={variant === "dropdown" ? isDropdownOpen : undefined}
         onMouseEnter={() => compact && setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
-        className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${className}`}
+        className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${className}`}
       >
         <Icon
           size={18}
@@ -168,14 +168,14 @@ export function ThemeToggle({
                   key={themeOption}
                   role="menuitem"
                   onClick={() => handleSelectTheme(themeOption)}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
                 >
                   <OptionIcon size={16} className="flex-shrink-0" />
                   <span className="flex-1 text-left">{optionConfig.label}</span>
                   {isSelected && (
                     <Check
                       size={16}
-                      className="text-blue-600 dark:text-blue-400"
+                      className="text-primary-600 dark:text-primary-400"
                     />
                   )}
                 </button>

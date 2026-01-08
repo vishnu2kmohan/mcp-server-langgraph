@@ -40,7 +40,7 @@ function ChatHeaderActions({
       )}
       <button
         onClick={onClear}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+        className="flex items-center gap-2 px-3 py-1.5 text-sm text-error-600 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
       >
         <Trash2 size={16} />
         Clear
@@ -98,12 +98,12 @@ export function ChatHeader({
             <div
               className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
                 isReconnecting
-                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                  ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400"
                   : connectionMode === "websocket"
-                    ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                    ? "bg-success-100 text-success-700 dark:bg-success-900/20 dark:text-success-400"
                     : connectionMode === "rest"
-                      ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
-                      : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                      ? "bg-warning-100 text-warning-700 dark:bg-warning-900/20 dark:text-warning-400"
+                      : "bg-error-100 text-error-700 dark:bg-error-900/20 dark:text-error-400"
               }`}
             >
               {isReconnecting ? (
@@ -166,13 +166,13 @@ export function ChatHeader({
 
       {/* MCP Connection Error Banner */}
       {mcpError && (
-        <div className="px-6 py-3 bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-800 flex items-center justify-between">
-          <p className="text-orange-700 dark:text-orange-400 text-sm">
+        <div className="px-6 py-3 bg-grafana-50 dark:bg-grafana-900/20 border-b border-grafana-200 dark:border-grafana-800 flex items-center justify-between">
+          <p className="text-grafana-700 dark:text-grafana-400 text-sm">
             {mcpError}
           </p>
           <button
             onClick={onConnect}
-            className="text-orange-600 hover:text-orange-800 text-sm"
+            className="text-grafana-600 hover:text-grafana-800 text-sm"
             aria-label="Retry connection"
           >
             Retry
@@ -182,14 +182,14 @@ export function ChatHeader({
 
       {/* Session Error Banner */}
       {sessionError && (
-        <div className="px-6 py-3 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800 flex items-center justify-between">
-          <p className="text-red-700 dark:text-red-400 text-sm">
+        <div className="px-6 py-3 bg-error-50 dark:bg-error-900/20 border-b border-error-200 dark:border-error-800 flex items-center justify-between">
+          <p className="text-error-700 dark:text-error-400 text-sm">
             {sessionError}
           </p>
           {onClearError && (
             <button
               onClick={onClearError}
-              className="text-red-600 hover:text-red-800 text-sm"
+              className="text-error-600 hover:text-error-800 text-sm"
               aria-label="Dismiss error"
             >
               Dismiss

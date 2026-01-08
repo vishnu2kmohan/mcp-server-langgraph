@@ -203,7 +203,7 @@ export function VectorsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
+        <RefreshCw className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
   }
@@ -237,28 +237,28 @@ export function VectorsPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowSearchPanel(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-insight-600 text-white rounded-lg hover:bg-insight-700 transition-colors"
             >
               <Search size={16} />
               Search Vectors
             </button>
             <button
               onClick={() => setShowUpsertPanel(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700 transition-colors"
             >
               <Upload size={16} />
               Upsert Points
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               <Plus size={16} />
               Create Collection
             </button>
             <button
               onClick={handleRefresh}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
             >
               <RefreshCw size={16} />
               Refresh
@@ -269,8 +269,8 @@ export function VectorsPage() {
 
       {/* Error Banner */}
       {error && collections.length > 0 && (
-        <div className="px-6 py-3 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
-          <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+        <div className="px-6 py-3 bg-error-50 dark:bg-error-900/20 border-b border-error-200 dark:border-error-800">
+          <p className="text-error-700 dark:text-error-400 text-sm">{error}</p>
         </div>
       )}
 
@@ -289,7 +289,7 @@ export function VectorsPage() {
               <p>No collections found</p>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="mt-4 flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
               >
                 <Plus size={16} />
                 Create First Collection
@@ -304,7 +304,7 @@ export function VectorsPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Database size={24} className="text-blue-500" />
+                      <Database size={24} className="text-primary-500" />
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                           {collection.name}
@@ -317,7 +317,7 @@ export function VectorsPage() {
                     <button
                       onClick={() => handleDeleteCollection(collection.name)}
                       aria-label={`Delete ${collection.name}`}
-                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                      className="p-2 text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded transition-colors"
                     >
                       <Trash2 size={20} />
                     </button>
@@ -394,7 +394,7 @@ export function VectorsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                 >
                   Create
                 </button>
@@ -422,7 +422,7 @@ export function VectorsPage() {
                   setHasSearched(false);
                 }}
                 aria-label="Close search"
-                className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
               >
                 <X size={20} />
               </button>
@@ -491,7 +491,7 @@ export function VectorsPage() {
               <button
                 type="submit"
                 disabled={isSearching}
-                className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                className="w-full px-4 py-2 bg-insight-600 text-white rounded-lg hover:bg-insight-700 disabled:opacity-50 transition-colors"
               >
                 {isSearching ? "Searching..." : "Search"}
               </button>
@@ -518,7 +518,7 @@ export function VectorsPage() {
                         <span className="text-sm font-mono text-gray-500 dark:text-gray-400">
                           ID: {result.id}
                         </span>
-                        <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-sm rounded">
+                        <span className="px-2 py-0.5 bg-insight-100 dark:bg-insight-900/30 text-insight-700 dark:text-insight-400 text-sm rounded">
                           Score: {result.score.toFixed(2)}
                         </span>
                       </div>
@@ -554,7 +554,7 @@ export function VectorsPage() {
                   setUpsertError(null);
                 }}
                 aria-label="Close upsert"
-                className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
               >
                 <X size={20} />
               </button>
@@ -563,14 +563,14 @@ export function VectorsPage() {
             <form onSubmit={handleUpsert} className="p-6 space-y-4">
               {/* Success Message */}
               {upsertSuccess && (
-                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 text-sm">
+                <div className="p-3 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg text-success-700 dark:text-success-400 text-sm">
                   Point upserted successfully!
                 </div>
               )}
 
               {/* Error Message */}
               {upsertError && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
+                <div className="p-3 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg text-error-700 dark:text-error-400 text-sm">
                   Failed to upsert: {upsertError}
                 </div>
               )}
@@ -636,7 +636,7 @@ export function VectorsPage() {
               <button
                 type="submit"
                 disabled={isUpserting}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                className="w-full px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700 disabled:opacity-50 transition-colors"
               >
                 {isUpserting ? "Upserting..." : "Upsert"}
               </button>

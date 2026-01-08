@@ -129,7 +129,7 @@ export function ExportButton({
         className={cn(
           "flex items-center gap-2 px-3 py-1.5 text-sm",
           "text-gray-700 dark:text-gray-300",
-          "hover:bg-gray-100 dark:hover:bg-gray-700 rounded",
+          "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           className,
         )}
@@ -176,7 +176,7 @@ export function ExportButton({
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-2 text-sm text-left",
                   "text-gray-700 dark:text-gray-300",
-                  "hover:bg-gray-100 dark:hover:bg-gray-700",
+                  "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
                 )}
                 role="menuitem"
@@ -194,14 +194,14 @@ export function ExportButton({
               className={cn(
                 "flex items-center gap-3 px-4 py-2 text-sm cursor-pointer",
                 "text-gray-700 dark:text-gray-300",
-                "hover:bg-gray-100 dark:hover:bg-gray-700",
+                "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
               )}
             >
               <input
                 type="checkbox"
                 checked={includeMetadata}
                 onChange={(e) => setIncludeMetadata(e.target.checked)}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
               />
               <span>Include metadata</span>
             </label>

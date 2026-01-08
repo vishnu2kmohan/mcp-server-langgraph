@@ -44,7 +44,7 @@ export function ChatInput({
         disabled={isDisabled}
         placeholder={placeholder}
         rows={1}
-        className={`flex-1 px-4 py-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+        className={`flex-1 px-4 py-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 ${
           isDisabled
             ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
             : "bg-white dark:bg-gray-900"
@@ -56,8 +56,8 @@ export function ChatInput({
         aria-label="Send message"
         className={`p-2 rounded-lg transition-colors ${
           isDisabled
-            ? "bg-gray-300 dark:bg-gray-700 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700 text-white"
+            ? "bg-gray-300 dark:bg-gray-600 dark:bg-gray-700 cursor-not-allowed"
+            : "bg-primary-600 hover:bg-primary-700 text-white"
         }`}
       >
         <Send size={20} />

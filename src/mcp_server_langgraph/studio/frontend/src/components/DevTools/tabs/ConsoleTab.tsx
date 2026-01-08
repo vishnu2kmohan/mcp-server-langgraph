@@ -16,6 +16,13 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
+  ColumnDef,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+import {
   Info,
   AlertTriangle,
   AlertCircle,
@@ -32,12 +39,18 @@ import {
   Zap,
   Server,
   Download,
+  ArrowUpDown,
+  Search,
 } from "lucide-react";
 
 import { cn } from "../../../utils/cn";
+import HumanTimestamp from "../components/HumanTimestamp";
+import { useAutoTail } from "../hooks/useAutoTail";
+import { parseLogMessage } from "../utils/jsonLogParser";
 import { useConsoleEntries } from "../hooks/useConsoleEntries";
 import { exportConsoleToJSON, exportConsoleToCSV } from "../utils/export";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
+import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 import type {
   ConsoleTabProps,
   ConsoleEntry,
@@ -83,8 +96,15 @@ const SOURCE_LABELS: Record<ConsoleEntrySource, string> = {
 // Subcomponents
 // =============================================================================
 
+interface AugmentedConsoleEntry extends ConsoleEntry {
+  friendlyMessage: string;
+  structuredData: Record<string, unknown>;
+  detailFields: Array<{ key: string; value: string }>;
+  parsedPayload?: unknown;
+}
+
 interface ConsoleEntryRowProps {
-  entry: ConsoleEntry;
+  entry: AugmentedConsoleEntry;
   isExpanded: boolean;
   isFocused: boolean;
   onToggleExpand: () => void;
@@ -105,14 +125,15 @@ function ConsoleEntryRow({
   measureRef,
 }: ConsoleEntryRowProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const hasData = entry.data || entry.stackTrace;
+  const hasData =
+    Object.keys(entry.structuredData ?? {}).length > 0 || entry.stackTrace;
   const SourceIcon = SOURCE_ICONS[entry.source];
 
   const levelStyles = {
-    info: "text-blue-600 dark:text-blue-400",
-    warning: "text-amber-600 dark:text-amber-400",
-    error: "text-red-600 dark:text-red-400",
-    debug: "text-gray-500 dark:text-gray-500",
+    info: STATUS_TEXT_COLORS.info,
+    warning: STATUS_TEXT_COLORS.warning,
+    error: STATUS_TEXT_COLORS.error,
+    debug: STATUS_TEXT_COLORS.neutral,
   };
 
   const LevelIcon = {
@@ -121,17 +142,6 @@ function ConsoleEntryRow({
     error: AlertCircle,
     debug: Bug,
   }[entry.level];
-
-  const formatTimestamp = (ts: number) => {
-    const date = new Date(ts);
-    return date.toLocaleTimeString("en-US", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      fractionalSecondDigits: 3,
-    });
-  };
 
   return (
     <div
@@ -151,7 +161,7 @@ function ConsoleEntryRow({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="flex items-start gap-2 px-2 py-1">
+      <div className="grid grid-cols-[auto_auto_130px_120px_1fr_auto] items-start gap-2 px-2 py-1">
         {/* Expand button */}
         {hasData ? (
           <button
@@ -160,7 +170,7 @@ function ConsoleEntryRow({
             onClick={onToggleExpand}
             aria-expanded={isExpanded}
             aria-label={isExpanded ? "Collapse entry" : "Expand entry"}
-            className="mt-0.5 p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            className="mt-0.5 p-0.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
           >
             {isExpanded ? (
               <ChevronDown size={14} />
@@ -180,14 +190,12 @@ function ConsoleEntryRow({
         />
 
         {/* Timestamp */}
-        <span className="text-xs text-gray-400 dark:text-gray-500 font-mono flex-shrink-0">
-          {formatTimestamp(entry.timestamp)}
-        </span>
+        <HumanTimestamp timestamp={entry.timestamp} />
 
         {/* Source indicator */}
         <span
           data-testid={`source-${entry.source}`}
-          className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 flex-shrink-0"
+          className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-400 flex-shrink-0"
         >
           <SourceIcon size={12} aria-hidden="true" />
           <span className="hidden sm:inline">
@@ -196,9 +204,24 @@ function ConsoleEntryRow({
         </span>
 
         {/* Message */}
-        <span className="flex-1 min-w-0 text-sm whitespace-pre-wrap break-words">
-          {entry.message}
-        </span>
+        <div className="flex flex-col gap-1 min-w-0">
+          <span className="flex-1 min-w-0 text-sm whitespace-pre-wrap break-words">
+            {entry.friendlyMessage}
+          </span>
+          {entry.detailFields.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {entry.detailFields.map((field) => (
+                <span
+                  key={`${entry.id}-${field.key}`}
+                  className="inline-flex items-center gap-1 rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-xs text-gray-600 dark:text-gray-300"
+                >
+                  <span className="font-semibold">{field.key}:</span>
+                  <span className="truncate max-w-[180px]">{field.value}</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Copy button (visible on hover) */}
         {isHovered && (
@@ -207,7 +230,7 @@ function ConsoleEntryRow({
             type="button"
             onClick={onCopy}
             aria-label="Copy message"
-            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+            className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <Copy size={14} />
           </button>
@@ -218,17 +241,20 @@ function ConsoleEntryRow({
       {isExpanded && hasData && (
         <div
           data-testid={`expanded-data-${entry.id}`}
-          className="ml-12 mr-2 mb-2 p-2 bg-gray-100 dark:bg-gray-900 rounded text-xs font-mono overflow-x-auto"
+          className="ml-12 mr-2 mb-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono overflow-x-auto"
         >
-          {entry.data && (
+          {entry.structuredData && (
             <pre className="whitespace-pre-wrap text-gray-600 dark:text-gray-400">
-              {JSON.stringify(entry.data, null, 2)}
+              {JSON.stringify(entry.structuredData, null, 2)}
             </pre>
           )}
           {entry.stackTrace && (
             <pre
               data-testid={`stack-trace-${entry.id}`}
-              className="mt-2 whitespace-pre-wrap text-red-600 dark:text-red-400 border-t border-gray-200 dark:border-gray-700 pt-2"
+              className={cn(
+                "mt-2 whitespace-pre-wrap border-t border-gray-200 dark:border-gray-700 pt-2",
+                STATUS_TEXT_COLORS.error,
+              )}
             >
               {entry.stackTrace}
             </pre>
@@ -285,17 +311,55 @@ export function ConsoleTab({
   }, [localEntries, externalEntries]);
 
   /**
+   * Enrich entries with parsed JSON and structured data for rendering.
+   */
+  const augmentedEntries = useMemo<AugmentedConsoleEntry[]>(() => {
+    return mergedEntries.map((entry) => {
+      const parsedPayload = parseLogMessage(entry.message);
+      const parsedFromMessage =
+        parsedPayload.isJson && parsedPayload.extra
+          ? parsedPayload.extra
+          : null;
+      const structuredData: Record<string, unknown> = {
+        ...(entry.data ?? {}),
+        ...(parsedFromMessage ?? {}),
+      };
+
+      // Prefer human-friendly text from parsed payload when available
+      const friendlyMessage =
+        (parsedPayload.message as string | undefined) ?? entry.message;
+
+      // Build small set of detail chips for quick scanning
+      const detailFields = Object.entries(structuredData)
+        .filter(([key]) => key !== "message" && key !== "msg")
+        .map(([key, value]) => ({
+          key,
+          value:
+            typeof value === "object"
+              ? JSON.stringify(value)
+              : String(value ?? ""),
+        }))
+        .filter((field) => field.value !== "");
+
+      return {
+        ...entry,
+        friendlyMessage,
+        structuredData,
+        parsedPayload: parsedFromMessage ?? undefined,
+        detailFields,
+      };
+    });
+  }, [mergedEntries]);
+
+  /**
    * Filter merged entries by level.
    */
   const filteredEntries = useMemo(() => {
     if (filter === "all") {
-      return mergedEntries;
+      return augmentedEntries;
     }
-    return mergedEntries.filter((entry) => entry.level === filter);
-  }, [mergedEntries, filter]);
-
-  // Use merged entries for display
-  const entries = mergedEntries;
+    return augmentedEntries.filter((entry) => entry.level === filter);
+  }, [augmentedEntries, filter]);
 
   // Timeline integration for time-travel debugging
   const timeline = useTimelineContext();
@@ -304,38 +368,108 @@ export function ConsoleTab({
     new Set(),
   );
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "timestamp", desc: false },
+  ]);
   const listRef = useRef<HTMLDivElement>(null);
 
   /**
    * Filter entries by timeline window for time-travel debugging.
    */
   const timelineFilteredEntries = useMemo(() => {
-    const baseEntries = filteredEntries.length > 0 ? filteredEntries : entries;
-
     // If no time window is set, return all entries
-    if (!timeline.timeWindow) return baseEntries;
+    if (!timeline.timeWindow) return filteredEntries;
 
     // Filter entries within the timeline window
-    return baseEntries.filter((entry) => {
+    return filteredEntries.filter((entry) => {
       return (
         entry.timestamp >= timeline.timeWindow!.start &&
         entry.timestamp <= timeline.timeWindow!.end
       );
     });
-  }, [filteredEntries, entries, timeline.timeWindow]);
+  }, [filteredEntries, timeline.timeWindow]);
 
   /**
-   * Get display entries (with timeline filtering applied).
+   * Filter by search term across message and structured data.
    */
-  const displayEntries = useMemo(() => {
-    return timelineFilteredEntries;
-  }, [timelineFilteredEntries]);
+  const searchedEntries = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return timelineFilteredEntries;
+
+    return timelineFilteredEntries.filter((entry) => {
+      const haystacks = [
+        entry.friendlyMessage.toLowerCase(),
+        entry.source.toLowerCase(),
+        entry.level.toLowerCase(),
+        ...entry.detailFields.map((field) =>
+          `${field.key} ${field.value}`.toLowerCase(),
+        ),
+      ];
+      return haystacks.some((value) => value.includes(term));
+    });
+  }, [timelineFilteredEntries, searchTerm]);
+
+  const displayEntries = useMemo(() => searchedEntries, [searchedEntries]);
+
+  const columns = useMemo<ColumnDef<AugmentedConsoleEntry>[]>(
+    () => [
+      {
+        id: "expand",
+        header: "Expand",
+        cell: () => null,
+        size: 24,
+      },
+      {
+        accessorKey: "level",
+        header: "Level",
+        size: 80,
+      },
+      {
+        accessorKey: "timestamp",
+        header: "Time",
+        size: 140,
+        sortingFn: "datetime",
+      },
+      {
+        accessorKey: "source",
+        header: "Source",
+        size: 120,
+      },
+      {
+        accessorKey: "friendlyMessage",
+        header: "Message",
+      },
+    ],
+    [],
+  );
+
+  const table = useReactTable({
+    data: displayEntries,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    defaultColumn: { size: 100 },
+  });
+
+  const sortedRows = table.getRowModel().rows;
+
+  const { isAutoTailing, toggle: toggleAutoTail } = useAutoTail({
+    containerRef: listRef,
+    enabled: true,
+    onEntriesChange: () => {
+      // virtualizer uses translateY; force measurement after scroll
+      virtualizer.measure();
+    },
+  });
 
   /**
    * Only use virtualization for large lists.
    * For smaller lists, rendering all items is faster and simpler.
    */
-  const shouldVirtualize = displayEntries.length >= VIRTUALIZATION_THRESHOLD;
+  const shouldVirtualize = sortedRows.length >= VIRTUALIZATION_THRESHOLD;
 
   /**
    * Virtualizer for efficient rendering of large lists.
@@ -343,7 +477,7 @@ export function ConsoleTab({
    * for logs with thousands of entries.
    */
   const virtualizer = useVirtualizer({
-    count: displayEntries.length,
+    count: sortedRows.length,
     getScrollElement: () => listRef.current,
     estimateSize: () => ESTIMATED_ROW_HEIGHT,
     overscan: OVERSCAN_COUNT,
@@ -387,19 +521,6 @@ export function ConsoleTab({
   }, []);
 
   /**
-   * Scroll to bottom of log.
-   */
-  const scrollToBottom = useCallback(() => {
-    if (displayEntries.length > 0) {
-      if (shouldVirtualize) {
-        virtualizer.scrollToIndex(displayEntries.length - 1, { align: "end" });
-      } else if (listRef.current) {
-        listRef.current.scrollTop = listRef.current.scrollHeight;
-      }
-    }
-  }, [displayEntries.length, shouldVirtualize, virtualizer]);
-
-  /**
    * Handle clearing both local and external entries.
    */
   const handleClearConsole = useCallback(() => {
@@ -414,20 +535,18 @@ export function ConsoleTab({
     (e: React.KeyboardEvent) => {
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setFocusedIndex((prev) =>
-          Math.min(prev + 1, displayEntries.length - 1),
-        );
+        setFocusedIndex((prev) => Math.min(prev + 1, sortedRows.length - 1));
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
         setFocusedIndex((prev) => Math.max(prev - 1, 0));
       } else if (e.key === "Enter" && focusedIndex >= 0) {
-        const entry = displayEntries[focusedIndex];
+        const entry = sortedRows[focusedIndex]?.original;
         if (entry.data || entry.stackTrace) {
           toggleExpand(entry.id);
         }
       }
     },
-    [displayEntries, focusedIndex, toggleExpand],
+    [sortedRows, focusedIndex, toggleExpand],
   );
 
   /**
@@ -436,6 +555,25 @@ export function ConsoleTab({
   useEffect(() => {
     virtualizer.measure();
   }, [expandedEntries, virtualizer]);
+
+  /**
+   * Render helpers
+   */
+  const renderSortIndicator = (field: string) => {
+    const column = table.getColumn(field);
+    const isSorted = column?.getIsSorted();
+    return (
+      <ArrowUpDown
+        size={12}
+        className={cn(
+          "ml-1 inline-block transition-transform",
+          isSorted ? "text-primary-600" : "text-gray-400 dark:text-gray-400",
+          isSorted === "desc" && "rotate-180",
+        )}
+        aria-hidden="true"
+      />
+    );
+  };
 
   return (
     <div
@@ -463,8 +601,32 @@ export function ConsoleTab({
           data-testid="entry-count"
           className="text-xs text-gray-500 dark:text-gray-400"
         >
-          {displayEntries.length}
+          {sortedRows.length}
         </span>
+
+        {/* Search */}
+        <label className="relative text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <Search
+            size={12}
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
+            aria-hidden="true"
+          />
+          <input
+            data-testid="console-search-input"
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Filter logs"
+            className={cn(
+              "pl-6 pr-2 py-1 text-xs",
+              "bg-white dark:bg-gray-900",
+              "border border-gray-200 dark:border-gray-700 rounded",
+              "focus:outline-none focus:ring-1 focus:ring-primary-500",
+              "w-36",
+            )}
+            aria-label="Filter console logs"
+          />
+        </label>
 
         {/* Spacer */}
         <div className="flex-1" />
@@ -476,7 +638,7 @@ export function ConsoleTab({
             type="button"
             aria-label="Export console logs"
             aria-haspopup="true"
-            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500"
+            className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
           >
             <Download size={14} />
           </button>
@@ -485,7 +647,7 @@ export function ConsoleTab({
               data-testid="export-json-button"
               type="button"
               onClick={() => exportConsoleToJSON(displayEntries)}
-              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap"
+              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 whitespace-nowrap"
             >
               Export as JSON
             </button>
@@ -493,20 +655,28 @@ export function ConsoleTab({
               data-testid="export-csv-button"
               type="button"
               onClick={() => exportConsoleToCSV(displayEntries)}
-              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap"
+              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 whitespace-nowrap"
             >
               Export as CSV
             </button>
           </div>
         </div>
 
-        {/* Scroll to bottom */}
+        {/* Auto-tail toggle */}
         <button
           data-testid="scroll-to-bottom"
           type="button"
-          onClick={scrollToBottom}
-          aria-label="Scroll to bottom"
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+          onClick={toggleAutoTail}
+          aria-pressed={isAutoTailing}
+          aria-label={
+            isAutoTailing ? "Pause auto-tail to newest log" : "Resume auto-tail"
+          }
+          className={cn(
+            "p-1 rounded",
+            isAutoTailing
+              ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30"
+              : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+          )}
         >
           <ArrowDown size={14} />
         </button>
@@ -517,17 +687,17 @@ export function ConsoleTab({
           type="button"
           onClick={handleClearConsole}
           aria-label="Clear console"
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 hover:text-red-500"
+          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 hover:text-error-500"
         >
           <Trash2 size={14} />
         </button>
       </div>
 
       {/* Entries list */}
-      {displayEntries.length === 0 ? (
+      {sortedRows.length === 0 ? (
         <div
           data-testid="console-empty-state"
-          className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500"
+          className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-400"
         >
           <Terminal size={32} className="mb-2 opacity-50" />
           <p>No console output</p>
@@ -544,6 +714,37 @@ export function ConsoleTab({
           onClick={() => setFocusedIndex(0)}
           className="flex-1 min-h-0 overflow-y-auto focus:outline-none"
         >
+          {/* Header */}
+          <div className="sticky top-0 z-10 bg-gray-100 dark:bg-gray-800/95 dark:bg-gray-800/95 backdrop-blur border-b border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-[auto_auto_130px_120px_1fr_auto] items-center gap-2 px-2 py-2 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
+              <span className="text-xs text-gray-400 dark:text-gray-400">
+                Expand
+              </span>
+              <button
+                type="button"
+                className="flex items-center text-left"
+                onClick={() => table.getColumn("level")?.toggleSorting()}
+              >
+                Level {renderSortIndicator("level")}
+              </button>
+              <button
+                type="button"
+                className="flex items-center text-left"
+                onClick={() => table.getColumn("timestamp")?.toggleSorting()}
+              >
+                Time {renderSortIndicator("timestamp")}
+              </button>
+              <button
+                type="button"
+                className="flex items-center text-left"
+                onClick={() => table.getColumn("source")?.toggleSorting()}
+              >
+                Source {renderSortIndicator("source")}
+              </button>
+              <span>Message</span>
+              <span className="text-right">Actions</span>
+            </div>
+          </div>
           {shouldVirtualize ? (
             /* Virtualized rendering for large lists */
             <div
@@ -554,7 +755,8 @@ export function ConsoleTab({
               }}
             >
               {virtualizer.getVirtualItems().map((virtualRow) => {
-                const entry = displayEntries[virtualRow.index];
+                const entry = sortedRows[virtualRow.index]?.original;
+                if (!entry) return null;
                 return (
                   <ConsoleEntryRow
                     key={entry.id}
@@ -562,7 +764,7 @@ export function ConsoleTab({
                     isExpanded={expandedEntries.has(entry.id)}
                     isFocused={focusedIndex === virtualRow.index}
                     onToggleExpand={() => toggleExpand(entry.id)}
-                    onCopy={() => copyMessage(entry.message)}
+                    onCopy={() => copyMessage(entry.friendlyMessage)}
                     virtualIndex={virtualRow.index}
                     measureRef={virtualizer.measureElement}
                     style={{
@@ -578,14 +780,14 @@ export function ConsoleTab({
             </div>
           ) : (
             /* Standard rendering for small lists */
-            displayEntries.map((entry, index) => (
+            sortedRows.map((row, index) => (
               <ConsoleEntryRow
-                key={entry.id}
-                entry={entry}
-                isExpanded={expandedEntries.has(entry.id)}
+                key={row.original.id}
+                entry={row.original}
+                isExpanded={expandedEntries.has(row.original.id)}
                 isFocused={focusedIndex === index}
-                onToggleExpand={() => toggleExpand(entry.id)}
-                onCopy={() => copyMessage(entry.message)}
+                onToggleExpand={() => toggleExpand(row.original.id)}
+                onCopy={() => copyMessage(row.original.friendlyMessage)}
               />
             ))
           )}

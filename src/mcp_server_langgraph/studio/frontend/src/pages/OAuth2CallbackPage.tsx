@@ -157,7 +157,7 @@ export function OAuth2CallbackPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-primary-500 mx-auto mb-4" />
           <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             Processing Authorization
           </h1>
@@ -174,7 +174,7 @@ export function OAuth2CallbackPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <CheckCircle className="w-16 h-16 text-success-500 mx-auto mb-4" />
           <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             Authorization Successful
           </h1>
@@ -186,7 +186,7 @@ export function OAuth2CallbackPage() {
               </span>
             )}
           </p>
-          <p className="text-sm text-gray-400 dark:text-gray-500">
+          <p className="text-sm text-gray-400 dark:text-gray-400">
             Redirecting to connections...
           </p>
         </div>
@@ -198,13 +198,13 @@ export function OAuth2CallbackPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <div className="text-center max-w-md mx-4">
-        <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <XCircle className="w-16 h-16 text-error-500 mx-auto mb-4" />
         <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
           Authorization Failed
         </h1>
         {error && (
           <>
-            <p className="text-red-600 dark:text-red-400 mb-2">
+            <p className="text-error-600 dark:text-error-400 mb-2">
               {error.message}
             </p>
             {error.detail && (
@@ -217,14 +217,14 @@ export function OAuth2CallbackPage() {
         <div className="flex items-center justify-center gap-4 mt-6">
           <button
             onClick={() => processCallback()}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
           >
             <RefreshCw className="w-4 h-4" />
             Try Again
           </button>
           <Link
             to="/studio/connections"
-            className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+            className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 rounded-md"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Connections

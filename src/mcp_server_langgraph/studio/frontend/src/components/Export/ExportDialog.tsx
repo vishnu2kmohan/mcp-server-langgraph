@@ -57,10 +57,10 @@ function FormatButton({
       role="radio"
       aria-checked={selected}
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
         selected
-          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-          : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+          ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+          : "border-gray-200 dark:border-gray-700 dark:border-gray-600 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500"
       }`}
     >
       {icon}
@@ -97,8 +97,10 @@ function OptionToggle({
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-          checked ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-600"
+        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+          checked
+            ? "bg-primary-600"
+            : "bg-gray-200 dark:bg-gray-700 dark:bg-gray-600"
         }`}
       >
         <span
@@ -228,7 +230,7 @@ export function ExportDialog({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <X size={20} />
           </button>
@@ -306,7 +308,7 @@ export function ExportDialog({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             Cancel
           </button>
@@ -315,11 +317,11 @@ export function ExportDialog({
             <button
               type="button"
               onClick={handleCopy}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               {actionState === "copied" ? (
                 <>
-                  <Check size={16} className="text-green-500" />
+                  <Check size={16} className="text-success-500" />
                   Copied!
                 </>
               ) : (
@@ -333,7 +335,7 @@ export function ExportDialog({
             <button
               type="button"
               onClick={handleDownload}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
               {actionState === "downloaded" ? (
                 <>

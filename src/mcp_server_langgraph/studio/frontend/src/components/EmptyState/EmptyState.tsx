@@ -163,7 +163,7 @@ export function EmptyState({
       <div
         data-testid="empty-state-icon"
         aria-hidden="true"
-        className="mb-4 text-gray-400 dark:text-gray-500"
+        className="mb-4 text-gray-400 dark:text-gray-400"
       >
         {icon ?? <IconComponent size={iconSize} className="opacity-50" />}
       </div>
@@ -201,7 +201,7 @@ export function EmptyState({
       {ability && (
         <p
           className={cn(
-            "text-gray-400 dark:text-gray-500 italic",
+            "text-gray-400 dark:text-gray-400 italic",
             TEXT_STYLES[variant],
           )}
         >
@@ -213,7 +213,7 @@ export function EmptyState({
       {isLoading ? (
         <div
           data-testid="empty-state-loading"
-          className="mt-4 flex items-center gap-2 text-gray-500"
+          className="mt-4 flex items-center gap-2 text-gray-500 dark:text-gray-400"
         >
           <Loader2 size={16} className="animate-spin" />
           <span className="text-sm">Loading...</span>

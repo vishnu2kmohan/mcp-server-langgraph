@@ -102,10 +102,10 @@ export function MermaidArtifact({
           <button
             onClick={handleCopy}
             title="Copy code"
-            className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
           >
             {isCopied ? (
-              <Check size={16} className="text-green-500" />
+              <Check size={16} className="text-success-500" />
             ) : (
               <Copy size={16} />
             )}
@@ -113,7 +113,7 @@ export function MermaidArtifact({
           <button
             onClick={handleOpenInLive}
             title="Open in Mermaid Live"
-            className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
           >
             <ExternalLink size={16} />
           </button>
@@ -127,7 +127,7 @@ export function MermaidArtifact({
             <button
               onClick={handleToggleExpand}
               title={isExpanded ? "Collapse" : "Expand"}
-              className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
             >
               {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
             </button>

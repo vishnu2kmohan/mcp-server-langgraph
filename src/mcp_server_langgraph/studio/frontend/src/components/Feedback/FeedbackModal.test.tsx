@@ -134,7 +134,7 @@ describe("FeedbackModal", () => {
       const score7 = screen.getByTestId("nps-score-7");
       fireEvent.click(score7);
 
-      expect(score7).toHaveClass("bg-blue-600");
+      expect(score7).toHaveClass("bg-primary-600");
     });
 
     it("should allow changing NPS score selection", () => {
@@ -143,8 +143,10 @@ describe("FeedbackModal", () => {
       fireEvent.click(screen.getByTestId("nps-score-5"));
       fireEvent.click(screen.getByTestId("nps-score-9"));
 
-      expect(screen.getByTestId("nps-score-5")).not.toHaveClass("bg-blue-600");
-      expect(screen.getByTestId("nps-score-9")).toHaveClass("bg-blue-600");
+      expect(screen.getByTestId("nps-score-5")).not.toHaveClass(
+        "bg-primary-600",
+      );
+      expect(screen.getByTestId("nps-score-9")).toHaveClass("bg-primary-600");
     });
 
     it("should display NPS scale labels", () => {
@@ -176,13 +178,13 @@ describe("FeedbackModal", () => {
       fireEvent.click(screen.getByTestId("csat-star-4"));
 
       // Stars 1-4 should be filled
-      expect(screen.getByTestId("csat-star-1")).toHaveClass("text-yellow-400");
-      expect(screen.getByTestId("csat-star-2")).toHaveClass("text-yellow-400");
-      expect(screen.getByTestId("csat-star-3")).toHaveClass("text-yellow-400");
-      expect(screen.getByTestId("csat-star-4")).toHaveClass("text-yellow-400");
+      expect(screen.getByTestId("csat-star-1")).toHaveClass("text-warning-400");
+      expect(screen.getByTestId("csat-star-2")).toHaveClass("text-warning-400");
+      expect(screen.getByTestId("csat-star-3")).toHaveClass("text-warning-400");
+      expect(screen.getByTestId("csat-star-4")).toHaveClass("text-warning-400");
       // Star 5 should not be filled
       expect(screen.getByTestId("csat-star-5")).not.toHaveClass(
-        "text-yellow-400",
+        "text-warning-400",
       );
     });
   });

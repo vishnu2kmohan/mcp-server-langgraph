@@ -60,7 +60,7 @@ function getStatusIcon(status: ComplianceStatus) {
       return (
         <CheckCircle
           size={16}
-          className="text-green-500"
+          className="text-success-500"
           role="img"
           aria-hidden="true"
         />
@@ -69,7 +69,7 @@ function getStatusIcon(status: ComplianceStatus) {
       return (
         <AlertCircle
           size={16}
-          className="text-yellow-500"
+          className="text-warning-500"
           role="img"
           aria-hidden="true"
         />
@@ -78,7 +78,7 @@ function getStatusIcon(status: ComplianceStatus) {
       return (
         <AlertCircle
           size={16}
-          className="text-red-500"
+          className="text-error-500"
           role="img"
           aria-hidden="true"
         />
@@ -98,9 +98,9 @@ function getStatusLabel(status: ComplianceStatus): string {
 }
 
 function getPercentageColor(percentage: number): string {
-  if (percentage >= 90) return "text-green-600 dark:text-green-400";
-  if (percentage >= 70) return "text-yellow-600 dark:text-yellow-400";
-  return "text-red-600 dark:text-red-400";
+  if (percentage >= 90) return "text-success-600 dark:text-success-400";
+  if (percentage >= 70) return "text-warning-600 dark:text-warning-400";
+  return "text-error-600 dark:text-error-400";
 }
 
 // =============================================================================
@@ -149,21 +149,21 @@ function FrameworkCard({ name, icon, summary }: FrameworkCardProps) {
           {summary.compliantCount}/{summary.totalCount} controls
         </span>
         {summary.status === "partial" && (
-          <span className="text-yellow-600 dark:text-yellow-400">
+          <span className="text-warning-600 dark:text-warning-400">
             {getStatusLabel(summary.status)}
           </span>
         )}
       </div>
 
       {summary.pendingActions !== undefined && summary.pendingActions > 0 && (
-        <div className="mt-2 text-xs text-orange-600 dark:text-orange-400">
+        <div className="mt-2 text-xs text-grafana-600 dark:text-grafana-400">
           {summary.pendingActions} actions pending
         </div>
       )}
 
       {summary.authLevel && (
         <div className="mt-2">
-          <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+          <span className="text-xs px-2 py-0.5 rounded bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">
             {summary.authLevel}
           </span>
         </div>
@@ -185,7 +185,7 @@ export function ComplianceDashboard({
   if (isLoading) {
     return (
       <div data-testid="compliance-dashboard" className={cn("p-6", className)}>
-        <div className="flex items-center gap-2 text-gray-500">
+        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
           <Loader2 size={16} className="animate-spin" />
           <span>Loading compliance data...</span>
         </div>
@@ -204,7 +204,10 @@ export function ComplianceDashboard({
           className,
         )}
       >
-        <LayoutDashboard size={32} className="mx-auto mb-3 text-gray-400" />
+        <LayoutDashboard
+          size={32}
+          className="mx-auto mb-3 text-gray-400 dark:text-gray-400"
+        />
         <p className="text-gray-500 dark:text-gray-400">
           No compliance data available
         </p>
@@ -231,22 +234,22 @@ export function ComplianceDashboard({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <FrameworkCard
           name="SOC-2"
-          icon={<Shield size={18} className="text-blue-500" />}
+          icon={<Shield size={18} className="text-primary-500" />}
           summary={summary.soc2}
         />
         <FrameworkCard
           name="HIPAA"
-          icon={<HeartPulse size={18} className="text-red-500" />}
+          icon={<HeartPulse size={18} className="text-error-500" />}
           summary={summary.hipaa}
         />
         <FrameworkCard
           name="GDPR"
-          icon={<Flag size={18} className="text-blue-600" />}
+          icon={<Flag size={18} className="text-primary-600" />}
           summary={summary.gdpr}
         />
         <FrameworkCard
           name="FedRAMP"
-          icon={<BadgeCheck size={18} className="text-purple-600" />}
+          icon={<BadgeCheck size={18} className="text-insight-600" />}
           summary={summary.fedramp}
         />
       </div>

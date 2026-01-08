@@ -94,7 +94,7 @@ export function TokenUsageDisplay({
     return `$${cost.toFixed(2)}`;
   };
 
-  const textSize = compact ? "text-[10px]" : "text-xs";
+  const textSize = compact ? "text-xs" : "text-xs";
   const iconSize = compact ? 10 : 12;
 
   return (
@@ -110,16 +110,20 @@ export function TokenUsageDisplay({
           <span className="text-gray-500 dark:text-gray-400">Input:</span>
         )}
         <span>{formatNumber(promptTokens)}</span>
-        <span className="text-gray-300 dark:text-gray-600">/</span>
+        <span className="text-gray-300 dark:text-gray-600 dark:text-gray-300">
+          /
+        </span>
         {showLabels && (
           <span className="text-gray-500 dark:text-gray-400">Output:</span>
         )}
         <span>{formatNumber(completionTokens)}</span>
-        <span className="text-gray-300 dark:text-gray-600">=</span>
+        <span className="text-gray-300 dark:text-gray-600 dark:text-gray-300">
+          =
+        </span>
         <span className="font-medium text-gray-500 dark:text-gray-400">
           {formatNumber(totalTokens)}
         </span>
-        <span className="text-gray-400 dark:text-gray-500">tokens</span>
+        <span className="text-gray-400 dark:text-gray-400">tokens</span>
       </span>
 
       {/* Cost estimation */}

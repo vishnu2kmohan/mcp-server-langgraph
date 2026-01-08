@@ -48,7 +48,7 @@ function NotificationTypeToggle({
         checked={enabled}
         onChange={(e) => onChange(e.target.checked)}
         disabled={disabled}
-        className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 disabled:opacity-50"
+        className="w-5 h-5 text-primary-600 rounded focus:ring-primary-500 disabled:opacity-50"
       />
     </label>
   );
@@ -97,7 +97,7 @@ export function NotificationPreferencesSettings() {
         data-testid="preferences-loading"
         className="flex items-center justify-center py-8"
       >
-        <RefreshCw size={24} className="animate-spin text-blue-500" />
+        <RefreshCw size={24} className="animate-spin text-primary-500" />
       </div>
     );
   }
@@ -105,16 +105,16 @@ export function NotificationPreferencesSettings() {
   // Error state
   if (isError) {
     return (
-      <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+      <div className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg">
         <div className="flex items-center gap-3">
-          <AlertCircle size={20} className="text-red-500" />
-          <p className="text-sm text-red-700 dark:text-red-400">
+          <AlertCircle size={20} className="text-error-500" />
+          <p className="text-sm text-error-700 dark:text-error-400">
             Failed to load notification preferences
           </p>
         </div>
         <button
           onClick={() => refetch()}
-          className="mt-3 flex items-center gap-2 px-3 py-1.5 text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200"
+          className="mt-3 flex items-center gap-2 px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
         >
           <RefreshCw size={14} />
           Retry

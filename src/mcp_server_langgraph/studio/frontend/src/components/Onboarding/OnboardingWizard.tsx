@@ -276,7 +276,7 @@ export function OnboardingWizard({
                 className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
               >
                 <div
-                  className="h-full bg-blue-500 transition-all duration-300"
+                  className="h-full bg-primary-500 transition-all duration-300"
                   style={{ width: `${(currentStep / totalSteps) * 100}%` }}
                 />
               </div>
@@ -284,7 +284,7 @@ export function OnboardingWizard({
             <button
               onClick={onSkip}
               aria-label="Skip"
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="p-2 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
             >
               <X className="w-5 h-5" />
             </button>
@@ -296,8 +296,8 @@ export function OnboardingWizard({
           {/* Step 1: Welcome */}
           {currentStep === 1 && (
             <div className="text-center py-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-6">
-                <Sparkles className="w-8 h-8 text-blue-500" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 mb-6">
+                <Sparkles className="w-8 h-8 text-primary-500" />
               </div>
               <h2
                 id="wizard-title"
@@ -311,19 +311,19 @@ export function OnboardingWizard({
               </p>
               <div className="grid grid-cols-3 gap-4 max-w-md mx-auto text-center">
                 <div className="p-4">
-                  <Bot className="w-8 h-8 mx-auto text-blue-500 mb-2" />
+                  <Bot className="w-8 h-8 mx-auto text-primary-500 mb-2" />
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     AI Agents
                   </p>
                 </div>
                 <div className="p-4">
-                  <GitBranch className="w-8 h-8 mx-auto text-green-500 mb-2" />
+                  <GitBranch className="w-8 h-8 mx-auto text-success-500 mb-2" />
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Workflows
                   </p>
                 </div>
                 <div className="p-4">
-                  <Server className="w-8 h-8 mx-auto text-purple-500 mb-2" />
+                  <Server className="w-8 h-8 mx-auto text-insight-500 mb-2" />
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Integrations
                   </p>
@@ -347,13 +347,13 @@ export function OnboardingWizard({
 
               {/* AI Suggestion Banner (Phase 6.5) */}
               {detectedIntent && confidence >= 0.7 && (
-                <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                  <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
+                <div className="mb-4 p-3 bg-insight-50 dark:bg-insight-900/20 border border-insight-200 dark:border-insight-800 rounded-lg">
+                  <div className="flex items-center gap-2 text-insight-700 dark:text-insight-300">
                     <Zap className="w-4 h-4" />
                     <span className="text-sm font-medium">
                       AI detected: {detectedIntent.replace(/_/g, " ")}
                     </span>
-                    <span className="text-xs text-purple-500 dark:text-purple-400">
+                    <span className="text-xs text-insight-500 dark:text-insight-400">
                       ({Math.round(confidence * 100)}% confidence)
                     </span>
                   </div>
@@ -373,17 +373,17 @@ export function OnboardingWizard({
                       aria-pressed={selectedPersona === option.id}
                       className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-all ${
                         selectedPersona === option.id
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                          ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
                           : isAIRecommended
-                            ? "border-purple-300 dark:border-purple-700 bg-purple-50/50 dark:bg-purple-900/10"
-                            : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                            ? "border-insight-300 dark:border-insight-700 bg-insight-50/50 dark:bg-insight-900/10"
+                            : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-600"
                       }`}
                     >
                       <div
                         className={`p-3 rounded-lg ${
                           selectedPersona === option.id
-                            ? "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
-                            : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                            ? "bg-primary-100 text-primary-600 dark:bg-primary-900/40 dark:text-primary-400"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                         }`}
                       >
                         {option.icon}
@@ -394,7 +394,7 @@ export function OnboardingWizard({
                             {option.title}
                           </h3>
                           {isAIRecommended && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/40 rounded-full">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-insight-700 dark:text-insight-300 bg-insight-100 dark:bg-insight-900/40 rounded-full">
                               <Zap className="w-3 h-3" />
                               Recommended
                             </span>
@@ -411,9 +411,9 @@ export function OnboardingWizard({
 
               {/* Skip Step Suggestion (Phase 6.5) */}
               {shouldSkipCurrentStep && (
-                <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <div className="mt-4 p-3 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                    <div className="flex items-center gap-2 text-success-700 dark:text-success-300">
                       <Zap className="w-4 h-4" />
                       <span className="text-sm">
                         AI suggests skipping this step based on your experience
@@ -421,7 +421,7 @@ export function OnboardingWizard({
                     </div>
                     <button
                       onClick={handleNext}
-                      className="text-sm font-medium text-green-600 dark:text-green-400 hover:underline"
+                      className="text-sm font-medium text-success-600 dark:text-success-400 hover:underline"
                     >
                       Skip →
                     </button>
@@ -446,8 +446,8 @@ export function OnboardingWizard({
 
               {/* AI Template Recommendation (Phase 6.5) */}
               {aiRecommendedTemplateId && confidence >= 0.7 && (
-                <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                  <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
+                <div className="mb-4 p-3 bg-insight-50 dark:bg-insight-900/20 border border-insight-200 dark:border-insight-800 rounded-lg">
+                  <div className="flex items-center gap-2 text-insight-700 dark:text-insight-300">
                     <Zap className="w-4 h-4" />
                     <span className="text-sm font-medium">
                       AI recommends:{" "}
@@ -476,17 +476,17 @@ export function OnboardingWizard({
                         aria-pressed={selectedTemplate?.id === template.id}
                         className={`flex items-start gap-4 p-4 text-left rounded-lg border-2 transition-all ${
                           selectedTemplate?.id === template.id
-                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                            ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
                             : isAIRecommended
-                              ? "border-purple-300 dark:border-purple-700 bg-purple-50/50 dark:bg-purple-900/10"
-                              : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
+                              ? "border-insight-300 dark:border-insight-700 bg-insight-50/50 dark:bg-insight-900/10"
+                              : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600"
                         }`}
                       >
                         <div
                           className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
                             selectedTemplate?.id === template.id
-                              ? "bg-blue-100 text-blue-600 dark:bg-blue-900/40"
-                              : "bg-gray-100 text-gray-600 dark:bg-gray-700"
+                              ? "bg-primary-100 text-primary-600 dark:bg-primary-900/40"
+                              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 dark:bg-gray-700"
                           }`}
                         >
                           {getCategoryIcon(template.category)}
@@ -497,7 +497,7 @@ export function OnboardingWizard({
                               {template.name}
                             </h3>
                             {isAIRecommended && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/40 rounded-full">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-insight-700 dark:text-insight-300 bg-insight-100 dark:bg-insight-900/40 rounded-full">
                                 <Zap className="w-3 h-3" />
                                 AI Pick
                               </span>
@@ -519,11 +519,11 @@ export function OnboardingWizard({
                 aria-pressed={scratchSelected}
                 className={`w-full flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
                   scratchSelected
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                    : "border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400"
+                    ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
+                    : "border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:border-gray-500"
                 }`}
               >
-                <FileCode className="w-5 h-5 text-gray-500" />
+                <FileCode className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 <span className="text-gray-700 dark:text-gray-300">
                   Start from scratch
                 </span>
@@ -549,7 +549,7 @@ export function OnboardingWizard({
                     key={index}
                     className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
                   >
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                    <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg text-primary-600 dark:text-primary-400">
                       {feature.icon}
                     </div>
                     <div>
@@ -588,7 +588,7 @@ export function OnboardingWizard({
                   <button
                     onClick={handleNext}
                     aria-label="Get Started"
-                    className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                   >
                     Get Started
                     <ArrowRight className="w-4 h-4" />
@@ -601,8 +601,8 @@ export function OnboardingWizard({
                     aria-label="Next"
                     className={`flex items-center gap-2 px-6 py-2 rounded-lg ${
                       canProceedStep2
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        ? "bg-primary-600 text-white hover:bg-primary-700"
+                        : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed"
                     }`}
                   >
                     Next
@@ -616,8 +616,8 @@ export function OnboardingWizard({
                     aria-label="Next"
                     className={`flex items-center gap-2 px-6 py-2 rounded-lg ${
                       canProceedStep3
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        ? "bg-primary-600 text-white hover:bg-primary-700"
+                        : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed"
                     }`}
                   >
                     Next
@@ -629,7 +629,7 @@ export function OnboardingWizard({
               <button
                 onClick={handleComplete}
                 aria-label="Complete"
-                className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                className="flex items-center gap-2 px-6 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700"
               >
                 Complete
                 <Sparkles className="w-4 h-4" />

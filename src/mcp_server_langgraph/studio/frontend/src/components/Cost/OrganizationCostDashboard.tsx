@@ -132,8 +132,8 @@ export function OrganizationCostDashboard({
           onClick={() => setViewMode("organization")}
           className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
             viewMode === "organization"
-              ? "border-blue-500 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+              ? "border-primary-500 text-primary-600 dark:text-primary-400"
+              : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-300"
           }`}
         >
           <Building2 size={16} />
@@ -143,14 +143,14 @@ export function OrganizationCostDashboard({
           onClick={() => setViewMode("project")}
           className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
             viewMode === "project"
-              ? "border-blue-500 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+              ? "border-primary-500 text-primary-600 dark:text-primary-400"
+              : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-300"
           }`}
         >
           <Folder size={16} />
           Projects
           {selectedOrg && (
-            <span className="ml-1 text-xs bg-blue-100 dark:bg-blue-900 px-1.5 py-0.5 rounded">
+            <span className="ml-1 text-xs bg-primary-100 dark:bg-primary-900 px-1.5 py-0.5 rounded">
               {selectedOrg.replace("organization:", "")}
             </span>
           )}
@@ -159,14 +159,14 @@ export function OrganizationCostDashboard({
           onClick={() => setViewMode("team")}
           className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
             viewMode === "team"
-              ? "border-blue-500 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+              ? "border-primary-500 text-primary-600 dark:text-primary-400"
+              : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-300"
           }`}
         >
           <Users size={16} />
           Teams
           {selectedProject && (
-            <span className="ml-1 text-xs bg-blue-100 dark:bg-blue-900 px-1.5 py-0.5 rounded">
+            <span className="ml-1 text-xs bg-primary-100 dark:bg-primary-900 px-1.5 py-0.5 rounded">
               {selectedProject.replace("project:", "")}
             </span>
           )}
@@ -178,7 +178,7 @@ export function OrganizationCostDashboard({
         <div className="grid gap-4 md:grid-cols-3">
           <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 mb-2">
-              <Building2 size={20} className="text-blue-500" />
+              <Building2 size={20} className="text-primary-500" />
               <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                 Total Organizations
               </h3>
@@ -189,7 +189,7 @@ export function OrganizationCostDashboard({
           </div>
           <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp size={20} className="text-green-500" />
+              <TrendingUp size={20} className="text-success-500" />
               <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                 Total Cost
               </h3>
@@ -200,7 +200,7 @@ export function OrganizationCostDashboard({
           </div>
           <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp size={20} className="text-purple-500" />
+              <TrendingUp size={20} className="text-insight-500" />
               <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                 Total Requests
               </h3>
@@ -274,7 +274,10 @@ export function OrganizationCostDashboard({
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                           <div className="flex items-center gap-2">
-                            <Building2 size={16} className="text-gray-400" />
+                            <Building2
+                              size={16}
+                              className="text-gray-400 dark:text-gray-400"
+                            />
                             {org.organizationId.replace("organization:", "")}
                           </div>
                         </td>
@@ -317,7 +320,7 @@ export function OrganizationCostDashboard({
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Cost by Project
                   {selectedOrg && (
-                    <span className="ml-2 text-sm font-normal text-gray-500">
+                    <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
                       in {selectedOrg.replace("organization:", "")}
                     </span>
                   )}
@@ -356,7 +359,10 @@ export function OrganizationCostDashboard({
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                           <div className="flex items-center gap-2">
-                            <Folder size={16} className="text-gray-400" />
+                            <Folder
+                              size={16}
+                              className="text-gray-400 dark:text-gray-400"
+                            />
                             {proj.projectId.replace("project:", "")}
                           </div>
                         </td>
@@ -398,7 +404,7 @@ export function OrganizationCostDashboard({
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Cost by Team
                   {selectedProject && (
-                    <span className="ml-2 text-sm font-normal text-gray-500">
+                    <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
                       in {selectedProject.replace("project:", "")}
                     </span>
                   )}
@@ -436,7 +442,10 @@ export function OrganizationCostDashboard({
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                           <div className="flex items-center gap-2">
-                            <Users size={16} className="text-gray-400" />
+                            <Users
+                              size={16}
+                              className="text-gray-400 dark:text-gray-400"
+                            />
                             {team.teamId.replace("team:", "")}
                           </div>
                         </td>

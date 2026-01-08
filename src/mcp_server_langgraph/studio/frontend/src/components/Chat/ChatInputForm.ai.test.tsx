@@ -565,7 +565,7 @@ describe("ChatInputForm AI Features", () => {
 
       const indicator = screen.getByTestId("kb-status-indicator");
       expect(indicator).toBeInTheDocument();
-      expect(indicator).toHaveClass("bg-green-500");
+      expect(indicator).toHaveClass("bg-success-500");
     });
 
     it("should show misconfigured status with yellow indicator", () => {
@@ -582,7 +582,7 @@ describe("ChatInputForm AI Features", () => {
       );
 
       const indicator = screen.getByTestId("kb-status-indicator");
-      expect(indicator).toHaveClass("bg-yellow-500");
+      expect(indicator).toHaveClass("bg-warning-500");
     });
 
     it("should render KnowledgeBaseFocus in compact mode", () => {

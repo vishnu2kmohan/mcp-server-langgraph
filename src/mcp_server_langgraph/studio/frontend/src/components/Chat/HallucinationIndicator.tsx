@@ -99,7 +99,7 @@ export function HallucinationIndicator({
 
   if (isReported) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+      <span className="inline-flex items-center gap-1 text-xs text-warning-600 dark:text-warning-400">
         <Flag className="w-3 h-3" />
         Reported
       </span>
@@ -108,7 +108,7 @@ export function HallucinationIndicator({
 
   if (showThankYou) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+      <span className="inline-flex items-center gap-1 text-xs text-success-600 dark:text-success-400">
         <CheckCircle className="w-3 h-3" />
         Thank you for your feedback
       </span>
@@ -121,7 +121,7 @@ export function HallucinationIndicator({
         onClick={handleOpenDialog}
         disabled={isReported}
         aria-label="Report inaccuracy"
-        className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-amber-600 dark:text-gray-400 dark:hover:text-amber-400 rounded hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+        className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-warning-600 dark:text-gray-400 dark:hover:text-warning-400 rounded hover:bg-warning-50 dark:hover:bg-warning-900/20 transition-colors"
       >
         <Flag className="w-3 h-3" />
         Flag
@@ -138,7 +138,7 @@ export function HallucinationIndicator({
             {/* Header */}
             <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                <AlertTriangle className="w-5 h-5 text-warning-500" />
                 <h2
                   id="hallucination-dialog-title"
                   className="font-semibold text-gray-900 dark:text-gray-100"
@@ -149,7 +149,7 @@ export function HallucinationIndicator({
               <button
                 onClick={handleCancel}
                 aria-label="Close"
-                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"
+                className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 rounded"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -173,8 +173,8 @@ export function HallucinationIndicator({
                     aria-pressed={selectedCategory === option.id}
                     className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                       selectedCategory === option.id
-                        ? "border-amber-500 bg-amber-50 dark:bg-amber-900/20"
-                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
+                        ? "border-warning-500 bg-warning-50 dark:bg-warning-900/20"
+                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600"
                     }`}
                   >
                     <div className="font-medium text-sm text-gray-900 dark:text-gray-100">
@@ -196,7 +196,7 @@ export function HallucinationIndicator({
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
                   placeholder="Provide additional details about the inaccuracy..."
-                  className="w-full mt-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 border-0 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 resize-none h-20 focus:ring-2 focus:ring-amber-500"
+                  className="w-full mt-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 border-0 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 resize-none h-20 focus:ring-2 focus:ring-warning-500"
                 />
               </div>
             </div>
@@ -216,8 +216,8 @@ export function HallucinationIndicator({
                 aria-label="Submit"
                 className={`px-4 py-2 text-sm rounded-lg ${
                   selectedCategory
-                    ? "bg-amber-600 text-white hover:bg-amber-700"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    ? "bg-warning-600 text-white hover:bg-warning-700"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed"
                 }`}
               >
                 Submit

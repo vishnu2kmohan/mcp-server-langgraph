@@ -54,10 +54,10 @@ export function ExecutableArtifact({
   if (!data || data.trim() === "") {
     return (
       <div
-        className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+        className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg"
         role="alert"
       >
-        <p className="text-sm text-red-600 dark:text-red-400">
+        <p className="text-sm text-error-600 dark:text-error-400">
           No code provided
         </p>
       </div>
@@ -108,10 +108,10 @@ export function ExecutableArtifact({
         >
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+              <div className="p-2 bg-warning-100 dark:bg-warning-900/30 rounded-full">
                 <AlertTriangle
                   size={24}
-                  className="text-amber-600 dark:text-amber-400"
+                  className="text-warning-600 dark:text-warning-400"
                 />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -128,13 +128,13 @@ export function ExecutableArtifact({
             <div className="flex items-center gap-3 justify-end">
               <button
                 onClick={handleCancel}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirm}
-                className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm font-medium text-white bg-success-600 hover:bg-success-700 rounded-lg transition-colors flex items-center gap-2"
               >
                 <Play size={14} />
                 Confirm
@@ -145,7 +145,7 @@ export function ExecutableArtifact({
       )}
 
       {/* Header */}
-      <div className="px-4 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {title && (
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -155,7 +155,7 @@ export function ExecutableArtifact({
           <span className="text-xs font-mono bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-400">
             {config.language}
           </span>
-          <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-500">
+          <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
             {runtimeIcon}
             {runtimeLabel}
           </span>
@@ -163,7 +163,7 @@ export function ExecutableArtifact({
         <button
           onClick={handleRun}
           disabled={isRunning}
-          className="flex items-center gap-1.5 px-3 py-1 text-sm bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1 text-sm bg-success-600 hover:bg-success-700 disabled:bg-success-400 text-white rounded transition-colors"
         >
           {isRunning ? (
             <>
@@ -189,11 +189,11 @@ export function ExecutableArtifact({
       {/* Output */}
       {result && (
         <div className="border-t border-gray-200 dark:border-gray-700">
-          <div className="px-4 py-2 bg-gray-100 dark:bg-gray-900 flex items-center justify-between">
+          <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 flex items-center justify-between">
             <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
               Output
             </span>
-            <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
+            <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
               {result.executionTime !== undefined && (
                 <span className="flex items-center gap-1">
                   <Clock size={12} />
@@ -203,8 +203,8 @@ export function ExecutableArtifact({
               <span
                 className={
                   result.exitCode === 0
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-red-600 dark:text-red-400"
+                    ? "text-success-600 dark:text-success-400"
+                    : "text-error-600 dark:text-error-400"
                 }
               >
                 Exit code: {result.exitCode}
@@ -218,14 +218,14 @@ export function ExecutableArtifact({
               </pre>
             )}
             {result.stderr && (
-              <div className="text-red-600 dark:text-red-400">
+              <div className="text-error-600 dark:text-error-400">
                 <pre className="text-sm font-mono whitespace-pre-wrap">
                   {result.stderr}
                 </pre>
               </div>
             )}
             {result.error && (
-              <div className="text-red-600 dark:text-red-400">
+              <div className="text-error-600 dark:text-error-400">
                 <pre className="text-sm font-mono whitespace-pre-wrap">
                   {result.error}
                 </pre>

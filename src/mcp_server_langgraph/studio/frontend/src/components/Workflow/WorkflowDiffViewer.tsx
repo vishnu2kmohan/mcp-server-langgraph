@@ -137,7 +137,7 @@ export function WorkflowDiffViewer({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <GitCompare size={16} className="text-gray-500" />
+          <GitCompare size={16} className="text-gray-500 dark:text-gray-400" />
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
             Compare Versions
           </h3>
@@ -157,7 +157,7 @@ export function WorkflowDiffViewer({
                 "transition-colors",
                 mode === "side-by-side"
                   ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300",
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300",
               )}
             >
               <Columns size={12} />
@@ -172,7 +172,7 @@ export function WorkflowDiffViewer({
                 "transition-colors",
                 mode === "unified"
                   ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300",
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300",
               )}
             >
               <List size={12} />
@@ -186,7 +186,7 @@ export function WorkflowDiffViewer({
               type="button"
               aria-label="Close"
               onClick={onClose}
-              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+              className="p-1 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
             >
               <X size={16} />
             </button>
@@ -214,7 +214,7 @@ export function WorkflowDiffViewer({
             {(diffSummary.nodesAdded > 0 || diffSummary.edgesAdded > 0) && (
               <div
                 data-testid="diff-additions"
-                className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400"
+                className="flex items-center gap-1 text-xs text-success-600 dark:text-success-400"
               >
                 <Plus size={12} />
                 <span>
@@ -231,7 +231,7 @@ export function WorkflowDiffViewer({
             {(diffSummary.nodesRemoved > 0 || diffSummary.edgesRemoved > 0) && (
               <div
                 data-testid="diff-deletions"
-                className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400"
+                className="flex items-center gap-1 text-xs text-error-600 dark:text-error-400"
               >
                 <Minus size={12} />
                 <span>
@@ -277,11 +277,11 @@ export function WorkflowDiffViewer({
           <div data-testid="unified-view" className="h-full overflow-auto">
             <pre className="p-4 text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-pre-wrap">
               {/* Unified diff view - show both with labels */}
-              <span className="text-red-600 dark:text-red-400">
+              <span className="text-error-600 dark:text-error-400">
                 --- v{versionA.versionNumber}
               </span>
               {"\n"}
-              <span className="text-green-600 dark:text-green-400">
+              <span className="text-success-600 dark:text-success-400">
                 +++ v{versionB.versionNumber}
               </span>
               {"\n\n"}

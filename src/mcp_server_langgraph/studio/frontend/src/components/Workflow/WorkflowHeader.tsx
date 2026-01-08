@@ -27,7 +27,9 @@ export function WorkflowHeader({
   return (
     <header
       className={`px-6 py-4 border-b ${
-        isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+        isDarkMode
+          ? "bg-gray-800 border-gray-700"
+          : "bg-white border-gray-200 dark:border-gray-700"
       }`}
     >
       <div className="flex items-center justify-between">
@@ -41,7 +43,9 @@ export function WorkflowHeader({
           </h1>
           <p
             className={`text-sm ${
-              isDarkMode ? "text-gray-400" : "text-gray-500"
+              isDarkMode
+                ? "text-gray-400 dark:text-gray-400"
+                : "text-gray-500 dark:text-gray-400"
             }`}
           >
             MCP Server with LangGraph - Build agents visually, export to code
@@ -62,8 +66,8 @@ export function WorkflowHeader({
             onClick={onToggleDarkMode}
             className={`p-2 rounded-lg transition-colors ${
               isDarkMode
-                ? "bg-gray-700 text-yellow-400 hover:bg-gray-600"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-gray-700 text-warning-400 hover:bg-gray-600"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700"
             }`}
             title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
             aria-label={
@@ -77,7 +81,7 @@ export function WorkflowHeader({
             className={`p-2 rounded-lg transition-colors ${
               isDarkMode
                 ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700"
             }`}
             title="Settings"
             aria-label="Settings"
@@ -89,7 +93,7 @@ export function WorkflowHeader({
             className={`p-2 rounded-lg transition-colors ${
               isDarkMode
                 ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700"
             }`}
             title="Help"
             aria-label="Help"

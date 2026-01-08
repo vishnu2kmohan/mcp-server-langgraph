@@ -113,11 +113,11 @@ export function ResponseRating({
           aria-pressed={currentRating === "up"}
           className={`
             p-1.5 rounded-lg transition-colors
-            focus:outline-none focus:ring-2 focus:ring-blue-500/50
+            focus:outline-none focus:ring-2 focus:ring-primary-500/50
             ${
               currentRating === "up"
-                ? "text-green-500 bg-green-50 dark:bg-green-900/20"
-                : "text-gray-400 hover:text-green-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "text-success-500 bg-success-50 dark:bg-success-900/20"
+                : "text-gray-400 dark:text-gray-400 hover:text-success-500 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
             }
             ${isSubmitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
           `}
@@ -136,11 +136,11 @@ export function ResponseRating({
           aria-pressed={currentRating === "down"}
           className={`
             p-1.5 rounded-lg transition-colors
-            focus:outline-none focus:ring-2 focus:ring-blue-500/50
+            focus:outline-none focus:ring-2 focus:ring-primary-500/50
             ${
               currentRating === "down"
-                ? "text-red-500 bg-red-50 dark:bg-red-900/20"
-                : "text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "text-error-500 bg-error-50 dark:bg-error-900/20"
+                : "text-gray-400 dark:text-gray-400 hover:text-error-500 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
             }
             ${isSubmitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
           `}
@@ -151,7 +151,10 @@ export function ResponseRating({
         {/* Loading indicator */}
         {isSubmitting && (
           <span data-testid="rating-loading" className="ml-1">
-            <Loader2 size={iconSize} className="animate-spin text-gray-400" />
+            <Loader2
+              size={iconSize}
+              className="animate-spin text-gray-400 dark:text-gray-400"
+            />
           </span>
         )}
 
@@ -176,17 +179,17 @@ export function ResponseRating({
             className="flex-1 px-3 py-1.5 text-sm border rounded-lg
               bg-white dark:bg-gray-800
               border-gray-300 dark:border-gray-600
-              focus:outline-none focus:ring-2 focus:ring-blue-500/50
+              focus:outline-none focus:ring-2 focus:ring-primary-500/50
               text-gray-700 dark:text-gray-300
-              placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              placeholder:text-gray-400 dark:text-gray-400 dark:placeholder:text-gray-500"
           />
           <button
             data-testid="submit-feedback"
             type="button"
             onClick={handleSubmitFeedback}
             disabled={!feedbackText.trim()}
-            className="p-1.5 rounded-lg text-blue-600 dark:text-blue-400
-              hover:bg-blue-50 dark:hover:bg-blue-900/20
+            className="p-1.5 rounded-lg text-primary-600 dark:text-primary-400
+              hover:bg-primary-50 dark:hover:bg-primary-900/20
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-colors"
           >

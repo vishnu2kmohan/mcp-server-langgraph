@@ -135,17 +135,17 @@ export function ConnectedComplianceDashboard({
       <div
         data-testid="compliance-dashboard"
         className={cn(
-          "rounded-lg border border-red-200 dark:border-red-800",
-          "bg-red-50 dark:bg-red-900/20 p-6 text-center",
+          "rounded-lg border border-error-200 dark:border-error-800",
+          "bg-error-50 dark:bg-error-900/20 p-6 text-center",
           className,
         )}
       >
         <AlertTriangle
           size={32}
-          className="mx-auto mb-3 text-red-500"
+          className="mx-auto mb-3 text-error-500"
           aria-hidden="true"
         />
-        <p className="text-red-700 dark:text-red-300 mb-4">
+        <p className="text-error-700 dark:text-error-300 mb-4">
           Failed to load compliance data
         </p>
         <button
@@ -154,7 +154,7 @@ export function ConnectedComplianceDashboard({
           onClick={handleRetry}
           className={cn(
             "inline-flex items-center gap-2 px-4 py-2 rounded-lg",
-            "bg-red-600 text-white hover:bg-red-700",
+            "bg-error-600 text-white hover:bg-error-700",
             "transition-colors",
           )}
         >

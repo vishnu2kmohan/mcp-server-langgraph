@@ -114,14 +114,14 @@ export function AuditLogPage() {
 
   const getActionColor = (action: string) => {
     if (action.includes("delete"))
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+      return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
     if (action.includes("create"))
-      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+      return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
     if (action.includes("update"))
-      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+      return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400";
     if (action.includes("login"))
-      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-    return "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400";
+      return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
+    return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 dark:bg-gray-900/30 dark:text-gray-400";
   };
 
   return (
@@ -130,7 +130,7 @@ export function AuditLogPage() {
       <header className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Shield className="text-blue-500" size={28} />
+            <Shield className="text-primary-500" size={28} />
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 Audit Logs
@@ -143,14 +143,14 @@ export function AuditLogPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleExport}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
             >
               <Download size={16} />
               Export
             </button>
             <button
               onClick={() => refetch()}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
             >
               <RefreshCw size={16} />
               Refresh
@@ -167,14 +167,14 @@ export function AuditLogPage() {
             placeholder="Filter by action..."
             value={actionFilter}
             onChange={(e) => setActionFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <input
             type="text"
             placeholder="Filter by user..."
             value={userFilter}
             onChange={(e) => setUserFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <span className="text-sm text-gray-500 dark:text-gray-400">
             {filteredLogs.length} of {total} entries
@@ -186,7 +186,7 @@ export function AuditLogPage() {
       <div className="flex-1 overflow-y-auto p-6">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
-            <RefreshCw size={32} className="animate-spin text-blue-500" />
+            <RefreshCw size={32} className="animate-spin text-primary-500" />
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
@@ -194,7 +194,7 @@ export function AuditLogPage() {
             <p className="text-lg">Failed to load audit logs</p>
             <button
               onClick={() => refetch()}
-              className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="mt-4 flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               <RefreshCw size={16} />
               Retry
@@ -220,9 +220,15 @@ export function AuditLogPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       {expandedLogId === log.id ? (
-                        <ChevronDown size={16} className="text-gray-400" />
+                        <ChevronDown
+                          size={16}
+                          className="text-gray-400 dark:text-gray-400"
+                        />
                       ) : (
-                        <ChevronRight size={16} className="text-gray-400" />
+                        <ChevronRight
+                          size={16}
+                          className="text-gray-400 dark:text-gray-400"
+                        />
                       )}
                       <span
                         className={`px-2 py-1 text-xs rounded-full ${getActionColor(log.action)}`}
@@ -249,7 +255,7 @@ export function AuditLogPage() {
                     <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Details
                     </h4>
-                    <pre className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 p-3 rounded-lg overflow-auto">
+                    <pre className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-auto">
                       {JSON.stringify(log.details, null, 2)}
                     </pre>
                   </div>

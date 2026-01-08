@@ -45,7 +45,7 @@ export function FeatureFlagsCard({ data }: FeatureFlagsCardProps) {
     <Card data-testid="feature-flags-card">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Flag size={24} className="text-blue-500" />
+          <Flag size={24} className="text-primary-500" />
           <CardTitle>Feature Flags</CardTitle>
         </div>
         <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full">
@@ -57,13 +57,13 @@ export function FeatureFlagsCard({ data }: FeatureFlagsCardProps) {
         {/* Summary */}
         <div className="flex gap-4 mb-4">
           <div className="flex items-center gap-2">
-            <Check size={16} className="text-green-500" />
+            <Check size={16} className="text-success-500" />
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {enabledCount} enabled
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <X size={16} className="text-gray-400" />
+            <X size={16} className="text-gray-400 dark:text-gray-400" />
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {disabledCount} disabled
             </span>
@@ -83,8 +83,8 @@ export function FeatureFlagsCard({ data }: FeatureFlagsCardProps) {
               <span
                 className={`px-2 py-0.5 text-xs font-medium rounded ${
                   enabled
-                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                    : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                    ? "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                 }`}
               >
                 {enabled ? "Enabled" : "Disabled"}

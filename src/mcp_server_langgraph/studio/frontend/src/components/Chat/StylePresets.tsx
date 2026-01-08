@@ -125,11 +125,11 @@ export function StylePresets({
               ${compact ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-sm"}
               rounded-lg font-medium
               transition-colors
-              focus:outline-none focus:ring-2 focus:ring-blue-500/50
+              focus:outline-none focus:ring-2 focus:ring-primary-500/50
               ${
                 isActive
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  ? "bg-primary-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700"
               }
               ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
             `}

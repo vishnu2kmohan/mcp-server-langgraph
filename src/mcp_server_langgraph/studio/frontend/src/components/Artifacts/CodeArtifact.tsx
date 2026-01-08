@@ -141,7 +141,7 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
   const themeClasses =
     theme === "dark"
       ? "bg-gray-900 text-gray-100 border-gray-700"
-      : "bg-gray-50 text-gray-900 border-gray-200";
+      : "bg-gray-50 text-gray-900 border-gray-200 dark:border-gray-700";
 
   return (
     <div
@@ -155,7 +155,7 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
         className={`flex items-center justify-between px-4 py-2 border-b ${
           theme === "dark"
             ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 bg-gray-100"
+            : "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800"
         }`}
       >
         <div className="flex items-center gap-3">
@@ -164,7 +164,7 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
             className={`text-xs font-mono px-2 py-1 rounded ${
               theme === "dark"
                 ? "bg-gray-700 text-gray-300"
-                : "bg-gray-200 text-gray-700"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
             }`}
           >
             {language}
@@ -176,14 +176,14 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
             className={`flex items-center gap-2 px-3 py-1 text-sm rounded transition-colors ${
               theme === "dark"
                 ? "hover:bg-gray-700 text-gray-300"
-                : "hover:bg-gray-200 text-gray-700"
+                : "hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
             }`}
             aria-label="Copy code"
           >
             {copied ? (
               <>
-                <Check className="w-4 h-4 text-green-500" />
-                <span className="text-green-500">Copied!</span>
+                <Check className="w-4 h-4 text-success-500" />
+                <span className="text-success-500">Copied!</span>
               </>
             ) : (
               <>
@@ -197,7 +197,7 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
             className={`p-1.5 rounded transition-colors ${
               theme === "dark"
                 ? "hover:bg-gray-700 text-gray-300"
-                : "hover:bg-gray-200 text-gray-700"
+                : "hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
             }`}
             aria-label="Download code"
           >

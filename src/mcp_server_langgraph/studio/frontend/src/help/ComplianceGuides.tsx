@@ -59,11 +59,12 @@ const FRAMEWORK_LABELS: Record<ComplianceFramework, string> = {
 };
 
 const FRAMEWORK_COLORS: Record<ComplianceFramework, string> = {
-  soc2: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
-  hipaa: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300",
-  gdpr: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300",
+  soc2: "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+  hipaa:
+    "bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-300",
+  gdpr: "bg-insight-100 dark:bg-insight-900/30 text-insight-700 dark:text-insight-300",
   fedramp:
-    "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300",
+    "bg-grafana-100 dark:bg-grafana-900/30 text-grafana-700 dark:text-grafana-300",
 };
 
 // =============================================================================
@@ -150,7 +151,7 @@ export function ComplianceGuides({
           <div className="flex-1 relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
             />
             <input
               type="search"
@@ -212,12 +213,12 @@ export function ComplianceGuides({
                 {isExpanded ? (
                   <ChevronDown
                     size={18}
-                    className="text-gray-400 mt-0.5 flex-shrink-0"
+                    className="text-gray-400 dark:text-gray-400 mt-0.5 flex-shrink-0"
                   />
                 ) : (
                   <ChevronRight
                     size={18}
-                    className="text-gray-400 mt-0.5 flex-shrink-0"
+                    className="text-gray-400 dark:text-gray-400 mt-0.5 flex-shrink-0"
                   />
                 )}
                 <div className="flex-1 min-w-0">
@@ -255,7 +256,7 @@ export function ComplianceGuides({
                       type="button"
                       data-testid="print-guide"
                       onClick={(e) => handlePrint(guide, e)}
-                      className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                      className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
                     >
                       <Printer size={14} />
                       Print
@@ -275,7 +276,7 @@ export function ComplianceGuides({
                           className={cn(
                             "flex items-start gap-3 p-3 rounded-lg border",
                             isCompleted
-                              ? "bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800"
+                              ? "bg-success-50 dark:bg-success-900/10 border-success-200 dark:border-success-800"
                               : "bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700",
                           )}
                         >
@@ -302,7 +303,7 @@ export function ComplianceGuides({
                           {isCompleted && (
                             <Check
                               size={16}
-                              className="text-green-500 flex-shrink-0"
+                              className="text-success-500 flex-shrink-0"
                             />
                           )}
                         </div>

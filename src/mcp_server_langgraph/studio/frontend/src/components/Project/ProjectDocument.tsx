@@ -147,24 +147,24 @@ export function ProjectDocument({
       label: "Sessions",
       count: project?.sessionCount ?? 0,
       path: `/studio/chat?project=${projectId}`,
-      color: "text-blue-600 dark:text-blue-400",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      color: "text-primary-600 dark:text-primary-400",
+      bgColor: "bg-primary-50 dark:bg-primary-900/20",
     },
     {
       icon: GitBranch,
       label: "Workflows",
       count: project?.workflowCount ?? 0,
       path: `/studio/workflows?project=${projectId}`,
-      color: "text-purple-600 dark:text-purple-400",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      color: "text-insight-600 dark:text-insight-400",
+      bgColor: "bg-insight-50 dark:bg-insight-900/20",
     },
     {
       icon: Plug,
       label: "Connections",
       count: project?.connectionCount ?? 0,
       path: `/studio/connections/mcp?project=${projectId}`,
-      color: "text-green-600 dark:text-green-400",
-      bgColor: "bg-green-50 dark:bg-green-900/20",
+      color: "text-success-600 dark:text-success-400",
+      bgColor: "bg-success-50 dark:bg-success-900/20",
     },
   ];
 
@@ -182,7 +182,7 @@ export function ProjectDocument({
       <header className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <FolderKanban className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <FolderKanban className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 {project?.name || "Project"}
@@ -198,15 +198,15 @@ export function ProjectDocument({
             <span
               className={`px-2 py-1 text-xs rounded-full ${
                 project?.status === "active"
-                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                  : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                  ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
               }`}
             >
               {project?.status || "unknown"}
             </span>
             <button
               onClick={() => refetch()}
-              className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
               title="Refresh"
             >
               <RefreshCw size={16} />
@@ -225,14 +225,17 @@ export function ProjectDocument({
             </h3>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
-                <User size={16} className="text-gray-400" />
+                <User size={16} className="text-gray-400 dark:text-gray-400" />
                 <span className="text-gray-600 dark:text-gray-400">Owner:</span>
                 <span className="text-gray-900 dark:text-gray-100">
                   {project?.ownerName || project?.ownerId || "Unknown"}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Calendar size={16} className="text-gray-400" />
+                <Calendar
+                  size={16}
+                  className="text-gray-400 dark:text-gray-400"
+                />
                 <span className="text-gray-600 dark:text-gray-400">
                   Created:
                 </span>
@@ -241,7 +244,10 @@ export function ProjectDocument({
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Calendar size={16} className="text-gray-400" />
+                <Calendar
+                  size={16}
+                  className="text-gray-400 dark:text-gray-400"
+                />
                 <span className="text-gray-600 dark:text-gray-400">
                   Updated:
                 </span>
@@ -272,7 +278,10 @@ export function ProjectDocument({
                     <div className={cn("p-2 rounded-lg", resource.bgColor)}>
                       <resource.icon size={20} className={resource.color} />
                     </div>
-                    <ExternalLink size={14} className="text-gray-400" />
+                    <ExternalLink
+                      size={14}
+                      className="text-gray-400 dark:text-gray-400"
+                    />
                   </div>
                   <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {resource.count}
@@ -293,7 +302,7 @@ export function ProjectDocument({
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => navigate(`/studio/chat?project=${projectId}`)}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/30"
               >
                 <MessageSquare size={16} />
                 New Session
@@ -302,14 +311,14 @@ export function ProjectDocument({
                 onClick={() =>
                   navigate(`/studio/workflows?project=${projectId}`)
                 }
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30"
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-insight-50 text-insight-700 dark:bg-insight-900/20 dark:text-insight-400 rounded-lg hover:bg-insight-100 dark:hover:bg-insight-900/30"
               >
                 <GitBranch size={16} />
                 Create Workflow
               </button>
               <button
                 onClick={() => navigate(`/studio/projects/${projectId}`)}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600"
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-50 text-gray-700 dark:text-gray-200 dark:bg-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-600"
               >
                 <ExternalLink size={16} />
                 Full View

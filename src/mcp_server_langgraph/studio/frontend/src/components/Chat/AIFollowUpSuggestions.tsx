@@ -194,10 +194,10 @@ export function AIFollowUpSuggestions({
                 className={`
                   inline-flex items-center gap-1.5
                   px-3 py-1.5 rounded-full
-                  bg-blue-50 dark:bg-blue-900/20
-                  text-blue-700 dark:text-blue-300
-                  hover:bg-blue-100 dark:hover:bg-blue-900/40
-                  border border-blue-200 dark:border-blue-800
+                  bg-primary-50 dark:bg-primary-900/20
+                  text-primary-700 dark:text-primary-300
+                  hover:bg-primary-100 dark:hover:bg-primary-900/40
+                  border border-primary-200 dark:border-primary-800
                   transition-colors cursor-pointer
                   disabled:opacity-50 disabled:cursor-not-allowed
                   ${compact ? "px-2 py-1" : "px-3 py-1.5"}
@@ -208,7 +208,7 @@ export function AIFollowUpSuggestions({
                   <Icon size={compact ? 10 : 12} />
                 </span>
                 {showCategories && (
-                  <span className="text-[10px] uppercase font-semibold text-blue-500 dark:text-blue-400">
+                  <span className="text-xs uppercase font-semibold text-primary-500 dark:text-primary-400">
                     {CATEGORY_LABELS[category]}
                   </span>
                 )}
@@ -231,8 +231,8 @@ export function AIFollowUpSuggestions({
                     className={`
                       p-1 rounded-full
                       text-gray-400 dark:text-gray-500
-                      hover:text-green-600 dark:hover:text-green-400
-                      hover:bg-green-50 dark:hover:bg-green-900/20
+                      hover:text-success-600 dark:hover:text-success-400
+                      hover:bg-success-50 dark:hover:bg-success-900/20
                       transition-colors
                       disabled:opacity-50 disabled:cursor-not-allowed
                     `}
@@ -251,8 +251,8 @@ export function AIFollowUpSuggestions({
                     className={`
                       p-1 rounded-full
                       text-gray-400 dark:text-gray-500
-                      hover:text-red-600 dark:hover:text-red-400
-                      hover:bg-red-50 dark:hover:bg-red-900/20
+                      hover:text-error-600 dark:hover:text-error-400
+                      hover:bg-error-50 dark:hover:bg-error-900/20
                       transition-colors
                       disabled:opacity-50 disabled:cursor-not-allowed
                     `}

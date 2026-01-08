@@ -223,7 +223,10 @@ export function WorkflowEditor({
           className,
         )}
       >
-        <Loader2 size={24} className="animate-spin text-gray-400" />
+        <Loader2
+          size={24}
+          className="animate-spin text-gray-400 dark:text-gray-400"
+        />
       </div>
     );
   }
@@ -240,7 +243,7 @@ export function WorkflowEditor({
         )}
       >
         <div className="text-center">
-          <AlertCircle size={32} className="mx-auto mb-2 text-red-500" />
+          <AlertCircle size={32} className="mx-auto mb-2 text-error-500" />
           <p className="text-gray-500 dark:text-gray-400">
             Failed to load workflow
           </p>
@@ -275,7 +278,7 @@ export function WorkflowEditor({
               "transition-colors",
               currentView === "visual"
                 ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300",
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300",
             )}
           >
             <LayoutGrid size={12} />
@@ -291,7 +294,7 @@ export function WorkflowEditor({
               "transition-colors",
               currentView === "code"
                 ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300",
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300",
             )}
           >
             <Code size={12} />
@@ -304,10 +307,10 @@ export function WorkflowEditor({
       {isSyncing && (
         <div
           data-testid="sync-status"
-          className="flex items-center gap-2 px-4 py-1.5 bg-purple-50 dark:bg-purple-900/20 border-b border-purple-200 dark:border-purple-800"
+          className="flex items-center gap-2 px-4 py-1.5 bg-insight-50 dark:bg-insight-900/20 border-b border-insight-200 dark:border-insight-800"
         >
-          <RefreshCw size={12} className="animate-spin text-purple-500" />
-          <span className="text-xs text-purple-600 dark:text-purple-400">
+          <RefreshCw size={12} className="animate-spin text-insight-500" />
+          <span className="text-xs text-insight-600 dark:text-insight-400">
             Syncing...
           </span>
         </div>
@@ -317,10 +320,10 @@ export function WorkflowEditor({
       {parseError && (
         <div
           data-testid="parse-error"
-          className="flex items-center gap-2 px-4 py-1.5 bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-800"
+          className="flex items-center gap-2 px-4 py-1.5 bg-grafana-50 dark:bg-grafana-900/20 border-b border-grafana-200 dark:border-grafana-800"
         >
-          <AlertCircle size={12} className="text-orange-500" />
-          <span className="text-xs text-orange-600 dark:text-orange-400">
+          <AlertCircle size={12} className="text-grafana-500" />
+          <span className="text-xs text-grafana-600 dark:text-grafana-400">
             JSON Error: {parseError}
           </span>
         </div>
@@ -328,9 +331,9 @@ export function WorkflowEditor({
 
       {/* Validation status bar */}
       {isValidating && (
-        <div className="flex items-center gap-2 px-4 py-1.5 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
-          <Loader2 size={12} className="animate-spin text-blue-500" />
-          <span className="text-xs text-blue-600 dark:text-blue-400">
+        <div className="flex items-center gap-2 px-4 py-1.5 bg-primary-50 dark:bg-primary-900/20 border-b border-primary-200 dark:border-primary-800">
+          <Loader2 size={12} className="animate-spin text-primary-500" />
+          <span className="text-xs text-primary-600 dark:text-primary-400">
             Validating...
           </span>
         </div>
@@ -342,15 +345,15 @@ export function WorkflowEditor({
         validationResult.errors.length > 0 && (
           <div
             data-testid="validation-errors"
-            className="px-4 py-2 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800"
+            className="px-4 py-2 bg-error-50 dark:bg-error-900/20 border-b border-error-200 dark:border-error-800"
           >
             <div className="flex items-center gap-2 mb-1">
-              <AlertCircle size={12} className="text-red-500" />
-              <span className="text-xs font-medium text-red-600 dark:text-red-400">
+              <AlertCircle size={12} className="text-error-500" />
+              <span className="text-xs font-medium text-error-600 dark:text-error-400">
                 Validation Errors
               </span>
             </div>
-            <ul className="text-xs text-red-600 dark:text-red-400 space-y-0.5 pl-4">
+            <ul className="text-xs text-error-600 dark:text-error-400 space-y-0.5 pl-4">
               {validationResult.errors.map((error, i) => (
                 <li key={i}>{error}</li>
               ))}
@@ -362,15 +365,15 @@ export function WorkflowEditor({
       {validationResult && validationResult.warnings.length > 0 && (
         <div
           data-testid="validation-warnings"
-          className="px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800"
+          className="px-4 py-2 bg-warning-50 dark:bg-warning-900/20 border-b border-warning-200 dark:border-warning-800"
         >
           <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle size={12} className="text-amber-500" />
-            <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+            <AlertTriangle size={12} className="text-warning-500" />
+            <span className="text-xs font-medium text-warning-600 dark:text-warning-400">
               Warnings
             </span>
           </div>
-          <ul className="text-xs text-amber-600 dark:text-amber-400 space-y-0.5 pl-4">
+          <ul className="text-xs text-warning-600 dark:text-warning-400 space-y-0.5 pl-4">
             {validationResult.warnings.map((warning, i) => (
               <li key={i}>{warning}</li>
             ))}

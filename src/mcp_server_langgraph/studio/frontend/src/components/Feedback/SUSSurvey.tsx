@@ -127,7 +127,7 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
         </div>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
-            className="bg-blue-600 h-2 rounded-full transition-all"
+            className="bg-primary-600 h-2 rounded-full transition-all"
             style={{ width: `${(answeredCount / 10) * 100}%` }}
           />
         </div>
@@ -168,7 +168,7 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
                     value={rating}
                     checked={responses[index] === rating}
                     onChange={() => handleRatingChange(index, rating)}
-                    className="w-5 h-5 text-blue-600 focus:ring-blue-500"
+                    className="w-5 h-5 text-primary-600 focus:ring-primary-500"
                   />
                   <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {rating}
@@ -193,8 +193,8 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
           disabled={!allAnswered}
           className={`px-6 py-2 text-sm rounded-md transition-colors ${
             allAnswered
-              ? "bg-blue-600 text-white hover:bg-blue-700"
-              : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              ? "bg-primary-600 text-white hover:bg-primary-700"
+              : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed"
           }`}
         >
           Submit

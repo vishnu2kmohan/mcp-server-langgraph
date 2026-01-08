@@ -205,7 +205,7 @@ export function SlashCommandMenu({
                   px-3 py-2 cursor-pointer flex items-center gap-3
                   ${
                     isHighlighted
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                      ? "bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300"
                       : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
                   }
                 `}
@@ -214,8 +214,8 @@ export function SlashCommandMenu({
                   size={16}
                   className={
                     isHighlighted
-                      ? "text-blue-500"
-                      : "text-gray-400 dark:text-gray-500"
+                      ? "text-primary-500"
+                      : "text-gray-400 dark:text-gray-400"
                   }
                 />
                 <div className="flex-1 min-w-0">
@@ -227,7 +227,7 @@ export function SlashCommandMenu({
                   </div>
                 </div>
                 {command.shortcut && (
-                  <kbd className="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-500 dark:text-gray-400">
+                  <kbd className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-500 dark:text-gray-400">
                     {command.shortcut}
                   </kbd>
                 )}

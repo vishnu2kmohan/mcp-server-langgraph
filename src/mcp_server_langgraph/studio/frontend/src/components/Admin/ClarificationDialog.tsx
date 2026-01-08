@@ -166,13 +166,13 @@ export function ClarificationDialog({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-blue-500" />
+            <HelpCircle className="w-5 h-5 text-primary-500" />
             Agent Needs Your Input
           </h2>
           <button
             data-testid="close-dialog"
             onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -182,7 +182,7 @@ export function ClarificationDialog({
         <div className="p-4 space-y-4 overflow-y-auto max-h-[60vh]">
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-400">
+            <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg p-3 text-error-700 dark:text-error-400">
               {error}
             </div>
           )}
@@ -207,7 +207,9 @@ export function ClarificationDialog({
               <div className="mt-1 space-y-1">
                 {Object.entries(request.context).map(([key, value]) => (
                   <div key={key} className="text-gray-700 dark:text-gray-300">
-                    <span className="text-gray-500">{key}:</span>{" "}
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {key}:
+                    </span>{" "}
                     {String(value)}
                   </div>
                 ))}
@@ -225,7 +227,7 @@ export function ClarificationDialog({
                 placeholder={request.placeholder || "Enter your response..."}
                 rows={3}
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
           )}
@@ -241,7 +243,7 @@ export function ClarificationDialog({
                   disabled={isSubmitting}
                   className={`w-full text-left p-3 border rounded-lg transition-colors ${
                     selectedOptionId === option.id
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
                       : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
@@ -250,7 +252,7 @@ export function ClarificationDialog({
                       {option.label}
                     </span>
                     {option.isRecommended && (
-                      <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
+                      <span className="text-xs px-2 py-0.5 bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 rounded">
                         Recommended
                       </span>
                     )}
@@ -271,21 +273,21 @@ export function ClarificationDialog({
               data-testid="confirmation-warning"
               className={`flex items-start gap-3 rounded-lg p-3 ${
                 hasDestructiveContext
-                  ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
-                  : "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+                  ? "bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800"
+                  : "bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800"
               }`}
             >
               <AlertTriangle
                 className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                  hasDestructiveContext ? "text-red-500" : "text-amber-500"
+                  hasDestructiveContext ? "text-error-500" : "text-warning-500"
                 }`}
               />
               <div>
                 <p
                   className={`font-medium ${
                     hasDestructiveContext
-                      ? "text-red-700 dark:text-red-400"
-                      : "text-amber-700 dark:text-amber-400"
+                      ? "text-error-700 dark:text-error-400"
+                      : "text-warning-700 dark:text-warning-400"
                   }`}
                 >
                   Please confirm to proceed
@@ -293,8 +295,8 @@ export function ClarificationDialog({
                 <p
                   className={`text-sm ${
                     hasDestructiveContext
-                      ? "text-red-600 dark:text-red-400/80"
-                      : "text-amber-600 dark:text-amber-400/80"
+                      ? "text-error-600 dark:text-error-400/80"
+                      : "text-warning-600 dark:text-warning-400/80"
                   }`}
                 >
                   This action requires your explicit confirmation.
@@ -312,7 +314,7 @@ export function ClarificationDialog({
                 data-testid="confirm-no"
                 onClick={() => handleConfirmation(false)}
                 disabled={isSubmitting}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-error-700 dark:text-error-400 bg-error-100 dark:bg-error-900/30 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <XCircle className="w-4 h-4" />
                 No
@@ -321,7 +323,7 @@ export function ClarificationDialog({
                 data-testid="confirm-yes"
                 onClick={() => handleConfirmation(true)}
                 disabled={isSubmitting}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-success-600 rounded-lg hover:bg-success-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting ? (
                   <Loader2
@@ -338,7 +340,7 @@ export function ClarificationDialog({
             <>
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
@@ -346,7 +348,7 @@ export function ClarificationDialog({
                 data-testid="submit-button"
                 onClick={isTextType ? handleTextSubmit : handleChoiceSubmit}
                 disabled={!canSubmit || isSubmitting}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting ? (
                   <Loader2

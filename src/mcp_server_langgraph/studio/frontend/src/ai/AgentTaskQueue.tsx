@@ -46,33 +46,33 @@ const STATUS_CONFIG: Record<
 > = {
   queued: {
     icon: <Clock className="h-3 w-3" />,
-    color: "text-yellow-600",
-    bgColor: "bg-yellow-500",
+    color: "text-warning-600",
+    bgColor: "bg-warning-500",
   },
   running: {
     icon: <Loader2 className="h-3 w-3 animate-spin" />,
-    color: "text-blue-600",
-    bgColor: "bg-blue-500",
+    color: "text-primary-600",
+    bgColor: "bg-primary-500",
   },
   completed: {
     icon: <CheckCircle className="h-3 w-3" />,
-    color: "text-green-600",
-    bgColor: "bg-green-500",
+    color: "text-success-600",
+    bgColor: "bg-success-500",
   },
   failed: {
     icon: <AlertCircle className="h-3 w-3" />,
-    color: "text-red-600",
-    bgColor: "bg-red-500",
+    color: "text-error-600",
+    bgColor: "bg-error-500",
   },
   awaiting_approval: {
     icon: <AlertCircle className="h-3 w-3" />,
-    color: "text-amber-600",
-    bgColor: "bg-amber-500",
+    color: "text-warning-600",
+    bgColor: "bg-warning-500",
   },
   awaiting_clarification: {
     icon: <Clock className="h-3 w-3" />,
-    color: "text-purple-600",
-    bgColor: "bg-purple-500",
+    color: "text-insight-600",
+    bgColor: "bg-insight-500",
   },
 };
 
@@ -121,7 +121,7 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
             {agent.task}
           </p>
           {agent.error && (
-            <p className="mt-1 text-xs text-red-500">{agent.error}</p>
+            <p className="mt-1 text-xs text-error-500">{agent.error}</p>
           )}
         </div>
 
@@ -133,9 +133,9 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
               aria-label={`Cancel ${agent.name}`}
               className={cn(
                 "p-1 rounded",
-                "text-gray-400 hover:text-gray-600",
+                "text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300",
                 "dark:hover:text-gray-300",
-                "hover:bg-gray-100 dark:hover:bg-gray-700",
+                "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
               )}
             >
               <X className="h-4 w-4" />
@@ -148,9 +148,9 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
               aria-label={`Dismiss ${agent.name}`}
               className={cn(
                 "p-1 rounded",
-                "text-gray-400 hover:text-gray-600",
+                "text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300",
                 "dark:hover:text-gray-300",
-                "hover:bg-gray-100 dark:hover:bg-gray-700",
+                "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
               )}
             >
               <Trash2 className="h-4 w-4" />
@@ -162,7 +162,7 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
       {/* Progress bar for running tasks */}
       {agent.status === "running" && (
         <div className="mt-2">
-          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
             <span>Progress</span>
             <span>{agent.progress}%</span>
           </div>
@@ -174,7 +174,7 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
             className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
           >
             <div
-              className="h-full bg-blue-500 transition-all duration-300"
+              className="h-full bg-primary-500 transition-all duration-300"
               style={{ width: `${agent.progress}%` }}
             />
           </div>
@@ -256,9 +256,9 @@ export function AgentTaskQueue({ onCancel, className }: AgentTaskQueueProps) {
             onClick={handleClearCompleted}
             className={cn(
               "text-xs px-2 py-1 rounded",
-              "text-gray-500 hover:text-gray-700",
+              "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200",
               "dark:text-gray-400 dark:hover:text-gray-200",
-              "hover:bg-gray-100 dark:hover:bg-gray-700",
+              "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
             )}
           >
             Clear completed

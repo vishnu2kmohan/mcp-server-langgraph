@@ -88,7 +88,7 @@ export function AgentsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
+        <RefreshCw className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
   }
@@ -126,7 +126,7 @@ export function AgentsPage() {
           </div>
           <button
             onClick={handleRefresh}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
           >
             <RefreshCw size={16} />
             Refresh
@@ -140,7 +140,7 @@ export function AgentsPage() {
           {/* Model Configuration Card */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Cpu size={24} className="text-blue-500" />
+              <Cpu size={24} className="text-primary-500" />
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 Model Configuration
               </h2>
@@ -213,12 +213,15 @@ export function AgentsPage() {
                     type="checkbox"
                     checked={localVerification}
                     onChange={handleVerificationToggle}
-                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-5 h-5 text-primary-600 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
                   />
                   {localVerification ? (
-                    <Check size={16} className="ml-2 text-green-500" />
+                    <Check size={16} className="ml-2 text-success-500" />
                   ) : (
-                    <X size={16} className="ml-2 text-gray-400" />
+                    <X
+                      size={16}
+                      className="ml-2 text-gray-400 dark:text-gray-400"
+                    />
                   )}
                 </div>
               </div>
@@ -228,11 +231,11 @@ export function AgentsPage() {
           {/* Tools Card */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Wrench size={24} className="text-purple-500" />
+              <Wrench size={24} className="text-insight-500" />
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 Available Tools
               </h2>
-              <span className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
+              <span className="px-2 py-1 text-xs bg-insight-100 dark:bg-insight-900/30 text-insight-700 dark:text-insight-400 rounded-full">
                 {tools.length} tools available
               </span>
             </div>
@@ -246,10 +249,10 @@ export function AgentsPage() {
                 {tools.map((tool) => (
                   <div
                     key={tool.name}
-                    className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 transition-colors"
+                    className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-500 transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <Wrench size={16} className="text-purple-500" />
+                      <Wrench size={16} className="text-insight-500" />
                       <div>
                         <h3 className="font-medium text-gray-900 dark:text-gray-100">
                           {tool.name}

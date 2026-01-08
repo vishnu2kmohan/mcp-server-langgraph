@@ -26,6 +26,10 @@ import {
   useLLMStreamingWebSocket,
   type ActiveStream,
 } from "../../../hooks/useLLMStreamingWebSocket";
+import {
+  STATUS_TEXT_COLORS,
+  STREAM_STATUS_STYLES,
+} from "../utils/devToolsColors";
 
 // =============================================================================
 // Types
@@ -51,28 +55,28 @@ function getStatusIcon(status: ActiveStream["status"]): React.ReactNode {
     case "active":
       return (
         <Loader2
-          className="w-4 h-4 text-blue-500 animate-spin"
+          className={cn("w-4 h-4 animate-spin", STATUS_TEXT_COLORS.info)}
           data-testid="stream-status-active"
         />
       );
     case "success":
       return (
         <CheckCircle2
-          className="w-4 h-4 text-green-500"
+          className={cn("w-4 h-4", STATUS_TEXT_COLORS.success)}
           data-testid="stream-status-success"
         />
       );
     case "error":
       return (
         <XCircle
-          className="w-4 h-4 text-red-500"
+          className={cn("w-4 h-4", STATUS_TEXT_COLORS.error)}
           data-testid="stream-status-error"
         />
       );
     case "cancelled":
       return (
         <AlertCircle
-          className="w-4 h-4 text-yellow-500"
+          className={cn("w-4 h-4", STATUS_TEXT_COLORS.warning)}
           data-testid="stream-status-cancelled"
         />
       );
@@ -80,16 +84,8 @@ function getStatusIcon(status: ActiveStream["status"]): React.ReactNode {
 }
 
 function getStatusColor(status: ActiveStream["status"]): string {
-  switch (status) {
-    case "active":
-      return "border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950";
-    case "success":
-      return "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950";
-    case "error":
-      return "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950";
-    case "cancelled":
-      return "border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950";
-  }
+  // Use semantic stream status styles from design system
+  return STREAM_STATUS_STYLES[status];
 }
 
 // =============================================================================
@@ -116,33 +112,33 @@ function ConnectionStatus({
     <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-md text-sm">
       {status === "connected" && (
         <>
-          <Wifi className="w-4 h-4 text-green-500" />
-          <span className="text-green-700 dark:text-green-400">Connected</span>
+          <Wifi className={cn("w-4 h-4", STATUS_TEXT_COLORS.success)} />
+          <span className={STATUS_TEXT_COLORS.success}>Connected</span>
         </>
       )}
       {status === "connecting" && (
         <>
-          <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
-          <span className="text-blue-700 dark:text-blue-400">
-            Connecting...
-          </span>
+          <Loader2
+            className={cn("w-4 h-4 animate-spin", STATUS_TEXT_COLORS.info)}
+          />
+          <span className={STATUS_TEXT_COLORS.info}>Connecting...</span>
         </>
       )}
       {status === "reconnecting" && (
         <>
-          <RefreshCw className="w-4 h-4 text-yellow-500 animate-spin" />
-          <span className="text-yellow-700 dark:text-yellow-400">
-            Reconnecting...
-          </span>
+          <RefreshCw
+            className={cn("w-4 h-4 animate-spin", STATUS_TEXT_COLORS.warning)}
+          />
+          <span className={STATUS_TEXT_COLORS.warning}>Reconnecting...</span>
         </>
       )}
       {status === "disconnected" && (
         <>
-          <WifiOff className="w-4 h-4 text-gray-500" />
-          <span className="text-gray-600 dark:text-gray-400">Disconnected</span>
+          <WifiOff className={cn("w-4 h-4", STATUS_TEXT_COLORS.neutral)} />
+          <span className={STATUS_TEXT_COLORS.neutral}>Disconnected</span>
           <button
             onClick={onReconnect}
-            className="ml-2 px-2 py-0.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            className="ml-2 px-2 py-0.5 text-xs bg-primary-500 text-white rounded hover:bg-primary-600 transition-colors"
           >
             Reconnect
           </button>
@@ -151,11 +147,11 @@ function ConnectionStatus({
       {status === "error" && (
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-red-500" />
-            <span className="text-red-700 dark:text-red-400">Error</span>
+            <AlertCircle className={cn("w-4 h-4", STATUS_TEXT_COLORS.error)} />
+            <span className={STATUS_TEXT_COLORS.error}>Error</span>
           </div>
           {error && (
-            <span className="text-xs text-red-600 dark:text-red-400 mt-1">
+            <span className={cn("text-xs mt-1", STATUS_TEXT_COLORS.error)}>
               {error}
             </span>
           )}

@@ -129,11 +129,31 @@ export interface NetworkUpdateEntry {
   payload: NetworkUpdatePayload;
 }
 
+/** Agent trace step payload (DevTools-specific) */
+export interface TraceStepPayload {
+  id?: string;
+  session_id: string;
+  node_id?: string;
+  name: string;
+  status: string;
+  start_time: number;
+  end_time?: number;
+  duration_ms?: number;
+  attributes?: Record<string, unknown>;
+}
+
+/** Agent trace step message (Server → Client, DevTools WebSocket) */
+export interface TraceStepEntry {
+  type: "trace_step";
+  payload: TraceStepPayload;
+}
+
 /** Union of all DevTools messages */
 export type DevToolsMessage =
   | ConsoleLogEntry
   | NetworkRequestEntry
-  | NetworkUpdateEntry;
+  | NetworkUpdateEntry
+  | TraceStepEntry;
 
 // =============================================================================
 // Traces Protocol (/api/v1/ws/traces)
@@ -470,6 +490,14 @@ export function isNetworkUpdateEntry(
 ): value is NetworkUpdateEntry {
   if (!isMessageEnvelope(value)) return false;
   return value.type === "network_update" && "payload" in value;
+}
+
+/**
+ * Type guard for TraceStepEntry
+ */
+export function isTraceStepEntry(value: unknown): value is TraceStepEntry {
+  if (!isMessageEnvelope(value)) return false;
+  return value.type === "trace_step" && "payload" in value;
 }
 
 /**

@@ -115,13 +115,13 @@ export interface RemediationApprovalDialogProps {
 function getRiskColor(risk: RiskLevel): string {
   switch (risk) {
     case "low":
-      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+      return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
     case "medium":
-      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+      return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400";
     case "high":
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+      return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
     default:
-      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
+      return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400";
   }
 }
 
@@ -131,11 +131,11 @@ function getRiskColor(risk: RiskLevel): string {
 function getSeverityColor(severity: RemediationRequest["severity"]): string {
   switch (severity) {
     case "critical":
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+      return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
     case "warning":
-      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+      return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400";
     default:
-      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
+      return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400";
   }
 }
 
@@ -252,7 +252,7 @@ export function RemediationApprovalDialog({
           <button
             data-testid="close-dialog"
             onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -262,7 +262,7 @@ export function RemediationApprovalDialog({
         <div className="p-4 space-y-4 overflow-y-auto max-h-[60vh]">
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-400">
+            <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg p-3 text-error-700 dark:text-error-400">
               {error}
             </div>
           )}
@@ -287,7 +287,7 @@ export function RemediationApprovalDialog({
             <div className="flex items-center gap-2">
               <span
                 data-testid="step-number"
-                className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-sm font-medium"
+                className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-500 text-white text-sm font-medium"
               >
                 {remediation.stepNumber}
               </span>
@@ -320,14 +320,14 @@ export function RemediationApprovalDialog({
           {isHighRisk && (
             <div
               data-testid="high-risk-warning"
-              className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3"
+              className="flex items-start gap-3 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg p-3"
             >
-              <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-red-700 dark:text-red-400">
+                <p className="font-medium text-error-700 dark:text-error-400">
                   High Risk Action
                 </p>
-                <p className="text-sm text-red-600 dark:text-red-400/80">
+                <p className="text-sm text-error-600 dark:text-error-400/80">
                   This action has been flagged as high risk. Please review
                   carefully before approving.
                 </p>
@@ -338,7 +338,7 @@ export function RemediationApprovalDialog({
           {/* Impact Analysis */}
           <div className="space-y-2">
             <div className="flex items-start gap-2">
-              <Info className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+              <Info className="w-4 h-4 text-gray-400 dark:text-gray-400 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   <strong>Impact:</strong>{" "}
@@ -347,7 +347,7 @@ export function RemediationApprovalDialog({
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <Info className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+              <Info className="w-4 h-4 text-gray-400 dark:text-gray-400 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   <strong>Rollback:</strong>{" "}
@@ -363,7 +363,9 @@ export function RemediationApprovalDialog({
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Rejection Reason{" "}
-              <span className="text-gray-500">(required for rejection)</span>
+              <span className="text-gray-500 dark:text-gray-400">
+                (required for rejection)
+              </span>
             </label>
             <div
               data-testid="rejection-reason-select"
@@ -376,8 +378,8 @@ export function RemediationApprovalDialog({
                   key={reasonOption.value}
                   className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
                     selectedRejectionReason === reasonOption.value
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                      ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-600"
                   }`}
                 >
                   <input
@@ -424,7 +426,7 @@ export function RemediationApprovalDialog({
                 }}
                 placeholder="Describe your reason for rejection..."
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           )}
@@ -435,7 +437,10 @@ export function RemediationApprovalDialog({
               htmlFor="reason-input"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
-              Additional Notes <span className="text-gray-500">(optional)</span>
+              Additional Notes{" "}
+              <span className="text-gray-500 dark:text-gray-400">
+                (optional)
+              </span>
             </label>
             <textarea
               id="reason-input"
@@ -447,10 +452,10 @@ export function RemediationApprovalDialog({
               }}
               placeholder="Enter additional notes for approval or rejection..."
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             {validationError && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              <p className="mt-1 text-sm text-error-600 dark:text-error-400">
                 {validationError}
               </p>
             )}
@@ -463,7 +468,7 @@ export function RemediationApprovalDialog({
             data-testid="reject-button"
             onClick={handleReject}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-error-700 dark:text-error-400 bg-error-100 dark:bg-error-900/30 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isRejecting ? (
               <Loader2
@@ -479,7 +484,7 @@ export function RemediationApprovalDialog({
             data-testid="approve-button"
             onClick={handleApprove}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-success-600 rounded-lg hover:bg-success-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isApproving ? (
               <Loader2

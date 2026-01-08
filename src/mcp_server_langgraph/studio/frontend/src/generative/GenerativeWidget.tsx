@@ -175,7 +175,7 @@ export function GenerativeWidget({
           data-testid="refresh-button"
           type="button"
           onClick={() => onRefresh?.(config.id)}
-          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 transition-colors"
           aria-label="Refresh widget"
         >
           <RefreshCw size={14} />
@@ -187,13 +187,15 @@ export function GenerativeWidget({
         <WidgetSkeleton />
       ) : error ? (
         <div className="flex flex-col items-center py-4 text-center">
-          <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
-          <p className="text-sm text-red-600 dark:text-red-400 mb-2">{error}</p>
+          <AlertCircle className="w-8 h-8 text-error-500 mb-2" />
+          <p className="text-sm text-error-600 dark:text-error-400 mb-2">
+            {error}
+          </p>
           <button
             data-testid="retry-button"
             type="button"
             onClick={onRetry}
-            className="px-3 py-1 text-sm bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+            className="px-3 py-1 text-sm bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400 rounded hover:bg-error-200 dark:hover:bg-error-900/50 transition-colors"
           >
             Retry
           </button>

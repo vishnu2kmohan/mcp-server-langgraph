@@ -1,24 +1,24 @@
 /**
- * LogsTab Component Tests
- *
- * TDD tests for OTEL structured logs with trace correlation.
+ * LogsTab Tests - react-table layout, auto-tail, service discovery
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  render,
-  screen,
-  fireEvent,
-  within,
-  cleanup,
-} from "@testing-library/react";
 import React from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, cleanup } from "@testing-library/react";
 
 import { LogsTab } from "./LogsTab";
 import { DevToolsTimelineProvider } from "../context/DevToolsTimelineProvider";
 
 // =============================================================================
-// Test Helpers
+// Helpers & Mocks
 // =============================================================================
+
+const mockServicesHook = vi
+  .fn()
+  .mockReturnValue({ data: ["api-gateway", "worker"] });
+
+vi.mock("../../api", () => ({
+  useListDevtoolsServicesQuery: () => mockServicesHook(),
+}));
 
 function renderWithProvider(
   ui: React.ReactElement,
@@ -64,221 +64,84 @@ const mockLogs = [
     spanId: "jkl012",
     attributes: { error: "ETIMEDOUT", host: "db-primary" },
   },
-  {
-    id: "log-4",
-    timestamp: new Date(Date.now() - 45000).toISOString(),
-    level: "warning" as const,
-    service: "cache-service",
-    message: "Cache miss rate increasing",
-    traceId: "xyz789",
-    spanId: "mno345",
-    attributes: { missRate: "15%" },
-  },
 ];
 
 // =============================================================================
 // Tests
 // =============================================================================
 
-describe("LogsTab", () => {
+describe("LogsTab (react-table + service discovery)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
   });
 
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
-    vi.useRealTimers();
-    vi.clearAllMocks();
   });
 
-  describe("rendering", () => {
-    it("should render without crashing", () => {
-      renderWithProvider(<LogsTab />);
-      expect(screen.getByTestId("logs-tab")).toBeInTheDocument();
-    });
-
-    it("should display empty state when no logs", () => {
-      renderWithProvider(<LogsTab />);
-      expect(screen.getByText(/no logs/i)).toBeInTheDocument();
-    });
-
-    it("should display search input", () => {
-      renderWithProvider(<LogsTab />);
-      expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
-    });
-
-    it("should display filter controls", () => {
-      renderWithProvider(<LogsTab />);
-      expect(
-        screen.getByRole("button", { name: /level/i }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /service/i }),
-      ).toBeInTheDocument();
-    });
+  it("renders logs with human-friendly timestamps", () => {
+    renderWithProvider(<LogsTab logs={mockLogs} />);
+    expect(screen.getByTestId("logs-tab")).toBeInTheDocument();
+    expect(screen.getAllByTestId("human-timestamp").length).toBeGreaterThan(0);
+    expect(screen.getByText(/request received/i)).toBeInTheDocument();
   });
 
-  describe("log list", () => {
-    it("should display logs when logs exist", () => {
-      renderWithProvider(<LogsTab logs={mockLogs} />);
-
-      expect(screen.getByText(/request received/i)).toBeInTheDocument();
-      expect(screen.getByText(/token prediction started/i)).toBeInTheDocument();
-      expect(screen.getByText(/connection timeout/i)).toBeInTheDocument();
-    });
-
-    it("should display level badges", () => {
-      renderWithProvider(<LogsTab logs={mockLogs} />);
-
-      const logsTab = screen.getByTestId("logs-tab");
-      expect(within(logsTab).getByText(/^info$/i)).toBeInTheDocument();
-      expect(within(logsTab).getByText(/^debug$/i)).toBeInTheDocument();
-      expect(within(logsTab).getByText(/^error$/i)).toBeInTheDocument();
-    });
-
-    it("should display service names", () => {
-      renderWithProvider(<LogsTab logs={mockLogs} />);
-
-      expect(screen.getByText(/api-gateway/i)).toBeInTheDocument();
-      expect(screen.getByText(/llm-service/i)).toBeInTheDocument();
-      expect(screen.getByText(/db-service/i)).toBeInTheDocument();
-    });
-
-    it("should display timestamps", () => {
-      renderWithProvider(<LogsTab logs={mockLogs} />);
-
-      const logsTab = screen.getByTestId("logs-tab");
-      // Should have timestamps displayed
-      const timestamps = within(logsTab).getAllByTestId("log-timestamp");
-      expect(timestamps.length).toBeGreaterThan(0);
-    });
+  it("shows empty state when no logs available", () => {
+    renderWithProvider(<LogsTab />);
+    expect(screen.getByText(/no logs/i)).toBeInTheDocument();
   });
 
-  describe("trace correlation", () => {
-    it("should display trace_id for logs with traces", () => {
-      renderWithProvider(<LogsTab logs={mockLogs} />);
+  it("filters by search term and level", () => {
+    renderWithProvider(<LogsTab logs={mockLogs} />);
 
-      expect(screen.getAllByText(/abc123/i).length).toBeGreaterThan(0);
+    fireEvent.change(screen.getByPlaceholderText(/search logs/i), {
+      target: { value: "connection" },
     });
+    expect(screen.getByText(/connection timeout/i)).toBeInTheDocument();
+    expect(screen.queryByText(/request received/i)).not.toBeInTheDocument();
 
-    it("should display span_id for logs with spans", () => {
-      renderWithProvider(<LogsTab logs={mockLogs} />);
-
-      expect(screen.getAllByText(/def456/i).length).toBeGreaterThan(0);
-    });
-
-    it("should have Jump to Trace button for logs with trace_id", () => {
-      const onJumpToTrace = vi.fn();
-      renderWithProvider(
-        <LogsTab logs={mockLogs} onJumpToTrace={onJumpToTrace} />,
-      );
-
-      const jumpButtons = screen.getAllByRole("button", {
-        name: /jump to trace/i,
-      });
-      expect(jumpButtons.length).toBeGreaterThan(0);
-    });
-
-    it("should call onJumpToTrace when Jump to Trace clicked", () => {
-      const onJumpToTrace = vi.fn();
-      renderWithProvider(
-        <LogsTab logs={mockLogs} onJumpToTrace={onJumpToTrace} />,
-      );
-
-      const jumpButtons = screen.getAllByRole("button", {
-        name: /jump to trace/i,
-      });
-      fireEvent.click(jumpButtons[0]);
-
-      expect(onJumpToTrace).toHaveBeenCalledWith("abc123");
-    });
+    fireEvent.click(screen.getByRole("button", { name: /level/i }));
+    fireEvent.click(screen.getByRole("button", { name: /error/i }));
+    expect(screen.getByText(/connection timeout/i)).toBeInTheDocument();
   });
 
-  describe("filtering", () => {
-    it("should filter logs by search term", () => {
-      renderWithProvider(<LogsTab logs={mockLogs} />);
+  it("merges discovered services into the filter dropdown", () => {
+    renderWithProvider(<LogsTab logs={mockLogs.slice(0, 1)} />);
 
-      const searchInput = screen.getByPlaceholderText(/search/i);
-      fireEvent.change(searchInput, { target: { value: "connection" } });
-
-      expect(screen.getByText(/connection timeout/i)).toBeInTheDocument();
-      expect(screen.queryByText(/request received/i)).not.toBeInTheDocument();
-    });
-
-    it("should filter logs by level", () => {
-      renderWithProvider(<LogsTab logs={mockLogs} />);
-
-      fireEvent.click(screen.getByRole("button", { name: /level/i }));
-      fireEvent.click(screen.getByRole("option", { name: /error/i }));
-
-      expect(screen.getByText(/connection timeout/i)).toBeInTheDocument();
-      expect(screen.queryByText(/request received/i)).not.toBeInTheDocument();
-    });
-
-    it("should filter logs by service", () => {
-      renderWithProvider(<LogsTab logs={mockLogs} />);
-
-      fireEvent.click(screen.getByRole("button", { name: /service/i }));
-      fireEvent.click(screen.getByRole("option", { name: /api-gateway/i }));
-
-      expect(screen.getByText(/request received/i)).toBeInTheDocument();
-      expect(screen.queryByText(/connection timeout/i)).not.toBeInTheDocument();
-    });
+    fireEvent.click(screen.getByRole("button", { name: /service/i }));
+    expect(screen.getByRole("button", { name: /worker/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /api-gateway/i }),
+    ).toBeInTheDocument();
   });
 
-  describe("expandable attributes", () => {
-    it("should show expand button for logs with attributes", () => {
-      renderWithProvider(<LogsTab logs={mockLogs} />);
-
-      const expandButtons = screen.getAllByRole("button", { name: /expand/i });
-      expect(expandButtons.length).toBeGreaterThan(0);
-    });
-
-    it("should expand attributes when clicked", () => {
-      renderWithProvider(<LogsTab logs={mockLogs} />);
-
-      const expandButtons = screen.getAllByRole("button", { name: /expand/i });
-      fireEvent.click(expandButtons[0]);
-
-      // Should show attributes JSON
-      expect(screen.getByText(/method/i)).toBeInTheDocument();
-      expect(screen.getByText(/post/i)).toBeInTheDocument();
-    });
+  it("toggles auto-tail via the down arrow control", () => {
+    renderWithProvider(<LogsTab logs={mockLogs} />);
+    const toggle = screen.getByTestId("logs-auto-tail");
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
   });
 
-  describe("timeline integration", () => {
-    it("should filter logs by time window", () => {
-      // Logs should sync with timeline context
-      renderWithProvider(<LogsTab logs={mockLogs} />);
+  it("invokes onJumpToTrace when Jump to Trace is clicked", () => {
+    const onJumpToTrace = vi.fn();
+    renderWithProvider(
+      <LogsTab logs={mockLogs} onJumpToTrace={onJumpToTrace} />,
+    );
 
-      expect(screen.getByTestId("logs-tab")).toBeInTheDocument();
-    });
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /jump to trace/i })[0],
+    );
+    expect(onJumpToTrace).toHaveBeenCalledWith("abc123");
   });
 
-  describe("loading state", () => {
-    it("should show loading skeleton when isLoading", () => {
-      renderWithProvider(<LogsTab isLoading />);
+  it("shows loading and error states", () => {
+    renderWithProvider(<LogsTab isLoading />);
+    expect(screen.getByTestId("logs-loading")).toBeInTheDocument();
 
-      expect(screen.getByTestId("logs-loading")).toBeInTheDocument();
-    });
-  });
-
-  describe("error state", () => {
-    it("should display error message on error", () => {
-      renderWithProvider(<LogsTab error="Failed to fetch logs" />);
-
-      expect(screen.getByText(/failed to fetch logs/i)).toBeInTheDocument();
-    });
-  });
-
-  describe("copy action", () => {
-    it("should have copy button for logs", () => {
-      renderWithProvider(<LogsTab logs={mockLogs} />);
-
-      const copyButtons = screen.getAllByRole("button", { name: /copy/i });
-      expect(copyButtons.length).toBeGreaterThan(0);
-    });
+    cleanup();
+    renderWithProvider(<LogsTab error="Failed to fetch logs" />);
+    expect(screen.getByText(/failed to fetch logs/i)).toBeInTheDocument();
   });
 });

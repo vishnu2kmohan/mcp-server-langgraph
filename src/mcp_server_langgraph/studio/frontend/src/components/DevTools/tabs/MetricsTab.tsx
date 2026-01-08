@@ -7,6 +7,12 @@
 import React, { useMemo, useCallback } from "react";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import { cn } from "../../../utils/cn";
+import {
+  SPARKLINE_COLORS,
+  STATUS_TEXT_COLORS,
+  getTrendTextColor,
+  getSparklineColor,
+} from "../utils/devToolsColors";
 
 // =============================================================================
 // Types
@@ -69,7 +75,7 @@ function Sparkline({
   data,
   width = 80,
   height = 24,
-  color = "#3b82f6",
+  color = SPARKLINE_COLORS.primary,
   className,
 }: SparklineProps): React.ReactElement {
   const path = useMemo(() => {
@@ -125,11 +131,8 @@ function TrendIndicator({
     stable: "\u2192", // →
   }[trend];
 
-  const color = {
-    up: "text-green-500",
-    down: "text-red-500",
-    stable: "text-gray-500",
-  }[trend];
+  // Use semantic colors from design system
+  const color = getTrendTextColor(trend);
 
   return (
     <span
@@ -194,13 +197,7 @@ function MetricCard({ metric }: MetricCardProps): React.ReactElement {
         </div>
         <Sparkline
           data={metric.sparkline}
-          color={
-            metric.trend === "up"
-              ? "#22c55e"
-              : metric.trend === "down"
-                ? "#ef4444"
-                : "#6b7280"
-          }
+          color={getSparklineColor(metric.trend)}
         />
       </div>
       <div className="mt-2">
@@ -335,7 +332,7 @@ export function MetricsTab({
           className,
         )}
       >
-        <div className="text-red-500 mb-4">
+        <div className={cn(STATUS_TEXT_COLORS.error, "mb-4")}>
           <svg
             className="w-12 h-12 mx-auto"
             fill="none"
@@ -350,10 +347,10 @@ export function MetricsTab({
             />
           </svg>
         </div>
-        <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+        <p className={cn(STATUS_TEXT_COLORS.error, "mb-4")}>{error}</p>
         <button
           onClick={handleRetry}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+          className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors"
           aria-label="Retry"
         >
           Retry
@@ -383,8 +380,8 @@ export function MetricsTab({
                 className={cn(
                   "px-3 py-1 text-sm rounded-md transition-colors",
                   timeRange === range
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700",
+                    ? "bg-primary-500 text-white"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
                 )}
                 aria-label={range}
               >
@@ -406,7 +403,7 @@ export function MetricsTab({
           {grafanaUrl && (
             <button
               onClick={handleOpenGrafana}
-              className="px-3 py-1.5 text-sm bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors flex items-center gap-1"
+              className="px-3 py-1.5 text-sm bg-grafana-500 text-white rounded-md hover:bg-grafana-600 transition-colors flex items-center gap-1"
               aria-label="View in Grafana"
             >
               <svg
@@ -429,7 +426,7 @@ export function MetricsTab({
           {/* Refresh button */}
           <button
             onClick={handleRefresh}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-1.5 rounded-md hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 transition-colors"
             aria-label="Refresh"
           >
             <svg
@@ -454,7 +451,7 @@ export function MetricsTab({
         {!hasMetrics && !hasHeartMetrics ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <svg
-              className="w-12 h-12 text-gray-400 mb-4"
+              className="w-12 h-12 text-gray-400 dark:text-gray-400 mb-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -469,7 +466,7 @@ export function MetricsTab({
             <p className="text-gray-500 dark:text-gray-400">
               No metrics available
             </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+            <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">
               Metrics will appear when data is collected
             </p>
           </div>

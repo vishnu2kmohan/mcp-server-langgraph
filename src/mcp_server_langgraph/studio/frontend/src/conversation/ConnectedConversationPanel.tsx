@@ -570,9 +570,9 @@ export const ConnectedConversationPanel = forwardRef<
           data-testid="streaming-error"
           className={cn(
             "flex items-center gap-2 px-4 py-2",
-            "bg-red-50 dark:bg-red-900/20",
-            "border-b border-red-200 dark:border-red-800",
-            "text-sm text-red-700 dark:text-red-300",
+            "bg-error-50 dark:bg-error-900/20",
+            "border-b border-error-200 dark:border-error-800",
+            "text-sm text-error-700 dark:text-error-300",
           )}
         >
           <AlertCircle size={16} className="flex-shrink-0" />
@@ -583,7 +583,7 @@ export const ConnectedConversationPanel = forwardRef<
           <button
             data-testid="dismiss-streaming-error"
             onClick={() => setIsStreamingErrorDismissed(true)}
-            className="p-1 hover:bg-red-100 dark:hover:bg-red-800/50 rounded"
+            className="p-1 hover:bg-error-100 dark:hover:bg-error-800/50 rounded"
             aria-label="Dismiss error"
           >
             <X size={14} />
@@ -597,9 +597,9 @@ export const ConnectedConversationPanel = forwardRef<
           data-testid="thinking-content"
           className={cn(
             "flex flex-col gap-1 px-4 py-2",
-            "bg-purple-50 dark:bg-purple-900/20",
-            "border-b border-purple-200 dark:border-purple-800",
-            "text-sm text-purple-700 dark:text-purple-300",
+            "bg-insight-50 dark:bg-insight-900/20",
+            "border-b border-insight-200 dark:border-insight-800",
+            "text-sm text-insight-700 dark:text-insight-300",
           )}
         >
           <div className="flex items-center gap-2">
@@ -608,7 +608,7 @@ export const ConnectedConversationPanel = forwardRef<
             {thinkingTokens && (
               <span
                 data-testid="thinking-tokens-badge"
-                className="px-1.5 py-0.5 bg-purple-100 dark:bg-purple-800/50 rounded text-xs"
+                className="px-1.5 py-0.5 bg-insight-100 dark:bg-insight-800/50 rounded text-xs"
               >
                 {thinkingTokens.toLocaleString()}
               </span>
@@ -618,7 +618,7 @@ export const ConnectedConversationPanel = forwardRef<
               onClick={() =>
                 setIsThinkingContentCollapsed(!isThinkingContentCollapsed)
               }
-              className="ml-auto p-1 hover:bg-purple-100 dark:hover:bg-purple-800/50 rounded"
+              className="ml-auto p-1 hover:bg-insight-100 dark:hover:bg-insight-800/50 rounded"
               aria-label={
                 isThinkingContentCollapsed
                   ? "Expand thinking content"
@@ -633,7 +633,7 @@ export const ConnectedConversationPanel = forwardRef<
             </button>
           </div>
           {!isThinkingContentCollapsed && (
-            <div className="pl-6 text-xs text-purple-600 dark:text-purple-400 whitespace-pre-wrap max-h-24 overflow-y-auto">
+            <div className="pl-6 text-xs text-insight-600 dark:text-insight-400 whitespace-pre-wrap max-h-24 overflow-y-auto">
               {thinkingContent}
             </div>
           )}
@@ -646,9 +646,9 @@ export const ConnectedConversationPanel = forwardRef<
           data-testid="goal-tracker"
           className={cn(
             "flex items-center gap-2 px-4 py-2",
-            "bg-blue-50 dark:bg-blue-900/20",
-            "border-b border-blue-200 dark:border-blue-800",
-            "text-sm text-blue-700 dark:text-blue-300",
+            "bg-primary-50 dark:bg-primary-900/20",
+            "border-b border-primary-200 dark:border-primary-800",
+            "text-sm text-primary-700 dark:text-primary-300",
           )}
         >
           <Target size={16} className="flex-shrink-0" />
@@ -656,7 +656,7 @@ export const ConnectedConversationPanel = forwardRef<
             <span className="font-medium">Goal: </span>
             <span className="truncate">{goalTracking.primaryGoal}</span>
             {goalTracking.progressPercent !== null && (
-              <span className="ml-2 text-blue-600 dark:text-blue-400">
+              <span className="ml-2 text-primary-600 dark:text-primary-400">
                 ({goalTracking.progressPercent}% complete)
               </span>
             )}
@@ -670,9 +670,9 @@ export const ConnectedConversationPanel = forwardRef<
           data-testid="context-warning"
           className={cn(
             "flex items-center gap-2 px-4 py-2",
-            "bg-amber-50 dark:bg-amber-900/20",
-            "border-b border-amber-200 dark:border-amber-800",
-            "text-sm text-amber-700 dark:text-amber-300",
+            "bg-warning-50 dark:bg-warning-900/20",
+            "border-b border-warning-200 dark:border-warning-800",
+            "text-sm text-warning-700 dark:text-warning-300",
           )}
         >
           <AlertTriangle size={16} className="flex-shrink-0" />
@@ -680,7 +680,7 @@ export const ConnectedConversationPanel = forwardRef<
             <span className="font-medium">Context Usage: </span>
             <span>{contextOptimization.usagePercent?.toFixed(0)}%</span>
             {contextOptimization.recommendedAction && (
-              <span className="ml-2 text-amber-600 dark:text-amber-400">
+              <span className="ml-2 text-warning-600 dark:text-warning-400">
                 - {contextOptimization.recommendedAction.replace(/_/g, " ")}
               </span>
             )}
@@ -694,9 +694,9 @@ export const ConnectedConversationPanel = forwardRef<
           data-testid="intent-indicator"
           className={cn(
             "flex items-center gap-2 px-4 py-1.5",
-            "bg-purple-50 dark:bg-purple-900/20",
-            "border-b border-purple-200 dark:border-purple-800",
-            "text-xs text-purple-700 dark:text-purple-300",
+            "bg-insight-50 dark:bg-insight-900/20",
+            "border-b border-insight-200 dark:border-insight-800",
+            "text-xs text-insight-700 dark:text-insight-300",
           )}
         >
           <Sparkles size={12} className="flex-shrink-0" />
@@ -706,7 +706,7 @@ export const ConnectedConversationPanel = forwardRef<
               {intentDetection.intent.replace(/_/g, " ")}
             </span>
             {intentDetection.confidence !== null && (
-              <span className="ml-1 text-purple-500 dark:text-purple-400">
+              <span className="ml-1 text-insight-500 dark:text-insight-400">
                 ({(intentDetection.confidence * 100).toFixed(0)}%)
               </span>
             )}
@@ -724,24 +724,24 @@ export const ConnectedConversationPanel = forwardRef<
             "flex items-center gap-2 px-4 py-1",
             "border-b",
             aiSuggestionsError
-              ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+              ? "bg-error-50 dark:bg-error-900/20 border-error-200 dark:border-error-800"
               : aiSuggestionsConnected
-                ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                ? "bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-800"
                 : "bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700",
           )}
         >
           {aiSuggestionsConnected ? (
-            <Wifi size={12} className="text-green-500" />
+            <Wifi size={12} className="text-success-500" />
           ) : (
-            <WifiOff size={12} className="text-gray-400" />
+            <WifiOff size={12} className="text-gray-400 dark:text-gray-400" />
           )}
           <span
             className={cn(
               "text-xs",
               aiSuggestionsError
-                ? "text-red-600 dark:text-red-400"
+                ? "text-error-600 dark:text-error-400"
                 : aiSuggestionsConnected
-                  ? "text-green-600 dark:text-green-400"
+                  ? "text-success-600 dark:text-success-400"
                   : "text-gray-500 dark:text-gray-400",
             )}
           >
@@ -763,8 +763,8 @@ export const ConnectedConversationPanel = forwardRef<
             className={cn(
               "flex items-center gap-2 px-4 py-2",
               suggestion.priority === "high"
-                ? "bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-800"
-                : "bg-cyan-50 dark:bg-cyan-900/20 border-b border-cyan-200 dark:border-cyan-800",
+                ? "bg-grafana-50 dark:bg-grafana-900/20 border-b border-grafana-200 dark:border-grafana-800"
+                : "bg-info-50 dark:bg-info-900/20 border-b border-info-200 dark:border-info-800",
             )}
           >
             <Lightbulb
@@ -772,8 +772,8 @@ export const ConnectedConversationPanel = forwardRef<
               className={cn(
                 "flex-shrink-0",
                 suggestion.priority === "high"
-                  ? "text-orange-500"
-                  : "text-cyan-500",
+                  ? "text-grafana-500"
+                  : "text-info-500",
               )}
             />
             <div className="flex-1 text-sm text-gray-700 dark:text-gray-300">
@@ -782,10 +782,10 @@ export const ConnectedConversationPanel = forwardRef<
             <button
               data-testid="dismiss-suggestion-button"
               onClick={() => dismissSuggestion(suggestion.id)}
-              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+              className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
               aria-label="Dismiss suggestion"
             >
-              <X size={14} className="text-gray-400" />
+              <X size={14} className="text-gray-400 dark:text-gray-400" />
             </button>
           </div>
         ))}
@@ -798,25 +798,25 @@ export const ConnectedConversationPanel = forwardRef<
             data-testid="ai-suggestion-spotlight"
             className={cn(
               "flex items-center gap-3 px-4 py-3",
-              "bg-gradient-to-r from-purple-50 to-pink-50",
-              "dark:from-purple-900/20 dark:to-pink-900/20",
-              "border-b border-purple-200 dark:border-purple-800",
+              "bg-gradient-to-r from-insight-50 to-pink-50",
+              "dark:from-insight-900/20 dark:to-pink-900/20",
+              "border-b border-insight-200 dark:border-insight-800",
             )}
           >
             <Sparkles
               size={20}
-              className="flex-shrink-0 text-purple-500 animate-pulse"
+              className="flex-shrink-0 text-insight-500 animate-pulse"
             />
-            <div className="flex-1 text-sm font-medium text-purple-700 dark:text-purple-300">
+            <div className="flex-1 text-sm font-medium text-insight-700 dark:text-insight-300">
               {suggestion.message}
             </div>
             <button
               data-testid="dismiss-suggestion-button"
               onClick={() => dismissSuggestion(suggestion.id)}
-              className="p-1 hover:bg-purple-200 dark:hover:bg-purple-700 rounded"
+              className="p-1 hover:bg-insight-200 dark:hover:bg-insight-700 rounded"
               aria-label="Dismiss suggestion"
             >
-              <X size={14} className="text-purple-400" />
+              <X size={14} className="text-insight-400" />
             </button>
           </div>
         ))}
@@ -833,10 +833,13 @@ export const ConnectedConversationPanel = forwardRef<
               "border-b border-gray-200 dark:border-gray-700",
             )}
           >
-            <Lightbulb size={12} className="flex-shrink-0 text-gray-400" />
+            <Lightbulb
+              size={12}
+              className="flex-shrink-0 text-gray-400 dark:text-gray-400"
+            />
             <div className="flex-1 text-xs text-gray-600 dark:text-gray-400">
               {suggestion.targetElement && (
-                <span className="font-mono text-xs text-gray-400 mr-2">
+                <span className="font-mono text-xs text-gray-400 dark:text-gray-400 mr-2">
                   [{suggestion.targetElement}]
                 </span>
               )}
@@ -845,10 +848,10 @@ export const ConnectedConversationPanel = forwardRef<
             <button
               data-testid="dismiss-suggestion-button"
               onClick={() => dismissSuggestion(suggestion.id)}
-              className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+              className="p-0.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
               aria-label="Dismiss suggestion"
             >
-              <X size={12} className="text-gray-400" />
+              <X size={12} className="text-gray-400 dark:text-gray-400" />
             </button>
           </div>
         ))}

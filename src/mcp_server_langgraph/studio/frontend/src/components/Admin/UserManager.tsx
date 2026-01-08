@@ -120,7 +120,7 @@ export function UserManager({
         data-testid="user-loading"
         className="flex items-center justify-center h-full"
       >
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
   }
@@ -134,7 +134,7 @@ export function UserManager({
         </h2>
         <button
           onClick={() => setIsInviteModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
         >
           <UserPlus className="w-4 h-4" />
           Invite User
@@ -143,13 +143,13 @@ export function UserManager({
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-400" />
         <input
           type="text"
           placeholder="Search users..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
       </div>
 
@@ -170,7 +170,7 @@ export function UserManager({
                     user.isActive ? "status-active" : "status-inactive"
                   }
                   className={`w-2 h-2 rounded-full ${
-                    user.isActive ? "bg-green-500" : "bg-gray-400"
+                    user.isActive ? "bg-success-500" : "bg-gray-400"
                   }`}
                 />
               </div>
@@ -187,14 +187,14 @@ export function UserManager({
                   </span>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
                 Last login: {formatDate(user.lastLogin)}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleManageRoles(user)}
-                className="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 rounded transition-colors"
+                className="px-3 py-1.5 text-sm text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900 rounded transition-colors"
                 aria-label="Manage roles"
               >
                 Manage Roles
@@ -202,7 +202,7 @@ export function UserManager({
               {user.isActive ? (
                 <button
                   onClick={() => handleDeactivateClick(user.id)}
-                  className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded transition-colors"
+                  className="px-3 py-1.5 text-sm text-error-600 hover:bg-error-50 dark:hover:bg-error-900 rounded transition-colors"
                   aria-label="Deactivate"
                 >
                   Deactivate
@@ -210,7 +210,7 @@ export function UserManager({
               ) : (
                 <button
                   onClick={() => onActivate(user.id)}
-                  className="px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900 rounded transition-colors"
+                  className="px-3 py-1.5 text-sm text-success-600 hover:bg-success-50 dark:hover:bg-success-900 rounded transition-colors"
                   aria-label="Activate"
                 >
                   Activate
@@ -230,13 +230,13 @@ export function UserManager({
           <>
             <button
               onClick={() => setIsInviteModalOpen(false)}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             >
               Cancel
             </button>
             <button
               onClick={handleInvite}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
               Send Invite
             </button>
@@ -256,7 +256,7 @@ export function UserManager({
             type="email"
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
         <div>
@@ -270,7 +270,7 @@ export function UserManager({
                   type="checkbox"
                   checked={inviteRoles.includes(role)}
                   onChange={() => handleInviteRoleToggle(role)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
                 />
                 <span className="text-gray-700 dark:text-gray-300">{role}</span>
               </label>
@@ -288,13 +288,13 @@ export function UserManager({
           <>
             <button
               onClick={() => setIsRoleModalOpen(false)}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveRoles}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
               Save Roles
             </button>
@@ -313,7 +313,7 @@ export function UserManager({
                 checked={selectedRoles.includes(role)}
                 onChange={() => handleRoleToggle(role)}
                 aria-label={role}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
               />
               <span className="text-gray-700 dark:text-gray-300">{role}</span>
             </label>
@@ -330,13 +330,13 @@ export function UserManager({
           <>
             <button
               onClick={() => setIsDeactivateConfirmOpen(false)}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             >
               Cancel
             </button>
             <button
               onClick={handleDeactivateConfirm}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              className="px-4 py-2 bg-error-600 text-white rounded-lg hover:bg-error-700"
             >
               Confirm
             </button>

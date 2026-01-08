@@ -53,7 +53,7 @@ function Dialog({ isOpen, onClose, title, children }: DialogProps) {
           </h3>
           <button
             onClick={onClose}
-            className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
           >
             <X className="w-5 h-5" />
           </button>
@@ -102,7 +102,7 @@ function CreateSessionDialog({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter session name"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             autoFocus
           />
         </div>
@@ -110,14 +110,14 @@ function CreateSessionDialog({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={!name.trim()}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
           >
             Create
           </button>
@@ -265,7 +265,7 @@ export function SessionsTab({
                 }
                 onChange={handleSelectAll}
                 aria-label="Select all sessions"
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
               />
               Select All
             </label>
@@ -273,7 +273,7 @@ export function SessionsTab({
         </div>
         <button
           onClick={() => setShowDialog(true)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700"
         >
           <Plus className="w-4 h-4" />
           New Session
@@ -296,7 +296,7 @@ export function SessionsTab({
                 checked={selectedSessions.has(session.id)}
                 onChange={() => {}}
                 onClick={(e) => handleSelectSession(session.id, e)}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-gray-900 dark:text-gray-100">
@@ -310,11 +310,11 @@ export function SessionsTab({
                 <button
                   aria-label="Remove session"
                   onClick={(e) => handleRemoveSession(session.id, e)}
-                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                  className="p-1.5 text-gray-400 dark:text-gray-400 hover:text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
-                <MessageSquare className="w-5 h-5 text-gray-400" />
+                <MessageSquare className="w-5 h-5 text-gray-400 dark:text-gray-400" />
               </div>
             </div>
           ))}

@@ -146,7 +146,7 @@ describe("CodePreviewToggle", () => {
       render(<CodePreviewToggle mode="code" onModeChange={onModeChange} />);
 
       const codeButton = screen.getByRole("button", { name: /code/i });
-      expect(codeButton).toHaveClass("bg-blue-500");
+      expect(codeButton).toHaveClass("bg-primary-500");
     });
 
     it("applies custom className", () => {

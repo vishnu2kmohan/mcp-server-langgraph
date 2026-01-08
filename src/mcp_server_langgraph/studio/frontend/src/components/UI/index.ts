@@ -17,6 +17,21 @@ export type { ButtonProps, ButtonVariant, ButtonSize } from "./Button";
 export { Badge } from "./Badge";
 export type { BadgeProps, BadgeVariant, BadgeSize } from "./Badge";
 
+// StatusBadge - Semantic status badges with design system colors
+export { StatusBadge } from "./StatusBadge";
+export type { StatusBadgeProps, StatusBadgeSize } from "./StatusBadge";
+
+// ConfidenceIndicator - AI confidence score display
+export { ConfidenceIndicator } from "./ConfidenceIndicator";
+export type {
+  ConfidenceIndicatorProps,
+  ConfidenceIndicatorSize,
+} from "./ConfidenceIndicator";
+
+// RiskBadge - Risk level display with semantic colors
+export { RiskBadge } from "./RiskBadge";
+export type { RiskBadgeProps, RiskBadgeSize } from "./RiskBadge";
+
 // Card - Content container with variants
 export { Card, CardHeader, CardTitle, CardContent, CardFooter } from "./Card";
 export type {

@@ -358,10 +358,10 @@ export function InteractiveSVGArtifact({
   if (error) {
     return (
       <div
-        className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+        className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg"
         role="alert"
       >
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-sm text-error-600 dark:text-error-400">{error}</p>
       </div>
     );
   }
@@ -378,7 +378,7 @@ export function InteractiveSVGArtifact({
       tabIndex={0}
     >
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-2 p-2 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+      <div className="flex items-center justify-between gap-2 p-2 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700 dark:border-gray-600">
         {/* Title */}
         {title && (
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">
@@ -392,7 +392,7 @@ export function InteractiveSVGArtifact({
             type="button"
             onClick={handleZoomOut}
             aria-label="Zoom out"
-            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -417,7 +417,7 @@ export function InteractiveSVGArtifact({
             type="button"
             onClick={handleZoomIn}
             aria-label="Zoom in"
-            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -440,7 +440,7 @@ export function InteractiveSVGArtifact({
             type="button"
             onClick={handleResetZoom}
             aria-label="Reset zoom"
-            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -465,10 +465,10 @@ export function InteractiveSVGArtifact({
             type="button"
             onClick={handleCopy}
             aria-label="Copy SVG"
-            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             {copied ? (
-              <Check size={16} className="text-green-500" />
+              <Check size={16} className="text-success-500" />
             ) : (
               <Copy size={16} />
             )}
@@ -477,7 +477,7 @@ export function InteractiveSVGArtifact({
             type="button"
             onClick={handleDownloadSVG}
             aria-label="Download SVG"
-            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -499,7 +499,7 @@ export function InteractiveSVGArtifact({
             type="button"
             onClick={handleDownloadPNG}
             aria-label="Download PNG"
-            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -521,7 +521,7 @@ export function InteractiveSVGArtifact({
             type="button"
             onClick={handleToggleFullscreen}
             aria-label="Toggle fullscreen"
-            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             {isFullscreen ? (
               <svg

@@ -61,7 +61,7 @@ function Dialog({ isOpen, onClose, title, children }: DialogProps) {
           </h3>
           <button
             onClick={onClose}
-            className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
           >
             <X className="w-5 h-5" />
           </button>
@@ -117,7 +117,7 @@ function AddConnectionDialog({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter connection name"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             autoFocus
           />
         </div>
@@ -132,7 +132,7 @@ function AddConnectionDialog({
             id="connection-type"
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="mcp_server">MCP Server</option>
             <option value="vector_store">Vector Store</option>
@@ -143,14 +143,14 @@ function AddConnectionDialog({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={!name.trim() || isSubmitting}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
           >
             {isSubmitting ? "Adding..." : "Add"}
           </button>
@@ -201,7 +201,7 @@ function AddMemberDialog({ isOpen, onClose, onSubmit }: AddMemberDialogProps) {
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
             placeholder="Enter user ID"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             autoFocus
           />
         </div>
@@ -216,7 +216,7 @@ function AddMemberDialog({ isOpen, onClose, onSubmit }: AddMemberDialogProps) {
             id="member-role"
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="editor">Editor</option>
             <option value="viewer">Viewer</option>
@@ -227,14 +227,14 @@ function AddMemberDialog({ isOpen, onClose, onSubmit }: AddMemberDialogProps) {
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={!userId.trim() || isSubmitting}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
           >
             {isSubmitting ? "Adding..." : "Add"}
           </button>
@@ -376,12 +376,12 @@ export function ProjectDetailPage() {
   if (error || !project) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
-        <div className="text-red-500 dark:text-red-400">
+        <div className="text-error-500 dark:text-error-400">
           Error: {error || "Project not found"}
         </div>
         <button
           onClick={handleBack}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
         >
           Back to Projects
         </button>
@@ -396,7 +396,7 @@ export function ProjectDetailPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={handleBack}
-            className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -412,7 +412,7 @@ export function ProjectDetailPage() {
           </div>
           <button
             onClick={() => refetch()}
-            className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             title={isFetching ? "Syncing..." : "Refresh (auto-syncs every 30s)"}
             data-testid="project-refresh-button"
           >
@@ -421,7 +421,7 @@ export function ProjectDetailPage() {
             />
           </button>
           <button
-            className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             title="Settings"
           >
             <Settings className="w-5 h-5" />
@@ -438,7 +438,7 @@ export function ProjectDetailPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
+                  ? "border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400"
                   : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
               }`}
             >
@@ -537,7 +537,7 @@ function ConnectionsTab({
         </h2>
         <button
           onClick={() => setShowDialog(true)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700"
         >
           <Plus className="w-4 h-4" />
           Add Connection
@@ -566,8 +566,8 @@ function ConnectionsTab({
               <span
                 className={`px-2 py-0.5 text-xs rounded-full ${
                   connection.status === "active"
-                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                    : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                    ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                 }`}
               >
                 {connection.status}
@@ -618,10 +618,10 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-4">
-        <div className="text-red-500 dark:text-red-400">{error}</div>
+        <div className="text-error-500 dark:text-error-400">{error}</div>
         <button
           onClick={() => refetchObservability()}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
         >
           Retry
         </button>
@@ -653,7 +653,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
             Total Errors
           </h3>
-          <div className="text-2xl font-semibold text-red-600 dark:text-red-400">
+          <div className="text-2xl font-semibold text-error-600 dark:text-error-400">
             {data?.errorsTotal ?? 0}
           </div>
         </div>
@@ -678,7 +678,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
           </p>
           <a
             href={`/studio/observability?project=${projectId}`}
-            className="text-blue-600 dark:text-blue-400 text-sm hover:underline"
+            className="text-primary-600 dark:text-primary-400 text-sm hover:underline"
           >
             View traces →
           </a>
@@ -692,7 +692,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
           </p>
           <a
             href={`/studio/observability?project=${projectId}&tab=metrics`}
-            className="text-blue-600 dark:text-blue-400 text-sm hover:underline"
+            className="text-primary-600 dark:text-primary-400 text-sm hover:underline"
           >
             View metrics →
           </a>
@@ -706,7 +706,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
           </p>
           <a
             href={`/studio/observability?project=${projectId}&tab=logs`}
-            className="text-blue-600 dark:text-blue-400 text-sm hover:underline"
+            className="text-primary-600 dark:text-primary-400 text-sm hover:underline"
           >
             View logs →
           </a>
@@ -720,7 +720,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
           </p>
           <a
             href={`/studio/observability?project=${projectId}&tab=alerts`}
-            className="text-blue-600 dark:text-blue-400 text-sm hover:underline"
+            className="text-primary-600 dark:text-primary-400 text-sm hover:underline"
           >
             View alerts →
           </a>
@@ -735,7 +735,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
           </h3>
           <a
             href={`/studio/observability?project=${projectId}&tab=logs`}
-            className="text-blue-600 dark:text-blue-400 text-sm hover:underline"
+            className="text-primary-600 dark:text-primary-400 text-sm hover:underline"
           >
             View all →
           </a>
@@ -755,10 +755,10 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
                   <span
                     className={`px-1.5 py-0.5 rounded text-xs font-medium ${
                       log.level === "error"
-                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                        ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400"
                         : log.level === "warn"
-                          ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                          : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                          ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400"
+                          : "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
                     }`}
                   >
                     {log.level}
@@ -784,7 +784,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
           </h3>
           <a
             href={`/studio/observability?project=${projectId}&tab=alerts`}
-            className="text-blue-600 dark:text-blue-400 text-sm hover:underline"
+            className="text-primary-600 dark:text-primary-400 text-sm hover:underline"
           >
             View all →
           </a>
@@ -804,10 +804,10 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
                   <span
                     className={`px-1.5 py-0.5 rounded text-xs font-medium ${
                       alert.severity === "critical"
-                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                        ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400"
                         : alert.severity === "warning"
-                          ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                          : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                          ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400"
+                          : "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
                     }`}
                   >
                     {alert.severity}
@@ -863,10 +863,10 @@ function CostTab({ projectId }: { projectId: string }) {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-4">
-        <div className="text-red-500 dark:text-red-400">{error}</div>
+        <div className="text-error-500 dark:text-error-400">{error}</div>
         <button
           onClick={() => refetchCost()}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
         >
           Retry
         </button>
@@ -892,7 +892,7 @@ function CostTab({ projectId }: { projectId: string }) {
           <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {formattedCost}
           </div>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
             This month
           </p>
         </div>
@@ -903,7 +903,7 @@ function CostTab({ projectId }: { projectId: string }) {
           <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {formattedTokens}
           </div>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
             Prompt + Completion
           </p>
         </div>
@@ -914,7 +914,7 @@ function CostTab({ projectId }: { projectId: string }) {
           <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {data?.session_count || 0}
           </div>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
             Active this month
           </p>
         </div>
@@ -961,7 +961,7 @@ function CostTab({ projectId }: { projectId: string }) {
       <div>
         <a
           href={`/studio/cost?project=${projectId}`}
-          className="text-blue-600 dark:text-blue-400 text-sm hover:underline"
+          className="text-primary-600 dark:text-primary-400 text-sm hover:underline"
         >
           View detailed cost breakdown →
         </a>
@@ -1023,7 +1023,7 @@ function MembersTab({
         </h2>
         <button
           onClick={() => setShowDialog(true)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700"
         >
           <Plus className="w-4 h-4" />
           Add Member
@@ -1058,7 +1058,7 @@ function MembersTab({
                   <button
                     aria-label="Remove member"
                     onClick={() => handleRemoveMember(member.userId)}
-                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                    className="p-1.5 text-gray-400 dark:text-gray-400 hover:text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -1066,10 +1066,10 @@ function MembersTab({
                 <span
                   className={`px-2 py-0.5 text-xs rounded-full ${
                     member.role === "owner"
-                      ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                      ? "bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400"
                       : member.role === "editor"
-                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                        : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                        ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                   }`}
                 >
                   {member.role}

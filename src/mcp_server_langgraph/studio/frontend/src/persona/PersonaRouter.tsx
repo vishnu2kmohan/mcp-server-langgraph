@@ -153,7 +153,7 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
           className,
         )}
       >
-        <ShieldX className="h-16 w-16 text-red-400" />
+        <ShieldX className="h-16 w-16 text-error-400" />
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
           Access Denied
         </h2>
@@ -179,7 +179,7 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
               "flex items-center gap-2 px-4 py-2 rounded-md",
               "border border-gray-300 dark:border-gray-600",
               "text-gray-700 dark:text-gray-300",
-              "hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors",
+              "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors",
             )}
           >
             Request Access

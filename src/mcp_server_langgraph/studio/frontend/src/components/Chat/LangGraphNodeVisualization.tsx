@@ -82,7 +82,7 @@ export function getNodeStatusIndicator(status: LangGraphNodeStatus) {
       return (
         <CheckCircle
           size={12}
-          className="text-green-500"
+          className="text-success-500"
           data-testid="node-status-completed"
         />
       );
@@ -90,7 +90,7 @@ export function getNodeStatusIndicator(status: LangGraphNodeStatus) {
       return (
         <Loader2
           size={12}
-          className="text-blue-500 animate-spin"
+          className="text-primary-500 animate-spin"
           data-testid="node-status-running"
         />
       );
@@ -98,7 +98,7 @@ export function getNodeStatusIndicator(status: LangGraphNodeStatus) {
       return (
         <XCircle
           size={12}
-          className="text-red-500"
+          className="text-error-500"
           data-testid="node-status-error"
         />
       );
@@ -106,7 +106,7 @@ export function getNodeStatusIndicator(status: LangGraphNodeStatus) {
       return (
         <Circle
           size={12}
-          className="text-gray-400"
+          className="text-gray-400 dark:text-gray-400"
           data-testid="node-status-pending"
         />
       );
@@ -130,11 +130,11 @@ export function getNodeColor(
   status: LangGraphNodeStatus,
 ): string {
   if (status === "error")
-    return "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700";
+    return "bg-error-50 dark:bg-error-900/20 border-error-300 dark:border-error-700";
   if (status === "running")
-    return "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700";
+    return "bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700";
   if (status === "completed")
-    return "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700";
+    return "bg-success-50 dark:bg-success-900/20 border-success-300 dark:border-success-700";
 
   switch (type) {
     case "start":
@@ -142,13 +142,13 @@ export function getNodeColor(
     case "end":
       return "bg-slate-50 dark:bg-slate-900/20 border-slate-300 dark:border-slate-700";
     case "conditional":
-      return "bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700";
+      return "bg-warning-50 dark:bg-warning-900/20 border-warning-300 dark:border-warning-700";
     case "tool":
-      return "bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700";
+      return "bg-insight-50 dark:bg-insight-900/20 border-insight-300 dark:border-insight-700";
     case "agent":
       return "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700";
     default:
-      return "bg-gray-50 dark:bg-gray-900/20 border-gray-300 dark:border-gray-700";
+      return "bg-gray-50 dark:bg-gray-900/20 border-gray-300 dark:border-gray-600 dark:border-gray-700";
   }
 }
 
@@ -179,7 +179,7 @@ export function LangGraphNodeVisualization({
               className={`
                 flex items-center gap-2 px-3 py-2 rounded-lg border
                 ${getNodeColor(node.type, node.status)}
-                ${isActive ? "ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-gray-900" : ""}
+                ${isActive ? "ring-2 ring-primary-500 ring-offset-1 dark:ring-offset-gray-900" : ""}
                 transition-all duration-200
               `}
             >
@@ -211,7 +211,7 @@ export function LangGraphNodeVisualization({
                   <div
                     key={`${edge.from}-${edge.to}`}
                     data-testid={`edge-${edge.from}-to-${edge.to}`}
-                    className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500"
+                    className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-400"
                   >
                     <ArrowRight size={10} />
                     {edge.condition && (

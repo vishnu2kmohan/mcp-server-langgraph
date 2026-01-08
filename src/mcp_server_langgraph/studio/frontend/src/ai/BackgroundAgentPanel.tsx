@@ -69,36 +69,36 @@ function formatElapsedTime(startedAt: number): string {
 function StatusIcon({ status }: { status: AgentStatus }) {
   switch (status) {
     case "running":
-      return <Loader2 size={14} className="animate-spin text-blue-500" />;
+      return <Loader2 size={14} className="animate-spin text-primary-500" />;
     case "queued":
-      return <Clock size={14} className="text-gray-400" />;
+      return <Clock size={14} className="text-gray-400 dark:text-gray-400" />;
     case "completed":
-      return <CheckCircle size={14} className="text-green-500" />;
+      return <CheckCircle size={14} className="text-success-500" />;
     case "failed":
-      return <XCircle size={14} className="text-red-500" />;
+      return <XCircle size={14} className="text-error-500" />;
     case "awaiting_approval":
-      return <AlertTriangle size={14} className="text-amber-500" />;
+      return <AlertTriangle size={14} className="text-warning-500" />;
     case "awaiting_clarification":
-      return <HelpCircle size={14} className="text-purple-500" />;
+      return <HelpCircle size={14} className="text-insight-500" />;
     default:
-      return <Circle size={14} className="text-gray-400" />;
+      return <Circle size={14} className="text-gray-400 dark:text-gray-400" />;
   }
 }
 
 function getStatusColor(status: AgentStatus): string {
   switch (status) {
     case "running":
-      return "text-blue-600 dark:text-blue-400";
+      return "text-primary-600 dark:text-primary-400";
     case "queued":
       return "text-gray-500 dark:text-gray-400";
     case "completed":
-      return "text-green-600 dark:text-green-400";
+      return "text-success-600 dark:text-success-400";
     case "failed":
-      return "text-red-600 dark:text-red-400";
+      return "text-error-600 dark:text-error-400";
     case "awaiting_approval":
-      return "text-amber-600 dark:text-amber-400";
+      return "text-warning-600 dark:text-warning-400";
     case "awaiting_clarification":
-      return "text-purple-600 dark:text-purple-400";
+      return "text-insight-600 dark:text-insight-400";
     default:
       return "text-gray-500 dark:text-gray-400";
   }
@@ -153,9 +153,9 @@ export function BackgroundAgentPanel({
           </span>
         </div>
         {collapsed ? (
-          <ChevronDown size={16} className="text-gray-400" />
+          <ChevronDown size={16} className="text-gray-400 dark:text-gray-400" />
         ) : (
-          <ChevronUp size={16} className="text-gray-400" />
+          <ChevronUp size={16} className="text-gray-400 dark:text-gray-400" />
         )}
       </button>
 
@@ -200,11 +200,11 @@ export function BackgroundAgentPanel({
                       <div className="mt-1 flex items-center gap-2">
                         <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-blue-500 transition-all"
+                            className="h-full bg-primary-500 transition-all"
                             style={{ width: `${agent.progress}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           {agent.progress}%
                         </span>
                       </div>
@@ -212,11 +212,13 @@ export function BackgroundAgentPanel({
 
                     {/* Error message for failed */}
                     {agent.status === "failed" && agent.error && (
-                      <p className="mt-1 text-xs text-red-500">{agent.error}</p>
+                      <p className="mt-1 text-xs text-error-500">
+                        {agent.error}
+                      </p>
                     )}
 
                     {/* Elapsed time */}
-                    <span className="text-xs text-gray-400 mt-1">
+                    <span className="text-xs text-gray-400 dark:text-gray-400 mt-1">
                       {formatElapsedTime(agent.startedAt)}
                     </span>
                   </div>
@@ -231,8 +233,8 @@ export function BackgroundAgentPanel({
                         onClick={() => onCancel(agent.id)}
                         className={cn(
                           "p-1 rounded",
-                          "text-gray-400 hover:text-red-500",
-                          "hover:bg-red-100 dark:hover:bg-red-900/30",
+                          "text-gray-400 dark:text-gray-400 hover:text-error-500",
+                          "hover:bg-error-100 dark:hover:bg-error-900/30",
                           "transition-colors",
                         )}
                       >
@@ -246,8 +248,8 @@ export function BackgroundAgentPanel({
                         onClick={() => onRetry(agent.id)}
                         className={cn(
                           "p-1 rounded",
-                          "text-gray-400 hover:text-blue-500",
-                          "hover:bg-blue-100 dark:hover:bg-blue-900/30",
+                          "text-gray-400 dark:text-gray-400 hover:text-primary-500",
+                          "hover:bg-primary-100 dark:hover:bg-primary-900/30",
                           "transition-colors",
                         )}
                       >

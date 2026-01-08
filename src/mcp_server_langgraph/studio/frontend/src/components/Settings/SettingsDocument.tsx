@@ -129,7 +129,7 @@ export function SettingsDocument({
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
           >
             {saveSuccess ? (
               <>
@@ -161,8 +161,8 @@ export function SettingsDocument({
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
                   activeTab === tab.id
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                    ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                 }`}
               >
                 <tab.icon size={18} />
@@ -222,8 +222,8 @@ export function SettingsDocument({
             {/* API Keys Tab */}
             {activeTab === "api-keys" && (
               <div className="space-y-5">
-                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                <div className="p-4 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
+                  <p className="text-sm text-warning-800 dark:text-warning-200">
                     API keys provide access to your account. Keep them secure.
                   </p>
                 </div>
@@ -240,13 +240,13 @@ export function SettingsDocument({
                     />
                     <button
                       onClick={() => setShowApiKey(!showApiKey)}
-                      className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                     >
                       {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                 </div>
-                <button className="px-4 py-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50">
+                <button className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50">
                   Regenerate API Key
                 </button>
               </div>
@@ -283,7 +283,7 @@ export function SettingsDocument({
                           [key]: e.target.checked,
                         })
                       }
-                      className="w-5 h-5 text-blue-600 rounded"
+                      className="w-5 h-5 text-primary-600 rounded"
                     />
                   </label>
                 ))}
@@ -303,8 +303,8 @@ export function SettingsDocument({
                       onClick={() => setTheme(t)}
                       className={`p-4 rounded-lg border-2 transition-colors ${
                         theme === t
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
+                          ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
+                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600"
                       }`}
                     >
                       <div className="text-center">
@@ -327,7 +327,7 @@ export function SettingsDocument({
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     Add an extra layer of security to your account
                   </p>
-                  <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                  <button className="px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700">
                     Enable 2FA
                   </button>
                 </div>
@@ -338,7 +338,7 @@ export function SettingsDocument({
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     Manage devices logged in to your account
                   </p>
-                  <button className="px-4 py-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200">
+                  <button className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200">
                     Sign Out All Devices
                   </button>
                 </div>

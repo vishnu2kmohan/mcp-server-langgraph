@@ -123,9 +123,9 @@ export function ConnectionBulkActions({
   return (
     <div
       data-testid="bulk-actions"
-      className="mb-4 flex items-center gap-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/30"
+      className="mb-4 flex items-center gap-4 rounded-lg border border-primary-200 bg-primary-50 p-3 dark:border-primary-800 dark:bg-primary-900/30"
     >
-      <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+      <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
         {selectedIds.length} selected
       </span>
 
@@ -133,7 +133,7 @@ export function ConnectionBulkActions({
         <button
           onClick={handleDeleteClick}
           disabled={isDeleting || isTesting}
-          className="flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-md bg-error-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-error-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Trash2 className="h-4 w-4" />
           Delete
@@ -142,7 +142,7 @@ export function ConnectionBulkActions({
         <button
           onClick={handleTest}
           disabled={isDeleting || isTesting}
-          className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-md bg-primary-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isTesting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -155,7 +155,7 @@ export function ConnectionBulkActions({
         <button
           onClick={handleClearSelection}
           disabled={isDeleting || isTesting}
-          className="flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          className="flex items-center gap-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
         >
           <X className="h-4 w-4" />
           Clear
@@ -164,7 +164,7 @@ export function ConnectionBulkActions({
 
       {error && (
         <div
-          className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400"
+          className="flex items-center gap-2 text-sm text-error-600 dark:text-error-400"
           role="alert"
         >
           <AlertCircle className="h-4 w-4" />
@@ -181,14 +181,14 @@ export function ConnectionBulkActions({
             <button
               onClick={handleCancelDelete}
               disabled={isDeleting}
-              className="rounded-md px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="rounded-md px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirmDelete}
               disabled={isDeleting}
-              className="flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-2 rounded-md bg-error-600 px-4 py-2 text-white hover:bg-error-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
               {isDeleting ? "Deleting..." : "Confirm Delete"}
@@ -201,11 +201,11 @@ export function ConnectionBulkActions({
         </p>
 
         {deleteResult && deleteResult.failed_ids.length > 0 && (
-          <div className="rounded-md bg-yellow-50 p-3 dark:bg-yellow-900/30">
-            <p className="text-sm text-green-600 dark:text-green-400">
+          <div className="rounded-md bg-warning-50 p-3 dark:bg-warning-900/30">
+            <p className="text-sm text-success-600 dark:text-success-400">
               {deleteResult.deleted_count} deleted successfully
             </p>
-            <p className="text-sm text-red-600 dark:text-red-400">
+            <p className="text-sm text-error-600 dark:text-error-400">
               {deleteResult.failed_ids.length} failed to delete
             </p>
           </div>

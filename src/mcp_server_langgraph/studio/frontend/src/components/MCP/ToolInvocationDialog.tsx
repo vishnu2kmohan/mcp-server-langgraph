@@ -176,13 +176,15 @@ export function ToolInvocationDialog({
         {/* Loading state */}
         {isLoadingTools && (
           <div className="flex items-center justify-center py-8">
-            <span className="text-gray-500">Loading tools...</span>
+            <span className="text-gray-500 dark:text-gray-400">
+              Loading tools...
+            </span>
           </div>
         )}
 
         {/* Error state */}
         {toolsError && (
-          <div className="rounded-md bg-red-50 p-4 text-red-700 dark:bg-red-900/20 dark:text-red-400">
+          <div className="rounded-md bg-error-50 p-4 text-error-700 dark:bg-error-900/20 dark:text-error-400">
             Error loading tools. Please try again.
           </div>
         )}
@@ -202,7 +204,7 @@ export function ToolInvocationDialog({
                 id="tool-select"
                 value={selectedToolName}
                 onChange={handleToolSelect}
-                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               >
                 <option value="">-- Select a tool --</option>
                 {toolsData?.tools.map((tool) => (
@@ -215,7 +217,7 @@ export function ToolInvocationDialog({
 
             {/* Tool description */}
             {selectedTool && (
-              <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-600 dark:bg-gray-700/50 dark:text-gray-400">
+              <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-600 dark:text-gray-300 dark:bg-gray-700/50 dark:text-gray-400">
                 {selectedTool.description}
               </div>
             )}
@@ -233,7 +235,9 @@ export function ToolInvocationDialog({
                       className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       {arg.name}
-                      {arg.required && <span className="text-red-500">*</span>}
+                      {arg.required && (
+                        <span className="text-error-500">*</span>
+                      )}
                     </label>
                     {arg.description && (
                       <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">
@@ -247,7 +251,7 @@ export function ToolInvocationDialog({
                       onChange={(e) =>
                         handleArgumentChange(arg.name, e.target.value)
                       }
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder={arg.type}
                     />
                   </div>
@@ -260,8 +264,8 @@ export function ToolInvocationDialog({
               <div
                 className={`rounded-md p-4 ${
                   result.isError
-                    ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-                    : "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                    ? "bg-error-50 text-error-700 dark:bg-error-900/20 dark:text-error-400"
+                    : "bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-400"
                 }`}
               >
                 <h3 className="mb-2 font-medium">
@@ -282,7 +286,7 @@ export function ToolInvocationDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+            className="rounded-md border border-gray-300 dark:border-gray-600 bg-white px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
           >
             Cancel
           </button>
@@ -290,7 +294,7 @@ export function ToolInvocationDialog({
             type="button"
             onClick={handleInvoke}
             disabled={!isFormValid || isInvoking}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isInvoking ? "Invoking..." : "Invoke"}
           </button>

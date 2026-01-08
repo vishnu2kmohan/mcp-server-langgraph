@@ -149,25 +149,25 @@ export class ErrorBoundary extends Component<
       <div
         role="alert"
         aria-live="assertive"
-        className="flex min-h-[200px] flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-950"
+        className="flex min-h-[200px] flex-col items-center justify-center rounded-lg border border-error-200 bg-error-50 p-6 text-center dark:border-error-800 dark:bg-error-950"
       >
         <AlertTriangle
-          className="mb-4 h-12 w-12 text-red-500 dark:text-red-400"
+          className="mb-4 h-12 w-12 text-error-500 dark:text-error-400"
           aria-hidden="true"
         />
-        <h2 className="mb-2 text-lg font-semibold text-red-800 dark:text-red-200">
+        <h2 className="mb-2 text-lg font-semibold text-error-800 dark:text-error-200">
           Something went wrong
         </h2>
-        <p className="mb-4 max-w-md text-sm text-red-600 dark:text-red-300">
+        <p className="mb-4 max-w-md text-sm text-error-600 dark:text-error-300">
           {error?.message || "An unexpected error occurred"}
         </p>
 
         {showDetails && error && (
           <details className="mb-4 w-full max-w-lg text-left">
-            <summary className="cursor-pointer text-sm font-medium text-red-700 dark:text-red-300">
+            <summary className="cursor-pointer text-sm font-medium text-error-700 dark:text-error-300">
               Error Details
             </summary>
-            <pre className="mt-2 overflow-auto rounded bg-red-100 p-3 text-xs text-red-800 dark:bg-red-900 dark:text-red-200">
+            <pre className="mt-2 overflow-auto rounded bg-error-100 p-3 text-xs text-error-800 dark:bg-error-900 dark:text-error-200">
               Error: {error.name}: {error.message}
               {error.stack && `\n\n${error.stack}`}
             </pre>
@@ -178,7 +178,7 @@ export class ErrorBoundary extends Component<
           ref={this.retryButtonRef}
           type="button"
           onClick={this.resetErrorBoundary}
-          className="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:bg-red-700 dark:hover:bg-red-600"
+          className="inline-flex items-center gap-2 rounded-md bg-error-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-error-700 focus:outline-none focus:ring-2 focus:ring-error-500 focus:ring-offset-2 dark:bg-error-700 dark:hover:bg-error-600"
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
           Try Again

@@ -61,11 +61,11 @@ const DEFAULT_STALE_THRESHOLD_MS = 60 * 60 * 1000; // 1 hour
 function getRiskBgColor(risk: RiskLevel): string {
   switch (risk) {
     case "low":
-      return "bg-green-500";
+      return "bg-success-500";
     case "medium":
-      return "bg-yellow-500";
+      return "bg-warning-500";
     case "high":
-      return "bg-red-500";
+      return "bg-error-500";
     default:
       return "bg-gray-500";
   }
@@ -130,7 +130,7 @@ function StepCard({ step }: StepCardProps) {
     >
       <div className="flex items-center gap-2 mb-2">
         {/* Step Number */}
-        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-medium">
+        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary-500 text-white text-xs font-medium">
           {step.stepNumber}
         </span>
 
@@ -153,7 +153,7 @@ function StepCard({ step }: StepCardProps) {
         {step.requiresApproval && (
           <span
             data-testid={`requires-approval-${step.stepNumber}`}
-            className="flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400"
+            className="flex items-center gap-1 text-xs text-grafana-600 dark:text-grafana-400"
           >
             <ShieldCheck className="w-3 h-3" />
             Approval required
@@ -169,13 +169,13 @@ function StepCard({ step }: StepCardProps) {
       {/* Command */}
       {step.command ? (
         <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-gray-400" />
+          <Terminal className="w-4 h-4 text-gray-400 dark:text-gray-400" />
           <code className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono">
             {step.command}
           </code>
         </div>
       ) : (
-        <div className="flex items-center gap-2 text-xs text-gray-500 italic">
+        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 italic">
           <Terminal className="w-4 h-4" />
           Manual step - no command
         </div>
@@ -213,16 +213,16 @@ export function AIRecommendationCard({
     return (
       <div
         data-testid="ai-recommendation-card"
-        className="bg-white dark:bg-gray-900 border border-red-200 dark:border-red-800 rounded-lg p-4"
+        className="bg-white dark:bg-gray-900 border border-error-200 dark:border-error-800 rounded-lg p-4"
       >
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-red-700 dark:text-red-400">{error}</p>
+            <p className="text-error-700 dark:text-error-400">{error}</p>
             <button
               data-testid="retry-button"
               onClick={onRegenerate}
-              className="mt-2 text-sm text-red-600 dark:text-red-400 underline hover:no-underline"
+              className="mt-2 text-sm text-error-600 dark:text-error-400 underline hover:no-underline"
             >
               Retry
             </button>
@@ -244,7 +244,7 @@ export function AIRecommendationCard({
           <p>No recommendation available</p>
           <button
             onClick={onRegenerate}
-            className="mt-2 text-sm text-blue-600 dark:text-blue-400 underline hover:no-underline"
+            className="mt-2 text-sm text-primary-600 dark:text-primary-400 underline hover:no-underline"
           >
             Generate recommendation
           </button>
@@ -263,7 +263,7 @@ export function AIRecommendationCard({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <Bot className="w-5 h-5 text-purple-500" />
+          <Bot className="w-5 h-5 text-insight-500" />
           <h3 className="font-medium text-gray-900 dark:text-white">
             AI Recommendation
           </h3>
@@ -275,7 +275,7 @@ export function AIRecommendationCard({
           data-testid="regenerate-button"
           onClick={onRegenerate}
           disabled={isRegenerating}
-          className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isRegenerating ? (
             <RefreshCw
@@ -358,7 +358,7 @@ export function AIRecommendationCard({
             href={recommendation.runbookReference}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            className="flex items-center gap-1 text-sm text-primary-600 dark:text-primary-400 hover:underline"
           >
             <ExternalLink className="w-4 h-4" />
             View Runbook
@@ -375,7 +375,7 @@ export function AIRecommendationCard({
         {stale && (
           <span
             data-testid="stale-indicator"
-            className="flex items-center gap-1 text-orange-500"
+            className="flex items-center gap-1 text-grafana-500"
           >
             <AlertTriangle className="w-3 h-3" />
             Stale - consider regenerating

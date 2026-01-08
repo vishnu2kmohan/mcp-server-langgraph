@@ -177,7 +177,7 @@ export function CostDocument({
                 {/* Total Cost */}
                 <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign size={20} className="text-blue-500" />
+                    <DollarSign size={20} className="text-primary-500" />
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       Total Cost
                     </h3>
@@ -195,7 +195,7 @@ export function CostDocument({
                 {/* Total Tokens */}
                 <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp size={20} className="text-green-500" />
+                    <TrendingUp size={20} className="text-success-500" />
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       Total Tokens
                     </h3>
@@ -213,7 +213,7 @@ export function CostDocument({
                 {/* Average Cost per Token */}
                 <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign size={20} className="text-purple-500" />
+                    <DollarSign size={20} className="text-insight-500" />
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       Avg Cost/Token
                     </h3>
@@ -331,7 +331,7 @@ export function CostDocument({
                           >
                             <div
                               data-cost-bar
-                              className="w-full bg-blue-500 rounded-t transition-all hover:bg-blue-600"
+                              className="w-full bg-primary-500 rounded-t transition-all hover:bg-primary-600"
                               style={{
                                 height: `${heightPercent}%`,
                                 minHeight: "4px",

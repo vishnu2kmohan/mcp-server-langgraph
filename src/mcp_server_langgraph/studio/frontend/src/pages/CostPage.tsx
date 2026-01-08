@@ -251,21 +251,29 @@ export function CostPage({
   const getWsStatusDisplay = () => {
     switch (wsStatus) {
       case "connected":
-        return { text: "Live", color: "text-green-500", Icon: Wifi };
+        return { text: "Live", color: "text-success-500", Icon: Wifi };
       case "connecting":
-        return { text: "Connecting...", color: "text-yellow-500", Icon: Wifi };
+        return { text: "Connecting...", color: "text-warning-500", Icon: Wifi };
       case "reconnecting":
         return {
           text: "Reconnecting...",
-          color: "text-yellow-500",
+          color: "text-warning-500",
           Icon: Wifi,
         };
       case "disconnected":
-        return { text: "Offline", color: "text-gray-500", Icon: WifiOff };
+        return {
+          text: "Offline",
+          color: "text-gray-500 dark:text-gray-400",
+          Icon: WifiOff,
+        };
       case "error":
-        return { text: "Error", color: "text-red-500", Icon: WifiOff };
+        return { text: "Error", color: "text-error-500", Icon: WifiOff };
       default:
-        return { text: "Unknown", color: "text-gray-500", Icon: WifiOff };
+        return {
+          text: "Unknown",
+          color: "text-gray-500 dark:text-gray-400",
+          Icon: WifiOff,
+        };
     }
   };
 
@@ -291,10 +299,10 @@ export function CostPage({
                 data-testid="ws-status-indicator"
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
                   wsStatus === "connected"
-                    ? "bg-green-100 dark:bg-green-900/30"
+                    ? "bg-success-100 dark:bg-success-900/30"
                     : wsStatus === "error"
-                      ? "bg-red-100 dark:bg-red-900/30"
-                      : "bg-yellow-100 dark:bg-yellow-900/30"
+                      ? "bg-error-100 dark:bg-error-900/30"
+                      : "bg-warning-100 dark:bg-warning-900/30"
                 }`}
               >
                 <wsStatusDisplay.Icon
@@ -331,7 +339,7 @@ export function CostPage({
                     className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     aria-label="Start date"
                   />
-                  <span className="text-gray-500">to</span>
+                  <span className="text-gray-500 dark:text-gray-400">to</span>
                   <input
                     type="date"
                     value={endDate}
@@ -355,8 +363,8 @@ export function CostPage({
                 }}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   useCustomDateRange
-                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                    : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 border border-gray-300 dark:border-gray-600"
+                    ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-300 border border-gray-300 dark:border-gray-600"
                 }`}
                 aria-label={
                   useCustomDateRange
@@ -380,8 +388,8 @@ export function CostPage({
               onClick={() => setDashboardView("personal")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 dashboardView === "personal"
-                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-300"
               }`}
             >
               <DollarSign size={16} />
@@ -391,8 +399,8 @@ export function CostPage({
               onClick={() => setDashboardView("organizational")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 dashboardView === "organizational"
-                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-300"
               }`}
             >
               <Building2 size={16} />
@@ -406,24 +414,24 @@ export function CostPage({
       {enableRealtime && budgetWarnings.length > 0 && (
         <div
           data-testid="budget-warning-banner"
-          className="mx-6 mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg"
+          className="mx-6 mt-4 p-4 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg"
         >
           <div className="flex items-start gap-3">
             <AlertTriangle
               size={20}
-              className="text-amber-500 flex-shrink-0 mt-0.5"
+              className="text-warning-500 flex-shrink-0 mt-0.5"
             />
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+              <h3 className="text-sm font-medium text-warning-800 dark:text-warning-200">
                 Budget Warning
               </h3>
-              <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+              <p className="text-sm text-warning-700 dark:text-warning-300 mt-1">
                 {budgetWarnings[budgetWarnings.length - 1].message}
               </p>
             </div>
             <button
               onClick={clearBudgetWarnings}
-              className="text-amber-500 hover:text-amber-700 dark:hover:text-amber-300"
+              className="text-warning-500 hover:text-warning-700 dark:hover:text-warning-300"
               aria-label="Dismiss warning"
             >
               <X size={16} />
@@ -438,10 +446,10 @@ export function CostPage({
           data-testid="budget-alerts-banner"
           className={`mx-6 mt-4 p-4 rounded-lg border ${
             budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-              ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+              ? "bg-error-50 dark:bg-error-900/20 border-error-200 dark:border-error-800"
               : budgetAlerts[budgetAlerts.length - 1].status === "critical"
-                ? "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800"
-                : "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
+                ? "bg-grafana-50 dark:bg-grafana-900/20 border-grafana-200 dark:border-grafana-800"
+                : "bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800"
           }`}
         >
           <div className="flex items-start gap-3">
@@ -449,21 +457,21 @@ export function CostPage({
               size={20}
               className={`flex-shrink-0 mt-0.5 ${
                 budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-                  ? "text-red-500"
+                  ? "text-error-500"
                   : budgetAlerts[budgetAlerts.length - 1].status === "critical"
-                    ? "text-orange-500"
-                    : "text-amber-500"
+                    ? "text-grafana-500"
+                    : "text-warning-500"
               }`}
             />
             <div className="flex-1">
               <h3
                 className={`text-sm font-medium ${
                   budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-                    ? "text-red-800 dark:text-red-200"
+                    ? "text-error-800 dark:text-error-200"
                     : budgetAlerts[budgetAlerts.length - 1].status ===
                         "critical"
-                      ? "text-orange-800 dark:text-orange-200"
-                      : "text-amber-800 dark:text-amber-200"
+                      ? "text-grafana-800 dark:text-grafana-200"
+                      : "text-warning-800 dark:text-warning-200"
                 }`}
               >
                 Budget Alert (
@@ -472,11 +480,11 @@ export function CostPage({
               <p
                 className={`text-sm mt-1 ${
                   budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-                    ? "text-red-700 dark:text-red-300"
+                    ? "text-error-700 dark:text-error-300"
                     : budgetAlerts[budgetAlerts.length - 1].status ===
                         "critical"
-                      ? "text-orange-700 dark:text-orange-300"
-                      : "text-amber-700 dark:text-amber-300"
+                      ? "text-grafana-700 dark:text-grafana-300"
+                      : "text-warning-700 dark:text-warning-300"
                 }`}
               >
                 {budgetAlerts[budgetAlerts.length - 1].message}
@@ -484,11 +492,11 @@ export function CostPage({
               <p
                 className={`text-xs mt-1 ${
                   budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-                    ? "text-red-600 dark:text-red-400"
+                    ? "text-error-600 dark:text-error-400"
                     : budgetAlerts[budgetAlerts.length - 1].status ===
                         "critical"
-                      ? "text-orange-600 dark:text-orange-400"
-                      : "text-amber-600 dark:text-amber-400"
+                      ? "text-grafana-600 dark:text-grafana-400"
+                      : "text-warning-600 dark:text-warning-400"
                 }`}
               >
                 {budgetAlerts[budgetAlerts.length - 1].entityType}:{" "}
@@ -499,10 +507,10 @@ export function CostPage({
               onClick={clearBudgetAlerts}
               className={`${
                 budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-                  ? "text-red-500 hover:text-red-700 dark:hover:text-red-300"
+                  ? "text-error-500 hover:text-error-700 dark:hover:text-error-300"
                   : budgetAlerts[budgetAlerts.length - 1].status === "critical"
-                    ? "text-orange-500 hover:text-orange-700 dark:hover:text-orange-300"
-                    : "text-amber-500 hover:text-amber-700 dark:hover:text-amber-300"
+                    ? "text-grafana-500 hover:text-grafana-700 dark:hover:text-grafana-300"
+                    : "text-warning-500 hover:text-warning-700 dark:hover:text-warning-300"
               }`}
               aria-label="Dismiss alert"
             >
@@ -530,11 +538,11 @@ export function CostPage({
             <div
               className={`absolute left-0 top-0 h-full rounded-full transition-all ${
                 (userBudget.currentUsage / userBudget.budgetLimit) * 100 >= 90
-                  ? "bg-red-500"
+                  ? "bg-error-500"
                   : (userBudget.currentUsage / userBudget.budgetLimit) * 100 >=
                       75
-                    ? "bg-amber-500"
-                    : "bg-blue-500"
+                    ? "bg-warning-500"
+                    : "bg-primary-500"
               }`}
               style={{
                 width: `${Math.min(100, (userBudget.currentUsage / userBudget.budgetLimit) * 100)}%`,
@@ -629,7 +637,7 @@ export function CostPage({
                 {/* Total Cost */}
                 <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign size={20} className="text-blue-500" />
+                    <DollarSign size={20} className="text-primary-500" />
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       Total Cost
                     </h3>
@@ -647,7 +655,7 @@ export function CostPage({
                 {/* Total Tokens */}
                 <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp size={20} className="text-green-500" />
+                    <TrendingUp size={20} className="text-success-500" />
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       Total Tokens
                     </h3>
@@ -665,7 +673,7 @@ export function CostPage({
                 {/* Average Cost per Token */}
                 <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign size={20} className="text-purple-500" />
+                    <DollarSign size={20} className="text-insight-500" />
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       Avg Cost/Token
                     </h3>
@@ -751,7 +759,7 @@ export function CostPage({
                 className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse" />
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                     Live Session Costs
                   </h2>
@@ -869,7 +877,7 @@ export function CostPage({
                           >
                             <div
                               data-cost-bar
-                              className="w-full bg-blue-500 rounded-t transition-all hover:bg-blue-600"
+                              className="w-full bg-primary-500 rounded-t transition-all hover:bg-primary-600"
                               style={{
                                 height: `${heightPercent}%`,
                                 minHeight: "4px",

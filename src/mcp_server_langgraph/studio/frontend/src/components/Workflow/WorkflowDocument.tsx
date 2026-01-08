@@ -168,7 +168,7 @@ export function WorkflowDocument({
           className,
         )}
       >
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
   }
@@ -187,27 +187,27 @@ export function WorkflowDocument({
         {/* Toolbar */}
         <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
-            <GitBranch size={18} className="text-gray-500" />
+            <GitBranch size={18} className="text-gray-500 dark:text-gray-400" />
             <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
               {metadata?.name || "Workflow"}
-              {isDirty && <span className="text-yellow-500 ml-1">*</span>}
+              {isDirty && <span className="text-warning-500 ml-1">*</span>}
             </h2>
 
             {isReadOnly && (
-              <span className="flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded">
+              <span className="flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
                 <Lock size={12} />
                 Read-Only
               </span>
             )}
 
             {!validation.isValid && (
-              <span className="text-xs px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded">
+              <span className="text-xs px-2 py-1 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded">
                 {validation.errors.length} errors
               </span>
             )}
 
             {validationError && (
-              <div className="flex items-center gap-2 px-2 py-1 bg-red-100 dark:bg-red-900/30 rounded text-xs text-red-700 dark:text-red-400">
+              <div className="flex items-center gap-2 px-2 py-1 bg-error-100 dark:bg-error-900/30 rounded text-xs text-error-700 dark:text-error-400">
                 <AlertCircle size={12} />
                 {validationError}
               </div>
@@ -218,11 +218,11 @@ export function WorkflowDocument({
                 className={cn(
                   "text-xs px-2 py-1 rounded",
                   executionState === "running" &&
-                    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+                    "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400",
                   executionState === "completed" &&
-                    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+                    "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400",
                   executionState === "error" &&
-                    "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+                    "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400",
                 )}
               >
                 {executionState}
@@ -234,7 +234,7 @@ export function WorkflowDocument({
             <button
               onClick={() => dispatch(undo())}
               disabled={!canUndo || isReadOnly}
-              className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 rounded"
+              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 rounded"
               title="Undo"
             >
               <Undo size={16} />
@@ -242,7 +242,7 @@ export function WorkflowDocument({
             <button
               onClick={() => dispatch(redo())}
               disabled={!canRedo || isReadOnly}
-              className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 rounded"
+              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 rounded"
               title="Redo"
             >
               <Redo size={16} />
@@ -253,7 +253,7 @@ export function WorkflowDocument({
             <button
               onClick={handleRun}
               disabled={executionState === "running" || !validation.isValid}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-success-600 text-white rounded hover:bg-success-700 disabled:opacity-50"
               title="Run"
             >
               {executionState === "running" ? (
@@ -266,7 +266,7 @@ export function WorkflowDocument({
 
             <button
               onClick={handleExportJSON}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded hover:bg-gray-200"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:bg-gray-700"
               title="Export"
             >
               <Download size={14} />
@@ -276,7 +276,7 @@ export function WorkflowDocument({
             <button
               onClick={handleSave}
               disabled={isSaving || !isDirty || isReadOnly}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50"
               title="Save"
             >
               {isSaving ? (

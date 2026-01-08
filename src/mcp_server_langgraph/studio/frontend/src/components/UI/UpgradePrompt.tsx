@@ -74,36 +74,36 @@ export function UpgradePrompt({
   const getUrgencyStyle = () => {
     switch (urgency) {
       case "critical":
-        return "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800";
+        return "bg-error-50 dark:bg-error-900/20 border-error-200 dark:border-error-800";
       case "warning":
-        return "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800";
+        return "bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800";
       case "info":
       default:
-        return "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800";
+        return "bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800";
     }
   };
 
   const getButtonStyle = () => {
     switch (urgency) {
       case "critical":
-        return "bg-red-600 hover:bg-red-700 text-white";
+        return "bg-error-600 hover:bg-error-700 text-white";
       case "warning":
-        return "bg-amber-600 hover:bg-amber-700 text-white";
+        return "bg-warning-600 hover:bg-warning-700 text-white";
       case "info":
       default:
-        return "bg-blue-600 hover:bg-blue-700 text-white";
+        return "bg-primary-600 hover:bg-primary-700 text-white";
     }
   };
 
   const getIconStyle = () => {
     switch (urgency) {
       case "critical":
-        return "text-red-500";
+        return "text-error-500";
       case "warning":
-        return "text-amber-500";
+        return "text-warning-500";
       case "info":
       default:
-        return "text-blue-500";
+        return "text-primary-500";
     }
   };
 
@@ -161,7 +161,7 @@ export function UpgradePrompt({
             type="button"
             onClick={onDismiss}
             aria-label="Dismiss"
-            className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className="p-1.5 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 transition-colors"
           >
             <X size={16} />
           </button>

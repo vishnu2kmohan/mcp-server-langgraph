@@ -242,7 +242,7 @@ describe("InlineEdit", () => {
 
       // Input should still be visible (not saved) and have error styling
       expect(input).toBeInTheDocument();
-      expect(input).toHaveClass("border-red-500");
+      expect(input).toHaveClass("border-error-500");
     });
   });
 

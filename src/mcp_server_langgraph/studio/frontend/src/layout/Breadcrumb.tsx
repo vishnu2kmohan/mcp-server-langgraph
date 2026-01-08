@@ -57,7 +57,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
             {/* Separator (except for first item) */}
             {index > 0 && (
               <span
-                className="text-gray-300 dark:text-gray-600"
+                className="text-gray-300 dark:text-gray-600 dark:text-gray-300"
                 aria-hidden="true"
               >
                 /
@@ -78,7 +78,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
                 className={cn(
                   "text-sm font-medium",
                   "text-gray-500 dark:text-gray-400",
-                  "hover:text-gray-700 dark:hover:text-gray-200",
+                  "hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-200",
                   "hover:underline",
                   "transition-colors",
                 )}

@@ -239,7 +239,7 @@ export function ChatMessages({
               className={`max-w-[70%] px-4 py-3 rounded-2xl ${
                 message.role === "user"
                   ? "bg-chat-user-bubble dark:bg-chat-user-bubble-dark text-white rounded-br-md"
-                  : "bg-chat-ai-bubble dark:bg-chat-ai-bubble-dark border border-gray-200/50 dark:border-gray-700/50 text-gray-900 dark:text-gray-100 rounded-bl-md"
+                  : "bg-chat-ai-bubble dark:bg-chat-ai-bubble-dark border border-gray-200 dark:border-gray-700/50 dark:border-gray-700/50 text-gray-900 dark:text-gray-100 rounded-bl-md"
               }`}
             >
               {/* Rich markdown rendering for all messages */}
@@ -257,7 +257,7 @@ export function ChatMessages({
               {message.role === "assistant" &&
                 message.sources &&
                 message.sources.length > 0 && (
-                  <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
+                  <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700 dark:border-gray-600">
                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                       Sources:
                     </p>
@@ -268,7 +268,7 @@ export function ChatMessages({
                           href={source.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                          className="inline-flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:underline"
                         >
                           <ExternalLink size={10} />
                           {source.title}
@@ -323,7 +323,9 @@ export function ChatMessages({
 
               <p
                 className={`text-xs mt-1 ${
-                  message.role === "user" ? "text-blue-200" : "text-gray-400"
+                  message.role === "user"
+                    ? "text-primary-200"
+                    : "text-gray-400 dark:text-gray-400"
                 }`}
               >
                 {new Date(message.timestamp).toLocaleTimeString()}
@@ -391,7 +393,7 @@ export function ChatMessages({
                   enableInteractiveArtifacts={enableInteractiveArtifacts}
                   isStreaming={true}
                 />
-                <span className="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse align-middle" />
+                <span className="inline-block w-2 h-4 ml-1 bg-primary-500 animate-pulse align-middle" />
               </div>
             ) : (
               <div className="space-y-2">
@@ -414,7 +416,7 @@ export function ChatMessages({
                 {showAgentExecutionTrace && (
                   <Suspense
                     fallback={
-                      <div className="flex items-center gap-2 p-3 text-gray-400">
+                      <div className="flex items-center gap-2 p-3 text-gray-400 dark:text-gray-400">
                         <Loader2 size={14} className="animate-spin" />
                         <span className="text-xs">Loading trace panel...</span>
                       </div>
@@ -450,7 +452,7 @@ export function ChatMessages({
             {showAgentExecutionTrace && (
               <Suspense
                 fallback={
-                  <div className="flex items-center gap-2 p-3 text-gray-400">
+                  <div className="flex items-center gap-2 p-3 text-gray-400 dark:text-gray-400">
                     <Loader2 size={14} className="animate-spin" />
                     <span className="text-xs">Loading trace panel...</span>
                   </div>

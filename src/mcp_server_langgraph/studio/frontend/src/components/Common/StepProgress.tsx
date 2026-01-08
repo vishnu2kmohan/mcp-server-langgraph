@@ -73,23 +73,23 @@ const SIZE_CLASSES: Record<
 const STATUS_CLASSES: Record<StepStatus, { circle: string; text: string }> = {
   pending: {
     circle:
-      "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500",
+      "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-400",
     text: "text-gray-500 dark:text-gray-400",
   },
   current: {
     circle:
-      "bg-blue-100 dark:bg-blue-900/30 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400",
-    text: "text-blue-700 dark:text-blue-300 font-medium",
+      "bg-primary-100 dark:bg-primary-900/30 border-primary-600 dark:border-primary-400 text-primary-600 dark:text-primary-400",
+    text: "text-primary-700 dark:text-primary-300 font-medium",
   },
   completed: {
     circle:
-      "bg-green-600 dark:bg-green-500 border-green-600 dark:border-green-500 text-white",
+      "bg-success-600 dark:bg-success-500 border-success-600 dark:border-success-500 text-white",
     text: "text-gray-700 dark:text-gray-300",
   },
   error: {
     circle:
-      "bg-red-100 dark:bg-red-900/30 border-red-600 dark:border-red-400 text-red-600 dark:text-red-400",
-    text: "text-red-700 dark:text-red-300",
+      "bg-error-100 dark:bg-error-900/30 border-error-600 dark:border-error-400 text-error-600 dark:text-error-400",
+    text: "text-error-700 dark:text-error-300",
   },
 };
 
@@ -199,7 +199,7 @@ export function StepProgress({
                   onClick={() => handleStepClick(index, status)}
                   className={`flex items-center justify-center rounded-full border-2 transition-colors ${sizeClasses.circle} ${statusClasses.circle} ${
                     isClickable
-                      ? "cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      ? "cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                       : ""
                   }`}
                 >
@@ -277,7 +277,7 @@ export function StepProgress({
                     : `ml-4 w-0.5 h-8`
                 } rounded-full transition-colors ${
                   index < currentStep
-                    ? "bg-green-600 dark:bg-green-500"
+                    ? "bg-success-600 dark:bg-success-500"
                     : "bg-gray-200 dark:bg-gray-700"
                 }`}
                 aria-hidden="true"

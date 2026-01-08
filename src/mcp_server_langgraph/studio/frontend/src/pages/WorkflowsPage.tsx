@@ -356,7 +356,7 @@ export function WorkflowsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
   }
@@ -369,18 +369,18 @@ export function WorkflowsPage() {
           <div className="flex items-center gap-4">
             <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               {metadata?.name || "New Workflow"}
-              {isDirty && <span className="text-yellow-500 ml-1">*</span>}
+              {isDirty && <span className="text-warning-500 ml-1">*</span>}
             </h1>
 
             {isReadOnly && (
-              <span className="flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded">
+              <span className="flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
                 <Lock size={12} />
                 Read-Only
               </span>
             )}
 
             {!validation.isValid && (
-              <span className="text-xs px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded">
+              <span className="text-xs px-2 py-1 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded">
                 {validation.errors.length} errors
               </span>
             )}
@@ -389,15 +389,15 @@ export function WorkflowsPage() {
             {validationError && (
               <div
                 role="alert"
-                className="flex items-center gap-2 px-3 py-1.5 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg"
+                className="flex items-center gap-2 px-3 py-1.5 bg-error-100 dark:bg-error-900/30 border border-error-200 dark:border-error-800 rounded-lg"
               >
-                <AlertCircle size={14} className="text-red-500" />
-                <span className="text-sm text-red-700 dark:text-red-400">
+                <AlertCircle size={14} className="text-error-500" />
+                <span className="text-sm text-error-700 dark:text-error-400">
                   {validationError}
                 </span>
                 <button
                   onClick={() => setValidationError(null)}
-                  className="ml-1 p-0.5 text-red-500 hover:text-red-700"
+                  className="ml-1 p-0.5 text-error-500 hover:text-error-700"
                   aria-label="Dismiss"
                 >
                   <X size={14} />
@@ -409,9 +409,9 @@ export function WorkflowsPage() {
               <span
                 className={`
                   text-xs px-2 py-1 rounded
-                  ${executionState === "running" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : ""}
-                  ${executionState === "completed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : ""}
-                  ${executionState === "error" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : ""}
+                  ${executionState === "running" ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400" : ""}
+                  ${executionState === "completed" ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400" : ""}
+                  ${executionState === "error" ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400" : ""}
                 `}
               >
                 {executionState}
@@ -425,10 +425,10 @@ export function WorkflowsPage() {
                 title={`Connection: ${connectionStatus}${reconnectAttempts > 0 ? ` (attempt ${reconnectAttempts})` : ""}`}
                 className={`
                   flex items-center gap-1 text-xs px-2 py-1 rounded
-                  ${connectionStatus === "connected" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : ""}
-                  ${connectionStatus === "connecting" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" : ""}
-                  ${connectionStatus === "reconnecting" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" : ""}
-                  ${connectionStatus === "disconnected" || connectionStatus === "error" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : ""}
+                  ${connectionStatus === "connected" ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400" : ""}
+                  ${connectionStatus === "connecting" ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400" : ""}
+                  ${connectionStatus === "reconnecting" ? "bg-grafana-100 text-grafana-700 dark:bg-grafana-900/30 dark:text-grafana-400" : ""}
+                  ${connectionStatus === "disconnected" || connectionStatus === "error" ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400" : ""}
                 `}
               >
                 {connectionStatus === "connected" && <Wifi size={12} />}
@@ -452,7 +452,7 @@ export function WorkflowsPage() {
                 connectionStatus === "error") && (
                 <button
                   onClick={reconnect}
-                  className="flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                  className="flex items-center gap-1 text-xs px-2 py-1 bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 rounded hover:bg-primary-200 dark:hover:bg-primary-900/50"
                 >
                   <RefreshCw size={12} />
                   Reconnect
@@ -464,7 +464,7 @@ export function WorkflowsPage() {
             <button
               onClick={() => dispatch(undo())}
               disabled={!canUndo || isReadOnly}
-              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
+              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
               title="Undo (Cmd+Z)"
             >
               <Undo size={18} />
@@ -472,7 +472,7 @@ export function WorkflowsPage() {
             <button
               onClick={() => dispatch(redo())}
               disabled={!canRedo || isReadOnly}
-              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
+              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
               title="Redo (Cmd+Shift+Z)"
             >
               <Redo size={18} />
@@ -487,7 +487,7 @@ export function WorkflowsPage() {
                 !validation.isValid ||
                 (isReadOnly && !canExecute)
               }
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-success-600 text-white rounded hover:bg-success-700 disabled:opacity-50"
               title="Run Workflow (Cmd+Enter)"
             >
               {executionState === "running" ? (
@@ -501,7 +501,7 @@ export function WorkflowsPage() {
             <button
               onClick={handleGenerateCode}
               disabled={isGeneratingCode}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded hover:bg-purple-200"
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400 rounded hover:bg-insight-200"
             >
               <Code size={16} />
               Generate Code
@@ -516,8 +516,8 @@ export function WorkflowsPage() {
               }}
               className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded ${
                 showSuggestions
-                  ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                  : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200"
+                  ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700"
               }`}
               title="AI Suggestions"
               data-testid="ai-suggestions-toggle"
@@ -533,7 +533,7 @@ export function WorkflowsPage() {
                 className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded ${
                   showHistoryPanel
                     ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
-                    : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700"
                 }`}
                 title="Execution History"
               >
@@ -544,7 +544,7 @@ export function WorkflowsPage() {
 
             <button
               onClick={handleExportJSON}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded hover:bg-gray-200"
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:bg-gray-700"
             >
               <Download size={16} />
               Export JSON
@@ -553,7 +553,7 @@ export function WorkflowsPage() {
             <button
               onClick={handleSave}
               disabled={isSaving || !isDirty || isReadOnly}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50"
               title="Save (Cmd+S)"
             >
               {isSaving ? (

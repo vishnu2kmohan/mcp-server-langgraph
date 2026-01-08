@@ -122,7 +122,7 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl shadow-lg mb-4">
             <svg
               className="w-10 h-10 text-white"
               fill="none"
@@ -151,7 +151,7 @@ export function LoginPage() {
           {idpLoading && (
             <div className="flex items-center justify-center py-8">
               <Loader2
-                className="h-8 w-8 animate-spin text-blue-600"
+                className="h-8 w-8 animate-spin text-primary-600"
                 role="status"
                 aria-label="Loading identity providers"
               />
@@ -164,7 +164,7 @@ export function LoginPage() {
               <div className="mb-6">
                 <a
                   href="/api/v1/auth/login"
-                  className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                  className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
                 >
                   <LogIn className="h-5 w-5" />
                   Sign in with SSO

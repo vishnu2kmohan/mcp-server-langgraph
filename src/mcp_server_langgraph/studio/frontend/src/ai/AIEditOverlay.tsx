@@ -174,7 +174,7 @@ export function AIEditOverlay({
         <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
           Selected code (lines {selection.start.line}-{selection.end.line})
         </div>
-        <pre className="text-xs bg-gray-100 dark:bg-gray-900 p-2 rounded max-h-20 overflow-auto text-gray-700 dark:text-gray-300 font-mono">
+        <pre className="text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded max-h-20 overflow-auto text-gray-700 dark:text-gray-300 font-mono">
           {selection.content.slice(0, 200)}
           {selection.content.length > 200 && "..."}
         </pre>
@@ -198,7 +198,7 @@ export function AIEditOverlay({
               data-testid="cancel-edit"
               type="button"
               onClick={onCancel}
-              className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
             >
               Cancel
             </button>
@@ -225,7 +225,7 @@ export function AIEditOverlay({
       {/* Error State */}
       {error && (
         <div className="p-4">
-          <div className="flex items-center gap-2 text-red-500 mb-3">
+          <div className="flex items-center gap-2 text-error-500 mb-3">
             <AlertCircle size={16} />
             <span className="text-sm">{error}</span>
           </div>
@@ -234,7 +234,7 @@ export function AIEditOverlay({
               data-testid="cancel-edit"
               type="button"
               onClick={onCancel}
-              className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
             >
               Cancel
             </button>
@@ -242,7 +242,7 @@ export function AIEditOverlay({
               data-testid="retry-button"
               type="button"
               onClick={handleRetry}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-error-500 text-white rounded hover:bg-error-600 transition-colors"
             >
               <RefreshCw size={14} />
               Retry
@@ -265,10 +265,10 @@ export function AIEditOverlay({
                   data-testid={`diff-${line.type}`}
                   className={cn(
                     "px-2 py-0.5",
-                    line.type === "add" && "bg-green-900/30 text-green-400",
+                    line.type === "add" && "bg-success-900/30 text-success-400",
                     line.type === "remove" &&
-                      "bg-red-900/30 text-red-400 line-through",
-                    line.type === "same" && "text-gray-400",
+                      "bg-error-900/30 text-error-400 line-through",
+                    line.type === "same" && "text-gray-400 dark:text-gray-400",
                   )}
                 >
                   {line.type === "add" && "+ "}
@@ -285,7 +285,7 @@ export function AIEditOverlay({
               data-testid="regenerate-button"
               type="button"
               onClick={handleRegenerate}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
             >
               <RefreshCw size={14} />
               Regenerate
@@ -295,7 +295,7 @@ export function AIEditOverlay({
                 data-testid="cancel-edit"
                 type="button"
                 onClick={onCancel}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
               >
                 <X size={14} />
                 Cancel
@@ -304,7 +304,7 @@ export function AIEditOverlay({
                 data-testid="apply-edit"
                 type="button"
                 onClick={() => onApply(editResult.newContent)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-success-500 text-white rounded hover:bg-success-600 transition-colors"
               >
                 <Check size={14} />
                 Apply

@@ -142,8 +142,8 @@ export function InteractiveChart({
             aria-label="Line chart"
             className={`p-1.5 rounded ${
               chartType === "line"
-                ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
-                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                ? "bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400"
+                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
             }`}
           >
             <TrendingUp size={14} />
@@ -154,8 +154,8 @@ export function InteractiveChart({
             aria-label="Bar chart"
             className={`p-1.5 rounded ${
               chartType === "bar"
-                ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
-                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                ? "bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400"
+                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
             }`}
           >
             <BarChart2 size={14} />
@@ -166,8 +166,8 @@ export function InteractiveChart({
             aria-label="Pie chart"
             className={`p-1.5 rounded ${
               chartType === "pie"
-                ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
-                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                ? "bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400"
+                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
             }`}
           >
             <PieChartIcon size={14} />
@@ -182,8 +182,8 @@ export function InteractiveChart({
             aria-label="Toggle data table"
             className={`p-1.5 rounded ${
               showDataTable
-                ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
-                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                ? "bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400"
+                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
             }`}
           >
             <Table size={14} />
@@ -192,10 +192,10 @@ export function InteractiveChart({
             type="button"
             onClick={handleCopy}
             aria-label="Copy data"
-            className="p-1.5 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="p-1.5 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
           >
             {copied ? (
-              <Check size={14} className="text-green-500" />
+              <Check size={14} className="text-success-500" />
             ) : (
               <Copy size={14} />
             )}
@@ -204,7 +204,7 @@ export function InteractiveChart({
             type="button"
             onClick={handleToggleFullscreen}
             aria-label="Toggle fullscreen"
-            className="p-1.5 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="p-1.5 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
           >
             {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
           </button>

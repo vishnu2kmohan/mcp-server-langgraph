@@ -164,7 +164,7 @@ export function PromptTester({
       {/* Dialog content */}
       <div className="relative z-10 flex h-[80vh] w-full max-w-3xl flex-col rounded-lg bg-white shadow-xl dark:bg-gray-800">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 p-4 dark:border-gray-700">
           <h2
             id="prompt-tester-title"
             className="text-xl font-semibold text-gray-900 dark:text-white"
@@ -174,7 +174,7 @@ export function PromptTester({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            className="rounded-md p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
             aria-label="Close"
           >
             <svg
@@ -196,14 +196,16 @@ export function PromptTester({
         {/* Loading state */}
         {isLoadingPrompts && (
           <div className="flex flex-1 items-center justify-center">
-            <span className="text-gray-500">Loading prompts...</span>
+            <span className="text-gray-500 dark:text-gray-400">
+              Loading prompts...
+            </span>
           </div>
         )}
 
         {/* Error state */}
         {promptsError && (
           <div className="flex flex-1 items-center justify-center">
-            <div className="rounded-md bg-red-50 p-4 text-red-700 dark:bg-red-900/20 dark:text-red-400">
+            <div className="rounded-md bg-error-50 p-4 text-error-700 dark:bg-error-900/20 dark:text-error-400">
               Error loading prompts. Please try again.
             </div>
           </div>
@@ -213,7 +215,7 @@ export function PromptTester({
         {!isLoadingPrompts && !promptsError && (
           <div className="flex flex-1 flex-col overflow-hidden p-4">
             {promptsData?.prompts.length === 0 ? (
-              <div className="flex flex-1 items-center justify-center text-gray-500">
+              <div className="flex flex-1 items-center justify-center text-gray-500 dark:text-gray-400">
                 No prompts available
               </div>
             ) : (
@@ -230,7 +232,7 @@ export function PromptTester({
                     id="prompt-select"
                     value={selectedPromptName}
                     onChange={handlePromptSelect}
-                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="">-- Select a prompt --</option>
                     {promptsData?.prompts.map((prompt) => (
@@ -243,7 +245,7 @@ export function PromptTester({
 
                 {/* Prompt description */}
                 {selectedPrompt && (
-                  <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-600 dark:bg-gray-700/50 dark:text-gray-400">
+                  <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-600 dark:text-gray-300 dark:bg-gray-700/50 dark:text-gray-400">
                     {selectedPrompt.description}
                   </div>
                 )}
@@ -262,7 +264,7 @@ export function PromptTester({
                         >
                           {arg.name}
                           {arg.required && (
-                            <span className="text-red-500">*</span>
+                            <span className="text-error-500">*</span>
                           )}
                         </label>
                         {arg.description && (
@@ -276,7 +278,7 @@ export function PromptTester({
                           onChange={(e) =>
                             handleArgumentChange(arg.name, e.target.value)
                           }
-                          className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                          className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           rows={3}
                           placeholder={arg.description}
                         />
@@ -292,7 +294,7 @@ export function PromptTester({
                       type="button"
                       onClick={handleExecute}
                       disabled={!isFormValid || isExecuting}
-                      className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {isExecuting ? "Executing..." : "Execute"}
                     </button>
@@ -301,7 +303,7 @@ export function PromptTester({
 
                 {/* Error display */}
                 {error && (
-                  <div className="rounded-md bg-red-50 p-4 text-red-700 dark:bg-red-900/20 dark:text-red-400">
+                  <div className="rounded-md bg-error-50 p-4 text-error-700 dark:bg-error-900/20 dark:text-error-400">
                     {error}
                   </div>
                 )}
@@ -316,7 +318,7 @@ export function PromptTester({
                       {result.messages.map((message, index) => (
                         <div
                           key={index}
-                          className="rounded-md border border-gray-200 p-3 dark:border-gray-700"
+                          className="rounded-md border border-gray-200 dark:border-gray-700 p-3 dark:border-gray-700"
                         >
                           <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
                             {message.role}

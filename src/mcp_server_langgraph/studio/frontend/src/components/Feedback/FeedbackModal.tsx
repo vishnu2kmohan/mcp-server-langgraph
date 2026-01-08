@@ -50,7 +50,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
       >
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6 mx-4">
           <div className="flex flex-col items-center text-center">
-            <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
+            <CheckCircle className="w-16 h-16 text-success-500 mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               Thank You!
             </h2>
@@ -59,7 +59,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             </p>
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               Done
             </button>
@@ -88,7 +88,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
           <button
             data-testid="close-feedback-modal"
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+            className="p-1 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded"
           >
             <X size={20} className="text-gray-500 dark:text-gray-400" />
           </button>
@@ -109,8 +109,8 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   w-10 h-10 rounded-lg font-medium transition-colors
                   ${
                     npsScore === score
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                      ? "bg-primary-600 text-white"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                   }
                 `}
               >
@@ -139,8 +139,8 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   p-2 transition-colors
                   ${
                     csatRating !== null && star <= csatRating
-                      ? "text-yellow-400"
-                      : "text-gray-300 dark:text-gray-600 hover:text-yellow-300"
+                      ? "text-warning-400"
+                      : "text-gray-300 dark:text-gray-600 dark:text-gray-300 hover:text-warning-300"
                   }
                 `}
               >
@@ -169,7 +169,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
               bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-              focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
 
@@ -178,7 +178,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || isLoading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700
+            className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700
               disabled:opacity-50 disabled:cursor-not-allowed transition-colors
               flex items-center gap-2"
           >

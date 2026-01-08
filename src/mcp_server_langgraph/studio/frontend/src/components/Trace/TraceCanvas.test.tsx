@@ -154,7 +154,7 @@ describe("TraceCanvas", () => {
 
       const { container } = renderWithProviders(<TraceCanvas />);
 
-      const greenDot = container.querySelector(".bg-green-500");
+      const greenDot = container.querySelector(".bg-success-500");
       expect(greenDot).toBeInTheDocument();
     });
 

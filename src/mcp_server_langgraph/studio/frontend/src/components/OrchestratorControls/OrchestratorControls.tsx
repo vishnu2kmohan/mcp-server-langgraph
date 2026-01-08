@@ -127,7 +127,7 @@ export function OrchestratorControls({
     <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
       {/* Header */}
       <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-        <Settings className="w-4 h-4 text-blue-500" />
+        <Settings className="w-4 h-4 text-primary-500" />
         Orchestrator Configuration
       </h3>
 
@@ -146,7 +146,7 @@ export function OrchestratorControls({
             value={config.orchestrator}
             onChange={handleOrchestratorChange}
             disabled={disabled}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {ORCHESTRATOR_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -170,7 +170,7 @@ export function OrchestratorControls({
             value={config.thinkingBudget}
             onChange={handleThinkingBudgetChange}
             disabled={disabled}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {THINKING_BUDGET_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -197,7 +197,7 @@ export function OrchestratorControls({
             disabled={disabled}
             min={0}
             max={3}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Number of critique iterations (0-3)
@@ -219,7 +219,7 @@ export function OrchestratorControls({
             checked={config.autoApprove}
             onChange={handleAutoApproveChange}
             disabled={disabled}
-            className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
       </div>

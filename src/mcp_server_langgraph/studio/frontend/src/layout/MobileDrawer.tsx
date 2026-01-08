@@ -269,7 +269,7 @@ export function MobileDrawer({
             className={cn(
               "p-2 rounded-lg",
               "text-gray-500 dark:text-gray-400",
-              "hover:bg-gray-100 dark:hover:bg-gray-800",
+              "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
               "focus:outline-none focus:ring-2 focus:ring-primary-500",
             )}
           >
@@ -292,7 +292,7 @@ export function MobileDrawer({
                   "focus:outline-none focus:ring-2 focus:ring-primary-500",
                   activeItem === item.id
                     ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
                 )}
               >
                 {item.icon}
@@ -318,7 +318,7 @@ export function MobileDrawer({
                   "focus:outline-none focus:ring-2 focus:ring-primary-500",
                   activeItem === item.id
                     ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
                 )}
               >
                 {item.icon}

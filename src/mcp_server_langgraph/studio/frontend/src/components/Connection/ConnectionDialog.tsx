@@ -166,14 +166,14 @@ export function ConnectionDialog({
     <>
       <button
         onClick={onClose}
-        className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+        className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-md"
         disabled={isLoading}
       >
         Cancel
       </button>
       <button
         onClick={handleSubmit}
-        className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={isLoading}
       >
         {isLoading ? "Saving..." : "Save"}
@@ -205,13 +205,15 @@ export function ConnectionDialog({
             setName(e.target.value);
             if (errors.name) setErrors({ ...errors, name: undefined });
           }}
-          className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-            errors.name ? "border-red-500" : "border-gray-300"
+          className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+            errors.name
+              ? "border-error-500"
+              : "border-gray-300 dark:border-gray-600"
           }`}
           placeholder="My MCP Server"
         />
         {errors.name && (
-          <p className="mt-1 text-sm text-red-500">{errors.name}</p>
+          <p className="mt-1 text-sm text-error-500">{errors.name}</p>
         )}
       </div>
 
@@ -231,13 +233,15 @@ export function ConnectionDialog({
             setUrl(e.target.value);
             if (errors.url) setErrors({ ...errors, url: undefined });
           }}
-          className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-            errors.url ? "border-red-500" : "border-gray-300"
+          className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+            errors.url
+              ? "border-error-500"
+              : "border-gray-300 dark:border-gray-600"
           }`}
           placeholder="https://mcp.example.com"
         />
         {errors.url && (
-          <p className="mt-1 text-sm text-red-500">{errors.url}</p>
+          <p className="mt-1 text-sm text-error-500">{errors.url}</p>
         )}
       </div>
 
@@ -253,7 +257,7 @@ export function ConnectionDialog({
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           placeholder="Optional description"
           rows={2}
         />
@@ -271,7 +275,7 @@ export function ConnectionDialog({
           id="auth_type"
           value={authType}
           onChange={(e) => setAuthType(e.target.value as AuthType)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           disabled={isEditing} // Can't change auth type when editing
         >
           <option value="none">No Authentication</option>
@@ -297,13 +301,15 @@ export function ConnectionDialog({
               setApiKey(e.target.value);
               if (errors.apiKey) setErrors({ ...errors, apiKey: undefined });
             }}
-            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-              errors.apiKey ? "border-red-500" : "border-gray-300"
+            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+              errors.apiKey
+                ? "border-error-500"
+                : "border-gray-300 dark:border-gray-600"
             }`}
             placeholder="Enter your API key"
           />
           {errors.apiKey && (
-            <p className="mt-1 text-sm text-red-500">{errors.apiKey}</p>
+            <p className="mt-1 text-sm text-error-500">{errors.apiKey}</p>
           )}
         </div>
       )}
@@ -327,13 +333,15 @@ export function ConnectionDialog({
                 if (errors.clientId)
                   setErrors({ ...errors, clientId: undefined });
               }}
-              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                errors.clientId ? "border-red-500" : "border-gray-300"
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+                errors.clientId
+                  ? "border-error-500"
+                  : "border-gray-300 dark:border-gray-600"
               }`}
               placeholder="OAuth2 client ID"
             />
             {errors.clientId && (
-              <p className="mt-1 text-sm text-red-500">{errors.clientId}</p>
+              <p className="mt-1 text-sm text-error-500">{errors.clientId}</p>
             )}
           </div>
 
@@ -349,7 +357,7 @@ export function ConnectionDialog({
               type="password"
               value={clientSecret}
               onChange={(e) => setClientSecret(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               placeholder="Optional client secret"
             />
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -369,7 +377,7 @@ export function ConnectionDialog({
               type="text"
               value={scopes}
               onChange={(e) => setScopes(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               placeholder="read write tools (space-separated)"
             />
           </div>

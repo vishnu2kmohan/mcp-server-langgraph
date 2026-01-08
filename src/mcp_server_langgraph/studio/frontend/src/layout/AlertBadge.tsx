@@ -122,8 +122,8 @@ export function AlertBadge({ onClick, className }: AlertBadgeProps) {
         "text-white text-xs font-medium",
         "transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2",
         hasCritical
-          ? "bg-red-500 hover:bg-red-600 focus:ring-red-500"
-          : "bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500",
+          ? "bg-error-500 hover:bg-error-600 focus:ring-error-500"
+          : "bg-warning-500 hover:bg-warning-600 focus:ring-warning-500",
         shouldPulse && "animate-pulse",
         className,
       )}

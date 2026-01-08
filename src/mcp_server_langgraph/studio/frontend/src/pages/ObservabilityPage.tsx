@@ -376,24 +376,24 @@ export function ObservabilityPage() {
   const getLogLevelColor = (level: "info" | "warn" | "error" | "debug") => {
     switch (level) {
       case "error":
-        return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+        return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
       case "warn":
-        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+        return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400";
       case "info":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
       case "debug":
-        return "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400";
+        return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 dark:bg-gray-900/30 dark:text-gray-400";
     }
   };
 
   const getStatusColor = (status: "success" | "error" | "running") => {
     switch (status) {
       case "success":
-        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+        return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
       case "error":
-        return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+        return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
       case "running":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
     }
   };
 
@@ -402,13 +402,13 @@ export function ObservabilityPage() {
   ) => {
     switch (severity) {
       case "critical":
-        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+        return "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-400";
       case "error":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
+        return "bg-grafana-100 text-grafana-800 dark:bg-grafana-900/30 dark:text-grafana-400";
       case "warning":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
+        return "bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-400";
       case "info":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
+        return "bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-400";
     }
   };
 
@@ -417,13 +417,13 @@ export function ObservabilityPage() {
   ) => {
     switch (state) {
       case "firing":
-        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+        return "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-400";
       case "pending":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
+        return "bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-400";
       case "resolved":
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+        return "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400";
       case "silenced":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+        return "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
     }
   };
 
@@ -487,7 +487,7 @@ export function ObservabilityPage() {
             />
             <button
               onClick={handleRefresh}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
             >
               <RefreshCw size={16} />
               Refresh
@@ -505,8 +505,8 @@ export function ObservabilityPage() {
               onClick={() => handleTabChange(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                 activeTab === tab.id
-                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                  : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                  ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
               }`}
             >
               <tab.icon size={16} />
@@ -526,8 +526,8 @@ export function ObservabilityPage() {
                 onClick={() => setStatusFilter("")}
                 className={`px-2 py-1 text-xs rounded ${
                   statusFilter === ""
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    ? "bg-primary-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                 }`}
                 aria-pressed={statusFilter === ""}
               >
@@ -537,8 +537,8 @@ export function ObservabilityPage() {
                 onClick={() => setStatusFilter("success")}
                 className={`px-2 py-1 text-xs rounded ${
                   statusFilter === "success"
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    ? "bg-success-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                 }`}
                 aria-pressed={statusFilter === "success"}
               >
@@ -548,8 +548,8 @@ export function ObservabilityPage() {
                 onClick={() => setStatusFilter("error")}
                 className={`px-2 py-1 text-xs rounded ${
                   statusFilter === "error"
-                    ? "bg-red-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    ? "bg-error-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                 }`}
                 aria-pressed={statusFilter === "error"}
               >
@@ -559,8 +559,8 @@ export function ObservabilityPage() {
                 onClick={() => setStatusFilter("running")}
                 className={`px-2 py-1 text-xs rounded ${
                   statusFilter === "running"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    ? "bg-primary-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                 }`}
                 aria-pressed={statusFilter === "running"}
               >
@@ -575,7 +575,7 @@ export function ObservabilityPage() {
                 value={sessionIdFilter}
                 onChange={(e) => setSessionIdFilter(e.target.value)}
                 placeholder="Session ID"
-                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 aria-label="Filter by session ID"
               />
               <input
@@ -583,7 +583,7 @@ export function ObservabilityPage() {
                 value={userIdFilter}
                 onChange={(e) => setUserIdFilter(e.target.value)}
                 placeholder="User ID"
-                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 aria-label="Filter by user ID"
               />
               <input
@@ -591,7 +591,7 @@ export function ObservabilityPage() {
                 value={workflowIdFilter}
                 onChange={(e) => setWorkflowIdFilter(e.target.value)}
                 placeholder="Workflow ID"
-                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 aria-label="Filter by workflow ID"
               />
               <input
@@ -599,7 +599,7 @@ export function ObservabilityPage() {
                 value={projectIdFilter}
                 onChange={(e) => setProjectIdFilter(e.target.value)}
                 placeholder="Project ID"
-                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 aria-label="Filter by project ID"
               />
             </div>
@@ -608,7 +608,7 @@ export function ObservabilityPage() {
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
               aria-label="Time range"
             >
               <option value="15m">Last 15 minutes</option>
@@ -657,14 +657,14 @@ export function ObservabilityPage() {
                   sessionsData.items.map((session) => (
                     <div
                       key={session.id}
-                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 transition-colors cursor-pointer"
+                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 transition-colors cursor-pointer"
                       onClick={() =>
                         window.open(`/studio/chat/${session.id}`, "_blank")
                       }
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Bot size={20} className="text-purple-500" />
+                          <Bot size={20} className="text-insight-500" />
                           <div>
                             <h3 className="font-medium text-gray-900 dark:text-gray-100">
                               {session.name || "Untitled Session"}
@@ -682,22 +682,25 @@ export function ObservabilityPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           {session.status === "active" ? (
-                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400">
                               <CheckCircle size={12} />
                               Active
                             </span>
                           ) : session.status === "archived" ? (
-                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400">
                               <Clock size={12} />
                               Archived
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
+                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 dark:bg-gray-900/30 dark:text-gray-400">
                               <XCircle size={12} />
                               {session.status}
                             </span>
                           )}
-                          <ExternalLink size={16} className="text-gray-400" />
+                          <ExternalLink
+                            size={16}
+                            className="text-gray-400 dark:text-gray-400"
+                          />
                         </div>
                       </div>
                     </div>
@@ -722,7 +725,7 @@ export function ObservabilityPage() {
                   workflowsData.items.map((workflow) => (
                     <div
                       key={workflow.id}
-                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 transition-colors cursor-pointer"
+                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 transition-colors cursor-pointer"
                       onClick={() =>
                         window.open(
                           `/studio/workflows/${workflow.id}`,
@@ -751,14 +754,17 @@ export function ObservabilityPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">
                             <Activity size={12} />
                             {workflow.nodeCount} nodes
                           </span>
-                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 dark:bg-gray-900/30 dark:text-gray-400">
                             {workflow.edgeCount} edges
                           </span>
-                          <ExternalLink size={16} className="text-gray-400" />
+                          <ExternalLink
+                            size={16}
+                            className="text-gray-400 dark:text-gray-400"
+                          />
                         </div>
                       </div>
                     </div>
@@ -788,7 +794,7 @@ export function ObservabilityPage() {
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       showTraceCanvas
                         ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                     }`}
                   >
                     {showTraceCanvas ? "Hide Canvas" : "Show Canvas"}
@@ -818,13 +824,13 @@ export function ObservabilityPage() {
                         onClick={() => setSelectedTraceId(trace.id)}
                         className={`p-4 bg-white dark:bg-gray-800 rounded-lg border transition-colors cursor-pointer ${
                           selectedTraceId === trace.id
-                            ? "border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800"
-                            : "border-gray-200 dark:border-gray-700 hover:border-blue-500"
+                            ? "border-primary-500 ring-2 ring-primary-200 dark:ring-primary-800"
+                            : "border-gray-200 dark:border-gray-700 hover:border-primary-500"
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <Activity size={20} className="text-blue-500" />
+                            <Activity size={20} className="text-primary-500" />
                             <div>
                               <h3 className="font-medium text-gray-900 dark:text-gray-100">
                                 {trace.name}
@@ -857,7 +863,7 @@ export function ObservabilityPage() {
                         <button
                           onClick={() => setCursor(tracesData.nextCursor)}
                           disabled={isTracesFetching}
-                          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
+                          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50"
                         >
                           {isTracesFetching ? (
                             <>
@@ -880,7 +886,7 @@ export function ObservabilityPage() {
                           </span>
                           <button
                             onClick={() => setSelectedTraceId(null)}
-                            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
                           >
                             Close
                           </button>
@@ -901,11 +907,11 @@ export function ObservabilityPage() {
                             data-testid="trace-intelligence-panel"
                             className="border-t border-gray-200 dark:border-gray-700"
                           >
-                            <div className="px-4 py-2 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-b border-gray-200 dark:border-gray-700">
+                            <div className="px-4 py-2 bg-gradient-to-r from-insight-50 to-blue-50 dark:from-insight-900/20 dark:to-blue-900/20 border-b border-gray-200 dark:border-gray-700">
                               <div className="flex items-center gap-2">
                                 <Sparkles
                                   size={16}
-                                  className="text-purple-500"
+                                  className="text-insight-500"
                                 />
                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                   AI Insights
@@ -920,7 +926,7 @@ export function ObservabilityPage() {
                                   Summary
                                 </h4>
                                 {traceSummary.isLoading ? (
-                                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                                  <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-400">
                                     <Loader2
                                       size={14}
                                       className="animate-spin"
@@ -938,7 +944,7 @@ export function ObservabilityPage() {
                                           (action, idx) => (
                                             <span
                                               key={idx}
-                                              className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"
+                                              className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded"
                                             >
                                               {action}
                                             </span>
@@ -967,7 +973,7 @@ export function ObservabilityPage() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <p className="text-sm text-gray-400">
+                                  <p className="text-sm text-gray-400 dark:text-gray-400">
                                     No summary available
                                   </p>
                                 )}
@@ -979,7 +985,7 @@ export function ObservabilityPage() {
                                   Health & Anomalies
                                 </h4>
                                 {traceAnomaly.isLoading ? (
-                                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                                  <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-400">
                                     <Loader2
                                       size={14}
                                       className="animate-spin"
@@ -997,10 +1003,10 @@ export function ObservabilityPage() {
                                         <span
                                           className={`text-sm font-medium ${
                                             traceAnomaly.healthScore >= 80
-                                              ? "text-green-600 dark:text-green-400"
+                                              ? "text-success-600 dark:text-success-400"
                                               : traceAnomaly.healthScore >= 60
-                                                ? "text-yellow-600 dark:text-yellow-400"
-                                                : "text-red-600 dark:text-red-400"
+                                                ? "text-warning-600 dark:text-warning-400"
+                                                : "text-error-600 dark:text-error-400"
                                           }`}
                                         >
                                           {traceAnomaly.healthScore}/100
@@ -1023,7 +1029,7 @@ export function ObservabilityPage() {
                                               content={`${bottleneck.durationMs}ms (${bottleneck.percentageOfTotal}% of total)`}
                                               position="top"
                                             >
-                                              <span className="inline-block px-2 py-0.5 text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded cursor-help">
+                                              <span className="inline-block px-2 py-0.5 text-xs bg-grafana-100 dark:bg-grafana-900/30 text-grafana-700 dark:text-grafana-300 rounded cursor-help">
                                                 {bottleneck.stepName}
                                               </span>
                                             </Tooltip>
@@ -1052,11 +1058,11 @@ export function ObservabilityPage() {
                                               <div
                                                 className={`text-xs px-2 py-1 rounded cursor-help ${
                                                   anomaly.severity === "error"
-                                                    ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                                                    ? "bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-300"
                                                     : anomaly.severity ===
                                                         "warning"
-                                                      ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
-                                                      : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                                                      ? "bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300"
+                                                      : "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
                                                 }`}
                                               >
                                                 {anomaly.stepName}:{" "}
@@ -1087,7 +1093,7 @@ export function ObservabilityPage() {
 
                                     {traceAnomaly.anomalies.length === 0 &&
                                       traceAnomaly.bottlenecks.length === 0 && (
-                                        <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                                        <p className="text-sm text-success-600 dark:text-success-400 flex items-center gap-1">
                                           <TrendingUp size={14} />
                                           No issues detected
                                         </p>
@@ -1163,7 +1169,7 @@ export function ObservabilityPage() {
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     Total Errors
                   </h3>
-                  <div className="text-2xl font-semibold text-red-600 dark:text-red-400">
+                  <div className="text-2xl font-semibold text-error-600 dark:text-error-400">
                     {(metrics.errorsTotal ?? 0).toLocaleString()}
                   </div>
                 </div>
@@ -1231,8 +1237,8 @@ export function ObservabilityPage() {
                         onClick={() => setAlertStateFilter("")}
                         className={`px-2 py-1 text-xs rounded ${
                           alertStateFilter === ""
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                            ? "bg-primary-600 text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                         }`}
                       >
                         All
@@ -1241,8 +1247,8 @@ export function ObservabilityPage() {
                         onClick={() => setAlertStateFilter("firing")}
                         className={`px-2 py-1 text-xs rounded ${
                           alertStateFilter === "firing"
-                            ? "bg-red-600 text-white"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                            ? "bg-error-600 text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                         }`}
                       >
                         Firing
@@ -1251,8 +1257,8 @@ export function ObservabilityPage() {
                         onClick={() => setAlertStateFilter("pending")}
                         className={`px-2 py-1 text-xs rounded ${
                           alertStateFilter === "pending"
-                            ? "bg-yellow-600 text-white"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                            ? "bg-warning-600 text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                         }`}
                       >
                         Pending
@@ -1261,8 +1267,8 @@ export function ObservabilityPage() {
                         onClick={() => setAlertStateFilter("resolved")}
                         className={`px-2 py-1 text-xs rounded ${
                           alertStateFilter === "resolved"
-                            ? "bg-green-600 text-white"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                            ? "bg-success-600 text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                         }`}
                       >
                         Resolved
@@ -1278,7 +1284,7 @@ export function ObservabilityPage() {
                     <select
                       value={alertSeverityFilter}
                       onChange={(e) => setAlertSeverityFilter(e.target.value)}
-                      className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     >
                       <option value="">All Severities</option>
                       <option value="critical">Critical</option>
@@ -1312,7 +1318,7 @@ export function ObservabilityPage() {
                   alerts.map((alert) => (
                     <div
                       key={alert.alertId}
-                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 transition-colors"
+                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 transition-colors"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
@@ -1320,12 +1326,12 @@ export function ObservabilityPage() {
                             size={20}
                             className={
                               alert.severity === "critical"
-                                ? "text-red-500"
+                                ? "text-error-500"
                                 : alert.severity === "error"
-                                  ? "text-orange-500"
+                                  ? "text-grafana-500"
                                   : alert.severity === "warning"
-                                    ? "text-yellow-500"
-                                    : "text-blue-500"
+                                    ? "text-warning-500"
+                                    : "text-primary-500"
                             }
                           />
                           <div>
@@ -1370,7 +1376,7 @@ export function ObservabilityPage() {
                               href={alert.generatorUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                              className="p-1 text-gray-400 dark:text-gray-400 hover:text-primary-500 transition-colors"
                               title="View in Grafana"
                             >
                               <ExternalLink size={16} />

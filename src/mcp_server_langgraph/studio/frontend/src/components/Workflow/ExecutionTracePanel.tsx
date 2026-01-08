@@ -60,23 +60,23 @@ function formatRelativeTime(timestamp: number): string {
 function getLogLevelIcon(level: string) {
   switch (level) {
     case "error":
-      return <XCircle className="w-4 h-4 text-red-500" />;
+      return <XCircle className="w-4 h-4 text-error-500" />;
     case "warning":
-      return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+      return <AlertTriangle className="w-4 h-4 text-warning-500" />;
     case "info":
     default:
-      return <Info className="w-4 h-4 text-blue-500" />;
+      return <Info className="w-4 h-4 text-primary-500" />;
   }
 }
 
 function getLogLevelClass(level: string): string {
   switch (level) {
     case "error":
-      return "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800";
+      return "bg-error-50 border-error-200 dark:bg-error-900/20 dark:border-error-800";
     case "warning":
-      return "bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800";
+      return "bg-warning-50 border-warning-200 dark:bg-warning-900/20 dark:border-warning-800";
     default:
-      return "bg-gray-50 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700";
+      return "bg-gray-50 border-gray-200 dark:border-gray-700 dark:bg-gray-800/50 dark:border-gray-700";
   }
 }
 
@@ -94,7 +94,7 @@ const ExecutionStateIndicator = memo(
       switch (state) {
         case "running":
           return (
-            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+            <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400">
               <Loader2
                 className="w-4 h-4 animate-spin"
                 data-testid="execution-spinner"
@@ -104,14 +104,14 @@ const ExecutionStateIndicator = memo(
           );
         case "completed":
           return (
-            <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+            <div className="flex items-center gap-2 text-success-600 dark:text-success-400">
               <CheckCircle className="w-4 h-4" />
               <span>Completed</span>
             </div>
           );
         case "error":
           return (
-            <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+            <div className="flex items-center gap-2 text-error-600 dark:text-error-400">
               <XCircle className="w-4 h-4" />
               <span>Error</span>
             </div>
@@ -185,7 +185,7 @@ const LogEntry = memo(
             )}
           </div>
           {hasDetails && (
-            <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <button className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300">
               {isExpanded ? (
                 <ChevronDown className="w-4 h-4" />
               ) : (
@@ -203,7 +203,7 @@ const LogEntry = memo(
                 <>
                   {log.data.output && <div>{log.data.output}</div>}
                   {log.data.tokens !== undefined && (
-                    <div className="text-gray-500">
+                    <div className="text-gray-500 dark:text-gray-400">
                       tokens: {log.data.tokens}
                     </div>
                   )}
@@ -310,7 +310,7 @@ export const ExecutionTracePanel = memo(
               className={`px-2 py-1 text-xs rounded ${
                 levelFilter === "all"
                   ? "bg-gray-200 dark:bg-gray-700"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                  : "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
               }`}
             >
               All
@@ -320,8 +320,8 @@ export const ExecutionTracePanel = memo(
               aria-label="Errors"
               className={`px-2 py-1 text-xs rounded ${
                 levelFilter === "error"
-                  ? "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                  ? "bg-error-100 text-error-700 dark:bg-error-900/50 dark:text-error-300"
+                  : "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
               }`}
             >
               Errors
@@ -334,7 +334,7 @@ export const ExecutionTracePanel = memo(
             placeholder="Filter by node..."
             value={nodeFilter}
             onChange={(e) => setNodeFilter(e.target.value)}
-            className="flex-1 px-2 py-1 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="flex-1 px-2 py-1 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
 
           {/* Actions */}
@@ -344,8 +344,8 @@ export const ExecutionTracePanel = memo(
             aria-pressed={autoScroll}
             className={`p-1.5 rounded ${
               autoScroll
-                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
-                : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300"
+                : "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
             }`}
           >
             <ArrowDownToLine className="w-4 h-4" />
@@ -354,7 +354,7 @@ export const ExecutionTracePanel = memo(
           <button
             onClick={handleClearLogs}
             aria-label="Clear"
-            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-gray-500 hover:text-red-500"
+            className="p-1.5 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 rounded text-gray-500 dark:text-gray-400 hover:text-error-500"
           >
             <Trash2 className="w-4 h-4" />
           </button>

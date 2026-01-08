@@ -159,7 +159,7 @@ export function ShortcutsPanel({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="p-1 rounded text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <X size={20} />
           </button>
@@ -170,7 +170,7 @@ export function ShortcutsPanel({
           <div className="relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
               aria-hidden="true"
             />
             <input
@@ -180,14 +180,14 @@ export function ShortcutsPanel({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search shortcuts..."
               aria-label="Search shortcuts"
-              className="w-full pl-9 pr-8 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full pl-9 pr-8 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
                 aria-label="Clear search"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
               >
                 <X size={14} />
               </button>

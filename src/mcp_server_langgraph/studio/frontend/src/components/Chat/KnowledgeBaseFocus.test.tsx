@@ -252,7 +252,7 @@ describe("KnowledgeBaseFocus", () => {
 
     const indicator = screen.getByTestId("kb-status-indicator");
     expect(indicator).toBeInTheDocument();
-    expect(indicator).toHaveClass("bg-green-500");
+    expect(indicator).toHaveClass("bg-success-500");
   });
 
   it("shows yellow indicator when kbStatus is misconfigured", () => {
@@ -265,7 +265,7 @@ describe("KnowledgeBaseFocus", () => {
     );
 
     const indicator = screen.getByTestId("kb-status-indicator");
-    expect(indicator).toHaveClass("bg-yellow-500");
+    expect(indicator).toHaveClass("bg-warning-500");
   });
 
   it("shows gray indicator when kbStatus is unavailable", () => {

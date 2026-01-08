@@ -226,7 +226,7 @@ export function SettingsPage() {
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
           >
             {saveSuccess ? (
               <>
@@ -258,8 +258,8 @@ export function SettingsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
                   activeTab === tab.id
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                    ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                 }`}
               >
                 <tab.icon size={20} />
@@ -319,8 +319,8 @@ export function SettingsPage() {
             {/* API Keys Tab */}
             {activeTab === "api-keys" && (
               <div className="space-y-6">
-                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                <div className="p-4 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
+                  <p className="text-sm text-warning-800 dark:text-warning-200">
                     API keys provide access to your account. Keep them secure
                     and never share them publicly.
                   </p>
@@ -338,13 +338,13 @@ export function SettingsPage() {
                     />
                     <button
                       onClick={() => setShowApiKey(!showApiKey)}
-                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                     >
                       {showApiKey ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
                 </div>
-                <button className="px-4 py-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50">
+                <button className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50">
                   Regenerate API Key
                 </button>
               </div>
@@ -359,7 +359,7 @@ export function SettingsPage() {
                   className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <BellRing className="h-5 w-5 text-blue-500" />
+                    <BellRing className="h-5 w-5 text-primary-500" />
                     <h3 className="font-medium text-gray-900 dark:text-gray-100">
                       Push Notifications
                     </h3>
@@ -369,14 +369,14 @@ export function SettingsPage() {
                   </p>
 
                   {!isPushSupported ? (
-                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                    <div className="flex items-center gap-2 text-warning-600 dark:text-warning-400">
                       <BellOff className="h-4 w-4" />
                       <span className="text-sm">
                         Push notifications are not supported in this browser.
                       </span>
                     </div>
                   ) : pushPermission === "denied" ? (
-                    <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                    <div className="flex items-center gap-2 text-error-600 dark:text-error-400">
                       <AlertCircle className="h-4 w-4" />
                       <span className="text-sm">
                         Notifications are blocked. Please enable them in your
@@ -388,7 +388,7 @@ export function SettingsPage() {
                       data-testid="push-notifications-toggle"
                       onClick={unsubscribePush}
                       disabled={isPushLoading}
-                      className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50"
+                      className="flex items-center gap-2 px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50 disabled:opacity-50"
                       aria-label="Disable push notifications"
                     >
                       <BellOff className="h-4 w-4" />
@@ -401,7 +401,7 @@ export function SettingsPage() {
                       data-testid="push-notifications-toggle"
                       onClick={subscribePush}
                       disabled={isPushLoading}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                      className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
                       aria-label="Enable push notifications"
                     >
                       <Bell className="h-4 w-4" />
@@ -431,8 +431,8 @@ export function SettingsPage() {
                         onClick={() => setTheme(t)}
                         className={`p-4 rounded-lg border-2 transition-colors ${
                           theme === t
-                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                            : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
+                            ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
+                            : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600"
                         }`}
                       >
                         <div className="text-center">
@@ -463,7 +463,7 @@ export function SettingsPage() {
                       <button
                         type="button"
                         onClick={() => dispatch(resetToDefaults())}
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
                       >
                         <RotateCcw size={16} />
                         Reset to Persona Defaults
@@ -484,7 +484,7 @@ export function SettingsPage() {
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     Add an extra layer of security to your account
                   </p>
-                  <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                  <button className="px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700">
                     Enable 2FA
                   </button>
                 </div>
@@ -495,7 +495,7 @@ export function SettingsPage() {
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     Manage devices that are logged in to your account
                   </p>
-                  <button className="px-4 py-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200">
+                  <button className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200">
                     Sign Out All Devices
                   </button>
                 </div>
@@ -505,8 +505,8 @@ export function SettingsPage() {
             {/* Audit Log Tab (Admin Only) */}
             {activeTab === "audit-log" && isAdmin && (
               <div className="space-y-6">
-                <div className="p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                  <p className="text-sm text-purple-800 dark:text-purple-200">
+                <div className="p-4 bg-insight-50 dark:bg-insight-900/20 border border-insight-200 dark:border-insight-800 rounded-lg">
+                  <p className="text-sm text-insight-800 dark:text-insight-200">
                     Real-time audit event stream for compliance and security
                     monitoring.
                   </p>
@@ -518,8 +518,8 @@ export function SettingsPage() {
             {/* Manage User Keys Tab (Admin Only) */}
             {activeTab === "manage-keys" && isAdmin && (
               <div className="space-y-6">
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                <div className="p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg">
+                  <p className="text-sm text-primary-800 dark:text-primary-200">
                     As an administrator, you can manage API keys for all users
                     in the system.
                   </p>
@@ -545,17 +545,17 @@ export function SettingsPage() {
                 {adminError && !isLoadingUsers && (
                   <div
                     role="alert"
-                    className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+                    className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <AlertCircle size={20} className="text-red-500" />
-                      <p className="text-sm text-red-700 dark:text-red-400">
+                      <AlertCircle size={20} className="text-error-500" />
+                      <p className="text-sm text-error-700 dark:text-error-400">
                         {adminError}
                       </p>
                     </div>
                     <button
                       onClick={loadManagedUsers}
-                      className="mt-3 flex items-center gap-2 px-3 py-1.5 text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200"
+                      className="mt-3 flex items-center gap-2 px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
                     >
                       <RefreshCw size={14} />
                       Retry
@@ -568,7 +568,7 @@ export function SettingsPage() {
                   <div className="relative">
                     <Search
                       size={16}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
                     />
                     <input
                       type="text"
@@ -584,7 +584,7 @@ export function SettingsPage() {
                   <div className="flex items-center justify-center py-8">
                     <RefreshCw
                       size={24}
-                      className="animate-spin text-blue-500"
+                      className="animate-spin text-primary-500"
                     />
                   </div>
                 ) : adminError &&
@@ -607,7 +607,10 @@ export function SettingsPage() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                            <User size={20} className="text-gray-500" />
+                            <User
+                              size={20}
+                              className="text-gray-500 dark:text-gray-400"
+                            />
                           </div>
                           <div>
                             <p className="font-medium text-gray-900 dark:text-gray-100">
@@ -625,7 +628,7 @@ export function SettingsPage() {
                             <button
                               onClick={() => handleRevokeKey(managedUser.id)}
                               aria-label="Revoke"
-                              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200"
+                              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
                             >
                               <Trash2 size={14} />
                               Revoke
@@ -634,7 +637,7 @@ export function SettingsPage() {
                             <button
                               onClick={() => handleGenerateKey(managedUser.id)}
                               aria-label="Generate"
-                              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-lg hover:bg-green-200"
+                              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400 rounded-lg hover:bg-success-200"
                             >
                               <Plus size={14} />
                               Generate

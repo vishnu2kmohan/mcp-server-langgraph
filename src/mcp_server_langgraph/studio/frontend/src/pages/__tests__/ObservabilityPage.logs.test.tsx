@@ -222,7 +222,7 @@ describe("ObservabilityPage - Logs", () => {
       await waitFor(() => {
         const warnBadge = screen.getByText("warn");
         expect(warnBadge).toBeInTheDocument();
-        expect(warnBadge).toHaveClass("bg-yellow-100");
+        expect(warnBadge).toHaveClass("bg-warning-100");
       });
     });
 

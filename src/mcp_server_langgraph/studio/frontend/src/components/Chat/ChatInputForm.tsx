@@ -374,9 +374,9 @@ export function ChatInputForm({
       {isDragging && (
         <div
           data-testid="drop-zone-overlay"
-          className="absolute inset-0 bg-blue-500/20 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center z-10"
+          className="absolute inset-0 bg-primary-500/20 border-2 border-dashed border-primary-500 rounded-lg flex items-center justify-center z-10"
         >
-          <p className="text-blue-600 font-medium">Drop files here</p>
+          <p className="text-primary-600 font-medium">Drop files here</p>
         </div>
       )}
 
@@ -390,16 +390,18 @@ export function ChatInputForm({
             >
               <span className="truncate max-w-[150px]">{file.file.name}</span>
               {file.status === "uploading" && (
-                <span className="text-blue-500 text-xs">{file.progress}%</span>
+                <span className="text-primary-500 text-xs">
+                  {file.progress}%
+                </span>
               )}
               {file.status === "error" && (
-                <span className="text-red-500 text-xs">{file.error}</span>
+                <span className="text-error-500 text-xs">{file.error}</span>
               )}
               <button
                 type="button"
                 onClick={() => onRemoveFile(file.id)}
                 aria-label="Remove file"
-                className="text-gray-400 hover:text-red-500 transition-colors"
+                className="text-gray-400 dark:text-gray-400 hover:text-error-500 transition-colors"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -410,19 +412,19 @@ export function ChatInputForm({
 
       {/* Error messages */}
       {voiceError && (
-        <p className="text-red-500 text-sm mb-2 px-1">{voiceError}</p>
+        <p className="text-error-500 text-sm mb-2 px-1">{voiceError}</p>
       )}
       {fileError && (
-        <p className="text-red-500 text-sm mb-2 px-1">{fileError}</p>
+        <p className="text-error-500 text-sm mb-2 px-1">{fileError}</p>
       )}
 
       {/* Voice input browser compatibility banner */}
       {!isVoiceSupported && !isVoiceBannerDismissed && (
         <div
           data-testid="voice-not-supported-banner"
-          className="flex items-center justify-between gap-3 mb-3 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm"
+          className="flex items-center justify-between gap-3 mb-3 px-3 py-2 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg text-sm"
         >
-          <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+          <div className="flex items-center gap-2 text-warning-800 dark:text-warning-200">
             <Mic className="w-4 h-4 flex-shrink-0" />
             <span>
               Voice input is not supported in this browser. For best experience,
@@ -433,7 +435,7 @@ export function ChatInputForm({
             type="button"
             onClick={() => setIsVoiceBannerDismissed(true)}
             aria-label="Dismiss"
-            className="p-1 text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 transition-colors"
+            className="p-1 text-warning-600 hover:text-warning-800 dark:text-warning-400 dark:hover:text-warning-200 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -444,9 +446,9 @@ export function ChatInputForm({
       {isListening && (
         <div
           data-testid="recording-indicator"
-          className="flex items-center gap-2 mb-3 text-red-500 px-1"
+          className="flex items-center gap-2 mb-3 text-error-500 px-1"
         >
-          <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+          <span className="w-2 h-2 bg-error-500 rounded-full animate-pulse" />
           <span className="text-sm">Listening...</span>
         </div>
       )}
@@ -467,7 +469,7 @@ export function ChatInputForm({
                 <span
                   key={detected.url}
                   data-testid="url-fetch-loading"
-                  className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full"
+                  className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full"
                 >
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span>{hostname}</span>
@@ -480,7 +482,7 @@ export function ChatInputForm({
                 <span
                   key={detected.url}
                   data-testid="url-fetched-badge"
-                  className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full"
+                  className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-300 rounded-full"
                 >
                   <Check className="w-3 h-3" />
                   <span>{fetched.title || hostname}</span>
@@ -489,7 +491,7 @@ export function ChatInputForm({
                       type="button"
                       onClick={() => onRemoveFetchedUrl(detected.url)}
                       aria-label={`Remove ${hostname}`}
-                      className="ml-1 p-0.5 hover:bg-green-200 dark:hover:bg-green-800 rounded-full transition-colors"
+                      className="ml-1 p-0.5 hover:bg-success-200 dark:hover:bg-success-800 rounded-full transition-colors"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -523,7 +525,7 @@ export function ChatInputForm({
             aria-haspopup="listbox"
             aria-expanded={isModelDropdownOpen}
             aria-controls="model-selector-listbox"
-            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <span className="font-medium">
               {selectedModel || "Select model"}
@@ -555,7 +557,7 @@ export function ChatInputForm({
                   aria-selected={model.id === selectedModel}
                   data-testid={`model-option-${model.id}`}
                   onClick={() => handleModelSelect(model.id)}
-                  className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:bg-blue-50 dark:focus:bg-blue-900/30"
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:bg-primary-50 dark:focus:bg-primary-900/30"
                 >
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{model.name}</span>
@@ -565,7 +567,7 @@ export function ChatInputForm({
                   </div>
                   {model.id === selectedModel && (
                     <Check
-                      className="w-4 h-4 text-green-500"
+                      className="w-4 h-4 text-success-500"
                       aria-hidden="true"
                     />
                   )}
@@ -636,7 +638,7 @@ export function ChatInputForm({
                   type="button"
                   disabled={isProcessing || isUploading}
                   aria-label="Attach file"
-                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="p-2 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 disabled:opacity-50 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                   onClick={() =>
                     document.getElementById("chat-file-input-rich")?.click()
                   }
@@ -654,8 +656,8 @@ export function ChatInputForm({
                     }
                     className={`p-2 rounded-lg transition-colors ${
                       isListening
-                        ? "text-red-500 bg-red-50 dark:bg-red-900/20"
-                        : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        ? "text-error-500 bg-error-50 dark:bg-error-900/20"
+                        : "text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                     } disabled:opacity-50`}
                   >
                     {isListening ? (
@@ -699,7 +701,7 @@ export function ChatInputForm({
                     type="button"
                     onClick={onStopStreaming}
                     aria-label="Stop generating"
-                    className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    className="p-2 bg-error-500 text-white rounded-lg hover:bg-error-600 transition-colors"
                     data-testid="stop-streaming-button"
                   >
                     <Square className="w-5 h-5" />
@@ -710,7 +712,7 @@ export function ChatInputForm({
                     disabled={!canSend}
                     aria-label="Send"
                     data-testid="send-button"
-                    className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {isProcessing ? (
                       <Loader2
@@ -729,7 +731,7 @@ export function ChatInputForm({
           /* Legacy Mode: Plain textarea with existing styling */
           <div
             data-testid="input-wrapper"
-            className="flex items-end gap-2 p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all"
+            className="flex items-end gap-2 p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all"
           >
             {/* Left controls - Attachment button */}
             <div className="flex items-center gap-1 pb-1">
@@ -746,7 +748,7 @@ export function ChatInputForm({
                 type="button"
                 disabled={isProcessing || isUploading}
                 aria-label="Attach file"
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="p-2 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 disabled:opacity-50 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                 onClick={() =>
                   document.getElementById("chat-file-input")?.click()
                 }
@@ -769,7 +771,7 @@ export function ChatInputForm({
                   {/* Ghost text suggestion */}
                   <span
                     data-testid="inline-suggestion"
-                    className="text-gray-400 dark:text-gray-500"
+                    className="text-gray-400 dark:text-gray-400"
                   >
                     {inlineSuggestion}
                   </span>
@@ -784,7 +786,7 @@ export function ChatInputForm({
                     data-testid="suggestion-loading"
                     className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
                   >
-                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-400 dark:text-gray-400" />
                   </div>
                 )}
 
@@ -797,14 +799,14 @@ export function ChatInputForm({
                 disabled={isProcessing}
                 rows={1}
                 aria-label="Message input"
-                className="w-full px-2 py-2 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-lg disabled:opacity-50 min-h-[40px] max-h-[200px]"
+                className="w-full px-2 py-2 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset rounded-lg disabled:opacity-50 min-h-[40px] max-h-[200px]"
               />
 
               {/* Hint text for accepting suggestion */}
               {showInlineSuggestion && (
                 <div
                   data-testid="suggestion-hint"
-                  className="absolute -bottom-5 left-2 text-xs text-gray-400 dark:text-gray-500"
+                  className="absolute -bottom-5 left-2 text-xs text-gray-400 dark:text-gray-400"
                 >
                   Press Tab to accept
                 </div>
@@ -823,8 +825,8 @@ export function ChatInputForm({
                   }
                   className={`p-2 rounded-lg transition-colors ${
                     isListening
-                      ? "text-red-500 bg-red-50 dark:bg-red-900/20"
-                      : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      ? "text-error-500 bg-error-50 dark:bg-error-900/20"
+                      : "text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                   } disabled:opacity-50`}
                 >
                   {isListening ? (
@@ -841,7 +843,7 @@ export function ChatInputForm({
                   type="button"
                   onClick={onStopStreaming}
                   aria-label="Stop generating"
-                  className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  className="p-2 bg-error-500 text-white rounded-lg hover:bg-error-600 transition-colors"
                   data-testid="stop-streaming-button"
                 >
                   <Square className="w-5 h-5" />
@@ -852,7 +854,7 @@ export function ChatInputForm({
                   disabled={!canSend}
                   aria-label="Send"
                   data-testid="send-button"
-                  className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isProcessing ? (
                     <Loader2
@@ -888,7 +890,7 @@ export function ChatInputForm({
               className={`flex items-center gap-2 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg p-1 ${
                 enableThinking
                   ? "text-violet-600 dark:text-violet-400"
-                  : "text-gray-400 dark:text-gray-500"
+                  : "text-gray-400 dark:text-gray-400"
               }`}
             >
               <span
@@ -918,7 +920,7 @@ export function ChatInputForm({
       )}
 
       {/* Hint text */}
-      <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-2">
+      <p className="text-xs text-gray-400 dark:text-gray-400 text-center mt-2">
         Press Enter to send, Shift+Enter for new line
       </p>
     </div>

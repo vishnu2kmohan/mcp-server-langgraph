@@ -163,7 +163,7 @@ export function AuthCallbackPage() {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700 text-center">
           {status === "processing" && (
             <>
-              <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+              <Loader2 className="w-12 h-12 text-primary-600 animate-spin mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 Completing sign in...
               </h2>
@@ -175,7 +175,7 @@ export function AuthCallbackPage() {
 
           {status === "success" && (
             <>
-              <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
+              <CheckCircle className="w-12 h-12 text-success-600 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 Sign in successful!
               </h2>
@@ -187,16 +187,16 @@ export function AuthCallbackPage() {
 
           {status === "error" && (
             <>
-              <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+              <AlertCircle className="w-12 h-12 text-error-600 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 Sign in failed
               </h2>
-              <p className="text-red-600 dark:text-red-400 mb-4">
+              <p className="text-error-600 dark:text-error-400 mb-4">
                 {errorMessage}
               </p>
               <button
                 onClick={() => navigate("/login", { replace: true })}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
               >
                 Try again
               </button>

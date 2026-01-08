@@ -67,7 +67,7 @@ describe("OfflineBanner", () => {
     it("should have appropriate warning styling", () => {
       render(<OfflineBanner />);
       const banner = screen.getByRole("alert");
-      expect(banner).toHaveClass("bg-yellow-500");
+      expect(banner).toHaveClass("bg-warning-500");
     });
 
     it("should be accessible with aria-live attribute", () => {

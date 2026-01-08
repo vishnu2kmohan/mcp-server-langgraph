@@ -74,17 +74,17 @@ function getConfidenceLevel(confidence: number): {
   if (confidence >= 0.8) {
     return {
       level: "high",
-      color: "text-green-600",
+      color: "text-success-600",
       testId: "confidence-high",
     };
   } else if (confidence >= 0.6) {
     return {
       level: "medium",
-      color: "text-yellow-600",
+      color: "text-warning-600",
       testId: "confidence-medium",
     };
   }
-  return { level: "low", color: "text-red-600", testId: "confidence-low" };
+  return { level: "low", color: "text-error-600", testId: "confidence-low" };
 }
 
 /**
@@ -141,7 +141,7 @@ export function CrossInsightsPanel({
             ) : (
               <ChevronDown className="w-4 h-4" />
             )}
-            <Lightbulb className="w-5 h-5 text-yellow-500" />
+            <Lightbulb className="w-5 h-5 text-warning-500" />
             <h3 role="heading" aria-level={3} className="font-semibold text-sm">
               AI Insights
             </h3>
@@ -163,7 +163,7 @@ export function CrossInsightsPanel({
         {onDismiss && (
           <button
             onClick={onDismiss}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
             aria-label="Dismiss insights panel"
           >
             <X className="w-4 h-4" />
@@ -180,8 +180,8 @@ export function CrossInsightsPanel({
               className="flex items-center justify-center py-8"
               data-testid="insights-loading"
             >
-              <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-              <span className="ml-2 text-sm text-gray-500">
+              <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+              <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
                 Analyzing patterns...
               </span>
             </div>
@@ -189,7 +189,7 @@ export function CrossInsightsPanel({
 
           {/* Empty state */}
           {!isLoading && !hasContent && (
-            <div className="py-6 text-center text-gray-500 text-sm">
+            <div className="py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
               No insights available
             </div>
           )}
@@ -199,13 +199,13 @@ export function CrossInsightsPanel({
             <div className="p-4 space-y-4">
               {/* Persona mismatch warning */}
               {hasPersonaMismatch && personaResult && (
-                <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                  <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3 p-3 bg-warning-50 dark:bg-warning-900/20 rounded-lg border border-warning-200 dark:border-warning-800">
+                  <AlertTriangle className="w-5 h-5 text-warning-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    <p className="text-sm font-medium text-warning-800 dark:text-warning-200">
                       Persona mismatch detected
                     </p>
-                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                    <p className="text-xs text-warning-700 dark:text-warning-300 mt-1">
                       Assigned:{" "}
                       <span className="font-medium">
                         {personaResult.assignedPersona}
@@ -217,7 +217,7 @@ export function CrossInsightsPanel({
                       </span>
                     </p>
                     {personaResult.recommendation && (
-                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                      <p className="text-xs text-warning-600 dark:text-warning-400 mt-1">
                         {personaResult.recommendation}
                       </p>
                     )}
@@ -227,13 +227,13 @@ export function CrossInsightsPanel({
 
               {/* Disclosure level upgrade */}
               {hasDisclosureUpgrade && disclosureResult && (
-                <div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <ArrowUpCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+                  <ArrowUpCircle className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    <p className="text-sm font-medium text-primary-800 dark:text-primary-200">
                       Level upgrade recommended
                     </p>
-                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                    <p className="text-xs text-primary-700 dark:text-primary-300 mt-1">
                       Current:{" "}
                       <span className="font-medium">
                         {disclosureResult.currentLevel}
@@ -245,7 +245,7 @@ export function CrossInsightsPanel({
                       </span>
                     </p>
                     {disclosureResult.personalizedMessage && (
-                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                      <p className="text-xs text-primary-600 dark:text-primary-400 mt-1">
                         {disclosureResult.personalizedMessage}
                       </p>
                     )}
@@ -265,7 +265,7 @@ export function CrossInsightsPanel({
                         key={index}
                         className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
                       >
-                        <Sparkles className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
+                        <Sparkles className="w-4 h-4 text-insight-500 flex-shrink-0 mt-0.5" />
                         <span>{insight}</span>
                       </li>
                     ))}
@@ -284,7 +284,7 @@ export function CrossInsightsPanel({
                       {personaResult.uiAdaptations.map((adaptation, index) => (
                         <span
                           key={index}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-success-100 dark:bg-success-900/30 text-success-800 dark:text-success-200"
                         >
                           <span className="font-medium">
                             {adaptation.feature}
@@ -308,7 +308,7 @@ export function CrossInsightsPanel({
                       {disclosureResult.unlockFeatures.map((feature, index) => (
                         <span
                           key={index}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200"
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-insight-100 dark:bg-insight-900/30 text-insight-800 dark:text-insight-200"
                         >
                           {feature}
                         </span>

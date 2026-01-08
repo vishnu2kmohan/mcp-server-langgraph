@@ -195,7 +195,7 @@ describe("InlineSuggestions", () => {
       );
 
       const confidenceBadge = screen.getByText(/95%/).closest("span");
-      expect(confidenceBadge).toHaveClass("text-green-600");
+      expect(confidenceBadge).toHaveClass("text-success-600");
     });
 
     it("applies medium confidence styling for >= 0.7 and < 0.9", () => {
@@ -208,7 +208,7 @@ describe("InlineSuggestions", () => {
       );
 
       const confidenceBadge = screen.getByText(/72%/).closest("span");
-      expect(confidenceBadge).toHaveClass("text-yellow-600");
+      expect(confidenceBadge).toHaveClass("text-warning-600");
     });
   });
 });

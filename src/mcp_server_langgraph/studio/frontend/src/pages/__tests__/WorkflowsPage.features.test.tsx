@@ -410,7 +410,7 @@ describe("WorkflowsPage - Features", () => {
       fireEvent.click(suggestButton);
 
       // Should now have active styling
-      expect(suggestButton).toHaveClass("bg-yellow-100");
+      expect(suggestButton).toHaveClass("bg-warning-100");
     });
   });
 

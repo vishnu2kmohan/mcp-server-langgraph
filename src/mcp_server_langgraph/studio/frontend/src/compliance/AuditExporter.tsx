@@ -190,7 +190,7 @@ export function AuditExporter({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Download size={18} className="text-gray-500" />
+          <Download size={18} className="text-gray-500 dark:text-gray-400" />
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
             Export Audit Logs
           </h3>
@@ -200,7 +200,7 @@ export function AuditExporter({
             className={cn(
               "text-xs",
               isRateLimited
-                ? "text-red-500"
+                ? "text-error-500"
                 : "text-gray-500 dark:text-gray-400",
             )}
           >
@@ -216,7 +216,9 @@ export function AuditExporter({
         <div className="text-sm text-gray-700 dark:text-gray-300">
           <span className="font-medium">{auditLogs.length} records</span>
           {isEmpty ? (
-            <span className="ml-2 text-gray-500">No audit logs to export</span>
+            <span className="ml-2 text-gray-500 dark:text-gray-400">
+              No audit logs to export
+            </span>
           ) : (
             <span className="ml-2 text-gray-500 dark:text-gray-400">
               from {dateRangeText.start} to {dateRangeText.end}
@@ -247,7 +249,7 @@ export function AuditExporter({
                 "flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors",
                 selectedFormat === value
                   ? "selected border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300"
-                  : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600",
+                  : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-600",
               )}
             >
               <Icon size={16} />
@@ -336,7 +338,7 @@ export function AuditExporter({
         <div
           role="status"
           data-testid="export-success"
-          className="mt-3 flex items-center gap-2 text-green-600 dark:text-green-400"
+          className="mt-3 flex items-center gap-2 text-success-600 dark:text-success-400"
         >
           <Check size={16} />
           <span className="text-sm">Export complete! Download started.</span>
@@ -346,7 +348,7 @@ export function AuditExporter({
       {exportStatus === "error" && error && (
         <div
           role="alert"
-          className="mt-3 flex items-center gap-2 text-red-600 dark:text-red-400"
+          className="mt-3 flex items-center gap-2 text-error-600 dark:text-error-400"
         >
           <AlertCircle size={16} />
           <span className="text-sm">{error}</span>

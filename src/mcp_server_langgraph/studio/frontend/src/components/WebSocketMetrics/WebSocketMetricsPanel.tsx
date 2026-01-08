@@ -46,7 +46,7 @@ interface StatusBadgeProps {
 function StatusBadge({ successRate }: StatusBadgeProps): React.ReactElement {
   if (successRate === null) {
     return (
-      <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+      <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
         N/A
       </span>
     );
@@ -54,10 +54,10 @@ function StatusBadge({ successRate }: StatusBadgeProps): React.ReactElement {
 
   const color =
     successRate >= 90
-      ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+      ? "bg-success-100 text-success-700 dark:bg-success-900 dark:text-success-300"
       : successRate >= 70
-        ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
-        : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300";
+        ? "bg-warning-100 text-warning-700 dark:bg-warning-900 dark:text-warning-300"
+        : "bg-error-100 text-error-700 dark:bg-error-900 dark:text-error-300";
 
   return (
     <span className={cn("px-2 py-0.5 text-xs rounded-full font-medium", color)}>
@@ -82,7 +82,7 @@ function MetricCard({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
       <div className="flex items-center gap-2">
-        {icon && <div className="text-gray-400 dark:text-gray-500">{icon}</div>}
+        {icon && <div className="text-gray-400 dark:text-gray-400">{icon}</div>}
         <span className="text-sm text-gray-500 dark:text-gray-400">
           {label}
         </span>
@@ -254,7 +254,7 @@ export function WebSocketMetricsPanel({
         </h3>
         <button
           onClick={refresh}
-          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          className="p-1.5 rounded-md hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
           aria-label="Refresh"
         >
           <svg
@@ -278,7 +278,7 @@ export function WebSocketMetricsPanel({
         {!hasConnections ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <svg
-              className="w-12 h-12 text-gray-400 mb-4"
+              className="w-12 h-12 text-gray-400 dark:text-gray-400 mb-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -293,7 +293,7 @@ export function WebSocketMetricsPanel({
             <p className="text-gray-500 dark:text-gray-400">
               No WebSocket connections
             </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+            <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">
               Metrics will appear when WebSocket hooks report data
             </p>
           </div>

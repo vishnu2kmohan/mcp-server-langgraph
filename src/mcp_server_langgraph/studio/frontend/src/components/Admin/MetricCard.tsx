@@ -29,9 +29,9 @@ export interface MetricCardProps {
  * Get color class based on value (for percentage metrics)
  */
 function getValueColor(value: number): string {
-  if (value >= 80) return "text-green-600";
-  if (value >= 60) return "text-yellow-600";
-  return "text-red-600";
+  if (value >= 80) return "text-success-600";
+  if (value >= 60) return "text-warning-600";
+  return "text-error-600";
 }
 
 /**
@@ -108,7 +108,7 @@ export function MetricCard({
         {showTrend && (
           <span
             className={`flex items-center text-sm ${
-              isPositiveTrend ? "text-green-500" : "text-red-500"
+              isPositiveTrend ? "text-success-500" : "text-error-500"
             }`}
           >
             {isPositiveTrend ? (

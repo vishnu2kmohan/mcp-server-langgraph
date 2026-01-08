@@ -116,7 +116,7 @@ function calculateDensity(
 // =============================================================================
 
 const buttonStyles = {
-  base: "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none hover:bg-gray-100 dark:hover:bg-gray-800",
+  base: "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
   icon: "h-7 w-7",
   sm: "h-7 px-2 text-xs",
 };
@@ -200,7 +200,7 @@ function TimelineMinimap({
           <div
             key={i}
             data-density-bar
-            className="flex-1 bg-blue-500/60 rounded-t"
+            className="flex-1 bg-primary-500/60 rounded-t"
             style={{ height: `${Math.max(d * 100, 2)}%` }}
           />
         ))}
@@ -210,7 +210,7 @@ function TimelineMinimap({
       {windowOverlay && (
         <div
           data-testid="time-window-overlay"
-          className="absolute inset-y-0 bg-blue-500/20 border-x border-blue-500"
+          className="absolute inset-y-0 bg-primary-500/20 border-x border-primary-500"
           style={{
             left: `${windowOverlay.left}%`,
             width: `${windowOverlay.width}%`,
@@ -242,7 +242,7 @@ function TimelineMinimap({
           <div
             key={bookmark.id}
             data-testid="bookmark-indicator"
-            className="absolute top-0 bottom-0 w-0.5 bg-yellow-500"
+            className="absolute top-0 bottom-0 w-0.5 bg-warning-500"
             style={{ left: `${position}%` }}
             title={bookmark.label}
           />
@@ -446,7 +446,7 @@ export function TimelineBar({
                   type="button"
                   role="option"
                   aria-label={option.label}
-                  className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                   onClick={() => handleSpeedSelect(option.value)}
                 >
                   {option.label}
@@ -486,7 +486,7 @@ export function TimelineBar({
             buttonStyles.base,
             buttonStyles.sm,
             "gap-1",
-            timeline.isLiveMode && "text-red-500",
+            timeline.isLiveMode && "text-error-500",
           )}
           onClick={handleLiveToggle}
           data-active={timeline.isLiveMode}
@@ -515,7 +515,7 @@ export function TimelineBar({
                     type="button"
                     role="option"
                     aria-label={option.label}
-                    className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap"
+                    className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 whitespace-nowrap"
                     onClick={() => handleTimeRangeSelect(option.value)}
                   >
                     {option.label}

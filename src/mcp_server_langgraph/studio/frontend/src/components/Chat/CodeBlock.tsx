@@ -97,9 +97,9 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
       >
         <button
           onClick={handleToggleWordWrap}
-          className={`p-1.5 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+          className={`p-1.5 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
             wordWrap
-              ? "bg-blue-600 text-white"
+              ? "bg-primary-600 text-white"
               : "bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white"
           }`}
           title="Toggle word wrap"
@@ -126,7 +126,7 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
         </button>
         <button
           onClick={handleDownload}
-          className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
           title="Download file"
           aria-label="Download code as file"
         >
@@ -149,7 +149,7 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
         </button>
         <button
           onClick={handleCopy}
-          className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
           title="Copy code"
           aria-label={
             copied ? "Code copied to clipboard" : "Copy code to clipboard"
@@ -163,7 +163,7 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
         </button>
       </div>
       {language && (
-        <div className="absolute left-3 top-2 z-10 text-xs text-gray-400 font-mono">
+        <div className="absolute left-3 top-2 z-10 text-xs text-gray-400 dark:text-gray-400 font-mono">
           {language}
         </div>
       )}

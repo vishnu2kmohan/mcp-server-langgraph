@@ -62,20 +62,20 @@ const SIZE_CLASSES: Record<ProgressSize, { bar: string; text: string }> = {
 
 const COLOR_CLASSES: Record<ProgressColor, { fill: string; track: string }> = {
   primary: {
-    fill: "bg-blue-600 dark:bg-blue-500",
-    track: "bg-blue-100 dark:bg-blue-900/30",
+    fill: "bg-primary-600 dark:bg-primary-500",
+    track: "bg-primary-100 dark:bg-primary-900/30",
   },
   success: {
-    fill: "bg-green-600 dark:bg-green-500",
-    track: "bg-green-100 dark:bg-green-900/30",
+    fill: "bg-success-600 dark:bg-success-500",
+    track: "bg-success-100 dark:bg-success-900/30",
   },
   warning: {
-    fill: "bg-yellow-600 dark:bg-yellow-500",
-    track: "bg-yellow-100 dark:bg-yellow-900/30",
+    fill: "bg-warning-600 dark:bg-warning-500",
+    track: "bg-warning-100 dark:bg-warning-900/30",
   },
   error: {
-    fill: "bg-red-600 dark:bg-red-500",
-    track: "bg-red-100 dark:bg-red-900/30",
+    fill: "bg-error-600 dark:bg-error-500",
+    track: "bg-error-100 dark:bg-error-900/30",
   },
 };
 
@@ -122,7 +122,7 @@ export function ProgressIndicator({
         >
           {status && <span>{status}</span>}
           {eta && (
-            <span className="text-gray-500 dark:text-gray-500">{eta}</span>
+            <span className="text-gray-500 dark:text-gray-400">{eta}</span>
           )}
         </div>
       )}
@@ -139,7 +139,7 @@ export function ProgressIndicator({
           >
             <Loader2
               data-testid="progress-spinner"
-              className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400"
+              className="h-5 w-5 animate-spin text-primary-600 dark:text-primary-400"
               aria-hidden="true"
             />
           </div>
@@ -179,7 +179,7 @@ export function ProgressIndicator({
             onClick={onCancel}
             disabled={cancelling}
             aria-label="Cancel"
-            className={`p-1 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+            className={`p-1 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${
               cancelling ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >

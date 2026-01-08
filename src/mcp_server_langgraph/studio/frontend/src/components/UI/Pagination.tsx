@@ -299,7 +299,7 @@ export function PagePagination({
                 aria-current={page === currentPage ? "page" : undefined}
                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors disabled:cursor-not-allowed ${
                   page === currentPage
-                    ? "bg-blue-600 text-white"
+                    ? "bg-primary-600 text-white"
                     : "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                 }`}
               >

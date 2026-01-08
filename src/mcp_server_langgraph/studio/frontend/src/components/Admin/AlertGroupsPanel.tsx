@@ -33,14 +33,15 @@ export interface AlertGroupsPanelProps {
 // =============================================================================
 
 const severityStyles: Record<string, string> = {
-  critical: "bg-red-500 text-white",
-  warning: "bg-yellow-500 text-black",
-  info: "bg-blue-500 text-white",
+  critical: "bg-error-500 text-white",
+  warning: "bg-warning-500 text-black",
+  info: "bg-primary-500 text-white",
 };
 
 const stateStyles: Record<string, string> = {
-  firing: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-  resolved: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  firing: "bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-200",
+  resolved:
+    "bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-200",
 };
 
 // =============================================================================
@@ -90,7 +91,7 @@ export function AlertGroupsPanel({
               role="button"
               tabIndex={0}
               aria-expanded={isExpanded}
-              className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
               data-testid={`group-header-${group.groupKey}`}
               onClick={() => onToggleGroup(group.groupKey)}
               onKeyDown={(e) => handleKeyDown(e, group.groupKey)}
@@ -99,12 +100,12 @@ export function AlertGroupsPanel({
                 {/* Expand/Collapse Icon */}
                 {isExpanded ? (
                   <ChevronDown
-                    className="w-4 h-4 text-gray-500"
+                    className="w-4 h-4 text-gray-500 dark:text-gray-400"
                     data-testid={`collapse-icon-${group.groupKey}`}
                   />
                 ) : (
                   <ChevronRight
-                    className="w-4 h-4 text-gray-500"
+                    className="w-4 h-4 text-gray-500 dark:text-gray-400"
                     data-testid={`expand-icon-${group.groupKey}`}
                   />
                 )}
@@ -140,7 +141,7 @@ export function AlertGroupsPanel({
                 </span>
 
                 {/* Alert Count */}
-                <span className="flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 text-sm font-medium bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-full">
+                <span className="flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 text-sm font-medium bg-gray-200 dark:bg-gray-700 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-full">
                   {group.count}
                 </span>
               </div>
@@ -156,7 +157,7 @@ export function AlertGroupsPanel({
                     tabIndex={0}
                     className={`p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
                       selectedAlertId === alert.alertId
-                        ? "border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                        ? "border-l-4 border-primary-500 bg-primary-50 dark:bg-primary-900/20"
                         : "border-l-4 border-transparent"
                     }`}
                     data-testid={`alert-item-${alert.alertId}`}

@@ -194,7 +194,7 @@ describe("AIRecommendationCard", () => {
       render(<AIRecommendationCard {...defaultProps} />);
 
       expect(screen.getByTestId("overall-risk-badge")).toHaveClass(
-        "bg-yellow-500",
+        "bg-warning-500",
       );
     });
 
@@ -228,7 +228,7 @@ describe("AIRecommendationCard", () => {
       );
 
       expect(screen.getByTestId("overall-risk-badge")).toHaveClass(
-        "bg-red-500",
+        "bg-error-500",
       );
     });
 
@@ -248,7 +248,7 @@ describe("AIRecommendationCard", () => {
       );
 
       expect(screen.getByTestId("overall-risk-badge")).toHaveClass(
-        "bg-green-500",
+        "bg-success-500",
       );
     });
   });

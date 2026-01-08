@@ -106,7 +106,7 @@ export const HTTP_METHOD_COLORS = {
   POST: "text-primary-600 dark:text-primary-400",
   PUT: "text-warning-600 dark:text-warning-400",
   DELETE: "text-error-600 dark:text-error-400",
-  PATCH: "text-purple-600 dark:text-purple-400",
+  PATCH: "text-insight-600 dark:text-insight-400",
   DEFAULT: "text-gray-600 dark:text-gray-400",
 } as const;
 

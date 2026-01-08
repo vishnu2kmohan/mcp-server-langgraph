@@ -52,24 +52,26 @@ export interface GDPRPanelProps {
 function getStatusIcon(status: ControlStatus) {
   switch (status) {
     case "compliant":
-      return <CheckCircle size={14} className="text-green-500" />;
+      return <CheckCircle size={14} className="text-success-500" />;
     case "partial":
-      return <AlertCircle size={14} className="text-yellow-500" />;
+      return <AlertCircle size={14} className="text-warning-500" />;
     case "non-compliant":
-      return <XCircle size={14} className="text-red-500" />;
+      return <XCircle size={14} className="text-error-500" />;
     default:
-      return <AlertCircle size={14} className="text-gray-400" />;
+      return (
+        <AlertCircle size={14} className="text-gray-400 dark:text-gray-400" />
+      );
   }
 }
 
 function getStatusColor(status: ControlStatus): string {
   switch (status) {
     case "compliant":
-      return "text-green-600 dark:text-green-400";
+      return "text-success-600 dark:text-success-400";
     case "partial":
-      return "text-yellow-600 dark:text-yellow-400";
+      return "text-warning-600 dark:text-warning-400";
     case "non-compliant":
-      return "text-red-600 dark:text-red-400";
+      return "text-error-600 dark:text-error-400";
     default:
       return "text-gray-500 dark:text-gray-400";
   }
@@ -104,7 +106,7 @@ export function GDPRPanel({
           className,
         )}
       >
-        <div className="flex items-center gap-2 text-gray-500">
+        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
           <Loader2 size={16} className="animate-spin" />
           <span>Loading GDPR controls...</span>
         </div>
@@ -124,7 +126,7 @@ export function GDPRPanel({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <Flag size={18} className="text-blue-600" />
+          <Flag size={18} className="text-primary-600" />
           <h3 className="font-semibold text-gray-900 dark:text-gray-100">
             GDPR
           </h3>
@@ -168,7 +170,7 @@ export function GDPRPanel({
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       {control.name}
                     </span>
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">
                       {control.article}
                     </span>
                     <span
@@ -185,7 +187,7 @@ export function GDPRPanel({
                   </p>
                   {control.pendingRequests !== undefined &&
                     control.pendingRequests > 0 && (
-                      <div className="flex items-center gap-1 mt-2 text-xs text-orange-600 dark:text-orange-400">
+                      <div className="flex items-center gap-1 mt-2 text-xs text-grafana-600 dark:text-grafana-400">
                         <Users size={12} />
                         <span>
                           {control.pendingRequests} pending request

@@ -49,10 +49,11 @@ function formatTimestamp(date: Date | null): string {
  */
 function SeverityBadge({ severity }: { severity: string }) {
   const colorClasses = {
-    critical: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    critical:
+      "bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-200",
     warning:
-      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-    info: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      "bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-200",
+    info: "bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200",
   };
 
   return (
@@ -72,9 +73,11 @@ function SeverityBadge({ severity }: { severity: string }) {
 function SentimentBadge({ sentiment }: { sentiment: string }) {
   const colorClasses = {
     positive:
-      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    negative: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-    neutral: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
+      "bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-200",
+    negative:
+      "bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-200",
+    neutral:
+      "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
   };
 
   return (
@@ -94,7 +97,7 @@ function SentimentBadge({ sentiment }: { sentiment: string }) {
  */
 function AnomalyCard({ anomaly }: { anomaly: AnomalyInsight }) {
   return (
-    <div className="p-4 border border-yellow-200 dark:border-yellow-800 rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
+    <div className="p-4 border border-warning-200 dark:border-warning-800 rounded-lg bg-warning-50 dark:bg-warning-900/20">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
           {anomaly.dimension}
@@ -188,7 +191,7 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
               : prediction.current}
           </p>
         </div>
-        <div className="text-gray-400">→</div>
+        <div className="text-gray-400 dark:text-gray-400">→</div>
         <div>
           <span className="text-xs text-gray-500 dark:text-gray-400">
             Predicted
@@ -196,8 +199,8 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
           <p
             className={`text-lg font-semibold ${
               isPositive
-                ? "text-green-600 dark:text-green-400"
-                : "text-red-600 dark:text-red-400"
+                ? "text-success-600 dark:text-success-400"
+                : "text-error-600 dark:text-error-400"
             }`}
           >
             {typeof prediction.predicted === "number" &&
@@ -278,7 +281,7 @@ export function AIInsightsPanel({
           <button
             onClick={refresh}
             disabled={isLoading}
-            className="px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
+            className="px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50"
             aria-label="Refresh insights"
           >
             {isLoading ? "Loading..." : "Refresh"}
@@ -300,12 +303,12 @@ export function AIInsightsPanel({
         {/* Error State */}
         {error && (
           <div className="text-center py-8">
-            <div className="text-red-600 dark:text-red-400 mb-4">
+            <div className="text-error-600 dark:text-error-400 mb-4">
               {error.message}
             </div>
             <button
               onClick={refresh}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700"
+              className="px-4 py-2 text-sm font-medium text-white bg-error-600 rounded hover:bg-error-700"
               aria-label="Retry loading insights"
             >
               Retry

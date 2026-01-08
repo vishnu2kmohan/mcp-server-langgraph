@@ -91,7 +91,7 @@ function DeleteConfirmDialog({ onConfirm, onCancel }: DeleteDialogProps) {
               "px-4 py-2 rounded-lg text-sm font-medium",
               "text-gray-700 dark:text-gray-300",
               "bg-gray-100 dark:bg-gray-700",
-              "hover:bg-gray-200 dark:hover:bg-gray-600",
+              "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600",
               "transition-colors",
             )}
           >
@@ -103,7 +103,7 @@ function DeleteConfirmDialog({ onConfirm, onCancel }: DeleteDialogProps) {
             onClick={onConfirm}
             className={cn(
               "px-4 py-2 rounded-lg text-sm font-medium",
-              "text-white bg-red-600 hover:bg-red-700",
+              "text-white bg-error-600 hover:bg-error-700",
               "transition-colors",
             )}
           >
@@ -152,7 +152,7 @@ function ExportMenu({ onExport, onClose }: ExportMenuProps) {
           className={cn(
             "w-full px-4 py-2 text-left text-sm",
             "text-gray-700 dark:text-gray-300",
-            "hover:bg-gray-100 dark:hover:bg-gray-700",
+            "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
             "transition-colors",
           )}
         >
@@ -198,9 +198,9 @@ function ActionButton({
         "flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium",
         "transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500",
         variant === "default" &&
-          "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700",
+          "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
         variant === "danger" &&
-          "text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30",
+          "text-error-600 dark:text-error-400 hover:bg-error-100 dark:hover:bg-error-900/30",
         disabled && "opacity-50 cursor-not-allowed",
       )}
     >
@@ -272,7 +272,7 @@ export function ArtifactActions({
       {showCopySuccess ? (
         <div
           data-testid="copy-success"
-          className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-green-600 dark:text-green-400"
+          className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-success-600 dark:text-success-400"
         >
           <Check size={14} />
           {!compact && <span>Copied!</span>}
@@ -309,7 +309,7 @@ export function ArtifactActions({
           className={cn(
             "flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium",
             "transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500",
-            "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700",
+            "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
             disabled && "opacity-50 cursor-not-allowed",
           )}
         >

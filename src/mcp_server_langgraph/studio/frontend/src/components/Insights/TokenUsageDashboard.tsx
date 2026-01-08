@@ -69,13 +69,13 @@ function MetricCard({
   color = "blue",
 }: MetricCardProps) {
   const colorClasses = {
-    blue: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30",
+    blue: "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30",
     green:
-      "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30",
+      "text-success-600 dark:text-success-400 bg-success-50 dark:bg-success-900/30",
     purple:
-      "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30",
+      "text-insight-600 dark:text-insight-400 bg-insight-50 dark:bg-insight-900/30",
     orange:
-      "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30",
+      "text-grafana-600 dark:text-grafana-400 bg-grafana-50 dark:bg-grafana-900/30",
   };
 
   return (
@@ -114,10 +114,10 @@ interface ProgressBarProps {
 function ProgressBar({ value, max, label, showWarning }: ProgressBarProps) {
   const percentage = Math.min((value / max) * 100, 100);
   const barColor = showWarning
-    ? "bg-orange-500"
+    ? "bg-grafana-500"
     : percentage > 90
-      ? "bg-red-500"
-      : "bg-blue-500";
+      ? "bg-error-500"
+      : "bg-primary-500";
 
   return (
     <div className="space-y-1">
@@ -175,7 +175,7 @@ function HistoryChart({ history }: HistoryChartProps) {
           return (
             <div
               key={index}
-              className="flex-1 bg-blue-500 dark:bg-blue-400 rounded-t transition-all hover:bg-blue-600 dark:hover:bg-blue-300"
+              className="flex-1 bg-primary-500 dark:bg-primary-400 rounded-t transition-all hover:bg-primary-600 dark:hover:bg-primary-300"
               style={{ height: `${height}%` }}
               title={`${formatNumber(entry.tokens)} tokens at ${new Date(entry.timestamp).toLocaleTimeString()}`}
             />
@@ -245,7 +245,7 @@ export function TokenUsageDashboard({
           type="button"
           onClick={refresh}
           aria-label="Refresh token usage"
-          className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <RefreshCw size={16} />
         </button>
@@ -296,7 +296,7 @@ export function TokenUsageDashboard({
             showWarning={isContextWindowNearLimit}
           />
           {isContextWindowNearLimit && (
-            <p className="text-sm text-orange-600 dark:text-orange-400 mt-2">
+            <p className="text-sm text-grafana-600 dark:text-grafana-400 mt-2">
               Warning: Context window usage is high. Consider starting a new
               session.
             </p>
@@ -314,7 +314,7 @@ export function TokenUsageDashboard({
       {/* Loading overlay */}
       {showLoading && (
         <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
         </div>
       )}
     </div>

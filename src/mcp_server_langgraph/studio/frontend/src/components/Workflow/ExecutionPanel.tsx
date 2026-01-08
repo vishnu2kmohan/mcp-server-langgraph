@@ -49,14 +49,14 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
   const getNodeStatusBadgeClass = (status: NodeStatus): string => {
     switch (status) {
       case "running":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
       case "success":
-        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+        return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
       case "error":
-        return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+        return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
       case "idle":
       default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
+        return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
     }
   };
 
@@ -76,11 +76,11 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
   const getLogIcon = (level: "info" | "warning" | "error") => {
     switch (level) {
       case "info":
-        return <Info size={16} className="text-blue-500" />;
+        return <Info size={16} className="text-primary-500" />;
       case "warning":
-        return <AlertTriangle size={16} className="text-yellow-500" />;
+        return <AlertTriangle size={16} className="text-warning-500" />;
       case "error":
-        return <XCircle size={16} className="text-red-500" />;
+        return <XCircle size={16} className="text-error-500" />;
     }
   };
 
@@ -103,10 +103,10 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
           <span
             className={`
               text-xs px-2 py-0.5 rounded
-              ${executionState === "idle" ? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300" : ""}
-              ${executionState === "running" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : ""}
-              ${executionState === "completed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : ""}
-              ${executionState === "error" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : ""}
+              ${executionState === "idle" ? "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" : ""}
+              ${executionState === "running" ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400" : ""}
+              ${executionState === "completed" ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400" : ""}
+              ${executionState === "error" ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400" : ""}
             `}
           >
             {executionState}
@@ -117,7 +117,7 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
           {executionState === "running" && onStop && (
             <button
               onClick={onStop}
-              className="flex items-center gap-1 text-xs px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded hover:bg-red-200 dark:hover:bg-red-900/50"
+              className="flex items-center gap-1 text-xs px-2 py-1 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded hover:bg-error-200 dark:hover:bg-error-900/50"
             >
               <Square size={12} />
               Stop
@@ -134,7 +134,7 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
           {onClose && (
             <button
               onClick={onClose}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              className="p-1 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded"
             >
               <X size={18} className="text-gray-500 dark:text-gray-400" />
             </button>

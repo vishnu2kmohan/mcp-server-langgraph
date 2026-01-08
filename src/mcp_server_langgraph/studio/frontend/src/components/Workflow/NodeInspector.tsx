@@ -110,7 +110,7 @@ export function NodeInspector() {
         </h3>
         <button
           onClick={() => dispatch(clearSelection())}
-          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+          className="p-1 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded"
           aria-label="Close node inspector"
         >
           <X size={18} className="text-gray-500 dark:text-gray-400" />
@@ -139,7 +139,7 @@ export function NodeInspector() {
             onChange={(e) => handleLabelChange(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md
               bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-              focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
 
@@ -154,7 +154,7 @@ export function NodeInspector() {
               onChange={(e) => handleConfigChange("model", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md
                 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
               <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
@@ -176,7 +176,7 @@ export function NodeInspector() {
               placeholder="e.g., search_web, read_file"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md
                 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
         )}
@@ -199,7 +199,7 @@ export function NodeInspector() {
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md
               bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-              focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
 
@@ -212,8 +212,8 @@ export function NodeInspector() {
             text-sm font-medium transition-colors
             ${
               showAiChat
-                ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                ? "bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
             }
           `}
         >
@@ -225,7 +225,7 @@ export function NodeInspector() {
         {showAiChat && (
           <div
             data-testid="ai-chat-panel"
-            className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-600"
+            className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-700 dark:border-gray-600"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -234,7 +234,7 @@ export function NodeInspector() {
               <button
                 data-testid="close-ai-panel"
                 onClick={() => setShowAiChat(false)}
-                className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded"
                 aria-label="Close AI assistant panel"
               >
                 <X size={14} className="text-gray-500 dark:text-gray-400" />
@@ -255,13 +255,13 @@ export function NodeInspector() {
                 placeholder="Ask about this node config..."
                 className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md
                   bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                  focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  focus:ring-2 focus:ring-insight-500 focus:border-transparent"
               />
               <button
                 data-testid="send-ai-question"
                 onClick={handleAskAi}
                 disabled={!question.trim() || isLoadingAi}
-                className="p-2 bg-purple-600 text-white rounded-md hover:bg-purple-700
+                className="p-2 bg-insight-600 text-white rounded-md hover:bg-insight-700
                   disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Send question to AI assistant"
               >
@@ -288,7 +288,7 @@ export function NodeInspector() {
             {aiError && (
               <div
                 data-testid="ai-error"
-                className="mt-3 p-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm rounded"
+                className="mt-3 p-2 bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-400 text-sm rounded"
               >
                 {aiError}
               </div>
@@ -309,7 +309,10 @@ export function NodeInspector() {
                     </span>
                     <ul className="mt-1 text-xs text-gray-600 dark:text-gray-400 space-y-1">
                       {aiResponse.examples.map((example, i) => (
-                        <li key={i} className="pl-2 border-l-2 border-gray-300">
+                        <li
+                          key={i}
+                          className="pl-2 border-l-2 border-gray-300 dark:border-gray-600"
+                        >
                           {example}
                         </li>
                       ))}
@@ -322,9 +325,9 @@ export function NodeInspector() {
                   <button
                     data-testid="apply-suggested-config"
                     onClick={handleApplySuggestedConfig}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700
-                      dark:bg-green-900/30 dark:text-green-400 text-sm rounded-md
-                      hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-success-100 text-success-700
+                      dark:bg-success-900/30 dark:text-success-400 text-sm rounded-md
+                      hover:bg-success-200 dark:hover:bg-success-900/50 transition-colors"
                   >
                     <Check size={14} />
                     Apply Suggested Config

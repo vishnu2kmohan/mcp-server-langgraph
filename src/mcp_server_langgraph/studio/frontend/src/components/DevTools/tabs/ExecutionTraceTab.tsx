@@ -24,6 +24,7 @@ import {
   type ExecutionStep,
 } from "../hooks/useWorkflowExecution";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
+import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 import type { ExecutionTraceTabProps } from "../types";
 
 // =============================================================================
@@ -41,19 +42,22 @@ function StepStatusIcon({ status, stepId }: StepStatusIconProps) {
   return (
     <span data-testid={`step-status-${stepId}`}>
       {status === "completed" && (
-        <CheckCircle {...iconProps} className="text-green-500" />
+        <CheckCircle {...iconProps} className="text-success-500" />
       )}
       {status === "running" && (
-        <Play {...iconProps} className="text-blue-500 animate-pulse" />
+        <Play {...iconProps} className="text-primary-500 animate-pulse" />
       )}
       {status === "pending" && (
-        <Clock {...iconProps} className="text-gray-400" />
+        <Clock {...iconProps} className="text-gray-400 dark:text-gray-400" />
       )}
       {status === "error" && (
-        <AlertCircle {...iconProps} className="text-red-500" />
+        <AlertCircle {...iconProps} className="text-error-500" />
       )}
       {status === "skipped" && (
-        <SkipForward {...iconProps} className="text-gray-400" />
+        <SkipForward
+          {...iconProps}
+          className="text-gray-400 dark:text-gray-400"
+        />
       )}
     </span>
   );
@@ -84,9 +88,9 @@ function ExecutionStepRow({
         "flex items-center gap-2 px-2 py-1.5 cursor-pointer",
         "border-b border-gray-100 dark:border-gray-800",
         "hover:bg-gray-50 dark:hover:bg-gray-800/50",
-        isSelected && "bg-blue-50 dark:bg-blue-900/20",
+        isSelected && "bg-primary-50 dark:bg-primary-900/20",
         isCurrent &&
-          "bg-yellow-50 dark:bg-yellow-900/20 border-l-2 border-l-yellow-500",
+          "bg-warning-50 dark:bg-warning-900/20 border-l-2 border-l-warning-500",
       )}
       onClick={onSelect}
     >
@@ -98,16 +102,19 @@ function ExecutionStepRow({
           e.stopPropagation();
           onToggleExpand();
         }}
-        className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+        className="p-0.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
         aria-expanded={isExpanded}
         aria-label={
           isExpanded ? `Collapse ${step.nodeName}` : `Expand ${step.nodeName}`
         }
       >
         {isExpanded ? (
-          <ChevronDown size={12} className="text-gray-500" />
+          <ChevronDown size={12} className="text-gray-500 dark:text-gray-400" />
         ) : (
-          <ChevronRight size={12} className="text-gray-500" />
+          <ChevronRight
+            size={12}
+            className="text-gray-500 dark:text-gray-400"
+          />
         )}
       </button>
 
@@ -143,8 +150,10 @@ function StepDetails({ step }: StepDetailsProps) {
         {/* Input */}
         {step.input && (
           <div data-testid={`step-input-${step.id}`}>
-            <span className="text-gray-500 font-medium">Input:</span>
-            <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-900 rounded text-gray-700 dark:text-gray-300 overflow-x-auto">
+            <span className="text-gray-500 dark:text-gray-400 font-medium">
+              Input:
+            </span>
+            <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded text-gray-700 dark:text-gray-300 overflow-x-auto">
               {JSON.stringify(step.input, null, 2)}
             </pre>
           </div>
@@ -153,8 +162,10 @@ function StepDetails({ step }: StepDetailsProps) {
         {/* Output */}
         {step.output && (
           <div data-testid={`step-output-${step.id}`}>
-            <span className="text-gray-500 font-medium">Output:</span>
-            <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-900 rounded text-gray-700 dark:text-gray-300 overflow-x-auto">
+            <span className="text-gray-500 dark:text-gray-400 font-medium">
+              Output:
+            </span>
+            <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded text-gray-700 dark:text-gray-300 overflow-x-auto">
               {JSON.stringify(step.output, null, 2)}
             </pre>
           </div>
@@ -162,14 +173,14 @@ function StepDetails({ step }: StepDetailsProps) {
 
         {/* Error */}
         {step.error && (
-          <div className="text-red-500">
+          <div className={STATUS_TEXT_COLORS.error}>
             <span className="font-medium">Error:</span>
             <p className="mt-1">{step.error}</p>
           </div>
         )}
 
         {/* Metadata */}
-        <div className="grid grid-cols-2 gap-2 text-gray-500">
+        <div className="grid grid-cols-2 gap-2 text-gray-500 dark:text-gray-400">
           <div>
             <span>Node ID:</span>
             <span className="ml-2 text-gray-700 dark:text-gray-300">
@@ -257,7 +268,7 @@ export function ExecutionTraceTab({
           data-testid="execution-trace-loading"
           className="flex-1 flex items-center justify-center"
         >
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
         </div>
       </div>
     );
@@ -272,7 +283,10 @@ export function ExecutionTraceTab({
       >
         <div
           data-testid="execution-trace-error"
-          className="flex-1 flex flex-col items-center justify-center text-red-500"
+          className={cn(
+            "flex-1 flex flex-col items-center justify-center",
+            STATUS_TEXT_COLORS.error,
+          )}
         >
           <AlertCircle size={32} className="mb-2" />
           <p className="text-sm">{error.message}</p>
@@ -290,7 +304,7 @@ export function ExecutionTraceTab({
       >
         <div
           data-testid="execution-trace-empty"
-          className="flex-1 flex flex-col items-center justify-center text-gray-400"
+          className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-400"
         >
           <Workflow size={32} className="mb-2 opacity-50" />
           <p className="text-sm">No execution data available</p>
@@ -311,11 +325,15 @@ export function ExecutionTraceTab({
       <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         {/* Workflow indicator */}
         <div className="flex items-center gap-1.5">
-          <Workflow size={14} className="text-gray-500" aria-hidden="true" />
+          <Workflow
+            size={14}
+            className="text-gray-500 dark:text-gray-400"
+            aria-hidden="true"
+          />
           <h3 className="text-xs text-gray-600 dark:text-gray-400">
             Execution
           </h3>
-          <span className="text-xs text-gray-500 dark:text-gray-500 ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
+          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
             {workflowId}
           </span>
         </div>
@@ -324,11 +342,13 @@ export function ExecutionTraceTab({
         <div className="flex-1" />
 
         {/* Step count */}
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-gray-500 dark:text-gray-400">
           {filteredSteps.filter((s) => s.status === "completed").length}/
           {filteredSteps.length} steps
           {timeline.timeWindow && filteredSteps.length !== steps.length && (
-            <span className="ml-1 text-gray-400">({steps.length} total)</span>
+            <span className="ml-1 text-gray-400 dark:text-gray-400">
+              ({steps.length} total)
+            </span>
           )}
         </span>
 
@@ -337,7 +357,7 @@ export function ExecutionTraceTab({
           data-testid="refresh-execution-button"
           type="button"
           onClick={refetch}
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500"
+          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
           aria-label="Refresh execution"
         >
           <RefreshCw size={14} />

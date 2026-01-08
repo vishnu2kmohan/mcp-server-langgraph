@@ -141,7 +141,7 @@ export function CanvasTabs({
                 "bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm",
               !isActive &&
                 !isDisabled &&
-                "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600",
+                "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600",
               isDisabled && "opacity-50 cursor-not-allowed",
             )}
           >

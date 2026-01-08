@@ -94,7 +94,7 @@ export function ResourceBrowser({
           )}
         />
         <svg
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -155,8 +155,8 @@ export function ResourceBrowser({
                   onClick={() => handleView(resource.qualifiedName)}
                   className={cn(
                     "shrink-0 px-3 py-1.5 text-sm font-medium rounded-md",
-                    "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200",
-                    "hover:bg-gray-200 dark:hover:bg-gray-600",
+                    "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 dark:bg-gray-700 dark:text-gray-200",
+                    "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600",
                     "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2",
                     "transition-colors",
                   )}

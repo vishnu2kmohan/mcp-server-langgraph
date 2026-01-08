@@ -106,7 +106,7 @@ export function TaskMappingCard({
                   </td>
                   <td className="py-3 px-3 text-center">
                     {isEnabled ? (
-                      <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                      <span className="px-2 py-1 text-xs bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 rounded-full">
                         Active
                       </span>
                     ) : (

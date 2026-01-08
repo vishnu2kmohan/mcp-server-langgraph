@@ -84,15 +84,15 @@ export interface PlanEditorProps {
 function getRiskLevelColor(level: string): string {
   switch (level.toLowerCase()) {
     case "low":
-      return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      return "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400";
     case "medium":
-      return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400";
+      return "bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-400";
     case "high":
-      return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+      return "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-400";
     case "critical":
-      return "bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-300";
+      return "bg-error-200 text-error-900 dark:bg-error-900/50 dark:text-error-300";
     default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+      return "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
   }
 }
 
@@ -102,12 +102,12 @@ function getRiskLevelColor(level: string): string {
 function getStatusColor(status: PlanStatus): string {
   switch (status) {
     case "approved":
-      return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      return "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400";
     case "rejected":
-      return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+      return "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-400";
     case "awaiting_approval":
     default:
-      return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400";
+      return "bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-400";
   }
 }
 
@@ -173,7 +173,7 @@ export function PlanEditor({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <Settings className="w-5 h-5 text-blue-500" />
+          <Settings className="w-5 h-5 text-primary-500" />
           Execution Plan
         </h2>
         <span
@@ -204,16 +204,16 @@ export function PlanEditor({
         {/* Complexity and Risk */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
+            <AlertTriangle className="w-4 h-4 text-warning-500" />
             <span className="text-sm text-gray-600 dark:text-gray-400">
               Complexity:
             </span>
-            <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+            <span className="px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-400">
               {plan.complexity}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-500" />
+            <AlertCircle className="w-4 h-4 text-warning-500" />
             <span className="text-sm text-gray-600 dark:text-gray-400">
               Risk:
             </span>
@@ -228,7 +228,7 @@ export function PlanEditor({
         {/* Cost and Model */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <DollarSign className="w-4 h-4 text-green-500" />
+            <DollarSign className="w-4 h-4 text-success-500" />
             <span className="text-sm text-gray-600 dark:text-gray-400">
               Estimated Cost:
             </span>
@@ -237,7 +237,7 @@ export function PlanEditor({
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Brain className="w-4 h-4 text-purple-500" />
+            <Brain className="w-4 h-4 text-insight-500" />
             <span className="text-sm text-gray-600 dark:text-gray-400">
               Executor:
             </span>
@@ -285,7 +285,7 @@ export function PlanEditor({
               value={orchestrator}
               onChange={handleOrchestratorChange}
               disabled={readOnly}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="standard">Standard</option>
               <option value="swarm">Swarm</option>
@@ -308,7 +308,7 @@ export function PlanEditor({
               value={thinkingBudget}
               onChange={handleThinkingBudgetChange}
               disabled={readOnly}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="none">None</option>
               <option value="light">Light</option>
@@ -333,7 +333,7 @@ export function PlanEditor({
               disabled={readOnly}
               min={0}
               max={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
         </div>
@@ -345,7 +345,7 @@ export function PlanEditor({
           type="button"
           onClick={onReject}
           disabled={readOnly}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-error-700 dark:text-error-400 bg-error-100 dark:bg-error-900/30 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <XCircle className="w-4 h-4" />
           Reject
@@ -354,7 +354,7 @@ export function PlanEditor({
           type="button"
           onClick={onApprove}
           disabled={readOnly}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-success-600 rounded-lg hover:bg-success-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <CheckCircle className="w-4 h-4" />
           Approve

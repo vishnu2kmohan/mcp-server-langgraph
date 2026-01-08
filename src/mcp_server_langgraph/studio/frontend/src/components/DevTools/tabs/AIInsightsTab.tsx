@@ -33,6 +33,7 @@ import { useObservabilityAI } from "../hooks/useObservabilityAI";
 import { useAppSelector } from "../../../store/hooks";
 import { selectUser } from "../../../store/slices/authSlice";
 import type { AIInsightsTabProps, AIInsight, AIInsightType } from "../types";
+import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 
 // =============================================================================
 // Types
@@ -80,13 +81,13 @@ function getInsightIcon(type: AIInsightType) {
 function getSeverityColor(severity: string): string {
   switch (severity) {
     case "critical":
-      return "bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700";
+      return "bg-error-100 dark:bg-error-900/30 border-error-300 dark:border-error-700";
     case "high":
-      return "bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700";
+      return "bg-warning-100 dark:bg-warning-900/30 border-warning-300 dark:border-warning-700";
     case "medium":
-      return "bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700";
+      return "bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800";
     case "low":
-      return "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700";
+      return "bg-primary-100 dark:bg-primary-900/30 border-primary-300 dark:border-primary-700";
     default:
       return "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600";
   }
@@ -95,13 +96,13 @@ function getSeverityColor(severity: string): string {
 function getSeverityIndicatorColor(severity: string): string {
   switch (severity) {
     case "critical":
-      return "bg-red-500";
+      return "bg-error-500";
     case "high":
-      return "bg-orange-500";
+      return "bg-warning-500";
     case "medium":
-      return "bg-amber-500";
+      return "bg-warning-400";
     case "low":
-      return "bg-blue-500";
+      return "bg-primary-500";
     default:
       return "bg-gray-500";
   }
@@ -110,15 +111,15 @@ function getSeverityIndicatorColor(severity: string): string {
 function getTypeBadgeColor(type: AIInsightType): string {
   switch (type) {
     case "anomaly":
-      return "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300";
+      return "bg-error-100 dark:bg-error-900/50 text-error-700 dark:text-error-300";
     case "performance":
-      return "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300";
+      return "bg-insight-100 dark:bg-insight-900/50 text-insight-700 dark:text-insight-300";
     case "cost":
-      return "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300";
+      return "bg-success-100 dark:bg-success-900/50 text-success-700 dark:text-success-300";
     case "suggestion":
-      return "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300";
+      return "bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300";
     case "warning":
-      return "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300";
+      return "bg-warning-100 dark:bg-warning-900/50 text-warning-700 dark:text-warning-300";
     default:
       return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300";
   }
@@ -210,8 +211,8 @@ function InsightCard({ insight, onDismiss }: InsightCardProps) {
           onClick={() => onDismiss(insight.id)}
           className={cn(
             "absolute top-1 right-1 p-1 rounded",
-            "bg-gray-200/80 dark:bg-gray-700/80",
-            "hover:bg-gray-300 dark:hover:bg-gray-600",
+            "bg-gray-200 dark:bg-gray-700/80 dark:bg-gray-700/80",
+            "hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-600",
             "text-gray-600 dark:text-gray-400",
           )}
           aria-label="Dismiss insight"
@@ -318,10 +319,10 @@ function ObservabilityPanel({
               {insights.traceAnomalies.slowSpans.map((span) => (
                 <div
                   key={span.spanId}
-                  className="text-xs p-2 bg-orange-50 dark:bg-orange-900/20 rounded flex justify-between"
+                  className="text-xs p-2 bg-grafana-50 dark:bg-grafana-900/20 rounded flex justify-between"
                 >
                   <span className="font-mono">{span.name}</span>
-                  <span className="text-orange-600 dark:text-orange-400">
+                  <span className="text-grafana-600 dark:text-grafana-400">
                     {span.durationMs}ms
                   </span>
                 </div>
@@ -345,10 +346,10 @@ function ObservabilityPanel({
               {insights.traceAnomalies.errorPatterns.map((pattern) => (
                 <div
                   key={pattern.name}
-                  className="text-xs p-2 bg-red-50 dark:bg-red-900/20 rounded flex justify-between"
+                  className="text-xs p-2 bg-error-50 dark:bg-error-900/20 rounded flex justify-between"
                 >
                   <span className="font-mono">{pattern.name}</span>
-                  <span className="text-red-600 dark:text-red-400">
+                  <span className={STATUS_TEXT_COLORS.error}>
                     {pattern.count} occurrences
                   </span>
                 </div>
@@ -369,19 +370,19 @@ function ObservabilityPanel({
           </h3>
           <div className="flex gap-4 text-xs">
             <div className="flex-1 p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
-              <div className="text-gray-500">p50</div>
+              <div className="text-gray-500 dark:text-gray-400">p50</div>
               <div className="font-medium">
                 p50: {insights.traceAnomalies.percentiles.p50}ms
               </div>
             </div>
             <div className="flex-1 p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
-              <div className="text-gray-500">p95</div>
+              <div className="text-gray-500 dark:text-gray-400">p95</div>
               <div className="font-medium">
                 p95: {insights.traceAnomalies.percentiles.p95}ms
               </div>
             </div>
             <div className="flex-1 p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
-              <div className="text-gray-500">p99</div>
+              <div className="text-gray-500 dark:text-gray-400">p99</div>
               <div className="font-medium">
                 p99: {insights.traceAnomalies.percentiles.p99}ms
               </div>
@@ -404,7 +405,7 @@ function ObservabilityPanel({
             {insights.alertCorrelations.map((correlation, idx) => (
               <div
                 key={idx}
-                className="text-xs p-2 bg-amber-50 dark:bg-amber-900/20 rounded"
+                className="text-xs p-2 bg-warning-50 dark:bg-warning-900/20 rounded"
               >
                 <div className="font-medium">
                   {correlation.alerts.length} alerts correlated
@@ -439,13 +440,16 @@ function ObservabilityPanel({
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1">
               {insights.costPrediction.trend === "increasing" && (
-                <TrendingUp size={14} className="text-red-500" />
+                <TrendingUp size={14} className={STATUS_TEXT_COLORS.error} />
               )}
               {insights.costPrediction.trend === "decreasing" && (
-                <TrendingDown size={14} className="text-green-500" />
+                <TrendingDown
+                  size={14}
+                  className={STATUS_TEXT_COLORS.success}
+                />
               )}
               {insights.costPrediction.trend === "stable" && (
-                <Minus size={14} className="text-gray-500" />
+                <Minus size={14} className={STATUS_TEXT_COLORS.neutral} />
               )}
               <span className="capitalize">
                 {insights.costPrediction.trend}
@@ -458,7 +462,10 @@ function ObservabilityPanel({
             {insights.costPrediction.anomalies.length > 0 && (
               <div
                 data-testid="cost-anomaly-indicator"
-                className="text-red-500 flex items-center gap-1"
+                className={cn(
+                  STATUS_TEXT_COLORS.error,
+                  "flex items-center gap-1",
+                )}
               >
                 <AlertCircle size={12} />
                 {insights.costPrediction.anomalies.length} anomalies
@@ -479,10 +486,10 @@ function ObservabilityPanel({
             Root Cause Analysis
           </h3>
           <div className="text-xs space-y-2">
-            <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded">
+            <div className="p-2 bg-insight-50 dark:bg-insight-900/20 rounded">
               <div className="flex justify-between">
                 <span className="font-medium">Hypothesis</span>
-                <span className="text-purple-600">
+                <span className="text-insight-600">
                   {Math.round(insights.rootCauseAnalysis.confidence * 100)}%
                 </span>
               </div>
@@ -498,14 +505,16 @@ function ObservabilityPanel({
                   className="p-2 bg-gray-50 dark:bg-gray-800 rounded flex justify-between"
                 >
                   <span>{cause.description}</span>
-                  <span className="text-gray-500">
+                  <span className="text-gray-500 dark:text-gray-400">
                     {Math.round(cause.likelihood * 100)}%
                   </span>
                 </div>
               ))}
             </div>
             <div className="mt-2">
-              <div className="text-gray-500 mb-1">Suggested Actions:</div>
+              <div className="text-gray-500 dark:text-gray-400 mb-1">
+                Suggested Actions:
+              </div>
               {insights.rootCauseAnalysis.suggestedActions.map(
                 (action, idx) => (
                   <div
@@ -540,10 +549,10 @@ function ObservabilityPanel({
                 className={cn(
                   "text-xs p-2 rounded",
                   alert.probability >= 0.9
-                    ? "bg-red-100 dark:bg-red-900/30"
+                    ? "bg-error-100 dark:bg-error-900/30"
                     : alert.probability >= 0.7
-                      ? "bg-orange-50 dark:bg-orange-900/20"
-                      : "bg-yellow-50 dark:bg-yellow-900/20",
+                      ? "bg-warning-100 dark:bg-warning-900/20"
+                      : "bg-warning-50 dark:bg-warning-900/20",
                 )}
               >
                 <div className="flex justify-between">
@@ -617,7 +626,7 @@ function NLQueryInput({
           disabled={state.isLoading || !state.query.trim()}
           className={cn(
             "absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded",
-            "text-gray-400 hover:text-primary-500 disabled:opacity-50",
+            "text-gray-400 dark:text-gray-400 hover:text-primary-500 disabled:opacity-50",
           )}
         >
           {state.isLoading ? (
@@ -632,7 +641,7 @@ function NLQueryInput({
       {state.isLoading && (
         <div
           data-testid="nl-query-loading"
-          className="flex items-center gap-2 text-xs text-gray-500"
+          className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
         >
           <Loader2 size={12} className="animate-spin" />
           Analyzing...
@@ -658,7 +667,7 @@ function NLQueryInput({
             className={cn(
               "px-2 py-1 text-xs rounded-full",
               "bg-gray-100 dark:bg-gray-700",
-              "hover:bg-gray-200 dark:hover:bg-gray-600",
+              "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600",
               "text-gray-600 dark:text-gray-400",
             )}
           >
@@ -670,7 +679,7 @@ function NLQueryInput({
       {/* Query History */}
       {state.history.length > 0 && (
         <div data-testid="nl-query-history" className="space-y-1">
-          <div className="text-xs text-gray-500 flex items-center gap-1">
+          <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
             <History size={12} />
             Recent queries
           </div>
@@ -678,7 +687,7 @@ function NLQueryInput({
             <button
               key={idx}
               onClick={() => onSuggestionClick(item.query)}
-              className="block w-full text-left text-xs p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+              className="block w-full text-left text-xs p-1 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
             >
               {item.query}
             </button>
@@ -723,10 +732,11 @@ function SuggestedActionsPanel({ actions }: SuggestedActionsPanelProps) {
             data-priority={action.priority}
             className={cn(
               "text-xs p-2 rounded flex items-start gap-2",
-              action.priority === "high" && "bg-red-50 dark:bg-red-900/20",
+              action.priority === "high" && "bg-error-50 dark:bg-error-900/20",
               action.priority === "medium" &&
-                "bg-yellow-50 dark:bg-yellow-900/20",
-              action.priority === "low" && "bg-blue-50 dark:bg-blue-900/20",
+                "bg-warning-50 dark:bg-warning-900/20",
+              action.priority === "low" &&
+                "bg-primary-50 dark:bg-primary-900/20",
             )}
           >
             <div className="flex-1">
@@ -737,13 +747,13 @@ function SuggestedActionsPanel({ actions }: SuggestedActionsPanelProps) {
             </div>
             <span
               className={cn(
-                "px-1.5 py-0.5 rounded text-[10px] uppercase",
+                "px-1.5 py-0.5 rounded text-xs uppercase font-medium",
                 action.priority === "high" &&
-                  "bg-red-200 dark:bg-red-800 text-red-700 dark:text-red-300",
+                  "bg-error-100 dark:bg-error-900/50 text-error-700 dark:text-error-300",
                 action.priority === "medium" &&
-                  "bg-yellow-200 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-300",
+                  "bg-warning-100 dark:bg-warning-900/50 text-warning-700 dark:text-warning-300",
                 action.priority === "low" &&
-                  "bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-300",
+                  "bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300",
               )}
             >
               {action.priority}
@@ -875,11 +885,16 @@ export function AIInsightsTab({
       >
         <div
           data-testid="ai-insights-error"
-          className="flex-1 flex flex-col items-center justify-center text-red-500 dark:text-red-400 p-4"
+          className={cn(
+            "flex-1 flex flex-col items-center justify-center p-4",
+            STATUS_TEXT_COLORS.error,
+          )}
         >
           <AlertCircle size={32} className="mb-2 opacity-70" />
           <p className="text-sm font-medium">Error loading insights</p>
-          <p className="text-xs text-gray-500 mt-1">{error.message}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {error.message}
+          </p>
         </div>
       </div>
     );
@@ -907,7 +922,7 @@ export function AIInsightsTab({
               onClick={() => setViewMode("observability")}
               className={cn(
                 "px-2 py-1 text-xs rounded flex items-center gap-1",
-                "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
+                "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
               )}
             >
               <Activity size={12} />
@@ -919,7 +934,7 @@ export function AIInsightsTab({
             type="button"
             data-testid="refresh-insights-button"
             onClick={handleRefresh}
-            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500"
+            className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
             aria-label="Refresh insights"
           >
             <RefreshCw size={14} />
@@ -939,7 +954,7 @@ export function AIInsightsTab({
 
           <div
             data-testid="ai-insights-empty"
-            className="flex flex-col items-center justify-center text-gray-400 py-8"
+            className="flex flex-col items-center justify-center text-gray-400 dark:text-gray-400 py-8"
           >
             <Sparkles size={32} className="mb-2 opacity-50" />
             <p className="text-sm">No AI insights</p>
@@ -978,7 +993,7 @@ export function AIInsightsTab({
               "px-2 py-1 text-xs rounded flex items-center gap-1",
               viewMode === "observability"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
+                : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
             )}
           >
             <Activity size={12} />
@@ -997,7 +1012,7 @@ export function AIInsightsTab({
                 "px-2 py-1 text-xs rounded",
                 filter === "all"
                   ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                  : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
+                  : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
               )}
             >
               All
@@ -1010,7 +1025,7 @@ export function AIInsightsTab({
                 "px-2 py-1 text-xs rounded",
                 filter === "anomaly"
                   ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                  : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
+                  : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
               )}
             >
               Anomaly
@@ -1023,7 +1038,7 @@ export function AIInsightsTab({
                 "px-2 py-1 text-xs rounded",
                 filter === "suggestion"
                   ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                  : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
+                  : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
               )}
             >
               Suggestion
@@ -1038,14 +1053,14 @@ export function AIInsightsTab({
           type="button"
           data-testid="refresh-insights-button"
           onClick={handleRefresh}
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500"
+          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
           aria-label="Refresh insights"
         >
           <RefreshCw size={14} />
         </button>
 
         {/* Insight count */}
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-gray-500 dark:text-gray-400">
           {filteredInsights.length} insight
           {filteredInsights.length !== 1 ? "s" : ""}
         </span>

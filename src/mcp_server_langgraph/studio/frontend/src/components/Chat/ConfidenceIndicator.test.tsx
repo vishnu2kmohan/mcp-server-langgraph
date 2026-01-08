@@ -37,21 +37,21 @@ describe("ConfidenceIndicator", () => {
       render(<ConfidenceIndicator score={0.92} />);
 
       const indicator = screen.getByTestId("confidence-indicator");
-      expect(indicator).toHaveClass("text-green-600");
+      expect(indicator).toHaveClass("text-success-600");
     });
 
     it("should show yellow indicator for medium confidence (0.6-0.79)", () => {
       render(<ConfidenceIndicator score={0.72} />);
 
       const indicator = screen.getByTestId("confidence-indicator");
-      expect(indicator).toHaveClass("text-yellow-600");
+      expect(indicator).toHaveClass("text-warning-600");
     });
 
     it("should show red indicator for low confidence (< 0.6)", () => {
       render(<ConfidenceIndicator score={0.45} />);
 
       const indicator = screen.getByTestId("confidence-indicator");
-      expect(indicator).toHaveClass("text-red-600");
+      expect(indicator).toHaveClass("text-error-600");
     });
   });
 

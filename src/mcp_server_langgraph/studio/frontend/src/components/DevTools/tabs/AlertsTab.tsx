@@ -7,6 +7,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import { cn } from "../../../utils/cn";
+import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 
 // =============================================================================
 // Types
@@ -28,8 +29,21 @@ export interface Alert {
   labels?: Record<string, string>;
 }
 
+export type ConnectionStatus =
+  | "connected"
+  | "connecting"
+  | "reconnecting"
+  | "disconnected"
+  | "error";
+
 export interface AlertsTabProps {
   alerts?: Alert[];
+  /** External alerts from WebSocket for real-time updates */
+  externalAlerts?: Alert[];
+  /** Callback to clear external (WebSocket) alerts */
+  onClearExternal?: () => void;
+  /** WebSocket connection status for indicator display */
+  connectionStatus?: ConnectionStatus;
   isLoading?: boolean;
   error?: string;
   onSilence?: (alertId: string) => void;
@@ -65,9 +79,9 @@ interface StateBadgeProps {
 
 function StateBadge({ state }: StateBadgeProps): React.ReactElement {
   const config = {
-    firing: { color: "bg-red-500 text-white", icon: "\u{1F534}" }, // 🔴
-    pending: { color: "bg-yellow-500 text-black", icon: "\u{1F7E1}" }, // 🟡
-    resolved: { color: "bg-green-500 text-white", icon: "\u{1F7E2}" }, // 🟢
+    firing: { color: "bg-error-500 text-white", icon: "\u{1F534}" }, // 🔴
+    pending: { color: "bg-warning-500 text-black", icon: "\u{1F7E1}" }, // 🟡
+    resolved: { color: "bg-success-500 text-white", icon: "\u{1F7E2}" }, // 🟢
     silenced: { color: "bg-gray-500 text-white", icon: "\u{26D4}" }, // ⛔
   }[state];
 
@@ -89,10 +103,11 @@ interface SeverityBadgeProps {
 
 function SeverityBadge({ severity }: SeverityBadgeProps): React.ReactElement {
   const config = {
-    critical: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    critical:
+      "bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-200",
     warning:
-      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-    info: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      "bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-200",
+    info: "bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200",
   }[severity];
 
   return (
@@ -126,7 +141,7 @@ function FilterDropdown({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center gap-1"
+        className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 flex items-center gap-1"
         aria-label={label}
       >
         {label}: {value || "All"}
@@ -158,8 +173,8 @@ function FilterDropdown({
                 setIsOpen(false);
               }}
               className={cn(
-                "w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700",
-                !value && "bg-blue-50 dark:bg-blue-900",
+                "w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                !value && "bg-primary-50 dark:bg-primary-900",
               )}
               aria-label="All"
             >
@@ -174,8 +189,8 @@ function FilterDropdown({
                   setIsOpen(false);
                 }}
                 className={cn(
-                  "w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700",
-                  value === option && "bg-blue-50 dark:bg-blue-900",
+                  "w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                  value === option && "bg-primary-50 dark:bg-primary-900",
                 )}
                 aria-label={option}
               >
@@ -214,10 +229,10 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
       className={cn(
         "border rounded-lg p-4",
         alert.state === "firing"
-          ? "border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950"
+          ? "border-error-300 bg-error-50 dark:border-error-800 dark:bg-error-950"
           : alert.state === "pending"
-            ? "border-yellow-300 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950"
-            : "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800",
+            ? "border-warning-300 bg-warning-50 dark:border-warning-800 dark:bg-warning-950"
+            : "border-gray-200 dark:border-gray-700 bg-white dark:border-gray-700 dark:bg-gray-800",
       )}
     >
       {/* Header */}
@@ -231,7 +246,7 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
           <span className="text-sm text-gray-500 dark:text-gray-400">
             {alert.service}
           </span>
-          <span className="text-sm text-gray-400 dark:text-gray-500">
+          <span className="text-sm text-gray-400 dark:text-gray-400">
             {formatRelativeTime(alert.startedAt)}
           </span>
         </div>
@@ -247,7 +262,7 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
         {alert.generatorUrl && (
           <button
             onClick={handleOpenGrafana}
-            className="px-3 py-1 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors flex items-center gap-1"
+            className="px-3 py-1 text-sm bg-grafana-500 text-white rounded hover:bg-grafana-600 transition-colors flex items-center gap-1"
             aria-label="View in Grafana"
           >
             <svg
@@ -277,7 +292,7 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
         )}
         <button
           onClick={() => setShowDetails(!showDetails)}
-          className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
+          className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
           aria-label="Details"
         >
           Details
@@ -352,6 +367,9 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
 
 export function AlertsTab({
   alerts = [],
+  externalAlerts,
+  onClearExternal: _onClearExternal,
+  connectionStatus,
   isLoading = false,
   error,
   onSilence,
@@ -364,15 +382,42 @@ export function AlertsTab({
   const [severityFilter, setSeverityFilter] = useState("");
   const [serviceFilter, setServiceFilter] = useState("");
 
-  // Get unique services for filter dropdown
+  // Merge alerts from REST API and WebSocket, deduplicating by ID
+  // External (WebSocket) alerts take precedence for duplicates (newer state)
+  const mergedAlerts = useMemo(() => {
+    const allAlerts = [...alerts];
+    const existingIds = new Set(allAlerts.map((a) => a.id));
+
+    if (externalAlerts) {
+      for (const external of externalAlerts) {
+        if (!existingIds.has(external.id)) {
+          allAlerts.push(external);
+        } else {
+          // Update existing with newer data from WebSocket
+          const idx = allAlerts.findIndex((a) => a.id === external.id);
+          if (idx >= 0) {
+            allAlerts[idx] = external;
+          }
+        }
+      }
+    }
+
+    // Sort by startedAt descending (newest first)
+    return allAlerts.sort(
+      (a, b) =>
+        new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime(),
+    );
+  }, [alerts, externalAlerts]);
+
+  // Get unique services for filter dropdown (from merged alerts)
   const services = useMemo(() => {
-    const uniqueServices = new Set(alerts.map((a) => a.service));
+    const uniqueServices = new Set(mergedAlerts.map((a) => a.service));
     return Array.from(uniqueServices).sort();
-  }, [alerts]);
+  }, [mergedAlerts]);
 
   // Filter alerts
   const filteredAlerts = useMemo(() => {
-    let result = alerts;
+    let result = mergedAlerts;
 
     // Filter by timeline time window
     if (timeline?.timeWindow) {
@@ -402,7 +447,7 @@ export function AlertsTab({
 
     return result;
   }, [
-    alerts,
+    mergedAlerts,
     timeline?.timeWindow,
     stateFilter,
     severityFilter,
@@ -448,7 +493,7 @@ export function AlertsTab({
           className,
         )}
       >
-        <div className="text-red-500 mb-4">
+        <div className={cn(STATUS_TEXT_COLORS.error, "mb-4")}>
           <svg
             className="w-12 h-12 mx-auto"
             fill="none"
@@ -463,7 +508,7 @@ export function AlertsTab({
             />
           </svg>
         </div>
-        <p className="text-red-600 dark:text-red-400">{error}</p>
+        <p className={STATUS_TEXT_COLORS.error}>{error}</p>
       </div>
     );
   }
@@ -475,6 +520,23 @@ export function AlertsTab({
     >
       {/* Header */}
       <div className="flex items-center gap-2 p-3 border-b border-gray-200 dark:border-gray-700">
+        {/* Connection status indicator */}
+        {connectionStatus && (
+          <span
+            className={cn(
+              "w-2 h-2 rounded-full",
+              connectionStatus === "connected" && "bg-success-500",
+              connectionStatus === "connecting" &&
+                "bg-warning-500 animate-pulse",
+              connectionStatus === "reconnecting" &&
+                "bg-warning-500 animate-pulse",
+              connectionStatus === "disconnected" &&
+                "bg-gray-400 dark:bg-gray-500",
+              connectionStatus === "error" && "bg-error-500",
+            )}
+            title={`WebSocket: ${connectionStatus}`}
+          />
+        )}
         <FilterDropdown
           label="State"
           options={["firing", "pending", "resolved", "silenced"]}
@@ -502,7 +564,7 @@ export function AlertsTab({
               setSeverityFilter("");
               setServiceFilter("");
             }}
-            className="px-2 py-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            className="px-2 py-1 text-sm text-primary-600 dark:text-primary-400 hover:underline"
           >
             Clear filters
           </button>
@@ -514,7 +576,7 @@ export function AlertsTab({
         {filteredAlerts.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <svg
-              className="w-12 h-12 text-gray-400 mb-4"
+              className="w-12 h-12 text-gray-400 dark:text-gray-400 mb-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -527,7 +589,7 @@ export function AlertsTab({
               />
             </svg>
             <p className="text-gray-500 dark:text-gray-400">No alerts</p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+            <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">
               {stateFilter || severityFilter || serviceFilter
                 ? "No alerts match the current filters"
                 : "All systems are operating normally"}

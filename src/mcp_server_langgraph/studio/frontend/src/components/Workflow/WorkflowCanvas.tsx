@@ -96,7 +96,7 @@ export function WorkflowCanvas({
       // Apply highlight styling when node matches highlightedNodeId
       className:
         highlightedNodeId === node.id
-          ? "ring-2 ring-blue-500 ring-offset-2"
+          ? "ring-2 ring-primary-500 ring-offset-2"
           : undefined,
       data: {
         ...node.data,

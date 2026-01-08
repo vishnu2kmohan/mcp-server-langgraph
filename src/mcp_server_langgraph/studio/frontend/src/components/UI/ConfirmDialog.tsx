@@ -64,8 +64,8 @@ export function ConfirmDialog({
             disabled={isLoading}
             className={`px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 transition-colors ${
               isDestructive
-                ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
-                : "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
+                ? "bg-error-600 hover:bg-error-700 focus:ring-error-500"
+                : "bg-primary-600 hover:bg-primary-700 focus:ring-primary-500"
             }`}
           >
             {isLoading ? (
@@ -102,8 +102,8 @@ export function ConfirmDialog({
       <div className="flex gap-4">
         {isDestructive && (
           <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            <div className="w-10 h-10 bg-error-100 dark:bg-error-900/30 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-error-600 dark:text-error-400" />
             </div>
           </div>
         )}

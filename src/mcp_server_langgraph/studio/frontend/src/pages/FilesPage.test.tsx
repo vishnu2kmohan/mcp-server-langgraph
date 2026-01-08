@@ -495,7 +495,7 @@ describe("FilesPage", () => {
 
       // Find the confirm delete button in the modal (not the aria-label Delete button)
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector("button.bg-red-500");
+      const confirmButton = modal.querySelector("button.bg-error-500");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
@@ -519,7 +519,7 @@ describe("FilesPage", () => {
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector("button.bg-red-500");
+      const confirmButton = modal.querySelector("button.bg-error-500");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
@@ -544,7 +544,7 @@ describe("FilesPage", () => {
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector("button.bg-red-500");
+      const confirmButton = modal.querySelector("button.bg-error-500");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
@@ -570,7 +570,7 @@ describe("FilesPage", () => {
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector("button.bg-red-500");
+      const confirmButton = modal.querySelector("button.bg-error-500");
       fireEvent.click(confirmButton!);
 
       expect(screen.getByText("Deleting...")).toBeInTheDocument();
@@ -586,7 +586,7 @@ describe("FilesPage", () => {
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector("button.bg-red-500");
+      const confirmButton = modal.querySelector("button.bg-error-500");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
@@ -608,7 +608,7 @@ describe("FilesPage", () => {
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector("button.bg-red-500");
+      const confirmButton = modal.querySelector("button.bg-error-500");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {

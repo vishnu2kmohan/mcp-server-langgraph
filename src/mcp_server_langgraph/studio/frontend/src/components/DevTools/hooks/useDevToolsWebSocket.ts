@@ -24,12 +24,14 @@ import {
   isConsoleLogEntry,
   isNetworkRequestEntry,
   isNetworkUpdateEntry,
+  isTraceStepEntry,
 } from "../../../types/websocket-protocols";
 import type {
   ConsoleLogEntry,
   NetworkRequestEntry,
   NetworkUpdateEntry,
   DevToolsMessage,
+  TraceStepPayload,
 } from "../../../types/websocket-protocols";
 
 // =============================================================================
@@ -62,10 +64,14 @@ export interface UseDevToolsWebSocketReturn {
   consoleEntries: ConsoleEntry[];
   /** Network entries received from WebSocket */
   networkEntries: NetworkEntry[];
+  /** Agent trace steps received from WebSocket */
+  traceSteps: TraceStepPayload[];
   /** Clear all console entries */
   clearConsoleEntries: () => void;
   /** Clear all network entries */
   clearNetworkEntries: () => void;
+  /** Clear all trace steps */
+  clearTraceSteps: () => void;
   /** Manually reconnect */
   reconnect: () => void;
   /** Number of reconnection attempts (for dashboard visibility) */
@@ -127,6 +133,7 @@ export function useDevToolsWebSocket(
 
   const [consoleEntries, setConsoleEntries] = useState<ConsoleEntry[]>([]);
   const [networkEntries, setNetworkEntries] = useState<NetworkEntry[]>([]);
+  const [traceSteps, setTraceSteps] = useState<TraceStepPayload[]>([]);
   const [connectionStatus, setConnectionStatus] =
     useState<DevToolsWebSocketStatus>("disconnected");
 
@@ -148,10 +155,15 @@ export function useDevToolsWebSocket(
 
       const sessionId = entryData.sessionId as string | undefined;
       const workflowId = entryData.workflowId as string | undefined;
+      const sessionIdUnderscore = entryData.session_id as string | undefined;
 
       // Include if no session/workflow (global) or matches context
       if (!sessionId && !workflowId) return true;
-      return sessionId === ctxId || workflowId === ctxId;
+      return (
+        sessionId === ctxId ||
+        workflowId === ctxId ||
+        sessionIdUnderscore === ctxId
+      );
     },
     [],
   );
@@ -202,6 +214,11 @@ export function useDevToolsWebSocket(
               : entry,
           ),
         );
+      } else if (isTraceStepEntry(data)) {
+        const step = data.payload;
+        if (shouldIncludeEntry(step as unknown as Record<string, unknown>)) {
+          setTraceSteps((prev) => [...prev, step]);
+        }
       }
     },
     [maxConsoleEntries, maxNetworkEntries, shouldIncludeEntry],
@@ -288,12 +305,21 @@ export function useDevToolsWebSocket(
     setNetworkEntries([]);
   }, []);
 
+  /**
+   * Clear trace steps.
+   */
+  const clearTraceSteps = useCallback(() => {
+    setTraceSteps([]);
+  }, []);
+
   return {
     status: connectionStatus,
     consoleEntries,
     networkEntries,
+    traceSteps,
     clearConsoleEntries,
     clearNetworkEntries,
+    clearTraceSteps,
     reconnect: wsReconnect,
     reconnectAttempts,
   };

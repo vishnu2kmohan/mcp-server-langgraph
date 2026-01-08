@@ -295,12 +295,12 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
       // Build hover tooltip content
       const hoverContent = (
         <div className="space-y-1.5 min-w-48 max-w-64">
-          <div className="flex items-center gap-1.5 text-xs text-gray-400">
+          <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-400">
             <Clock size={12} />
             <span>Created {formatRelativeTime(createdAt)}</span>
           </div>
           {metadata?.messageCount !== undefined && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+            <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-400">
               <MessageSquare size={12} />
               <span>
                 {metadata.messageCount} message
@@ -324,7 +324,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
             "transition-colors",
             session.id === currentSessionId
               ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700",
+              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
           )}
         >
           {enableEdit ? (
@@ -407,7 +407,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
           <div className="relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
               aria-hidden="true"
             />
             <input
@@ -443,7 +443,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
                 >
                   <h3
                     id="today-sessions-heading"
-                    className="text-xs text-gray-400 uppercase tracking-wider mb-2"
+                    className="text-xs text-gray-400 dark:text-gray-400 uppercase tracking-wider mb-2"
                   >
                     Today
                   </h3>
@@ -459,7 +459,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
                 >
                   <h3
                     id="yesterday-sessions-heading"
-                    className="text-xs text-gray-400 uppercase tracking-wider mb-2"
+                    className="text-xs text-gray-400 dark:text-gray-400 uppercase tracking-wider mb-2"
                   >
                     Yesterday
                   </h3>
@@ -475,7 +475,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
                 >
                   <h3
                     id="older-sessions-heading"
-                    className="text-xs text-gray-400 uppercase tracking-wider mb-2"
+                    className="text-xs text-gray-400 dark:text-gray-400 uppercase tracking-wider mb-2"
                   >
                     Older
                   </h3>

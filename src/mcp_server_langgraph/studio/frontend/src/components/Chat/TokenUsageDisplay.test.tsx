@@ -121,7 +121,7 @@ describe("TokenUsageDisplay", () => {
       render(<TokenUsageDisplay {...defaultProps} compact />);
 
       const container = screen.getByTestId("token-usage-container");
-      expect(container).toHaveClass("text-[10px]");
+      expect(container).toHaveClass("text-xs");
     });
   });
 

@@ -93,12 +93,12 @@ export function SharedWorkflowsList({
   const getPermissionBadgeStyle = (permission: string) => {
     switch (permission) {
       case "editor":
-        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+        return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
       case "executor":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
       case "viewer":
       default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
+        return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
     }
   };
 
@@ -175,7 +175,7 @@ export function SharedWorkflowsList({
       <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Share2 className="text-blue-500" size={24} />
+            <Share2 className="text-primary-500" size={24} />
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Shared With Me
@@ -188,7 +188,7 @@ export function SharedWorkflowsList({
           <button
             onClick={fetchSharedWorkflows}
             aria-label="Refresh"
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
           >
             <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
             Refresh
@@ -203,7 +203,7 @@ export function SharedWorkflowsList({
             {/* Search Input */}
             <div className="relative flex-1 min-w-[200px]">
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
                 size={16}
               />
               <input
@@ -211,7 +211,7 @@ export function SharedWorkflowsList({
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Search workflows..."
-                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
@@ -248,7 +248,7 @@ export function SharedWorkflowsList({
               <button
                 onClick={clearFilters}
                 aria-label="Clear filters"
-                className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
+                className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded-lg"
               >
                 <X size={14} />
                 Clear filters
@@ -266,7 +266,7 @@ export function SharedWorkflowsList({
             <Loader2
               data-testid="loading-spinner"
               size={32}
-              className="animate-spin text-blue-500"
+              className="animate-spin text-primary-500"
             />
           </div>
         )}
@@ -274,12 +274,12 @@ export function SharedWorkflowsList({
         {/* Error State */}
         {!isLoading && error && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <AlertCircle size={48} className="text-red-500 mb-4" />
-            <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+            <AlertCircle size={48} className="text-error-500 mb-4" />
+            <p className="text-error-600 dark:text-error-400 mb-4">{error}</p>
             <button
               onClick={fetchSharedWorkflows}
               aria-label="Retry"
-              className="px-4 py-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200"
+              className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
             >
               Retry
             </button>
@@ -289,7 +289,10 @@ export function SharedWorkflowsList({
         {/* Empty State */}
         {!isLoading && !error && workflows.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Inbox size={48} className="text-gray-400 mb-4" />
+            <Inbox
+              size={48}
+              className="text-gray-400 dark:text-gray-400 mb-4"
+            />
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
               No workflows shared with you
             </h3>
@@ -305,7 +308,10 @@ export function SharedWorkflowsList({
           workflows.length > 0 &&
           filteredWorkflows.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Search size={48} className="text-gray-400 mb-4" />
+              <Search
+                size={48}
+                className="text-gray-400 dark:text-gray-400 mb-4"
+              />
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                 No workflows match your filters
               </h3>
@@ -314,7 +320,7 @@ export function SharedWorkflowsList({
               </p>
               <button
                 onClick={clearFilters}
-                className="px-4 py-2 text-sm bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-lg hover:bg-blue-200"
+                className="px-4 py-2 text-sm bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 rounded-lg hover:bg-primary-200"
               >
                 Clear filters
               </button>
@@ -329,7 +335,7 @@ export function SharedWorkflowsList({
                 key={workflow.id}
                 className={`flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border ${
                   isViewOnly(workflow.permission)
-                    ? "border-amber-200 dark:border-amber-800"
+                    ? "border-warning-200 dark:border-warning-800"
                     : "border-gray-200 dark:border-gray-700"
                 }`}
               >
@@ -339,7 +345,7 @@ export function SharedWorkflowsList({
                     {isViewOnly(workflow.permission) && (
                       <Lock
                         size={14}
-                        className="text-amber-600 dark:text-amber-400 flex-shrink-0"
+                        className="text-warning-600 dark:text-warning-400 flex-shrink-0"
                         data-testid={`lock-icon-${workflow.id}`}
                       />
                     )}
@@ -348,7 +354,7 @@ export function SharedWorkflowsList({
                     </h3>
                     {/* Show "View Only" badge for viewer permission, otherwise show permission level */}
                     {isViewOnly(workflow.permission) ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 flex items-center gap-1">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400 flex items-center gap-1">
                         View Only
                       </span>
                     ) : (
@@ -363,7 +369,7 @@ export function SharedWorkflowsList({
                   <p className="text-sm text-gray-600 dark:text-gray-400 truncate mb-1">
                     {workflow.description}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     Shared by {workflow.shared_by} on{" "}
                     {formatDate(workflow.shared_at)}
                   </p>
@@ -373,7 +379,7 @@ export function SharedWorkflowsList({
                   <button
                     onClick={() => onView?.(workflow.id)}
                     aria-label="View"
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                   >
                     <Eye size={14} />
                     View
@@ -392,8 +398,8 @@ export function SharedWorkflowsList({
                     }
                     className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg ${
                       canEdit(workflow.permission)
-                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50"
-                        : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed opacity-60"
+                        ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 hover:bg-primary-200 dark:hover:bg-primary-900/50"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-400 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed opacity-60"
                     }`}
                   >
                     <Edit3 size={14} />
@@ -403,7 +409,7 @@ export function SharedWorkflowsList({
                     <button
                       onClick={() => onExecute?.(workflow.id)}
                       aria-label="Execute"
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400 rounded-lg hover:bg-success-200 dark:hover:bg-success-900/50"
                     >
                       <Play size={14} />
                       Execute

@@ -70,8 +70,8 @@ function getSuggestionIcon(type: SuggestionType) {
 }
 
 function getConfidenceColor(confidence: number): string {
-  if (confidence >= 0.9) return "text-green-600 dark:text-green-400";
-  if (confidence >= 0.7) return "text-yellow-600 dark:text-yellow-400";
+  if (confidence >= 0.9) return "text-success-600 dark:text-success-400";
+  if (confidence >= 0.7) return "text-warning-600 dark:text-warning-400";
   return "text-gray-500 dark:text-gray-400";
 }
 
@@ -136,8 +136,8 @@ export function SuggestionsPanel({
           aria-label="Refresh suggestions"
           className={cn(
             "p-1.5 rounded",
-            "text-gray-400 hover:text-gray-600 dark:hover:text-gray-200",
-            "hover:bg-gray-100 dark:hover:bg-gray-800",
+            "text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-200",
+            "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
             "transition-colors",
             "disabled:opacity-50 disabled:cursor-not-allowed",
           )}
@@ -234,7 +234,7 @@ export function SuggestionsPanel({
                           aria-label="Accept suggestion"
                           className={cn(
                             "p-1 rounded",
-                            "text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30",
+                            "text-success-600 hover:bg-success-100 dark:hover:bg-success-900/30",
                             "transition-colors",
                           )}
                         >
@@ -246,7 +246,7 @@ export function SuggestionsPanel({
                           aria-label="Dismiss suggestion"
                           className={cn(
                             "p-1 rounded",
-                            "text-gray-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30",
+                            "text-gray-400 dark:text-gray-400 hover:text-error-500 hover:bg-error-100 dark:hover:bg-error-900/30",
                             "transition-colors",
                           )}
                         >

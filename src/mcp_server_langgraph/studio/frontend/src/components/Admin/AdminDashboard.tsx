@@ -309,7 +309,7 @@ export function AdminDashboard({
         data-testid="dashboard-loading"
         className="flex items-center justify-center h-full"
       >
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
   }
@@ -317,11 +317,11 @@ export function AdminDashboard({
   const getHealthColor = (status: SystemHealth["status"]) => {
     switch (status) {
       case "healthy":
-        return "bg-green-500";
+        return "bg-success-500";
       case "degraded":
-        return "bg-yellow-500";
+        return "bg-warning-500";
       case "unhealthy":
-        return "bg-red-500";
+        return "bg-error-500";
     }
   };
 
@@ -359,7 +359,7 @@ export function AdminDashboard({
         </h1>
         <button
           onClick={onRefresh}
-          className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
           aria-label="Refresh dashboard"
         >
           <RefreshCw className="w-4 h-4" />
@@ -380,7 +380,7 @@ export function AdminDashboard({
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === tab.id
-                ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                ? "border-primary-600 text-primary-600 dark:text-primary-400"
                 : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
             }`}
           >
@@ -390,7 +390,7 @@ export function AdminDashboard({
             {tab.badge !== undefined && tab.badge > 0 && (
               <span
                 data-testid="alert-badge"
-                className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-white bg-red-500 rounded-full"
+                className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-white bg-error-500 rounded-full"
               >
                 {tab.badge}
               </span>
@@ -571,9 +571,9 @@ interface MetricCardProps {
 
 function MetricCard({ label, value }: MetricCardProps) {
   const getColor = (value: number) => {
-    if (value >= 80) return "text-green-600";
-    if (value >= 60) return "text-yellow-600";
-    return "text-red-600";
+    if (value >= 80) return "text-success-600";
+    if (value >= 60) return "text-warning-600";
+    return "text-error-600";
   };
 
   return (

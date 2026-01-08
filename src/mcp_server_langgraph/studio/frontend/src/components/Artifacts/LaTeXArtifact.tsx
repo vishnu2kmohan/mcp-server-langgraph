@@ -215,7 +215,7 @@ export function LaTeXArtifact({
           <div className="flex items-center gap-1">
             <button
               onClick={handleZoomOut}
-              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded transition-colors"
               aria-label="Zoom out"
             >
               <ZoomOut size={14} />
@@ -225,14 +225,14 @@ export function LaTeXArtifact({
             </span>
             <button
               onClick={handleZoomIn}
-              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded transition-colors"
               aria-label="Zoom in"
             >
               <ZoomIn size={14} />
             </button>
             <button
               onClick={handleResetZoom}
-              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded transition-colors"
               aria-label="Reset zoom"
             >
               <RotateCcw size={14} />
@@ -242,7 +242,7 @@ export function LaTeXArtifact({
           {/* Fullscreen toggle */}
           <button
             onClick={handleToggleFullscreen}
-            className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+            className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded transition-colors"
             aria-label="Toggle fullscreen"
           >
             {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
@@ -251,12 +251,12 @@ export function LaTeXArtifact({
           {/* Copy button */}
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+            className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded transition-colors"
             aria-label={copied ? "Copied" : "Copy LaTeX"}
           >
             {copied ? (
               <>
-                <Check size={14} className="text-green-500" />
+                <Check size={14} className="text-success-500" />
                 <span>Copied!</span>
               </>
             ) : (
@@ -276,9 +276,9 @@ export function LaTeXArtifact({
         {error ? (
           <div className="flex flex-col gap-3">
             {/* Error message */}
-            <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
-              <AlertTriangle size={16} className="text-red-500" />
-              <span className="text-sm text-red-700 dark:text-red-400">
+            <div className="flex items-center gap-2 p-3 bg-error-50 dark:bg-error-900/20 rounded border border-error-200 dark:border-error-800">
+              <AlertTriangle size={16} className="text-error-500" />
+              <span className="text-sm text-error-700 dark:text-error-400">
                 Error: {error}
               </span>
             </div>

@@ -120,7 +120,7 @@ export function InteractiveForm({
       "w-full px-3 py-2 rounded-lg",
       "bg-gray-50 dark:bg-gray-900",
       "border",
-      error ? "border-red-500" : "border-gray-200 dark:border-gray-700",
+      error ? "border-error-500" : "border-gray-200 dark:border-gray-700",
       "text-gray-900 dark:text-gray-100",
       "placeholder-gray-500 dark:placeholder-gray-400",
       "focus:outline-none focus:ring-2 focus:ring-primary-500",
@@ -233,7 +233,7 @@ export function InteractiveForm({
               )}
             >
               {field.label}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
+              {field.required && <span className="text-error-500 ml-1">*</span>}
             </label>
 
             {renderField(field)}
@@ -241,7 +241,7 @@ export function InteractiveForm({
             {errors[field.id] && (
               <span
                 data-testid={`error-${field.id}`}
-                className="text-xs text-red-500"
+                className="text-xs text-error-500"
               >
                 {errors[field.id]}
               </span>

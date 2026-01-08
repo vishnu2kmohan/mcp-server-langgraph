@@ -143,12 +143,12 @@ export function ReasoningEffortSelector({
           Thinking
         </span>
         {modelName && (
-          <span className="text-xs text-gray-400 dark:text-gray-500">
+          <span className="text-xs text-gray-400 dark:text-gray-400">
             ({modelName})
           </span>
         )}
         {!modelSupportsThinking && (
-          <span className="text-xs text-amber-600 dark:text-amber-400">
+          <span className="text-xs text-warning-600 dark:text-warning-400">
             Not supported
           </span>
         )}
@@ -176,7 +176,7 @@ export function ReasoningEffortSelector({
                 ${
                   isSelected
                     ? "bg-violet-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                 }
                 ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"}
               `}

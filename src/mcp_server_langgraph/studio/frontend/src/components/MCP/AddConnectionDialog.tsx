@@ -215,7 +215,7 @@ export function AddConnectionDialog({
           </h2>
           <button
             onClick={handleClose}
-            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
             aria-label="Close"
           >
             <X size={20} />
@@ -240,14 +240,14 @@ export function AddConnectionDialog({
               placeholder="e.g., Zapier MCP"
               className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
                 errors.name
-                  ? "border-red-500"
+                  ? "border-error-500"
                   : "border-gray-300 dark:border-gray-600"
               }`}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? "name-error" : undefined}
             />
             {errors.name && (
-              <p id="name-error" className="mt-1 text-sm text-red-600">
+              <p id="name-error" className="mt-1 text-sm text-error-600">
                 {errors.name}
               </p>
             )}
@@ -287,14 +287,14 @@ export function AddConnectionDialog({
               placeholder="https://mcp.example.com"
               className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
                 errors.url
-                  ? "border-red-500"
+                  ? "border-error-500"
                   : "border-gray-300 dark:border-gray-600"
               }`}
               aria-invalid={!!errors.url}
               aria-describedby={errors.url ? "url-error" : undefined}
             />
             {errors.url && (
-              <p id="url-error" className="mt-1 text-sm text-red-600">
+              <p id="url-error" className="mt-1 text-sm text-error-600">
                 {errors.url}
               </p>
             )}
@@ -339,7 +339,7 @@ export function AddConnectionDialog({
                   placeholder="e.g., python or npx"
                   className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
                     errors.command
-                      ? "border-red-500"
+                      ? "border-error-500"
                       : "border-gray-300 dark:border-gray-600"
                   }`}
                   aria-invalid={!!errors.command}
@@ -348,7 +348,7 @@ export function AddConnectionDialog({
                   }
                 />
                 {errors.command && (
-                  <p id="command-error" className="mt-1 text-sm text-red-600">
+                  <p id="command-error" className="mt-1 text-sm text-error-600">
                     {errors.command}
                   </p>
                 )}
@@ -369,7 +369,7 @@ export function AddConnectionDialog({
                   placeholder="e.g., -m mcp_server --port 3000"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Space-separated arguments
                 </p>
               </div>
@@ -451,7 +451,7 @@ export function AddConnectionDialog({
                   placeholder="e.g., read write"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Space-separated scopes
                 </p>
               </div>
@@ -463,14 +463,14 @@ export function AddConnectionDialog({
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>

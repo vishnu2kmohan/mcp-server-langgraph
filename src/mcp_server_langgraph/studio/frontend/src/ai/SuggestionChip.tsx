@@ -82,8 +82,8 @@ function getIcon(icon: ChipIcon, size: number) {
 // =============================================================================
 
 function getConfidenceClass(confidence: number): string {
-  if (confidence >= 0.9) return "text-green-600 dark:text-green-400";
-  if (confidence >= 0.7) return "text-yellow-600 dark:text-yellow-400";
+  if (confidence >= 0.9) return "text-success-600 dark:text-success-400";
+  if (confidence >= 0.7) return "text-warning-600 dark:text-warning-400";
   return "text-gray-500 dark:text-gray-400";
 }
 
@@ -117,7 +117,7 @@ function getVariantClasses(variant: ChipVariant): string {
       return cn(
         "bg-gray-100 dark:bg-gray-800",
         "text-gray-700 dark:text-gray-300",
-        "hover:bg-gray-200 dark:hover:bg-gray-700",
+        "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
       );
     default:
       return "";
@@ -204,7 +204,7 @@ export function SuggestionChip({
         // Variant styles
         variant === "default" && "bg-primary",
         variant === "outline" && "border bg-transparent",
-        variant === "subtle" && "bg-gray-100",
+        variant === "subtle" && "bg-gray-100 dark:bg-gray-800",
         getVariantClasses(variant),
         // Disabled styles
         isDisabled && "opacity-50 cursor-not-allowed",

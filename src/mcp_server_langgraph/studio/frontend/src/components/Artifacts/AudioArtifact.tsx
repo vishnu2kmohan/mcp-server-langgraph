@@ -23,10 +23,10 @@ export function AudioArtifact({
   if (!data || data.trim() === "") {
     return (
       <div
-        className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+        className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg"
         role="alert"
       >
-        <p className="text-sm text-red-600 dark:text-red-400">
+        <p className="text-sm text-error-600 dark:text-error-400">
           No audio source provided
         </p>
       </div>

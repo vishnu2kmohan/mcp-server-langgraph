@@ -44,38 +44,38 @@ function getStatusStyles(status: BudgetStatusType): {
   switch (status) {
     case "ok":
       return {
-        bgColor: "bg-green-50 dark:bg-green-900/20",
-        borderColor: "border-green-200 dark:border-green-800",
-        textColor: "text-green-700 dark:text-green-400",
-        progressColor: "bg-green-500",
+        bgColor: "bg-success-50 dark:bg-success-900/20",
+        borderColor: "border-success-200 dark:border-success-800",
+        textColor: "text-success-700 dark:text-success-400",
+        progressColor: "bg-success-500",
       };
     case "warning":
       return {
-        bgColor: "bg-amber-50 dark:bg-amber-900/20",
-        borderColor: "border-amber-200 dark:border-amber-800",
-        textColor: "text-amber-700 dark:text-amber-400",
-        progressColor: "bg-amber-500",
+        bgColor: "bg-warning-50 dark:bg-warning-900/20",
+        borderColor: "border-warning-200 dark:border-warning-800",
+        textColor: "text-warning-700 dark:text-warning-400",
+        progressColor: "bg-warning-500",
       };
     case "critical":
       return {
-        bgColor: "bg-orange-50 dark:bg-orange-900/20",
-        borderColor: "border-orange-200 dark:border-orange-800",
-        textColor: "text-orange-700 dark:text-orange-400",
-        progressColor: "bg-orange-500",
+        bgColor: "bg-grafana-50 dark:bg-grafana-900/20",
+        borderColor: "border-grafana-200 dark:border-grafana-800",
+        textColor: "text-grafana-700 dark:text-grafana-400",
+        progressColor: "bg-grafana-500",
       };
     case "exceeded":
       return {
-        bgColor: "bg-red-50 dark:bg-red-900/20",
-        borderColor: "border-red-200 dark:border-red-800",
-        textColor: "text-red-700 dark:text-red-400",
-        progressColor: "bg-red-500",
+        bgColor: "bg-error-50 dark:bg-error-900/20",
+        borderColor: "border-error-200 dark:border-error-800",
+        textColor: "text-error-700 dark:text-error-400",
+        progressColor: "bg-error-500",
       };
   }
 }
 
 /** Get icon for entity type */
 function EntityIcon({ entityType }: { entityType: EntityType }) {
-  const className = "w-5 h-5 text-gray-400";
+  const className = "w-5 h-5 text-gray-400 dark:text-gray-400";
 
   switch (entityType) {
     case "organization":
@@ -206,7 +206,7 @@ export function BudgetStatusCard({
           {parseFloat(status.remaining) >= 0 ? (
             <>Remaining: {formatCurrency(status.remaining)}</>
           ) : (
-            <span className="text-red-600 dark:text-red-400">
+            <span className="text-error-600 dark:text-error-400">
               Over budget:{" "}
               {formatCurrency(
                 Math.abs(parseFloat(status.remaining)).toString(),

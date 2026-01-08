@@ -96,7 +96,7 @@ export function SandpackLoadingFallback() {
         <div className="h-3 bg-gray-800 rounded w-3/4" />
       </div>
       <div className="p-4 bg-gray-800 border-t border-gray-700">
-        <div className="flex items-center gap-2 text-gray-500">
+        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
           <Loader2 size={14} className="animate-spin" />
           <span className="text-xs">Loading interactive editor...</span>
         </div>
@@ -171,12 +171,12 @@ function ChartCodeBlock({ code }: { code: string }) {
 
   if (error) {
     return (
-      <div className="my-2 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-        <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400 mb-2">
+      <div className="my-2 p-4 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
+        <div className="flex items-center gap-2 text-warning-600 dark:text-warning-400 mb-2">
           <AlertCircle size={16} />
           <span className="font-medium">Chart Error</span>
         </div>
-        <pre className="text-xs text-yellow-600 overflow-x-auto">{error}</pre>
+        <pre className="text-xs text-warning-600 overflow-x-auto">{error}</pre>
       </div>
     );
   }
@@ -344,7 +344,7 @@ function MarkdownContentImpl({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 dark:text-blue-400 hover:underline"
+          className="text-primary-600 dark:text-primary-400 hover:underline"
           {...props}
         >
           {children}

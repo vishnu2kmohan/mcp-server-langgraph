@@ -99,7 +99,7 @@ export function ChatMessage({
           className="flex items-center gap-2"
         >
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-gray-500">Thinking...</span>
+          <span className="text-gray-500 dark:text-gray-400">Thinking...</span>
         </div>
       );
     }
@@ -228,13 +228,13 @@ export function ChatMessage({
         {isAssistant && sources && sources.length > 0 && (
           <div
             data-testid="sources-section"
-            className="mt-3 pt-3 border-t border-gray-200/50 dark:border-gray-600/50"
+            className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700/50 dark:border-gray-600/50"
           >
             <div className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
               <ExternalLink
                 data-testid="sources-icon"
                 size={12}
-                className="text-gray-400 dark:text-gray-500"
+                className="text-gray-400 dark:text-gray-400"
               />
               <span>Sources:</span>
             </div>
@@ -245,7 +245,7 @@ export function ChatMessage({
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                    className="text-sm text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-1"
                   >
                     {source.title}
                   </a>
@@ -270,7 +270,7 @@ export function ChatMessage({
 
         {/* Response Rating - only for assistant messages when not loading */}
         {isAssistant && !isLoading && messageId && onRate && (
-          <div className="mt-3 pt-3 border-t border-gray-200/50 dark:border-gray-600/50 flex items-center justify-between">
+          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700/50 dark:border-gray-600/50 flex items-center justify-between">
             <ResponseRating
               messageId={messageId}
               onRate={onRate}
@@ -286,7 +286,7 @@ export function ChatMessage({
 
         {/* AI Follow-Up Suggestions - only for assistant messages when not loading */}
         {isAssistant && !isLoading && onSuggestionSelect && (
-          <div className="mt-3 pt-3 border-t border-gray-200/50 dark:border-gray-600/50">
+          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700/50 dark:border-gray-600/50">
             <AIFollowUpSuggestions
               suggestions={suggestions || []}
               onSelect={onSuggestionSelect}

@@ -209,13 +209,21 @@ export function AggregatedCapabilitiesPanel({
             {/* Stats summary */}
             <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
               <span>{totalServers} servers</span>
-              <span className="text-gray-300 dark:text-gray-600">|</span>
+              <span className="text-gray-300 dark:text-gray-600 dark:text-gray-300">
+                |
+              </span>
               <span>{totalTools} tools</span>
-              <span className="text-gray-300 dark:text-gray-600">|</span>
+              <span className="text-gray-300 dark:text-gray-600 dark:text-gray-300">
+                |
+              </span>
               <span>{totalResources} resources</span>
-              <span className="text-gray-300 dark:text-gray-600">|</span>
+              <span className="text-gray-300 dark:text-gray-600 dark:text-gray-300">
+                |
+              </span>
               <span>{totalPrompts} prompts</span>
-              <span className="text-gray-300 dark:text-gray-600">|</span>
+              <span className="text-gray-300 dark:text-gray-600 dark:text-gray-300">
+                |
+              </span>
               {/* Real-time sync indicator */}
               <span
                 className="flex items-center gap-1"
@@ -224,12 +232,12 @@ export function AggregatedCapabilitiesPanel({
                 <span
                   className={cn(
                     "w-2 h-2 rounded-full",
-                    wsStatus === "connected" && "bg-green-500",
-                    wsStatus === "connecting" && "bg-yellow-500 animate-pulse",
+                    wsStatus === "connected" && "bg-success-500",
+                    wsStatus === "connecting" && "bg-warning-500 animate-pulse",
                     wsStatus === "reconnecting" &&
-                      "bg-yellow-500 animate-pulse",
+                      "bg-warning-500 animate-pulse",
                     wsStatus === "disconnected" && "bg-gray-400",
-                    wsStatus === "error" && "bg-red-500",
+                    wsStatus === "error" && "bg-error-500",
                   )}
                 />
                 <span className="text-xs">
@@ -245,8 +253,8 @@ export function AggregatedCapabilitiesPanel({
               onClick={handleRefreshAll}
               className={cn(
                 "px-3 py-1.5 text-sm font-medium rounded-md",
-                "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200",
-                "hover:bg-gray-200 dark:hover:bg-gray-600",
+                "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 dark:bg-gray-700 dark:text-gray-200",
+                "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600",
                 "focus:outline-none focus:ring-2 focus:ring-brand-primary",
               )}
             >
@@ -258,14 +266,14 @@ export function AggregatedCapabilitiesPanel({
 
       {/* Filter indicator */}
       {serverFilter && (
-        <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800 flex items-center justify-between">
-          <span className="text-sm text-blue-700 dark:text-blue-300">
+        <div className="px-4 py-2 bg-primary-50 dark:bg-primary-900/20 border-b border-primary-100 dark:border-primary-800 flex items-center justify-between">
+          <span className="text-sm text-primary-700 dark:text-primary-300">
             Filtered by server: <strong>{serverFilter}</strong>
           </span>
           <button
             type="button"
             onClick={handleClearFilter}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
           >
             Clear filter
           </button>

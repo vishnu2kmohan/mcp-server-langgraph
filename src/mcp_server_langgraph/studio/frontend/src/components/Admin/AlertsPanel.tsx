@@ -91,9 +91,9 @@ function formatRelativeTime(isoDate: string): string {
 function getSeverityColor(severity: Alert["severity"]): string {
   switch (severity) {
     case "critical":
-      return "bg-red-500";
+      return "bg-error-500";
     case "warning":
-      return "bg-yellow-500";
+      return "bg-warning-500";
     default:
       return "bg-gray-500";
   }
@@ -106,18 +106,18 @@ function getStateStyle(state: Alert["state"]): { bg: string; text: string } {
   switch (state) {
     case "firing":
       return {
-        bg: "bg-red-100 dark:bg-red-900/30",
-        text: "text-red-700 dark:text-red-400",
+        bg: "bg-error-100 dark:bg-error-900/30",
+        text: "text-error-700 dark:text-error-400",
       };
     case "resolved":
       return {
-        bg: "bg-green-100 dark:bg-green-900/30",
-        text: "text-green-700 dark:text-green-400",
+        bg: "bg-success-100 dark:bg-success-900/30",
+        text: "text-success-700 dark:text-success-400",
       };
     default:
       return {
         bg: "bg-gray-100 dark:bg-gray-800",
-        text: "text-gray-700 dark:text-gray-400",
+        text: "text-gray-700 dark:text-gray-200 dark:text-gray-400",
       };
   }
 }
@@ -128,13 +128,13 @@ function getStateStyle(state: Alert["state"]): { bg: string; text: string } {
 function getConnectionColor(status?: WebSocketConnectionStatus): string {
   switch (status) {
     case "connected":
-      return "bg-green-500";
+      return "bg-success-500";
     case "connecting":
     case "reconnecting":
-      return "bg-yellow-500";
+      return "bg-warning-500";
     case "disconnected":
     case "error":
-      return "bg-red-500";
+      return "bg-error-500";
     default:
       return "bg-gray-500";
   }
@@ -160,7 +160,7 @@ function AlertItem({ alert, isSelected, onClick }: AlertItemProps) {
       onClick={onClick}
       className={`w-full text-left p-3 rounded-lg border transition-colors ${
         isSelected
-          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+          ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
           : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
       }`}
     >
@@ -193,7 +193,7 @@ function AlertItem({ alert, isSelected, onClick }: AlertItemProps) {
           </p>
 
           {/* Labels and Time */}
-          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
             {serviceLabel && (
               <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
                 {serviceLabel}
@@ -284,7 +284,7 @@ export function AlertsPanel({
         data-testid="alerts-loading"
         className="flex items-center justify-center h-64"
       >
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
   }
@@ -294,7 +294,7 @@ export function AlertsPanel({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-gray-500" />
+          <AlertTriangle className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             Infrastructure Alerts
           </h2>
@@ -318,8 +318,8 @@ export function AlertsPanel({
               aria-pressed={viewMode === "flat"}
               className={`p-1.5 rounded transition-colors ${
                 viewMode === "flat"
-                  ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  ? "bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300"
               }`}
               title="Flat view"
             >
@@ -331,8 +331,8 @@ export function AlertsPanel({
               aria-pressed={viewMode === "grouped"}
               className={`p-1.5 rounded transition-colors ${
                 viewMode === "grouped"
-                  ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  ? "bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300"
               }`}
               title="Grouped view"
             >
@@ -347,8 +347,8 @@ export function AlertsPanel({
             aria-pressed={soundEnabled}
             className={`p-2 rounded-lg transition-colors ${
               soundEnabled
-                ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                ? "bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
             }`}
             title={soundEnabled ? "Sound enabled" : "Sound disabled"}
           >
@@ -364,25 +364,25 @@ export function AlertsPanel({
       {/* Badge Counts */}
       <div className="flex items-center gap-4 px-4 py-2 bg-gray-50 dark:bg-gray-800/50">
         <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-red-500" />
+          <div className="w-2 h-2 rounded-full bg-error-500" />
           <span className="text-sm text-gray-600 dark:text-gray-400">
             Critical:
           </span>
           <span
             data-testid="critical-count"
-            className="text-sm font-medium text-red-600 dark:text-red-400"
+            className="text-sm font-medium text-error-600 dark:text-error-400"
           >
             {criticalCount}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-yellow-500" />
+          <div className="w-2 h-2 rounded-full bg-warning-500" />
           <span className="text-sm text-gray-600 dark:text-gray-400">
             Warning:
           </span>
           <span
             data-testid="warning-count"
-            className="text-sm font-medium text-yellow-600 dark:text-yellow-400"
+            className="text-sm font-medium text-warning-600 dark:text-warning-400"
           >
             {warningCount}
           </span>
@@ -396,8 +396,8 @@ export function AlertsPanel({
           onClick={() => handleSeverityToggle("critical")}
           className={`px-2 py-1 text-xs rounded-full transition-colors ${
             filters.severity.includes("critical")
-              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-              : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+              ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
           }`}
         >
           Critical
@@ -406,8 +406,8 @@ export function AlertsPanel({
           onClick={() => handleSeverityToggle("warning")}
           className={`px-2 py-1 text-xs rounded-full transition-colors ${
             filters.severity.includes("warning")
-              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-              : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+              ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
           }`}
         >
           Warning
@@ -420,8 +420,8 @@ export function AlertsPanel({
           onClick={() => handleStateToggle("firing")}
           className={`px-2 py-1 text-xs rounded-full transition-colors ${
             filters.state.includes("firing")
-              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-              : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+              ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
           }`}
         >
           Firing
@@ -430,8 +430,8 @@ export function AlertsPanel({
           onClick={() => handleStateToggle("resolved")}
           className={`px-2 py-1 text-xs rounded-full transition-colors ${
             filters.state.includes("resolved")
-              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-              : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+              ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
           }`}
         >
           Resolved

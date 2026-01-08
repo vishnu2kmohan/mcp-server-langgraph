@@ -53,20 +53,20 @@ export interface BatchApprovalPanelProps {
  * Get confidence color based on value
  */
 function getConfidenceColor(confidence: number): string {
-  if (confidence >= 0.9) return "text-green-600 dark:text-green-400";
-  if (confidence >= 0.7) return "text-blue-600 dark:text-blue-400";
-  if (confidence >= 0.5) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  if (confidence >= 0.9) return "text-success-600 dark:text-success-400";
+  if (confidence >= 0.7) return "text-primary-600 dark:text-primary-400";
+  if (confidence >= 0.5) return "text-warning-600 dark:text-warning-400";
+  return "text-error-600 dark:text-error-400";
 }
 
 /**
  * Get confidence background color
  */
 function getConfidenceBgColor(confidence: number): string {
-  if (confidence >= 0.9) return "bg-green-500";
-  if (confidence >= 0.7) return "bg-blue-500";
-  if (confidence >= 0.5) return "bg-amber-500";
-  return "bg-red-500";
+  if (confidence >= 0.9) return "bg-success-500";
+  if (confidence >= 0.7) return "bg-primary-500";
+  if (confidence >= 0.5) return "bg-warning-500";
+  return "bg-error-500";
 }
 
 // =============================================================================
@@ -141,7 +141,7 @@ export function BatchApprovalPanel({
         )}
       >
         <CheckCircle
-          className="w-12 h-12 text-green-500 mb-4"
+          className="w-12 h-12 text-success-500 mb-4"
           aria-hidden="true"
         />
         <p className="text-gray-600 dark:text-gray-400">No pending approvals</p>
@@ -171,7 +171,7 @@ export function BatchApprovalPanel({
               onChange={handleToggleSelectAll}
               disabled={isLoading}
               aria-label="Select all"
-              className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50"
+              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 disabled:opacity-50"
             />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Select all
@@ -194,7 +194,7 @@ export function BatchApprovalPanel({
             aria-label="Approve selected"
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium",
-              "bg-green-600 text-white hover:bg-green-700",
+              "bg-success-600 text-white hover:bg-success-700",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               "transition-colors",
             )}
@@ -217,7 +217,7 @@ export function BatchApprovalPanel({
             aria-label="Reject selected"
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium",
-              "bg-red-600 text-white hover:bg-red-700",
+              "bg-error-600 text-white hover:bg-error-700",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               "transition-colors",
             )}
@@ -279,7 +279,7 @@ export function BatchApprovalPanel({
                   onChange={() => handleToggleSelect(approval.requestId)}
                   disabled={isLoading}
                   aria-label={`Select ${approval.agentName}`}
-                  className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50"
+                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 disabled:opacity-50"
                 />
               </label>
 
@@ -312,7 +312,7 @@ export function BatchApprovalPanel({
                   </span>
                   {approval.confidence < approval.threshold && (
                     <AlertTriangle
-                      className="w-4 h-4 text-amber-500"
+                      className="w-4 h-4 text-warning-500"
                       aria-hidden="true"
                     />
                   )}
@@ -326,7 +326,7 @@ export function BatchApprovalPanel({
               <span
                 className={cn(
                   "px-2 py-0.5 text-xs font-medium rounded",
-                  "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+                  "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
                 )}
               >
                 {approval.triggerReason.replace(/_/g, " ")}

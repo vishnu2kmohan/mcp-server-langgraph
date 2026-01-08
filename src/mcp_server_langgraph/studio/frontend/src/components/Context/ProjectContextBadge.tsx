@@ -80,7 +80,7 @@ export function ProjectContextBadge({
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         aria-label={`Project context active${contextPath ? `: ${contextPath}` : ""}`}
-        className={`inline-flex items-center gap-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${sizeClasses.badge} ${className}`}
+        className={`inline-flex items-center gap-1.5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-900/50 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${sizeClasses.badge} ${className}`}
       >
         {isLoading ? (
           <Loader2

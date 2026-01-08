@@ -79,13 +79,13 @@ function LayoutPreview({ layout }: { layout: WorkspaceLayout }) {
         </div>
       )}
       <div
-        className="bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center border-r border-gray-300 dark:border-gray-600"
+        className="bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center border-r border-gray-300 dark:border-gray-600"
         style={{ width: `${layout.conversation}%` }}
       >
         {layout.conversation}%
       </div>
       <div
-        className="bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center"
+        className="bg-insight-100 dark:bg-insight-900/30 flex items-center justify-center"
         style={{ width: `${layout.canvas}%` }}
       >
         {layout.canvas}%
@@ -202,7 +202,7 @@ export function WorkspacePresets({
               "border-2",
               isSelected
                 ? "selected border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600",
+                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-600",
               "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
             )}
           >
@@ -212,7 +212,7 @@ export function WorkspacePresets({
                 className={cn(
                   isSelected
                     ? "text-primary-500"
-                    : "text-gray-400 dark:text-gray-500",
+                    : "text-gray-400 dark:text-gray-400",
                 )}
               />
               <span

@@ -54,11 +54,11 @@ function getHealthStatus(avgSuccessRate: number | null): HealthStatus {
 function getStatusColorClass(status: HealthStatus): string {
   switch (status) {
     case "healthy":
-      return "bg-green-500";
+      return "bg-success-500";
     case "warning":
-      return "bg-yellow-500";
+      return "bg-warning-500";
     case "critical":
-      return "bg-red-500";
+      return "bg-error-500";
     case "unknown":
     default:
       return "bg-gray-400";
@@ -131,7 +131,9 @@ export function WebSocketHealthIndicator({
           data-testid="ws-health-status"
           className="w-2.5 h-2.5 rounded-full bg-gray-400"
         />
-        <span className="text-sm text-gray-500">No connections</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          No connections
+        </span>
       </div>
     );
   }
@@ -153,12 +155,12 @@ export function WebSocketHealthIndicator({
         <span
           className={`text-sm font-medium ${
             healthStatus === "healthy"
-              ? "text-green-600"
+              ? "text-success-600"
               : healthStatus === "warning"
-                ? "text-yellow-600"
+                ? "text-warning-600"
                 : healthStatus === "critical"
-                  ? "text-red-600"
-                  : "text-gray-500"
+                  ? "text-error-600"
+                  : "text-gray-500 dark:text-gray-400"
           }`}
         >
           {statusLabel}
@@ -167,7 +169,7 @@ export function WebSocketHealthIndicator({
 
       {/* Connection count */}
       {!compact && (
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           {metrics.totalConnections} connection
           {metrics.totalConnections !== 1 ? "s" : ""}
         </span>
@@ -175,7 +177,7 @@ export function WebSocketHealthIndicator({
 
       {/* Detailed metrics */}
       {showDetails && (
-        <div className="flex items-center gap-3 text-xs text-gray-500">
+        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
           <span>{metrics.avgSuccessRate}% success</span>
           <span>{metrics.totalReconnectionAttempts} reconnects</span>
         </div>

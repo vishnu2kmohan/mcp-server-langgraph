@@ -80,7 +80,7 @@ describe("StatusBar", () => {
 
       const indicator = screen.getByTestId("connection-indicator");
       expect(indicator).toBeInTheDocument();
-      expect(indicator).toHaveClass("bg-green-500");
+      expect(indicator).toHaveClass("bg-success-500");
     });
 
     it("should show disconnected indicator when disconnected", () => {
@@ -88,7 +88,7 @@ describe("StatusBar", () => {
 
       const indicator = screen.getByTestId("connection-indicator");
       expect(indicator).toBeInTheDocument();
-      expect(indicator).toHaveClass("bg-red-500");
+      expect(indicator).toHaveClass("bg-error-500");
     });
 
     it("should show connecting indicator when connecting", () => {
@@ -96,7 +96,7 @@ describe("StatusBar", () => {
 
       const indicator = screen.getByTestId("connection-indicator");
       expect(indicator).toBeInTheDocument();
-      expect(indicator).toHaveClass("bg-yellow-500");
+      expect(indicator).toHaveClass("bg-warning-500");
     });
 
     it("should hide connection indicator when status is undefined", () => {
@@ -260,21 +260,21 @@ describe("StatusBar", () => {
       render(<StatusBar modelName="gpt-4" modelProvider="openai" />);
 
       const indicator = screen.getByTestId("model-indicator");
-      expect(indicator).toHaveClass("text-green-600");
+      expect(indicator).toHaveClass("text-success-600");
     });
 
     it("should apply provider color class for anthropic", () => {
       render(<StatusBar modelName="claude-3" modelProvider="anthropic" />);
 
       const indicator = screen.getByTestId("model-indicator");
-      expect(indicator).toHaveClass("text-orange-600");
+      expect(indicator).toHaveClass("text-grafana-600");
     });
 
     it("should apply provider color class for google", () => {
       render(<StatusBar modelName="gemini-2.5" modelProvider="google" />);
 
       const indicator = screen.getByTestId("model-indicator");
-      expect(indicator).toHaveClass("text-blue-600");
+      expect(indicator).toHaveClass("text-primary-600");
     });
 
     it("should include provider in title", () => {
@@ -403,7 +403,7 @@ describe("StatusBar", () => {
       render(<StatusBar />);
 
       const statusBar = screen.getByTestId("status-bar");
-      expect(statusBar).toHaveClass("dark:bg-gray-900");
+      expect(statusBar).toHaveClass("dark:bg-gray-800");
     });
   });
 
@@ -413,7 +413,7 @@ describe("StatusBar", () => {
 
       const indicator = screen.getByTestId("connection-indicator");
       expect(indicator).toBeInTheDocument();
-      expect(indicator).toHaveClass("bg-red-500");
+      expect(indicator).toHaveClass("bg-error-500");
     });
 
     it("should display error message when provided", () => {
@@ -427,7 +427,7 @@ describe("StatusBar", () => {
       render(<StatusBar errorMessage="Something went wrong" />);
 
       const errorElement = screen.getByTestId("error-message");
-      expect(errorElement).toHaveClass("text-red-500");
+      expect(errorElement).toHaveClass("text-error-500");
     });
 
     it("should not display error message when not provided", () => {
@@ -445,7 +445,7 @@ describe("StatusBar", () => {
       );
 
       const indicator = screen.getByTestId("connection-indicator");
-      expect(indicator).toHaveClass("bg-red-500");
+      expect(indicator).toHaveClass("bg-error-500");
       expect(screen.getByText("Server unreachable")).toBeInTheDocument();
     });
   });
@@ -559,7 +559,7 @@ describe("StatusBar", () => {
       );
 
       const button = screen.getByTestId("pending-approvals-indicator");
-      expect(button).toHaveClass("bg-amber-100");
+      expect(button).toHaveClass("bg-warning-100");
     });
 
     it("should show active state when approvalsPanelOpen is true", () => {
@@ -572,7 +572,7 @@ describe("StatusBar", () => {
       );
 
       const button = screen.getByTestId("pending-approvals-indicator");
-      expect(button).toHaveClass("bg-amber-200");
+      expect(button).toHaveClass("bg-warning-200");
     });
 
     it("should have accessible aria-label for pending approvals button", () => {
@@ -794,14 +794,14 @@ describe("StatusBar", () => {
       render(<StatusBar kbStatus="ready" />);
 
       const indicator = screen.getByTestId("kb-status-indicator");
-      expect(indicator).toHaveClass("bg-green-500");
+      expect(indicator).toHaveClass("bg-success-500");
     });
 
     it("should show yellow indicator when kbStatus is misconfigured", () => {
       render(<StatusBar kbStatus="misconfigured" />);
 
       const indicator = screen.getByTestId("kb-status-indicator");
-      expect(indicator).toHaveClass("bg-yellow-500");
+      expect(indicator).toHaveClass("bg-warning-500");
     });
 
     it("should show gray indicator when kbStatus is unavailable", () => {

@@ -71,12 +71,14 @@ import { useConnectionsRealtimeWebSocket } from "../hooks/useConnectionsRealtime
 // Status badge colors
 const statusColors: Record<ConnectionStatus, string> = {
   connected:
-    "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  disconnected: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
-  connecting: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  error: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+    "bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-300",
+  disconnected:
+    "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+  connecting:
+    "bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-300",
+  error: "bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-300",
   auth_required:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+    "bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-300",
 };
 
 // Auth type icons
@@ -88,11 +90,13 @@ const authIcons: Record<AuthType, React.ReactNode> = {
 
 // Status icons
 const statusIcons: Record<ConnectionStatus, React.ReactNode> = {
-  connected: <CheckCircle className="w-4 h-4 text-green-500" />,
-  disconnected: <XCircle className="w-4 h-4 text-gray-400" />,
-  connecting: <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />,
-  error: <AlertCircle className="w-4 h-4 text-red-500" />,
-  auth_required: <AlertCircle className="w-4 h-4 text-yellow-500" />,
+  connected: <CheckCircle className="w-4 h-4 text-success-500" />,
+  disconnected: (
+    <XCircle className="w-4 h-4 text-gray-400 dark:text-gray-400" />
+  ),
+  connecting: <Loader2 className="w-4 h-4 text-primary-500 animate-spin" />,
+  error: <AlertCircle className="w-4 h-4 text-error-500" />,
+  auth_required: <AlertCircle className="w-4 h-4 text-warning-500" />,
 };
 
 // Polling interval options (in milliseconds)
@@ -366,7 +370,7 @@ export function ConnectionsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
         <span className="ml-2 text-gray-600 dark:text-gray-400">
           Loading connections...
         </span>
@@ -378,13 +382,13 @@ export function ConnectionsPage() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
-        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-        <p className="text-red-600 dark:text-red-400">
+        <AlertCircle className="w-12 h-12 text-error-500 mb-4" />
+        <p className="text-error-600 dark:text-error-400">
           Failed to fetch connections
         </p>
         <button
           onClick={() => refetch()}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
         >
           Retry
         </button>
@@ -397,7 +401,7 @@ export function ConnectionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Server className="w-8 h-8 text-blue-600" />
+          <Server className="w-8 h-8 text-primary-600" />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             MCP Connections
           </h1>
@@ -408,9 +412,9 @@ export function ConnectionsPage() {
             title={wsError ? `WebSocket: ${wsError}` : `WebSocket: ${wsStatus}`}
             className={`w-2.5 h-2.5 rounded-full ${
               wsStatus === "connected"
-                ? "bg-green-500"
+                ? "bg-success-500"
                 : wsStatus === "connecting" || wsStatus === "reconnecting"
-                  ? "bg-yellow-500 animate-pulse"
+                  ? "bg-warning-500 animate-pulse"
                   : "bg-gray-400"
             }`}
           />
@@ -418,7 +422,7 @@ export function ConnectionsPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setTemplateSelectorOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            className="flex items-center gap-2 px-4 py-2 border border-primary-600 text-primary-600 rounded-md hover:bg-primary-50 dark:hover:bg-primary-900/20"
             aria-label="From Template"
           >
             <LayoutTemplate className="w-4 h-4" />
@@ -426,13 +430,13 @@ export function ConnectionsPage() {
           </button>
           <button
             onClick={handleAddClick}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
             aria-label="Add Connection"
             title={`Add Connection (${formatShortcut(COMMON_SHORTCUTS.NEW)})`}
           >
             <Plus className="w-4 h-4" />
             Add Connection
-            <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-blue-700 rounded">
+            <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-primary-700 rounded">
               {formatShortcut(COMMON_SHORTCUTS.NEW)}
             </kbd>
           </button>
@@ -443,14 +447,14 @@ export function ConnectionsPage() {
       <div className="flex flex-wrap gap-4 mb-6">
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-400" />
           <input
             ref={searchInputRef}
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={`Search connections... (${formatShortcut(COMMON_SHORTCUTS.SEARCH)})`}
-            className="w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            className="w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
         </div>
 
@@ -466,7 +470,7 @@ export function ConnectionsPage() {
             onChange={(e) =>
               setStatusFilter(e.target.value as ConnectionStatus | "")
             }
-            className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           >
             <option value="">All Statuses</option>
             <option value="connected">Connected</option>
@@ -487,7 +491,7 @@ export function ConnectionsPage() {
             aria-label="Auth Type"
             value={authTypeFilter}
             onChange={(e) => setAuthTypeFilter(e.target.value as AuthType | "")}
-            className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           >
             <option value="">All Auth Types</option>
             <option value="none">No Auth</option>
@@ -506,7 +510,7 @@ export function ConnectionsPage() {
             aria-label="Sort By"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as ConnectionSortField)}
-            className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           >
             <option value="created_at">Created</option>
             <option value="updated_at">Updated</option>
@@ -518,7 +522,7 @@ export function ConnectionsPage() {
         {/* Sort Order Toggle */}
         <button
           onClick={toggleSortOrder}
-          className="flex items-center gap-1 px-3 py-2 border rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600"
+          className="flex items-center gap-1 px-3 py-2 border rounded-md hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-600"
           aria-label="Sort Order"
         >
           {sortOrder === "asc" ? (
@@ -526,7 +530,7 @@ export function ConnectionsPage() {
           ) : (
             <ArrowDown className="w-4 h-4" />
           )}
-          <ArrowUpDown className="w-4 h-4 text-gray-400" />
+          <ArrowUpDown className="w-4 h-4 text-gray-400 dark:text-gray-400" />
         </button>
 
         {/* Polling Control */}
@@ -537,8 +541,8 @@ export function ConnectionsPage() {
             }
             className={`p-2 rounded-l-md transition-colors ${
               pollingSpeed !== "off"
-                ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-                : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                ? "bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300"
+                : "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
             }`}
             aria-label={
               pollingSpeed !== "off"
@@ -587,7 +591,7 @@ export function ConnectionsPage() {
       {/* Empty State */}
       {connections.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Server className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" />
+          <Server className="w-16 h-16 text-gray-300 dark:text-gray-600 dark:text-gray-300 mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             No Connections
           </h2>
@@ -596,7 +600,7 @@ export function ConnectionsPage() {
           </p>
           <button
             onClick={handleAddClick}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
           >
             <Plus className="w-4 h-4" />
             Add Connection
@@ -627,7 +631,7 @@ export function ConnectionsPage() {
                 selectedIds.size > 0 && selectedIds.size === connections.length
               }
               onChange={handleSelectAll}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
               aria-label="Select all connections"
             />
             <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -641,7 +645,7 @@ export function ConnectionsPage() {
             <div
               key={connection.id}
               className={`bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-4 hover:shadow-md transition-shadow ${
-                selectedIds.has(connection.id) ? "ring-2 ring-blue-500" : ""
+                selectedIds.has(connection.id) ? "ring-2 ring-primary-500" : ""
               }`}
             >
               <div className="flex items-start justify-between">
@@ -651,7 +655,7 @@ export function ConnectionsPage() {
                     type="checkbox"
                     checked={selectedIds.has(connection.id)}
                     onChange={() => handleSelectConnection(connection.id)}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
                     aria-label={`Select ${connection.name}`}
                   />
                 </div>
@@ -675,7 +679,7 @@ export function ConnectionsPage() {
                     </span>
 
                     {/* Auth Type Badge */}
-                    <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                    <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                       {authIcons[connection.authType]}
                       {connection.authType}
                     </span>
@@ -697,7 +701,7 @@ export function ConnectionsPage() {
 
                   {/* Server info */}
                   {connection.serverName && (
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
                       Server: {connection.serverName}
                     </p>
                   )}
@@ -707,7 +711,7 @@ export function ConnectionsPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleTestClick(connection.id)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-md"
+                    className="p-2 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/50 rounded-md"
                     aria-label="Test"
                     disabled={isTesting}
                   >
@@ -715,21 +719,21 @@ export function ConnectionsPage() {
                   </button>
                   <button
                     onClick={() => handleViewAuditLog(connection.id)}
-                    className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/50 rounded-md"
+                    className="p-2 text-insight-600 hover:bg-insight-50 dark:hover:bg-insight-900/50 rounded-md"
                     aria-label="Audit Log"
                   >
                     <FileText className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleEditClick(connection)}
-                    className="p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded-md"
+                    className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 rounded-md"
                     aria-label="Edit"
                   >
                     <Pencil className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteClick(connection.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-md"
+                    className="p-2 text-error-600 hover:bg-error-50 dark:hover:bg-error-900/50 rounded-md"
                     aria-label="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -799,13 +803,13 @@ export function ConnectionsPage() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirmId(null)}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-md"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-md"
+                className="px-4 py-2 bg-error-600 text-white hover:bg-error-700 rounded-md"
                 disabled={isDeleting}
               >
                 {isDeleting ? "Deleting..." : "Delete"}
@@ -833,7 +837,7 @@ export function ConnectionsPage() {
             />
             <button
               onClick={() => setTemplateSelectorOpen(false)}
-              className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              className="absolute top-4 right-4 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300"
               aria-label="Close"
             >
               ×
@@ -853,7 +857,7 @@ export function ConnectionsPage() {
             <ConnectionAuditLog connectionId={auditLogConnectionId} />
             <button
               onClick={() => setAuditLogConnectionId(null)}
-              className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              className="absolute top-4 right-4 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300"
               aria-label="Close"
             >
               ×

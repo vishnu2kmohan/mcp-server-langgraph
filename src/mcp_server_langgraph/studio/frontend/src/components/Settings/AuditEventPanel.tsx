@@ -56,15 +56,17 @@ function cn(...classes: (string | undefined | boolean)[]): string {
 // Category color mapping
 const categoryColors: Record<string, string> = {
   authentication:
-    "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+    "bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-300",
   authorization:
-    "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+    "bg-insight-100 text-insight-800 dark:bg-insight-900/30 dark:text-insight-300",
   data_access:
-    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+    "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-300",
   data_modification:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-  system: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
-  security: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+    "bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-300",
+  system:
+    "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+  security:
+    "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-300",
 };
 
 function formatTimestamp(timestamp: string): string {
@@ -163,10 +165,10 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
   const isConnecting = status === "connecting";
   const isReconnecting = status === "reconnecting";
   const statusColor = isConnected
-    ? "text-green-500"
+    ? "text-success-500"
     : isConnecting || isReconnecting
-      ? "text-yellow-500"
-      : "text-red-500";
+      ? "text-warning-500"
+      : "text-error-500";
 
   return (
     <div
@@ -176,7 +178,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-purple-600" />
+          <Shield className="w-5 h-5 text-insight-600" />
           <h3 className="font-semibold text-gray-900 dark:text-white">
             Audit Events
           </h3>
@@ -214,7 +216,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
             <button
               data-testid="reconnect-button"
               onClick={reconnect}
-              className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
+              className="p-1.5 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded"
               title="Reconnect"
             >
               <RefreshCw className="w-4 h-4" />
@@ -228,8 +230,8 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
             className={cn(
               "p-1.5 rounded relative",
               isFilterOpen
-                ? "text-blue-600 bg-blue-50 dark:bg-blue-900/30"
-                : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700",
+                ? "text-primary-600 bg-primary-50 dark:bg-primary-900/30"
+                : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700",
             )}
             title="Filter events"
           >
@@ -237,7 +239,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
             {hasActiveFilter && (
               <span
                 data-testid="filter-active-badge"
-                className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"
+                className="absolute -top-1 -right-1 w-2 h-2 bg-primary-500 rounded-full"
               />
             )}
           </button>
@@ -247,7 +249,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
             <button
               data-testid="clear-filter-button"
               onClick={handleClearFilter}
-              className="p-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded"
+              className="p-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 rounded"
               title="Clear filter"
             >
               <X className="w-4 h-4" />
@@ -261,8 +263,8 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
             className={cn(
               "p-1.5 rounded",
               isPaused
-                ? "text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30"
-                : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700",
+                ? "text-success-600 hover:bg-success-50 dark:hover:bg-success-900/30"
+                : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700",
             )}
             title={isPaused ? "Resume" : "Pause"}
           >
@@ -278,7 +280,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
             <button
               data-testid="clear-button"
               onClick={clearEvents}
-              className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+              className="p-1.5 text-error-600 hover:bg-error-50 dark:hover:bg-error-900/30 rounded"
               title="Clear events"
             >
               <Trash2 className="w-4 h-4" />
@@ -307,7 +309,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
                   data-testid={`filter-${category.id}`}
                   checked={selectedCategories.has(category.id)}
                   onChange={() => handleCategoryToggle(category.id)}
-                  className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="w-3.5 h-3.5 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
                 />
                 <span className="text-xs text-gray-700 dark:text-gray-300">
                   {category.label}
@@ -320,8 +322,8 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
 
       {/* Paused indicator */}
       {isPaused && (
-        <div className="px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800">
-          <p className="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
+        <div className="px-4 py-2 bg-warning-50 dark:bg-warning-900/20 border-b border-warning-200 dark:border-warning-800">
+          <p className="text-sm text-warning-700 dark:text-warning-300 flex items-center gap-2">
             <Pause className="w-4 h-4" />
             Event streaming paused. Click{" "}
             <button
@@ -359,7 +361,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
             {events.length} event{events.length !== 1 ? "s" : ""}
           </span>
           {hasActiveFilter && (
-            <span className="text-blue-600 dark:text-blue-400">
+            <span className="text-primary-600 dark:text-primary-400">
               Filter active: {currentFilter?.categories?.join(", ")}
             </span>
           )}
@@ -397,7 +399,7 @@ function AuditEventItem({ event }: AuditEventItemProps) {
               {event.eventType}
             </span>
             {event.regulation && (
-              <span className="px-1.5 py-0.5 text-[10px] font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 rounded">
+              <span className="px-1.5 py-0.5 text-xs font-medium bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-300 rounded">
                 {event.regulation}
               </span>
             )}
@@ -411,7 +413,7 @@ function AuditEventItem({ event }: AuditEventItemProps) {
             </div>
           )}
         </div>
-        <div className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+        <div className="text-xs text-gray-400 dark:text-gray-400 flex-shrink-0">
           {formatTimestamp(event.timestamp)}
         </div>
       </div>

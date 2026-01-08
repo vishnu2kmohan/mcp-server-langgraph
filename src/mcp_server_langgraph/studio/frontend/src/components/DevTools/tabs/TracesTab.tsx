@@ -19,6 +19,7 @@ import {
 
 import { cn } from "../../../utils/cn";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
+import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 
 // =============================================================================
 // Types
@@ -82,34 +83,42 @@ function formatDuration(ms: number): string {
 function getStatusIcon(status: "ok" | "error" | "unset") {
   switch (status) {
     case "ok":
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
+      return (
+        <CheckCircle className={cn("h-4 w-4", STATUS_TEXT_COLORS.success)} />
+      );
     case "error":
-      return <AlertCircle className="h-4 w-4 text-red-500" />;
+      return (
+        <AlertCircle className={cn("h-4 w-4", STATUS_TEXT_COLORS.error)} />
+      );
     default:
-      return <Circle className="h-4 w-4 text-gray-400" />;
+      return <Circle className={cn("h-4 w-4", STATUS_TEXT_COLORS.neutral)} />;
   }
 }
 
 /**
  * Get background color for span bar based on status.
- * Used in waterfall view to visually indicate span status.
+ * Uses semantic colors from design system.
  */
 function getStatusColor(status: "ok" | "error" | "unset"): string {
   switch (status) {
     case "ok":
-      return "bg-green-500";
+      return "bg-success-500";
     case "error":
-      return "bg-red-500";
+      return "bg-error-500";
     default:
       return "bg-gray-400";
   }
 }
 
+/**
+ * Get background color for duration bar based on relative duration.
+ * Uses semantic colors: error for slow, warning for medium, primary for fast.
+ */
 function getDurationColor(durationMs: number, totalMs: number): string {
   const ratio = durationMs / totalMs;
-  if (ratio > 0.5) return "bg-red-500";
-  if (ratio > 0.25) return "bg-yellow-500";
-  return "bg-blue-500";
+  if (ratio > 0.5) return "bg-error-500";
+  if (ratio > 0.25) return "bg-warning-500";
+  return "bg-primary-500";
 }
 
 // =============================================================================
@@ -140,8 +149,8 @@ function SpanRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer border-b border-gray-100 dark:border-gray-800",
-        isSelected && "bg-blue-50 dark:bg-blue-900/20",
+        "flex items-center gap-2 py-1 px-2 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 cursor-pointer border-b border-gray-100 dark:border-gray-800",
+        isSelected && "bg-primary-50 dark:bg-primary-900/20",
       )}
       onClick={onClick}
       data-span-id={span.spanId}
@@ -203,7 +212,7 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
         <button
           type="button"
           onClick={onClose}
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
           aria-label="Close"
         >
           <X className="h-4 w-4" />
@@ -229,7 +238,7 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
         {span.errorMessage && (
           <>
             <dt className="text-gray-500 dark:text-gray-400">Error</dt>
-            <dd className="text-red-500">{span.errorMessage}</dd>
+            <dd className={STATUS_TEXT_COLORS.error}>{span.errorMessage}</dd>
           </>
         )}
       </dl>
@@ -237,7 +246,7 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
       {Object.keys(span.attributes).length > 0 && (
         <div className="mt-4">
           <h4 className="text-sm font-medium mb-2">Attributes</h4>
-          <pre className="text-xs bg-gray-100 dark:bg-gray-900 p-2 rounded overflow-auto max-h-40">
+          <pre className="text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded overflow-auto max-h-40">
             {JSON.stringify(span.attributes, null, 2)}
           </pre>
         </div>
@@ -397,7 +406,7 @@ export function TracesTab({
         data-testid="traces-tab"
         className={cn("flex items-center justify-center h-full", className)}
       >
-        <div className="text-red-500">{error}</div>
+        <div className={STATUS_TEXT_COLORS.error}>{error}</div>
       </div>
     );
   }
@@ -411,7 +420,7 @@ export function TracesTab({
       <div className="flex items-center gap-2 p-2 border-b border-gray-200 dark:border-gray-700">
         {/* Search */}
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-400" />
           <input
             type="text"
             placeholder="Search traces..."
@@ -437,7 +446,7 @@ export function TracesTab({
               <button
                 type="button"
                 role="option"
-                className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                 onClick={() => {
                   setServiceFilter("all");
                   setShowServiceMenu(false);
@@ -450,7 +459,7 @@ export function TracesTab({
                   key={service}
                   type="button"
                   role="option"
-                  className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                   onClick={() => {
                     setServiceFilter(service);
                     setShowServiceMenu(false);
@@ -479,7 +488,7 @@ export function TracesTab({
                 type="button"
                 role="option"
                 aria-label="All"
-                className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                 onClick={() => {
                   setStatusFilter("all");
                   setShowStatusMenu(false);
@@ -491,7 +500,7 @@ export function TracesTab({
                 type="button"
                 role="option"
                 aria-label="ok"
-                className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                 onClick={() => {
                   setStatusFilter("ok");
                   setShowStatusMenu(false);
@@ -503,7 +512,7 @@ export function TracesTab({
                 type="button"
                 role="option"
                 aria-label="error"
-                className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                 onClick={() => {
                   setStatusFilter("error");
                   setShowStatusMenu(false);
@@ -538,7 +547,7 @@ export function TracesTab({
             <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
               <button
                 type="button"
-                className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
                 onClick={handleClearTrace}
                 aria-label="Back to list"
               >
@@ -608,7 +617,8 @@ export function TracesTab({
                   data-status={trace.status}
                   className={cn(
                     "flex items-center gap-4 p-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer",
-                    trace.status === "error" && "bg-red-50 dark:bg-red-900/10",
+                    trace.status === "error" &&
+                      "bg-error-50 dark:bg-error-900/10",
                   )}
                   onClick={() => handleTraceSelect(trace.traceId)}
                 >
@@ -626,11 +636,11 @@ export function TracesTab({
                     {formatDuration(trace.durationMs)}
                   </div>
 
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-gray-400 dark:text-gray-400">
                     {trace.spanCount} spans
                   </div>
 
-                  <ChevronRight className="h-4 w-4 text-gray-400" />
+                  <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-400" />
                 </div>
               ))
             )}

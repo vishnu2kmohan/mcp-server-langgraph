@@ -20,6 +20,7 @@ import { selectSessionError } from "../../../store/slices/sessionSlice";
 import { selectMCPError } from "../../../store/slices/mcpSlice";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type { ProblemsTabProps } from "../types";
+import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 
 // =============================================================================
 // Types
@@ -53,8 +54,8 @@ function ProblemRow({ problem, onDismiss }: ProblemRowProps) {
     problem.severity === "error" ? AlertCircle : AlertTriangle;
   const severityColor =
     problem.severity === "error"
-      ? "text-red-500 dark:text-red-400"
-      : "text-amber-500 dark:text-amber-400";
+      ? STATUS_TEXT_COLORS.error
+      : STATUS_TEXT_COLORS.warning;
 
   return (
     <li
@@ -105,7 +106,7 @@ function ProblemRow({ problem, onDismiss }: ProblemRowProps) {
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss problem"
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
         >
           <X size={14} />
         </button>
@@ -215,7 +216,7 @@ export function ProblemsTab({
               "px-2 py-1 text-xs rounded",
               filter === "all"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700",
+                : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
             )}
           >
             All
@@ -227,8 +228,8 @@ export function ProblemsTab({
             className={cn(
               "px-2 py-1 text-xs rounded flex items-center gap-1",
               filter === "errors"
-                ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700",
+                ? "bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-300"
+                : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
             )}
           >
             <AlertCircle size={12} />
@@ -241,8 +242,8 @@ export function ProblemsTab({
             className={cn(
               "px-2 py-1 text-xs rounded flex items-center gap-1",
               filter === "warnings"
-                ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700",
+                ? "bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300"
+                : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
             )}
           >
             <AlertTriangle size={12} />
@@ -255,14 +256,17 @@ export function ProblemsTab({
           <div className="flex items-center gap-2 ml-2">
             <span
               data-testid="error-count"
-              className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400"
+              className={cn(
+                "flex items-center gap-1 text-xs",
+                STATUS_TEXT_COLORS.error,
+              )}
             >
               <AlertCircle size={12} />
               {errorCount}
             </span>
             <span
               data-testid="warning-count"
-              className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400"
+              className="flex items-center gap-1 text-xs text-warning-600 dark:text-warning-400"
             >
               <AlertTriangle size={12} />
               {warningCount}
@@ -279,7 +283,7 @@ export function ProblemsTab({
           type="button"
           onClick={clearAll}
           aria-label="Clear all problems"
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 hover:text-red-500"
+          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 hover:text-error-500"
         >
           <Trash2 size={14} />
         </button>
@@ -289,9 +293,9 @@ export function ProblemsTab({
       {filteredProblems.length === 0 ? (
         <div
           data-testid="problems-empty-state"
-          className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500"
+          className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-400"
         >
-          <CheckCircle size={32} className="mb-2 opacity-50 text-green-500" />
+          <CheckCircle size={32} className="mb-2 opacity-50 text-success-500" />
           <p>No problems detected</p>
           <p className="text-xs mt-1">Your code looks good!</p>
         </div>

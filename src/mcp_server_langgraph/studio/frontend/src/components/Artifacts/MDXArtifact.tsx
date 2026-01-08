@@ -50,7 +50,9 @@ function Accordion({
         className="w-full flex items-center gap-2 p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
       >
         {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-        {icon && <span className="text-gray-500">{icon}</span>}
+        {icon && (
+          <span className="text-gray-500 dark:text-gray-400">{icon}</span>
+        )}
         <span className="font-medium text-gray-900 dark:text-gray-100">
           {title}
         </span>
@@ -82,36 +84,38 @@ const calloutStyles: Record<
   { bg: string; border: string; icon: React.ReactNode }
 > = {
   note: {
-    bg: "bg-blue-50 dark:bg-blue-900/20",
-    border: "border-blue-200 dark:border-blue-800",
-    icon: <Info size={18} className="text-blue-600 dark:text-blue-400" />,
+    bg: "bg-primary-50 dark:bg-primary-900/20",
+    border: "border-primary-200 dark:border-primary-800",
+    icon: <Info size={18} className="text-primary-600 dark:text-primary-400" />,
   },
   warning: {
-    bg: "bg-yellow-50 dark:bg-yellow-900/20",
-    border: "border-yellow-200 dark:border-yellow-800",
+    bg: "bg-warning-50 dark:bg-warning-900/20",
+    border: "border-warning-200 dark:border-warning-800",
     icon: (
       <AlertTriangle
         size={18}
-        className="text-yellow-600 dark:text-yellow-400"
+        className="text-warning-600 dark:text-warning-400"
       />
     ),
   },
   info: {
-    bg: "bg-blue-50 dark:bg-blue-900/20",
-    border: "border-blue-200 dark:border-blue-800",
-    icon: <Info size={18} className="text-blue-600 dark:text-blue-400" />,
+    bg: "bg-primary-50 dark:bg-primary-900/20",
+    border: "border-primary-200 dark:border-primary-800",
+    icon: <Info size={18} className="text-primary-600 dark:text-primary-400" />,
   },
   tip: {
-    bg: "bg-green-50 dark:bg-green-900/20",
-    border: "border-green-200 dark:border-green-800",
+    bg: "bg-success-50 dark:bg-success-900/20",
+    border: "border-success-200 dark:border-success-800",
     icon: (
-      <Lightbulb size={18} className="text-green-600 dark:text-green-400" />
+      <Lightbulb size={18} className="text-success-600 dark:text-success-400" />
     ),
   },
   check: {
-    bg: "bg-green-50 dark:bg-green-900/20",
-    border: "border-green-200 dark:border-green-800",
-    icon: <Check size={18} className="text-green-600 dark:text-green-400" />,
+    bg: "bg-success-50 dark:bg-success-900/20",
+    border: "border-success-200 dark:border-success-800",
+    icon: (
+      <Check size={18} className="text-success-600 dark:text-success-400" />
+    ),
   },
 };
 
@@ -157,9 +161,11 @@ interface CardProps {
 
 function Card({ title, icon, href, children }: CardProps) {
   const content = (
-    <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
+    <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-500 dark:hover:border-primary-400 transition-colors">
       <div className="flex items-center gap-2 mb-2">
-        {icon && <span className="text-gray-500">{icon}</span>}
+        {icon && (
+          <span className="text-gray-500 dark:text-gray-400">{icon}</span>
+        )}
         <h4 className="font-semibold text-gray-900 dark:text-gray-100">
           {title}
         </h4>
@@ -229,8 +235,8 @@ function Tabs({ children }: TabsProps) {
             onClick={() => setActiveTab(index)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === index
-                ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                ? "border-primary-500 text-primary-600 dark:text-primary-400"
+                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300"
             }`}
           >
             {tab.title}
@@ -270,12 +276,12 @@ function Step({
 }) {
   return (
     <div className="flex gap-4">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-        <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+        <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">
           •
         </span>
       </div>
-      <div className="flex-1 pb-4 border-l-2 border-gray-200 dark:border-gray-700 pl-4 -ml-4 relative before:absolute before:left-0 before:top-4 before:w-4 before:h-0.5 before:bg-gray-200 dark:before:bg-gray-700">
+      <div className="flex-1 pb-4 border-l-2 border-gray-200 dark:border-gray-700 pl-4 -ml-4 relative before:absolute before:left-0 before:top-4 before:w-4 before:h-0.5 before:bg-gray-200 dark:bg-gray-700 dark:before:bg-gray-700">
         <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
           {title}
         </h4>
@@ -304,7 +310,7 @@ export const mdxComponents = {
   Steps,
   Step,
   // Re-export for customization
-  Info: () => <AlertCircle className="text-blue-500" />,
+  Info: () => <AlertCircle className="text-primary-500" />,
 };
 
 // ============================================================================
@@ -331,18 +337,18 @@ export function MDXArtifact({
   return (
     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
       {title && (
-        <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900">
+        <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {title}
           </h4>
         </div>
       )}
       <div className="p-4">
-        <div className="mb-4 text-xs text-gray-500 flex items-center gap-2">
+        <div className="mb-4 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
           <Info size={14} />
           <span>MDX document with interactive components</span>
           {Object.keys(components).length > 0 && (
-            <span className="ml-2 px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded">
+            <span className="ml-2 px-2 py-0.5 bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 rounded">
               {Object.keys(components).length} custom components
             </span>
           )}

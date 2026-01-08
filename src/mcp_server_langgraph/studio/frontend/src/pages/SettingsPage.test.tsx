@@ -568,13 +568,13 @@ describe("SettingsPage", () => {
 
       // System should be selected by default
       const systemButton = screen.getByText("system").closest("button");
-      expect(systemButton).toHaveClass("border-blue-500");
+      expect(systemButton).toHaveClass("border-primary-500");
 
       // Click dark
       const darkButton = screen.getByText("dark").closest("button")!;
       fireEvent.click(darkButton);
 
-      expect(darkButton).toHaveClass("border-blue-500");
+      expect(darkButton).toHaveClass("border-primary-500");
     });
   });
 

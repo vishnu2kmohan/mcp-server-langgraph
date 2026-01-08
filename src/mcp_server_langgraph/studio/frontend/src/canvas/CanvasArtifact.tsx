@@ -163,7 +163,7 @@ function LineNumbers({ content }: { content: string }) {
   return (
     <div
       data-testid="line-numbers"
-      className="select-none pr-3 mr-3 border-r border-gray-300 dark:border-gray-600 text-gray-400 text-right"
+      className="select-none pr-3 mr-3 border-r border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-400 text-right"
     >
       {Array.from({ length: lines }, (_, i) => (
         <div key={i + 1}>{i + 1}</div>
@@ -541,7 +541,7 @@ base64.b64encode(buf.read()).decode("utf-8")
                     <div className="h-3 bg-gray-800 rounded w-3/4" />
                   </div>
                   <div className="p-4 bg-gray-800 border-t border-gray-700">
-                    <div className="flex items-center gap-2 text-gray-500">
+                    <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                       <Loader2 size={14} className="animate-spin" />
                       <span className="text-xs">
                         Loading interactive editor...
@@ -613,7 +613,7 @@ base64.b64encode(buf.read()).decode("utf-8")
           {language && (
             <span
               data-testid="language-badge"
-              className="px-1.5 py-0.5 text-xs rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+              className="px-1.5 py-0.5 text-xs rounded bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
             >
               {language}
             </span>
@@ -621,7 +621,7 @@ base64.b64encode(buf.read()).decode("utf-8")
           {isAIGenerated && (
             <span
               data-testid="ai-badge"
-              className="flex items-center gap-1 px-1.5 py-0.5 text-xs rounded bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
+              className="flex items-center gap-1 px-1.5 py-0.5 text-xs rounded bg-insight-100 dark:bg-insight-900/30 text-insight-600 dark:text-insight-400"
             >
               <Sparkles size={10} />
               AI
@@ -634,7 +634,9 @@ base64.b64encode(buf.read()).decode("utf-8")
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400">v{artifact.version}</span>
+          <span className="text-xs text-gray-400 dark:text-gray-400">
+            v{artifact.version}
+          </span>
           {editable && !isEditing && (
             <button
               data-testid="edit-button"
@@ -643,8 +645,8 @@ base64.b64encode(buf.read()).decode("utf-8")
               aria-label="Edit artifact"
               className={cn(
                 "p-1.5 rounded transition-colors",
-                "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
-                "hover:bg-gray-100 dark:hover:bg-gray-700",
+                "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200",
+                "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
               )}
             >
               <Edit2 size={14} />
@@ -659,8 +661,8 @@ base64.b64encode(buf.read()).decode("utf-8")
                 aria-label="Save changes"
                 className={cn(
                   "p-1.5 rounded transition-colors",
-                  "text-green-600 hover:text-green-700",
-                  "hover:bg-green-100 dark:hover:bg-green-900/30",
+                  "text-success-600 hover:text-success-700",
+                  "hover:bg-success-100 dark:hover:bg-success-900/30",
                 )}
               >
                 <Save size={14} />
@@ -672,8 +674,8 @@ base64.b64encode(buf.read()).decode("utf-8")
                 aria-label="Cancel editing"
                 className={cn(
                   "p-1.5 rounded transition-colors",
-                  "text-red-600 hover:text-red-700",
-                  "hover:bg-red-100 dark:hover:bg-red-900/30",
+                  "text-error-600 hover:text-error-700",
+                  "hover:bg-error-100 dark:hover:bg-error-900/30",
                 )}
               >
                 <X size={14} />
@@ -740,7 +742,7 @@ base64.b64encode(buf.read()).decode("utf-8")
           )}
 
           {aiError && hasTriggeredAnalysis && (
-            <p className="text-sm text-red-600 dark:text-red-400">
+            <p className="text-sm text-error-600 dark:text-error-400">
               Failed to analyze code. Click retry to try again.
             </p>
           )}
@@ -761,10 +763,10 @@ base64.b64encode(buf.read()).decode("utf-8")
                       className={cn(
                         "px-1.5 py-0.5 text-xs font-medium rounded",
                         aiComplexity <= 10
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                          ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300"
                           : aiComplexity <= 20
-                            ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
-                            : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+                            ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-300"
+                            : "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-300",
                       )}
                     >
                       {aiComplexity}
@@ -782,20 +784,20 @@ base64.b64encode(buf.read()).decode("utf-8")
                     </span>
                     <div className="flex items-center gap-1">
                       {aiQualityScore >= 0.8 ? (
-                        <CheckCircle2 size={12} className="text-green-500" />
+                        <CheckCircle2 size={12} className="text-success-500" />
                       ) : aiQualityScore >= 0.6 ? (
-                        <AlertTriangle size={12} className="text-yellow-500" />
+                        <AlertTriangle size={12} className="text-warning-500" />
                       ) : (
-                        <AlertTriangle size={12} className="text-red-500" />
+                        <AlertTriangle size={12} className="text-error-500" />
                       )}
                       <span
                         className={cn(
                           "text-xs font-medium",
                           aiQualityScore >= 0.8
-                            ? "text-green-600 dark:text-green-400"
+                            ? "text-success-600 dark:text-success-400"
                             : aiQualityScore >= 0.6
-                              ? "text-yellow-600 dark:text-yellow-400"
-                              : "text-red-600 dark:text-red-400",
+                              ? "text-warning-600 dark:text-warning-400"
+                              : "text-error-600 dark:text-error-400",
                         )}
                       >
                         {Math.round(aiQualityScore * 100)}%
@@ -818,10 +820,10 @@ base64.b64encode(buf.read()).decode("utf-8")
                         className={cn(
                           "px-2 py-0.5 text-xs rounded-full",
                           issue.severity === "error"
-                            ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                            ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-300"
                             : issue.severity === "warning"
-                              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
-                              : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+                              ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-300"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
                         )}
                         title={issue.message}
                       >
@@ -871,7 +873,7 @@ base64.b64encode(buf.read()).decode("utf-8")
                     "px-2 py-1 text-xs rounded border",
                     runtime === "sandbox"
                       ? "bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 text-primary-700 dark:text-primary-200"
-                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
+                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
                   )}
                 >
                   Server sandbox
@@ -884,7 +886,7 @@ base64.b64encode(buf.read()).decode("utf-8")
                       "px-2 py-1 text-xs rounded border",
                       runtime === "pyodide"
                         ? "bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 text-primary-700 dark:text-primary-200"
-                        : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
+                        : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
                     )}
                   >
                     Pyodide (browser)
@@ -903,7 +905,7 @@ base64.b64encode(buf.read()).decode("utf-8")
               }
               className={cn(
                 "flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium",
-                "bg-green-600 text-white hover:bg-green-700",
+                "bg-success-600 text-white hover:bg-success-700",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
               )}
             >
@@ -936,7 +938,7 @@ base64.b64encode(buf.read()).decode("utf-8")
           {runtime === "sandbox" && (sandboxResult || sandboxError) && (
             <div className="space-y-2">
               {sandboxError && (
-                <div className="rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-800 dark:text-red-200">
+                <div className="rounded border border-error-200 dark:border-error-800 bg-error-50 dark:bg-error-950/40 p-3 text-sm text-error-800 dark:text-error-200">
                   {sandboxError}
                 </div>
               )}
@@ -968,17 +970,17 @@ base64.b64encode(buf.read()).decode("utf-8")
                     </div>
                   )}
                   {sandboxResult.stderr && (
-                    <div className="rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-3">
-                      <div className="text-xs font-semibold text-red-700 dark:text-red-300 mb-1">
+                    <div className="rounded border border-error-200 dark:border-error-800 bg-error-50 dark:bg-error-950/40 p-3">
+                      <div className="text-xs font-semibold text-error-700 dark:text-error-300 mb-1">
                         stderr
                       </div>
-                      <pre className="text-sm text-red-800 dark:text-red-200 whitespace-pre-wrap">
+                      <pre className="text-sm text-error-800 dark:text-error-200 whitespace-pre-wrap">
                         {sandboxResult.stderr}
                       </pre>
                     </div>
                   )}
                   {sandboxResult.error && !sandboxResult.stderr && (
-                    <div className="rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-800 dark:text-red-200">
+                    <div className="rounded border border-error-200 dark:border-error-800 bg-error-50 dark:bg-error-950/40 p-3 text-sm text-error-800 dark:text-error-200">
                       {sandboxResult.error}
                     </div>
                   )}
@@ -1001,17 +1003,17 @@ base64.b64encode(buf.read()).decode("utf-8")
                   </div>
                 )}
                 {pythonStderr && (
-                  <div className="rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-3">
-                    <div className="text-xs font-semibold text-red-700 dark:text-red-300 mb-1">
+                  <div className="rounded border border-error-200 dark:border-error-800 bg-error-50 dark:bg-error-950/40 p-3">
+                    <div className="text-xs font-semibold text-error-700 dark:text-error-300 mb-1">
                       stderr
                     </div>
-                    <pre className="text-sm text-red-800 dark:text-red-200 whitespace-pre-wrap">
+                    <pre className="text-sm text-error-800 dark:text-error-200 whitespace-pre-wrap">
                       {pythonStderr}
                     </pre>
                   </div>
                 )}
                 {pythonError && (
-                  <div className="rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-800 dark:text-red-200">
+                  <div className="rounded border border-error-200 dark:border-error-800 bg-error-50 dark:bg-error-950/40 p-3 text-sm text-error-800 dark:text-error-200">
                     {pythonError}
                   </div>
                 )}

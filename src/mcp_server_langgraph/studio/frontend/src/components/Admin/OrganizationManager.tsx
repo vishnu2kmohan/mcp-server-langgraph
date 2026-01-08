@@ -111,7 +111,7 @@ export function OrganizationManager({
         data-testid="org-loading"
         className="flex items-center justify-center h-full"
       >
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
   }
@@ -125,7 +125,7 @@ export function OrganizationManager({
         </h2>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Create Organization
@@ -134,19 +134,19 @@ export function OrganizationManager({
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-400" />
         <input
           type="text"
           placeholder="Search organizations..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
       </div>
 
       {/* Organization List */}
       {filteredOrganizations.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           No organizations found
         </div>
       ) : (
@@ -158,7 +158,7 @@ export function OrganizationManager({
               onClick={() => onSelect(org.id)}
               className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors ${
                 selectedOrgId === org.id
-                  ? "bg-blue-50 dark:bg-blue-900 border-blue-300 dark:border-blue-700"
+                  ? "bg-primary-50 dark:bg-primary-900 border-primary-300 dark:border-primary-700"
                   : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
               }`}
             >
@@ -179,7 +179,7 @@ export function OrganizationManager({
                     e.stopPropagation();
                     handleEdit(org);
                   }}
-                  className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+                  className="p-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors"
                   aria-label="Edit"
                 >
                   <Edit2 className="w-4 h-4" />
@@ -189,7 +189,7 @@ export function OrganizationManager({
                     e.stopPropagation();
                     handleDeleteClick(org.id);
                   }}
-                  className="p-2 text-gray-500 hover:text-red-600 transition-colors"
+                  className="p-2 text-gray-500 dark:text-gray-400 hover:text-error-600 transition-colors"
                   aria-label="Delete"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -209,13 +209,13 @@ export function OrganizationManager({
           <>
             <button
               onClick={() => setIsCreateModalOpen(false)}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             >
               Cancel
             </button>
             <button
               onClick={handleCreate}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
               Create
             </button>
@@ -234,7 +234,7 @@ export function OrganizationManager({
             type="text"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
       </Dialog>
@@ -248,13 +248,13 @@ export function OrganizationManager({
           <>
             <button
               onClick={() => setIsEditModalOpen(false)}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             >
               Cancel
             </button>
             <button
               onClick={handleUpdate}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
               Save
             </button>
@@ -273,7 +273,7 @@ export function OrganizationManager({
             type="text"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
       </Dialog>
@@ -287,13 +287,13 @@ export function OrganizationManager({
           <>
             <button
               onClick={() => setIsDeleteConfirmOpen(false)}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             >
               Cancel
             </button>
             <button
               onClick={handleDeleteConfirm}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              className="px-4 py-2 bg-error-600 text-white rounded-lg hover:bg-error-700"
             >
               Confirm
             </button>

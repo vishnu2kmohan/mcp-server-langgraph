@@ -223,6 +223,18 @@ export interface AgentTraceTabProps {
   sessionId: string;
   /** Callback when node is highlighted */
   onNodeHighlight?: (nodeId: string | null) => void;
+  /** External real-time steps from DevTools WebSocket */
+  externalSteps?: {
+    id?: string;
+    session_id: string;
+    node_id?: string;
+    name: string;
+    status: string;
+    start_time: number;
+    end_time?: number;
+    duration_ms?: number;
+    attributes?: Record<string, unknown>;
+  }[];
 }
 
 /** Props for ExecutionTraceTab */

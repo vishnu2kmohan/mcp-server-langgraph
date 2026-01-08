@@ -60,31 +60,31 @@ const statusStyles: Record<
     bg: "bg-gray-100 dark:bg-gray-800",
     border: "border-gray-300 dark:border-gray-600",
     text: "text-gray-500 dark:text-gray-400",
-    icon: <Circle size={12} className="text-gray-400" />,
+    icon: <Circle size={12} className="text-gray-400 dark:text-gray-400" />,
   },
   pending: {
     bg: "bg-gray-100 dark:bg-gray-800",
-    border: "border-gray-400 dark:border-gray-500",
+    border: "border-gray-400 dark:border-gray-500 dark:border-gray-500",
     text: "text-gray-600 dark:text-gray-300",
-    icon: <Circle size={12} className="text-gray-400" />,
+    icon: <Circle size={12} className="text-gray-400 dark:text-gray-400" />,
   },
   running: {
-    bg: "bg-blue-50 dark:bg-blue-900/30",
-    border: "border-blue-500",
-    text: "text-blue-700 dark:text-blue-300",
-    icon: <Loader2 size={12} className="text-blue-500 animate-spin" />,
+    bg: "bg-primary-50 dark:bg-primary-900/30",
+    border: "border-primary-500",
+    text: "text-primary-700 dark:text-primary-300",
+    icon: <Loader2 size={12} className="text-primary-500 animate-spin" />,
   },
   success: {
-    bg: "bg-green-50 dark:bg-green-900/30",
-    border: "border-green-500",
-    text: "text-green-700 dark:text-green-300",
-    icon: <CheckCircle size={12} className="text-green-500" />,
+    bg: "bg-success-50 dark:bg-success-900/30",
+    border: "border-success-500",
+    text: "text-success-700 dark:text-success-300",
+    icon: <CheckCircle size={12} className="text-success-500" />,
   },
   error: {
-    bg: "bg-red-50 dark:bg-red-900/30",
-    border: "border-red-500",
-    text: "text-red-700 dark:text-red-300",
-    icon: <XCircle size={12} className="text-red-500" />,
+    bg: "bg-error-50 dark:bg-error-900/30",
+    border: "border-error-500",
+    text: "text-error-700 dark:text-error-300",
+    icon: <XCircle size={12} className="text-error-500" />,
   },
 };
 
@@ -141,7 +141,7 @@ export function WorkflowMiniView({
             Workflow
           </span>
           {activeNode && (
-            <span className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+            <span className="text-xs text-primary-600 dark:text-primary-400 flex items-center gap-1">
               <Loader2 size={10} className="animate-spin" />
               {activeNode.name}
             </span>
@@ -154,10 +154,13 @@ export function WorkflowMiniView({
           {onExpand && (
             <button
               onClick={onExpand}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+              className="p-1 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 rounded transition-colors"
               title="Expand workflow view"
             >
-              <ChevronRight size={14} className="text-gray-400" />
+              <ChevronRight
+                size={14}
+                className="text-gray-400 dark:text-gray-400"
+              />
             </button>
           )}
         </div>
@@ -166,7 +169,7 @@ export function WorkflowMiniView({
       {/* Progress bar */}
       <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full mb-3 overflow-hidden">
         <div
-          className="h-full bg-blue-500 transition-all duration-500 ease-out"
+          className="h-full bg-primary-500 transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -179,7 +182,10 @@ export function WorkflowMiniView({
           <div key={node.id} className="flex items-center gap-1">
             <WorkflowNodeBadge node={node} />
             {isHorizontal && index < nodes.length - 1 && (
-              <ChevronRight size={12} className="text-gray-400 flex-shrink-0" />
+              <ChevronRight
+                size={12}
+                className="text-gray-400 dark:text-gray-400 flex-shrink-0"
+              />
             )}
           </div>
         ))}

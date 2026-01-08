@@ -54,7 +54,9 @@ import { TimelineBar } from "./TimelineBar";
 import { DevToolsTimelineProvider } from "./context/DevToolsTimelineProvider";
 import { DevToolsWebSocketObserver } from "./components/DevToolsWebSocketObserver";
 import { useTraceWebSocket } from "../../hooks/useTraceWebSocket";
+import { useAlertWebSocket } from "../../hooks/useAlertWebSocket";
 import { useDevToolsWebSocket } from "./hooks/useDevToolsWebSocket";
+import { selectAlerts, clearAlerts } from "../../store/slices/alertSlice";
 import {
   useListTracesQuery,
   useListLogsQuery,
@@ -162,7 +164,7 @@ const WsMetricsTabContent = lazy(() =>
 function TabContentLoader() {
   return (
     <div className="flex items-center justify-center h-full">
-      <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-400" />
     </div>
   );
 }
@@ -186,7 +188,7 @@ function ConsoleFilter({ value, onChange }: ConsoleFilterProps) {
           "appearance-none pl-2 pr-6 py-1 text-xs rounded",
           "bg-gray-100 dark:bg-gray-700",
           "text-gray-700 dark:text-gray-200",
-          "border border-gray-200 dark:border-gray-600",
+          "border border-gray-200 dark:border-gray-700 dark:border-gray-600",
           "focus:outline-none focus:ring-1 focus:ring-primary-500",
         )}
       >
@@ -197,7 +199,7 @@ function ConsoleFilter({ value, onChange }: ConsoleFilterProps) {
       </select>
       <ChevronDown
         size={12}
-        className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500"
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500 dark:text-gray-400"
       />
     </div>
   );
@@ -232,11 +234,39 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     networkEntries: wsNetworkEntries,
     clearConsoleEntries: clearWsConsoleEntries,
     clearNetworkEntries: clearWsNetworkEntries,
+    traceSteps: wsTraceSteps,
+    clearTraceSteps: _clearWsTraceSteps,
     reconnectAttempts: devToolsReconnectAttempts,
   } = useDevToolsWebSocket({
     enabled: !collapsed,
     contextEntityId: entityId,
   });
+
+  // Alert WebSocket - auto-connect for real-time alert updates
+  const { status: alertWsStatus } = useAlertWebSocket({
+    enabled: !collapsed && availableTabs.includes("alerts"),
+    showToasts: false, // DevTools handles display
+  });
+
+  // Get WebSocket alerts from Redux store
+  const wsAlerts = useAppSelector(selectAlerts);
+
+  // Transform Redux alerts to DevTools Alert format
+  const wsAlertsList = useMemo(() => {
+    if (!wsAlerts || wsAlerts.length === 0) return [];
+    return wsAlerts.map((alert) => ({
+      id: alert.alertId,
+      name: alert.name,
+      state: alert.state as "firing" | "pending" | "resolved" | "silenced",
+      severity: alert.severity,
+      service: alert.labels?.service || "unknown",
+      message: alert.message,
+      startedAt: alert.startedAt || new Date().toISOString(),
+      resolvedAt: alert.endedAt ?? undefined,
+      generatorUrl: undefined,
+      labels: alert.labels,
+    }));
+  }, [wsAlerts]);
 
   // RTK Query hooks for OTEL tabs - skip when collapsed or tab not active
   // These provide real-time API data to the observability tabs
@@ -340,10 +370,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
       id: alert.alertId,
       name: alert.name,
       state: alert.state as "firing" | "pending" | "resolved" | "silenced",
-      severity: (alert.severity === "error" ? "critical" : alert.severity) as
-        | "critical"
-        | "warning"
-        | "info",
+      severity: alert.severity as "critical" | "warning" | "info",
       service: alert.labels?.service || "unknown",
       message: alert.message,
       startedAt: alert.startedAt || new Date().toISOString(),
@@ -521,7 +548,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             className="h-full min-h-0"
           >
             <Suspense fallback={<TabContentLoader />}>
-              <AgentTraceTabContent sessionId={entityId ?? ""} />
+              <AgentTraceTabContent
+                sessionId={entityId ?? ""}
+                externalSteps={wsTraceSteps}
+              />
             </Suspense>
           </div>
         );
@@ -592,6 +622,9 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             <Suspense fallback={<TabContentLoader />}>
               <AlertsTabContent
                 alerts={alertsList}
+                externalAlerts={wsAlertsList}
+                connectionStatus={alertWsStatus}
+                onClearExternal={() => dispatch(clearAlerts())}
                 isLoading={isAlertsLoading}
                 error={alertsError ? String(alertsError) : undefined}
               />
@@ -662,7 +695,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
               devToolsReconnectAttempts > 0 && (
                 <div
                   data-testid="devtools-reconnecting-indicator"
-                  className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 text-xs"
+                  className="flex items-center gap-1 text-warning-600 dark:text-warning-400 text-xs"
                 >
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span>Reconnecting ({devToolsReconnectAttempts})...</span>
@@ -671,7 +704,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             {devToolsWsStatus === "error" && (
               <div
                 data-testid="devtools-error-indicator"
-                className="flex items-center gap-1 text-red-600 dark:text-red-400 text-xs"
+                className="flex items-center gap-1 text-error-600 dark:text-error-400 text-xs"
               >
                 <AlertTriangle className="w-3 h-3" />
                 <span>Connection error</span>
@@ -680,7 +713,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             {devToolsWsStatus === "connected" && (
               <div
                 data-testid="devtools-connected-indicator"
-                className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs"
+                className="flex items-center gap-1 text-success-600 dark:text-success-400 text-xs"
               >
                 <Wifi className="w-3 h-3" />
               </div>
@@ -702,8 +735,8 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
               onClick={handleClearConsole}
               className={cn(
                 "p-1.5 rounded",
-                "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
-                "hover:bg-gray-100 dark:hover:bg-gray-700",
+                "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200",
+                "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
               )}
               title="Clear Console"
               aria-label="Clear"
@@ -716,8 +749,8 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
               onClick={handleMaximize}
               className={cn(
                 "p-1.5 rounded",
-                "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
-                "hover:bg-gray-100 dark:hover:bg-gray-700",
+                "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200",
+                "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
               )}
               title={maximized ? "Minimize" : "Maximize"}
               aria-label={maximized ? "Minimize" : "Maximize"}
@@ -730,8 +763,8 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
               onClick={handleCollapse}
               className={cn(
                 "p-1.5 rounded",
-                "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
-                "hover:bg-gray-100 dark:hover:bg-gray-700",
+                "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200",
+                "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
               )}
               title="Collapse"
               aria-label="Collapse"

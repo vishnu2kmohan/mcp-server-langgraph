@@ -138,7 +138,7 @@ export function DataExplorer({
           <div className="relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
             />
             <input
               data-testid="search-input"
@@ -155,7 +155,7 @@ export function DataExplorer({
             data-testid="export-button"
             type="button"
             onClick={onExport}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300 transition-colors"
             aria-label="Export data"
           >
             <Download size={18} />
@@ -263,7 +263,7 @@ export function DataExplorer({
               type="button"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft size={18} />
             </button>
@@ -272,7 +272,7 @@ export function DataExplorer({
               type="button"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronRight size={18} />
             </button>

@@ -110,7 +110,7 @@ export function ExecutableCanvas({
                 "p-1.5",
                 viewMode === "split"
                   ? "bg-gray-200 dark:bg-gray-700"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-800",
+                  : "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
               )}
               aria-label="Split view"
             >
@@ -124,7 +124,7 @@ export function ExecutableCanvas({
                 "p-1.5",
                 viewMode === "code"
                   ? "bg-gray-200 dark:bg-gray-700"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-800",
+                  : "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
               )}
               aria-label="Code only"
             >
@@ -138,7 +138,7 @@ export function ExecutableCanvas({
                 "p-1.5",
                 viewMode === "preview"
                   ? "bg-gray-200 dark:bg-gray-700"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-800",
+                  : "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
               )}
               aria-label="Preview only"
             >
@@ -152,7 +152,7 @@ export function ExecutableCanvas({
               data-testid="stop-button"
               type="button"
               onClick={onStop}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-error-500 text-white rounded hover:bg-error-600 transition-colors"
             >
               <Square size={14} />
               Stop
@@ -162,7 +162,7 @@ export function ExecutableCanvas({
               data-testid="run-button"
               type="button"
               onClick={handleRun}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-success-500 text-white rounded hover:bg-success-600 transition-colors"
             >
               <Play size={14} />
               Run
@@ -236,10 +236,10 @@ export function ExecutableCanvas({
       {error && (
         <div
           data-testid="error-panel"
-          className="error flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 border-t border-red-200 dark:border-red-800"
+          className="error flex items-center gap-2 px-4 py-2 bg-error-50 dark:bg-error-900/20 border-t border-error-200 dark:border-error-800"
         >
-          <AlertTriangle size={16} className="text-red-500" />
-          <span className="text-sm text-red-600 dark:text-red-400">
+          <AlertTriangle size={16} className="text-error-500" />
+          <span className="text-sm text-error-600 dark:text-error-400">
             {error}
           </span>
         </div>
@@ -251,7 +251,7 @@ export function ExecutableCanvas({
           data-testid="console-panel"
           className="border-t border-gray-200 dark:border-gray-700"
         >
-          <div className="flex items-center justify-between px-4 py-1 bg-gray-100 dark:bg-gray-900">
+          <div className="flex items-center justify-between px-4 py-1 bg-gray-100 dark:bg-gray-800">
             <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
               Console
             </span>
@@ -259,7 +259,7 @@ export function ExecutableCanvas({
               data-testid="clear-console"
               type="button"
               onClick={onClearConsole}
-              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
               aria-label="Clear console"
             >
               <Trash2 size={12} />

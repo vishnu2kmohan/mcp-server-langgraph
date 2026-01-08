@@ -67,7 +67,7 @@ describe("EndNode", () => {
       renderWithProvider();
 
       // CircleStop icon should be present with red styling
-      const icons = document.querySelectorAll("svg.text-red-500");
+      const icons = document.querySelectorAll("svg.text-error-500");
       expect(icons.length).toBeGreaterThan(0);
     });
 
@@ -118,7 +118,7 @@ describe("EndNode", () => {
       expect(node).toBeInTheDocument();
 
       // Check for green status icon
-      const checkIcon = document.querySelector("svg.text-green-500");
+      const checkIcon = document.querySelector("svg.text-success-500");
       expect(checkIcon).toBeInTheDocument();
     });
 
@@ -136,7 +136,7 @@ describe("EndNode", () => {
       expect(node).toBeInTheDocument();
 
       // Check for red status icon
-      const xIcon = document.querySelector("svg.text-red-500");
+      const xIcon = document.querySelector("svg.text-error-500");
       // There are two red icons: CircleStop and XCircle when error
       expect(xIcon).toBeInTheDocument();
     });
@@ -170,7 +170,7 @@ describe("EndNode", () => {
 
       const node = document.querySelector('[data-selected="true"]');
       expect(node).toBeInTheDocument();
-      expect(node?.className).toContain("border-blue-500");
+      expect(node?.className).toContain("border-primary-500");
     });
 
     it("should have blue border with pulse when running", () => {
@@ -184,7 +184,7 @@ describe("EndNode", () => {
       });
 
       const node = document.querySelector('[data-status="running"]');
-      expect(node?.className).toContain("border-blue-500");
+      expect(node?.className).toContain("border-primary-500");
       expect(node?.className).toContain("animate-pulse");
     });
 
@@ -199,7 +199,7 @@ describe("EndNode", () => {
       });
 
       const node = document.querySelector('[data-status="success"]');
-      expect(node?.className).toContain("border-green-500");
+      expect(node?.className).toContain("border-success-500");
     });
 
     it("should have red border when error", () => {
@@ -213,7 +213,7 @@ describe("EndNode", () => {
       });
 
       const node = document.querySelector('[data-status="error"]');
-      expect(node?.className).toContain("border-red-500");
+      expect(node?.className).toContain("border-error-500");
     });
 
     it("should have gray border when not selected and idle", () => {
@@ -351,7 +351,7 @@ describe("EndNode", () => {
       renderWithProvider();
 
       // CircleStop icon has text-red-500 class for styling
-      const icons = document.querySelectorAll("svg.text-red-500");
+      const icons = document.querySelectorAll("svg.text-error-500");
       // Should find at least one red icon (the CircleStop)
       expect(icons.length).toBeGreaterThan(0);
     });

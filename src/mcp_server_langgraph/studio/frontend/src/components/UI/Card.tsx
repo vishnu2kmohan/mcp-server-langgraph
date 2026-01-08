@@ -32,7 +32,7 @@ function cn(...classes: (string | undefined | boolean)[]): string {
 function getVariantClasses(variant: CardVariant): string {
   const variants: Record<CardVariant, string> = {
     default: cn(
-      "border border-gray-200 bg-white",
+      "border border-gray-200 dark:border-gray-700 bg-white",
       "dark:border-gray-700 dark:bg-gray-900",
     ),
     elevated: cn(
@@ -89,7 +89,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           interactive &&
             cn(
               "cursor-pointer transition-all duration-fast",
-              "hover:shadow-soft hover:border-gray-300",
+              "hover:shadow-soft hover:border-gray-300 dark:border-gray-600",
               "dark:hover:border-gray-600",
             ),
           className,

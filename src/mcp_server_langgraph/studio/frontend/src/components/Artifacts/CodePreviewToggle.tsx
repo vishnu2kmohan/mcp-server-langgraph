@@ -70,8 +70,8 @@ export function CodePreviewToggle({
           "px-3 py-1 text-xs font-medium rounded-md transition-colors",
           "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1",
           mode === "code"
-            ? "bg-blue-500 text-white shadow-sm"
-            : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200",
+            ? "bg-primary-500 text-white shadow-sm"
+            : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200",
         )}
       >
         Code
@@ -86,8 +86,8 @@ export function CodePreviewToggle({
           "px-3 py-1 text-xs font-medium rounded-md transition-colors",
           "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1",
           mode === "preview"
-            ? "bg-blue-500 text-white shadow-sm"
-            : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200",
+            ? "bg-primary-500 text-white shadow-sm"
+            : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200",
           !previewSupported && "opacity-50 cursor-not-allowed",
         )}
       >

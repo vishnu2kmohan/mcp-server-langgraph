@@ -129,14 +129,14 @@ export function ChatSuggestions({
                   rounded-lg
                   text-gray-700 dark:text-gray-300
                   hover:bg-gray-50 dark:hover:bg-gray-700
-                  hover:border-blue-300 dark:hover:border-blue-600
-                  focus:outline-none focus:ring-2 focus:ring-blue-500/50
+                  hover:border-primary-300 dark:hover:border-primary-600
+                  focus:outline-none focus:ring-2 focus:ring-primary-500/50
                   transition-colors
                 `}
               >
                 <Icon
                   size={compact ? 14 : 16}
-                  className="text-gray-400 dark:text-gray-500"
+                  className="text-gray-400 dark:text-gray-400"
                 />
                 <span>{suggestion.text}</span>
               </button>

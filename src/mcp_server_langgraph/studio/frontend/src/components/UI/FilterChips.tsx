@@ -50,13 +50,13 @@ function getChipClasses(
   if (isSelected) {
     switch (color) {
       case "green":
-        return `${baseClasses} bg-green-100 text-green-800 ring-2 ring-green-500 dark:bg-green-900/40 dark:text-green-300 focus:ring-green-500`;
+        return `${baseClasses} bg-success-100 text-success-800 ring-2 ring-success-500 dark:bg-success-900/40 dark:text-success-300 focus:ring-success-500`;
       case "red":
-        return `${baseClasses} bg-red-100 text-red-800 ring-2 ring-red-500 dark:bg-red-900/40 dark:text-red-300 focus:ring-red-500`;
+        return `${baseClasses} bg-error-100 text-error-800 ring-2 ring-error-500 dark:bg-error-900/40 dark:text-error-300 focus:ring-error-500`;
       case "yellow":
-        return `${baseClasses} bg-yellow-100 text-yellow-800 ring-2 ring-yellow-500 dark:bg-yellow-900/40 dark:text-yellow-300 focus:ring-yellow-500`;
+        return `${baseClasses} bg-warning-100 text-warning-800 ring-2 ring-warning-500 dark:bg-warning-900/40 dark:text-warning-300 focus:ring-warning-500`;
       case "blue":
-        return `${baseClasses} bg-blue-100 text-blue-800 ring-2 ring-blue-500 dark:bg-blue-900/40 dark:text-blue-300 focus:ring-blue-500`;
+        return `${baseClasses} bg-primary-100 text-primary-800 ring-2 ring-primary-500 dark:bg-primary-900/40 dark:text-primary-300 focus:ring-primary-500`;
       case "gray":
       default:
         return `${baseClasses} bg-gray-200 text-gray-900 ring-2 ring-gray-500 dark:bg-gray-700 dark:text-gray-100 focus:ring-gray-500`;
@@ -65,13 +65,13 @@ function getChipClasses(
     // Unselected state - subtle coloring based on the color
     switch (color) {
       case "green":
-        return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-green-50 hover:text-green-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-green-900/20 dark:hover:text-green-400 focus:ring-green-500`;
+        return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-success-50 hover:text-success-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-success-900/20 dark:hover:text-success-400 focus:ring-success-500`;
       case "red":
-        return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-red-900/20 dark:hover:text-red-400 focus:ring-red-500`;
+        return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-error-50 hover:text-error-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-error-900/20 dark:hover:text-error-400 focus:ring-error-500`;
       case "yellow":
-        return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-yellow-50 hover:text-yellow-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400 focus:ring-yellow-500`;
+        return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-warning-50 hover:text-warning-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-warning-900/20 dark:hover:text-warning-400 focus:ring-warning-500`;
       case "blue":
-        return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 focus:ring-blue-500`;
+        return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-primary-50 hover:text-primary-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-primary-900/20 dark:hover:text-primary-400 focus:ring-primary-500`;
       case "gray":
       default:
         return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 focus:ring-gray-500`;

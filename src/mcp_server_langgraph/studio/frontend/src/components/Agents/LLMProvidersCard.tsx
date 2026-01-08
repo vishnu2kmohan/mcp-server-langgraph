@@ -32,11 +32,11 @@ export function LLMProvidersCard({ providers }: LLMProvidersCardProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-center gap-3 mb-4">
-        <Cloud size={24} className="text-cyan-500" />
+        <Cloud size={24} className="text-info-500" />
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           LLM Providers
         </h2>
-        <span className="px-2 py-1 text-xs bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 rounded-full">
+        <span className="px-2 py-1 text-xs bg-info-100 dark:bg-info-900/30 text-info-700 dark:text-info-400 rounded-full">
           {providers.length} providers
         </span>
       </div>
@@ -45,7 +45,7 @@ export function LLMProvidersCard({ providers }: LLMProvidersCardProps) {
         {providers.map((provider) => (
           <div
             key={provider.name}
-            className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-cyan-500 transition-colors"
+            className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-info-500 transition-colors"
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -54,12 +54,12 @@ export function LLMProvidersCard({ providers }: LLMProvidersCardProps) {
                     {provider.displayName}
                   </h3>
                   {provider.requiresApiKey ? (
-                    <span className="flex items-center gap-1 px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">
+                    <span className="flex items-center gap-1 px-2 py-0.5 text-xs bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400 rounded">
                       <Key size={12} />
                       API Key Required
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
+                    <span className="flex items-center gap-1 px-2 py-0.5 text-xs bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 rounded">
                       <KeyRound size={12} />
                       No API Key
                     </span>
@@ -88,7 +88,7 @@ export function LLMProvidersCard({ providers }: LLMProvidersCardProps) {
             </div>
 
             {provider.apiKeyEnvVar && (
-              <div className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+              <div className="mt-2 text-xs text-gray-400 dark:text-gray-400">
                 Env: <code className="font-mono">{provider.apiKeyEnvVar}</code>
               </div>
             )}

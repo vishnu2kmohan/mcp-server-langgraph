@@ -49,7 +49,7 @@ export function UpdatePrompt({
     <div
       role="alert"
       aria-live="polite"
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[70] bg-blue-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 max-w-md"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[70] bg-primary-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 max-w-md"
     >
       <RefreshCw
         className={`h-5 w-5 flex-shrink-0 ${isUpdating ? "animate-spin" : ""}`}
@@ -61,7 +61,7 @@ export function UpdatePrompt({
           {isUpdating ? "Updating application..." : "New version available"}
         </p>
         {!isUpdating && (
-          <p className="text-xs text-blue-100 mt-0.5">
+          <p className="text-xs text-primary-100 mt-0.5">
             Click update to get the latest features
           </p>
         )}
@@ -72,7 +72,7 @@ export function UpdatePrompt({
           type="button"
           onClick={onUpdate}
           disabled={isUpdating}
-          className="px-3 py-1.5 text-sm font-medium bg-white text-blue-600 rounded hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-3 py-1.5 text-sm font-medium bg-white text-primary-600 rounded hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Update application now"
         >
           Update
@@ -81,7 +81,7 @@ export function UpdatePrompt({
           type="button"
           onClick={onDismiss}
           disabled={isUpdating}
-          className="p-1.5 text-blue-100 hover:text-white hover:bg-blue-700 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 text-primary-100 hover:text-white hover:bg-primary-700 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Remind me later"
         >
           <X className="h-4 w-4" aria-hidden="true" />

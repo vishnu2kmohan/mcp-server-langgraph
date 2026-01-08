@@ -59,7 +59,7 @@ const COLORS = {
   start: "bg-emerald-500 dark:bg-emerald-600",
   end: "bg-rose-500 dark:bg-rose-600",
   llm: "bg-violet-500 dark:bg-violet-600",
-  tool: "bg-amber-500 dark:bg-amber-600",
+  tool: "bg-warning-500 dark:bg-warning-600",
   conditional: "bg-sky-500 dark:bg-sky-600",
   approval: "bg-pink-500 dark:bg-pink-600",
   custom: "bg-slate-500 dark:bg-slate-600",
@@ -71,7 +71,7 @@ const COLORS = {
   llmBorder:
     "border-violet-200 dark:border-violet-700 hover:border-violet-400 dark:hover:border-violet-500",
   toolBorder:
-    "border-amber-200 dark:border-amber-700 hover:border-amber-400 dark:hover:border-amber-500",
+    "border-warning-200 dark:border-warning-700 hover:border-warning-400 dark:hover:border-warning-500",
   conditionalBorder:
     "border-sky-200 dark:border-sky-700 hover:border-sky-400 dark:hover:border-sky-500",
   approvalBorder:
@@ -266,7 +266,7 @@ function DraggableNode({
       data-testid={`node-${template.type}`}
     >
       {/* Drag handle indicator */}
-      <div className="flex-shrink-0 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex-shrink-0 text-gray-400 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
         <GripVertical size={14} />
       </div>
 
@@ -327,7 +327,7 @@ export function NodePalette({
               w-12 h-12 rounded-lg ${template.color} text-white
               flex items-center justify-center
               hover:opacity-90 transition-opacity
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+              focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
             `}
             title={`Add ${template.label}: ${template.description}`}
             aria-label={`Add ${template.label} node`}
@@ -345,7 +345,7 @@ export function NodePalette({
       data-testid="node-palette"
     >
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-800">
         <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
           Node Types
         </h2>
@@ -354,7 +354,7 @@ export function NodePalette({
         <div className="relative">
           <Search
             size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
           />
           <input
             type="text"
@@ -363,7 +363,7 @@ export function NodePalette({
             placeholder="Search nodes..."
             className="w-full pl-9 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg
               placeholder:text-gray-400 dark:placeholder:text-gray-500
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+              focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
               transition-colors"
             aria-label="Search node types"
           />
@@ -397,8 +397,8 @@ export function NodePalette({
       </div>
 
       {/* Footer hint */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-800">
-        <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700 dark:border-gray-800">
+        <p className="text-xs text-gray-400 dark:text-gray-400 text-center">
           Drag nodes to canvas or click to add
         </p>
       </div>

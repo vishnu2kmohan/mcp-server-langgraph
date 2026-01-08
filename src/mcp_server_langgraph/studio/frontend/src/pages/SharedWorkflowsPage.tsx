@@ -88,7 +88,7 @@ export function SharedWorkflowsPage() {
         className="flex items-center justify-center h-full"
         data-testid="loading-indicator"
       >
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
   }
@@ -151,20 +151,20 @@ export function SharedWorkflowsPage() {
       {/* Search and Sort Controls */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-400" />
           <input
             type="text"
             placeholder="Search workflows..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <select
           aria-label="Sort by"
           value={sortBy}
           onChange={handleSortChange}
-          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
         >
           <option value="createdAt">Date Created</option>
           <option value="name">Name</option>
@@ -185,11 +185,11 @@ export function SharedWorkflowsPage() {
         {filteredWorkflows.map((workflow) => (
           <div
             key={workflow.id}
-            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-primary-300 dark:hover:border-primary-600 transition-colors"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2">
-                <GitBranch className="w-5 h-5 text-blue-500" />
+                <GitBranch className="w-5 h-5 text-primary-500" />
                 <h3 className="font-medium text-gray-900 dark:text-white">
                   {workflow.name}
                 </h3>
@@ -218,7 +218,7 @@ export function SharedWorkflowsPage() {
 
             <button
               onClick={() => handleViewWorkflow(workflow.id)}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
             >
               <Eye className="w-4 h-4" />
               View

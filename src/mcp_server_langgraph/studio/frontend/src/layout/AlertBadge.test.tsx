@@ -140,13 +140,13 @@ describe("AlertBadge", () => {
     it("should show red styling for critical alerts", () => {
       renderWithStore(<AlertBadge {...defaultProps} />, createTestStore(1, 0));
 
-      expect(screen.getByTestId("alert-badge")).toHaveClass("bg-red-500");
+      expect(screen.getByTestId("alert-badge")).toHaveClass("bg-error-500");
     });
 
     it("should show yellow styling for warning-only alerts", () => {
       renderWithStore(<AlertBadge {...defaultProps} />, createTestStore(0, 2));
 
-      expect(screen.getByTestId("alert-badge")).toHaveClass("bg-yellow-500");
+      expect(screen.getByTestId("alert-badge")).toHaveClass("bg-warning-500");
     });
   });
 

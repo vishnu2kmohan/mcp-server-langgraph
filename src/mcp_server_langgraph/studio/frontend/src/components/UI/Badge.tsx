@@ -40,12 +40,12 @@ function cn(...classes: (string | undefined | boolean)[]): string {
 function getVariantClasses(variant: BadgeVariant): string {
   const variants: Record<BadgeVariant, string> = {
     default: cn(
-      "bg-gray-100 text-gray-800",
+      "bg-gray-100 dark:bg-gray-800 text-gray-800",
       "dark:bg-gray-800 dark:text-gray-200",
     ),
     primary: cn(
       "bg-brand-primary text-white",
-      "dark:bg-blue-600 dark:text-white",
+      "dark:bg-primary-600 dark:text-white",
     ),
     success: cn(
       "bg-success-500 text-white",
@@ -57,7 +57,7 @@ function getVariantClasses(variant: BadgeVariant): string {
     ),
     error: cn("bg-error-500 text-white", "dark:bg-error-600 dark:text-white"),
     outline: cn(
-      "bg-transparent border border-gray-300 text-gray-700",
+      "bg-transparent border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200",
       "dark:border-gray-600 dark:text-gray-300",
     ),
   };

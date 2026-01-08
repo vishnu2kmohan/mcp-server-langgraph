@@ -353,8 +353,8 @@ export function ChartArtifact({
                   onClick={() => setChartType(type)}
                   className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
                     chartType === type
-                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                      ? "bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                   }`}
                   aria-label={label}
                 >
@@ -373,7 +373,7 @@ export function ChartArtifact({
           {expandable && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded"
               aria-label={isExpanded ? "Collapse chart" : "Expand chart"}
             >
               {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}

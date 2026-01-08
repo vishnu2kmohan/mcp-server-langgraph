@@ -62,15 +62,15 @@ function formatNumber(num: number): string {
 }
 
 function getCacheHitBarColor(ratio: number): string {
-  if (ratio >= 0.7) return "bg-green-500";
-  if (ratio >= 0.5) return "bg-yellow-500";
-  return "bg-red-500";
+  if (ratio >= 0.7) return "bg-success-500";
+  if (ratio >= 0.5) return "bg-warning-500";
+  return "bg-error-500";
 }
 
 function getErrorRateColor(rate: number): string {
-  if (rate < 0.05) return "text-green-600";
-  if (rate < 0.1) return "text-yellow-600";
-  return "text-red-600";
+  if (rate < 0.05) return "text-success-600";
+  if (rate < 0.1) return "text-warning-600";
+  return "text-error-600";
 }
 
 function formatCacheAge(ageMs: number): string {
@@ -104,14 +104,14 @@ function MetricCard({
   valueClassName,
 }: MetricCardProps) {
   const colorClasses = {
-    blue: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30",
+    blue: "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30",
     green:
-      "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30",
+      "text-success-600 dark:text-success-400 bg-success-50 dark:bg-success-900/30",
     purple:
-      "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30",
+      "text-insight-600 dark:text-insight-400 bg-insight-50 dark:bg-insight-900/30",
     orange:
-      "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30",
-    red: "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30",
+      "text-grafana-600 dark:text-grafana-400 bg-grafana-50 dark:bg-grafana-900/30",
+    red: "text-error-600 dark:text-error-400 bg-error-50 dark:bg-error-900/30",
   };
 
   return (
@@ -157,7 +157,7 @@ function FeatureRow({ feature, metrics }: FeatureRowProps) {
           {Math.round(metrics.averageLatency)}ms
         </span>
         {metrics.errorCount > 0 && (
-          <span className="text-red-500">{metrics.errorCount} err</span>
+          <span className="text-error-500">{metrics.errorCount} err</span>
         )}
       </div>
     </div>
@@ -199,7 +199,7 @@ export function AICacheMetricsDashboard({
           type="button"
           onClick={onRefresh}
           aria-label="Refresh cache metrics"
-          className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <RefreshCw size={16} />
         </button>
@@ -332,12 +332,12 @@ export function AICacheMetricsDashboard({
                   return (
                     <>
                       <div
-                        className="bg-green-500"
+                        className="bg-success-500"
                         style={{ width: `${l1Pct}%` }}
                         title={`L1 Hits: ${l1Pct.toFixed(1)}%`}
                       />
                       <div
-                        className="bg-blue-500"
+                        className="bg-primary-500"
                         style={{ width: `${l2Pct}%` }}
                         title={`L2 Hits: ${l2Pct.toFixed(1)}%`}
                       />
@@ -355,7 +355,7 @@ export function AICacheMetricsDashboard({
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
-                    <Zap size={14} className="text-green-500" />
+                    <Zap size={14} className="text-success-500" />
                     <span className="text-gray-600 dark:text-gray-400">
                       L1 (Memory)
                     </span>
@@ -370,7 +370,7 @@ export function AICacheMetricsDashboard({
 
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
-                    <HardDrive size={14} className="text-blue-500" />
+                    <HardDrive size={14} className="text-primary-500" />
                     <span className="text-gray-600 dark:text-gray-400">
                       L2 (Session)
                     </span>
@@ -385,7 +385,10 @@ export function AICacheMetricsDashboard({
 
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
-                    <Database size={14} className="text-gray-400" />
+                    <Database
+                      size={14}
+                      className="text-gray-400 dark:text-gray-400"
+                    />
                     <span className="text-gray-600 dark:text-gray-400">
                       Misses
                     </span>
@@ -400,7 +403,7 @@ export function AICacheMetricsDashboard({
 
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
-                    <Clock size={14} className="text-purple-500" />
+                    <Clock size={14} className="text-insight-500" />
                     <span className="text-gray-600 dark:text-gray-400">
                       Cache Age
                     </span>
@@ -424,7 +427,7 @@ export function AICacheMetricsDashboard({
           data-testid="loading-indicator"
           className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center rounded-lg"
         >
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
         </div>
       )}
     </div>

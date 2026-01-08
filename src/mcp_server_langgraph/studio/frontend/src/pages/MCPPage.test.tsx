@@ -653,7 +653,7 @@ describe("MCPPage", () => {
       renderWithStore();
       const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
       expect(wsIndicator).toBeInTheDocument();
-      expect(wsIndicator).toHaveClass("bg-green-500");
+      expect(wsIndicator).toHaveClass("bg-success-500");
     });
     it("should show yellow indicator when WebSocket is connecting", () => {
       mockUseMCPWebSocket.mockReturnValue({
@@ -677,7 +677,7 @@ describe("MCPPage", () => {
       });
       renderWithStore();
       const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
-      expect(wsIndicator).toHaveClass("bg-yellow-500");
+      expect(wsIndicator).toHaveClass("bg-warning-500");
     });
     it("should show gray indicator when WebSocket is disconnected", () => {
       mockUseMCPWebSocket.mockReturnValue({

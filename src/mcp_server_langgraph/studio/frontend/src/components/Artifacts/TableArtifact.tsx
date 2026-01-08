@@ -173,7 +173,7 @@ export function TableArtifact({
           {expandable && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded"
               aria-label={isExpanded ? "Collapse table" : "Expand table"}
             >
               {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
@@ -199,7 +199,7 @@ export function TableArtifact({
                     key={column.key}
                     className={`px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ${
                       column.sortable
-                        ? "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                        ? "cursor-pointer hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                         : ""
                     }`}
                     onClick={() => handleSort(column.key)}

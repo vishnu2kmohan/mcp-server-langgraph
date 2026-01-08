@@ -155,25 +155,25 @@ export function ConfirmationDialog({
   // Severity-based styles
   const severityStyles = {
     info: {
-      button: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500",
+      button: "bg-primary-600 hover:bg-primary-700 focus:ring-primary-500",
       icon: null,
     },
     warning: {
-      button: "bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500",
+      button: "bg-warning-600 hover:bg-warning-700 focus:ring-warning-500",
       icon: (
         <AlertTriangle
           data-testid="warning-icon"
-          className="h-6 w-6 text-yellow-600"
+          className="h-6 w-6 text-warning-600"
           aria-hidden="true"
         />
       ),
     },
     danger: {
-      button: "bg-red-600 hover:bg-red-700 focus:ring-red-500",
+      button: "bg-error-600 hover:bg-error-700 focus:ring-error-500",
       icon: (
         <AlertCircle
           data-testid="danger-icon"
-          className="h-6 w-6 text-red-600"
+          className="h-6 w-6 text-error-600"
           aria-hidden="true"
         />
       ),
@@ -231,7 +231,7 @@ export function ConfirmationDialog({
                 value={typedText}
                 onChange={(e) => setTypedText(e.target.value)}
                 placeholder={`Type ${confirmText} to confirm`}
-                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-error-500 focus:outline-none focus:ring-1 focus:ring-error-500"
               />
             </div>
           )}
@@ -243,7 +243,7 @@ export function ConfirmationDialog({
             type="button"
             onClick={onCancel}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {cancelLabel}
           </button>

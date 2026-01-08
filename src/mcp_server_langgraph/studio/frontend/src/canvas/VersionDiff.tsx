@@ -266,7 +266,7 @@ export function VersionDiff({
               aria-label="Close diff view"
               className={cn(
                 "p-1.5 rounded-lg transition-colors",
-                "text-gray-500 hover:text-gray-700 hover:bg-gray-100",
+                "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:bg-gray-800",
                 "dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700",
               )}
             >
@@ -333,7 +333,7 @@ export function VersionDiff({
           )}
 
           {aiError && hasTriggeredAnalysis && (
-            <p className="text-sm text-red-600 dark:text-red-400">
+            <p className="text-sm text-error-600 dark:text-error-400">
               Failed to analyze diff. Click retry to try again.
             </p>
           )}
@@ -352,10 +352,10 @@ export function VersionDiff({
                       className={cn(
                         "px-2 py-0.5 text-xs rounded-full",
                         change.impact === "high"
-                          ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                          ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-300"
                           : change.impact === "medium"
-                            ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
-                            : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+                            ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-300"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
                       )}
                     >
                       {change.type}: {change.description}
@@ -365,7 +365,7 @@ export function VersionDiff({
               )}
 
               {breakingChanges && (
-                <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                <div className="flex items-center gap-1 text-xs text-error-600 dark:text-error-400">
                   <span className="font-medium">
                     ⚠ Breaking changes detected
                   </span>
@@ -410,16 +410,18 @@ export function VersionDiff({
                 key={index}
                 className={cn(
                   "flex",
-                  line.type === "added" && "bg-green-50 dark:bg-green-900/20",
-                  line.type === "removed" && "bg-red-50 dark:bg-red-900/20",
+                  line.type === "added" &&
+                    "bg-success-50 dark:bg-success-900/20",
+                  line.type === "removed" && "bg-error-50 dark:bg-error-900/20",
                 )}
               >
                 <span
                   className={cn(
-                    "w-12 text-right pr-3 text-gray-400 select-none border-r border-gray-200 dark:border-gray-700",
+                    "w-12 text-right pr-3 text-gray-400 dark:text-gray-400 select-none border-r border-gray-200 dark:border-gray-700",
                     line.type === "added" &&
-                      "text-green-600 dark:text-green-400",
-                    line.type === "removed" && "text-red-600 dark:text-red-400",
+                      "text-success-600 dark:text-success-400",
+                    line.type === "removed" &&
+                      "text-error-600 dark:text-error-400",
                   )}
                 >
                   {line.type === "added" && "+"}
@@ -430,8 +432,9 @@ export function VersionDiff({
                   className={cn(
                     "flex-1 pl-3 whitespace-pre",
                     line.type === "added" &&
-                      "text-green-700 dark:text-green-300",
-                    line.type === "removed" && "text-red-700 dark:text-red-300",
+                      "text-success-700 dark:text-success-300",
+                    line.type === "removed" &&
+                      "text-error-700 dark:text-error-300",
                     line.type === "unchanged" &&
                       "text-gray-700 dark:text-gray-300",
                   )}
@@ -445,7 +448,7 @@ export function VersionDiff({
           // Split view
           <>
             <div className="border-r border-gray-200 dark:border-gray-700 pr-4">
-              <div className="text-xs text-gray-500 mb-2">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                 v{baseVersion.version}
               </div>
               {diffLines
@@ -456,7 +459,7 @@ export function VersionDiff({
                     className={cn(
                       "whitespace-pre",
                       line.type === "removed" &&
-                        "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300",
+                        "bg-error-50 dark:bg-error-900/20 text-error-700 dark:text-error-300",
                       line.type === "unchanged" &&
                         "text-gray-700 dark:text-gray-300",
                     )}
@@ -466,7 +469,7 @@ export function VersionDiff({
                 ))}
             </div>
             <div className="pl-4">
-              <div className="text-xs text-gray-500 mb-2">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                 v{comparedVersion.version}
               </div>
               {diffLines
@@ -477,7 +480,7 @@ export function VersionDiff({
                     className={cn(
                       "whitespace-pre",
                       line.type === "added" &&
-                        "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300",
+                        "bg-success-50 dark:bg-success-900/20 text-success-700 dark:text-success-300",
                       line.type === "unchanged" &&
                         "text-gray-700 dark:text-gray-300",
                     )}

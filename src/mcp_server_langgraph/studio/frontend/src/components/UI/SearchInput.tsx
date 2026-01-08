@@ -69,11 +69,11 @@ export function SearchInput({
       <div className="absolute left-3 pointer-events-none">
         {isLoading ? (
           <div data-testid="search-loading">
-            <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+            <Loader2 className="w-4 h-4 animate-spin text-gray-400 dark:text-gray-400" />
           </div>
         ) : (
           <div data-testid="search-icon">
-            <Search className="w-4 h-4 text-gray-400" />
+            <Search className="w-4 h-4 text-gray-400 dark:text-gray-400" />
           </div>
         )}
       </div>
@@ -89,7 +89,7 @@ export function SearchInput({
           bg-white dark:bg-gray-700
           text-gray-900 dark:text-gray-100
           placeholder-gray-400 dark:placeholder-gray-500
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
         "
       />
 
@@ -97,7 +97,7 @@ export function SearchInput({
         <button
           onClick={handleClear}
           aria-label="Clear search"
-          className="absolute right-2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          className="absolute right-2 p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
         >
           <X className="w-4 h-4" />
         </button>

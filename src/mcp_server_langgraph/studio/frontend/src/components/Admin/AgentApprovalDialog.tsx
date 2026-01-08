@@ -82,10 +82,10 @@ export interface AgentApprovalDialogProps {
  * Get confidence color based on value
  */
 function getConfidenceColor(confidence: number): string {
-  if (confidence >= 0.9) return "bg-green-500";
-  if (confidence >= 0.7) return "bg-blue-500";
-  if (confidence >= 0.5) return "bg-amber-500";
-  return "bg-red-500";
+  if (confidence >= 0.9) return "bg-success-500";
+  if (confidence >= 0.7) return "bg-primary-500";
+  if (confidence >= 0.5) return "bg-warning-500";
+  return "bg-error-500";
 }
 
 /**
@@ -129,15 +129,15 @@ function formatNumber(num: number): string {
 function getRiskLevelColor(level: string): string {
   switch (level) {
     case "low":
-      return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      return "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400";
     case "medium":
-      return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400";
+      return "bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-400";
     case "high":
-      return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+      return "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-400";
     case "critical":
-      return "bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-300";
+      return "bg-error-200 text-error-900 dark:bg-error-900/50 dark:text-error-300";
     default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+      return "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
   }
 }
 
@@ -257,13 +257,13 @@ export function AgentApprovalDialog({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-amber-500" />
+            <AlertTriangle className="w-5 h-5 text-warning-500" />
             Agent Decision Requires Approval
           </h2>
           <button
             data-testid="close-dialog"
             onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -273,7 +273,7 @@ export function AgentApprovalDialog({
         <div className="p-4 space-y-4 overflow-y-auto max-h-[60vh]">
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-400">
+            <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg p-3 text-error-700 dark:text-error-400">
               {error}
             </div>
           )}
@@ -291,7 +291,7 @@ export function AgentApprovalDialog({
                 >
                   {confidencePercent}%
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   / Threshold:{" "}
                   <span data-testid="confidence-threshold">
                     {thresholdPercent}%
@@ -312,16 +312,16 @@ export function AgentApprovalDialog({
           {isLowConfidence && (
             <div
               data-testid="low-confidence-warning"
-              className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3"
+              className="flex items-start gap-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg p-3"
             >
-              <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-warning-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-amber-700 dark:text-amber-400">
+                <p className="font-medium text-warning-700 dark:text-warning-400">
                   Low Confidence
                 </p>
                 <p
                   data-testid="trigger-explanation"
-                  className="text-sm text-amber-600 dark:text-amber-400/80"
+                  className="text-sm text-warning-600 dark:text-warning-400/80"
                 >
                   {getTriggerExplanation(
                     request.triggerReason,
@@ -338,9 +338,9 @@ export function AgentApprovalDialog({
           {request.aiExplanation && (
             <details
               data-testid="ai-explanation-section"
-              className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg overflow-hidden"
+              className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg overflow-hidden"
             >
-              <summary className="cursor-pointer p-3 font-medium text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 flex items-center gap-2">
+              <summary className="cursor-pointer p-3 font-medium text-primary-700 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900/30 flex items-center gap-2">
                 <Lightbulb className="w-4 h-4" />
                 Why is the agent uncertain?
               </summary>
@@ -353,7 +353,7 @@ export function AgentApprovalDialog({
                 {/* What Could Go Wrong */}
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                    <AlertTriangle className="w-3.5 h-3.5 text-warning-500" />
                     What could go wrong:
                   </p>
                   <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -366,7 +366,7 @@ export function AgentApprovalDialog({
                   request.aiExplanation.saferAlternatives.length > 0 && (
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
-                        <Lightbulb className="w-3.5 h-3.5 text-green-500" />
+                        <Lightbulb className="w-3.5 h-3.5 text-success-500" />
                         Safer alternatives:
                       </p>
                       <ul className="mt-1 space-y-1.5">
@@ -374,15 +374,15 @@ export function AgentApprovalDialog({
                           (alt, index) => (
                             <li
                               key={index}
-                              className="text-gray-600 dark:text-gray-400 pl-4 border-l-2 border-green-300 dark:border-green-700"
+                              className="text-gray-600 dark:text-gray-400 pl-4 border-l-2 border-success-300 dark:border-success-700"
                             >
                               <span className="font-medium text-gray-800 dark:text-gray-200">
                                 {alt.action}
                               </span>
-                              <span className="text-green-600 dark:text-green-400 ml-1">
+                              <span className="text-success-600 dark:text-success-400 ml-1">
                                 ({Math.round(alt.confidence * 100)}%)
                               </span>
-                              <span className="text-gray-500 dark:text-gray-500 block text-xs">
+                              <span className="text-gray-500 dark:text-gray-400 block text-xs">
                                 Trade-off: {alt.tradeOff}
                               </span>
                             </li>
@@ -397,7 +397,7 @@ export function AgentApprovalDialog({
                   request.aiExplanation.confidenceFactors.length > 0 && (
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
-                        <TrendingDown className="w-3.5 h-3.5 text-red-500" />
+                        <TrendingDown className="w-3.5 h-3.5 text-error-500" />
                         Confidence factors:
                       </p>
                       <ul className="mt-1 space-y-1">
@@ -410,8 +410,8 @@ export function AgentApprovalDialog({
                               <span
                                 className={`font-mono ${
                                   factor.weight < 0
-                                    ? "text-red-600 dark:text-red-400"
-                                    : "text-green-600 dark:text-green-400"
+                                    ? "text-error-600 dark:text-error-400"
+                                    : "text-success-600 dark:text-success-400"
                                 }`}
                               >
                                 {factor.weight > 0 ? "+" : ""}
@@ -433,15 +433,15 @@ export function AgentApprovalDialog({
           {enableAI && (
             <div
               data-testid="hitl-risk-assessment"
-              className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 space-y-3"
+              className="bg-insight-50 dark:bg-insight-900/20 border border-insight-200 dark:border-insight-800 rounded-lg p-4 space-y-3"
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-medium text-purple-900 dark:text-purple-100 flex items-center gap-2">
+                <h3 className="font-medium text-insight-900 dark:text-insight-100 flex items-center gap-2">
                   <Shield className="w-4 h-4" />
                   AI Risk Assessment
                 </h3>
                 {riskLoading && (
-                  <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+                  <Loader2 className="w-4 h-4 animate-spin text-insight-500" />
                 )}
               </div>
 
@@ -449,12 +449,12 @@ export function AgentApprovalDialog({
                 <>
                   <div className="flex items-center gap-4">
                     <div>
-                      <span className="text-sm text-purple-600 dark:text-purple-400">
+                      <span className="text-sm text-insight-600 dark:text-insight-400">
                         Risk Score
                       </span>
                       <p
                         data-testid="risk-score"
-                        className="text-lg font-bold text-purple-900 dark:text-purple-100"
+                        className="text-lg font-bold text-insight-900 dark:text-insight-100"
                       >
                         {Math.round((riskScore || 0) * 100)}%
                       </p>
@@ -470,16 +470,16 @@ export function AgentApprovalDialog({
                   {/* Risk Factors */}
                   {riskFactors && riskFactors.length > 0 && (
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                      <p className="text-sm font-medium text-insight-800 dark:text-insight-200">
                         Risk Factors:
                       </p>
                       <ul className="space-y-1">
                         {riskFactors.map((factor, index) => (
                           <li
                             key={index}
-                            className="text-xs text-purple-700 dark:text-purple-300 flex items-center gap-2"
+                            className="text-xs text-insight-700 dark:text-insight-300 flex items-center gap-2"
                           >
-                            <span className="font-mono text-purple-500">
+                            <span className="font-mono text-insight-500">
                               {Math.round((factor.weight || 0) * 100)}%
                             </span>
                             <span>{factor.description || factor.factor}</span>
@@ -492,14 +492,14 @@ export function AgentApprovalDialog({
                   {/* Mitigations */}
                   {mitigations && mitigations.length > 0 && (
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                      <p className="text-sm font-medium text-insight-800 dark:text-insight-200">
                         Suggested Mitigations:
                       </p>
                       <ul className="space-y-1">
                         {mitigations.map((mitigation, index) => (
                           <li
                             key={index}
-                            className="text-xs text-purple-700 dark:text-purple-300 pl-3"
+                            className="text-xs text-insight-700 dark:text-insight-300 pl-3"
                           >
                             • {mitigation}
                           </li>
@@ -512,16 +512,16 @@ export function AgentApprovalDialog({
                   {recommendation && (
                     <div
                       data-testid="ai-recommendation"
-                      className="mt-2 p-2 bg-purple-100 dark:bg-purple-900/40 rounded text-sm"
+                      className="mt-2 p-2 bg-insight-100 dark:bg-insight-900/40 rounded text-sm"
                     >
-                      <span className="font-medium text-purple-800 dark:text-purple-200">
+                      <span className="font-medium text-insight-800 dark:text-insight-200">
                         AI Recommendation:{" "}
                       </span>
-                      <span className="text-purple-700 dark:text-purple-300 capitalize">
+                      <span className="text-insight-700 dark:text-insight-300 capitalize">
                         {recommendation}
                       </span>
                       {riskExplanation && (
-                        <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                        <p className="text-xs text-insight-600 dark:text-insight-400 mt-1">
                           {riskExplanation}
                         </p>
                       )}
@@ -578,9 +578,9 @@ export function AgentApprovalDialog({
                           className="flex items-center gap-2 text-xs text-indigo-700 dark:text-indigo-300 p-2 bg-indigo-100 dark:bg-indigo-900/40 rounded"
                         >
                           {decision.decision === "approved" ? (
-                            <ThumbsUp className="w-3 h-3 text-green-500" />
+                            <ThumbsUp className="w-3 h-3 text-success-500" />
                           ) : (
-                            <ThumbsDown className="w-3 h-3 text-red-500" />
+                            <ThumbsDown className="w-3 h-3 text-error-500" />
                           )}
                           <span className="capitalize">
                             {decision.decision}
@@ -688,7 +688,10 @@ export function AgentApprovalDialog({
               htmlFor="reason-input"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
-              Reason <span className="text-gray-500">(optional)</span>
+              Reason{" "}
+              <span className="text-gray-500 dark:text-gray-400">
+                (optional)
+              </span>
             </label>
             <textarea
               id="reason-input"
@@ -697,7 +700,7 @@ export function AgentApprovalDialog({
               onChange={(e) => setReason(e.target.value)}
               placeholder="Enter a reason for your decision..."
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
         </div>
@@ -708,7 +711,7 @@ export function AgentApprovalDialog({
             data-testid="reject-button"
             onClick={handleReject}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-error-700 dark:text-error-400 bg-error-100 dark:bg-error-900/30 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isRejecting ? (
               <Loader2
@@ -724,7 +727,7 @@ export function AgentApprovalDialog({
             data-testid="approve-button"
             onClick={handleApprove}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-success-600 rounded-lg hover:bg-success-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isApproving ? (
               <Loader2

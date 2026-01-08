@@ -469,7 +469,7 @@ export function ArtifactExporter({
               data-testid="export-loading"
               className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-800/80"
             >
-              <Loader2 size={20} className="animate-spin text-blue-500" />
+              <Loader2 size={20} className="animate-spin text-primary-500" />
             </div>
           )}
 

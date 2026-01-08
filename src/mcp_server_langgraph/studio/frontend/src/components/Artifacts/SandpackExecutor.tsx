@@ -112,22 +112,22 @@ class SandpackErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <div
-          className="bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 p-4"
+          className="bg-error-50 dark:bg-error-900/20 rounded-lg border border-error-200 dark:border-error-800 p-4"
           data-testid="sandpack-error-fallback"
         >
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+              <h3 className="text-sm font-medium text-error-800 dark:text-error-200">
                 Code execution failed
               </h3>
-              <p className="mt-1 text-sm text-red-600 dark:text-red-300">
+              <p className="mt-1 text-sm text-error-600 dark:text-error-300">
                 {this.state.error?.message || "An unexpected error occurred"}
               </p>
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={this.handleReset}
-                  className="flex items-center gap-1.5 px-3 py-1 text-sm bg-red-100 hover:bg-red-200 dark:bg-red-800 dark:hover:bg-red-700 text-red-800 dark:text-red-200 rounded transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1 text-sm bg-error-100 hover:bg-error-200 dark:bg-error-800 dark:hover:bg-error-700 text-error-800 dark:text-error-200 rounded transition-colors"
                 >
                   <RefreshCw size={14} />
                   Retry
@@ -135,7 +135,7 @@ class SandpackErrorBoundary extends Component<
               </div>
               {/* Show original code for reference */}
               <details className="mt-3">
-                <summary className="text-xs text-red-500 dark:text-red-400 cursor-pointer">
+                <summary className="text-xs text-error-500 dark:text-error-400 cursor-pointer">
                   View code ({this.props.language})
                 </summary>
                 <pre className="mt-2 p-2 bg-gray-900 rounded text-xs font-mono text-gray-100 overflow-x-auto max-h-32">
@@ -329,7 +329,7 @@ root.render(
     return (
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
         {/* Header */}
-        <div className="px-4 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {title && (
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -339,14 +339,14 @@ root.render(
             <span className="text-xs font-mono bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-400">
               {language}
             </span>
-            <span className="flex items-center gap-1 text-xs text-gray-500">
+            <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
               <Terminal size={14} />
               Sandpack
             </span>
           </div>
           <button
             onClick={handleRun}
-            className="flex items-center gap-1.5 px-3 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1 text-sm bg-success-600 hover:bg-success-700 text-white rounded transition-colors"
           >
             <Play size={14} />
             Run
@@ -369,7 +369,7 @@ root.render(
       data-testid="sandpack-executor"
     >
       {/* Header */}
-      <div className="px-4 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {title && (
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -379,7 +379,7 @@ root.render(
           <span className="text-xs font-mono bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-400">
             {language}
           </span>
-          <span className="flex items-center gap-1 text-xs text-gray-500">
+          <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
             <Terminal size={14} />
             Sandpack
           </span>
@@ -388,7 +388,7 @@ root.render(
           {isRunning ? (
             <button
               onClick={handleStop}
-              className="flex items-center gap-1.5 px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1 text-sm bg-error-600 hover:bg-error-700 text-white rounded transition-colors"
             >
               <Square size={14} />
               Stop
@@ -397,7 +397,7 @@ root.render(
             showRunButton && (
               <button
                 onClick={handleRun}
-                className="flex items-center gap-1.5 px-3 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1 text-sm bg-success-600 hover:bg-success-700 text-white rounded transition-colors"
               >
                 <Play size={14} />
                 Run

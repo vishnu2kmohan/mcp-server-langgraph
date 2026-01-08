@@ -186,7 +186,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
         className={`settings-panel loading ${className}`}
       >
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
         </div>
       </div>
     );
@@ -213,7 +213,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           onChange={(e) =>
             updateGeneralPreferences({ theme: e.target.value as ThemeMode })
           }
-          className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
         >
           <option value="system">System</option>
           <option value="light">Light</option>
@@ -235,7 +235,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           onChange={(e) =>
             updateGeneralPreferences({ language: e.target.value })
           }
-          className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
         >
           {LANGUAGES.map((lang) => (
             <option key={lang.code} value={lang.code}>
@@ -262,8 +262,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               autoScroll: !preferences.general.autoScroll,
             })
           }
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-            preferences.general.autoScroll ? "bg-blue-600" : "bg-gray-300"
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+            preferences.general.autoScroll
+              ? "bg-primary-600"
+              : "bg-gray-300 dark:bg-gray-600"
           }`}
         >
           <span
@@ -294,8 +296,8 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           role="switch"
           aria-checked={submitOnEnter}
           onClick={() => dispatch(setSubmitOnEnter(!submitOnEnter))}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-            submitOnEnter ? "bg-blue-600" : "bg-gray-300"
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+            submitOnEnter ? "bg-primary-600" : "bg-gray-300 dark:bg-gray-600"
           }`}
         >
           <span
@@ -323,10 +325,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               notificationsEnabled: !preferences.general.notificationsEnabled,
             })
           }
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
             preferences.general.notificationsEnabled
-              ? "bg-blue-600"
-              : "bg-gray-300"
+              ? "bg-primary-600"
+              : "bg-gray-300 dark:bg-gray-600"
           }`}
         >
           <span
@@ -367,10 +369,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               reducedMotion: !preferences.accessibility.reducedMotion,
             })
           }
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
             preferences.accessibility.reducedMotion
-              ? "bg-blue-600"
-              : "bg-gray-300"
+              ? "bg-primary-600"
+              : "bg-gray-300 dark:bg-gray-600"
           }`}
         >
           <span
@@ -405,10 +407,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               highContrast: !preferences.accessibility.highContrast,
             })
           }
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
             preferences.accessibility.highContrast
-              ? "bg-blue-600"
-              : "bg-gray-300"
+              ? "bg-primary-600"
+              : "bg-gray-300 dark:bg-gray-600"
           }`}
         >
           <span
@@ -443,10 +445,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               screenReaderMode: !preferences.accessibility.screenReaderMode,
             })
           }
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
             preferences.accessibility.screenReaderMode
-              ? "bg-blue-600"
-              : "bg-gray-300"
+              ? "bg-primary-600"
+              : "bg-gray-300 dark:bg-gray-600"
           }`}
         >
           <span
@@ -475,7 +477,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               fontSize: e.target.value as FontSize,
             })
           }
-          className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
         >
           <option value="small">Small</option>
           <option value="medium">Medium</option>
@@ -498,7 +500,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           >
             Temperature
           </label>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             {preferences.modelDefaults.defaultTemperature.toFixed(1)}
           </span>
         </div>
@@ -514,7 +516,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               defaultTemperature: parseFloat(e.target.value),
             })
           }
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+          className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
         />
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Higher values make output more random, lower values more focused
@@ -541,7 +543,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               defaultMaxTokens: parseInt(e.target.value, 10) || 4096,
             })
           }
-          className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
         />
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Maximum number of tokens in the response
@@ -567,7 +569,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
                 | "high",
             })
           }
-          className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
         >
           <option value="low">Low</option>
           <option value="medium">Medium</option>
@@ -632,8 +634,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               analyticsEnabled: !preferences.privacy.analyticsEnabled,
             })
           }
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-            preferences.privacy.analyticsEnabled ? "bg-blue-600" : "bg-gray-300"
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+            preferences.privacy.analyticsEnabled
+              ? "bg-primary-600"
+              : "bg-gray-300 dark:bg-gray-600"
           }`}
         >
           <span
@@ -668,10 +672,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               errorReportingEnabled: !preferences.privacy.errorReportingEnabled,
             })
           }
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
             preferences.privacy.errorReportingEnabled
-              ? "bg-blue-600"
-              : "bg-gray-300"
+              ? "bg-primary-600"
+              : "bg-gray-300 dark:bg-gray-600"
           }`}
         >
           <span
@@ -706,10 +710,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               storeHistoryLocally: !preferences.privacy.storeHistoryLocally,
             })
           }
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
             preferences.privacy.storeHistoryLocally
-              ? "bg-blue-600"
-              : "bg-gray-300"
+              ? "bg-primary-600"
+              : "bg-gray-300 dark:bg-gray-600"
           }`}
         >
           <span
@@ -753,8 +757,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               enabled: !preferences.hitl.enabled,
             })
           }
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-            preferences.hitl.enabled ? "bg-blue-600" : "bg-gray-300"
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+            preferences.hitl.enabled
+              ? "bg-primary-600"
+              : "bg-gray-300 dark:bg-gray-600"
           }`}
         >
           <span
@@ -774,7 +780,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           >
             Confidence threshold
           </label>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             {Math.round(preferences.hitl.confidenceThreshold * 100)}%
           </span>
         </div>
@@ -791,7 +797,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
             })
           }
           disabled={!preferences.hitl.enabled}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 disabled:opacity-50"
+          className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 disabled:opacity-50"
         />
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Require approval when agent confidence is below this threshold
@@ -807,7 +813,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           >
             Auto-approve threshold
           </label>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             {Math.round(preferences.hitl.autoApproveThreshold * 100)}%
           </span>
         </div>
@@ -824,7 +830,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
             })
           }
           disabled={!preferences.hitl.enabled}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 disabled:opacity-50"
+          className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 disabled:opacity-50"
         />
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Skip approval when agent confidence exceeds this threshold
@@ -855,10 +861,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
             })
           }
           disabled={!preferences.hitl.enabled}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 ${
             preferences.hitl.pushNotificationsEnabled
-              ? "bg-blue-600"
-              : "bg-gray-300"
+              ? "bg-primary-600"
+              : "bg-gray-300 dark:bg-gray-600"
           }`}
         >
           <span
@@ -894,8 +900,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
             })
           }
           disabled={!preferences.hitl.enabled}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
-            preferences.hitl.soundEnabled ? "bg-blue-600" : "bg-gray-300"
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 ${
+            preferences.hitl.soundEnabled
+              ? "bg-primary-600"
+              : "bg-gray-300 dark:bg-gray-600"
           }`}
         >
           <span
@@ -939,8 +947,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               updateThresholdSettings({ autoAdjustEnabled: newValue });
             }}
             disabled={!preferences.hitl.enabled}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
-              autoAdjustEnabled ? "bg-blue-600" : "bg-gray-300"
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 ${
+              autoAdjustEnabled
+                ? "bg-primary-600"
+                : "bg-gray-300 dark:bg-gray-600"
             }`}
           >
             <span
@@ -954,18 +964,18 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
         {/* Recommendation display and actions */}
         <div className="flex flex-col gap-3">
           {recommendation && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+            <div className="bg-primary-50 dark:bg-primary-900/20 p-3 rounded-lg border border-primary-200 dark:border-primary-700">
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles size={16} className="text-blue-500" />
-                <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                <Sparkles size={16} className="text-primary-500" />
+                <span className="text-sm font-medium text-primary-800 dark:text-primary-200">
                   Recommended:{" "}
                   {Math.round(recommendation.recommendedThreshold * 100)}%
                 </span>
               </div>
-              <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
+              <p className="text-xs text-primary-700 dark:text-primary-300 mb-2">
                 {recommendation.reason}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Based on {recommendation.sampleSize} approval decisions
                 (confidence: {Math.round(recommendation.confidenceLevel * 100)}
                 %)
@@ -974,8 +984,8 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           )}
 
           {thresholdError && (
-            <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-700">
-              <p className="text-xs text-red-600 dark:text-red-400">
+            <div className="bg-error-50 dark:bg-error-900/20 p-3 rounded-lg border border-error-200 dark:border-error-700">
+              <p className="text-xs text-error-600 dark:text-error-400">
                 {thresholdError}
               </p>
             </div>
@@ -985,7 +995,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
             <button
               onClick={fetchRecommendation}
               disabled={!preferences.hitl.enabled || thresholdLoading}
-              className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {thresholdLoading ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -1007,7 +1017,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               disabled={
                 !preferences.hitl.enabled || !recommendation || thresholdLoading
               }
-              className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-3 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Sparkles size={14} />
               Apply Recommendation
@@ -1051,7 +1061,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
         <button
           onClick={onClose}
           aria-label="Close settings"
-          className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-1 rounded-md hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <X size={20} />
         </button>
@@ -1074,10 +1084,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
             tabIndex={activeTab === tab.id ? 0 : -1}
             onClick={() => setActiveTab(tab.id)}
             onKeyDown={(e) => handleTabKeyDown(e, index)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 ${
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 ${
               activeTab === tab.id
-                ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                ? "border-primary-500 text-primary-600 dark:text-primary-400"
+                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-300"
             }`}
           >
             {tab.icon}
@@ -1100,7 +1110,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
       <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
         <button
           onClick={() => setShowResetConfirm(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 rounded-md focus:outline-none focus:ring-2 focus:ring-error-500"
         >
           <RotateCcw size={14} />
           Reset to defaults
@@ -1108,7 +1118,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
 
         <button
           onClick={onClose}
-          className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="px-4 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
         >
           Done
         </button>
@@ -1136,13 +1146,13 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowResetConfirm(false)}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
                 Cancel
               </button>
               <button
                 onClick={handleReset}
-                className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="px-3 py-1.5 text-sm font-medium text-white bg-error-600 rounded-md hover:bg-error-700 focus:outline-none focus:ring-2 focus:ring-error-500"
               >
                 Reset
               </button>

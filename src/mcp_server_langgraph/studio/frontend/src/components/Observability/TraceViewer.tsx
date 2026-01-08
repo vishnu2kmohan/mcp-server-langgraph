@@ -59,7 +59,7 @@ export function TraceViewer({
         data-testid="trace-loading"
         className="flex items-center justify-center h-64"
       >
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
   }
@@ -91,7 +91,7 @@ export function TraceViewer({
               href={grafanaUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-primary-600 hover:text-primary-800 dark:text-primary-400"
               aria-label="View in Grafana"
             >
               <ExternalLink className="w-4 h-4" />
@@ -104,7 +104,7 @@ export function TraceViewer({
       {/* Search */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-400" />
           <input
             type="text"
             placeholder="Search spans..."
@@ -177,7 +177,7 @@ function SpanRow({
       onClick={onClick}
       className={`flex items-center gap-4 p-2 rounded cursor-pointer transition-colors ${
         isSelected
-          ? "bg-blue-50 dark:bg-blue-900/20"
+          ? "bg-primary-50 dark:bg-primary-900/20"
           : "hover:bg-gray-50 dark:hover:bg-gray-800"
       } ${span.depth > 0 ? "ml-4" : ""}`}
     >
@@ -185,7 +185,7 @@ function SpanRow({
       <div
         data-testid={`span-status-${span.spanId}`}
         className={`w-2 h-2 rounded-full flex-shrink-0 ${
-          isError ? "bg-red-500" : "bg-green-500"
+          isError ? "bg-error-500" : "bg-success-500"
         }`}
       />
 
@@ -199,7 +199,7 @@ function SpanRow({
         <div
           data-testid={`span-bar-${span.spanId}`}
           className={`absolute h-full rounded ${
-            isError ? "bg-red-400" : "bg-blue-400"
+            isError ? "bg-error-400" : "bg-primary-400"
           }`}
           style={{
             left: `${barOffset}%`,
@@ -237,7 +237,7 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-200"
             aria-label="Close details"
           >
             ×
@@ -250,11 +250,11 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
 
       {/* Error Message */}
       {isError && span.errorMessage && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-800">
-          <p className="text-sm font-medium text-red-800 dark:text-red-200">
+        <div className="p-4 bg-error-50 dark:bg-error-900/20 border-b border-error-100 dark:border-error-800">
+          <p className="text-sm font-medium text-error-800 dark:text-error-200">
             Error
           </p>
-          <p className="text-sm text-red-600 dark:text-red-300 mt-1">
+          <p className="text-sm text-error-600 dark:text-error-300 mt-1">
             {span.errorMessage}
           </p>
         </div>

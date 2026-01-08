@@ -956,6 +956,15 @@ export const api = createApi({
       providesTags: ["Trace"], // Using Trace tag for now, could add 'Log' tag
     }),
 
+    /**
+     * List known services for DevTools filters.
+     */
+    listDevtoolsServices: builder.query<string[], void>({
+      query: () => "/devtools/services",
+      transformResponse: (response: string[]) => response ?? [],
+      providesTags: ["Trace"],
+    }),
+
     getMetrics: builder.query<ObservabilityMetricsCamelCase, void>({
       query: () => "/observability/metrics",
       transformResponse: (response: ObservabilityMetrics) =>
@@ -3608,6 +3617,7 @@ export const {
   useGetTraceQuery,
   useListLogsQuery,
   useGetMetricsQuery,
+  useListDevtoolsServicesQuery,
   // Alerts (LGTM Stack)
   useListAlertsQuery,
   useGetAlertQuery,

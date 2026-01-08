@@ -146,7 +146,7 @@ describe("AdminDashboard", () => {
       renderWithStore(<AdminDashboard {...defaultProps} />);
 
       const healthIndicator = screen.getByTestId("health-status");
-      expect(healthIndicator).toHaveClass("bg-green-500");
+      expect(healthIndicator).toHaveClass("bg-success-500");
     });
   });
 
@@ -155,7 +155,7 @@ describe("AdminDashboard", () => {
       renderWithStore(<AdminDashboard {...defaultProps} />);
 
       const indicator = screen.getByTestId("health-status");
-      expect(indicator).toHaveClass("bg-green-500");
+      expect(indicator).toHaveClass("bg-success-500");
     });
 
     it("should show yellow indicator for degraded status", () => {
@@ -170,7 +170,7 @@ describe("AdminDashboard", () => {
       renderWithStore(<AdminDashboard {...props} />);
 
       const indicator = screen.getByTestId("health-status");
-      expect(indicator).toHaveClass("bg-yellow-500");
+      expect(indicator).toHaveClass("bg-warning-500");
     });
 
     it("should show red indicator for unhealthy status", () => {
@@ -185,7 +185,7 @@ describe("AdminDashboard", () => {
       renderWithStore(<AdminDashboard {...props} />);
 
       const indicator = screen.getByTestId("health-status");
-      expect(indicator).toHaveClass("bg-red-500");
+      expect(indicator).toHaveClass("bg-error-500");
     });
   });
 
@@ -463,7 +463,7 @@ describe("AdminDashboard", () => {
 
       // All metrics are >= 80, so all should be green
       const happinessValue = screen.getByText("85%");
-      expect(happinessValue).toHaveClass("text-green-600");
+      expect(happinessValue).toHaveClass("text-success-600");
     });
 
     it("should show yellow color for metrics >= 60 and < 80", () => {
@@ -481,7 +481,7 @@ describe("AdminDashboard", () => {
 
       // All metrics are between 60-79, so all should be yellow
       const happinessValue = screen.getByText("60%");
-      expect(happinessValue).toHaveClass("text-yellow-600");
+      expect(happinessValue).toHaveClass("text-warning-600");
     });
 
     it("should show red color for metrics < 60", () => {
@@ -499,7 +499,7 @@ describe("AdminDashboard", () => {
 
       // All metrics are < 60, so all should be red
       const happinessValue = screen.getByText("10%");
-      expect(happinessValue).toHaveClass("text-red-600");
+      expect(happinessValue).toHaveClass("text-error-600");
     });
 
     it("should show exactly boundary value 80 as green", () => {
@@ -516,7 +516,7 @@ describe("AdminDashboard", () => {
       renderWithStore(<AdminDashboard {...propsWithBoundary} />);
 
       const happinessValue = screen.getByText("80%");
-      expect(happinessValue).toHaveClass("text-green-600");
+      expect(happinessValue).toHaveClass("text-success-600");
     });
 
     it("should show exactly boundary value 60 as yellow", () => {
@@ -533,7 +533,7 @@ describe("AdminDashboard", () => {
       renderWithStore(<AdminDashboard {...propsWithBoundary} />);
 
       const happinessValue = screen.getByText("60%");
-      expect(happinessValue).toHaveClass("text-yellow-600");
+      expect(happinessValue).toHaveClass("text-warning-600");
     });
   });
 

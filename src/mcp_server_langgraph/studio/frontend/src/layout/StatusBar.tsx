@@ -154,11 +154,11 @@ function buildTokenTooltip(
 function getProviderColorClass(provider: ModelProvider): string {
   switch (provider) {
     case "openai":
-      return "text-green-600 dark:text-green-400";
+      return "text-success-600 dark:text-success-400";
     case "anthropic":
-      return "text-orange-600 dark:text-orange-400";
+      return "text-grafana-600 dark:text-grafana-400";
     case "google":
-      return "text-blue-600 dark:text-blue-400";
+      return "text-primary-600 dark:text-primary-400";
     case "azure":
       return "text-sky-600 dark:text-sky-400";
     default:
@@ -226,9 +226,9 @@ function deriveContextualStatus(
 function getKBStatusValueColor(status: KBStatusValue): string {
   switch (status) {
     case "ready":
-      return "bg-green-500";
+      return "bg-success-500";
     case "misconfigured":
-      return "bg-yellow-500";
+      return "bg-warning-500";
     case "unavailable":
       return "bg-gray-400";
   }
@@ -321,7 +321,7 @@ export function StatusBar({
       aria-live="polite"
       className={cn(
         "flex items-center justify-between px-4 py-1",
-        "bg-gray-100 dark:bg-gray-900",
+        "bg-gray-100 dark:bg-gray-800",
         "border-t border-gray-200 dark:border-gray-700",
         "text-xs text-gray-500 dark:text-gray-400",
         className,
@@ -337,10 +337,10 @@ export function StatusBar({
             title={`Connection: ${connectionStatus}`}
             className={cn(
               "w-2 h-2 rounded-full cursor-help",
-              connectionStatus === "connected" && "bg-green-500",
-              connectionStatus === "disconnected" && "bg-red-500",
-              connectionStatus === "connecting" && "bg-yellow-500",
-              connectionStatus === "error" && "bg-red-500",
+              connectionStatus === "connected" && "bg-success-500",
+              connectionStatus === "disconnected" && "bg-error-500",
+              connectionStatus === "connecting" && "bg-warning-500",
+              connectionStatus === "error" && "bg-error-500",
             )}
             aria-label={`Connection status: ${connectionStatus}`}
           />
@@ -354,7 +354,7 @@ export function StatusBar({
               data-testid="reconnecting-indicator"
               role="status"
               aria-label={`Reconnecting, attempt ${reconnectAttempts}`}
-              className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 animate-pulse"
+              className="flex items-center gap-1 text-warning-600 dark:text-warning-400 animate-pulse"
             >
               <span>Reconnecting ({reconnectAttempts})...</span>
             </span>
@@ -389,7 +389,7 @@ export function StatusBar({
             <span>
               {tokenCount.toLocaleString()} tokens
               {costBreakdown && (
-                <span className="ml-1 text-gray-400 dark:text-gray-500">
+                <span className="ml-1 text-gray-400 dark:text-gray-400">
                   ({formatCost(costBreakdown.estimatedCostUsd)})
                 </span>
               )}
@@ -424,7 +424,7 @@ export function StatusBar({
               <span
                 data-testid="kb-context-stats"
                 title={`Context usage: ${Math.round((kbContextStats.tokensUsed / kbContextStats.tokenBudget) * 100)}%`}
-                className="text-gray-400 dark:text-gray-500"
+                className="text-gray-400 dark:text-gray-400"
               >
                 {kbContextStats.refsCount} refs ·{" "}
                 {kbContextStats.tokensUsed.toLocaleString()}
@@ -437,7 +437,7 @@ export function StatusBar({
         {errorMessage && (
           <span
             data-testid="error-message"
-            className="text-red-500 dark:text-red-400"
+            className="text-error-500 dark:text-error-400"
             role="alert"
           >
             {errorMessage}
@@ -457,7 +457,7 @@ export function StatusBar({
             aria-label={`Toggle agent task queue (${agentCount} agents)`}
             className={cn(
               "flex items-center gap-1 px-2 py-0.5 rounded",
-              "hover:bg-gray-200 dark:hover:bg-gray-700",
+              "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
               "transition-colors",
               agentQueueOpen && "bg-primary-100 dark:bg-primary-900/30",
             )}
@@ -481,17 +481,17 @@ export function StatusBar({
                 "flex items-center gap-1 px-2 py-0.5 rounded",
                 "transition-colors",
                 approvalsPanelOpen
-                  ? "bg-amber-200 dark:bg-amber-800/50"
-                  : "bg-amber-100 dark:bg-amber-900/30",
-                "hover:bg-amber-200 dark:hover:bg-amber-800/50",
+                  ? "bg-warning-200 dark:bg-warning-800/50"
+                  : "bg-warning-100 dark:bg-warning-900/30",
+                "hover:bg-warning-200 dark:hover:bg-warning-800/50",
               )}
             >
               <AlertTriangle
                 size={12}
-                className="text-amber-600 dark:text-amber-400"
+                className="text-warning-600 dark:text-warning-400"
                 aria-hidden="true"
               />
-              <span className="font-medium text-amber-700 dark:text-amber-300">
+              <span className="font-medium text-warning-700 dark:text-warning-300">
                 {pendingApprovals} pending
               </span>
             </button>
@@ -508,7 +508,7 @@ export function StatusBar({
             aria-pressed={!devToolsCollapsed}
             className={cn(
               "flex items-center gap-1 px-2 py-0.5 rounded",
-              "hover:bg-gray-200 dark:hover:bg-gray-700",
+              "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
               "transition-colors",
               !devToolsCollapsed && "bg-primary-100 dark:bg-primary-900/30",
             )}
@@ -517,7 +517,7 @@ export function StatusBar({
             {problemCount !== undefined && problemCount > 0 && (
               <span
                 data-testid="devtools-problem-count"
-                className="min-w-[1rem] h-4 px-1 text-xs font-medium text-white bg-red-500 rounded-full flex items-center justify-center"
+                className="min-w-[1rem] h-4 px-1 text-xs font-medium text-white bg-error-500 rounded-full flex items-center justify-center"
               >
                 {problemCount > 99 ? "99+" : problemCount}
               </span>

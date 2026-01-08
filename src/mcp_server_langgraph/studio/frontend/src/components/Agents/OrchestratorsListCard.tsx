@@ -61,9 +61,12 @@ export function OrchestratorsListCard({
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     {isEnabled ? (
-                      <Check size={16} className="text-green-500" />
+                      <Check size={16} className="text-success-500" />
                     ) : (
-                      <X size={16} className="text-gray-400" />
+                      <X
+                        size={16}
+                        className="text-gray-400 dark:text-gray-400"
+                      />
                     )}
                     <span className="font-medium text-gray-900 dark:text-gray-100">
                       {orchestrator.displayName}
@@ -72,8 +75,8 @@ export function OrchestratorsListCard({
                   <span
                     className={`px-2 py-0.5 text-xs font-medium rounded ${
                       isEnabled
-                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                        : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                        ? "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                     }`}
                   >
                     {isEnabled ? "Enabled" : "Disabled"}

@@ -150,24 +150,24 @@ export function ObservabilityDocument({
   const getLogLevelColor = (level: "info" | "warn" | "error" | "debug") => {
     switch (level) {
       case "error":
-        return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+        return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
       case "warn":
-        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+        return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400";
       case "info":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
       case "debug":
-        return "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400";
+        return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 dark:bg-gray-900/30 dark:text-gray-400";
     }
   };
 
   const getStatusColor = (status: "success" | "error" | "running") => {
     switch (status) {
       case "success":
-        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+        return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
       case "error":
-        return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+        return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
       case "running":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
     }
   };
 
@@ -200,7 +200,7 @@ export function ObservabilityDocument({
           </div>
           <button
             onClick={handleRefresh}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-gray-700 dark:text-gray-300"
+            className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors text-gray-700 dark:text-gray-300"
           >
             <RefreshCw size={16} />
             Refresh
@@ -217,13 +217,13 @@ export function ObservabilityDocument({
               Filtered by:
             </span>
             {sessionId && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full text-sm">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 rounded-full text-sm">
                 <MessageSquare size={14} />
                 {sessionId}
               </span>
             )}
             {workflowId && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full text-sm">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400 rounded-full text-sm">
                 <GitBranch size={14} />
                 {workflowId}
               </span>
@@ -232,7 +232,7 @@ export function ObservabilityDocument({
               <button
                 data-testid="clear-context-filter"
                 onClick={onClearContext}
-                className="inline-flex items-center gap-1 px-2 py-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                className="inline-flex items-center gap-1 px-2 py-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
               >
                 <X size={14} />
                 Clear
@@ -251,8 +251,8 @@ export function ObservabilityDocument({
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                 activeTab === tab.id
-                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                  : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                  ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
               }`}
             >
               <tab.icon size={16} />
@@ -275,11 +275,11 @@ export function ObservabilityDocument({
                   className={`px-2 py-1 text-xs rounded ${
                     statusFilter === status
                       ? status === "success"
-                        ? "bg-green-600 text-white"
+                        ? "bg-success-600 text-white"
                         : status === "error"
-                          ? "bg-red-600 text-white"
-                          : "bg-blue-600 text-white"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                          ? "bg-error-600 text-white"
+                          : "bg-primary-600 text-white"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                   }`}
                   aria-pressed={statusFilter === status}
                 >
@@ -292,7 +292,7 @@ export function ObservabilityDocument({
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
               aria-label="Time range"
             >
               <option value="15m">Last 15 minutes</option>
@@ -343,11 +343,11 @@ export function ObservabilityDocument({
                   traces.map((trace) => (
                     <div
                       key={trace.id}
-                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 transition-colors cursor-pointer"
+                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Activity size={20} className="text-blue-500" />
+                          <Activity size={20} className="text-primary-500" />
                           <div>
                             <h3 className="font-medium text-gray-900 dark:text-gray-100">
                               {trace.name}
@@ -434,7 +434,7 @@ export function ObservabilityDocument({
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     Total Errors
                   </h3>
-                  <div className="text-2xl font-semibold text-red-600 dark:text-red-400">
+                  <div className="text-2xl font-semibold text-error-600 dark:text-error-400">
                     {(metrics.errorsTotal ?? 0).toLocaleString()}
                   </div>
                 </div>

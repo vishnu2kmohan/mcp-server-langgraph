@@ -94,7 +94,7 @@ function CodeBlock({
 
   return (
     <div data-testid="code-block" className="relative my-2">
-      <div className="flex items-center justify-between px-3 py-1 bg-gray-700 dark:bg-gray-900 rounded-t-lg text-xs text-gray-400">
+      <div className="flex items-center justify-between px-3 py-1 bg-gray-700 dark:bg-gray-900 rounded-t-lg text-xs text-gray-400 dark:text-gray-400">
         <span>{language}</span>
         <button
           data-testid="copy-code-button"
@@ -182,7 +182,7 @@ function MessageBubbleImpl({
           data-testid="ai-avatar"
           className={cn(
             "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-            "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
+            "bg-insight-100 dark:bg-insight-900/30 text-insight-600 dark:text-insight-400",
           )}
         >
           <Bot size={16} />
@@ -228,7 +228,9 @@ function MessageBubbleImpl({
                 data-testid="message-timestamp"
                 className={cn(
                   "text-xs mt-1",
-                  isUser ? "text-primary-200" : "text-gray-400",
+                  isUser
+                    ? "text-primary-200"
+                    : "text-gray-400 dark:text-gray-400",
                 )}
               >
                 {formatTime(message.timestamp)}
@@ -244,7 +246,7 @@ function MessageBubbleImpl({
                 className={cn(
                   "absolute -top-2 -right-2 p-1.5 rounded-full",
                   "bg-white dark:bg-gray-700 shadow-md",
-                  "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
+                  "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200",
                   "transition-all",
                 )}
               >

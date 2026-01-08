@@ -348,7 +348,7 @@ export function CanvasShortcutsMenu({
                       {shortcut.label}
                     </span>
                     {shortcut.shortcut && (
-                      <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">
+                      <span className="text-xs text-gray-400 dark:text-gray-400 font-mono">
                         {shortcut.shortcut}
                       </span>
                     )}
@@ -365,7 +365,7 @@ export function CanvasShortcutsMenu({
 
           {/* Footer Tip */}
           <div className="px-3 py-2 border-t border-gray-100 dark:border-gray-700">
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+            <p className="text-xs text-gray-400 dark:text-gray-400">
               Actions apply to selected artifact
             </p>
           </div>

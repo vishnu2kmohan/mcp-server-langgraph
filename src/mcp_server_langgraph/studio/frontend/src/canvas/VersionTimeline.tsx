@@ -115,12 +115,12 @@ function VersionItem({
             <span data-testid="ai-indicator">
               <Sparkles
                 size={12}
-                className="text-purple-500 dark:text-purple-400"
+                className="text-insight-500 dark:text-insight-400"
               />
             </span>
           ) : (
             <span data-testid="user-indicator">
-              <User size={12} className="text-gray-400" />
+              <User size={12} className="text-gray-400 dark:text-gray-400" />
             </span>
           )}
         </div>
@@ -141,7 +141,7 @@ function VersionItem({
           aria-label={`Restore version ${version.version}`}
           className={cn(
             "p-1.5 rounded transition-colors",
-            "text-gray-500 hover:text-primary-600",
+            "text-gray-500 dark:text-gray-400 hover:text-primary-600",
             "hover:bg-primary-100 dark:hover:bg-primary-900/30",
           )}
         >
@@ -160,7 +160,9 @@ function VersionItem({
             "border border-gray-200 dark:border-gray-700",
           )}
         >
-          <div className="text-xs text-gray-500 mb-2">Content preview:</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            Content preview:
+          </div>
           <pre className="text-xs text-gray-700 dark:text-gray-300 overflow-hidden truncate">
             {version.content.slice(0, 100)}...
           </pre>
@@ -258,7 +260,7 @@ export function VersionTimeline({
           onClick={() => setIsExpanded(!isExpanded)}
           className={cn(
             "flex items-center justify-center gap-1 mt-2 py-1.5 text-sm",
-            "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
+            "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200",
             "transition-colors",
           )}
         >

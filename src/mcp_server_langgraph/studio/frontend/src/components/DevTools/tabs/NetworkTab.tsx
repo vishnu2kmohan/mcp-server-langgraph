@@ -4,7 +4,15 @@
  * Displays API requests, WebSocket messages, and MCP tool calls.
  * Chrome DevTools Network panel-like interface.
  */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
 import {
   Trash2,
   Search,
@@ -14,14 +22,22 @@ import {
   Globe,
   Loader2,
   Download,
+  ArrowDown,
+  ArrowUpDown,
 } from "lucide-react";
 
 import { cn } from "../../../utils/cn";
+import HumanTimestamp from "../components/HumanTimestamp";
+import { useAutoTail } from "../hooks/useAutoTail";
 import { useNetworkEntries } from "../hooks/useNetworkEntries";
 import { exportNetworkToJSON, exportNetworkToCSV } from "../utils/export";
 import { useDebouncedValue, useStableCallback } from "../utils/performance";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type { NetworkTabProps, NetworkEntry } from "../types";
+import {
+  getStatusCodeColor,
+  getHttpMethodColor,
+} from "../utils/devToolsColors";
 
 // =============================================================================
 // Performance Constants
@@ -35,7 +51,6 @@ const SEARCH_DEBOUNCE_MS = 150;
 // =============================================================================
 
 type FilterType = "all" | "api" | "mcp";
-
 // =============================================================================
 // Utility Functions
 // =============================================================================
@@ -47,34 +62,9 @@ function formatSize(bytes: number | undefined): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function getStatusColor(statusCode: number | undefined): string {
-  if (!statusCode) return "text-gray-400";
-  if (statusCode >= 200 && statusCode < 300)
-    return "text-green-600 dark:text-green-400";
-  if (statusCode >= 300 && statusCode < 400)
-    return "text-blue-600 dark:text-blue-400";
-  if (statusCode >= 400 && statusCode < 500)
-    return "text-amber-600 dark:text-amber-400";
-  if (statusCode >= 500) return "text-red-600 dark:text-red-400";
-  return "text-gray-600";
-}
-
-function getMethodColor(method: string): string {
-  switch (method) {
-    case "GET":
-      return "text-green-600 dark:text-green-400";
-    case "POST":
-      return "text-blue-600 dark:text-blue-400";
-    case "PUT":
-      return "text-amber-600 dark:text-amber-400";
-    case "DELETE":
-      return "text-red-600 dark:text-red-400";
-    case "PATCH":
-      return "text-purple-600 dark:text-purple-400";
-    default:
-      return "text-gray-600";
-  }
-}
+// Use semantic colors from design system (imported from devToolsColors)
+const getStatusColor = getStatusCodeColor;
+const getMethodColor = getHttpMethodColor;
 
 // =============================================================================
 // Subcomponents
@@ -107,8 +97,8 @@ function NetworkEntryRow({
       className={cn(
         "cursor-pointer border-b border-gray-100 dark:border-gray-800",
         "hover:bg-gray-50 dark:hover:bg-gray-800/50",
-        isSelected && "bg-blue-50 dark:bg-blue-900/20",
-        isError === true && "bg-red-50 dark:bg-red-900/10",
+        isSelected && "bg-primary-50 dark:bg-primary-900/20",
+        isError === true && "bg-error-50 dark:bg-error-900/10",
       )}
       onClick={onSelect}
     >
@@ -126,7 +116,7 @@ function NetworkEntryRow({
       <td className="px-2 py-1.5 whitespace-nowrap">
         {isPending ? (
           <span data-testid={`pending-${entry.id}`}>
-            <Loader2 size={12} className="animate-spin text-blue-500" />
+            <Loader2 size={12} className="animate-spin text-primary-500" />
           </span>
         ) : (
           <span
@@ -139,6 +129,11 @@ function NetworkEntryRow({
             {entry.statusCode}
           </span>
         )}
+      </td>
+
+      {/* Start time */}
+      <td className="px-2 py-1.5 whitespace-nowrap">
+        <HumanTimestamp timestamp={entry.startTime ?? 0} />
       </td>
 
       {/* URL */}
@@ -159,7 +154,7 @@ function NetworkEntryRow({
       <td className="px-2 py-1.5 whitespace-nowrap text-right">
         <span
           data-testid={`size-${entry.id}`}
-          className="text-xs text-gray-500"
+          className="text-xs text-gray-500 dark:text-gray-400"
         >
           {formatSize(entry.responseSize)}
         </span>
@@ -170,12 +165,12 @@ function NetworkEntryRow({
         {entry.duration !== undefined ? (
           <span
             data-testid={`duration-${entry.id}`}
-            className="text-xs text-gray-500"
+            className="text-xs text-gray-500 dark:text-gray-400"
           >
             {entry.duration}ms
           </span>
         ) : (
-          <span className="text-xs text-gray-400">-</span>
+          <span className="text-xs text-gray-400 dark:text-gray-400">-</span>
         )}
       </td>
     </tr>
@@ -207,7 +202,7 @@ function RequestDetails({ entry }: RequestDetailsProps) {
               "px-3 py-1.5 text-xs font-medium capitalize",
               activeTab === tab
                 ? "border-b-2 border-primary-500 text-primary-600"
-                : "text-gray-500 hover:text-gray-700",
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200",
             )}
           >
             {tab}
@@ -230,7 +225,9 @@ function RequestDetails({ entry }: RequestDetailsProps) {
                     {Object.entries(entry.requestHeaders).map(
                       ([key, value]) => (
                         <div key={key} className="contents">
-                          <dt className="text-gray-500">{key}:</dt>
+                          <dt className="text-gray-500 dark:text-gray-400">
+                            {key}:
+                          </dt>
                           <dd className="text-gray-700 dark:text-gray-300">
                             {value}
                           </dd>
@@ -252,7 +249,9 @@ function RequestDetails({ entry }: RequestDetailsProps) {
                     {Object.entries(entry.responseHeaders).map(
                       ([key, value]) => (
                         <div key={key} className="contents">
-                          <dt className="text-gray-500">{key}:</dt>
+                          <dt className="text-gray-500 dark:text-gray-400">
+                            {key}:
+                          </dt>
                           <dd className="text-gray-700 dark:text-gray-300">
                             {value}
                           </dd>
@@ -264,7 +263,9 @@ function RequestDetails({ entry }: RequestDetailsProps) {
               )}
 
             {!entry.requestHeaders && !entry.responseHeaders && (
-              <p className="text-gray-400">No headers available</p>
+              <p className="text-gray-400 dark:text-gray-400">
+                No headers available
+              </p>
             )}
           </div>
         )}
@@ -272,13 +273,15 @@ function RequestDetails({ entry }: RequestDetailsProps) {
         {activeTab === "payload" && (
           <div>
             {entry.requestBody ? (
-              <pre className="p-2 bg-gray-100 dark:bg-gray-900 rounded overflow-x-auto">
+              <pre className="p-2 bg-gray-100 dark:bg-gray-800 rounded overflow-x-auto">
                 {typeof entry.requestBody === "string"
                   ? entry.requestBody
                   : JSON.stringify(entry.requestBody, null, 2)}
               </pre>
             ) : (
-              <p className="text-gray-400">No request payload</p>
+              <p className="text-gray-400 dark:text-gray-400">
+                No request payload
+              </p>
             )}
           </div>
         )}
@@ -286,13 +289,15 @@ function RequestDetails({ entry }: RequestDetailsProps) {
         {activeTab === "response" && (
           <div>
             {entry.responseBody ? (
-              <pre className="p-2 bg-gray-100 dark:bg-gray-900 rounded overflow-x-auto">
+              <pre className="p-2 bg-gray-100 dark:bg-gray-800 rounded overflow-x-auto">
                 {typeof entry.responseBody === "string"
                   ? entry.responseBody
                   : JSON.stringify(entry.responseBody, null, 2)}
               </pre>
             ) : (
-              <p className="text-gray-400">No response body</p>
+              <p className="text-gray-400 dark:text-gray-400">
+                No response body
+              </p>
             )}
           </div>
         )}
@@ -314,6 +319,10 @@ export function NetworkTab({
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "startTime", desc: false },
+  ]);
 
   const {
     entries: localEntries,
@@ -411,6 +420,39 @@ export function NetworkTab({
     return result;
   }, [entries, filter, showMCPCalls, debouncedSearchTerm, timeline.timeWindow]);
 
+  const columns = useMemo<ColumnDef<NetworkEntry>[]>(
+    () => [
+      { accessorKey: "method", header: "Method" },
+      { accessorKey: "statusCode", header: "Status" },
+      { accessorKey: "startTime", header: "Start" },
+      { accessorKey: "url", header: "URL" },
+      { accessorKey: "source", header: "Source" },
+      { accessorKey: "responseSize", header: "Size" },
+      { accessorKey: "duration", header: "Time" },
+    ],
+    [],
+  );
+
+  const table = useReactTable({
+    data: filteredEntries,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  const sortedRows = table.getRowModel().rows;
+  const sortedEntries = useMemo(
+    () => sortedRows.map((row) => row.original),
+    [sortedRows],
+  );
+
+  const selectedEntry = useMemo(
+    () => sortedEntries.find((entry) => entry.id === selectedEntryId) ?? null,
+    [sortedEntries, selectedEntryId],
+  );
+
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setSearchTerm(e.target.value);
@@ -418,8 +460,13 @@ export function NetworkTab({
     [],
   );
 
+  const { isAutoTailing, toggle: toggleAutoTail } = useAutoTail({
+    containerRef: listRef,
+    enabled: true,
+  });
+
   // Empty state
-  if (filteredEntries.length === 0 && entries.length === 0) {
+  if (sortedEntries.length === 0 && entries.length === 0) {
     return (
       <div
         data-testid="network-tab"
@@ -427,7 +474,7 @@ export function NetworkTab({
       >
         <div
           data-testid="network-empty"
-          className="flex-1 flex flex-col items-center justify-center text-gray-400"
+          className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-400"
         >
           <Globe size={32} className="mb-2 opacity-50" />
           <p className="text-sm">No network activity</p>
@@ -449,7 +496,7 @@ export function NetworkTab({
           data-testid="recording-toggle"
           type="button"
           onClick={toggleRecording}
-          className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700"
           aria-pressed={isRecording}
           aria-label={isRecording ? "Stop recording" : "Start recording"}
         >
@@ -458,8 +505,8 @@ export function NetworkTab({
             size={10}
             className={cn(
               isRecording
-                ? "fill-red-500 text-red-500"
-                : "fill-gray-400 text-gray-400",
+                ? "fill-error-500 text-error-500"
+                : "fill-gray-400 text-gray-400 dark:text-gray-400",
             )}
           />
         </button>
@@ -469,7 +516,7 @@ export function NetworkTab({
           data-testid="clear-network-button"
           type="button"
           onClick={handleClearEntries}
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500"
+          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
           aria-label="Clear network log"
         >
           <Trash2 size={14} />
@@ -485,7 +532,7 @@ export function NetworkTab({
               "px-2 py-1 text-xs rounded",
               filter === "all"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
+                : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
             )}
           >
             All
@@ -498,7 +545,7 @@ export function NetworkTab({
               "px-2 py-1 text-xs rounded",
               filter === "api"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
+                : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
             )}
           >
             API
@@ -512,7 +559,7 @@ export function NetworkTab({
                 "px-2 py-1 text-xs rounded",
                 filter === "mcp"
                   ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                  : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
+                  : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
               )}
             >
               MCP
@@ -530,7 +577,7 @@ export function NetworkTab({
             type="button"
             aria-label="Export network log"
             aria-haspopup="true"
-            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500"
+            className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
           >
             <Download size={14} />
           </button>
@@ -539,7 +586,7 @@ export function NetworkTab({
               data-testid="export-network-json-button"
               type="button"
               onClick={() => exportNetworkToJSON(filteredEntries)}
-              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap"
+              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 whitespace-nowrap"
             >
               Export as JSON
             </button>
@@ -547,18 +594,39 @@ export function NetworkTab({
               data-testid="export-network-csv-button"
               type="button"
               onClick={() => exportNetworkToCSV(filteredEntries)}
-              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap"
+              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 whitespace-nowrap"
             >
               Export as CSV
             </button>
           </div>
         </div>
 
+        {/* Auto-tail toggle */}
+        <button
+          data-testid="network-auto-tail"
+          type="button"
+          onClick={toggleAutoTail}
+          aria-pressed={isAutoTailing}
+          aria-label={
+            isAutoTailing
+              ? "Pause auto-tail to newest request"
+              : "Resume auto-tail"
+          }
+          className={cn(
+            "p-1 rounded",
+            isAutoTailing
+              ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30"
+              : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
+          )}
+        >
+          <ArrowDown size={14} />
+        </button>
+
         {/* Search */}
         <div className="relative">
           <Search
             size={12}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
             aria-hidden="true"
           />
           <input
@@ -579,26 +647,50 @@ export function NetworkTab({
         </div>
 
         {/* Entry count */}
-        <span className="text-xs text-gray-500">
-          {filteredEntries.length} requests
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {sortedEntries.length} requests
         </span>
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" ref={listRef}>
         <table role="table" className="w-full text-left">
-          <thead className="sticky top-0 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500">
-            <tr>
-              <th className="px-2 py-1.5 font-medium">Method</th>
-              <th className="px-2 py-1.5 font-medium">Status</th>
-              <th className="px-2 py-1.5 font-medium">URL</th>
-              <th className="px-2 py-1.5 font-medium">Source</th>
-              <th className="px-2 py-1.5 font-medium text-right">Size</th>
-              <th className="px-2 py-1.5 font-medium text-right">Time</th>
-            </tr>
+          <thead className="sticky top-0 bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  const sorted = header.column.getIsSorted();
+                  return (
+                    <th key={header.id} className="px-2 py-1.5 font-medium">
+                      {header.isPlaceholder ? null : (
+                        <button
+                          type="button"
+                          className="flex items-center gap-1"
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                          <ArrowUpDown
+                            size={12}
+                            className={cn(
+                              sorted
+                                ? "text-primary-600"
+                                : "text-gray-400 dark:text-gray-400",
+                              sorted === "desc" && "rotate-180",
+                            )}
+                          />
+                        </button>
+                      )}
+                    </th>
+                  );
+                })}
+              </tr>
+            ))}
           </thead>
           <tbody>
-            {filteredEntries.map((entry) => (
+            {sortedEntries.map((entry) => (
               <NetworkEntryRow
                 key={entry.id}
                 entry={entry}
@@ -615,11 +707,7 @@ export function NetworkTab({
       </div>
 
       {/* Details panel */}
-      {selectedEntryId && (
-        <RequestDetails
-          entry={filteredEntries.find((e) => e.id === selectedEntryId)!}
-        />
-      )}
+      {selectedEntry && <RequestDetails entry={selectedEntry} />}
     </div>
   );
 }

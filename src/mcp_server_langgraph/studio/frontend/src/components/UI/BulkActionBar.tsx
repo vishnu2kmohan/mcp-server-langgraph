@@ -124,7 +124,7 @@ export function BulkActionBar({
           type="button"
           aria-label="Clear selection"
           onClick={onClearSelection}
-          className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
         >
           Clear
         </button>
@@ -138,7 +138,7 @@ export function BulkActionBar({
             key={action.label}
             type="button"
             onClick={() => handleCustomActionClick(action)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"
+            className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"
           >
             {action.icon}
             {action.label}
@@ -149,7 +149,7 @@ export function BulkActionBar({
         <button
           type="button"
           onClick={handleDeleteClick}
-          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 text-red-700 dark:text-red-300"
+          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md bg-error-100 hover:bg-error-200 dark:bg-error-900 dark:hover:bg-error-800 text-error-700 dark:text-error-300"
         >
           Delete
         </button>
@@ -171,7 +171,7 @@ export function BulkActionBar({
                 type="button"
                 onClick={handleDeleteCancel}
                 disabled={isDeleting}
-                className="px-3 py-1.5 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-50"
+                className="px-3 py-1.5 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -179,7 +179,7 @@ export function BulkActionBar({
                 type="button"
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
-                className="px-3 py-1.5 text-sm font-medium rounded-md bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+                className="px-3 py-1.5 text-sm font-medium rounded-md bg-error-600 hover:bg-error-700 text-white disabled:opacity-50"
               >
                 {isDeleting ? "Deleting..." : "Confirm"}
               </button>
@@ -204,7 +204,7 @@ export function BulkActionBar({
                 type="button"
                 onClick={handleCustomActionCancel}
                 disabled={isCustomActionLoading}
-                className="px-3 py-1.5 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-50"
+                className="px-3 py-1.5 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -212,7 +212,7 @@ export function BulkActionBar({
                 type="button"
                 onClick={handleCustomActionConfirm}
                 disabled={isCustomActionLoading}
-                className="px-3 py-1.5 text-sm font-medium rounded-md bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+                className="px-3 py-1.5 text-sm font-medium rounded-md bg-error-600 hover:bg-error-700 text-white disabled:opacity-50"
               >
                 {isCustomActionLoading ? "Processing..." : "Confirm"}
               </button>

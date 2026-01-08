@@ -170,7 +170,7 @@ export function PersonaSwitcher({
         onClick={() => handleSelect(persona)}
         className={cn(
           "flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors",
-          "hover:bg-gray-100 dark:hover:bg-gray-700",
+          "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
           isSelected && "selected bg-primary-50 dark:bg-primary-900/20",
           isFocused && "focused bg-gray-100 dark:bg-gray-700",
           isSubPersona && "sub-persona pl-8",
@@ -204,7 +204,7 @@ export function PersonaSwitcher({
         className={cn(
           "flex items-center gap-2 px-3 py-2 rounded-lg",
           "bg-gray-100 dark:bg-gray-800",
-          "hover:bg-gray-200 dark:hover:bg-gray-700",
+          "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
           "transition-colors",
         )}
         aria-haspopup="listbox"
@@ -217,7 +217,7 @@ export function PersonaSwitcher({
         <ChevronDown
           size={14}
           className={cn(
-            "text-gray-400 transition-transform",
+            "text-gray-400 dark:text-gray-400 transition-transform",
             isOpen && "rotate-180",
           )}
         />

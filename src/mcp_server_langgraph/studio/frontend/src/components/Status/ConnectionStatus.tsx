@@ -56,23 +56,23 @@ const STATUS_CONFIG: Record<
 > = {
   connected: {
     label: "Connected",
-    color: "bg-green-500",
+    color: "bg-success-500",
     icon: Wifi,
   },
   connecting: {
     label: "Connecting",
-    color: "bg-yellow-500",
+    color: "bg-warning-500",
     icon: Wifi,
     pulse: true,
   },
   disconnected: {
     label: "Disconnected",
-    color: "bg-red-500",
+    color: "bg-error-500",
     icon: WifiOff,
   },
   reconnecting: {
     label: "Reconnecting",
-    color: "bg-yellow-500",
+    color: "bg-warning-500",
     icon: RefreshCw,
     pulse: true,
   },
@@ -98,11 +98,11 @@ export function ConnectionStatus({
   const latencyInfo = useMemo(() => {
     if (latencyMs === undefined) return null;
 
-    let colorClass = "text-green-600 dark:text-green-400";
+    let colorClass = "text-success-600 dark:text-success-400";
     if (latencyMs > LATENCY_THRESHOLDS.moderate) {
-      colorClass = "text-red-600 dark:text-red-400";
+      colorClass = "text-error-600 dark:text-error-400";
     } else if (latencyMs > LATENCY_THRESHOLDS.good) {
-      colorClass = "text-yellow-600 dark:text-yellow-400";
+      colorClass = "text-warning-600 dark:text-warning-400";
     }
 
     return { value: `${latencyMs}ms`, colorClass };
@@ -204,7 +204,7 @@ export function ConnectionStatus({
         <button
           type="button"
           onClick={handleReconnect}
-          className="ml-2 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="ml-2 px-2 py-1 text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 rounded hover:bg-primary-100 dark:hover:bg-primary-900/40 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           Reconnect
         </button>

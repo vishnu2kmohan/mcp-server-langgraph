@@ -67,8 +67,8 @@ export function ContextualHelp({
         <div
           key={tip.id}
           className={cn(
-            "rounded-lg border border-yellow-200 dark:border-yellow-800/50",
-            "bg-yellow-50 dark:bg-yellow-900/20",
+            "rounded-lg border border-warning-200 dark:border-warning-800/50",
+            "bg-warning-50 dark:bg-warning-900/20",
             "p-3",
           )}
         >
@@ -77,7 +77,7 @@ export function ContextualHelp({
             <div className="flex-shrink-0 mt-0.5">
               <Lightbulb
                 size={16}
-                className="text-yellow-600 dark:text-yellow-400"
+                className="text-warning-600 dark:text-warning-400"
               />
             </div>
 
@@ -91,7 +91,7 @@ export function ContextualHelp({
                   type="button"
                   aria-label="Dismiss tip"
                   onClick={() => onDismiss(tip)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
                 >
                   <X size={14} />
                 </button>

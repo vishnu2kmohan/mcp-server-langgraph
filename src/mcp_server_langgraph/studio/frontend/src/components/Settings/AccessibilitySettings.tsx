@@ -76,8 +76,10 @@ function Toggle({
             onChange(!checked);
           }
         }}
-        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-          checked ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-600"
+        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+          checked
+            ? "bg-primary-600"
+            : "bg-gray-200 dark:bg-gray-700 dark:bg-gray-600"
         }`}
       >
         <span className="sr-only">{label}</span>
@@ -133,10 +135,10 @@ function FontSizeSelector({ value, onChange }: FontSizeSelectorProps) {
               aria-checked={value === size.key}
               data-testid={`font-size-${size.key}`}
               onClick={() => onChange(size.key)}
-              className={`flex flex-col items-center justify-center px-4 py-2 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              className={`flex flex-col items-center justify-center px-4 py-2 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
                 value === size.key
-                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                  : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300"
+                  ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                  : "border-gray-200 dark:border-gray-700 dark:border-gray-600 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300"
               }`}
             >
               <span
@@ -242,7 +244,7 @@ export function AccessibilitySettings({
         <button
           type="button"
           onClick={resetToDefaults}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
         >
           <RotateCcw size={16} />
           Reset to Defaults

@@ -800,7 +800,7 @@ export function StudioShellLayout() {
       {/* Skip-to-content link (WCAG 2.1 AA - 2.4.1 Bypass Blocks) */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-blue-600 focus:ring-2 focus:ring-blue-500"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-primary-600 focus:ring-2 focus:ring-primary-500"
       >
         Skip to main content
       </a>
@@ -1024,7 +1024,7 @@ export function StudioShellLayout() {
               <Suspense
                 fallback={
                   <div className="flex items-center justify-center h-full bg-white dark:bg-gray-900">
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-gray-400 dark:text-gray-400">
                       Loading DevTools...
                     </span>
                   </div>
@@ -1089,11 +1089,11 @@ export function StudioShellLayout() {
             role="alert"
             data-testid="persona-mismatch-banner"
           >
-            <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg shadow-lg p-4">
+            <div className="bg-insight-50 dark:bg-insight-900/30 border border-insight-200 dark:border-insight-700 rounded-lg shadow-lg p-4">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
                   <svg
-                    className="w-5 h-5 text-purple-600 dark:text-purple-400"
+                    className="w-5 h-5 text-insight-600 dark:text-insight-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1107,16 +1107,16 @@ export function StudioShellLayout() {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-purple-800 dark:text-purple-200">
+                  <h4 className="text-sm font-semibold text-insight-800 dark:text-insight-200">
                     We noticed you&apos;re using advanced features
                   </h4>
-                  <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
+                  <p className="text-sm text-insight-700 dark:text-insight-300 mt-1">
                     Your usage pattern suggests you might benefit from{" "}
                     <strong>{detectedPersona?.replace(/-/g, " ")}</strong>{" "}
                     capabilities.
                   </p>
                   {recommendation && (
-                    <p className="text-sm text-purple-600 dark:text-purple-400 mt-2">
+                    <p className="text-sm text-insight-600 dark:text-insight-400 mt-2">
                       {recommendation}
                     </p>
                   )}
@@ -1125,7 +1125,7 @@ export function StudioShellLayout() {
                       {behaviorSignals.slice(0, 3).map((signal, idx) => (
                         <span
                           key={idx}
-                          className="inline-flex items-center px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-800/50 text-purple-700 dark:text-purple-300 rounded"
+                          className="inline-flex items-center px-2 py-0.5 text-xs bg-insight-100 dark:bg-insight-800/50 text-insight-700 dark:text-insight-300 rounded"
                         >
                           {signal}
                         </span>
@@ -1135,7 +1135,7 @@ export function StudioShellLayout() {
                 </div>
                 <button
                   onClick={() => setPersonaBannerDismissed(true)}
-                  className="flex-shrink-0 p-1 text-purple-400 hover:text-purple-600 dark:hover:text-purple-200"
+                  className="flex-shrink-0 p-1 text-insight-400 hover:text-insight-600 dark:hover:text-insight-200"
                   aria-label="Dismiss persona suggestion"
                 >
                   <svg

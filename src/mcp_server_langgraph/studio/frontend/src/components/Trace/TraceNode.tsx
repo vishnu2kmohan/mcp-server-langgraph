@@ -18,8 +18,8 @@ interface TraceNodeData {
 
 function TraceNode({ data, selected }: NodeProps<TraceNodeData>) {
   const statusClasses = {
-    OK: "bg-green-100 border-green-500 text-green-800",
-    ERROR: "bg-red-100 border-red-500 text-red-800",
+    OK: "bg-success-100 border-success-500 text-success-800",
+    ERROR: "bg-error-100 border-error-500 text-error-800",
     UNSET: "bg-indigo-100 border-indigo-500 text-indigo-800",
   };
 
@@ -30,7 +30,7 @@ function TraceNode({ data, selected }: NodeProps<TraceNodeData>) {
         className={`
           px-4 py-2 rounded-lg border-2 min-w-[180px]
           ${statusClasses[data.status]}
-          ${selected ? "ring-2 ring-offset-2 ring-blue-500" : ""}
+          ${selected ? "ring-2 ring-offset-2 ring-primary-500" : ""}
           transition-all duration-200 hover:shadow-lg
         `}
       >

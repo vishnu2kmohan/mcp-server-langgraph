@@ -50,24 +50,26 @@ export interface SOC2PanelProps {
 function getStatusIcon(status: ControlStatus) {
   switch (status) {
     case "compliant":
-      return <CheckCircle size={14} className="text-green-500" />;
+      return <CheckCircle size={14} className="text-success-500" />;
     case "partial":
-      return <AlertCircle size={14} className="text-yellow-500" />;
+      return <AlertCircle size={14} className="text-warning-500" />;
     case "non-compliant":
-      return <XCircle size={14} className="text-red-500" />;
+      return <XCircle size={14} className="text-error-500" />;
     default:
-      return <AlertCircle size={14} className="text-gray-400" />;
+      return (
+        <AlertCircle size={14} className="text-gray-400 dark:text-gray-400" />
+      );
   }
 }
 
 function getStatusColor(status: ControlStatus): string {
   switch (status) {
     case "compliant":
-      return "text-green-600 dark:text-green-400";
+      return "text-success-600 dark:text-success-400";
     case "partial":
-      return "text-yellow-600 dark:text-yellow-400";
+      return "text-warning-600 dark:text-warning-400";
     case "non-compliant":
-      return "text-red-600 dark:text-red-400";
+      return "text-error-600 dark:text-error-400";
     default:
       return "text-gray-500 dark:text-gray-400";
   }
@@ -111,7 +113,7 @@ export function SOC2Panel({
           className,
         )}
       >
-        <div className="flex items-center gap-2 text-gray-500">
+        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
           <Loader2 size={16} className="animate-spin" />
           <span>Loading SOC-2 controls...</span>
         </div>
@@ -131,7 +133,7 @@ export function SOC2Panel({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <Shield size={18} className="text-blue-500" />
+          <Shield size={18} className="text-primary-500" />
           <h3 className="font-semibold text-gray-900 dark:text-gray-100">
             SOC-2
           </h3>
@@ -187,10 +189,10 @@ export function SOC2Panel({
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {control.name}
                   </p>
-                  <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
+                  <div className="flex items-center gap-4 mt-1 text-xs text-gray-400 dark:text-gray-400">
                     <span>Assessed: {formatDate(control.lastAssessed)}</span>
                     {control.remediationDue && (
-                      <span className="text-red-500">
+                      <span className="text-error-500">
                         Due: {formatDate(control.remediationDue)}
                       </span>
                     )}

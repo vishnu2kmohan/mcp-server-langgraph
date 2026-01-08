@@ -126,7 +126,7 @@ describe("AICacheMetricsDashboard", () => {
     it("shows green color for high cache hit ratio (>= 70%)", () => {
       render(<AICacheMetricsDashboard {...defaultProps} />);
       const progressBar = screen.getByTestId("cache-hit-progress-bar");
-      expect(progressBar).toHaveClass("bg-green-500");
+      expect(progressBar).toHaveClass("bg-success-500");
     });
 
     it("shows yellow color for medium cache hit ratio (50-70%)", () => {
@@ -135,7 +135,7 @@ describe("AICacheMetricsDashboard", () => {
         <AICacheMetricsDashboard {...defaultProps} snapshot={lowHitSnapshot} />,
       );
       const progressBar = screen.getByTestId("cache-hit-progress-bar");
-      expect(progressBar).toHaveClass("bg-yellow-500");
+      expect(progressBar).toHaveClass("bg-warning-500");
     });
 
     it("shows red color for low cache hit ratio (< 50%)", () => {
@@ -147,7 +147,7 @@ describe("AICacheMetricsDashboard", () => {
         />,
       );
       const progressBar = screen.getByTestId("cache-hit-progress-bar");
-      expect(progressBar).toHaveClass("bg-red-500");
+      expect(progressBar).toHaveClass("bg-error-500");
     });
   });
 
@@ -277,7 +277,7 @@ describe("AICacheMetricsDashboard", () => {
         />,
       );
       const errorRateElement = screen.getByTestId("error-rate-value");
-      expect(errorRateElement).toHaveClass("text-green-600");
+      expect(errorRateElement).toHaveClass("text-success-600");
     });
 
     it("shows yellow error rate between 5-10%", () => {
@@ -289,7 +289,7 @@ describe("AICacheMetricsDashboard", () => {
         />,
       );
       const errorRateElement = screen.getByTestId("error-rate-value");
-      expect(errorRateElement).toHaveClass("text-yellow-600");
+      expect(errorRateElement).toHaveClass("text-warning-600");
     });
 
     it("shows red error rate above 10%", () => {
@@ -301,7 +301,7 @@ describe("AICacheMetricsDashboard", () => {
         />,
       );
       const errorRateElement = screen.getByTestId("error-rate-value");
-      expect(errorRateElement).toHaveClass("text-red-600");
+      expect(errorRateElement).toHaveClass("text-error-600");
     });
   });
 

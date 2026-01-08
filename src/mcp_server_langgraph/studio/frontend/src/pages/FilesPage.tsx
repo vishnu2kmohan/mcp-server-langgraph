@@ -124,13 +124,13 @@ function getMimeType(
 function getFileIcon(type: FileItem["type"]) {
   switch (type) {
     case "code":
-      return <FileCode size={24} className="text-blue-500" />;
+      return <FileCode size={24} className="text-primary-500" />;
     case "document":
-      return <FileText size={24} className="text-green-500" />;
+      return <FileText size={24} className="text-success-500" />;
     case "image":
-      return <FileImage size={24} className="text-purple-500" />;
+      return <FileImage size={24} className="text-insight-500" />;
     default:
-      return <File size={24} className="text-gray-500" />;
+      return <File size={24} className="text-gray-500 dark:text-gray-400" />;
   }
 }
 
@@ -197,7 +197,7 @@ function FileCard({
               e.stopPropagation();
               onDownload(file);
             }}
-            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-1 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
             aria-label="Download"
           >
             <Download size={14} />
@@ -208,7 +208,7 @@ function FileCard({
               e.stopPropagation();
               onDelete(file);
             }}
-            className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
+            className="p-1 rounded hover:bg-error-100 dark:hover:bg-error-900/30 text-error-500"
             aria-label="Delete"
           >
             <Trash2 size={14} />
@@ -248,7 +248,7 @@ function FileCard({
             e.stopPropagation();
             onPreview(file);
           }}
-          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="p-2 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
           aria-label="Preview"
         >
           <Eye size={16} />
@@ -259,7 +259,7 @@ function FileCard({
             e.stopPropagation();
             onDownload(file);
           }}
-          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="p-2 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
           aria-label="Download"
         >
           <Download size={16} />
@@ -270,7 +270,7 @@ function FileCard({
             e.stopPropagation();
             onDelete(file);
           }}
-          className="p-2 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
+          className="p-2 rounded hover:bg-error-100 dark:hover:bg-error-900/30 text-error-500"
           aria-label="Delete"
         >
           <Trash2 size={16} />
@@ -506,9 +506,9 @@ export function FilesPage() {
     return (
       <div
         data-testid="files-page-error"
-        className="flex flex-col items-center justify-center h-full bg-gray-50 dark:bg-gray-900 text-gray-500"
+        className="flex flex-col items-center justify-center h-full bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400"
       >
-        <AlertCircle size={48} className="mb-4 text-red-500" />
+        <AlertCircle size={48} className="mb-4 text-error-500" />
         <p className="text-lg font-medium text-gray-900 dark:text-white">
           Failed to load files
         </p>
@@ -530,11 +530,11 @@ export function FilesPage() {
             "absolute top-2 right-2 z-20 px-3 py-1.5 rounded-lg text-sm font-medium",
             "transition-all duration-200 shadow-lg",
             deleteStatus === "pending" &&
-              "bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300",
+              "bg-warning-100 dark:bg-warning-900/50 text-warning-700 dark:text-warning-300",
             deleteStatus === "success" &&
-              "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300",
+              "bg-success-100 dark:bg-success-900/50 text-success-700 dark:text-success-300",
             deleteStatus === "error" &&
-              "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300",
+              "bg-error-100 dark:bg-error-900/50 text-error-700 dark:text-error-300",
           )}
         >
           {deleteStatus === "pending" && (
@@ -565,7 +565,7 @@ export function FilesPage() {
           <div className="relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
             />
             <input
               type="text"
@@ -576,7 +576,7 @@ export function FilesPage() {
               className={cn(
                 "pl-9 pr-4 py-2 rounded-lg text-sm w-64",
                 "bg-gray-100 dark:bg-gray-700",
-                "border border-gray-200 dark:border-gray-600",
+                "border border-gray-200 dark:border-gray-700 dark:border-gray-600",
                 "focus:outline-none focus:ring-2 focus:ring-primary-500",
                 "placeholder-gray-400",
               )}
@@ -593,7 +593,7 @@ export function FilesPage() {
                 "p-1.5 rounded",
                 viewMode === "grid"
                   ? "bg-white dark:bg-gray-600 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300",
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300",
               )}
               aria-label="Grid view"
             >
@@ -607,7 +607,7 @@ export function FilesPage() {
                 "p-1.5 rounded",
                 viewMode === "list"
                   ? "bg-white dark:bg-gray-600 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300",
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300",
               )}
               aria-label="List view"
             >
@@ -620,7 +620,7 @@ export function FilesPage() {
       {/* File list */}
       <div className="flex-1 overflow-auto p-6">
         {filteredFiles.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
+          <div className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-400">
             <FolderOpen size={48} className="mb-4 opacity-50" />
             <p className="text-sm">
               {searchQuery ? "No files match your search" : "No files yet"}
@@ -673,7 +673,7 @@ export function FilesPage() {
                   <h3 className="font-medium text-gray-900 dark:text-white">
                     {selectedFile.name}
                   </h3>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {formatFileSize(selectedFile.size)} •{" "}
                     {formatDate(selectedFile.updatedAt)}
                   </p>
@@ -682,7 +682,7 @@ export function FilesPage() {
               <button
                 type="button"
                 onClick={handleClosePreview}
-                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="p-2 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                 aria-label="Close preview"
               >
                 <X size={20} />
@@ -739,7 +739,7 @@ export function FilesPage() {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-error-500 text-white hover:bg-error-600 disabled:opacity-50"
               >
                 {isDeleting ? "Deleting..." : "Delete"}
               </button>

@@ -113,7 +113,7 @@ export function GuidedTour({
           <button
             onClick={handleSkip}
             aria-label="Skip"
-            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"
+            className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 rounded"
           >
             <X className="w-4 h-4" />
           </button>
@@ -134,9 +134,9 @@ export function GuidedTour({
               data-testid="tour-progress-dot"
               className={`w-2 h-2 rounded-full transition-colors ${
                 index === currentStepIndex
-                  ? "bg-blue-500"
+                  ? "bg-primary-500"
                   : index < currentStepIndex
-                    ? "bg-blue-300"
+                    ? "bg-primary-300"
                     : "bg-gray-300 dark:bg-gray-600"
               }`}
             />
@@ -167,7 +167,7 @@ export function GuidedTour({
               <button
                 onClick={handleNext}
                 aria-label="Finish"
-                className="flex items-center gap-1 px-4 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700"
+                className="flex items-center gap-1 px-4 py-1.5 text-sm bg-success-600 text-white rounded-lg hover:bg-success-700"
               >
                 Finish
                 <CheckCircle className="w-3 h-3" />
@@ -176,7 +176,7 @@ export function GuidedTour({
               <button
                 onClick={handleNext}
                 aria-label="Next"
-                className="flex items-center gap-1 px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="flex items-center gap-1 px-4 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700"
               >
                 Next
                 <ArrowRight className="w-3 h-3" />

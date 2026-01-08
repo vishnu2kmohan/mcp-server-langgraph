@@ -91,12 +91,12 @@ export function SaveAsWorkflowButton({
       <button
         onClick={handleSaveAsWorkflow}
         disabled={disabled || isLoading}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {isLoading ? (
           <Loader2 size={16} className="animate-spin" />
         ) : success ? (
-          <CheckCircle size={16} className="text-green-500" />
+          <CheckCircle size={16} className="text-success-500" />
         ) : (
           <Save size={16} />
         )}
@@ -105,19 +105,19 @@ export function SaveAsWorkflowButton({
 
       {/* Success Message */}
       {success && (
-        <div className="absolute top-full right-0 mt-2 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg shadow-lg min-w-[300px] z-10">
+        <div className="absolute top-full right-0 mt-2 p-4 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg shadow-lg min-w-[300px] z-10">
           <div className="flex items-start gap-3">
-            <CheckCircle size={20} className="text-green-500 mt-0.5" />
+            <CheckCircle size={20} className="text-success-500 mt-0.5" />
             <div className="flex-1">
-              <p className="font-medium text-green-900 dark:text-green-100">
+              <p className="font-medium text-success-900 dark:text-success-100">
                 Workflow Created
               </p>
-              <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+              <p className="text-sm text-success-700 dark:text-success-300 mt-1">
                 {success.name}
               </p>
               <a
                 href={`/studio/workflows?id=${success.workflowId}`}
-                className="inline-flex items-center gap-1 mt-2 text-sm text-green-600 dark:text-green-400 hover:underline"
+                className="inline-flex items-center gap-1 mt-2 text-sm text-success-600 dark:text-success-400 hover:underline"
               >
                 View Workflow
                 <ExternalLink size={14} />
@@ -129,13 +129,13 @@ export function SaveAsWorkflowButton({
 
       {/* Error Message */}
       {error && (
-        <div className="absolute top-full right-0 mt-2 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-lg min-w-[300px] z-10">
+        <div className="absolute top-full right-0 mt-2 p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg shadow-lg min-w-[300px] z-10">
           <div className="flex items-start gap-3">
             <div className="flex-1">
-              <p className="font-medium text-red-900 dark:text-red-100">
+              <p className="font-medium text-error-900 dark:text-error-100">
                 Failed to Create Workflow
               </p>
-              <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+              <p className="text-sm text-error-700 dark:text-error-300 mt-1">
                 {error}
               </p>
             </div>

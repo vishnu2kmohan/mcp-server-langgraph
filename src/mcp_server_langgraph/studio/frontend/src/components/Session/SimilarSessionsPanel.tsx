@@ -64,7 +64,7 @@ export function SimilarSessionsPanel({
         className={`similar-sessions-panel p-4 ${className}`}
       >
         <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-          <Sparkles size={16} className="text-purple-500" />
+          <Sparkles size={16} className="text-insight-500" />
           Similar Sessions
         </h3>
         <div className="space-y-3">
@@ -90,12 +90,12 @@ export function SimilarSessionsPanel({
         role="alert"
       >
         <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-          <Sparkles size={16} className="text-purple-500" />
+          <Sparkles size={16} className="text-insight-500" />
           Similar Sessions
         </h3>
         <div className="text-center py-4">
           <AlertCircle
-            className="mx-auto h-8 w-8 text-amber-500 mb-2"
+            className="mx-auto h-8 w-8 text-warning-500 mb-2"
             aria-hidden="true"
           />
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
@@ -103,7 +103,7 @@ export function SimilarSessionsPanel({
           </p>
           <button
             onClick={refetch}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-insight-500"
           >
             <RefreshCw size={14} />
             Retry
@@ -120,12 +120,12 @@ export function SimilarSessionsPanel({
     return (
       <div className={`similar-sessions-panel p-4 ${className}`}>
         <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-          <Sparkles size={16} className="text-purple-500" />
+          <Sparkles size={16} className="text-insight-500" />
           Similar Sessions
         </h3>
         <div className="text-center py-4">
           <Link2
-            className="mx-auto h-8 w-8 text-gray-400 dark:text-gray-600 mb-2"
+            className="mx-auto h-8 w-8 text-gray-400 dark:text-gray-400 dark:text-gray-600 dark:text-gray-300 mb-2"
             aria-hidden="true"
           />
           <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -142,7 +142,7 @@ export function SimilarSessionsPanel({
   return (
     <div className={`similar-sessions-panel p-4 ${className}`}>
       <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-        <Sparkles size={16} className="text-purple-500" />
+        <Sparkles size={16} className="text-insight-500" />
         Similar Sessions
       </h3>
       <div className="space-y-2" aria-label="Similar sessions">
@@ -155,14 +155,14 @@ export function SimilarSessionsPanel({
             <button
               key={session.sessionId}
               type="button"
-              className="w-full text-left group p-2 rounded-md border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/10 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full text-left group p-2 rounded-md border border-gray-200 dark:border-gray-700 hover:border-insight-300 dark:hover:border-insight-600 hover:bg-insight-50 dark:hover:bg-insight-900/10 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-insight-500"
               onClick={() => onSessionSelect?.(session.sessionId)}
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate flex-1">
                   {sessionName}
                 </span>
-                <span className="text-xs font-medium text-purple-600 dark:text-purple-400 ml-2">
+                <span className="text-xs font-medium text-insight-600 dark:text-insight-400 ml-2">
                   {scorePercent}%
                 </span>
               </div>

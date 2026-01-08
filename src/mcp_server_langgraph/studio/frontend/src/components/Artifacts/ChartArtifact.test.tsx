@@ -94,7 +94,7 @@ describe("ChartArtifact", () => {
       const lineButton = screen.getByRole("button", { name: /line/i });
       fireEvent.click(lineButton);
       // Chart type should change (internal state)
-      expect(lineButton).toHaveClass("bg-blue-100");
+      expect(lineButton).toHaveClass("bg-primary-100");
     });
   });
 

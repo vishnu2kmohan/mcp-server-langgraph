@@ -312,7 +312,7 @@ export function SessionList({
         aria-current={isSelected ? "true" : undefined}
         className={`group relative px-3 py-2 cursor-pointer border-b border-gray-100 dark:border-gray-800 ${
           isSelected
-            ? "bg-blue-50 dark:bg-blue-900/30"
+            ? "bg-primary-50 dark:bg-primary-900/30"
             : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
         }`}
         onClick={() => !isEditing && onSelect?.(session.id)}
@@ -327,14 +327,14 @@ export function SessionList({
                 onKeyDown={(e) => handleRenameKeyDown(e, session.id)}
                 onBlur={() => handleRenameSubmit(session.id)}
                 autoFocus
-                className="w-full px-1 py-0.5 text-sm rounded border border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-800"
+                className="w-full px-1 py-0.5 text-sm rounded border border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white dark:bg-gray-800"
               />
             ) : (
               <div className="flex items-center gap-1.5">
                 {isPinned && (
                   <Pin
                     size={12}
-                    className="text-blue-500 flex-shrink-0"
+                    className="text-primary-500 flex-shrink-0"
                     aria-label="Pinned"
                   />
                 )}
@@ -368,7 +368,7 @@ export function SessionList({
               aria-label="Session actions"
               aria-haspopup="menu"
               aria-expanded={activeMenuId === session.id}
-              className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="p-1 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <MoreVertical size={14} />
             </button>
@@ -387,7 +387,7 @@ export function SessionList({
                       e.stopPropagation();
                       handlePin(session.id);
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
                   >
                     {isPinned ? (
                       <>
@@ -407,7 +407,7 @@ export function SessionList({
                       e.stopPropagation();
                       handleStartRename(session);
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
                   >
                     <Edit2 size={14} />
                     Rename
@@ -418,7 +418,7 @@ export function SessionList({
                       e.stopPropagation();
                       handleDelete(session.id);
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20"
                   >
                     <Trash2 size={14} />
                     Delete
@@ -447,7 +447,7 @@ export function SessionList({
         <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
           {group.topic}
         </span>
-        <span className="text-xs text-gray-400 dark:text-gray-500">
+        <span className="text-xs text-gray-400 dark:text-gray-400">
           ({group.sessionIds.length})
         </span>
       </div>
@@ -466,7 +466,7 @@ export function SessionList({
           data-testid="ai-grouping-loading"
           role="status"
         >
-          <Loader2 className="mx-auto h-5 w-5 animate-spin text-blue-500" />
+          <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary-500" />
           <span className="sr-only">Loading AI groups...</span>
         </li>
       );
@@ -476,7 +476,7 @@ export function SessionList({
     if (enableAIGrouping && groupsError) {
       return (
         <li
-          className="p-4 text-center text-sm text-amber-600 dark:text-amber-400"
+          className="p-4 text-center text-sm text-warning-600 dark:text-warning-400"
           data-testid="ai-grouping-error"
           role="alert"
         >
@@ -529,7 +529,7 @@ export function SessionList({
               <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
                 Other
               </span>
-              <span className="text-xs text-gray-400 dark:text-gray-500">
+              <span className="text-xs text-gray-400 dark:text-gray-400">
                 ({ungroupedIds.length})
               </span>
             </div>
@@ -600,7 +600,7 @@ export function SessionList({
       <div className={`session-list ${className}`}>
         <div className="p-4 text-center">
           <MessageSquare
-            className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600 mb-3"
+            className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-400 dark:text-gray-600 dark:text-gray-300 mb-3"
             aria-hidden="true"
           />
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -612,7 +612,7 @@ export function SessionList({
           {onCreate && (
             <button
               onClick={onCreate}
-              className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <Plus size={16} />
               New Session
@@ -634,7 +634,7 @@ export function SessionList({
         <div className="relative">
           <Search
             size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
             aria-hidden="true"
           />
           <input
@@ -644,13 +644,13 @@ export function SessionList({
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search sessions..."
             aria-label="Search sessions"
-            className="w-full pl-9 pr-8 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full pl-9 pr-8 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
               aria-label="Clear search"
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
             >
               <X size={14} />
             </button>
@@ -661,7 +661,7 @@ export function SessionList({
         {onCreate && (
           <button
             onClick={onCreate}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <Plus size={16} />
             New Session

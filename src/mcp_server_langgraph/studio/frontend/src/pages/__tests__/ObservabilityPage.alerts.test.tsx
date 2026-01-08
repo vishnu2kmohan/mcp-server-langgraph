@@ -288,7 +288,7 @@ describe("ObservabilityPage - Alerts", () => {
       await waitFor(() => {
         const severityBadges = screen.getAllByText("error");
         const severityBadge = severityBadges.find((el) =>
-          el.classList.contains("bg-orange-100"),
+          el.classList.contains("bg-grafana-100"),
         );
         expect(severityBadge).toBeInTheDocument();
       });
@@ -328,7 +328,7 @@ describe("ObservabilityPage - Alerts", () => {
       await waitFor(() => {
         const infoBadge = screen.getByText("info");
         expect(infoBadge).toBeInTheDocument();
-        expect(infoBadge).toHaveClass("bg-blue-100");
+        expect(infoBadge).toHaveClass("bg-primary-100");
       });
     });
   });
@@ -375,7 +375,7 @@ describe("ObservabilityPage - Alerts", () => {
           el.classList.contains("rounded-full"),
         );
         expect(stateBadge).toBeInTheDocument();
-        expect(stateBadge).toHaveClass("bg-yellow-100");
+        expect(stateBadge).toHaveClass("bg-warning-100");
       });
     });
 
@@ -416,7 +416,7 @@ describe("ObservabilityPage - Alerts", () => {
           el.classList.contains("rounded-full"),
         );
         expect(stateBadge).toBeInTheDocument();
-        expect(stateBadge).toHaveClass("bg-green-100");
+        expect(stateBadge).toHaveClass("bg-success-100");
       });
     });
 

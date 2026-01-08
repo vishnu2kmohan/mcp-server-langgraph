@@ -37,7 +37,7 @@ export function CursorPagination({
       <div className="flex items-center gap-2">
         {isLoading && (
           <div data-testid="pagination-loading">
-            <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+            <Loader2 className="w-4 h-4 animate-spin text-gray-400 dark:text-gray-400" />
           </div>
         )}
         {itemCount !== undefined && totalCount !== undefined && (
@@ -57,8 +57,8 @@ export function CursorPagination({
             transition-colors
             ${
               isPreviousDisabled
-                ? "text-gray-400 dark:text-gray-600 cursor-not-allowed"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                ? "text-gray-400 dark:text-gray-400 dark:text-gray-600 dark:text-gray-300 cursor-not-allowed"
+                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
             }
           `}
         >
@@ -75,8 +75,8 @@ export function CursorPagination({
             transition-colors
             ${
               isNextDisabled
-                ? "text-gray-400 dark:text-gray-600 cursor-not-allowed"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                ? "text-gray-400 dark:text-gray-400 dark:text-gray-600 dark:text-gray-300 cursor-not-allowed"
+                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
             }
           `}
         >

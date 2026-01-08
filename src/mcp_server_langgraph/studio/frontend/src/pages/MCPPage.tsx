@@ -282,7 +282,7 @@ export function MCPPage() {
             <button
               onClick={handleOpenAddDialog}
               disabled={isConnecting}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
               aria-label="Add MCP Server"
             >
               <Plus size={16} />
@@ -293,7 +293,7 @@ export function MCPPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsToolInvocationOpen(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                 aria-label="Invoke Tool"
               >
                 <Play size={16} />
@@ -301,7 +301,7 @@ export function MCPPage() {
               </button>
               <button
                 onClick={() => setIsResourceViewerOpen(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                 aria-label="View Resources"
               >
                 <Eye size={16} />
@@ -309,7 +309,7 @@ export function MCPPage() {
               </button>
               <button
                 onClick={() => setIsPromptTesterOpen(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                 aria-label="Test Prompt"
               >
                 <TestTube size={16} />
@@ -317,7 +317,7 @@ export function MCPPage() {
               </button>
               <button
                 onClick={() => setIsElicitationOpen(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                 aria-label="Request Input"
               >
                 <UserCheck size={16} />
@@ -329,7 +329,7 @@ export function MCPPage() {
             <div className="flex items-center gap-2">
               <div
                 className={`w-2 h-2 rounded-full ${
-                  isConnected ? "bg-green-500" : "bg-red-500"
+                  isConnected ? "bg-success-500" : "bg-error-500"
                 }`}
               />
               <span className="text-sm text-gray-600 dark:text-gray-300">
@@ -350,10 +350,10 @@ export function MCPPage() {
               }
               className={`w-2.5 h-2.5 rounded-full ${
                 mcpWsStatus === "connected"
-                  ? "bg-green-500"
+                  ? "bg-success-500"
                   : mcpWsStatus === "connecting" ||
                       mcpWsStatus === "reconnecting"
-                    ? "bg-yellow-500 animate-pulse"
+                    ? "bg-warning-500 animate-pulse"
                     : "bg-gray-400"
               }`}
             />
@@ -366,8 +366,8 @@ export function MCPPage() {
                 title={`${mcpTasks.length} MCP task${mcpTasks.length === 1 ? "" : "s"}${hasRunningTasks ? " (running)" : ""}`}
                 className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${
                   hasRunningTasks
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 animate-pulse"
-                    : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                    ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 animate-pulse"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                 }`}
               >
                 {mcpTasks.length}
@@ -386,8 +386,8 @@ export function MCPPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                 activeTab === tab.id
-                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                  : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                  ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
               }`}
             >
               <tab.icon size={16} />
@@ -396,8 +396,8 @@ export function MCPPage() {
                 <span
                   className={`px-2 py-0.5 text-xs rounded-full ${
                     activeTab === tab.id
-                      ? "bg-blue-200 dark:bg-blue-800"
-                      : "bg-gray-200 dark:bg-gray-600"
+                      ? "bg-primary-200 dark:bg-primary-800"
+                      : "bg-gray-200 dark:bg-gray-700 dark:bg-gray-600"
                   }`}
                 >
                   {tab.count}
@@ -414,7 +414,7 @@ export function MCPPage() {
           <div className="relative">
             <Search
               size={20}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
             />
             <input
               type="text"
@@ -431,16 +431,18 @@ export function MCPPage() {
       {error && (
         <div
           role="alert"
-          className="px-6 py-3 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800"
+          className="px-6 py-3 bg-error-50 dark:bg-error-900/20 border-b border-error-200 dark:border-error-800"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertCircle size={16} className="text-red-500" />
-              <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+              <AlertCircle size={16} className="text-error-500" />
+              <p className="text-error-700 dark:text-error-400 text-sm">
+                {error}
+              </p>
             </div>
             <button
               onClick={() => dispatch(clearMCPError())}
-              className="p-1 text-red-500 hover:text-red-700 dark:hover:text-red-300"
+              className="p-1 text-error-500 hover:text-error-700 dark:hover:text-error-300"
               aria-label="Dismiss"
             >
               <X size={16} />
@@ -453,7 +455,7 @@ export function MCPPage() {
       <div className="flex-1 overflow-y-auto p-6">
         {isConnecting ? (
           <div className="flex items-center justify-center h-64">
-            <RefreshCw size={32} className="animate-spin text-blue-500" />
+            <RefreshCw size={32} className="animate-spin text-primary-500" />
           </div>
         ) : (
           <div className="space-y-4">
@@ -475,7 +477,7 @@ export function MCPPage() {
                         className="w-full p-4 flex items-center justify-between text-left"
                       >
                         <div className="flex items-center gap-3">
-                          <Wrench size={20} className="text-blue-500" />
+                          <Wrench size={20} className="text-primary-500" />
                           <div>
                             <h3 className="font-medium text-gray-900 dark:text-gray-100">
                               {tool.name}
@@ -486,9 +488,15 @@ export function MCPPage() {
                           </div>
                         </div>
                         {expandedItems.has(tool.name) ? (
-                          <ChevronDown size={20} className="text-gray-400" />
+                          <ChevronDown
+                            size={20}
+                            className="text-gray-400 dark:text-gray-400"
+                          />
                         ) : (
-                          <ChevronRight size={20} className="text-gray-400" />
+                          <ChevronRight
+                            size={20}
+                            className="text-gray-400 dark:text-gray-400"
+                          />
                         )}
                       </button>
                       {expandedItems.has(tool.name) && (
@@ -522,7 +530,7 @@ export function MCPPage() {
                         className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
                       >
                         <div className="flex items-center gap-3">
-                          <FileText size={20} className="text-green-500" />
+                          <FileText size={20} className="text-success-500" />
                           <div>
                             <h3 className="font-medium text-gray-900 dark:text-gray-100">
                               {resource.name}
@@ -553,7 +561,7 @@ export function MCPPage() {
                       className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
                     >
                       <div className="flex items-center gap-3">
-                        <MessageSquare size={20} className="text-purple-500" />
+                        <MessageSquare size={20} className="text-insight-500" />
                         <div>
                           <h3 className="font-medium text-gray-900 dark:text-gray-100">
                             {prompt.name}
@@ -577,7 +585,7 @@ export function MCPPage() {
                   <button
                     onClick={handleOpenAddDialog}
                     disabled={isConnecting}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
                   >
                     <Plus size={16} />
                     Add MCP Connection
@@ -596,12 +604,15 @@ export function MCPPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Server size={20} className="text-gray-500" />
+                          <Server
+                            size={20}
+                            className="text-gray-500 dark:text-gray-400"
+                          />
                           <div>
                             <h3 className="font-medium text-gray-900 dark:text-gray-100">
                               {server.id}
                               {server.id === primaryServerId && (
-                                <span className="ml-2 text-xs text-blue-600">
+                                <span className="ml-2 text-xs text-primary-600">
                                   (Primary)
                                 </span>
                               )}
@@ -613,31 +624,31 @@ export function MCPPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           {server.status === "connected" ? (
-                            <span className="flex items-center gap-1 text-green-600">
+                            <span className="flex items-center gap-1 text-success-600">
                               <Check size={16} />
                               Connected
                             </span>
                           ) : server.status === "error" ? (
-                            <span className="flex items-center gap-1 text-red-600">
+                            <span className="flex items-center gap-1 text-error-600">
                               <X size={16} />
                               Error
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 text-yellow-600">
+                            <span className="flex items-center gap-1 text-warning-600">
                               <RefreshCw size={16} className="animate-spin" />
                               Connecting
                             </span>
                           )}
                           <button
                             onClick={() => dispatch(removeServer(server.id))}
-                            className="p-2 text-gray-400 hover:text-red-500"
+                            className="p-2 text-gray-400 dark:text-gray-400 hover:text-error-500"
                           >
                             <X size={16} />
                           </button>
                         </div>
                       </div>
                       {server.error && (
-                        <p className="mt-2 text-sm text-red-600">
+                        <p className="mt-2 text-sm text-error-600">
                           {server.error}
                         </p>
                       )}
@@ -652,7 +663,7 @@ export function MCPPage() {
               <Suspense
                 fallback={
                   <div className="p-8 flex items-center justify-center">
-                    <Loader2 className="w-5 h-5 animate-spin text-blue-500 mr-2" />
+                    <Loader2 className="w-5 h-5 animate-spin text-primary-500 mr-2" />
                     <span className="text-gray-500 dark:text-gray-400">
                       Loading capabilities...
                     </span>
@@ -690,7 +701,7 @@ export function MCPPage() {
         fallback={
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl flex items-center gap-3">
-              <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+              <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
               <span className="text-gray-700 dark:text-gray-300">
                 Loading...
               </span>
@@ -711,7 +722,7 @@ export function MCPPage() {
         fallback={
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl flex items-center gap-3">
-              <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+              <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
               <span className="text-gray-700 dark:text-gray-300">
                 Loading...
               </span>

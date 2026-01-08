@@ -87,7 +87,7 @@ describe("WebSocketHealthIndicator", () => {
       render(<WebSocketHealthIndicator />);
 
       const indicator = screen.getByTestId("ws-health-status");
-      expect(indicator).toHaveClass("bg-green-500");
+      expect(indicator).toHaveClass("bg-success-500");
     });
 
     it("should show yellow/warning status when 70 <= avgSuccessRate < 90", () => {
@@ -98,7 +98,7 @@ describe("WebSocketHealthIndicator", () => {
       render(<WebSocketHealthIndicator />);
 
       const indicator = screen.getByTestId("ws-health-status");
-      expect(indicator).toHaveClass("bg-yellow-500");
+      expect(indicator).toHaveClass("bg-warning-500");
     });
 
     it("should show red/critical status when avgSuccessRate < 70", () => {
@@ -109,7 +109,7 @@ describe("WebSocketHealthIndicator", () => {
       render(<WebSocketHealthIndicator />);
 
       const indicator = screen.getByTestId("ws-health-status");
-      expect(indicator).toHaveClass("bg-red-500");
+      expect(indicator).toHaveClass("bg-error-500");
     });
 
     it("should show gray/unknown status when avgSuccessRate is null", () => {

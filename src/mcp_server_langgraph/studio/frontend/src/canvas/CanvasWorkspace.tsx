@@ -147,31 +147,31 @@ function ArtifactTabBar({
           artifact.editMetadata?.language || artifact.contentType;
         const hoverContent = (
           <div className="space-y-1.5 min-w-40 max-w-56">
-            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+            <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-400">
               <Code size={12} />
               <span className="capitalize">{artifact.type}</span>
               {language && (
                 <>
-                  <span className="text-gray-600">•</span>
+                  <span className="text-gray-600 dark:text-gray-300">•</span>
                   <span className="capitalize">{language}</span>
                 </>
               )}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+            <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-400">
               <FileCode2 size={12} />
               <span>
                 {lineCount} line{lineCount === 1 ? "" : "s"}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+            <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-400">
               <Clock size={12} />
               <span>Created {formatArtifactDate(artifact.createdAt)}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+            <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-400">
               {isAI ? (
                 <>
-                  <Bot size={12} className="text-purple-400" />
-                  <span className="text-purple-400">AI Generated</span>
+                  <Bot size={12} className="text-insight-400" />
+                  <span className="text-insight-400">AI Generated</span>
                 </>
               ) : (
                 <>
@@ -195,7 +195,7 @@ function ArtifactTabBar({
               isActive &&
                 "active bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
               !isActive &&
-                "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700",
+                "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
             )}
           >
             <FileCode2 size={14} />
@@ -213,7 +213,7 @@ function ArtifactTabBar({
             {isAI && (
               <span
                 data-testid="ai-badge"
-                className="w-1.5 h-1.5 rounded-full bg-purple-500"
+                className="w-1.5 h-1.5 rounded-full bg-insight-500"
               />
             )}
           </button>
@@ -431,9 +431,12 @@ export function CanvasWorkspace({
           className,
         )}
       >
-        <FileCode2 size={48} className="text-gray-400 mb-4" />
+        <FileCode2
+          size={48}
+          className="text-gray-400 dark:text-gray-400 mb-4"
+        />
         <p className="text-gray-500 dark:text-gray-400">No artifacts</p>
-        <p className="text-sm text-gray-400 dark:text-gray-500">
+        <p className="text-sm text-gray-400 dark:text-gray-400">
           Artifacts will appear here when generated
         </p>
       </div>
@@ -497,7 +500,7 @@ export function CanvasWorkspace({
                         Analyze
                       </button>
                     ) : codeAnalysis.isLoading ? (
-                      <span className="flex items-center gap-1 text-gray-400">
+                      <span className="flex items-center gap-1 text-gray-400 dark:text-gray-400">
                         <Loader2
                           size={12}
                           className="animate-spin"
@@ -516,10 +519,10 @@ export function CanvasWorkspace({
                                 className={cn(
                                   "font-medium",
                                   codeAnalysis.qualityScore >= 80
-                                    ? "text-green-400"
+                                    ? "text-success-400"
                                     : codeAnalysis.qualityScore >= 60
-                                      ? "text-yellow-400"
-                                      : "text-red-400",
+                                      ? "text-warning-400"
+                                      : "text-error-400",
                                 )}
                               >
                                 {codeAnalysis.qualityScore}/100
@@ -529,7 +532,7 @@ export function CanvasWorkspace({
                               <div>Complexity: {codeAnalysis.complexity}</div>
                             )}
                             {codeAnalysis.issues.length > 0 && (
-                              <div className="text-yellow-400">
+                              <div className="text-warning-400">
                                 {codeAnalysis.issues.length} issue
                                 {codeAnalysis.issues.length > 1 ? "s" : ""}
                               </div>
@@ -542,10 +545,10 @@ export function CanvasWorkspace({
                           className={cn(
                             "flex items-center gap-1 px-1.5 py-0.5 rounded",
                             codeAnalysis.qualityScore >= 80
-                              ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                              ? "bg-success-500/10 text-success-600 dark:text-success-400"
                               : codeAnalysis.qualityScore >= 60
-                                ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
-                                : "bg-red-500/10 text-red-600 dark:text-red-400",
+                                ? "bg-warning-500/10 text-warning-600 dark:text-warning-400"
+                                : "bg-error-500/10 text-error-600 dark:text-error-400",
                           )}
                         >
                           <Sparkles size={12} aria-hidden="true" />
@@ -579,7 +582,7 @@ export function CanvasWorkspace({
                         Validate
                       </button>
                     ) : diagramAnalysis.isLoading ? (
-                      <span className="flex items-center gap-1 text-gray-400">
+                      <span className="flex items-center gap-1 text-gray-400 dark:text-gray-400">
                         <Loader2
                           size={12}
                           className="animate-spin"
@@ -605,7 +608,7 @@ export function CanvasWorkspace({
                               <div>Edges: {diagramAnalysis.edgeCount}</div>
                             )}
                             {diagramAnalysis.issues.length > 0 && (
-                              <div className="text-yellow-400">
+                              <div className="text-warning-400">
                                 {diagramAnalysis.issues.length} issue
                                 {diagramAnalysis.issues.length > 1 ? "s" : ""}
                               </div>
@@ -618,8 +621,8 @@ export function CanvasWorkspace({
                           className={cn(
                             "flex items-center gap-1 px-1.5 py-0.5 rounded",
                             diagramAnalysis.isValid
-                              ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                              : "bg-red-500/10 text-red-600 dark:text-red-400",
+                              ? "bg-success-500/10 text-success-600 dark:text-success-400"
+                              : "bg-error-500/10 text-error-600 dark:text-error-400",
                           )}
                         >
                           {diagramAnalysis.isValid ? (
@@ -673,7 +676,7 @@ export function CanvasWorkspace({
                 <Suspense
                   fallback={
                     <div className="flex items-center justify-center h-32">
-                      <Loader2 className="animate-spin text-gray-400" />
+                      <Loader2 className="animate-spin text-gray-400 dark:text-gray-400" />
                     </div>
                   }
                 >

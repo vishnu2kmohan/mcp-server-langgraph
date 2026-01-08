@@ -417,7 +417,7 @@ export function RichTextInput({
         <button
           type="button"
           onClick={() => setToolbarExpanded((prev) => !prev)}
-          className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
           aria-label="Toggle formatting toolbar"
           aria-expanded={toolbarExpanded}
           title={
@@ -455,7 +455,7 @@ export function RichTextInput({
               type="button"
               onClick={handleBold}
               disabled={disabled}
-              className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Bold"
               title="Bold (Ctrl+B)"
             >
@@ -466,7 +466,7 @@ export function RichTextInput({
               type="button"
               onClick={handleItalic}
               disabled={disabled}
-              className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Italic"
               title="Italic (Ctrl+I)"
             >
@@ -477,7 +477,7 @@ export function RichTextInput({
               type="button"
               onClick={handleCode}
               disabled={disabled}
-              className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Code"
               title="Inline code (Ctrl+`)"
             >
@@ -490,7 +490,7 @@ export function RichTextInput({
               type="button"
               onClick={applyCodeBlock}
               disabled={disabled}
-              className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Code block"
               title="Code block"
             >
@@ -518,7 +518,7 @@ export function RichTextInput({
             bg-white dark:bg-gray-800
             text-gray-900 dark:text-gray-100
             placeholder-gray-500 dark:placeholder-gray-400
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+            focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
             disabled:opacity-50 disabled:cursor-not-allowed
           "
           aria-describedby={maxLength ? "character-count" : undefined}
@@ -561,11 +561,11 @@ export function RichTextInput({
         {enableInlineSuggestions && value && inlineSuggestion && (
           <div
             data-testid="inline-suggestion-overlay"
-            className="absolute left-0 top-0 pointer-events-none p-3 text-gray-400 dark:text-gray-500"
+            className="absolute left-0 top-0 pointer-events-none p-3 text-gray-400 dark:text-gray-400"
             aria-hidden="true"
           >
             <span className="invisible">{value}</span>
-            <span className="text-gray-400 dark:text-gray-500 opacity-60">
+            <span className="text-gray-400 dark:text-gray-400 opacity-60">
               {inlineSuggestion}
             </span>
           </div>
@@ -585,7 +585,7 @@ export function RichTextInput({
         {enableInlineSuggestions && value && inlineSuggestion && (
           <div
             data-testid="suggestion-hint"
-            className="absolute right-3 bottom-3 text-xs text-gray-400 dark:text-gray-500 bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded"
+            className="absolute right-3 bottom-3 text-xs text-gray-400 dark:text-gray-400 bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded"
           >
             <kbd className="font-mono text-xs">Tab</kbd> to accept
           </div>

@@ -173,7 +173,7 @@ export const InlineEdit = forwardRef<HTMLDivElement, InlineEditProps>(
               "focus:outline-none focus:ring-2 focus:ring-brand-primary",
               "dark:bg-gray-800 dark:text-gray-100",
               hasError
-                ? "border-red-500 focus:ring-red-500"
+                ? "border-error-500 focus:ring-error-500"
                 : "border-gray-300 dark:border-gray-600",
               isLoading && "opacity-50",
               inputClassName,
@@ -185,7 +185,7 @@ export const InlineEdit = forwardRef<HTMLDivElement, InlineEditProps>(
               className="absolute right-2 flex items-center"
             >
               <svg
-                className="animate-spin h-4 w-4 text-gray-500"
+                className="animate-spin h-4 w-4 text-gray-500 dark:text-gray-400"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -228,13 +228,17 @@ export const InlineEdit = forwardRef<HTMLDivElement, InlineEditProps>(
           aria-label={ariaLabel}
           className={cn(
             "text-left px-1 py-0.5 rounded",
-            "hover:bg-gray-100 dark:hover:bg-gray-800",
+            "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
             "focus:outline-none focus:ring-2 focus:ring-brand-primary",
             "transition-colors duration-fast",
             disabled && "pointer-events-none",
           )}
         >
-          {value || <span className="text-gray-400 italic">{placeholder}</span>}
+          {value || (
+            <span className="text-gray-400 dark:text-gray-400 italic">
+              {placeholder}
+            </span>
+          )}
         </button>
       </div>
     );

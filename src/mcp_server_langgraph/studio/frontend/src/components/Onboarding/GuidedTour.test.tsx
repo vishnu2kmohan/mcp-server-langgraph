@@ -191,14 +191,14 @@ describe("GuidedTour", () => {
     it("should highlight current step dot", () => {
       render(<GuidedTour {...defaultProps} />);
       const progressDots = screen.getAllByTestId("tour-progress-dot");
-      expect(progressDots[0]).toHaveClass("bg-blue-500");
+      expect(progressDots[0]).toHaveClass("bg-primary-500");
     });
 
     it("should update highlighted dot on navigation", () => {
       render(<GuidedTour {...defaultProps} />);
       fireEvent.click(screen.getByRole("button", { name: /next/i }));
       const progressDots = screen.getAllByTestId("tour-progress-dot");
-      expect(progressDots[1]).toHaveClass("bg-blue-500");
+      expect(progressDots[1]).toHaveClass("bg-primary-500");
     });
   });
 

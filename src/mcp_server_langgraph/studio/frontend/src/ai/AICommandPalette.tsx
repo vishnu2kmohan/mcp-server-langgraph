@@ -183,7 +183,7 @@ export function AICommandPalette({
       <div className="w-full max-w-xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
         {/* Search Input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <Search size={18} className="text-gray-400" />
+          <Search size={18} className="text-gray-400 dark:text-gray-400" />
           <input
             ref={inputRef}
             data-testid="command-search"
@@ -235,13 +235,16 @@ export function AICommandPalette({
                         onClick={() => handleExecute(cmd)}
                         className={cn(
                           "flex items-center justify-between px-4 py-2 cursor-pointer",
-                          "hover:bg-gray-100 dark:hover:bg-gray-700",
+                          "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
                           globalIndex === selectedIndex &&
                             "selected bg-gray-100 dark:bg-gray-700",
                         )}
                       >
                         <div className="flex items-center gap-3">
-                          <CommandIcon size={16} className="text-gray-400" />
+                          <CommandIcon
+                            size={16}
+                            className="text-gray-400 dark:text-gray-400"
+                          />
                           <div>
                             <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                               {cmd.name}
@@ -270,13 +273,16 @@ export function AICommandPalette({
                   onClick={() => handleExecute(cmd)}
                   className={cn(
                     "flex items-center justify-between px-4 py-2 cursor-pointer",
-                    "hover:bg-gray-100 dark:hover:bg-gray-700",
+                    "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
                     index === selectedIndex &&
                       "selected bg-gray-100 dark:bg-gray-700",
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <CommandIcon size={16} className="text-gray-400" />
+                    <CommandIcon
+                      size={16}
+                      className="text-gray-400 dark:text-gray-400"
+                    />
                     <div>
                       <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {cmd.name}

@@ -317,14 +317,14 @@ export function InteractiveMermaidDiagram({
   // Error state
   if (error) {
     return (
-      <div className="my-2 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-        <div className="flex items-center gap-2 text-red-600 dark:text-red-400 mb-2">
+      <div className="my-2 p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg">
+        <div className="flex items-center gap-2 text-error-600 dark:text-error-400 mb-2">
           <AlertCircle size={16} />
           <span className="font-medium">Diagram Error</span>
         </div>
-        <pre className="text-xs text-red-500 overflow-x-auto">{error}</pre>
+        <pre className="text-xs text-error-500 overflow-x-auto">{error}</pre>
         <details className="mt-2">
-          <summary className="text-xs text-gray-500 cursor-pointer">
+          <summary className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
             View source
           </summary>
           <pre className="mt-1 text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded overflow-x-auto">
@@ -348,14 +348,14 @@ export function InteractiveMermaidDiagram({
       tabIndex={0}
     >
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-2 p-2 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+      <div className="flex items-center justify-between gap-2 p-2 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700 dark:border-gray-600">
         {/* Zoom controls */}
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={handleZoomOut}
             aria-label="Zoom out"
-            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <ZoomOut size={16} />
           </button>
@@ -366,7 +366,7 @@ export function InteractiveMermaidDiagram({
             type="button"
             onClick={handleZoomIn}
             aria-label="Zoom in"
-            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <ZoomIn size={16} />
           </button>
@@ -374,7 +374,7 @@ export function InteractiveMermaidDiagram({
             type="button"
             onClick={handleResetZoom}
             aria-label="Reset zoom"
-            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <RotateCcw size={16} />
           </button>
@@ -386,10 +386,10 @@ export function InteractiveMermaidDiagram({
             type="button"
             onClick={handleCopy}
             aria-label="Copy source"
-            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             {copied ? (
-              <Check size={16} className="text-green-500" />
+              <Check size={16} className="text-success-500" />
             ) : (
               <Copy size={16} />
             )}
@@ -398,7 +398,7 @@ export function InteractiveMermaidDiagram({
             type="button"
             onClick={handleDownload}
             aria-label="Download as PNG"
-            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <Download size={16} />
           </button>
@@ -406,7 +406,7 @@ export function InteractiveMermaidDiagram({
             type="button"
             onClick={handleToggleFullscreen}
             aria-label="Toggle fullscreen"
-            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </button>

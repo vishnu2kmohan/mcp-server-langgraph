@@ -54,26 +54,26 @@ export function ExecutionHistoryPanel({
   const getStatusColor = (status: WorkflowExecution["status"]) => {
     switch (status) {
       case "completed":
-        return "bg-green-500";
+        return "bg-success-500";
       case "running":
-        return "bg-blue-500";
+        return "bg-primary-500";
       case "failed":
-        return "bg-red-500";
+        return "bg-error-500";
       case "pending":
-        return "bg-yellow-500";
+        return "bg-warning-500";
     }
   };
 
   const getStatusIcon = (status: WorkflowExecution["status"]) => {
     switch (status) {
       case "completed":
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-success-500" />;
       case "running":
-        return <PlayCircle className="w-4 h-4 text-blue-500 animate-spin" />;
+        return <PlayCircle className="w-4 h-4 text-primary-500 animate-spin" />;
       case "failed":
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
+        return <AlertCircle className="w-4 h-4 text-error-500" />;
       case "pending":
-        return <Clock className="w-4 h-4 text-yellow-500" />;
+        return <Clock className="w-4 h-4 text-warning-500" />;
     }
   };
 
@@ -103,7 +103,7 @@ export function ExecutionHistoryPanel({
         data-testid="execution-loading"
         className="flex items-center justify-center h-full p-8"
       >
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
   }
@@ -130,8 +130,8 @@ export function ExecutionHistoryPanel({
                 onClick={() => setStatusFilter(filter)}
                 className={`px-3 py-1 text-sm rounded-full transition-colors ${
                   statusFilter === filter
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    ? "bg-primary-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                 }`}
               >
                 {filter.charAt(0).toUpperCase() + filter.slice(1)}
@@ -145,11 +145,11 @@ export function ExecutionHistoryPanel({
       <div className="flex-1 overflow-y-auto">
         {filteredExecutions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-            <Clock className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-4" />
+            <Clock className="w-12 h-12 text-gray-300 dark:text-gray-600 dark:text-gray-300 mb-4" />
             <p className="text-gray-600 dark:text-gray-400 font-medium">
               No executions yet
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Run this workflow to see execution history
             </p>
           </div>
@@ -162,7 +162,7 @@ export function ExecutionHistoryPanel({
                 onClick={() => onSelectExecution(execution)}
                 className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
                   selectedExecutionId === execution.id
-                    ? "bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-500"
+                    ? "bg-primary-50 dark:bg-primary-900/20 ring-2 ring-primary-500"
                     : ""
                 }`}
               >
@@ -194,14 +194,14 @@ export function ExecutionHistoryPanel({
                     </div>
 
                     <div className="flex items-center gap-2 mt-1">
-                      <Clock className="w-3 h-3 text-gray-400" />
+                      <Clock className="w-3 h-3 text-gray-400 dark:text-gray-400" />
                       <span className="text-xs text-gray-500 dark:text-gray-400">
                         {formatTime(execution.startedAt)}
                       </span>
                     </div>
 
                     {execution.error && (
-                      <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-xs text-red-600 dark:text-red-400">
+                      <div className="mt-2 p-2 bg-error-50 dark:bg-error-900/20 rounded text-xs text-error-600 dark:text-error-400">
                         {execution.error}
                       </div>
                     )}
@@ -219,7 +219,7 @@ export function ExecutionHistoryPanel({
           <button
             onClick={onLoadMore}
             disabled={isLoading}
-            className="w-full py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors disabled:opacity-50"
+            className="w-full py-2 text-sm text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors disabled:opacity-50"
           >
             {isLoading ? "Loading..." : "Load More"}
           </button>

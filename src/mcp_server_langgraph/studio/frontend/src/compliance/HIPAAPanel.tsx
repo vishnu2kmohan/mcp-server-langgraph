@@ -53,24 +53,26 @@ export interface HIPAAPanelProps {
 function getStatusIcon(status: ControlStatus) {
   switch (status) {
     case "compliant":
-      return <CheckCircle size={14} className="text-green-500" />;
+      return <CheckCircle size={14} className="text-success-500" />;
     case "partial":
-      return <AlertCircle size={14} className="text-yellow-500" />;
+      return <AlertCircle size={14} className="text-warning-500" />;
     case "non-compliant":
-      return <XCircle size={14} className="text-red-500" />;
+      return <XCircle size={14} className="text-error-500" />;
     default:
-      return <AlertCircle size={14} className="text-gray-400" />;
+      return (
+        <AlertCircle size={14} className="text-gray-400 dark:text-gray-400" />
+      );
   }
 }
 
 function getStatusColor(status: ControlStatus): string {
   switch (status) {
     case "compliant":
-      return "text-green-600 dark:text-green-400";
+      return "text-success-600 dark:text-success-400";
     case "partial":
-      return "text-yellow-600 dark:text-yellow-400";
+      return "text-warning-600 dark:text-warning-400";
     case "non-compliant":
-      return "text-red-600 dark:text-red-400";
+      return "text-error-600 dark:text-error-400";
     default:
       return "text-gray-500 dark:text-gray-400";
   }
@@ -79,11 +81,11 @@ function getStatusColor(status: ControlStatus): string {
 function getCategoryColor(category: HIPAACategory): string {
   switch (category) {
     case "administrative":
-      return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
+      return "bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400";
     case "physical":
-      return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400";
+      return "bg-grafana-100 text-grafana-700 dark:bg-grafana-900/30 dark:text-grafana-400";
     case "technical":
-      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+      return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
   }
 }
 
@@ -116,7 +118,7 @@ export function HIPAAPanel({
           className,
         )}
       >
-        <div className="flex items-center gap-2 text-gray-500">
+        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
           <Loader2 size={16} className="animate-spin" />
           <span>Loading HIPAA controls...</span>
         </div>
@@ -136,7 +138,7 @@ export function HIPAAPanel({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <HeartPulse size={18} className="text-red-500" />
+          <HeartPulse size={18} className="text-error-500" />
           <h3 className="font-semibold text-gray-900 dark:text-gray-100">
             HIPAA
           </h3>
@@ -201,7 +203,7 @@ export function HIPAAPanel({
                     {control.id}
                   </p>
                   {control.phiAccessCount !== undefined && (
-                    <div className="flex items-center gap-1 mt-2 text-xs text-blue-600 dark:text-blue-400">
+                    <div className="flex items-center gap-1 mt-2 text-xs text-primary-600 dark:text-primary-400">
                       <Eye size={12} />
                       <span>PHI Access: {control.phiAccessCount} records</span>
                     </div>

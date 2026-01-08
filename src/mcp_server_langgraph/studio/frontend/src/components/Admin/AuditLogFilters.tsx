@@ -182,7 +182,7 @@ export function AuditLogFilters({
           User
         </label>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-400" />
           <input
             type="text"
             id="user-search"
@@ -198,7 +198,7 @@ export function AuditLogFilters({
       <div className="flex gap-2">
         <button
           onClick={handleReset}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
           aria-label="Reset filters"
         >
           <RotateCcw className="w-4 h-4" />
@@ -206,7 +206,7 @@ export function AuditLogFilters({
         </button>
         <button
           onClick={onExport}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors"
           aria-label="Export CSV"
         >
           <Download className="w-4 h-4" />

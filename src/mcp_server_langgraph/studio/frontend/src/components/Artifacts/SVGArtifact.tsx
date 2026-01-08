@@ -170,10 +170,10 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
   if (error) {
     return (
       <div
-        className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+        className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg"
         role="alert"
       >
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-sm text-error-600 dark:text-error-400">{error}</p>
       </div>
     );
   }
@@ -196,10 +196,10 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
           <button
             onClick={handleCopy}
             aria-label="Copy SVG"
-            className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
           >
             {copied ? (
-              <Check size={16} className="text-green-500" />
+              <Check size={16} className="text-success-500" />
             ) : (
               <Copy size={16} />
             )}

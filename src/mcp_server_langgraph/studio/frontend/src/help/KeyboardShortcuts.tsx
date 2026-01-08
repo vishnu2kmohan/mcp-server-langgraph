@@ -46,7 +46,7 @@ function KeyBadge({ keyName }: { keyName: string }) {
         "bg-gray-100 dark:bg-gray-700",
         "text-xs font-mono font-medium",
         "text-gray-700 dark:text-gray-300",
-        "border border-gray-200 dark:border-gray-600",
+        "border border-gray-200 dark:border-gray-700 dark:border-gray-600",
         "shadow-sm",
       )}
     >
@@ -121,7 +121,9 @@ export function KeyboardShortcuts({
                       <span key={`${shortcut.id}-${key}-${index}`}>
                         <KeyBadge keyName={key} />
                         {index < shortcut.keys.length - 1 && (
-                          <span className="mx-0.5 text-gray-400">+</span>
+                          <span className="mx-0.5 text-gray-400 dark:text-gray-400">
+                            +
+                          </span>
                         )}
                       </span>
                     ))}

@@ -155,7 +155,7 @@ export function LLMThinkingTrace({
               className="p-1 rounded hover:bg-violet-200 dark:hover:bg-violet-800 text-violet-600 dark:text-violet-400 transition-colors"
             >
               {copied ? (
-                <span className="flex items-center gap-1 text-xs text-green-600">
+                <span className="flex items-center gap-1 text-xs text-success-600">
                   <Check size={14} />
                   Copied!
                 </span>

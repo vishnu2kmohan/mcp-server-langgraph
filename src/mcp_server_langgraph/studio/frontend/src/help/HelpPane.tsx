@@ -54,13 +54,13 @@ export interface HelpPaneProps {
 function getCategoryColor(category: string): string {
   switch (category) {
     case "basics":
-      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+      return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
     case "productivity":
-      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+      return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
     case "compliance":
-      return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
+      return "bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400";
     default:
-      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
+      return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400";
   }
 }
 
@@ -116,7 +116,7 @@ export function HelpPane({
           className,
         )}
       >
-        <div className="flex items-center gap-2 text-gray-500">
+        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
           <Loader2 size={16} className="animate-spin" />
           <span>Loading help topics...</span>
         </div>
@@ -144,7 +144,7 @@ export function HelpPane({
         <div className="relative">
           <Search
             size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
           />
           <input
             type="text"
@@ -165,7 +165,7 @@ export function HelpPane({
               type="button"
               aria-label="Clear search"
               onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300"
             >
               <X size={16} />
             </button>
@@ -249,7 +249,7 @@ export function HelpPane({
 
           {/* Loading state for AI */}
           {aiLoading && (
-            <div className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <Loader2 size={12} className="animate-spin" />
               <span>Finding relevant help...</span>
             </div>

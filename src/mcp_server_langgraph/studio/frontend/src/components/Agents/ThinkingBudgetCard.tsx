@@ -42,15 +42,15 @@ const THINKING_LEVELS = ["low", "medium", "high", "ultra"] as const;
 function getComplexityIcon(complexity: string) {
   switch (complexity) {
     case "simple":
-      return <Zap size={14} className="text-green-500" />;
+      return <Zap size={14} className="text-success-500" />;
     case "complicated":
-      return <Gauge size={14} className="text-yellow-500" />;
+      return <Gauge size={14} className="text-warning-500" />;
     case "complex":
-      return <Brain size={14} className="text-orange-500" />;
+      return <Brain size={14} className="text-grafana-500" />;
     case "chaotic":
-      return <AlertTriangle size={14} className="text-red-500" />;
+      return <AlertTriangle size={14} className="text-error-500" />;
     default:
-      return <Gauge size={14} className="text-gray-400" />;
+      return <Gauge size={14} className="text-gray-400 dark:text-gray-400" />;
   }
 }
 
@@ -60,15 +60,15 @@ function getComplexityIcon(complexity: string) {
 function getLevelColorClass(level: string): string {
   switch (level) {
     case "low":
-      return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      return "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400";
     case "medium":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
+      return "bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-400";
     case "high":
-      return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
+      return "bg-grafana-100 text-grafana-800 dark:bg-grafana-900/30 dark:text-grafana-400";
     case "ultra":
-      return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+      return "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-400";
     default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400";
+      return "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-800 dark:text-gray-400";
   }
 }
 
@@ -124,7 +124,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
     <Card data-testid="thinking-budget-card">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Brain size={24} className="text-purple-500" />
+          <Brain size={24} className="text-insight-500" />
           <CardTitle>Thinking Budget</CardTitle>
         </div>
         <div className="flex items-center gap-2">
@@ -133,8 +133,8 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
               <span
                 className={`px-2 py-1 text-xs font-medium rounded-full ${
                   data.enabled
-                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                    : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                    ? "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
                 }`}
               >
                 {data.enabled ? "Enabled" : "Disabled"}
@@ -142,7 +142,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
               <button
                 data-testid="edit-thinking-budget-button"
                 onClick={handleEdit}
-                className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 transition-colors"
                 title="Edit thinking budget configuration"
               >
                 <Pencil
@@ -157,7 +157,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
                 data-testid="cancel-edit-button"
                 onClick={handleCancel}
                 disabled={isSaving}
-                className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+                className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
                 title="Cancel editing"
               >
                 <X size={16} className="text-gray-500 dark:text-gray-400" />
@@ -166,7 +166,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
                 data-testid="save-thinking-budget-button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="p-1.5 rounded bg-blue-500 hover:bg-blue-600 transition-colors disabled:opacity-50"
+                className="p-1.5 rounded bg-primary-500 hover:bg-primary-600 transition-colors disabled:opacity-50"
                 title="Save changes"
               >
                 <Save size={16} className="text-white" />
@@ -179,7 +179,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
       <CardContent>
         {/* Edit Controls (shown when editing) */}
         {isEditing && (
-          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="mb-4 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
             <div className="space-y-4">
               {/* Level Selector */}
               <div>
@@ -222,7 +222,9 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
                   onClick={() => setEditEnabled(!editEnabled)}
                   disabled={isSaving}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                    editEnabled ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
+                    editEnabled
+                      ? "bg-primary-600"
+                      : "bg-gray-300 dark:bg-gray-600"
                   }`}
                 >
                   <span

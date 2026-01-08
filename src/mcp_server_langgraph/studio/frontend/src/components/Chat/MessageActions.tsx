@@ -246,7 +246,7 @@ export function MessageActions({
         aria-label="Message actions"
         aria-expanded={isOpen}
         aria-haspopup="menu"
-        className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+        className="p-1 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
       >
         <MoreHorizontal size={16} />
       </button>
@@ -268,14 +268,14 @@ export function MessageActions({
                 <button
                   data-testid="confirm-delete"
                   onClick={handleConfirmDelete}
-                  className="flex-1 px-3 py-1.5 text-sm bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+                  className="flex-1 px-3 py-1.5 text-sm bg-error-600 hover:bg-error-700 text-white rounded transition-colors"
                 >
                   Delete
                 </button>
                 <button
                   data-testid="cancel-delete"
                   onClick={handleCancelDelete}
-                  className="flex-1 px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded transition-colors"
+                  className="flex-1 px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded transition-colors"
                 >
                   Cancel
                 </button>
@@ -288,11 +288,11 @@ export function MessageActions({
                 data-testid="action-copy"
                 onClick={handleCopy}
                 role="menuitem"
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
               >
                 {copied ? (
                   <>
-                    <Check size={16} className="text-green-500" />
+                    <Check size={16} className="text-success-500" />
                     <span data-testid="copy-success">Copied!</span>
                   </>
                 ) : (
@@ -309,7 +309,7 @@ export function MessageActions({
                   data-testid="action-copy-code"
                   onClick={handleCopyCode}
                   role="menuitem"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                 >
                   <Code2 size={16} />
                   <span>Copy Code</span>
@@ -326,8 +326,8 @@ export function MessageActions({
                     role="menuitem"
                     className={`p-1.5 rounded transition-colors ${
                       feedbackState === "positive"
-                        ? "text-green-600 bg-green-100 dark:bg-green-900/30"
-                        : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        ? "text-success-600 bg-success-100 dark:bg-success-900/30"
+                        : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                     }`}
                     aria-label="Thumbs up"
                   >
@@ -340,8 +340,8 @@ export function MessageActions({
                     role="menuitem"
                     className={`p-1.5 rounded transition-colors ${
                       feedbackState === "negative"
-                        ? "text-red-600 bg-red-100 dark:bg-red-900/30"
-                        : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        ? "text-error-600 bg-error-100 dark:bg-error-900/30"
+                        : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                     }`}
                     aria-label="Thumbs down"
                   >
@@ -359,8 +359,8 @@ export function MessageActions({
                   role="menuitem"
                   className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
                     isBookmarked
-                      ? "text-yellow-600 dark:text-yellow-400"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      ? "text-warning-600 dark:text-warning-400"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                   }`}
                 >
                   <Bookmark
@@ -377,7 +377,7 @@ export function MessageActions({
                   data-testid="action-share"
                   onClick={handleShare}
                   role="menuitem"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                 >
                   <Share2 size={16} />
                   <span>Share</span>
@@ -390,7 +390,7 @@ export function MessageActions({
                   data-testid="action-branch"
                   onClick={handleBranch}
                   role="menuitem"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                 >
                   <GitBranch size={16} />
                   <span>Branch</span>
@@ -403,7 +403,7 @@ export function MessageActions({
                   data-testid="action-edit"
                   onClick={handleEdit}
                   role="menuitem"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                 >
                   <Pencil size={16} />
                   <span>Edit</span>
@@ -417,7 +417,7 @@ export function MessageActions({
                   onClick={handleRegenerate}
                   disabled={isRegenerating}
                   role="menuitem"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isRegenerating ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -434,7 +434,7 @@ export function MessageActions({
                   data-testid="action-delete"
                   onClick={handleDeleteClick}
                   role="menuitem"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-error-600 dark:text-error-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                 >
                   <Trash2 size={16} />
                   <span>Delete</span>

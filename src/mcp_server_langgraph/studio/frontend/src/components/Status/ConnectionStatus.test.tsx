@@ -61,7 +61,7 @@ describe("ConnectionStatus", () => {
 
       expect(screen.getByText(/connected/i)).toBeInTheDocument();
       expect(screen.getByTestId("status-indicator")).toHaveClass(
-        "bg-green-500",
+        "bg-success-500",
       );
     });
 
@@ -70,7 +70,7 @@ describe("ConnectionStatus", () => {
 
       expect(screen.getByText(/connecting/i)).toBeInTheDocument();
       expect(screen.getByTestId("status-indicator")).toHaveClass(
-        "bg-yellow-500",
+        "bg-warning-500",
       );
     });
 
@@ -78,7 +78,9 @@ describe("ConnectionStatus", () => {
       render(<ConnectionStatus status="disconnected" />);
 
       expect(screen.getByText(/disconnected/i)).toBeInTheDocument();
-      expect(screen.getByTestId("status-indicator")).toHaveClass("bg-red-500");
+      expect(screen.getByTestId("status-indicator")).toHaveClass(
+        "bg-error-500",
+      );
     });
 
     it("should show reconnecting state with pulsing yellow indicator", () => {
@@ -111,19 +113,19 @@ describe("ConnectionStatus", () => {
     it("should show green latency for good connection", () => {
       render(<ConnectionStatus status="connected" latencyMs={50} />);
 
-      expect(screen.getByText(/50ms/i)).toHaveClass("text-green-600");
+      expect(screen.getByText(/50ms/i)).toHaveClass("text-success-600");
     });
 
     it("should show yellow latency for moderate connection", () => {
       render(<ConnectionStatus status="connected" latencyMs={150} />);
 
-      expect(screen.getByText(/150ms/i)).toHaveClass("text-yellow-600");
+      expect(screen.getByText(/150ms/i)).toHaveClass("text-warning-600");
     });
 
     it("should show red latency for slow connection", () => {
       render(<ConnectionStatus status="connected" latencyMs={300} />);
 
-      expect(screen.getByText(/300ms/i)).toHaveClass("text-red-600");
+      expect(screen.getByText(/300ms/i)).toHaveClass("text-error-600");
     });
   });
 

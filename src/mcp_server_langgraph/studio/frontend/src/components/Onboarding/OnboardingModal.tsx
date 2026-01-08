@@ -92,7 +92,7 @@ export function OnboardingModal({
                 id="onboarding-title"
                 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
               >
-                <Sparkles className="w-6 h-6 text-blue-500" />
+                <Sparkles className="w-6 h-6 text-primary-500" />
                 Welcome to Agent Studio
               </h2>
               <p className="mt-1 text-gray-600 dark:text-gray-400">
@@ -102,7 +102,7 @@ export function OnboardingModal({
             <button
               onClick={onClose}
               aria-label="Close"
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="p-2 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
             >
               <X className="w-5 h-5" />
             </button>
@@ -119,8 +119,8 @@ export function OnboardingModal({
                 aria-label={cat === "all" ? "All categories" : cat}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                   selectedCategory === cat
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                    : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                 }`}
               >
                 {cat === "all"
@@ -138,7 +138,7 @@ export function OnboardingModal({
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2
                 data-testid="loading-spinner"
-                className="w-8 h-8 animate-spin text-blue-500"
+                className="w-8 h-8 animate-spin text-primary-500"
               />
               <p className="mt-4 text-gray-600 dark:text-gray-400">
                 Loading templates...
@@ -149,11 +149,11 @@ export function OnboardingModal({
           {/* Error State */}
           {error && !isLoading && (
             <div className="flex flex-col items-center justify-center py-12">
-              <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+              <p className="text-error-600 dark:text-error-400 mb-4">{error}</p>
               {onRetry && (
                 <button
                   onClick={onRetry}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Retry
@@ -177,13 +177,13 @@ export function OnboardingModal({
                 <button
                   key={template.id}
                   onClick={() => onSelectTemplate(template)}
-                  className="flex items-start gap-4 p-4 text-left rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all group"
+                  className="flex items-start gap-4 p-4 text-left rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all group"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-600 dark:group-hover:bg-blue-900/30 dark:group-hover:text-blue-400 transition-colors">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 group-hover:bg-primary-100 group-hover:text-primary-600 dark:group-hover:bg-primary-900/30 dark:group-hover:text-primary-400 transition-colors">
                     {getCategoryIcon(template.category)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-600 dark:group-hover:text-primary-400">
                       {template.name}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
@@ -214,7 +214,7 @@ export function OnboardingModal({
           <button
             onClick={() => onSelectTemplate(null)}
             aria-label="Start from scratch"
-            className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <FileCode className="w-4 h-4" />
             Start from scratch

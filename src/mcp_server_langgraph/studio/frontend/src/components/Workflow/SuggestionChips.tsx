@@ -66,11 +66,11 @@ function SuggestionIcon({ type }: { type: string }) {
 function getConfidenceColorClass(level: "high" | "medium" | "low"): string {
   switch (level) {
     case "high":
-      return "border-green-500 bg-green-50 dark:bg-green-900/20";
+      return "border-success-500 bg-success-50 dark:bg-success-900/20";
     case "medium":
-      return "border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20";
+      return "border-warning-500 bg-warning-50 dark:bg-warning-900/20";
     case "low":
-      return "border-gray-400 bg-gray-50 dark:bg-gray-800/50";
+      return "border-gray-400 dark:border-gray-500 bg-gray-50 dark:bg-gray-800/50";
   }
 }
 
@@ -107,12 +107,12 @@ export function SuggestionChips({
   // Error state
   if (error) {
     return (
-      <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+      <div className="p-4 bg-error-50 dark:bg-error-900/20 rounded-lg border border-error-200 dark:border-error-800">
         <div className="flex items-center justify-between">
-          <span className="text-red-600 dark:text-red-400">{error}</span>
+          <span className="text-error-600 dark:text-error-400">{error}</span>
           <button
             onClick={onRefresh}
-            className="text-sm text-red-600 dark:text-red-400 hover:underline"
+            className="text-sm text-error-600 dark:text-error-400 hover:underline"
             aria-label="Retry"
           >
             Retry
@@ -132,7 +132,7 @@ export function SuggestionChips({
           </span>
           <button
             onClick={onRefresh}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
             aria-label="Refresh suggestions"
           >
             <RefreshCw className="w-4 h-4" />
@@ -151,12 +151,12 @@ export function SuggestionChips({
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <Lightbulb className="w-4 h-4 text-yellow-500" />
+          <Lightbulb className="w-4 h-4 text-warning-500" />
           <span className="font-medium text-sm text-gray-700 dark:text-gray-300">
             AI Suggestions
           </span>
           {!isExpanded && (
-            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400">
+            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400">
               {suggestions.length}
             </span>
           )}
@@ -164,14 +164,14 @@ export function SuggestionChips({
         <div className="flex items-center gap-2">
           <button
             onClick={onRefresh}
-            className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
             aria-label="Refresh suggestions"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
             aria-label={
               isExpanded ? "Collapse suggestions" : "Expand suggestions"
             }
@@ -212,14 +212,14 @@ export function SuggestionChips({
                 <div className="flex-shrink-0 flex items-center gap-1">
                   <button
                     onClick={() => onApply(suggestion)}
-                    className="p-1.5 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 rounded"
+                    className="p-1.5 text-success-600 hover:bg-success-100 dark:hover:bg-success-900/30 rounded"
                     aria-label="Apply suggestion"
                   >
                     <Check className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => onDismiss(suggestion)}
-                    className="p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                    className="p-1.5 text-gray-400 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded"
                     aria-label="Dismiss suggestion"
                   >
                     <X className="w-4 h-4" />
@@ -234,7 +234,7 @@ export function SuggestionChips({
             <li className="text-center">
               <button
                 onClick={() => setShowAll(true)}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
               >
                 Show {hiddenCount} more
               </button>

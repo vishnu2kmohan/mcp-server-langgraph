@@ -152,7 +152,7 @@ export function MessageList({
           data-testid="rich-message"
         >
           <div
-            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
+            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-insight-100 dark:bg-insight-900/30 text-insight-600 dark:text-insight-400"
             data-testid="ai-avatar"
           >
             <Bot size={16} />
@@ -162,7 +162,7 @@ export function MessageList({
               name="MarkdownContent"
               fallback={
                 <div
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-warning-700 dark:text-warning-300 bg-warning-50 dark:bg-warning-900/20 rounded border border-warning-200 dark:border-warning-800"
                   role="alert"
                   data-testid="message-render-error"
                 >
@@ -262,7 +262,7 @@ export function MessageList({
             "fixed bottom-24 right-8 p-2 rounded-full",
             "bg-white dark:bg-gray-800 shadow-lg",
             "text-gray-600 dark:text-gray-300",
-            "hover:bg-gray-100 dark:hover:bg-gray-700",
+            "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
             "transition-all",
           )}
           aria-label="Scroll to bottom"

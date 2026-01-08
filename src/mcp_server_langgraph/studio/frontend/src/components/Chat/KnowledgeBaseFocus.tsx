@@ -200,9 +200,9 @@ export function KnowledgeBaseFocus({
   const getStatusColor = (status: KBStatus): string => {
     switch (status) {
       case "ready":
-        return "bg-green-500";
+        return "bg-success-500";
       case "misconfigured":
-        return "bg-yellow-500";
+        return "bg-warning-500";
       case "unavailable":
         return "bg-gray-400";
     }
@@ -227,7 +227,7 @@ export function KnowledgeBaseFocus({
           "border border-gray-300 dark:border-gray-600",
           "bg-white dark:bg-gray-800",
           "hover:bg-gray-50 dark:hover:bg-gray-700",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500",
+          "focus:outline-none focus:ring-2 focus:ring-primary-500",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           compact ? "p-2" : "px-3 py-1.5 text-sm",
         )}
@@ -257,7 +257,7 @@ export function KnowledgeBaseFocus({
         {/* Chevron */}
         <ChevronDown
           className={cn(
-            "w-3 h-3 text-gray-400 transition-transform",
+            "w-3 h-3 text-gray-400 dark:text-gray-400 transition-transform",
             isOpen && "rotate-180",
           )}
           aria-hidden="true"
@@ -298,14 +298,14 @@ export function KnowledgeBaseFocus({
                   "transition-colors",
                   isFocused && "bg-gray-100 dark:bg-gray-700",
                   isSelected &&
-                    "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
+                    "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
                 )}
               >
                 <Icon
                   className={cn(
                     "w-4 h-4 flex-shrink-0",
                     isSelected
-                      ? "text-blue-600 dark:text-blue-400"
+                      ? "text-primary-600 dark:text-primary-400"
                       : "text-gray-500 dark:text-gray-400",
                   )}
                 />
@@ -314,7 +314,7 @@ export function KnowledgeBaseFocus({
                     className={cn(
                       "font-medium",
                       isSelected
-                        ? "text-blue-700 dark:text-blue-300"
+                        ? "text-primary-700 dark:text-primary-300"
                         : "text-gray-900 dark:text-gray-100",
                     )}
                   >
@@ -326,7 +326,7 @@ export function KnowledgeBaseFocus({
                 </div>
                 {isSelected && (
                   <Check
-                    className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0"
+                    className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0"
                     aria-hidden="true"
                   />
                 )}

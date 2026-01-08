@@ -44,11 +44,13 @@ function TrendIcon({ trend }: { trend: TrendType }) {
 
   switch (trend) {
     case "increasing":
-      return <TrendingUp className={`${className} text-amber-500`} />;
+      return <TrendingUp className={`${className} text-warning-500`} />;
     case "decreasing":
-      return <TrendingDown className={`${className} text-green-500`} />;
+      return <TrendingDown className={`${className} text-success-500`} />;
     case "stable":
-      return <Minus className={`${className} text-gray-500`} />;
+      return (
+        <Minus className={`${className} text-gray-500 dark:text-gray-400`} />
+      );
   }
 }
 
@@ -60,13 +62,13 @@ function getTrendStyles(trend: TrendType): {
   switch (trend) {
     case "increasing":
       return {
-        textColor: "text-amber-600 dark:text-amber-400",
-        bgColor: "bg-amber-100 dark:bg-amber-900/30",
+        textColor: "text-warning-600 dark:text-warning-400",
+        bgColor: "bg-warning-100 dark:bg-warning-900/30",
       };
     case "decreasing":
       return {
-        textColor: "text-green-600 dark:text-green-400",
-        bgColor: "bg-green-100 dark:bg-green-900/30",
+        textColor: "text-success-600 dark:text-success-400",
+        bgColor: "bg-success-100 dark:bg-success-900/30",
       };
     case "stable":
       return {
@@ -168,7 +170,7 @@ export function BudgetForecastChart({
           {/* Confidence range band */}
           <div
             data-testid="confidence-range"
-            className="absolute h-full bg-blue-200 dark:bg-blue-800 opacity-50"
+            className="absolute h-full bg-primary-200 dark:bg-primary-800 opacity-50"
             style={{
               left: `${Math.max(0, (lowNum / limitNum) * 100)}%`,
               width: `${Math.min(100, ((highNum - lowNum) / limitNum) * 100)}%`,
@@ -177,13 +179,13 @@ export function BudgetForecastChart({
           {/* Projected bar */}
           <div
             className={`h-full transition-all duration-300 ${
-              isOverBudget ? "bg-red-500" : "bg-blue-500"
+              isOverBudget ? "bg-error-500" : "bg-primary-500"
             }`}
             style={{ width: `${Math.min(projectedPercent, 100)}%` }}
           />
           {/* Budget limit marker */}
           <div
-            className="absolute top-0 bottom-0 w-0.5 bg-gray-800 dark:bg-gray-300"
+            className="absolute top-0 bottom-0 w-0.5 bg-gray-800 dark:bg-gray-300 dark:bg-gray-600"
             style={{ left: "100%" }}
           />
         </div>
@@ -206,8 +208,8 @@ export function BudgetForecastChart({
           <p
             className={`text-2xl font-bold ${
               isOverBudget
-                ? "text-red-600 dark:text-red-400"
-                : "text-blue-600 dark:text-blue-400"
+                ? "text-error-600 dark:text-error-400"
+                : "text-primary-600 dark:text-primary-400"
             }`}
           >
             {formatCurrency(forecast.projectedTotal)}
@@ -227,10 +229,10 @@ export function BudgetForecastChart({
       {isOverBudget && (
         <div
           data-testid="over-budget-warning"
-          className="flex items-center gap-2 p-3 rounded bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+          className="flex items-center gap-2 p-3 rounded bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800"
         >
-          <AlertTriangle className="w-5 h-5 text-red-500" />
-          <p className="text-sm text-red-700 dark:text-red-400">
+          <AlertTriangle className="w-5 h-5 text-error-500" />
+          <p className="text-sm text-error-700 dark:text-error-400">
             Projected spend exceeds monthly budget by{" "}
             {formatCurrency((projectedNum - limitNum).toString())}
           </p>

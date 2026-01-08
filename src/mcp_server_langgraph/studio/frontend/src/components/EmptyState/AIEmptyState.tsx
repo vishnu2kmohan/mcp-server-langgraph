@@ -79,7 +79,7 @@ function AISuggestionTrigger({
         <Sparkles
           size={16}
           data-testid="ai-suggestion-indicator"
-          className="text-yellow-300"
+          className="text-warning-300"
         />
       )}
       <span>{suggestion.text}</span>

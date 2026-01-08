@@ -542,11 +542,11 @@ export const ConnectedCanvasPanel = forwardRef<
             "absolute top-2 right-2 z-10 px-3 py-1.5 rounded-lg text-sm font-medium",
             "transition-all duration-200 shadow-lg",
             saveStatus === "saving" &&
-              "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300",
+              "bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300",
             saveStatus === "saved" &&
-              "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300",
+              "bg-success-100 dark:bg-success-900/50 text-success-700 dark:text-success-300",
             saveStatus === "error" &&
-              "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300",
+              "bg-error-100 dark:bg-error-900/50 text-error-700 dark:text-error-300",
           )}
         >
           {saveStatus === "saving" && (
@@ -643,14 +643,14 @@ export const ConnectedCanvasPanel = forwardRef<
           className={cn(
             "absolute bottom-16 right-4 z-20",
             "max-w-sm px-4 py-3 rounded-lg shadow-lg",
-            "bg-red-50 dark:bg-red-900/80 border border-red-200 dark:border-red-700",
-            "text-red-800 dark:text-red-200 text-sm",
+            "bg-error-50 dark:bg-error-900/80 border border-error-200 dark:border-error-700",
+            "text-error-800 dark:text-error-200 text-sm",
             "animate-in fade-in slide-in-from-bottom-4 duration-200",
           )}
         >
           <div className="flex items-start gap-2">
             <svg
-              className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-500"
+              className="w-5 h-5 flex-shrink-0 mt-0.5 text-error-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -664,14 +664,14 @@ export const ConnectedCanvasPanel = forwardRef<
             </svg>
             <div>
               <p className="font-medium">Action Failed</p>
-              <p className="mt-1 text-red-600 dark:text-red-300">
+              <p className="mt-1 text-error-600 dark:text-error-300">
                 {shortcutError}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setShortcutError(null)}
-              className="ml-auto -mr-1 p-1 rounded hover:bg-red-100 dark:hover:bg-red-800 transition-colors"
+              className="ml-auto -mr-1 p-1 rounded hover:bg-error-100 dark:hover:bg-error-800 transition-colors"
               aria-label="Dismiss error"
             >
               <svg

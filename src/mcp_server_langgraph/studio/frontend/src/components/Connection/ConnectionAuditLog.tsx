@@ -45,12 +45,14 @@ interface ConnectionAuditLogProps {
 // Action badge colors
 const actionColors: Record<string, string> = {
   create:
-    "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",
-  update: "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
-  delete: "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300",
-  test: "bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300",
+    "bg-success-100 text-success-800 dark:bg-success-900/50 dark:text-success-300",
+  update:
+    "bg-primary-100 text-primary-800 dark:bg-primary-900/50 dark:text-primary-300",
+  delete:
+    "bg-error-100 text-error-800 dark:bg-error-900/50 dark:text-error-300",
+  test: "bg-insight-100 text-insight-800 dark:bg-insight-900/50 dark:text-insight-300",
   authorize:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300",
+    "bg-warning-100 text-warning-800 dark:bg-warning-900/50 dark:text-warning-300",
 };
 
 export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
@@ -113,7 +115,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
   const getActionColor = (action: string) => {
     return (
       actionColors[action] ||
-      "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+      "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
     );
   };
 
@@ -123,7 +125,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
         data-testid="loading-audit-logs"
         className="flex items-center justify-center gap-3 py-12"
       >
-        <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+        <Loader2 className="h-6 w-6 animate-spin text-primary-500" />
         <span className="text-gray-600 dark:text-gray-400">
           Loading audit logs...
         </span>
@@ -137,13 +139,13 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
         className="flex flex-col items-center justify-center gap-4 py-12"
         role="alert"
       >
-        <AlertCircle className="h-12 w-12 text-red-500" />
-        <p className="text-red-600 dark:text-red-400">
+        <AlertCircle className="h-12 w-12 text-error-500" />
+        <p className="text-error-600 dark:text-error-400">
           Failed to load audit logs: {error}
         </p>
         <button
           onClick={fetchLogs}
-          className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          className="flex items-center gap-2 rounded-md bg-primary-600 px-4 py-2 text-white hover:bg-primary-700"
         >
           <RefreshCw className="h-4 w-4" />
           Retry
@@ -157,7 +159,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-purple-600" />
+          <FileText className="h-5 w-5 text-insight-600" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Audit Log
           </h3>
@@ -165,12 +167,12 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
         <div className="flex items-center gap-3">
           {/* Event Type Filter */}
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-400" />
+            <Filter className="h-4 w-4 text-gray-400 dark:text-gray-400" />
             <select
               data-testid="event-type-filter"
               value={eventTypeFilter}
               onChange={handleEventTypeChange}
-              className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="rounded-md border border-gray-300 dark:border-gray-600 bg-white px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="">All Events</option>
               <option value="connection.created">Created</option>
@@ -186,7 +188,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
           {/* Refresh Button */}
           <button
             onClick={fetchLogs}
-            className="flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+            className="flex items-center gap-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
           >
             <RefreshCw className="h-4 w-4" />
             Refresh
@@ -197,7 +199,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
       {/* Empty State */}
       {logs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <FileText className="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+          <FileText className="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600 dark:text-gray-300" />
           <p className="text-gray-500 dark:text-gray-400">
             No audit logs found for this connection.
           </p>
@@ -208,7 +210,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
           {logs.map((log) => (
             <div
               key={log.id}
-              className="rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-sm dark:border-gray-700 dark:bg-gray-800"
+              className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white transition-shadow hover:shadow-sm dark:border-gray-700 dark:bg-gray-800"
             >
               {/* Entry Header */}
               <div
@@ -230,7 +232,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
                   <span className="text-sm text-gray-500 dark:text-gray-400">
                     {log.actorId}
                   </span>
-                  <span className="text-sm text-gray-400 dark:text-gray-500">
+                  <span className="text-sm text-gray-400 dark:text-gray-400">
                     {formatDate(log.timestamp)}
                   </span>
                   <button
@@ -239,7 +241,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
                       e.stopPropagation();
                       toggleExpand(log.id);
                     }}
-                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                    className="rounded p-1 text-gray-400 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 hover:text-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                     aria-label={expandedId === log.id ? "Collapse" : "Expand"}
                   >
                     {expandedId === log.id ? (
@@ -253,13 +255,13 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
 
               {/* Expanded Details */}
               {expandedId === log.id && (
-                <div className="border-t border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/50">
+                <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/50">
                   {/* Details JSON */}
                   <div className="mb-4">
                     <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                       Details
                     </h4>
-                    <pre className="overflow-x-auto rounded-md bg-gray-100 p-3 text-xs text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                    <pre className="overflow-x-auto rounded-md bg-gray-100 dark:bg-gray-800 p-3 text-xs text-gray-800 dark:bg-gray-800 dark:text-gray-200">
                       {JSON.stringify(log.details, null, 2)}
                     </pre>
                   </div>

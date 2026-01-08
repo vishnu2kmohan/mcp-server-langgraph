@@ -36,7 +36,7 @@ export const HamburgerMenu = forwardRef<HTMLButtonElement, HamburgerMenuProps>(
         className={cn(
           "p-2 rounded-lg transition-colors",
           "text-gray-600 dark:text-gray-300",
-          "hover:bg-gray-100 dark:hover:bg-gray-800",
+          "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
           "focus:outline-none focus:ring-2 focus:ring-primary-500",
           className,
         )}

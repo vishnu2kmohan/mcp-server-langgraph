@@ -31,12 +31,16 @@ export function CodePanel({
     <div
       data-testid="code-panel"
       className={`w-96 border-l flex flex-col ${
-        isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+        isDarkMode
+          ? "bg-gray-800 border-gray-700"
+          : "bg-white border-gray-200 dark:border-gray-700"
       }`}
     >
       <div
         className={`p-4 border-b flex items-center justify-between ${
-          isDarkMode ? "border-gray-700" : "border-gray-200"
+          isDarkMode
+            ? "border-gray-700"
+            : "border-gray-200 dark:border-gray-700"
         }`}
       >
         <h2
@@ -52,7 +56,7 @@ export function CodePanel({
             className={`p-2 rounded-lg transition-colors ${
               isDarkMode
                 ? "hover:bg-gray-700 text-gray-300"
-                : "hover:bg-gray-100 text-gray-600"
+                : "hover:bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
             }`}
             title="Copy to clipboard"
             aria-label="Copy code"
@@ -64,7 +68,7 @@ export function CodePanel({
             className={`p-2 rounded-lg transition-colors ${
               isDarkMode
                 ? "hover:bg-gray-700 text-gray-300"
-                : "hover:bg-gray-100 text-gray-600"
+                : "hover:bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
             }`}
             title="Close panel"
             aria-label="Close"
@@ -78,7 +82,9 @@ export function CodePanel({
         {isEmpty ? (
           <div
             className={`text-center py-8 ${
-              isDarkMode ? "text-gray-400" : "text-gray-500"
+              isDarkMode
+                ? "text-gray-400 dark:text-gray-400"
+                : "text-gray-500 dark:text-gray-400"
             }`}
           >
             <p>No code generated yet.</p>

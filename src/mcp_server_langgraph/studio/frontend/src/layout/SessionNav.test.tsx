@@ -5,7 +5,7 @@
  * Tests session grouping, search, and navigation.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -572,7 +572,9 @@ describe("SessionNav Hover Details", () => {
     await user.hover(sessionItem.closest("div")!);
 
     // Wait for tooltip delay
-    await vi.advanceTimersByTimeAsync(300);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
 
     // Tooltip should appear
     expect(screen.getByRole("tooltip")).toBeInTheDocument();
@@ -589,7 +591,9 @@ describe("SessionNav Hover Details", () => {
 
     const sessionItem = screen.getByText("Today's Chat");
     await user.hover(sessionItem.closest("div")!);
-    await vi.advanceTimersByTimeAsync(300);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
 
     // Should show relative time (e.g., "Created today" or "a few seconds ago")
     const tooltip = screen.getByRole("tooltip");
@@ -610,7 +614,9 @@ describe("SessionNav Hover Details", () => {
 
     const sessionItem = screen.getByText("Today's Chat");
     await user.hover(sessionItem.closest("div")!);
-    await vi.advanceTimersByTimeAsync(300);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
 
     const tooltip = screen.getByRole("tooltip");
     expect(tooltip).toHaveTextContent(/5 messages/i);
@@ -635,7 +641,9 @@ describe("SessionNav Hover Details", () => {
 
     const sessionItem = screen.getByText("Today's Chat");
     await user.hover(sessionItem.closest("div")!);
-    await vi.advanceTimersByTimeAsync(300);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
 
     const tooltip = screen.getByRole("tooltip");
     expect(tooltip).toHaveTextContent("Hello, how can I help you today?");
@@ -662,7 +670,9 @@ describe("SessionNav Hover Details", () => {
 
     const sessionItem = screen.getByText("Today's Chat");
     await user.hover(sessionItem.closest("div")!);
-    await vi.advanceTimersByTimeAsync(300);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
 
     const tooltip = screen.getByRole("tooltip");
     // Should truncate with ellipsis
@@ -682,7 +692,9 @@ describe("SessionNav Hover Details", () => {
     const sessionItem = screen.getByText("Today's Chat");
     const hoverTarget = sessionItem.closest("div")!;
     await user.hover(hoverTarget);
-    await vi.advanceTimersByTimeAsync(300);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
 
     expect(screen.getByRole("tooltip")).toBeInTheDocument();
 
@@ -702,7 +714,9 @@ describe("SessionNav Hover Details", () => {
 
     const sessionItem = screen.getByText("Today's Chat");
     await user.hover(sessionItem.closest("div")!);
-    await vi.advanceTimersByTimeAsync(300);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
 
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });

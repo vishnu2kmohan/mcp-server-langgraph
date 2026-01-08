@@ -20,6 +20,7 @@ import { useAppSelector } from "../../../store/hooks";
 import { useStateHistory } from "../hooks/useStateHistory";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type { StateTabProps } from "../types";
+import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 
 // =============================================================================
 // Types
@@ -134,16 +135,16 @@ function StateNodeRow({
 
   const valueColor = useMemo(() => {
     if (node.value === null || node.value === undefined) {
-      return "text-gray-400 dark:text-gray-500";
+      return STATUS_TEXT_COLORS.neutral;
     }
     if (typeof node.value === "string") {
-      return "text-green-600 dark:text-green-400";
+      return STATUS_TEXT_COLORS.success;
     }
     if (typeof node.value === "number") {
-      return "text-blue-600 dark:text-blue-400";
+      return STATUS_TEXT_COLORS.info;
     }
     if (typeof node.value === "boolean") {
-      return "text-purple-600 dark:text-purple-400";
+      return "text-insight-600 dark:text-insight-400";
     }
     return "text-gray-600 dark:text-gray-400";
   }, [node.value]);
@@ -152,7 +153,7 @@ function StateNodeRow({
     <div
       className={cn(
         "flex items-center py-0.5 hover:bg-gray-50 dark:hover:bg-gray-800/50",
-        isMatch && "bg-yellow-50 dark:bg-yellow-900/20",
+        isMatch && "bg-warning-50 dark:bg-warning-900/20",
       )}
       style={{ paddingLeft: `${depth * 16 + 8}px` }}
     >
@@ -162,16 +163,22 @@ function StateNodeRow({
           data-testid={`expand-${node.path.replace(/\./g, "-")}`}
           type="button"
           onClick={onToggle}
-          className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+          className="p-0.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
           aria-expanded={isExpanded}
           aria-label={
             isExpanded ? `Collapse ${node.key}` : `Expand ${node.key}`
           }
         >
           {isExpanded ? (
-            <ChevronDown size={12} className="text-gray-500" />
+            <ChevronDown
+              size={12}
+              className="text-gray-500 dark:text-gray-400"
+            />
           ) : (
-            <ChevronRight size={12} className="text-gray-500" />
+            <ChevronRight
+              size={12}
+              className="text-gray-500 dark:text-gray-400"
+            />
           )}
         </button>
       ) : (
@@ -183,7 +190,7 @@ function StateNodeRow({
         {node.key}
       </span>
 
-      <span className="text-gray-400 dark:text-gray-500 mx-1">:</span>
+      <span className="text-gray-400 dark:text-gray-400 mx-1">:</span>
 
       {/* Value */}
       <span className={cn("text-sm", valueColor)}>
@@ -358,12 +365,16 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
       <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         {/* Context indicator */}
         <div className="flex items-center gap-1.5">
-          <Database size={14} className="text-gray-500" aria-hidden="true" />
+          <Database
+            size={14}
+            className="text-gray-500 dark:text-gray-400"
+            aria-hidden="true"
+          />
           <span className="text-xs text-gray-600 dark:text-gray-400 capitalize">
             {context}
           </span>
           {contextEntityId && (
-            <span className="text-xs text-gray-500 dark:text-gray-500 ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
+            <span className="text-xs text-gray-500 dark:text-gray-400 ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
               {contextEntityId}
             </span>
           )}
@@ -378,7 +389,7 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
             "flex items-center gap-1 px-2 py-0.5 rounded text-xs",
             timeTravelEnabled
               ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-500",
+              : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400",
           )}
           aria-pressed={timeTravelEnabled}
           aria-label="Toggle time-travel debugging"
@@ -394,7 +405,7 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
         <div className="relative">
           <Search
             size={12}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
             aria-hidden="true"
           />
           <input
@@ -419,7 +430,7 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
           data-testid="refresh-button"
           type="button"
           onClick={handleRefresh}
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500"
+          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
           aria-label="Refresh state"
         >
           <RefreshCw size={14} />

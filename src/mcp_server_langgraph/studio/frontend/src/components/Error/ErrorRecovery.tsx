@@ -79,21 +79,21 @@ const SEVERITY_CONFIG: Record<
 > = {
   error: {
     icon: AlertCircle,
-    bgColor: "bg-red-50 dark:bg-red-900/20",
-    borderColor: "border-red-200 dark:border-red-800",
-    textColor: "text-red-700 dark:text-red-400",
+    bgColor: "bg-error-50 dark:bg-error-900/20",
+    borderColor: "border-error-200 dark:border-error-800",
+    textColor: "text-error-700 dark:text-error-400",
   },
   warning: {
     icon: AlertTriangle,
-    bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
-    borderColor: "border-yellow-200 dark:border-yellow-800",
-    textColor: "text-yellow-700 dark:text-yellow-400",
+    bgColor: "bg-warning-50 dark:bg-warning-900/20",
+    borderColor: "border-warning-200 dark:border-warning-800",
+    textColor: "text-warning-700 dark:text-warning-400",
   },
   info: {
     icon: Info,
-    bgColor: "bg-blue-50 dark:bg-blue-900/20",
-    borderColor: "border-blue-200 dark:border-blue-800",
-    textColor: "text-blue-700 dark:text-blue-400",
+    bgColor: "bg-primary-50 dark:bg-primary-900/20",
+    borderColor: "border-primary-200 dark:border-primary-800",
+    textColor: "text-primary-700 dark:text-primary-400",
   },
 };
 
@@ -188,7 +188,7 @@ export function ErrorRecovery({
           <button
             type="button"
             onClick={onRetry}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <RefreshCw size={14} />
             Retry
@@ -198,7 +198,7 @@ export function ErrorRecovery({
           <button
             type="button"
             onClick={onReport}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <Bug size={14} />
             Report
@@ -208,7 +208,7 @@ export function ErrorRecovery({
           <button
             type="button"
             onClick={onDismiss}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <X size={14} />
             Dismiss
@@ -218,7 +218,7 @@ export function ErrorRecovery({
           type="button"
           onClick={() => setShowDetails(!showDetails)}
           aria-label={showDetails ? "Hide details" : "Show details"}
-          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           {showDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           Details
@@ -236,7 +236,7 @@ export function ErrorRecovery({
               type="button"
               onClick={handleCopy}
               aria-label="Copy error details"
-              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 bg-gray-100 dark:bg-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-200 bg-gray-100 dark:bg-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               {copied ? (
                 <>

@@ -122,7 +122,7 @@ function SessionHeader({
             className={cn(
               "p-1.5 rounded-md",
               "text-gray-500 dark:text-gray-400",
-              "hover:bg-gray-100 dark:hover:bg-gray-700",
+              "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
               "transition-colors",
             )}
             aria-label="Rename session"
@@ -138,8 +138,8 @@ function SessionHeader({
             className={cn(
               "p-1.5 rounded-md",
               "text-gray-500 dark:text-gray-400",
-              "hover:bg-red-100 dark:hover:bg-red-900/30",
-              "hover:text-red-600 dark:hover:text-red-400",
+              "hover:bg-error-100 dark:hover:bg-error-900/30",
+              "hover:text-error-600 dark:hover:text-error-400",
               "transition-colors",
             )}
             aria-label="Delete session"

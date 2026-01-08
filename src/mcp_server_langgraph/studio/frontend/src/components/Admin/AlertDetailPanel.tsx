@@ -69,11 +69,11 @@ export interface AlertDetailPanelProps {
 function getSeverityStyle(severity: Alert["severity"]): string {
   switch (severity) {
     case "critical":
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+      return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
     case "warning":
-      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+      return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400";
     default:
-      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
+      return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400";
   }
 }
 
@@ -83,11 +83,11 @@ function getSeverityStyle(severity: Alert["severity"]): string {
 function getStateStyle(state: Alert["state"]): string {
   switch (state) {
     case "firing":
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+      return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
     case "resolved":
-      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+      return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
     default:
-      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
+      return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400";
   }
 }
 
@@ -97,11 +97,11 @@ function getStateStyle(state: Alert["state"]): string {
 function getRiskColor(risk: RiskLevel): string {
   switch (risk) {
     case "low":
-      return "bg-green-500";
+      return "bg-success-500";
     case "medium":
-      return "bg-yellow-500";
+      return "bg-warning-500";
     case "high":
-      return "bg-red-500";
+      return "bg-error-500";
     default:
       return "bg-gray-500";
   }
@@ -113,19 +113,19 @@ function getRiskColor(risk: RiskLevel): string {
 function getStatusIcon(status: RemediationRequest["status"]) {
   switch (status) {
     case "pending":
-      return <Clock className="w-4 h-4 text-yellow-500" />;
+      return <Clock className="w-4 h-4 text-warning-500" />;
     case "approved":
-      return <CheckCircle className="w-4 h-4 text-green-500" />;
+      return <CheckCircle className="w-4 h-4 text-success-500" />;
     case "rejected":
-      return <XCircle className="w-4 h-4 text-red-500" />;
+      return <XCircle className="w-4 h-4 text-error-500" />;
     case "executing":
-      return <Play className="w-4 h-4 text-blue-500 animate-pulse" />;
+      return <Play className="w-4 h-4 text-primary-500 animate-pulse" />;
     case "completed":
-      return <CheckCircle className="w-4 h-4 text-green-500" />;
+      return <CheckCircle className="w-4 h-4 text-success-500" />;
     case "failed":
-      return <Ban className="w-4 h-4 text-red-500" />;
+      return <Ban className="w-4 h-4 text-error-500" />;
     default:
-      return <Clock className="w-4 h-4 text-gray-500" />;
+      return <Clock className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
   }
 }
 
@@ -171,7 +171,7 @@ function RemediationStepCard({
       <div className="flex items-center gap-3 mb-2">
         <span
           data-testid={`step-number-${step.stepNumber}`}
-          className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-sm font-medium"
+          className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-500 text-white text-sm font-medium"
         >
           {step.stepNumber}
         </span>
@@ -187,7 +187,7 @@ function RemediationStepCard({
         {remediation && (
           <span
             data-testid={`step-status-${step.stepNumber}`}
-            className="flex items-center gap-1 text-xs text-gray-500"
+            className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"
           >
             {getStatusIcon(remediation.status)}
             {remediation.status.charAt(0).toUpperCase() +
@@ -214,7 +214,7 @@ function RemediationStepCard({
           <button
             data-testid={`approve-step-${step.stepNumber}`}
             onClick={() => onApprove(remediation.remediationId)}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400 rounded-lg hover:bg-success-200 dark:hover:bg-success-900/50 transition-colors"
           >
             <CheckCircle className="w-4 h-4" />
             Approve
@@ -222,7 +222,7 @@ function RemediationStepCard({
           <button
             data-testid={`reject-step-${step.stepNumber}`}
             onClick={() => onReject(remediation.remediationId)}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50 transition-colors"
           >
             <XCircle className="w-4 h-4" />
             Reject
@@ -314,7 +314,7 @@ export function AlertDetailPanel({
           {/* Started Time */}
           <div
             data-testid="alert-started"
-            className="text-xs text-gray-500 dark:text-gray-500"
+            className="text-xs text-gray-500 dark:text-gray-400"
           >
             Started: {formatRelativeTime(alert.startedAt)}
           </div>
@@ -324,7 +324,7 @@ export function AlertDetailPanel({
         <button
           data-testid="close-detail-panel"
           onClick={onClose}
-          className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 rounded-lg transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -338,19 +338,19 @@ export function AlertDetailPanel({
             data-testid="recommendation-loading"
             className="flex items-center justify-center py-12"
           >
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
           </div>
         )}
 
         {/* Error State */}
         {recommendationError && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <p className="text-red-700 dark:text-red-400">
+          <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg p-4">
+            <p className="text-error-700 dark:text-error-400">
               Failed to generate recommendation: {recommendationError}
             </p>
             <button
               onClick={onRegenerate}
-              className="mt-2 text-sm text-red-600 dark:text-red-400 underline"
+              className="mt-2 text-sm text-error-600 dark:text-error-400 underline"
             >
               Try again
             </button>
@@ -418,7 +418,7 @@ export function AlertDetailPanel({
                   data-testid="regenerate-recommendation"
                   onClick={onRegenerate}
                   disabled={isRegenerating}
-                  className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <RefreshCw
                     className={`w-3 h-3 ${isRegenerating ? "animate-spin" : ""}`}
@@ -450,7 +450,7 @@ export function AlertDetailPanel({
                   href={recommendation.runbookReference}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  className="flex items-center gap-1 text-sm text-primary-600 dark:text-primary-400 hover:underline"
                 >
                   <ExternalLink className="w-4 h-4" />
                   View Runbook
@@ -459,7 +459,7 @@ export function AlertDetailPanel({
             )}
 
             {/* Model Info */}
-            <div className="text-xs text-gray-500 dark:text-gray-500 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="text-xs text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
               <span>
                 Generated by {recommendation.modelUsed} •{" "}
                 {formatRelativeTime(recommendation.generatedAt)}

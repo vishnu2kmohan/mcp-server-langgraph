@@ -84,7 +84,7 @@ export function AgentExecutionTracePanel({
         className={`mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 text-xs ${className}`}
         data-testid="agent-trace-panel-empty"
       >
-        <p className="text-gray-400 italic font-sans">
+        <p className="text-gray-400 dark:text-gray-400 italic font-sans">
           Processing... trace data will appear here.
         </p>
       </div>
@@ -98,7 +98,7 @@ export function AgentExecutionTracePanel({
         className={`mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 text-xs ${className}`}
         data-testid="agent-trace-panel"
       >
-        <p className="text-gray-400 italic font-sans">
+        <p className="text-gray-400 dark:text-gray-400 italic font-sans">
           Processing... trace data will appear here.
         </p>
       </div>
@@ -139,9 +139,9 @@ export function AgentExecutionTracePanel({
                 <span
                   className={`w-2 h-2 rounded-full ${
                     step.status === "completed"
-                      ? "bg-green-500"
+                      ? "bg-success-500"
                       : step.status === "running"
-                        ? "bg-blue-500 animate-pulse"
+                        ? "bg-primary-500 animate-pulse"
                         : "bg-gray-400"
                   }`}
                 />
@@ -149,7 +149,9 @@ export function AgentExecutionTracePanel({
                   {step.name}
                 </span>
                 {step.duration !== undefined && (
-                  <span className="text-gray-400">({step.duration}ms)</span>
+                  <span className="text-gray-400 dark:text-gray-400">
+                    ({step.duration}ms)
+                  </span>
                 )}
               </li>
             ))}
@@ -168,7 +170,7 @@ export function AgentExecutionTracePanel({
       {/* Raw output */}
       {trace.rawOutput && (
         <details className="mt-2">
-          <summary className="cursor-pointer text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 font-sans">
+          <summary className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 font-sans">
             Raw Output
           </summary>
           <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
@@ -183,15 +185,15 @@ export function AgentExecutionTracePanel({
           {/* AI Summary Panel */}
           {aiSummary && (
             <div
-              className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800"
+              className="mt-3 p-3 bg-primary-50 dark:bg-primary-900/20 rounded border border-primary-200 dark:border-primary-800"
               data-testid="ai-trace-summary"
             >
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-blue-600 dark:text-blue-400 font-semibold font-sans text-xs">
+                <span className="text-primary-600 dark:text-primary-400 font-semibold font-sans text-xs">
                   AI Summary
                 </span>
                 {aiLoading && (
-                  <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="w-3 h-3 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
                 )}
               </div>
               <p className="text-gray-700 dark:text-gray-300 font-sans text-xs">
@@ -210,7 +212,7 @@ export function AgentExecutionTracePanel({
                         key={idx}
                         className="text-gray-600 dark:text-gray-300 text-xs font-sans flex items-center gap-1"
                       >
-                        <span className="text-blue-500">•</span>
+                        <span className="text-primary-500">•</span>
                         {action}
                       </li>
                     ))}
@@ -234,10 +236,10 @@ export function AgentExecutionTracePanel({
                   <div
                     className={`h-full rounded-full transition-all ${
                       healthScore >= 0.8
-                        ? "bg-green-500"
+                        ? "bg-success-500"
                         : healthScore >= 0.6
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
+                          ? "bg-warning-500"
+                          : "bg-error-500"
                     }`}
                     style={{ width: `${healthScore * 100}%` }}
                   />
@@ -245,10 +247,10 @@ export function AgentExecutionTracePanel({
                 <span
                   className={`text-xs font-semibold ${
                     healthScore >= 0.8
-                      ? "text-green-600 dark:text-green-400"
+                      ? "text-success-600 dark:text-success-400"
                       : healthScore >= 0.6
-                        ? "text-yellow-600 dark:text-yellow-400"
-                        : "text-red-600 dark:text-red-400"
+                        ? "text-warning-600 dark:text-warning-400"
+                        : "text-error-600 dark:text-error-400"
                   }`}
                 >
                   {Math.round(healthScore * 100)}%
@@ -260,17 +262,17 @@ export function AgentExecutionTracePanel({
           {/* Bottleneck Indicators */}
           {bottlenecks && bottlenecks.length > 0 && (
             <div
-              className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800"
+              className="mt-2 p-2 bg-warning-50 dark:bg-warning-900/20 rounded border border-warning-200 dark:border-warning-800"
               data-testid="ai-bottleneck-indicator"
             >
-              <span className="text-yellow-700 dark:text-yellow-400 text-xs font-semibold font-sans">
+              <span className="text-warning-700 dark:text-warning-400 text-xs font-semibold font-sans">
                 Bottlenecks Detected:
               </span>
               <ul className="mt-1 space-y-1">
                 {bottlenecks.map((bottleneck, idx) => (
                   <li
                     key={idx}
-                    className="text-yellow-600 dark:text-yellow-300 text-xs font-sans flex items-center justify-between"
+                    className="text-warning-600 dark:text-warning-300 text-xs font-sans flex items-center justify-between"
                   >
                     <span>{bottleneck.stepName}</span>
                     <span className="font-mono">
@@ -291,20 +293,20 @@ export function AgentExecutionTracePanel({
                   key={idx}
                   className={`p-2 rounded text-xs font-sans flex items-start gap-2 ${
                     anomaly.severity === "error"
-                      ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300"
+                      ? "bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 text-error-700 dark:text-error-300"
                       : anomaly.severity === "warning"
-                        ? "bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300"
-                        : "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
+                        ? "bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 text-warning-700 dark:text-warning-300"
+                        : "bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 text-primary-700 dark:text-primary-300"
                   }`}
                   data-testid="ai-anomaly-badge"
                 >
                   <span
-                    className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                    className={`px-1.5 py-0.5 rounded text-xs font-semibold uppercase ${
                       anomaly.severity === "error"
-                        ? "bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200"
+                        ? "bg-error-200 dark:bg-error-800 text-error-800 dark:text-error-200"
                         : anomaly.severity === "warning"
-                          ? "bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200"
-                          : "bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200"
+                          ? "bg-warning-200 dark:bg-warning-800 text-warning-800 dark:text-warning-200"
+                          : "bg-primary-200 dark:bg-primary-800 text-primary-800 dark:text-primary-200"
                     }`}
                   >
                     {anomaly.severity}
@@ -325,17 +327,17 @@ export function AgentExecutionTracePanel({
 
           {/* Optimization Suggestions */}
           {optimizationSuggestions && optimizationSuggestions.length > 0 && (
-            <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
-              <span className="text-green-700 dark:text-green-400 text-xs font-semibold font-sans">
+            <div className="mt-2 p-2 bg-success-50 dark:bg-success-900/20 rounded border border-success-200 dark:border-success-800">
+              <span className="text-success-700 dark:text-success-400 text-xs font-semibold font-sans">
                 Optimization Suggestions:
               </span>
               <ul className="mt-1 space-y-0.5">
                 {optimizationSuggestions.map((suggestion, idx) => (
                   <li
                     key={idx}
-                    className="text-green-600 dark:text-green-300 text-xs font-sans flex items-center gap-1"
+                    className="text-success-600 dark:text-success-300 text-xs font-sans flex items-center gap-1"
                   >
-                    <span className="text-green-500">💡</span>
+                    <span className="text-success-500">💡</span>
                     {suggestion}
                   </li>
                 ))}

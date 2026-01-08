@@ -47,10 +47,10 @@ export function TierUsageBar({
 
   // Determine color based on usage percentage
   const getProgressColor = () => {
-    if (isUnlimited) return "bg-green-500";
-    if (percentage >= 100) return "bg-red-500";
-    if (percentage >= 80) return "bg-amber-500";
-    return "bg-blue-500";
+    if (isUnlimited) return "bg-success-500";
+    if (percentage >= 100) return "bg-error-500";
+    if (percentage >= 80) return "bg-warning-500";
+    return "bg-primary-500";
   };
 
   const shouldShowWarning = !isUnlimited && percentage >= 80;
@@ -64,12 +64,12 @@ export function TierUsageBar({
   const getTierBadgeStyle = () => {
     switch (tier) {
       case "dedicated":
-        return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
+        return "bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400";
       case "hybrid":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
       case "shared":
       default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
+        return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
     }
   };
 
@@ -114,14 +114,14 @@ export function TierUsageBar({
           {shouldShowWarning && (
             <AlertTriangle
               size={14}
-              className="text-amber-500"
+              className="text-warning-500"
               data-testid="usage-warning-icon"
             />
           )}
           {isUnlimited ? (
             <>
               <span className="font-medium">{current}</span>
-              <span className="text-gray-400 dark:text-gray-500">
+              <span className="text-gray-400 dark:text-gray-400">
                 / Unlimited
               </span>
             </>

@@ -199,7 +199,7 @@ export function ContextMenu({
             aria-label={ariaLabel}
             className={cn(
               "fixed z-50 min-w-[160px] py-1 rounded-lg shadow-lg",
-              "bg-white border border-gray-200",
+              "bg-white border border-gray-200 dark:border-gray-700",
               "dark:bg-gray-800 dark:border-gray-700",
               "animate-in fade-in-0 zoom-in-95 duration-100",
             )}
@@ -236,10 +236,10 @@ export function ContextMenu({
                   onClick={() => handleItemClick(item)}
                   className={cn(
                     "w-full px-3 py-2 text-left text-sm flex items-center gap-2",
-                    "focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700",
-                    "hover:bg-gray-100 dark:hover:bg-gray-700",
+                    "focus:outline-none focus:bg-gray-100 dark:bg-gray-800 dark:focus:bg-gray-700",
+                    "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
                     item.disabled
-                      ? "text-gray-400 cursor-not-allowed"
+                      ? "text-gray-400 dark:text-gray-400 cursor-not-allowed"
                       : "text-gray-700 dark:text-gray-200",
                   )}
                 >

@@ -97,16 +97,16 @@ export function TraceCanvas({
             <div className="flex items-center gap-2">
               <span
                 className={`h-3 w-3 rounded-full ${
-                  isConnected ? "bg-green-500" : "bg-gray-400"
+                  isConnected ? "bg-success-500" : "bg-gray-400"
                 }`}
               />
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-600 dark:text-gray-300">
                 {isConnected ? "Connected" : "Disconnected"}
               </span>
             </div>
 
             {/* Span Count */}
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
               {spans.length} spans | {events.length} events
             </div>
 
@@ -129,7 +129,7 @@ export function TraceCanvas({
               )}
               <button
                 onClick={handleClear}
-                className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                className="px-3 py-1 text-sm bg-error-100 text-error-700 rounded hover:bg-error-200 transition-colors"
               >
                 Clear
               </button>
@@ -145,7 +145,7 @@ export function TraceCanvas({
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 {isConnected ? "Waiting for traces..." : "Not connected"}
               </h3>
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 {isConnected
                   ? "Trace spans will appear here as they are received from the MCP server."
                   : "Click Connect to start receiving real-time trace data."}

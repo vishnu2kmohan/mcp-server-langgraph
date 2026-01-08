@@ -419,7 +419,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
         aria-label="Main navigation"
         className={cn(
           "flex flex-col items-center w-14 py-2",
-          "bg-gray-100 dark:bg-gray-900",
+          "bg-gray-100 dark:bg-gray-800",
           "border-r border-gray-200 dark:border-gray-700",
           className,
         )}
@@ -454,8 +454,8 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                     }}
                     className={cn(
                       "p-1.5 rounded-lg transition-all flex items-center justify-center",
-                      "text-gray-400 dark:text-gray-500",
-                      "hover:bg-gray-200 dark:hover:bg-gray-700",
+                      "text-gray-400 dark:text-gray-400",
+                      "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
                       "focus:outline-none focus:ring-2 focus:ring-primary-500",
                     )}
                   >
@@ -492,7 +492,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                               activeNavItem === item.id &&
                                 "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
                               activeNavItem !== item.id &&
-                                "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+                                "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
                             )}
                           >
                             {item.icon}
@@ -502,7 +502,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                                 data-testid="nav-prediction-indicator"
                                 className={cn(
                                   "absolute -top-0.5 -right-0.5 w-2 h-2",
-                                  "bg-amber-400 dark:bg-amber-500 rounded-full",
+                                  "bg-warning-400 dark:bg-warning-500 rounded-full",
                                   "animate-pulse",
                                 )}
                                 aria-label="AI suggested"
@@ -540,7 +540,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                     activeNavItem === item.id &&
                       "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
                     activeNavItem !== item.id &&
-                      "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+                      "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
                   )}
                 >
                   {item.icon}
@@ -550,7 +550,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                       data-testid="nav-prediction-indicator"
                       className={cn(
                         "absolute -top-0.5 -right-0.5 w-2 h-2",
-                        "bg-amber-400 dark:bg-amber-500 rounded-full",
+                        "bg-warning-400 dark:bg-warning-500 rounded-full",
                         "animate-pulse",
                       )}
                       aria-label="AI suggested"
@@ -580,7 +580,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
             className={cn(
               "p-2 rounded-lg transition-all",
               "text-gray-500 dark:text-gray-400",
-              "hover:bg-gray-200 dark:hover:bg-gray-700",
+              "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
               "focus:outline-none focus:ring-2 focus:ring-primary-500",
             )}
           >
@@ -600,7 +600,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                 activeNavItem === item.id &&
                   "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
                 activeNavItem !== item.id &&
-                  "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+                  "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
               )}
             >
               {item.icon}
