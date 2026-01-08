@@ -1,7 +1,7 @@
 """
-Tests for select_tools node in Agent Graph Builder.
+Tests for retrieve_tools node in Agent Graph Builder.
 
-TDD tests for the select_tools node that uses semantic search to
+TDD tests for the retrieve_tools node that uses semantic search to
 dynamically select relevant tools based on user query.
 
 RED Phase: These tests define the expected behavior.
@@ -9,7 +9,7 @@ GREEN Phase: Implementation in agent_graph_builder.py will make them pass.
 """
 
 import gc
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -17,9 +17,9 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_select_tools_state")
+@pytest.mark.xdist_group(name="test_retrieve_tools_state")
 class TestSelectToolsNodeState:
-    """Tests for select_tools state management."""
+    """Tests for retrieve_tools state management."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
@@ -57,17 +57,17 @@ class TestSelectToolsNodeState:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_select_tools_graph")
+@pytest.mark.xdist_group(name="test_retrieve_tools_graph")
 class TestSelectToolsNodeInGraph:
-    """Tests for select_tools node presence in graph."""
+    """Tests for retrieve_tools node presence in graph."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_graph_has_select_tools_node_when_enabled(self, monkeypatch) -> None:
-        """Graph should have select_tools node when enable_semantic_tool_selection=True."""
+    async def test_graph_has_retrieve_tools_node_when_enabled(self, monkeypatch) -> None:
+        """Graph should have retrieve_tools node when enable_semantic_tool_search=True."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
@@ -75,19 +75,19 @@ class TestSelectToolsNodeInGraph:
         from mcp_server_langgraph.core.agent_graph_builder import build_agent_graph
 
         config = AgentConfig(
-            enable_semantic_tool_selection=True,
+            enable_semantic_tool_search=True,
             enable_verification=False,
             enable_context_compaction=False,
         )
 
         graph = build_agent_graph(config)
 
-        # select_tools node should be present
-        assert "select_tools" in graph.nodes
+        # retrieve_tools node should be present
+        assert "retrieve_tools" in graph.nodes
 
     @pytest.mark.asyncio
-    async def test_graph_no_select_tools_node_when_disabled(self, monkeypatch) -> None:
-        """Graph should not have select_tools node when enable_semantic_tool_selection=False."""
+    async def test_graph_no_retrieve_tools_node_when_disabled(self, monkeypatch) -> None:
+        """Graph should not have retrieve_tools node when enable_semantic_tool_search=False."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
@@ -95,29 +95,29 @@ class TestSelectToolsNodeInGraph:
         from mcp_server_langgraph.core.agent_graph_builder import build_agent_graph
 
         config = AgentConfig(
-            enable_semantic_tool_selection=False,
+            enable_semantic_tool_search=False,
             enable_verification=False,
             enable_context_compaction=False,
         )
 
         graph = build_agent_graph(config)
 
-        # select_tools node should NOT be present
-        assert "select_tools" not in graph.nodes
+        # retrieve_tools node should NOT be present
+        assert "retrieve_tools" not in graph.nodes
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_select_tools_behavior")
+@pytest.mark.xdist_group(name="test_retrieve_tools_behavior")
 class TestSelectToolsNodeBehavior:
-    """Tests for select_tools node behavior."""
+    """Tests for retrieve_tools node behavior."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_select_tools_uses_semantic_index_manager(self, monkeypatch) -> None:
-        """select_tools should use SemanticIndexManager to search for tools."""
+    async def test_retrieve_tools_uses_semantic_index_manager(self, monkeypatch) -> None:
+        """retrieve_tools should use SemanticIndexManager to search for tools."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
@@ -129,30 +129,30 @@ class TestSelectToolsNodeBehavior:
         assert hasattr(SemanticIndexManager, "search_tools")
 
     @pytest.mark.asyncio
-    async def test_select_tools_respects_max_selected_tools(self, monkeypatch) -> None:
-        """select_tools should respect max_selected_tools config."""
+    async def test_retrieve_tools_respects_max_selected_tools(self, monkeypatch) -> None:
+        """retrieve_tools should respect max_selected_tools config."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
         from mcp_server_langgraph.core.agent_config import AgentConfig
 
         config = AgentConfig(
-            enable_semantic_tool_selection=True,
+            enable_semantic_tool_search=True,
             max_selected_tools=5,
         )
 
         assert config.max_selected_tools == 5
 
     @pytest.mark.asyncio
-    async def test_select_tools_respects_search_threshold(self, monkeypatch) -> None:
-        """select_tools should respect semantic_tool_search_threshold config."""
+    async def test_retrieve_tools_respects_search_threshold(self, monkeypatch) -> None:
+        """retrieve_tools should respect semantic_tool_search_threshold config."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
         from mcp_server_langgraph.core.agent_config import AgentConfig
 
         config = AgentConfig(
-            enable_semantic_tool_selection=True,
+            enable_semantic_tool_search=True,
             semantic_tool_search_threshold=0.7,
         )
 
@@ -160,17 +160,17 @@ class TestSelectToolsNodeBehavior:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_select_tools_integration")
+@pytest.mark.xdist_group(name="test_retrieve_tools_integration")
 class TestSelectToolsNodeIntegration:
-    """Integration tests for select_tools node with mocked dependencies."""
+    """Integration tests for retrieve_tools node with mocked dependencies."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_select_tools_node_updates_state_with_selected_tools(self, monkeypatch) -> None:
-        """select_tools node should update state with selected_tools list."""
+    async def test_retrieve_tools_node_updates_state_with_selected_tools(self, monkeypatch) -> None:
+        """retrieve_tools node should update state with selected_tools list."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
@@ -194,11 +194,11 @@ class TestSelectToolsNodeIntegration:
             ),
         ]
 
-        mock_semantic_index = AsyncMock()
+        mock_semantic_index = MagicMock()  # Container for async methods
         mock_semantic_index.search_tools = AsyncMock(return_value=mock_entries)
 
         config = AgentConfig(
-            enable_semantic_tool_selection=True,
+            enable_semantic_tool_search=True,
             enable_verification=False,
             enable_context_compaction=False,
             max_selected_tools=10,
@@ -206,11 +206,11 @@ class TestSelectToolsNodeIntegration:
 
         # Build graph - this test just verifies the node exists
         graph = build_agent_graph(config)
-        assert "select_tools" in graph.nodes
+        assert "retrieve_tools" in graph.nodes
 
     @pytest.mark.asyncio
-    async def test_select_tools_falls_back_to_all_tools_on_error(self, monkeypatch) -> None:
-        """select_tools should fall back to all tools if semantic search fails."""
+    async def test_retrieve_tools_falls_back_to_all_tools_on_error(self, monkeypatch) -> None:
+        """retrieve_tools should fall back to all tools if semantic search fails."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
@@ -218,18 +218,18 @@ class TestSelectToolsNodeIntegration:
         from mcp_server_langgraph.core.agent_graph_builder import build_agent_graph
 
         config = AgentConfig(
-            enable_semantic_tool_selection=True,
+            enable_semantic_tool_search=True,
             enable_verification=False,
             enable_context_compaction=False,
         )
 
         # Build graph - verify graceful degradation is in place
         graph = build_agent_graph(config)
-        assert "select_tools" in graph.nodes
+        assert "retrieve_tools" in graph.nodes
 
     @pytest.mark.asyncio
-    async def test_select_tools_with_empty_query_returns_default_tools(self, monkeypatch) -> None:
-        """select_tools should handle empty/short queries gracefully."""
+    async def test_retrieve_tools_with_empty_query_returns_default_tools(self, monkeypatch) -> None:
+        """retrieve_tools should handle empty/short queries gracefully."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
@@ -237,28 +237,28 @@ class TestSelectToolsNodeIntegration:
         from mcp_server_langgraph.core.agent_graph_builder import build_agent_graph
 
         config = AgentConfig(
-            enable_semantic_tool_selection=True,
+            enable_semantic_tool_search=True,
             enable_verification=False,
             enable_context_compaction=False,
         )
 
         # Build graph
         graph = build_agent_graph(config)
-        assert "select_tools" in graph.nodes
+        assert "retrieve_tools" in graph.nodes
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_select_tools_graph_flow")
+@pytest.mark.xdist_group(name="test_retrieve_tools_graph_flow")
 class TestSelectToolsGraphFlow:
-    """Tests for select_tools node graph flow and routing."""
+    """Tests for retrieve_tools node graph flow and routing."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_select_tools_routes_to_router(self, monkeypatch) -> None:
-        """select_tools should route to router node."""
+    async def test_retrieve_tools_routes_to_router(self, monkeypatch) -> None:
+        """retrieve_tools should route to router node."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
@@ -266,7 +266,7 @@ class TestSelectToolsGraphFlow:
         from mcp_server_langgraph.core.agent_graph_builder import build_agent_graph
 
         config = AgentConfig(
-            enable_semantic_tool_selection=True,
+            enable_semantic_tool_search=True,
             enable_verification=False,
             enable_context_compaction=False,
         )
@@ -274,13 +274,13 @@ class TestSelectToolsGraphFlow:
         graph = build_agent_graph(config)
 
         # Verify graph has required nodes
-        assert "select_tools" in graph.nodes
+        assert "retrieve_tools" in graph.nodes
         assert "router" in graph.nodes
         assert "respond" in graph.nodes
 
     @pytest.mark.asyncio
-    async def test_select_tools_inserted_before_router(self, monkeypatch) -> None:
-        """select_tools should be inserted before router in the graph flow."""
+    async def test_retrieve_tools_inserted_before_router(self, monkeypatch) -> None:
+        """retrieve_tools should be inserted before router in the graph flow."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
@@ -288,15 +288,15 @@ class TestSelectToolsGraphFlow:
         from mcp_server_langgraph.core.agent_graph_builder import build_agent_graph
 
         config = AgentConfig(
-            enable_semantic_tool_selection=True,
+            enable_semantic_tool_search=True,
             enable_context_compaction=False,
             enable_verification=False,
         )
 
         graph = build_agent_graph(config)
 
-        # select_tools should be in the graph
-        assert "select_tools" in graph.nodes
+        # retrieve_tools should be in the graph
+        assert "retrieve_tools" in graph.nodes
 
         # The node should exist and have proper edges (verified by graph compilation)
         assert graph is not None

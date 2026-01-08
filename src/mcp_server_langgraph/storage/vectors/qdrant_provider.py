@@ -45,15 +45,16 @@ class QdrantClientProtocol(Protocol):
         """Upsert points to collection."""
         ...
 
-    async def search(
+    async def query_points(
         self,
         collection_name: str,
-        query_vector: list[float],
+        query: list[float],
         limit: int,
         query_filter: Any | None = None,
+        score_threshold: float | None = None,
         **kwargs: Any,
-    ) -> list[Any]:
-        """Search for similar vectors."""
+    ) -> Any:
+        """Query points using vector similarity (qdrant-client >= 1.7 API)."""
         ...
 
     async def delete(
@@ -166,14 +167,15 @@ class QdrantVectorProvider(VectorSearchProvider):
                 ]
                 query_filter = Filter(must=conditions)  # type: ignore[arg-type]
 
-            # Search Qdrant
-            results = await self._client.search(
+            # Search Qdrant using query_points (qdrant-client >= 1.7)
+            response = await self._client.query_points(
                 collection_name=collection,
-                query_vector=query_vector,
+                query=query_vector,
                 limit=limit,
                 query_filter=query_filter,
                 score_threshold=min_score if min_score > 0 else None,
             )
+            results = response.points
 
             # Convert to VectorSearchResult
             return [

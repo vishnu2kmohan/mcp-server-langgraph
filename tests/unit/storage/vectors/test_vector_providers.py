@@ -397,12 +397,12 @@ class TestPgVectorProvider:
             )
 
             mock_pool = MagicMock()
-            mock_conn = AsyncMock()
+            mock_conn = AsyncMock()  # noqa: async-mock-config - nested context manager
 
             # Set up async context manager for pool.acquire()
             mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
-            mock_pool.acquire.return_value.__aexit__ = AsyncMock()
-            mock_conn.execute = AsyncMock()
+            mock_pool.acquire.return_value.__aexit__ = AsyncMock(return_value=None)
+            mock_conn.execute = AsyncMock(return_value=None)
 
             provider = PgVectorProvider(connection_pool=mock_pool)
             await provider.upsert(
@@ -432,10 +432,10 @@ class TestPgVectorProvider:
 
             # Set up async context managers
             mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
-            mock_pool.acquire.return_value.__aexit__ = AsyncMock()
+            mock_pool.acquire.return_value.__aexit__ = AsyncMock(return_value=None)
             mock_conn.cursor.return_value.__aenter__ = AsyncMock(return_value=mock_cursor)
-            mock_conn.cursor.return_value.__aexit__ = AsyncMock()
-            mock_cursor.execute = AsyncMock()
+            mock_conn.cursor.return_value.__aexit__ = AsyncMock(return_value=None)
+            mock_cursor.execute = AsyncMock(return_value=None)
             mock_cursor.fetchall = AsyncMock(
                 return_value=[
                     ("doc-1", 0.95, '{"title": "Test"}'),
@@ -544,7 +544,7 @@ class TestQdrantVectorProvider:
             )
 
             mock_client = MagicMock()
-            mock_client.upsert = AsyncMock()
+            mock_client.upsert = AsyncMock(return_value=None)
 
             provider = QdrantVectorProvider(client=mock_client)
             await provider.upsert(
@@ -573,7 +573,10 @@ class TestQdrantVectorProvider:
             mock_result.id = "doc-1"
             mock_result.score = 0.95
             mock_result.payload = {"title": "Test"}
-            mock_client.search = AsyncMock(return_value=[mock_result])
+            # Use query_points API (qdrant-client >= 1.7)
+            mock_response = MagicMock()
+            mock_response.points = [mock_result]
+            mock_client.query_points = AsyncMock(return_value=mock_response)
 
             provider = QdrantVectorProvider(client=mock_client)
             results = await provider.search(
@@ -598,7 +601,10 @@ class TestQdrantVectorProvider:
             )
 
             mock_client = MagicMock()
-            mock_client.search = AsyncMock(return_value=[])
+            # Use query_points API (qdrant-client >= 1.7)
+            mock_response = MagicMock()
+            mock_response.points = []
+            mock_client.query_points = AsyncMock(return_value=mock_response)
 
             provider = QdrantVectorProvider(client=mock_client)
             await provider.search(
@@ -608,9 +614,9 @@ class TestQdrantVectorProvider:
                 filters={"category": "A"},
             )
 
-            # Verify search was called with filter
-            assert mock_client.search.called
-            call_kwargs = mock_client.search.call_args
+            # Verify query_points was called with filter
+            assert mock_client.query_points.called
+            call_kwargs = mock_client.query_points.call_args
             # Filter should be passed in some form
             assert call_kwargs is not None
         except ImportError:
@@ -625,7 +631,7 @@ class TestQdrantVectorProvider:
             )
 
             mock_client = MagicMock()
-            mock_client.delete = AsyncMock()
+            mock_client.delete = AsyncMock(return_value=None)
 
             provider = QdrantVectorProvider(client=mock_client)
             await provider.delete(collection="test", id="doc-1")

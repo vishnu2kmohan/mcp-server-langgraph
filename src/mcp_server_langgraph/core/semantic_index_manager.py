@@ -5,7 +5,7 @@ to enable dynamic capability discovery and progressive disclosure.
 
 Follows patterns from:
 - Anthropic's Tool Search Tool pattern (defer_loading, 34-64% token savings)
-- LangGraph's Many Tools pattern (index embeddings, select_tools node)
+- LangGraph's Many Tools pattern (index embeddings, retrieve_tools node)
 
 Usage:
     from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
@@ -191,10 +191,14 @@ class SemanticIndexManager:
             for entry in entries:
                 payload = entry.to_dict()
                 payload["ref_type"] = "tool"
+                # Embedding is guaranteed to be set after batch embed loop above
+                embedding = entry.embedding
+                if embedding is None:
+                    continue  # Skip entries without embeddings (shouldn't happen)
                 points.append(
                     PointStruct(
                         id=entry.tool_id,
-                        vector=entry.embedding,
+                        vector=embedding,
                         payload=payload,
                     )
                 )
@@ -250,14 +254,15 @@ class SemanticIndexManager:
 
             query_filter = Filter(must=must_conditions)
 
-            # Search
-            results = await self.qdrant_client.search(
+            # Search using query_points (qdrant-client >= 1.7)
+            response = await self.qdrant_client.query_points(
                 collection_name=self.collection_name,
-                query_vector=query_embedding,
+                query=query_embedding,
                 query_filter=query_filter,
                 limit=limit,
                 score_threshold=min_score,
             )
+            results = response.points
 
             # Convert to ToolIndexEntry
             entries = []
@@ -354,14 +359,15 @@ class SemanticIndexManager:
 
             query_filter = Filter(must=must_conditions)
 
-            # Search
-            results = await self.qdrant_client.search(
+            # Search using query_points (qdrant-client >= 1.7)
+            response = await self.qdrant_client.query_points(
                 collection_name=self.collection_name,
-                query_vector=query_embedding,
+                query=query_embedding,
                 query_filter=query_filter,
                 limit=limit,
                 score_threshold=min_score,
             )
+            results = response.points
 
             # Convert to SkillIndexEntry
             entries = []
@@ -468,14 +474,15 @@ class SemanticIndexManager:
 
             query_filter = Filter(must=must_conditions)
 
-            # Search
-            results = await self.qdrant_client.search(
+            # Search using query_points (qdrant-client >= 1.7)
+            response = await self.qdrant_client.query_points(
                 collection_name=self.collection_name,
-                query_vector=query_embedding,
+                query=query_embedding,
                 query_filter=query_filter,
                 limit=limit,
                 score_threshold=min_score,
             )
+            results = response.points
 
             # Convert to MemoryIndexEntry
             entries = []
