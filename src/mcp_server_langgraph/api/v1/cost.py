@@ -15,13 +15,14 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from mcp_server_langgraph.auth.dependencies import (
     get_current_user,
     require_cost_admin,
     require_cost_viewer,
 )
+from mcp_server_langgraph.core.numeric import safe_float
 
 # Type alias for current user
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
@@ -53,6 +54,12 @@ class CostSummaryResponse(BaseModel):
     period_start: str | None = Field(default=None, description="Period start date")
     period_end: str | None = Field(default=None, description="Period end date")
 
+    @field_validator("total_cost", mode="before")
+    @classmethod
+    def validate_total_cost(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
+
 
 class ModelCostResponse(BaseModel):
     """Response model for per-model cost."""
@@ -63,6 +70,12 @@ class ModelCostResponse(BaseModel):
     prompt_tokens: int | None = Field(default=None, description="Prompt tokens")
     completion_tokens: int | None = Field(default=None, description="Completion tokens")
 
+    @field_validator("cost", mode="before")
+    @classmethod
+    def validate_cost(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
+
 
 class DailyCostResponse(BaseModel):
     """Response model for daily cost."""
@@ -70,6 +83,12 @@ class DailyCostResponse(BaseModel):
     date: str = Field(description="Date (YYYY-MM-DD)")
     cost: float = Field(description="Cost in USD")
     requests: int | None = Field(default=None, description="Number of requests")
+
+    @field_validator("cost", mode="before")
+    @classmethod
+    def validate_cost(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
 
 
 class CostRecordResponse(BaseModel):
@@ -89,6 +108,12 @@ class CostRecordResponse(BaseModel):
     project_id: str | None = Field(default=None, description="Project ID")
     team_id: str | None = Field(default=None, description="Team ID")
 
+    @field_validator("estimated_cost_usd", mode="before")
+    @classmethod
+    def validate_estimated_cost(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
+
 
 class PaginatedCostRecordsResponse(BaseModel):
     """Paginated response for cost records."""
@@ -106,6 +131,12 @@ class OrganizationCostResponse(BaseModel):
     total_tokens: int = Field(description="Total tokens used")
     request_count: int = Field(description="Number of requests")
 
+    @field_validator("total_cost", mode="before")
+    @classmethod
+    def validate_total_cost(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
+
 
 class ProjectCostResponse(BaseModel):
     """Response model for cost grouped by project."""
@@ -115,6 +146,12 @@ class ProjectCostResponse(BaseModel):
     total_cost: float = Field(description="Total cost in USD")
     total_tokens: int = Field(description="Total tokens used")
     request_count: int = Field(description="Number of requests")
+
+    @field_validator("total_cost", mode="before")
+    @classmethod
+    def validate_total_cost(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
 
 
 class TeamCostResponse(BaseModel):
@@ -126,6 +163,12 @@ class TeamCostResponse(BaseModel):
     total_cost: float = Field(description="Total cost in USD")
     total_tokens: int = Field(description="Total tokens used")
     request_count: int = Field(description="Number of requests")
+
+    @field_validator("total_cost", mode="before")
+    @classmethod
+    def validate_total_cost(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
 
 
 # Service Interface
@@ -688,6 +731,12 @@ class BudgetStatusResponse(BaseModel):
     entity_id: str = Field(description="Entity identifier")
     message: str = Field(description="Human-readable status message")
 
+    @field_validator("percent_used", "current_spend", "remaining", "monthly_limit", mode="before")
+    @classmethod
+    def validate_float_fields(cls, v: Any) -> float:
+        """Ensure float fields are valid (not NaN/Inf) for JSON serialization."""
+        return safe_float(v)
+
 
 class AnomalyDetectionResponse(BaseModel):
     """Response model for cost anomaly detection."""
@@ -699,6 +748,12 @@ class AnomalyDetectionResponse(BaseModel):
     std_dev: float = Field(description="Historical standard deviation")
     message: str = Field(description="Human-readable explanation")
 
+    @field_validator("z_score", "mean", "std_dev", mode="before")
+    @classmethod
+    def validate_float_fields(cls, v: Any) -> float:
+        """Ensure float fields are valid (not NaN/Inf) for JSON serialization."""
+        return safe_float(v)
+
 
 class ForecastResponse(BaseModel):
     """Response model for cost forecast."""
@@ -709,6 +764,12 @@ class ForecastResponse(BaseModel):
     trend: str = Field(description="Trend direction: increasing, decreasing, stable")
     days_analyzed: int = Field(description="Number of days of data analyzed")
     message: str = Field(description="Human-readable forecast summary")
+
+    @field_validator("projected_total", "confidence_low", "confidence_high", mode="before")
+    @classmethod
+    def validate_float_fields(cls, v: Any) -> float:
+        """Ensure float fields are valid (not NaN/Inf) for JSON serialization."""
+        return safe_float(v)
 
 
 # ==============================================================================

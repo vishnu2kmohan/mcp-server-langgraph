@@ -9,6 +9,8 @@ Implemented backends:
 - loki: Grafana Loki (LogQL) - Logging
 - prometheus: Prometheus/Mimir (PromQL) - Metrics
 - grafana: Grafana Alerting (Unified Alerting) - Alerting
+- mimir: Mimir Alertmanager (Alertmanager v2 API) - Alerting (direct, bypasses Grafana)
+- fallback: Fallback chain for resilient alerting (Grafana -> Mimir -> Stub)
 - cloudtrace: GCP Cloud Trace - Tracing
 - cloudlogging: GCP Cloud Logging - Logging
 - cloudmonitoring: GCP Cloud Monitoring - Metrics
@@ -23,3 +25,11 @@ Planned backends (not yet implemented):
 - azuremonitor: Azure Monitor Alerts
 - datadog: Datadog
 """
+
+from .fallback import FallbackAlertingClient
+from .mimir import MimirAlertingClient
+
+__all__ = [
+    "FallbackAlertingClient",
+    "MimirAlertingClient",
+]

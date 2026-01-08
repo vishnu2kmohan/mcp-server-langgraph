@@ -20,9 +20,10 @@ Usage:
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from mcp_server_langgraph.agents.registry import OrchestratorInfo, get_all_orchestrators
+from mcp_server_langgraph.core.numeric import safe_float
 from mcp_server_langgraph.auth.dependencies import get_current_user
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.core.feature_flags import feature_flags
@@ -417,6 +418,14 @@ class OrchestratorMetrics(BaseModel):
     p95_duration_ms: float | None = Field(default=None, description="95th percentile duration")
     p99_duration_ms: float | None = Field(default=None, description="99th percentile duration")
 
+    @field_validator("avg_duration_ms", "p50_duration_ms", "p95_duration_ms", "p99_duration_ms", mode="before")
+    @classmethod
+    def validate_duration(cls, v: float | None) -> float | None:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        if v is None:
+            return None
+        return safe_float(v)
+
 
 class HITLMetrics(BaseModel):
     """Metrics for Human-in-the-Loop interactions."""
@@ -427,6 +436,12 @@ class HITLMetrics(BaseModel):
     pending_count: int = Field(..., description="Pending requests")
     avg_response_latency_ms: float = Field(..., description="Average response latency in ms")
 
+    @field_validator("avg_response_latency_ms", mode="before")
+    @classmethod
+    def validate_latency(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
+
 
 class CostMetrics(BaseModel):
     """Metrics for LLM cost tracking."""
@@ -434,6 +449,12 @@ class CostMetrics(BaseModel):
     total_cost_usd: float = Field(..., description="Total cost in USD")
     total_tokens: int = Field(..., description="Total tokens consumed")
     avg_cost_per_request_usd: float = Field(..., description="Average cost per request in USD")
+
+    @field_validator("total_cost_usd", "avg_cost_per_request_usd", mode="before")
+    @classmethod
+    def validate_cost(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
 
 
 class AgentMetricsResponse(BaseModel):

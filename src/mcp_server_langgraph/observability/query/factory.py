@@ -96,6 +96,8 @@ class AlertingBackend(str, Enum):
     """Supported alerting backends."""
 
     GRAFANA = "grafana"  # Grafana Alerting (LGTM stack)
+    MIMIR = "mimir"  # Mimir built-in Alertmanager (direct access, bypasses Grafana)
+    FALLBACK = "fallback"  # Fallback chain: Grafana -> Mimir -> Stub
     CLOUDMONITORING = "cloudmonitoring"  # GCP Cloud Monitoring Alerting
     CLOUDWATCH = "cloudwatch"  # AWS CloudWatch Alarms
     AZUREMONITOR = "azuremonitor"  # Azure Monitor Alerts
@@ -141,6 +143,11 @@ def _get_metrics_backend() -> MetricsBackend:
 
 def _get_alerting_backend() -> AlertingBackend:
     """Determine alerting backend from environment."""
+    # Check if fallback mode is explicitly enabled
+    fallback_enabled = os.getenv("ALERTING_FALLBACK_ENABLED", "").lower() in ("true", "1", "yes")
+    if fallback_enabled:
+        return AlertingBackend.FALLBACK
+
     backend = os.getenv("OBSERVABILITY_ALERTING_BACKEND", "grafana").lower()
     try:
         return AlertingBackend(backend)
@@ -266,6 +273,29 @@ def _create_alerting_client(backend: AlertingBackend) -> AlertingQueryClient:
         from .backends.grafana import GrafanaAlertingClient
 
         return GrafanaAlertingClient()
+
+    elif backend == AlertingBackend.MIMIR:
+        from .backends.mimir import MimirAlertingClient
+
+        return MimirAlertingClient()
+
+    elif backend == AlertingBackend.FALLBACK:
+        # Create fallback chain: Grafana -> Mimir -> Stub
+        from .backends.fallback import FallbackAlertingClient
+        from .backends.grafana import GrafanaAlertingClient
+        from .backends.mimir import MimirAlertingClient
+        from .backends.stub import StubAlertingClient
+
+        health_check_ttl = int(os.getenv("ALERTING_HEALTH_CHECK_INTERVAL", "30"))
+        logger.info(f"Creating alerting fallback chain: Grafana -> Mimir -> Stub (health TTL: {health_check_ttl}s)")
+        return FallbackAlertingClient(
+            backends=[
+                GrafanaAlertingClient(),
+                MimirAlertingClient(),
+                StubAlertingClient(),
+            ],
+            health_check_ttl=health_check_ttl,
+        )
 
     elif backend == AlertingBackend.CLOUDMONITORING:
         # TODO: Implement GCP Cloud Monitoring Alerting backend

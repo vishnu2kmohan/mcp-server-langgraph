@@ -28,6 +28,8 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
+import asyncio
+import time
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 from uuid import uuid4
 
@@ -869,6 +871,72 @@ class ChatServiceImpl(ChatService):
         if not agent or not hasattr(agent, "astream_events"):
             raise ValueError("LangGraph agent not configured or doesn't support astream_events")
 
+        otel_tracer = trace.get_tracer(__name__)
+        broadcaster = None
+        try:
+            from mcp_server_langgraph.websocket.registry import get_devtools_broadcaster
+
+            broadcaster = get_devtools_broadcaster()
+        except Exception:
+            # DevTools broadcaster is optional; continue without it if unavailable.
+            broadcaster = None
+
+        node_start_times: dict[str, int] = {}
+        node_ids: dict[str, str] = {}
+
+        def _schedule_trace_step(
+            node_name: str,
+            status: str,
+            attributes: dict[str, Any] | None = None,
+        ) -> None:
+            if broadcaster is None:
+                return
+
+            start_time_ms = node_start_times.get(node_name, int(time.time() * 1000))
+            if status == "running":
+                node_start_times[node_name] = start_time_ms
+
+            end_time_ms = int(time.time() * 1000)
+            safe_attrs: dict[str, Any] | None = None
+            if attributes:
+                safe_attrs = {}
+                for key, value in attributes.items():
+                    if isinstance(value, (str, int, float, bool)) or value is None:
+                        safe_attrs[key] = value
+                    else:
+                        safe_attrs[key] = str(value)
+
+            payload = {
+                "id": node_ids.get(node_name) or f"{node_name}-{start_time_ms}",
+                "session_id": session_id,
+                "node_id": node_name,
+                "name": node_name,
+                "status": status,
+                "start_time": start_time_ms,
+            }
+
+            if status != "running":
+                payload["end_time"] = end_time_ms
+                payload["duration_ms"] = max(end_time_ms - start_time_ms, 0)
+
+            if safe_attrs:
+                payload["attributes"] = safe_attrs
+
+            if node_name not in node_ids:
+                node_ids[node_name] = str(payload["id"])
+
+            try:
+                loop = asyncio.get_running_loop()
+                _task = loop.create_task(
+                    broadcaster.broadcast_trace_step(payload, context_entity_id=session_id),
+                )
+                del _task  # Fire-and-forget; suppress RUF006
+            except RuntimeError:
+                # No running loop; skip best-effort devtools broadcast
+                pass
+            except Exception as exc:  # pragma: no cover - defensive logging only
+                logger.debug("Failed to broadcast trace step: %s", exc)
+
         # Build initial state from messages - use full conversation history
         # with proper role mapping (Phase 4.1 fix)
         langgraph_messages = _build_langgraph_messages(messages)
@@ -887,93 +955,114 @@ class ChatServiceImpl(ChatService):
         config = {"configurable": {"thread_id": session_id}}
         node_statuses: dict[str, str] = {}  # Track node statuses
         last_node: str | None = None
+        with otel_tracer.start_as_current_span("langgraph.execution") as exec_span:
+            exec_span.set_attribute("session.id", session_id)
+            exec_span.set_attribute("session_id", session_id)
+            exec_span.set_attribute("sessionId", session_id)
 
-        try:
-            async for event in agent.astream_events(initial_state, config=config, version="v2"):
-                event_type = event.get("event", "")
-                metadata = event.get("metadata", {})
-                langgraph_node = metadata.get("langgraph_node")
+            try:
+                async for event in agent.astream_events(initial_state, config=config, version="v2"):
+                    event_type = event.get("event", "")
+                    metadata = event.get("metadata", {})
+                    langgraph_node = metadata.get("langgraph_node")
 
-                # Handle node start events
-                if event_type == "on_chain_start" and langgraph_node:
-                    node_name = langgraph_node
-                    node_statuses[node_name] = "running"
+                    # Handle node start events
+                    if event_type == "on_chain_start" and langgraph_node:
+                        node_name = langgraph_node
+                        node_statuses[node_name] = "running"
+                        _schedule_trace_step(node_name, "running", metadata)
 
-                    # Emit current_node update
-                    yield {"current_node": node_name}
+                        # Emit current_node update
+                        yield {"current_node": node_name}
 
-                    # Emit langgraph_node event
-                    yield {
-                        "langgraph_node": {
-                            "id": node_name,
-                            "name": node_name,
-                            "type": self._infer_node_type(node_name),
-                            "status": "running",
-                        }
-                    }
-
-                    # Emit edge from previous node if exists
-                    if last_node and last_node != node_name:
+                        # Emit langgraph_node event
                         yield {
-                            "langgraph_edge": {
-                                "from": last_node,
-                                "to": node_name,
+                            "langgraph_node": {
+                                "id": node_name,
+                                "name": node_name,
+                                "type": self._infer_node_type(node_name),
+                                "status": "running",
                             }
                         }
 
-                    last_node = node_name
+                        # Emit edge from previous node if exists
+                        if last_node and last_node != node_name:
+                            yield {
+                                "langgraph_edge": {
+                                    "from": last_node,
+                                    "to": node_name,
+                                }
+                            }
 
-                # Handle node end events
-                elif event_type == "on_chain_end" and langgraph_node:
-                    node_name = langgraph_node
-                    node_statuses[node_name] = "completed"
+                        last_node = node_name
 
-                    # Emit langgraph_node event with completed status
-                    yield {
-                        "langgraph_node": {
-                            "id": node_name,
-                            "name": node_name,
-                            "type": self._infer_node_type(node_name),
-                            "status": "completed",
-                        }
-                    }
+                    # Handle node end events
+                    elif event_type == "on_chain_end" and langgraph_node:
+                        node_name = langgraph_node
+                        node_statuses[node_name] = "completed"
+                        _schedule_trace_step(node_name, "completed", metadata)
 
-                    # Check for triggered edges in metadata
-                    triggers = metadata.get("langgraph_triggers", [])
-                    for trigger in triggers:
+                        # Emit langgraph_node event with completed status
                         yield {
-                            "langgraph_edge": {
-                                "from": node_name,
-                                "to": trigger,
+                            "langgraph_node": {
+                                "id": node_name,
+                                "name": node_name,
+                                "type": self._infer_node_type(node_name),
+                                "status": "completed",
                             }
                         }
 
-                # Handle custom events (e.g., dynamic context loaded)
-                elif event_type == "on_custom":
-                    event_name = event.get("name", "")
-                    if event_name == "dynamic_context_loaded":
+                        # Check for triggered edges in metadata
+                        triggers = metadata.get("langgraph_triggers", [])
+                        for trigger in triggers:
+                            yield {
+                                "langgraph_edge": {
+                                    "from": node_name,
+                                    "to": trigger,
+                                }
+                            }
+
+                    # Handle custom events (e.g., dynamic context loaded, selected tools)
+                    elif event_type == "on_custom":
+                        event_name = event.get("name", "")
+                        if event_name == "dynamic_context_loaded":
+                            data = event.get("data", {})
+                            yield {
+                                "context_loaded": {
+                                    "refs_count": data.get("refs_count", 0),
+                                    "tokens_loaded": data.get("tokens_loaded", 0),
+                                }
+                            }
+                        elif event_name == "selected_tools":
+                            # Phase 5: Emit selected_tools SSE event for frontend visibility
+                            # Shows which tools were semantically selected for this request
+                            data = event.get("data", {})
+                            selected_tools_event: dict[str, Any] = {
+                                "selected_tools": data.get("selected_tools", []),
+                            }
+                            # Include optional selection scores if available
+                            if "selection_scores" in data:
+                                selected_tools_event["selection_scores"] = data["selection_scores"]
+                            # Include total available tools count if provided
+                            if "total_available" in data:
+                                selected_tools_event["total_available"] = data["total_available"]
+                            yield selected_tools_event
+
+                    # Handle streaming content from chat model
+                    elif event_type == "on_chat_model_stream":
                         data = event.get("data", {})
-                        yield {
-                            "context_loaded": {
-                                "refs_count": data.get("refs_count", 0),
-                                "tokens_loaded": data.get("tokens_loaded", 0),
+                        chunk = data.get("chunk")
+                        if chunk and hasattr(chunk, "content") and chunk.content:
+                            yield {
+                                "delta": {
+                                    "content": chunk.content,
+                                }
                             }
-                        }
 
-                # Handle streaming content from chat model
-                elif event_type == "on_chat_model_stream":
-                    data = event.get("data", {})
-                    chunk = data.get("chunk")
-                    if chunk and hasattr(chunk, "content") and chunk.content:
-                        yield {
-                            "delta": {
-                                "content": chunk.content,
-                            }
-                        }
-
-        except Exception as e:
-            logger.error(f"LangGraph streaming error: {e}", exc_info=True)
-            raise
+            except Exception as e:
+                exec_span.record_exception(e)
+                logger.error(f"LangGraph streaming error: {e}", exc_info=True)
+                raise
 
     def _infer_node_type(self, node_name: str) -> str:
         """Infer node type from name for visualization."""

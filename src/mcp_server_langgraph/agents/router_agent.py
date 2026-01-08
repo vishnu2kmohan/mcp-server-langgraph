@@ -117,6 +117,24 @@ class RouterOutputWithTemplates(RouterOutput):
     suggested_templates: list[TemplateSuggestion] = Field(default_factory=list)
 
 
+class RouterOutputWithDiscovery(RouterOutput):
+    """RouterOutput extended with semantic discovery results.
+
+    This model extends the base RouterOutput with discovered tools and skills
+    from semantic search. Used by route_with_semantic_discovery method.
+
+    Implements the Anthropic Tool Search Tool pattern for dynamic capability
+    discovery before routing decisions.
+
+    Attributes:
+        discovered_tools: Tools found via semantic search (list[ToolIndexEntry])
+        discovered_skills: Skills found via semantic search (list[SkillIndexEntry])
+    """
+
+    discovered_tools: list = Field(default_factory=list)
+    discovered_skills: list = Field(default_factory=list)
+
+
 # Default fallback for parse errors or low confidence
 DEFAULT_ROUTER_OUTPUT = RouterOutput(
     complexity="complicated",
@@ -291,6 +309,78 @@ class RouterAgent:
             thinking_budget=router_output.thinking_budget,
             confidence=router_output.confidence,
             suggested_templates=suggestions,
+        )
+
+    async def route_with_semantic_discovery(
+        self,
+        message: str,
+        semantic_index: Any,
+        tools_available: list[str] | None = None,
+        persona: str | None = None,
+        max_tools: int = 10,
+        max_skills: int = 5,
+    ) -> RouterOutputWithDiscovery:
+        """Route with semantic tool/skill discovery.
+
+        Implements the Anthropic Tool Search Tool pattern for dynamic capability
+        discovery before routing decisions. Uses SemanticIndexManager to find
+        relevant tools and skills via semantic search.
+
+        Args:
+            message: User message to classify
+            semantic_index: SemanticIndexManager instance for semantic search
+            tools_available: List of available tools (optional, merged with discovered)
+            persona: Current persona context (optional)
+            max_tools: Maximum number of tools to discover (default 10)
+            max_skills: Maximum number of skills to discover (default 5)
+
+        Returns:
+            RouterOutputWithDiscovery with classification and discovered capabilities
+        """
+        discovered_tools: list = []
+        discovered_skills: list = []
+
+        # Semantic search for tools and skills
+        try:
+            discovered_tools = await semantic_index.search_tools(query=message, limit=max_tools)
+        except Exception as e:
+            logger.warning(f"Semantic tool search failed: {e}")
+            discovered_tools = []
+
+        try:
+            discovered_skills = await semantic_index.search_skills(query=message, limit=max_skills)
+        except Exception as e:
+            logger.warning(f"Semantic skill search failed: {e}")
+            discovered_skills = []
+
+        # Merge discovered tool names with any provided tools
+        all_tools = tools_available or []
+        for tool in discovered_tools:
+            if hasattr(tool, "name") and tool.name not in all_tools:
+                all_tools.append(tool.name)
+
+        # Run normal routing with discovered tools context
+        router_output = await self.route(
+            message=message,
+            tools_available=all_tools if all_tools else None,
+            persona=persona,
+        )
+
+        # Return combined output with discovery results
+        return RouterOutputWithDiscovery(
+            complexity=router_output.complexity,
+            risk=router_output.risk,
+            task_type=router_output.task_type,
+            tools_needed=router_output.tools_needed,
+            suggested_orchestrator=router_output.suggested_orchestrator,
+            critique_rounds=router_output.critique_rounds,
+            thinking_budget=router_output.thinking_budget,
+            confidence=router_output.confidence,
+            skills_needed=router_output.skills_needed,
+            execution_mode=router_output.execution_mode,
+            routing_rationale=router_output.routing_rationale,
+            discovered_tools=discovered_tools,
+            discovered_skills=discovered_skills,
         )
 
     @staticmethod

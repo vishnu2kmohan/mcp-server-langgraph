@@ -20,6 +20,8 @@ import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol
 
+from mcp_server_langgraph.core.numeric import safe_divide, safe_float
+
 if TYPE_CHECKING:
     pass
 
@@ -204,11 +206,16 @@ class RecommendationScorer:
             # No history - neutral score
             return 0.5
 
-        # Calculate approval rate
-        approval_rate = history.approved_count / history.total_recommendations
+        # Calculate approval rate using safe_divide for robustness
+        approval_rate = safe_divide(
+            float(history.approved_count),
+            float(history.total_recommendations),
+            default=0.5,
+        )
 
-        # Weight the score
-        weighted_score = approval_rate * self.APPROVAL_WEIGHT + history.success_rate * self.SUCCESS_WEIGHT
+        # Weight the score - use safe_float in case success_rate is NaN
+        success_rate = safe_float(history.success_rate, default=0.0)
+        weighted_score = approval_rate * self.APPROVAL_WEIGHT + success_rate * self.SUCCESS_WEIGHT
 
         # Normalize to 0-1 range
         # Max weighted score would be 0.8 (0.4 + 0.4), so normalize
@@ -280,7 +287,12 @@ class RecommendationScorer:
         base_score = self.calculate_base_score(alert_type, history)
         confidence = self.calculate_confidence(alert_type, history)
 
-        approval_rate = history.approved_count / history.total_recommendations if history.total_recommendations > 0 else 0.0
+        # Use safe_divide for robustness against unexpected NaN values
+        approval_rate = safe_divide(
+            float(history.approved_count),
+            float(history.total_recommendations),
+            default=0.0,
+        )
 
         # Overall score is base score weighted by confidence
         overall_score = base_score * (0.5 + 0.5 * confidence)
@@ -289,8 +301,9 @@ class RecommendationScorer:
             overall_score=overall_score,
             confidence=confidence,
             approval_rate=approval_rate,
-            success_rate=history.success_rate,
-            avg_execution_time=history.avg_execution_time_seconds,
+            # Use safe_float for values that may come from external sources
+            success_rate=safe_float(history.success_rate),
+            avg_execution_time=safe_float(history.avg_execution_time_seconds),
             sample_count=history.total_recommendations,
         )
 

@@ -23,9 +23,10 @@ from enum import Enum
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from mcp_server_langgraph.auth.dependencies import get_current_user
+from mcp_server_langgraph.core.numeric import safe_float
 
 # Type alias for current user
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
@@ -172,6 +173,12 @@ class DisclosureAnalyzeResponse(BaseModel):
     personalized_message: str = Field(default="", description="Personalized message for the user")
     reasoning: str | None = Field(default=None, description="Optional reasoning for the recommendation")
 
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
+
 
 # =============================================================================
 # Request/Response Models - Empty State
@@ -270,6 +277,12 @@ class NudgeRecommendResponse(BaseModel):
     nudge: Nudge | None = None
     confidence: float = Field(ge=0, le=1, default=0.5)
 
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.5 (default) for JSON serialization safety."""
+        return safe_float(v, default=0.5)
+
 
 # =============================================================================
 # Request/Response Models - Error Analysis
@@ -320,6 +333,12 @@ class ErrorAnalyzeResponse(BaseModel):
     auto_recoverable: bool = Field(..., description="Whether the error can be auto-recovered")
     suggested_action: str | None = Field(default=None, description="Primary suggested action")
     confidence: float = Field(ge=0, le=1, description="Confidence in the analysis")
+
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
 
 
 # Legacy models kept for backward compatibility (deprecated)
@@ -477,6 +496,12 @@ class OnboardingPersonalizeResponse(BaseModel):
     skip_steps: list[str] = Field(default_factory=list)
     persona_prediction: str | None = None
 
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
+
 
 # =============================================================================
 # Request/Response Models - Metrics Insights
@@ -542,6 +567,12 @@ class MetricsInsightsResponse(BaseModel):
     insights: list[MetricInsight] = Field(default_factory=list, description="List of metric insights")
     overall_health: OverallHealth = Field(..., description="Overall system health status")
     recommendations: list[str] = Field(default_factory=list, description="Actionable recommendations")
+
+    @field_validator("happiness_score", mode="before")
+    @classmethod
+    def validate_happiness_score(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
 
 
 # Legacy models kept for backward compatibility (deprecated)
@@ -658,6 +689,12 @@ class CompositeAnalysisResponse(BaseModel):
         description="Insights derived from combining multiple analyses",
     )
     confidence: float = Field(ge=0, le=1, description="Overall confidence score for the composite analysis")
+
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
 
 
 class BatchCompositeRequest(BaseModel):

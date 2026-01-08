@@ -22,7 +22,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+from mcp_server_langgraph.core.numeric import safe_float
 
 from mcp_server_langgraph.api.pagination import (
     CursorPaginatedResponse,
@@ -61,6 +63,12 @@ class NodePosition(BaseModel):
 
     x: float = Field(description="X coordinate")
     y: float = Field(description="Y coordinate")
+
+    @field_validator("x", "y", mode="before")
+    @classmethod
+    def validate_coordinates(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
 
 
 class WorkflowNode(BaseModel):
@@ -176,6 +184,12 @@ class GenerateWorkflowResponse(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0, description="Generation confidence score")
     suggestions: list[str] = Field(default_factory=list, description="Improvement suggestions")
 
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
+
 
 # ==============================================================================
 # Chat-to-Workflow Models (ADR-0089, Plan Review Consensus)
@@ -230,6 +244,12 @@ class FromChatResponse(BaseModel):
         default=None,
         description="Execution plan (when refinement_mode='plan')",
     )
+
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
 
 
 # ==============================================================================

@@ -82,7 +82,10 @@ class CustomJSONFormatter(JsonFormatterBase):  # type: ignore[valid-type, misc]
         - hostname (optional)
         - exception details (if present)
         """
-        super().add_fields(log_record, record, message_dict)
+        # Only call super().add_fields() if the parent class has it
+        # (pythonjsonlogger.json.JsonFormatter has it, but logging.Formatter does not)
+        if hasattr(super(), "add_fields"):
+            super().add_fields(log_record, record, message_dict)
 
         # Add timestamp in ISO 8601 format with milliseconds
         if "timestamp" not in log_record:

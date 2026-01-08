@@ -18,7 +18,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from mcp_server_langgraph.core.numeric import safe_float
 
 
 # =============================================================================
@@ -321,6 +323,12 @@ class BudgetAlertPayload(BaseModel):
     monthly_limit_usd: str = Field(..., description="Monthly limit in USD")
     message: str = Field("", description="Alert message")
 
+    @field_validator("percent_used", mode="before")
+    @classmethod
+    def validate_percent_used(cls, v: Any) -> float:
+        """Ensure percent_used is valid (not NaN/Inf) for JSON serialization."""
+        return safe_float(v)
+
 
 class BudgetAlertEntry(BaseModel):
     """Budget alert entry message (Server -> Client)."""
@@ -380,6 +388,12 @@ class SuggestionResponsePayload(BaseModel):
     text: str = Field(..., description="Suggestion text")
     confidence: float = Field(..., description="Confidence score 0-1")
     reasoning: str | None = Field(None, description="Reasoning explanation")
+
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: Any) -> float:
+        """Ensure confidence is valid (not NaN/Inf) for JSON serialization."""
+        return safe_float(v)
 
 
 class SuggestionResponseEntry(BaseModel):

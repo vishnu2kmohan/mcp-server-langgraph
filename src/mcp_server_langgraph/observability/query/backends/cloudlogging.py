@@ -246,6 +246,14 @@ class CloudLoggingClient(LoggingQueryClient):
             limit=limit,
         )
 
+    async def list_services(self) -> list[str]:
+        """
+        List distinct services.
+
+        Cloud Logging implementation not yet supported; returns empty list.
+        """
+        return []
+
     async def health_check(self) -> bool:
         """Check if Cloud Logging API is accessible."""
         return self._initialized

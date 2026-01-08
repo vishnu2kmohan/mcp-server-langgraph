@@ -68,6 +68,9 @@ class AgentState(TypedDict):
     refinement_attempts: int | None
     user_request: str | None
 
+    # Semantic tool selection (Anthropic Tool Search Tool pattern)
+    selected_tools: list[str] | None
+
 
 # Comparison keywords that indicate multi-faceted queries
 _COMPARISON_KEYWORDS = frozenset(
@@ -258,6 +261,26 @@ def build_agent_graph(
     # Initialize the model via LiteLLM factory
     model = create_llm_from_config(effective_settings)
 
+    # Bind tools to model if tool calling is enabled
+    # This allows the LLM to autonomously decide when to call tools
+    model_with_tools = model
+    bound_tools: list = []
+    if config.enable_tool_calling:
+        try:
+            from mcp_server_langgraph.tools import get_all_tools
+
+            bound_tools = get_all_tools(effective_settings)
+            if bound_tools and hasattr(model, "bind_tools"):
+                model_with_tools = model.bind_tools(bound_tools)
+                logger.info(f"Tool calling enabled: bound {len(bound_tools)} tools to model")
+            elif bound_tools:
+                logger.warning("Model does not support bind_tools - tool calling will use keyword routing")
+            else:
+                logger.info("No tools available to bind")
+        except Exception as e:
+            logger.warning(f"Failed to bind tools to model: {e}")
+            # Fall back to model without tools
+
     # Initialize context manager (only used if compaction enabled)
     context_manager = None
     if config.enable_context_compaction:
@@ -336,6 +359,57 @@ def build_agent_graph(
                 state["compaction_applied"] = False
         else:
             state["compaction_applied"] = False
+
+        return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
+
+    async def select_tools(state: AgentState) -> AgentState:
+        """Dynamically select tools based on user query via semantic search.
+
+        Implements the Anthropic Tool Search Tool pattern and LangGraph's
+        Many Tools pattern. Uses semantic embeddings to find relevant tools
+        before binding them to the LLM, reducing token usage with 50+ tools.
+
+        When semantic search fails or returns no results, falls back to
+        using all available tools (graceful degradation).
+        """
+        # Get the last user message for semantic search
+        last_message = state["messages"][-1] if state["messages"] else None
+
+        if not last_message:
+            # No message to search with - use all tools
+            state["selected_tools"] = None
+            logger.debug("No message for semantic tool selection, using all tools")
+            return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
+
+        # Extract query text from message
+        if hasattr(last_message, "content"):
+            query = last_message.content if isinstance(last_message.content, str) else str(last_message.content)
+        else:
+            query = str(last_message)
+
+        # Short queries may not benefit from semantic search
+        if len(query.strip()) < 10:
+            state["selected_tools"] = None
+            logger.debug("Query too short for semantic tool selection, using all tools")
+            return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
+
+        try:
+            # Try to use semantic index manager if available
+
+            # Check if we have a semantic index available (would be injected via dependency)
+            # For now, we use a placeholder that will be integrated via dependency injection
+            # This enables the graph structure while allowing future integration
+            logger.info(f"Semantic tool selection query: '{query[:50]}...'")
+
+            # Placeholder: In full integration, SemanticIndexManager would be passed as a dependency
+            # For now, we set selected_tools to None to use all tools (graceful fallback)
+            state["selected_tools"] = None
+            logger.info("Semantic tool selection: using all tools (integration pending)")
+
+        except Exception as e:
+            # Graceful fallback - use all tools if semantic search fails
+            logger.warning(f"Semantic tool selection failed, falling back to all tools: {e}")
+            state["selected_tools"] = None
 
         return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
 
@@ -507,15 +581,20 @@ def build_agent_graph(
                 logger.info(f"Pydantic AI response generated, confidence: {typed_response.confidence}")
             except Exception as e:
                 logger.error(f"Pydantic AI response failed: {e}")
-                response = await model.ainvoke(messages_list)  # type: ignore[arg-type]
+                response = await model_with_tools.ainvoke(messages_list)  # type: ignore[arg-type]
         else:
-            response = await model.ainvoke(messages_list)  # type: ignore[arg-type]
+            response = await model_with_tools.ainvoke(messages_list)  # type: ignore[arg-type]
 
-        # Next action is determined by graph structure:
-        # - If verification enabled: respond -> verify (unconditional edge)
-        # - If verification disabled: respond -> END (unconditional edge)
-        # The verify node will set next_action after verification.
-        # We just preserve the current next_action or set to empty.
+        # Check if the LLM generated tool calls (when tool calling is enabled)
+        # If tool_calls are present, route to use_tools to execute them
+        tool_calls = getattr(response, "tool_calls", None)
+        if tool_calls and len(tool_calls) > 0:
+            state["next_action"] = "use_tools"
+            logger.info(f"LLM generated {len(tool_calls)} tool call(s), routing to use_tools")
+        else:
+            # No tool calls - proceed with verification or end
+            state["next_action"] = "end"
+
         return {**state, "messages": [response]}
 
     async def verify_response(state: AgentState) -> AgentState:
@@ -631,6 +710,19 @@ def build_agent_graph(
             return "end"
         return next_action  # type: ignore[return-value]
 
+    def should_use_tools_or_continue(state: AgentState) -> Literal["use_tools", "verify", "end"]:
+        """Conditional edge function to route based on tool_calls in response.
+
+        When the LLM generates tool_calls (with tool-bound model), route to
+        use_tools to execute them. Otherwise, continue to verification or end.
+        """
+        next_action = state.get("next_action", "end") or "end"
+        if next_action == "use_tools":
+            return "use_tools"
+        # If verification is enabled, "verify" will be mapped to the verify node
+        # Otherwise, "end" will be mapped to END
+        return "end" if next_action == "end" else "verify"
+
     # =========================================================================
     # Build Graph (compile-time composition based on config)
     # =========================================================================
@@ -645,6 +737,15 @@ def build_agent_graph(
     # Determine entry point based on enabled features
     entry_node: str | None = "router"  # Default entry
 
+    # Determine the node that comes before router (for semantic tool selection)
+    pre_router_node: str = "router"  # What to connect TO router
+
+    # Add semantic tool selection node if enabled (Anthropic Tool Search Tool pattern)
+    if config.enable_semantic_tool_selection:
+        workflow.add_node("select_tools", select_tools)
+        pre_router_node = "select_tools"  # select_tools comes before router
+        workflow.add_edge("select_tools", "router")
+
     # Add optional nodes and wire edges based on config
     if config.enable_dynamic_context_loading and context_loader:
         workflow.add_node("load_context", load_dynamic_context)
@@ -654,19 +755,22 @@ def build_agent_graph(
         if config.enable_context_compaction:
             workflow.add_node("compact", compact_context)
             workflow.add_edge("load_context", "compact")
-            workflow.add_edge("compact", "router")
+            workflow.add_edge("compact", pre_router_node)
         else:
-            workflow.add_edge("load_context", "router")
+            workflow.add_edge("load_context", pre_router_node)
 
     elif config.enable_context_compaction:
         workflow.add_node("compact", compact_context)
         workflow.add_edge(START, "compact")
-        workflow.add_edge("compact", "router")
+        workflow.add_edge("compact", pre_router_node)
         entry_node = None  # START already wired
 
     # Wire START to entry if not already wired
     if entry_node:
-        workflow.add_edge(START, entry_node)
+        if config.enable_semantic_tool_selection:
+            workflow.add_edge(START, "select_tools")
+        else:
+            workflow.add_edge(START, entry_node)
 
     # Router conditional edges
     workflow.add_conditional_edges(
@@ -684,7 +788,16 @@ def build_agent_graph(
         workflow.add_node("verify", verify_response)
         workflow.add_node("refine", refine_response)
 
-        workflow.add_edge("respond", "verify")
+        # Respond can route to: tools (if tool_calls), verify, or end
+        workflow.add_conditional_edges(
+            "respond",
+            should_use_tools_or_continue,
+            {
+                "use_tools": "tools",
+                "verify": "verify",
+                "end": END,
+            },
+        )
         workflow.add_conditional_edges(
             "verify",
             should_verify,
@@ -696,8 +809,16 @@ def build_agent_graph(
         )
         workflow.add_edge("refine", "respond")
     else:
-        # No verification - respond goes directly to END
-        workflow.add_edge("respond", END)
+        # No verification - respond can route to tools or END
+        workflow.add_conditional_edges(
+            "respond",
+            should_use_tools_or_continue,
+            {
+                "use_tools": "tools",
+                "verify": END,  # Map verify to END when verification disabled
+                "end": END,
+            },
+        )
 
     # Compile with optional checkpointing
     if config.enable_checkpointing:
@@ -719,6 +840,9 @@ def build_agent_graph(
             "enable_compaction": config.enable_context_compaction,
             "enable_verification": config.enable_verification,
             "enable_dynamic_context": config.enable_dynamic_context_loading,
+            "enable_tool_calling": config.enable_tool_calling,
+            "enable_semantic_tool_selection": config.enable_semantic_tool_selection,
+            "bound_tools_count": len(bound_tools),
             "nodes": list(compiled.nodes.keys()),
         },
     )

@@ -16,9 +16,10 @@ from typing import Annotated, Any, Literal, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from mcp_server_langgraph.auth.dependencies import get_current_user
+from mcp_server_langgraph.core.numeric import safe_float
 
 # Type alias for current user
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
@@ -233,6 +234,12 @@ class WorkflowSuggestion(BaseModel):
     description: str = Field(description="Human-readable description")
     confidence: float = Field(ge=0.0, le=1.0, description="Confidence score")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
 
 
 class ConversationMessage(BaseModel):
@@ -506,6 +513,12 @@ class ArtifactSuggestion(BaseModel):
     type: Literal["completion", "refactor", "fix", "explain"] = Field(description="Suggestion type")
     content: str = Field(description="Suggestion content")
     confidence: float = Field(ge=0.0, le=1.0, description="Confidence score")
+
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
 
 
 class ArtifactSuggestionsResponse(BaseModel):
@@ -1320,6 +1333,12 @@ class ChatSuggestion(BaseModel):
     confidence: float = Field(default=0.7, description="Confidence score 0-1")
     reasoning: str | None = Field(None, description="Why this suggestion was made")
 
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v, default=0.7)
+
 
 class ChatSuggestionsRequest(BaseModel):
     """Request for chat inline suggestions."""
@@ -1927,6 +1946,12 @@ class InterpretedAction(BaseModel):
     parameters: dict[str, Any] = Field(default_factory=dict, description="Action parameters")
     suggestion: str | None = Field(None, description="Suggested UI action")
 
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v, default=0.8)
+
 
 class InterpretCommandResponse(BaseModel):
     """Response with interpreted command."""
@@ -1936,6 +1961,12 @@ class InterpretCommandResponse(BaseModel):
     confidence: float = Field(description="Interpretation confidence")
     parameters: dict[str, Any] = Field(default_factory=dict, description="Extracted parameters")
     alternatives: list[InterpretedAction] = Field(default_factory=list, description="Alternative interpretations")
+
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
 
 
 @ai_router.post(

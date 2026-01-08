@@ -28,6 +28,8 @@ standard query API in OTEL. This module bridges that gap with abstractions.
 """
 
 from abc import ABC, abstractmethod
+
+from mcp_server_langgraph.core.numeric import safe_average
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -197,7 +199,7 @@ class MetricSeries:
         """Calculate average across all values."""
         if not self.values:
             return None
-        return sum(v.value for v in self.values) / len(self.values)
+        return safe_average([v.value for v in self.values])
 
 
 @dataclass
@@ -427,6 +429,16 @@ class LoggingQueryClient(ABC):
 
         Returns:
             LogSearchResult with matching log entries
+        """
+        ...
+
+    @abstractmethod
+    async def list_services(self) -> list[str]:
+        """
+        List distinct services known to the logging backend.
+
+        Returns:
+            Sorted list of service names.
         """
         ...
 

@@ -35,6 +35,7 @@ from mcp_server_langgraph.api.v1.mcp import mcp_router
 from mcp_server_langgraph.api.v1.mcp_aggregated import aggregated_router as mcp_aggregated_router
 from mcp_server_langgraph.api.v1.mcp_websocket import mcp_websocket_router
 from mcp_server_langgraph.api.v1.observability import observability_router
+from mcp_server_langgraph.api.v1.devtools import devtools_router
 from mcp_server_langgraph.api.v1.projects import projects_router
 from mcp_server_langgraph.api.v1.sessions import sessions_router
 from mcp_server_langgraph.api.v1.user import user_router
@@ -125,6 +126,8 @@ v1_router.include_router(cost_router)
 
 # Include observability endpoints
 v1_router.include_router(observability_router)
+# Include DevTools helpers
+v1_router.include_router(devtools_router)
 
 # Include MCP WebSocket endpoints
 v1_router.include_router(mcp_websocket_router)

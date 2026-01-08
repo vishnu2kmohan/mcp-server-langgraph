@@ -28,7 +28,7 @@ import logging
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from mcp_server_langgraph.api.pagination import (
     CursorPaginatedResponse,
@@ -37,6 +37,11 @@ from mcp_server_langgraph.api.pagination import (
 from mcp_server_langgraph.auth.dependencies import (
     require_observability_admin,
     require_observability_viewer,
+)
+from mcp_server_langgraph.core.numeric import (
+    safe_average,
+    safe_divide,
+    safe_float,
 )
 
 logger = logging.getLogger(__name__)
@@ -95,6 +100,14 @@ class SpanResponse(BaseModel):
         description="Name of the LLM model used in this span",
     )
 
+    @field_validator("duration_ms", mode="before")
+    @classmethod
+    def validate_duration(cls, v: Any) -> float | None:
+        """Ensure duration_ms is valid (not NaN/Inf) for JSON serialization."""
+        if v is None:
+            return None
+        return safe_float(v)
+
 
 class TraceResponse(BaseModel):
     """Response model for a trace."""
@@ -106,6 +119,14 @@ class TraceResponse(BaseModel):
     duration_ms: float | None = Field(default=None, description="Total duration")
     span_count: int | None = Field(default=None, description="Number of spans")
     spans: list[SpanResponse] = Field(default_factory=list, description="Trace spans")
+
+    @field_validator("duration_ms", mode="before")
+    @classmethod
+    def validate_duration(cls, v: Any) -> float | None:
+        """Ensure duration_ms is valid (not NaN/Inf) for JSON serialization."""
+        if v is None:
+            return None
+        return safe_float(v)
 
 
 class TraceListItem(BaseModel):
@@ -122,6 +143,14 @@ class TraceListItem(BaseModel):
     has_thinking: bool | None = Field(default=None, description="Whether trace includes LLM thinking/reasoning")
     thinking_tokens_total: int | None = Field(default=None, description="Total thinking tokens used in trace")
 
+    @field_validator("duration_ms", mode="before")
+    @classmethod
+    def validate_duration(cls, v: Any) -> float | None:
+        """Ensure duration_ms is valid (not NaN/Inf) for JSON serialization."""
+        if v is None:
+            return None
+        return safe_float(v)
+
 
 class MetricsResponse(BaseModel):
     """Response model for metrics."""
@@ -136,6 +165,14 @@ class MetricsResponse(BaseModel):
     latency_p50: float | None = Field(default=None, description="P50 latency in seconds")
     latency_p95: float | None = Field(default=None, description="P95 latency in seconds")
     latency_p99: float | None = Field(default=None, description="P99 latency in seconds")
+
+    @field_validator("avg_latency_ms", "p99_latency_ms", "latency_p50", "latency_p95", "latency_p99", mode="before")
+    @classmethod
+    def validate_latencies(cls, v: Any) -> float | None:
+        """Ensure latency fields are valid (not NaN/Inf) for JSON serialization."""
+        if v is None:
+            return None
+        return safe_float(v)
 
 
 class LogEntryResponse(BaseModel):
@@ -188,6 +225,12 @@ class SessionMetricsResponse(BaseModel):
     avg_latency_ms: float = Field(description="Average latency in milliseconds")
     p95_latency_ms: float = Field(description="95th percentile latency in milliseconds")
 
+    @field_validator("avg_latency_ms", "p95_latency_ms", mode="before")
+    @classmethod
+    def validate_latencies(cls, v: Any) -> float:
+        """Ensure latency fields are valid (not NaN/Inf) for JSON serialization."""
+        return safe_float(v)
+
 
 class WorkflowMetricsResponse(BaseModel):
     """Response model for workflow-level aggregated metrics."""
@@ -197,6 +240,12 @@ class WorkflowMetricsResponse(BaseModel):
     avg_latency_ms: float = Field(description="Average execution latency in milliseconds")
     p95_latency_ms: float = Field(description="95th percentile latency in milliseconds")
 
+    @field_validator("avg_latency_ms", "p95_latency_ms", mode="before")
+    @classmethod
+    def validate_latencies(cls, v: Any) -> float:
+        """Ensure latency fields are valid (not NaN/Inf) for JSON serialization."""
+        return safe_float(v)
+
 
 class UserMetricsResponse(BaseModel):
     """Response model for user-level aggregated metrics."""
@@ -205,6 +254,12 @@ class UserMetricsResponse(BaseModel):
     total_sessions: int = Field(description="Total unique sessions by this user")
     total_errors: int = Field(description="Total errors for this user")
     avg_latency_ms: float = Field(description="Average latency in milliseconds")
+
+    @field_validator("avg_latency_ms", mode="before")
+    @classmethod
+    def validate_latency(cls, v: Any) -> float:
+        """Ensure latency field is valid (not NaN/Inf) for JSON serialization."""
+        return safe_float(v)
 
 
 class LLMStreamingMetricsResponse(BaseModel):
@@ -267,6 +322,23 @@ class LLMStreamingMetricsResponse(BaseModel):
         default=True,
         description="Whether streaming metrics feature flag is enabled",
     )
+
+    @field_validator(
+        "ttfc_p50_seconds",
+        "ttfc_p95_seconds",
+        "ttfc_p99_seconds",
+        "inter_chunk_latency_p50_seconds",
+        "inter_chunk_latency_p95_seconds",
+        "duration_avg_seconds",
+        "success_rate",
+        mode="before",
+    )
+    @classmethod
+    def validate_float_fields(cls, v: Any) -> float | None:
+        """Ensure float fields are valid (not NaN/Inf) for JSON serialization."""
+        if v is None:
+            return None
+        return safe_float(v)
 
 
 # Service Interface
@@ -650,8 +722,9 @@ class ObservabilityServiceImpl(ObservabilityService):
             )
             if mean_latency.series:
                 val = mean_latency.series[0].latest_value
-                if val is not None:
-                    avg_latency_ms = float(val) * 1000.0
+                safe_val = safe_float(val)
+                if safe_val > 0:
+                    avg_latency_ms = safe_val * 1000.0
         except Exception as e:
             logger.debug("Failed to query avg latency: %s", e)
 
@@ -662,8 +735,9 @@ class ObservabilityServiceImpl(ObservabilityService):
             )
             if p50_result.series:
                 val = p50_result.series[0].latest_value
-                if val is not None:
-                    latency_p50 = float(val)
+                safe_val = safe_float(val)
+                if safe_val > 0:
+                    latency_p50 = safe_val
         except Exception as e:
             logger.debug("Failed to query p50 latency: %s", e)
 
@@ -674,9 +748,10 @@ class ObservabilityServiceImpl(ObservabilityService):
             )
             if p99_result.series:
                 val = p99_result.series[0].latest_value
-                if val is not None:
-                    p99_latency_ms = float(val) * 1000.0  # Convert seconds to ms
-                    latency_p99 = float(val)
+                safe_val = safe_float(val)
+                if safe_val > 0:
+                    p99_latency_ms = safe_val * 1000.0  # Convert seconds to ms
+                    latency_p99 = safe_val
         except Exception as e:
             logger.debug("Failed to query p99 latency: %s", e)
 
@@ -687,8 +762,9 @@ class ObservabilityServiceImpl(ObservabilityService):
             )
             if p95_result.series:
                 val = p95_result.series[0].latest_value
-                if val is not None:
-                    latency_p95 = float(val)
+                safe_val = safe_float(val)
+                if safe_val > 0:
+                    latency_p95 = safe_val
         except Exception as e:
             logger.debug("Failed to query p95 latency: %s", e)
 
@@ -942,8 +1018,8 @@ class ObservabilityServiceImpl(ObservabilityService):
         return {
             "total_requests": len(traces),
             "total_errors": error_count,
-            "avg_latency_ms": sum(durations) / len(durations) if durations else 0.0,
-            "p95_latency_ms": p95_latency,
+            "avg_latency_ms": safe_average(durations),
+            "p95_latency_ms": safe_float(p95_latency),
         }
 
     async def get_metrics_by_workflow(self, workflow_id: str) -> dict[str, Any]:
@@ -980,8 +1056,8 @@ class ObservabilityServiceImpl(ObservabilityService):
         return {
             "total_executions": len(traces),
             "total_errors": error_count,
-            "avg_latency_ms": sum(durations) / len(durations) if durations else 0.0,
-            "p95_latency_ms": p95_latency,
+            "avg_latency_ms": safe_average(durations),
+            "p95_latency_ms": safe_float(p95_latency),
         }
 
     async def get_metrics_by_user(self, user_id: str) -> dict[str, Any]:
@@ -1019,7 +1095,7 @@ class ObservabilityServiceImpl(ObservabilityService):
             "total_requests": len(traces),
             "total_sessions": len(unique_sessions),
             "total_errors": error_count,
-            "avg_latency_ms": sum(durations) / len(durations) if durations else 0.0,
+            "avg_latency_ms": safe_average(durations),
         }
 
     async def get_llm_streaming_metrics(
@@ -1064,8 +1140,9 @@ class ObservabilityServiceImpl(ObservabilityService):
             ttfc_p95_result = await self.metrics.query_instant(ttfc_p95_query)
             if ttfc_p95_result.series:
                 val = ttfc_p95_result.series[0].latest_value
-                if val is not None:
-                    result["ttfc_p95_seconds"] = float(val)
+                safe_val = safe_float(val)
+                if safe_val > 0:
+                    result["ttfc_p95_seconds"] = safe_val
         except Exception as e:
             logger.debug("Failed to query TTFC p95: %s", e)
 
@@ -1077,8 +1154,9 @@ class ObservabilityServiceImpl(ObservabilityService):
             ttfc_p50_result = await self.metrics.query_instant(ttfc_p50_query)
             if ttfc_p50_result.series:
                 val = ttfc_p50_result.series[0].latest_value
-                if val is not None:
-                    result["ttfc_p50_seconds"] = float(val)
+                safe_val = safe_float(val)
+                if safe_val > 0:
+                    result["ttfc_p50_seconds"] = safe_val
         except Exception as e:
             logger.debug("Failed to query TTFC p50: %s", e)
 
@@ -1088,8 +1166,9 @@ class ObservabilityServiceImpl(ObservabilityService):
             icl_p95_result = await self.metrics.query_instant(icl_p95_query)
             if icl_p95_result.series:
                 val = icl_p95_result.series[0].latest_value
-                if val is not None:
-                    result["inter_chunk_latency_p95_seconds"] = float(val)
+                safe_val = safe_float(val)
+                if safe_val > 0:
+                    result["inter_chunk_latency_p95_seconds"] = safe_val
         except Exception as e:
             logger.debug("Failed to query inter-chunk latency p95: %s", e)
 
@@ -1131,8 +1210,10 @@ class ObservabilityServiceImpl(ObservabilityService):
             if success_result.series and total_result.series:
                 success_val = success_result.series[0].latest_value
                 total_val = total_result.series[0].latest_value
-                if success_val is not None and total_val is not None and total_val > 0:
-                    result["success_rate"] = float(success_val) / float(total_val)
+                # Use safe_divide to handle NaN values from Prometheus
+                rate = safe_divide(success_val, total_val)
+                if rate > 0:
+                    result["success_rate"] = rate
         except Exception as e:
             logger.debug("Failed to query success rate: %s", e)
 

@@ -23,6 +23,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from mcp_server_langgraph.core.feature_flags import get_feature_flags
+from mcp_server_langgraph.core.numeric import safe_round
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.observability.query.backends.prometheus import PrometheusMetricsClient
@@ -115,7 +116,8 @@ class HeartMetricsServiceAdapter:
                 if result.series and result.series[0].values:
                     score = result.series[0].values[0].value
                     metrics[dimension] = {
-                        "score": round(score, 1),
+                        # Use safe_round to handle NaN/Inf from Prometheus
+                        "score": safe_round(score, 1),
                         "trend": "stable",  # Could calculate from range query
                         "change": 0.0,
                     }
@@ -238,7 +240,8 @@ class HeartMetricsServiceAdapter:
         if result.series and result.series[0].values:
             score = result.series[0].values[0].value
             return {
-                "score": round(score, 1),
+                # Use safe_round to handle NaN/Inf from Prometheus
+                "score": safe_round(score, 1),
                 "trend": "stable",
                 "samples": 0,
                 "breakdown": {},

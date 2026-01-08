@@ -148,6 +148,7 @@ class BroadcastingSpanProcessor(SpanProcessor):
 
             # Then try to schedule async broadcast to WebSocket subscribers
             self._schedule_websocket_broadcast(span_data)
+            self._schedule_devtools_trace_step(span_data)
 
         except Exception as e:
             # Never let broadcasting errors affect the application
@@ -168,6 +169,52 @@ class BroadcastingSpanProcessor(SpanProcessor):
         except RuntimeError:
             # No running event loop - that's fine, span is already queued
             pass
+
+    def _schedule_devtools_trace_step(self, span_data: dict[str, Any]) -> None:
+        """
+        Schedule a DevTools trace_step broadcast for spans with a session.id attribute.
+
+        Best-effort: skips silently if broadcaster not available or no loop.
+        """
+        attrs = span_data.get("attributes", {}) or {}
+        session_id = attrs.get("session.id") or attrs.get("session_id") or attrs.get("sessionId")
+        if not session_id:
+            return
+
+        payload = {
+            "id": span_data.get("span_id"),
+            "session_id": str(session_id),
+            "node_id": attrs.get("node.id") or attrs.get("node_id"),
+            "name": span_data.get("name"),
+            "status": span_data.get("status", "completed"),
+            "start_time": span_data.get("start_time", 0),
+            "end_time": span_data.get("end_time"),
+            "duration_ms": span_data.get("duration_ms"),
+            "attributes": attrs,
+        }
+
+        try:
+            from mcp_server_langgraph.websocket.registry import (
+                get_devtools_broadcaster,
+            )
+
+            broadcaster = get_devtools_broadcaster()
+            if broadcaster is None:
+                return
+
+            loop = asyncio.get_running_loop()
+            _task = loop.create_task(
+                broadcaster.broadcast_trace_step(
+                    payload,
+                    context_entity_id=str(session_id),
+                ),
+            )
+            del _task  # Fire-and-forget; suppress RUF006
+        except RuntimeError:
+            # No running loop; skip (trace already queued elsewhere)
+            pass
+        except Exception as exc:
+            logger.debug("Failed to broadcast trace_step to DevTools: %s", exc)
 
     def queue_broadcast(self, span_data: dict[str, Any]) -> None:
         """

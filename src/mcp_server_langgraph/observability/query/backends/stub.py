@@ -281,6 +281,11 @@ class StubLoggingClient(LoggingQueryClient):
         results = results[:limit]
         return LogSearchResult(entries=results, total_count=len(results))
 
+    async def list_services(self) -> list[str]:
+        """List distinct services."""
+        services = {log.service_name for log in self._logs if log.service_name}
+        return sorted(services)
+
     async def health_check(self) -> bool:
         """Always return healthy for stub."""
         return self._initialized

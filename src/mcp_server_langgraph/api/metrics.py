@@ -21,6 +21,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Query, status
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.core.numeric import safe_average, safe_divide
 from mcp_server_langgraph.observability.telemetry import logger
 
 router = APIRouter(prefix="/api/v1/metrics", tags=["metrics"])
@@ -318,19 +319,19 @@ async def get_aggregate_metrics(
     return AggregateMetrics(
         period=period,
         app_name=app,
-        nps_score_avg=sum(nps_scores) / len(nps_scores) if nps_scores else None,
-        satisfaction_avg=sum(satisfaction_scores) / len(satisfaction_scores) if satisfaction_scores else None,
-        task_success_rate=tasks_completed / tasks_started if tasks_started > 0 else None,
+        nps_score_avg=safe_average(nps_scores) if nps_scores else None,
+        satisfaction_avg=safe_average(satisfaction_scores) if satisfaction_scores else None,
+        task_success_rate=safe_divide(tasks_completed, tasks_started) if tasks_started > 0 else None,
         total_tasks_started=tasks_started,
         total_tasks_completed=tasks_completed,
         total_tasks_errored=tasks_errored,
-        avg_session_duration_ms=sum(session_durations) / len(session_durations) if session_durations else None,
+        avg_session_duration_ms=safe_average(session_durations) if session_durations else None,
         total_interactions=total_interactions,
         top_features=top_features,
         new_users_count=new_users,
-        onboarding_completion_rate=onboarding_complete / new_users if new_users > 0 else None,
-        avg_return_visits=sum(return_visits) / len(return_visits) if return_visits else None,
-        avg_days_active=sum(days_active) / len(days_active) if days_active else None,
+        onboarding_completion_rate=safe_divide(onboarding_complete, new_users) if new_users > 0 else None,
+        avg_return_visits=safe_average(return_visits) if return_visits else None,
+        avg_days_active=safe_average(days_active) if days_active else None,
     )
 
 

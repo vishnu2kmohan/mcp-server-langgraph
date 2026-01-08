@@ -243,6 +243,27 @@ class LokiLoggingClient(LoggingQueryClient):
             limit=limit,
         )
 
+    async def list_services(self) -> list[str]:
+        """
+        List distinct service labels from Loki streams.
+
+        Returns:
+            Sorted list of service names (best-effort, empty on failure).
+        """
+        if not self._initialized:
+            await self.initialize()
+        assert self._client is not None
+
+        try:
+            response = await self._client.get(f"{self._url}/loki/api/v1/label/service/values")
+            response.raise_for_status()
+            data = response.json()
+            values = data.get("data") or []
+            return sorted({str(v) for v in values if v})
+        except Exception as exc:  # pragma: no cover - best effort
+            logger.warning("Failed to list Loki services: %s", exc)
+            return []
+
     async def health_check(self) -> bool:
         """Check if Loki is healthy and reachable."""
         if not self._initialized:

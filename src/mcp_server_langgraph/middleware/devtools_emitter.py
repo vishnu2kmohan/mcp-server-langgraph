@@ -97,11 +97,20 @@ class DevToolsNetworkMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self._broadcaster_initialized = False
 
-    def _get_broadcaster(self) -> DevToolsBroadcaster:
-        """Lazily get the DevTools broadcaster to avoid import issues."""
-        from mcp_server_langgraph.websocket.registry import get_devtools_broadcaster
+    def _get_broadcaster(self) -> DevToolsBroadcaster | None:
+        """Lazily get the DevTools broadcaster to avoid import issues.
 
-        return get_devtools_broadcaster()
+        Returns:
+            DevToolsBroadcaster instance or None if websocket module unavailable
+            (e.g., in minimal Docker images like authz-proxy).
+        """
+        try:
+            from mcp_server_langgraph.websocket.registry import get_devtools_broadcaster
+
+            return get_devtools_broadcaster()
+        except (ImportError, ModuleNotFoundError):
+            # Websocket module not available (minimal Docker image)
+            return None
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """Process the request and emit network events.
@@ -131,6 +140,10 @@ class DevToolsNetworkMiddleware(BaseHTTPMiddleware):
         # Emit network request start event
         try:
             broadcaster = self._get_broadcaster()
+            if broadcaster is None:
+                # Websocket module not available, skip broadcast
+                response = await call_next(request)
+                return response
             await broadcaster.broadcast_network(
                 {
                     "id": request_id,
@@ -156,6 +169,9 @@ class DevToolsNetworkMiddleware(BaseHTTPMiddleware):
         # Emit network request completion event
         try:
             broadcaster = self._get_broadcaster()
+            if broadcaster is None:
+                # Websocket module not available, skip broadcast
+                return response
             status = "completed" if response.status_code < 400 else "error"
 
             # Try to get response size from content-length header
@@ -200,11 +216,20 @@ class DevToolsLoggingHandler(logging.Handler):
         super().__init__(level)
         self._loop: asyncio.AbstractEventLoop | None = None
 
-    def _get_broadcaster(self) -> DevToolsBroadcaster:
-        """Lazily get the DevTools broadcaster to avoid import issues."""
-        from mcp_server_langgraph.websocket.registry import get_devtools_broadcaster
+    def _get_broadcaster(self) -> DevToolsBroadcaster | None:
+        """Lazily get the DevTools broadcaster to avoid import issues.
 
-        return get_devtools_broadcaster()
+        Returns:
+            DevToolsBroadcaster instance or None if websocket module unavailable
+            (e.g., in minimal Docker images like authz-proxy).
+        """
+        try:
+            from mcp_server_langgraph.websocket.registry import get_devtools_broadcaster
+
+            return get_devtools_broadcaster()
+        except (ImportError, ModuleNotFoundError):
+            # Websocket module not available (minimal Docker image)
+            return None
 
     def _map_level(self, levelno: int) -> str:
         """Map Python log level to DevTools console level.
@@ -264,6 +289,9 @@ class DevToolsLoggingHandler(logging.Handler):
 
             # Schedule the broadcast (don't block) - task runs independently
             broadcaster = self._get_broadcaster()
+            if broadcaster is None:
+                # Websocket module not available, skip broadcast
+                return
             task = loop.create_task(broadcaster.broadcast_console(entry, context_entity_id=session_id))
             # Suppress unhandled exception warnings for fire-and-forget task
             task.add_done_callback(lambda t: t.exception() if t.done() and not t.cancelled() else None)

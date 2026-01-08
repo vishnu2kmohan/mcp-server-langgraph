@@ -38,6 +38,8 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any, Literal
 
+from mcp_server_langgraph.core.numeric import safe_divide
+
 logger = logging.getLogger(__name__)
 
 
@@ -142,7 +144,8 @@ class BudgetChecker:
         Returns:
             BudgetStatus with current status
         """
-        percent_used = float(current_spend / budget.monthly_limit_usd) * 100
+        # Use safe_divide to handle zero/invalid budget limits gracefully
+        percent_used = safe_divide(float(current_spend), float(budget.monthly_limit_usd)) * 100
         remaining = budget.monthly_limit_usd - current_spend
 
         # Determine status based on thresholds

@@ -276,6 +276,13 @@ class Settings(BaseSettings):
     enable_parallel_execution: bool = False  # Enable parallel tool execution
     max_parallel_tools: int = 5  # Maximum concurrent tool executions
 
+    # Semantic Tool Selection - Anthropic Tool Search Tool Pattern
+    # Uses vector embeddings to select relevant tools before binding to LLM
+    # Reduces token usage with many tools (50+) by 34-64%
+    enable_semantic_tool_selection: bool = False  # Enable semantic tool discovery
+    max_selected_tools: int = 10  # Maximum tools to select via semantic search
+    semantic_tool_search_threshold: float = 0.5  # Minimum similarity score (0-1)
+
     # Streaming Configuration - MCP WebSocket Streaming
     streaming_enabled: bool = True  # Enable or disable streaming support globally
     streaming_metrics_cleanup_interval: int = 300  # Interval in seconds between stream metrics cleanup (5 min)

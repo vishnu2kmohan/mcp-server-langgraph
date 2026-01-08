@@ -23,6 +23,8 @@ from typing import TYPE_CHECKING
 
 from opentelemetry import trace
 
+from mcp_server_langgraph.core.numeric import safe_average
+
 if TYPE_CHECKING:
     pass
 
@@ -477,7 +479,7 @@ class AlertCorrelationEngine:
 
         # Cascading failures typically have similar time gaps
         if time_diffs:
-            avg_diff = sum(time_diffs) / len(time_diffs)
+            avg_diff = safe_average(time_diffs)
             # Within 10 minutes between alerts indicates cascading pattern
             confidence = 0.6 + min(0.3, 0.1 * len(unique_services)) if avg_diff < 600 else 0.4
         else:

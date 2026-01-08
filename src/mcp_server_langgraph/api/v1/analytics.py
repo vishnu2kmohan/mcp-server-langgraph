@@ -23,6 +23,8 @@ import logging
 from datetime import datetime, UTC
 from typing import Any, Protocol
 
+from mcp_server_langgraph.core.numeric import safe_average, safe_divide
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
@@ -258,31 +260,34 @@ class InMemoryAnalyticsService:
             "timeframe": timeframe,
             "persona": persona,
             "happiness": {
-                "nps_score_avg": sum(nps_scores) / len(nps_scores) if nps_scores else None,
-                "csat_score_avg": sum(csat_scores) / len(csat_scores) if csat_scores else None,
+                "nps_score_avg": safe_average(nps_scores) if nps_scores else None,
+                "csat_score_avg": safe_average(csat_scores) if csat_scores else None,
                 "response_count": len(happiness_records),
             },
             "engagement": {
-                "avg_session_duration_seconds": sum(durations) / len(durations) if durations else 0.0,
-                "sessions_per_user": len(engagement_records) / max(len({r["user_id"] for r in engagement_records}), 1),
+                "avg_session_duration_seconds": safe_average(durations),
+                "sessions_per_user": safe_divide(len(engagement_records), len({r["user_id"] for r in engagement_records})),
                 "active_users": len({r["user_id"] for r in engagement_records}),
             },
             "adoption": {
-                "onboarding_completion_rate": sum(1 for r in adoption_records if r["completed"])
-                / max(len(adoption_records), 1),
+                "onboarding_completion_rate": safe_divide(
+                    sum(1 for r in adoption_records if r["completed"]), len(adoption_records)
+                ),
                 "feature_adoption": {},
             },
             "retention": {
-                "d7_retention": sum(1 for r in retention_records if r["return_visit"] and r["days_since_last_visit"] <= 7)
-                / max(len(retention_records), 1),
-                "d30_retention": sum(1 for r in retention_records if r["return_visit"] and r["days_since_last_visit"] <= 30)
-                / max(len(retention_records), 1),
+                "d7_retention": safe_divide(
+                    sum(1 for r in retention_records if r["return_visit"] and r["days_since_last_visit"] <= 7),
+                    len(retention_records),
+                ),
+                "d30_retention": safe_divide(
+                    sum(1 for r in retention_records if r["return_visit"] and r["days_since_last_visit"] <= 30),
+                    len(retention_records),
+                ),
             },
             "task_success": {
-                "overall_success_rate": sum(success_rates) / len(success_rates) if success_rates else 0.0,
-                "avg_task_duration_seconds": sum(r["duration_seconds"] for r in task_records) / len(task_records)
-                if task_records
-                else 0.0,
+                "overall_success_rate": safe_average(success_rates),
+                "avg_task_duration_seconds": safe_average([r["duration_seconds"] for r in task_records]),
             },
         }
 

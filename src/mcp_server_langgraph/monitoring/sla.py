@@ -16,6 +16,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.core.numeric import safe_average, safe_divide, safe_float
 from mcp_server_langgraph.integrations.alerting import Alert, AlertingService, AlertSeverity
 from mcp_server_langgraph.monitoring.prometheus_client import get_prometheus_client
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
@@ -170,10 +171,8 @@ class SLAMonitor:
             uptime_seconds = total_seconds - downtime_seconds
             uptime_percentage = (uptime_seconds / total_seconds * 100) if total_seconds > 0 else 0
 
-            # Calculate compliance percentage
-            compliance_percentage = (
-                (uptime_percentage / uptime_target.target_value * 100) if uptime_target.target_value > 0 else 0
-            )
+            # Calculate compliance percentage (using safe_divide for robustness)
+            compliance_percentage = safe_divide(safe_float(uptime_percentage), uptime_target.target_value, default=0.0) * 100
 
             # Determine status
             status = self._determine_status(uptime_percentage, uptime_target, is_higher_better=True)
@@ -254,8 +253,8 @@ class SLAMonitor:
                 logger.warning(f"Failed to query Prometheus for response times: {e}")
                 response_time_ms = 350  # Fallback to conservative estimate
 
-            # Calculate compliance percentage
-            compliance_percentage = (rt_target.target_value / response_time_ms * 100) if response_time_ms > 0 else 100
+            # Calculate compliance percentage (using safe_divide for robustness)
+            compliance_percentage = safe_divide(rt_target.target_value, safe_float(response_time_ms), default=100.0) * 100
 
             # Determine status
             status = self._determine_status(response_time_ms, rt_target, is_higher_better=False)
@@ -326,9 +325,9 @@ class SLAMonitor:
                 logger.warning(f"Failed to query Prometheus for error rate: {e}")
                 error_rate_percentage = 0.5  # Fallback to conservative estimate
 
-            # Calculate compliance percentage
+            # Calculate compliance percentage (using safe_divide for robustness)
             compliance_percentage = (
-                (error_target.target_value / error_rate_percentage * 100) if error_rate_percentage > 0 else 100
+                safe_divide(error_target.target_value, safe_float(error_rate_percentage), default=100.0) * 100
             )
 
             # Determine status
@@ -452,7 +451,8 @@ class SLAMonitor:
                 overall_status = SLAStatus.MEETING
 
             # Calculate overall compliance score (average of all measurements)
-            compliance_score = sum(m.compliance_percentage for m in measurements) / len(measurements) if measurements else 0.0
+            # Using safe_average to filter out any NaN values from individual measurements
+            compliance_score = safe_average([m.compliance_percentage for m in measurements])
 
             # Generate summary (only include measured metrics)
             summary = {

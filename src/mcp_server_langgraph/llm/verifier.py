@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
+from mcp_server_langgraph.core.numeric import safe_average
 from mcp_server_langgraph.llm.factory import create_verification_model
 from mcp_server_langgraph.llm.visual_verification_metrics import (
     record_screenshot_cache_hit,
@@ -515,7 +516,7 @@ FEEDBACK:
         # Calculate overall score from criteria if not explicitly provided in OVERALL
         if overall_score is None:
             if criterion_scores:
-                overall_score = sum(criterion_scores.values()) / len(criterion_scores)  # type: ignore[arg-type]
+                overall_score = safe_average(list(criterion_scores.values()))
                 logger.info("Calculated overall score from criterion scores")
             else:
                 overall_score = 0.5  # Default fallback
@@ -612,9 +613,7 @@ FEEDBACK:
             criterion_scores["completeness"] = 0.6
 
         # Calculate overall score
-        overall_score = (
-            1.0 if not issues else (sum(criterion_scores.values()) / len(criterion_scores) if criterion_scores else 0.5)
-        )
+        overall_score = 1.0 if not issues else (safe_average(list(criterion_scores.values())) if criterion_scores else 0.5)
         passed = len(issues) == 0
 
         feedback = "All rule checks passed." if passed else f"Failed {len(issues)} rule check(s). " + "; ".join(issues)
@@ -1148,7 +1147,7 @@ FEEDBACK:
                         adjusted_scores.append(1.0 - v)  # Invert
                     else:
                         adjusted_scores.append(v)
-                overall_score = sum(adjusted_scores) / len(adjusted_scores)
+                overall_score = safe_average(adjusted_scores)
                 logger.info("Calculated visual overall score from criterion scores")
             else:
                 overall_score = 0.5  # Default fallback

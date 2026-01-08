@@ -224,6 +224,25 @@ class DevToolsBroadcaster:
             context_entity_id=context_entity_id,
         )
 
+    async def broadcast_trace_step(
+        self,
+        step: dict[str, Any],
+        context_entity_id: str | None = None,
+    ) -> None:
+        """Broadcast an agent trace step for DevTools Agent Trace tab.
+
+        Args:
+            step: Step payload with session_id, name, status, timing, etc.
+            context_entity_id: Optional session/workflow ID for filtering
+        """
+        await self._broadcast(
+            {
+                "type": "trace_step",
+                "payload": step,
+            },
+            context_entity_id=context_entity_id,
+        )
+
 
 # =============================================================================
 # WebSocket Handler

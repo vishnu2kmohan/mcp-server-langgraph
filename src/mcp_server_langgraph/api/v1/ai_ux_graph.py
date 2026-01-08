@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     # StateNode is exported at runtime but not in LangGraph's type stubs
     from langgraph.graph.state import StateNode  # type: ignore[attr-defined]
 
+from mcp_server_langgraph.core.numeric import safe_average
 from mcp_server_langgraph.observability.telemetry import logger
 
 # OpenTelemetry tracer for graph node instrumentation
@@ -299,7 +300,7 @@ def create_cross_insights_node(llm_factory: Any, settings: Any) -> AnalysisNode:
                     insights.append("Power user encountering errors. Review workflow complexity and error messaging.")
 
         # Calculate weighted confidence
-        avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
+        avg_confidence = safe_average(confidences) if confidences else 0.0
 
         # Boost confidence if multiple high-confidence results agree
         if len(confidences) >= 2 and all(c >= 0.8 for c in confidences):

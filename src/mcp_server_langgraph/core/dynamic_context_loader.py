@@ -257,11 +257,27 @@ def _create_embeddings(
         raise ValueError(msg)
 
 
+# Valid ref_types for context references
+# Extended in Phase 4.1 to support semantic search for tools, skills, and memories
+VALID_REF_TYPES: tuple[str, ...] = (
+    "conversation",
+    "document",
+    "tool_usage",
+    "file",
+    "tool",
+    "skill",
+    "memory",
+)
+
+# Capability ref_types for semantic tool/skill discovery
+CAPABILITY_REF_TYPES: tuple[str, ...] = ("tool", "skill")
+
+
 class ContextReference(BaseModel):
     """Lightweight reference to context that can be loaded on demand."""
 
     ref_id: str = Field(description="Unique identifier for this context")
-    ref_type: str = Field(description="Type: conversation, document, tool_usage, file")
+    ref_type: str = Field(description="Type: conversation, document, tool_usage, file, tool, skill, memory")
     summary: str = Field(description="Brief summary for filtering (< 100 chars)")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
     relevance_score: float | None = Field(default=None, description="Relevance score if from search")
@@ -541,6 +557,7 @@ class DynamicContextLoader:
         query: str,
         top_k: int = 5,
         ref_type_filter: str | None = None,
+        ref_types: list[str] | None = None,
         min_score: float = 0.5,
         tenant_id: str | None = None,
     ) -> list[ContextReference]:
@@ -552,7 +569,8 @@ class DynamicContextLoader:
         Args:
             query: Search query
             top_k: Number of results
-            ref_type_filter: Optional filter by ref_type
+            ref_type_filter: Optional filter by single ref_type (deprecated, use ref_types)
+            ref_types: Optional list of ref_types to filter by (e.g., ["tool", "skill"])
             min_score: Minimum similarity score (0-1)
             tenant_id: Tenant ID for multi-tenant isolation (ADR-0095).
                        Required when enable_multi_tenant_isolation is True.
@@ -584,7 +602,18 @@ class DynamicContextLoader:
                 if enable_tenant_isolation and tenant_id:
                     must_conditions.append(FieldCondition(key="tenant_id", match=MatchValue(value=tenant_id)))
 
-                if ref_type_filter:
+                # Handle ref_type filtering (ref_types takes precedence over ref_type_filter)
+                if ref_types and len(ref_types) > 0:
+                    # Multiple ref_types: use should (OR) condition
+                    from qdrant_client.models import Filter as QdrantFilter
+
+                    # Build should conditions for each ref_type
+                    should_conditions = [FieldCondition(key="ref_type", match=MatchValue(value=rt)) for rt in ref_types]
+                    # Wrap in a filter with must containing a nested should
+                    ref_type_subfilter = QdrantFilter(should=should_conditions)  # type: ignore[arg-type]
+                    must_conditions.append(ref_type_subfilter)  # type: ignore[arg-type]
+                elif ref_type_filter:
+                    # Single ref_type filter (backward compatible)
                     must_conditions.append(FieldCondition(key="ref_type", match=MatchValue(value=ref_type_filter)))
 
                 # list is invariant but runtime accepts list[FieldCondition] for Filter.must

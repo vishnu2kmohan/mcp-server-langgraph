@@ -26,6 +26,7 @@ from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field, field_validator
 
 from mcp_server_langgraph.auth.dependencies import get_current_user
+from mcp_server_langgraph.core.numeric import safe_average, safe_float
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,12 @@ class SUSSurveyResponse(BaseModel):
     id: str
     sus_score: float = Field(..., ge=0.0, le=100.0)
     recorded_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    @field_validator("sus_score", mode="before")
+    @classmethod
+    def validate_sus_score(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
 
 
 class ScoreDistribution(BaseModel):
@@ -176,7 +183,7 @@ class InMemorySurveysService:
 
         return {
             "timeframe": timeframe,
-            "avg_score": sum(scores) / len(scores),
+            "avg_score": safe_average(scores),
             "response_count": len(scores),
             "score_distribution": {
                 "excellent": excellent,

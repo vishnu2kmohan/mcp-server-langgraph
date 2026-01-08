@@ -33,6 +33,7 @@ import pybreaker
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.core.numeric import safe_average, safe_divide, safe_float
 from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
 
 logger = logging.getLogger(__name__)
@@ -72,10 +73,14 @@ class QueryResult:
         return self.values[-1].value if self.values else None
 
     def get_average(self) -> float | None:
-        """Calculate average across all values"""
+        """Calculate average across all values.
+
+        Uses safe_average to handle NaN/Inf values that may come from
+        Prometheus histogram_quantile() with no data.
+        """
         if not self.values:
             return None
-        return sum(v.value for v in self.values) / len(self.values)
+        return safe_average([v.value for v in self.values])
 
 
 class PrometheusClient:
@@ -467,12 +472,15 @@ class PrometheusClient:
             total_rate_value = 0.0
 
             if error_results and error_results[0].values:
-                error_rate_value = error_results[0].get_latest_value()  # type: ignore[assignment]
+                # Use safe_float to handle NaN from Prometheus
+                error_rate_value = safe_float(error_results[0].get_latest_value())
 
             if total_results and total_results[0].values:
-                total_rate_value = total_results[0].get_latest_value()  # type: ignore[assignment]
+                # Use safe_float to handle NaN from Prometheus
+                total_rate_value = safe_float(total_results[0].get_latest_value())
 
-            error_pct = error_rate_value / total_rate_value * 100 if total_rate_value > 0 else 0.0
+            # Use safe_divide to handle division by zero and NaN values
+            error_pct = safe_divide(error_rate_value, total_rate_value) * 100
 
             logger.info(f"Error rate: {error_pct:.2f}% over {timerange}", extra={"service": service})
 

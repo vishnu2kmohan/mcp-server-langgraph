@@ -16,6 +16,8 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any
 
+from mcp_server_langgraph.core.numeric import safe_average
+
 if TYPE_CHECKING:
     pass
 
@@ -136,7 +138,7 @@ def combine_verification_results(
         }
 
     # Aggregate visual verification results
-    avg_visual_score = sum(r.overall_score for r in visual_results) / len(visual_results)
+    avg_visual_score = safe_average([r.overall_score for r in visual_results])
     all_visual_passed = all(r.passed for r in visual_results)
     visual_feedback = " | ".join(f"{r.url}: {r.feedback}" for r in visual_results)
 

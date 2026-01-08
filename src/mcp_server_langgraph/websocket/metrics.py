@@ -12,6 +12,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.core.numeric import safe_average
+
 logger = logging.getLogger(__name__)
 
 
@@ -202,9 +204,7 @@ class WebSocketMetrics:
     @property
     def average_latency(self) -> float:
         """Get average message latency in milliseconds."""
-        if not self._latencies:
-            return 0.0
-        return sum(self._latencies) / len(self._latencies)
+        return safe_average(self._latencies)
 
     def record_connection(self, user_id: str = "") -> None:
         """

@@ -13,6 +13,7 @@ from fastapi import APIRouter, status
 from pydantic import BaseModel
 
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.core.numeric import safe_round
 from mcp_server_langgraph.observability.telemetry import logger
 
 router = APIRouter(prefix="/api/v1/health", tags=["health"])
@@ -139,7 +140,7 @@ def get_resilience_stats() -> dict[str, Any]:
         for provider, bulkhead in bulkheads.items():
             stats["adaptive_bulkheads"][provider] = {
                 "current_limit": bulkhead.current_limit,
-                "error_rate": round(bulkhead.error_rate, 4),
+                "error_rate": safe_round(bulkhead.error_rate, 4),
                 "success_count": bulkhead.success_count,
                 "failure_count": bulkhead.failure_count,
             }
@@ -169,9 +170,9 @@ def get_resilience_stats() -> dict[str, Any]:
         buckets = get_all_token_buckets()
         for provider, bucket in buckets.items():
             stats["rate_limits"][provider] = {
-                "available_tokens": round(bucket.tokens, 2),
-                "capacity": round(bucket.capacity, 2),
-                "refill_rate": round(bucket.refill_rate, 4),
+                "available_tokens": safe_round(bucket.tokens, 2),
+                "capacity": safe_round(bucket.capacity, 2),
+                "refill_rate": safe_round(bucket.refill_rate, 4),
             }
     except Exception as e:
         logger.debug(f"Could not gather rate limit stats: {e}")
@@ -785,38 +786,46 @@ async def dependency_status() -> list[DependencyStatus]:
     start = time.perf_counter()
     healthy, message = validate_observability_initialized()
     latency = (time.perf_counter() - start) * 1000
-    dependencies.append(DependencyStatus(name="observability", healthy=healthy, message=message, latency_ms=round(latency, 2)))
+    dependencies.append(
+        DependencyStatus(name="observability", healthy=healthy, message=message, latency_ms=safe_round(latency, 2))
+    )
 
     # Check database
     start = time.perf_counter()
     healthy, message = await validate_database_connectivity_async()
     latency = (time.perf_counter() - start) * 1000
-    dependencies.append(DependencyStatus(name="database", healthy=healthy, message=message, latency_ms=round(latency, 2)))
+    dependencies.append(DependencyStatus(name="database", healthy=healthy, message=message, latency_ms=safe_round(latency, 2)))
 
     # Check Qdrant (if configured)
     if settings.qdrant_url:
         start = time.perf_counter()
         healthy, message = await validate_qdrant_connectivity_async()
         latency = (time.perf_counter() - start) * 1000
-        dependencies.append(DependencyStatus(name="qdrant", healthy=healthy, message=message, latency_ms=round(latency, 2)))
+        dependencies.append(
+            DependencyStatus(name="qdrant", healthy=healthy, message=message, latency_ms=safe_round(latency, 2))
+        )
 
     # Check LGTM stack (if configured)
     if settings.loki_url:
         start = time.perf_counter()
         healthy, message = await validate_loki_connectivity_async()
         latency = (time.perf_counter() - start) * 1000
-        dependencies.append(DependencyStatus(name="loki", healthy=healthy, message=message, latency_ms=round(latency, 2)))
+        dependencies.append(DependencyStatus(name="loki", healthy=healthy, message=message, latency_ms=safe_round(latency, 2)))
 
     if settings.tempo_url:
         start = time.perf_counter()
         healthy, message = await validate_tempo_connectivity_async()
         latency = (time.perf_counter() - start) * 1000
-        dependencies.append(DependencyStatus(name="tempo", healthy=healthy, message=message, latency_ms=round(latency, 2)))
+        dependencies.append(
+            DependencyStatus(name="tempo", healthy=healthy, message=message, latency_ms=safe_round(latency, 2))
+        )
 
     if settings.mimir_url:
         start = time.perf_counter()
         healthy, message = await validate_mimir_connectivity_async()
         latency = (time.perf_counter() - start) * 1000
-        dependencies.append(DependencyStatus(name="mimir", healthy=healthy, message=message, latency_ms=round(latency, 2)))
+        dependencies.append(
+            DependencyStatus(name="mimir", healthy=healthy, message=message, latency_ms=safe_round(latency, 2))
+        )
 
     return dependencies

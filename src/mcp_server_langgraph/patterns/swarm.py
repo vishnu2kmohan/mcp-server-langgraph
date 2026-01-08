@@ -35,6 +35,8 @@ from langchain_core.runnables import RunnableLambda
 from langgraph.graph import StateGraph
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.core.numeric import safe_average
+
 
 def merge_agent_results(left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any]:
     """Merge agent results dictionaries for concurrent updates."""
@@ -145,7 +147,7 @@ class Swarm:
                 similarity = len(intersection) / len(union) if union else 0
                 similarities.append(similarity)
 
-        return sum(similarities) / len(similarities) if similarities else 0.0
+        return safe_average(similarities) if similarities else 0.0
 
     def _aggregate_results(self, state: SwarmState) -> dict[str, Any]:
         """

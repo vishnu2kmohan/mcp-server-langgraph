@@ -76,6 +76,15 @@ if TYPE_CHECKING:
         perform_visual_verification,
         prioritize_urls,
     )
+    from mcp_server_langgraph.core.numeric import (
+        SafeFloat,
+        safe_average,
+        safe_divide,
+        safe_float,
+        safe_percentage,
+        safe_round,
+        safe_sum,
+    )
 
 __all__ = [
     # Agent
@@ -138,6 +147,14 @@ __all__ = [
     "ForkInfo",
     "ForkResult",
     "SessionForkManager",
+    # Safe Numeric Utilities (NaN/Inf protection)
+    "SafeFloat",
+    "safe_average",
+    "safe_divide",
+    "safe_float",
+    "safe_percentage",
+    "safe_round",
+    "safe_sum",
 ]
 
 
@@ -260,6 +277,20 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]  # noqa: C901
 
         vvh = importlib.import_module("mcp_server_langgraph.core.visual_verification_helper")
         return getattr(vvh, name)
+
+    # Safe numeric utilities (lightweight - no heavy deps)
+    if name in (
+        "SafeFloat",
+        "safe_average",
+        "safe_divide",
+        "safe_float",
+        "safe_percentage",
+        "safe_round",
+        "safe_sum",
+    ):
+        from mcp_server_langgraph.core import numeric
+
+        return getattr(numeric, name)
 
     # Not found
     msg = f"module {__name__!r} has no attribute {name!r}"
