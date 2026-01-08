@@ -137,6 +137,21 @@ repos:
     types: [python]
     stages:
     - pre-push
+  - id: check-unsafe-float-patterns
+    name: Detect unsafe float patterns (NaN/Inf)
+    description: 'Detects code patterns that could produce NaN/Inf values,
+      causing JSON serialization failures in API responses.
+
+      Problem: Prometheus histogram_quantile() and division by zero produce
+      NaN/Inf values that break JSON serialization.
+      Fix: Use safe_* functions from mcp_server_langgraph.core.numeric
+
+      '
+    entry: uv run --frozen python -u scripts/validation/check_unsafe_float_patterns.py
+    language: system
+    types: [python]
+    stages:
+    - pre-push
   - id: uv-lock-check
     name: Validate uv.lock synchronized with pyproject.toml
     entry: bash -c 'uv lock --check || (echo "ERROR - uv.lock out of sync. Run uv lock"; exit 1)'

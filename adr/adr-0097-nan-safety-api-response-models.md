@@ -1,0 +1,236 @@
+# ADR-0097: NaN Safety in API Response Models
+
+| Status   | Accepted                                     |
+|----------|----------------------------------------------|
+| Date     | 2026-01-07                                   |
+| Category | API / Observability                          |
+| Authors  | Claude Code                                  |
+
+## Context
+
+The MCP Server LangGraph API serves metrics data that originates from Prometheus queries. When Prometheus's `histogram_quantile()` function encounters sparse data or edge cases, it returns `NaN` (Not a Number). Similarly, division operations can produce `Infinity` values.
+
+Python's standard `json.dumps()` raises a `ValueError` when serializing NaN or Infinity:
+
+```python
+>>> import json
+>>> json.dumps({"latency_p99": float("nan")})
+ValueError: Out of range float values are not JSON compliant
+```
+
+This causes 500 Internal Server Error responses when:
+1. Percentile calculations have insufficient samples
+2. Rate calculations encounter sparse windows
+3. Division by zero in metric computations
+4. Budget utilization calculations with zero limits
+
+Affected API endpoints include:
+- `/api/v1/observability/*` - Metrics endpoints (latency percentiles, error rates)
+- `/api/v1/cost/*` - Budget and cost tracking (spend percentages, forecasts)
+- `/api/v1/agents/metrics` - Orchestrator performance metrics
+- `/api/v1/ai/*` - AI suggestion confidence scores
+- `/api/v1/ai-ux/*` - UX analysis responses
+
+## Decision
+
+### 1. Centralized Numeric Utilities
+
+Create `mcp_server_langgraph.core.numeric` module with safe numeric operations:
+
+```python
+# core/numeric.py
+import math
+from typing import Iterable
+
+def safe_float(value: float | int | None, default: float = 0.0) -> float:
+    """Convert NaN/Infinity to a safe default value."""
+    if value is None:
+        return default
+    try:
+        float_value = float(value)
+        if math.isnan(float_value) or math.isinf(float_value):
+            return default
+        return float_value
+    except (ValueError, TypeError):
+        return default
+
+def safe_average(values: Iterable[float | int | None], default: float = 0.0) -> float:
+    """Calculate mean, safely handling NaN/Infinity values."""
+    valid = [v for v in values if v is not None and math.isfinite(float(v))]
+    return sum(valid) / len(valid) if valid else default
+
+def safe_divide(numerator: float, denominator: float, default: float = 0.0) -> float:
+    """Safe division returning default for zero/invalid denominators."""
+    if denominator == 0 or not math.isfinite(denominator):
+        return default
+    result = numerator / denominator
+    return result if math.isfinite(result) else default
+
+def safe_percentage(numerator, denominator, *, clamp=True, ndigits=None) -> float:
+    """Calculate percentage with NaN/zero protection and optional clamping."""
+    ratio = safe_divide(numerator, denominator, default=float("nan"))
+    if math.isnan(ratio):
+        return 0.0
+    percentage = ratio * 100.0
+    if clamp:
+        percentage = max(0.0, min(100.0, percentage))
+    if ndigits is not None:
+        percentage = round(percentage, ndigits)
+    return percentage
+```
+
+### 2. SafeFloat Annotated Type (Recommended for New Models)
+
+For new response models, use the `SafeFloat` annotated type which automatically sanitizes values and documents NaN-safety in OpenAPI schemas:
+
+```python
+from pydantic import BaseModel
+from mcp_server_langgraph.core import SafeFloat
+
+class MetricsResponse(BaseModel):
+    latency_p99: SafeFloat  # Auto-sanitizes NaN/Inf to 0.0
+    error_rate: SafeFloat   # OpenAPI schema documents NaN-safety
+    cpu_usage: SafeFloat | None = None  # Optional fields work too
+```
+
+Benefits of `SafeFloat`:
+- Automatic NaN/Inf sanitization via Pydantic BeforeValidator
+- OpenAPI schema includes description: "NaN/Infinity-safe float value..."
+- JSON serialization is always safe (no ValueError)
+- Cleaner code than explicit `@field_validator` decorators
+
+### 3. Pydantic Field Validators (Legacy Pattern)
+
+All response models with float fields MUST use `@field_validator` with `safe_float`:
+
+```python
+from pydantic import BaseModel, Field, field_validator
+from mcp_server_langgraph.core.numeric import safe_float
+
+class MetricsResponse(BaseModel):
+    latency_p99: float = Field(..., description="99th percentile latency")
+    error_rate: float = Field(..., ge=0, le=1)
+
+    @field_validator("latency_p99", "error_rate", mode="before")
+    @classmethod
+    def validate_floats(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
+```
+
+### 3. Coverage Requirements
+
+| Model Category | Fields to Protect | Priority |
+|----------------|-------------------|----------|
+| Metrics percentiles (p50, p95, p99) | All | Critical |
+| Confidence scores (0.0-1.0) | All | High |
+| Cost/budget values | All | High |
+| Duration fields (ms, seconds) | All | High |
+| Rate/ratio fields | All | Medium |
+
+### 4. Testing Pattern
+
+All response models MUST have TDD test coverage for NaN handling:
+
+```python
+def test_response_model_nan_field(self) -> None:
+    """GIVEN NaN value for field
+    WHEN ResponseModel is created
+    THEN field is converted to 0.0
+    """
+    response = ResponseModel(field=float("nan"))
+    assert response.field == 0.0
+    assert math.isfinite(response.field)
+
+def test_response_model_inf_field(self) -> None:
+    """GIVEN Infinity value for field
+    WHEN ResponseModel is created
+    THEN field is converted to 0.0
+    """
+    response = ResponseModel(field=float("inf"))
+    assert response.field == 0.0
+
+def test_response_model_json_serializable(self) -> None:
+    """GIVEN ResponseModel with NaN input
+    WHEN serialized to JSON
+    THEN no serialization error occurs
+    """
+    response = ResponseModel(field=float("nan"))
+    json_str = response.model_dump_json()  # Should not raise
+    parsed = json.loads(json_str)
+    assert parsed["field"] == 0.0
+```
+
+### 5. Validation Script
+
+Pre-commit hook validates that response models use safe_float:
+
+```bash
+python scripts/validation/check_unsafe_float_patterns.py
+```
+
+## Consequences
+
+### Positive
+
+- **No 500 errors from NaN** - All API responses are JSON-serializable
+- **Defense in depth** - Validators catch issues at serialization boundary
+- **Consistent defaults** - Predictable 0.0 values instead of errors
+- **Auditable** - Clear pattern for code review
+- **Tested** - 53+ TDD tests verify the pattern works
+
+### Negative
+
+- **Information loss** - NaN/Inf converted to 0.0, not clearly marked
+- **Validator overhead** - Minimal per-request validation cost (~μs)
+- **Maintenance** - New response models need validators added
+
+### Models Covered
+
+| Module | Models | Fields Protected |
+|--------|--------|------------------|
+| cost.py | 7 models | total_cost, percent_used, z_score, etc. |
+| observability.py | 6 models | duration_ms, latency percentiles |
+| agents.py | 3 models | duration metrics, cost metrics |
+| ai.py | 5 models | confidence scores |
+| ai_ux.py | 6 models | confidence, happiness_score |
+| surveys.py | 1 model | sus_score |
+| workflows.py | 3 models | confidence, coordinates |
+| websocket/protocols.py | 2 models | percent_used, confidence |
+
+Total: **33 response models** with NaN-safe float fields
+
+## Alternatives Considered
+
+### A. Custom JSON Encoder
+
+```python
+class NaNSafeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+            return 0.0
+        return super().default(obj)
+```
+
+**Rejected**: Doesn't integrate with Pydantic's model_dump_json(), requires custom serialization everywhere.
+
+### B. Replace NaN at Query Time
+
+Fix values when querying Prometheus.
+
+**Rejected**: Spreads responsibility across query layer, harder to audit and test.
+
+### C. Return null Instead of 0.0
+
+```python
+return None if math.isnan(v) else v
+```
+
+**Rejected**: Requires nullable fields, complicates client parsing, breaks existing API contracts.
+
+## Related
+
+- ADR-0091: API Response Transformation Strategy
+- `tests/unit/api/v1/test_response_model_nan_validators.py` - TDD tests
+- `src/mcp_server_langgraph/core/numeric.py` - Safe numeric utilities
+- CONTRIBUTING.md - "Numeric Safety and NaN Handling" section
