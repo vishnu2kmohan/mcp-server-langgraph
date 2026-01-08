@@ -1,0 +1,264 @@
+# ADR-0098: Mimir Direct Query with Alerting Fallback Chain
+
+| Status   | Accepted                                     |
+|----------|----------------------------------------------|
+| Date     | 2026-01-07                                   |
+| Category | Observability                                |
+| Authors  | Claude Code                                  |
+
+## Context
+
+The observability alerting infrastructure had two critical gaps:
+
+1. **Single Point of Failure**: The `GrafanaAlertingClient` was the only alerting backend, meaning if Grafana was down, alerts could not be queried even though Mimir was still evaluating alert rules.
+
+2. **No Real-Time Updates**: The DevTools AlertsTab used only REST API polling, missing real-time alert updates even though WebSocket infrastructure existed via `AlertBroadcaster`.
+
+### Current Data Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  BEFORE: Single path, no resilience                                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  DevTools AlertsTab → RTK Query → GET /api/v1/observability/alerts     │
+│                                         ↓                               │
+│                               GrafanaAlertingClient                     │
+│                                         ↓                               │
+│                               Grafana API (SINGLE POINT OF FAILURE)    │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Mimir's Alerting Capabilities
+
+Mimir includes a built-in Alertmanager that:
+- Uses the same Alertmanager v2 API format as Grafana
+- Evaluates alert rules independently of Grafana
+- Supports multi-tenancy via `X-Scope-OrgID` header
+- Provides health check via `/ready` endpoint
+- Exposes alert rules via `/prometheus/api/v1/rules`
+
+## Decision
+
+### 1. MimirAlertingClient
+
+Create a new `MimirAlertingClient` that queries Mimir's built-in Alertmanager directly:
+
+```python
+# src/mcp_server_langgraph/observability/query/backends/mimir.py
+class MimirAlertingClient(AlertingQueryClient):
+    """
+    Mimir Alertmanager API client.
+
+    Configuration:
+        MIMIR_URL: Mimir URL (default: http://mimir:9009)
+        MIMIR_ORG_ID: Tenant ID for multi-tenancy (default: anonymous)
+
+    API Endpoints:
+        GET /alertmanager/api/v2/alerts - List alerts
+        GET /prometheus/api/v1/rules - List alerting rules
+        GET /ready - Health check
+    """
+```
+
+### 2. FallbackAlertingClient
+
+Create a fallback chain that tries multiple backends in order:
+
+```python
+# src/mcp_server_langgraph/observability/query/backends/fallback.py
+class FallbackAlertingClient(AlertingQueryClient):
+    """
+    Fallback Order: Grafana → Mimir → Stub
+
+    Features:
+    - Health check caching with configurable TTL
+    - Automatic failover on backend errors
+    - Marks backends unhealthy after exceptions
+    """
+```
+
+### 3. Factory Configuration
+
+Add fallback support to the alerting factory:
+
+```python
+# Environment Variables
+ALERTING_FALLBACK_ENABLED=true          # Enable fallback chain
+ALERTING_HEALTH_CHECK_INTERVAL=30       # Health check cache TTL (seconds)
+OBSERVABILITY_ALERTING_BACKEND=fallback # Direct backend selection
+```
+
+### 4. WebSocket Alert Streaming for DevTools
+
+Integrate existing `useAlertWebSocket` hook into DevTools AlertsTab:
+
+```typescript
+// DevToolsPanel.tsx
+const { status: alertWsStatus } = useAlertWebSocket({
+  enabled: !collapsed && availableTabs.includes("alerts"),
+  showToasts: false,
+});
+
+<AlertsTabContent
+  alerts={alertsList}           // REST API data
+  externalAlerts={wsAlertsList} // WebSocket data
+  connectionStatus={alertWsStatus}
+/>
+```
+
+## Architecture After Changes
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  AFTER: Resilient fallback + real-time updates                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  PATH A (Real-time Push):                                               │
+│  Mimir → Alertmanager Webhook → AlertBroadcaster → WS /api/v1/ws/alerts │
+│                                         ↓                               │
+│                          DevTools AlertsTab (real-time)                 │
+│                                                                         │
+│  PATH B (REST + Fallback):                                              │
+│  DevTools AlertsTab → RTK Query → GET /api/v1/observability/alerts     │
+│                                         ↓                               │
+│                              FallbackAlertingClient                     │
+│                                    ↓         ↓           ↓              │
+│                              Grafana    →  Mimir    →  Stub             │
+│                              (primary)    (fallback)   (last resort)    │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## Health Check Caching
+
+To avoid hammering backends on every request, health checks are cached:
+
+```python
+async def _is_backend_healthy(self, backend: AlertingQueryClient) -> bool:
+    backend_id = id(backend)
+    now = time.time()
+
+    # Check cache
+    if backend_id in self._health_cache:
+        is_healthy, timestamp = self._health_cache[backend_id]
+        if now - timestamp < self._health_check_ttl:
+            return is_healthy
+
+    # Perform health check
+    is_healthy = await backend.health_check()
+    self._health_cache[backend_id] = (is_healthy, now)
+    return is_healthy
+```
+
+## Files Changed
+
+| File | Change |
+|------|--------|
+| `observability/query/backends/mimir.py` | New MimirAlertingClient |
+| `observability/query/backends/fallback.py` | New FallbackAlertingClient |
+| `observability/query/factory.py` | Added MIMIR, FALLBACK backends |
+| `studio/frontend/src/components/DevTools/DevToolsPanel.tsx` | WebSocket integration |
+| `studio/frontend/src/components/DevTools/tabs/AlertsTab.tsx` | externalAlerts prop |
+
+## Test Coverage
+
+| Test File | Tests | Coverage |
+|-----------|-------|----------|
+| `test_mimir_alerting.py` | 14 | MimirAlertingClient |
+| `test_fallback_alerting.py` | 20 | FallbackAlertingClient + Metrics |
+| `test_alerting_fallback.py` | 10 | Integration tests (Mimir + Fallback) |
+| `AlertsTab.websocket.test.tsx` | 18 | WebSocket integration |
+
+## Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MIMIR_URL` | `http://mimir:9009` | Mimir server URL |
+| `MIMIR_ORG_ID` | `anonymous` | Mimir tenant ID |
+| `ALERTING_FALLBACK_ENABLED` | `false` | Enable fallback chain |
+| `ALERTING_HEALTH_CHECK_INTERVAL` | `30` | Health check cache TTL (seconds) |
+
+### Port Configuration for Testing
+
+The test infrastructure uses offset ports (+10000 from standard) to avoid conflicts:
+
+| Service | Production Port | Test Port (docker-compose.test.yml) |
+|---------|-----------------|--------------------------------------|
+| Mimir | 9009 | 19009 |
+| Grafana | 3001 | 13001 |
+| Loki | 3100 | 13100 |
+| Tempo | 3200 | 13200 |
+
+Test constants are centralized in `tests/constants.py`:
+```python
+TEST_MIMIR_PORT = 19009
+TEST_GRAFANA_PORT = 13001
+```
+
+## Prometheus Metrics
+
+The FallbackAlertingClient exposes Prometheus metrics for observability:
+
+| Metric | Type | Labels | Description |
+|--------|------|--------|-------------|
+| `alerting_fallback_activations_total` | Counter | `from_backend`, `to_backend`, `operation` | Fallback activations when primary fails |
+| `alerting_backend_errors_total` | Counter | `backend`, `operation`, `error_type` | Backend operation errors |
+| `alerting_health_checks_total` | Counter | `backend`, `result` | Health check outcomes (healthy/unhealthy/error) |
+
+Example queries:
+```promql
+# Fallback rate (fallbacks per minute)
+rate(alerting_fallback_activations_total[5m])
+
+# Backend error rate by type
+rate(alerting_backend_errors_total[5m]) by (backend, error_type)
+
+# Health check failure ratio
+alerting_health_checks_total{result!="healthy"} / alerting_health_checks_total
+```
+
+## Consequences
+
+### Positive
+
+1. **Resilience**: Alerts remain available when Grafana is down
+2. **Real-time**: DevTools shows alert updates via WebSocket
+3. **Minimal overhead**: Health check caching prevents backend hammering
+4. **Gradual rollout**: Fallback can be enabled via environment variable
+5. **Consistent API**: Mimir uses same Alertmanager v2 format as Grafana
+
+### Negative
+
+1. **Complexity**: Three backends to maintain instead of one
+2. **Latency**: Fallback adds slight latency on backend failures
+3. **Cache staleness**: Health cache may briefly serve stale data
+
+### Neutral
+
+1. **Multi-tenancy**: Must ensure `MIMIR_ORG_ID` matches across services
+2. **Monitoring**: Should monitor fallback activations for debugging
+
+## Deferred Decisions
+
+### Circuit Breaker Integration
+
+**Decision**: Intentionally not integrated with the existing `pybreaker` circuit breaker infrastructure.
+
+**Rationale**:
+
+1. **Health check caching provides similar protection**: The `FallbackAlertingClient` already caches health check results with configurable TTL (default 30 seconds), preventing repeated hammering of unhealthy backends.
+
+2. **Fallback chain naturally handles failures**: Unlike a circuit breaker that "fails fast" and rejects requests, the fallback pattern gracefully degrades by trying the next backend. This is more appropriate for alert queries where eventual availability is preferred over fast failure.
+
+3. **Simpler debugging**: With the current implementation, operators can easily understand the fallback flow from metrics (`alerting_fallback_activations_total`, `alerting_backend_errors_total`). Adding circuit breaker state adds another layer of complexity.
+
+4. **Recovery semantics differ**: Circuit breakers require explicit half-open testing for recovery. The health check caching naturally re-tests backends when TTL expires, providing continuous recovery attempts without the complexity of state machines.
+
+**Future Consideration**: If sustained high error rates cause performance issues due to repeated failed attempts, circuit breaker integration could be revisited. Monitor `alerting_backend_errors_total` to detect this scenario.
+
+## Related
+
+- ADR-0096: Alert Consolidation and Quality Standards
+- ADR-0097: NaN Safety in API Response Models
