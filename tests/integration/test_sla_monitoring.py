@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from mcp_server_langgraph.core.numeric import safe_average
 from mcp_server_langgraph.monitoring.sla import SLAMeasurement, SLAMetric, SLAMonitor, SLAReport, SLAStatus, SLATarget
 
 pytestmark = pytest.mark.integration
@@ -557,9 +558,7 @@ class TestSLAReport:
         report = await sla_monitor.generate_sla_report(period_days=1)
 
         # Compliance score should be average of measurement compliance percentages
-        expected_score = (
-            sum(m.compliance_percentage for m in report.measurements) / len(report.measurements) if report.measurements else 0
-        )
+        expected_score = safe_average([m.compliance_percentage for m in report.measurements])
 
         assert abs(report.compliance_score - expected_score) < 0.01
 

@@ -14,6 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from mcp_server_langgraph.core.numeric import safe_average
 
 pytestmark = [pytest.mark.integration, pytest.mark.visual_verification]
 
@@ -584,7 +585,7 @@ class TestMultiURLVisualVerificationIntegration:
         THEN average score is 0.8
         """
         scores = [0.9, 0.8, 0.7]
-        avg_score = sum(scores) / len(scores)
+        avg_score = safe_average(scores)
 
         assert avg_score == pytest.approx(0.8, abs=0.001)
 

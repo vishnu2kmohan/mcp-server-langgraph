@@ -531,5 +531,265 @@ def test_base_service_no_cloud_specific_annotations():
                 )
 
 
+# ==============================================================================
+# Test 10: Kubernetes Alerting Coverage (Prevents Alert Gaps in Production)
+# ==============================================================================
+# Ensures all canonical Prometheus/Mimir alerting rules are included in the
+# Helm chart for Kubernetes deployments (AWS/EKS, GCP/GKE, Azure/AKS, OpenShift).
+#
+# Reference: ADR-0096 - Alert Consolidation and Quality Standards
+# ==============================================================================
+
+
+class TestKubernetesAlertingCoverage:
+    """Tests for Kubernetes alerting rule coverage in Helm chart.
+
+    Validates that all canonical alerting rules from monitoring/prometheus/rules/
+    are included in the Helm chart for Kubernetes deployments.
+    """
+
+    @pytest.fixture
+    def canonical_rules_path(self):
+        """Path to canonical alerting rules."""
+        return Path(__file__).parent.parent.parent / "monitoring" / "prometheus" / "rules"
+
+    @pytest.fixture
+    def helm_rules_path(self):
+        """Path to Helm chart prometheus-rules directory."""
+        return Path(__file__).parent.parent.parent / "deployments" / "helm" / "mcp-server-langgraph" / "prometheus-rules"
+
+    @pytest.fixture
+    def helm_templates_path(self):
+        """Path to Helm chart templates directory."""
+        return Path(__file__).parent.parent.parent / "deployments" / "helm" / "mcp-server-langgraph" / "templates"
+
+    def test_all_canonical_rules_have_helm_equivalents(self, canonical_rules_path, helm_rules_path):
+        """All canonical alerting rule files must have Helm chart equivalents.
+
+        This test ensures that Kubernetes deployments have the same alerting
+        coverage as Docker Compose/Mimir deployments.
+
+        RED phase: Will fail until all 15 canonical rules are in Helm chart.
+        GREEN phase: After adding missing rule files to prometheus-rules/.
+        """
+        if not canonical_rules_path.exists():
+            pytest.skip("Canonical rules directory not found")
+        if not helm_rules_path.exists():
+            pytest.skip("Helm prometheus-rules directory not found")
+
+        # Get canonical rule file stems (without extension)
+        canonical_files = set()
+        for f in canonical_rules_path.glob("*.y*ml"):
+            # Skip K8s CRD files
+            with open(f) as fp:
+                content = fp.read()
+            if "apiVersion:" in content and "kind: PrometheusRule" in content:
+                continue
+            canonical_files.add(f.stem)
+
+        # Get Helm rule file stems
+        helm_files = {f.stem for f in helm_rules_path.glob("*.y*ml")}
+
+        # Map canonical names to expected Helm names (handle naming variations)
+        # e.g., langgraph-agent-alerts -> langgraph-agent
+        canonical_to_helm_map = {}
+        for canonical in canonical_files:
+            # Try variations
+            base_name = canonical.replace("-alerts", "").replace("_alerts", "")
+            canonical_to_helm_map[canonical] = [canonical, base_name]
+
+        # Find missing rules
+        missing_rules = []
+        for canonical, helm_variants in canonical_to_helm_map.items():
+            if not any(v in helm_files for v in helm_variants):
+                missing_rules.append(canonical)
+
+        assert not missing_rules, (
+            f"Missing {len(missing_rules)} alerting rule files in Helm chart:\n"
+            + "\n".join(f"  - {r}" for r in sorted(missing_rules))
+            + f"\n\nCanonical rules ({len(canonical_files)}): {sorted(canonical_files)}"
+            + f"\nHelm rules ({len(helm_files)}): {sorted(helm_files)}"
+            + f"\n\nTo fix, copy missing files to:\n  {helm_rules_path}/"
+            + "\nAnd create corresponding templates in:\n  templates/prometheus-rules-<name>.yaml"
+        )
+
+    def test_all_helm_rules_have_templates(self, helm_rules_path, helm_templates_path):
+        """All Helm prometheus-rules files must have corresponding templates.
+
+        Each rule file needs a PrometheusRule template that embeds it via .Files.Get.
+        """
+        if not helm_rules_path.exists():
+            pytest.skip("Helm prometheus-rules directory not found")
+        if not helm_templates_path.exists():
+            pytest.skip("Helm templates directory not found")
+
+        # Get rule files
+        rule_files = {f.stem for f in helm_rules_path.glob("*.y*ml")}
+
+        # Get template files that reference prometheus-rules
+        templates_with_rules = set()
+        for template in helm_templates_path.glob("prometheus-rules-*.yaml"):
+            with open(template) as f:
+                content = f.read()
+            # Extract the rule file name from .Files.Get
+            match = re.search(r'\.Files\.Get\s+"prometheus-rules/([^"]+)"', content)
+            if match:
+                rule_name = match.group(1).replace(".yaml", "").replace(".yml", "")
+                templates_with_rules.add(rule_name)
+
+        # Find rules without templates
+        missing_templates = rule_files - templates_with_rules
+
+        assert not missing_templates, (
+            f"Missing PrometheusRule templates for {len(missing_templates)} rule files:\n"
+            + "\n".join(f"  - {r}" for r in sorted(missing_templates))
+            + f"\n\nRule files: {sorted(rule_files)}"
+            + f"\nTemplates found: {sorted(templates_with_rules)}"
+            + "\n\nCreate template with pattern:"
+            + '\n  {{- if index .Values "kube-prometheus-stack" "enabled" }}'
+            + "\n  apiVersion: monitoring.coreos.com/v1"
+            + "\n  kind: PrometheusRule"
+            + "\n  metadata:"
+            + '\n    name: {{ include "mcp-server-langgraph.fullname" . }}-<name>-alerts'
+            + "\n  spec:"
+            + '\n    {{- .Files.Get "prometheus-rules/<name>.yaml" | nindent 2 }}'
+            + "\n  {{- end }}"
+        )
+
+    def test_helm_alerting_coverage_percentage(self, canonical_rules_path, helm_rules_path):
+        """Helm chart must have at least 80% alerting coverage of canonical rules.
+
+        This is a soft check to track progress toward full coverage.
+        Target: 100% coverage for production deployments.
+        """
+        if not canonical_rules_path.exists() or not helm_rules_path.exists():
+            pytest.skip("Required directories not found")
+
+        canonical_count = len(list(canonical_rules_path.glob("*.y*ml")))
+        helm_count = len(list(helm_rules_path.glob("*.y*ml")))
+
+        coverage = (helm_count / canonical_count * 100) if canonical_count > 0 else 0
+
+        # Require at least 80% coverage
+        assert coverage >= 80, (
+            f"Helm chart alerting coverage is {coverage:.1f}% ({helm_count}/{canonical_count})\n"
+            f"Target: 80% minimum, 100% recommended\n"
+            f"Missing {canonical_count - helm_count} rule files"
+        )
+
+
+class TestGrafanaDashboardParity:
+    """Tests for Grafana dashboard parity between Docker Compose and Kubernetes."""
+
+    @pytest.fixture
+    def canonical_dashboards_path(self, project_root: Path) -> Path:
+        """Path to canonical Grafana dashboards."""
+        return project_root / "monitoring" / "grafana" / "dashboards"
+
+    @pytest.fixture
+    def helm_dashboards_path(self, project_root: Path) -> Path:
+        """Path to Helm chart Grafana dashboards."""
+        return project_root / "deployments" / "helm" / "mcp-server-langgraph" / "dashboards"
+
+    @pytest.fixture
+    def helm_template_path(self, project_root: Path) -> Path:
+        """Path to Helm template for dashboard ConfigMaps."""
+        return (
+            project_root / "deployments" / "helm" / "mcp-server-langgraph" / "templates" / "grafana-dashboards-configmap.yaml"
+        )
+
+    def test_all_canonical_dashboards_exist_in_helm(
+        self,
+        canonical_dashboards_path: Path,
+        helm_dashboards_path: Path,
+    ) -> None:
+        """Verify all canonical dashboards have Helm equivalents."""
+        if not canonical_dashboards_path.exists() or not helm_dashboards_path.exists():
+            pytest.skip("Dashboard directories not found")
+
+        # Get all dashboard folders and files from canonical source
+        canonical_dashboards: set[str] = set()
+        for folder in canonical_dashboards_path.iterdir():
+            if folder.is_dir():
+                for dashboard in folder.glob("*.json"):
+                    canonical_dashboards.add(f"{folder.name}/{dashboard.name}")
+
+        # Get all dashboard folders and files from Helm
+        helm_dashboards: set[str] = set()
+        for folder in helm_dashboards_path.iterdir():
+            if folder.is_dir():
+                for dashboard in folder.glob("*.json"):
+                    helm_dashboards.add(f"{folder.name}/{dashboard.name}")
+
+        # Find missing dashboards
+        missing = canonical_dashboards - helm_dashboards
+
+        assert not missing, (
+            f"Missing {len(missing)} dashboards in Helm chart:\n"
+            + "\n".join(f"  - {d}" for d in sorted(missing))
+            + f"\n\nCanonical: {len(canonical_dashboards)} dashboards"
+            + f"\nHelm: {len(helm_dashboards)} dashboards"
+            + "\n\nTo fix, run: ./scripts/sync-grafana-dashboards.sh"
+        )
+
+    def test_helm_template_includes_all_folders(
+        self,
+        canonical_dashboards_path: Path,
+        helm_template_path: Path,
+    ) -> None:
+        """Verify Helm template folder list includes all canonical folders."""
+        if not canonical_dashboards_path.exists() or not helm_template_path.exists():
+            pytest.skip("Required paths not found")
+
+        # Get canonical folder names
+        canonical_folders = {f.name for f in canonical_dashboards_path.iterdir() if f.is_dir()}
+
+        # Parse Helm template for folder list
+        template_content = helm_template_path.read_text()
+
+        # Extract folder list from template (format: list "Folder1" "Folder2" ...)
+        import re
+
+        match = re.search(r'\$folders\s*:=\s*list\s+"([^}]+)"', template_content)
+        if not match:
+            pytest.fail("Could not find folder list in Helm template")
+
+        # Parse the folder names from the match
+        folder_str = match.group(0)
+        template_folders = set(re.findall(r'"([^"]+)"', folder_str))
+
+        missing_in_template = canonical_folders - template_folders
+
+        assert not missing_in_template, (
+            f"Helm template missing {len(missing_in_template)} folders:\n"
+            + "\n".join(f"  - {f}" for f in sorted(missing_in_template))
+            + f"\n\nUpdate the $folders list in:\n  {helm_template_path}"
+        )
+
+    def test_dashboard_parity_percentage(
+        self,
+        canonical_dashboards_path: Path,
+        helm_dashboards_path: Path,
+    ) -> None:
+        """Verify dashboard parity is at least 95%."""
+        if not canonical_dashboards_path.exists() or not helm_dashboards_path.exists():
+            pytest.skip("Dashboard directories not found")
+
+        canonical_count = sum(
+            1 for folder in canonical_dashboards_path.iterdir() if folder.is_dir() for _ in folder.glob("*.json")
+        )
+
+        helm_count = sum(1 for folder in helm_dashboards_path.iterdir() if folder.is_dir() for _ in folder.glob("*.json"))
+
+        parity = (helm_count / canonical_count * 100) if canonical_count > 0 else 0
+
+        assert parity >= 95, (
+            f"Dashboard parity is {parity:.1f}% ({helm_count}/{canonical_count})\n"
+            f"Target: 95% minimum, 100% recommended\n"
+            f"Missing {canonical_count - helm_count} dashboards\n"
+            f"\nTo fix, run: ./scripts/sync-grafana-dashboards.sh"
+        )
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -10,6 +10,7 @@ Thank you for your interest in contributing! This document provides guidelines f
   - [Pre-Push Validation](#4-pre-push-validation-recommended)
 - [Testing Requirements](#testing-requirements)
 - [Code Style](#code-style)
+  - [Numeric Safety and NaN Handling](#numeric-safety-and-nan-handling)
 - [Agent Studio Frontend Contribution Guidelines](#agent-studio-frontend-contribution-guidelines)
 - [Commit Guidelines](#commit-guidelines)
 - [Architecture Decision Records (ADRs)](#architecture-decision-records-adrs)
@@ -508,6 +509,80 @@ disallow_untyped_defs = true
 - `[tool.black]` - Use `ruff format` instead
 - `[tool.isort]` - Use `ruff check --select I` instead
 - `[tool.flake8]` - Use `ruff check` instead
+
+### Numeric Safety and NaN Handling
+
+**Critical**: All API response models with float fields MUST handle NaN/Infinity values to prevent JSON serialization failures.
+
+#### The Problem
+
+Prometheus `histogram_quantile()` and other metrics calculations can return `NaN` when there's insufficient data. Python's `json.dumps()` raises `ValueError` for NaN/Infinity:
+
+```python
+>>> import json
+>>> json.dumps({"latency_p99": float("nan")})
+ValueError: Out of range float values are not JSON compliant
+```
+
+#### The Solution
+
+Use the `safe_float()` utility from `mcp_server_langgraph.core.numeric` with Pydantic field validators:
+
+```python
+from pydantic import BaseModel, Field, field_validator
+from mcp_server_langgraph.core.numeric import safe_float
+
+class MetricsResponse(BaseModel):
+    latency_p99: float = Field(..., description="99th percentile latency")
+
+    @field_validator("latency_p99", mode="before")
+    @classmethod
+    def validate_latency_p99(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
+```
+
+#### Available Numeric Utilities
+
+All utilities are in `mcp_server_langgraph.core.numeric`:
+
+| Function | Description | Default |
+|----------|-------------|---------|
+| `safe_float(value, default=0.0)` | Converts NaN/Inf to safe default | 0.0 |
+| `safe_average(values, default=0.0)` | Safe mean calculation | 0.0 |
+| `safe_divide(a, b, default=0.0)` | Division with zero protection | 0.0 |
+| `safe_round(value, ndigits, default=0.0)` | Safe rounding | 0.0 |
+| `safe_sum(values)` | Sum ignoring NaN values | 0.0 |
+
+#### When to Add Validators
+
+Add `safe_float` validators to response models when:
+- Field comes from Prometheus/metrics calculations
+- Field is a percentile (p50, p95, p99)
+- Field is a ratio/percentage
+- Field is a confidence score
+- Field is a cost/budget value
+
+#### Testing Pattern
+
+Follow TDD with NaN test cases:
+
+```python
+def test_response_model_nan_field(self) -> None:
+    """GIVEN NaN value for field
+    WHEN ResponseModel is created
+    THEN field is converted to 0.0
+    """
+    response = ResponseModel(field=float("nan"))
+    assert response.field == 0.0
+    assert math.isfinite(response.field)
+```
+
+See `tests/unit/api/v1/test_response_model_nan_validators.py` for comprehensive examples.
+
+#### Architecture Decision
+
+For complete rationale, see ADR-0097: NaN Safety in API Response Models.
 
 ---
 

@@ -16,6 +16,8 @@ from decimal import Decimal
 
 import pytest
 
+from mcp_server_langgraph.core.numeric import safe_average
+
 pytestmark = [pytest.mark.unit]
 
 
@@ -557,7 +559,7 @@ class TestCostForecasting:
         )
 
         # With increasing trend, projection should be higher than simple average
-        simple_avg = sum(daily_spend) / len(daily_spend) * 30
+        simple_avg = safe_average(daily_spend) * 30
         assert forecast.projected_total >= simple_avg
 
     @pytest.mark.asyncio

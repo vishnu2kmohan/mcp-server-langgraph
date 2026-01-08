@@ -63,12 +63,18 @@ export const colors = {
     700: "#b91c1c",
   },
 
+  // Info semantic colors (cyan theme for informational content, cloud/infrastructure)
   info: {
-    50: "#f0f9ff",
-    100: "#e0f2fe",
-    500: "#0ea5e9",
-    600: "#0284c7",
-    700: "#0369a1",
+    50: "#ecfeff",
+    100: "#cffafe",
+    200: "#a5f3fc",
+    300: "#67e8f9",
+    400: "#22d3ee",
+    500: "#06b6d4", // Main info cyan
+    600: "#0891b2",
+    700: "#0e7490",
+    800: "#155e75",
+    900: "#164e63",
   },
 
   // Grafana brand colors (for observability integration)

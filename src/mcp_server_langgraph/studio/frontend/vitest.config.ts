@@ -110,14 +110,23 @@ function getHeapSizeMB(): string {
     return process.env.VITEST_HEAP_SIZE;
   }
 
-  // Priority 2: CI environments use smaller heap to fit 7GB runner
+  // Priority 2: Infer from NODE_OPTIONS if --max-old-space-size is set
+  // This allows sharding scripts to control heap via NODE_OPTIONS
+  const nodeOptions = process.env.NODE_OPTIONS ?? "";
+  const heapMatch = nodeOptions.match(/--max-old-space-size=(\d+)/);
+  if (heapMatch?.[1]) {
+    return heapMatch[1];
+  }
+
+  // Priority 3: CI environments use smaller heap to fit 7GB runner
   const isCI =
     process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
   if (isCI) {
     return "4096"; // 4GB per worker - safe for 7GB runner with 1 worker
   }
 
-  // Priority 3: Local development uses larger heap
+  // Priority 4: Local development uses moderate heap
+  // Reduced from 16GB to 8GB to fail faster on OOM during sharded runs
   return "8192"; // 8GB per worker for local development
 }
 

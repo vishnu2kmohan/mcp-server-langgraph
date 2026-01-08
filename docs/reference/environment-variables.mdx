@@ -128,6 +128,39 @@ At least one LLM provider API key is required for the agent to function:
   - Default: None (compact JSON)
   - Example: `export LOG_JSON_INDENT=2`
 
+##### Alerting Backend Configuration (ADR-0098)
+
+- **`ALERTING_FALLBACK_ENABLED`**
+  - Purpose: Enable resilient alerting fallback chain (Grafana -> Mimir -> Stub)
+  - Type: Boolean string ("true" / "false")
+  - Default: "false"
+  - Example: `export ALERTING_FALLBACK_ENABLED="true"`
+  - See: [ADR-0098: Mimir Alerting Fallback](/architecture/adr-0098-mimir-alerting-fallback)
+
+- **`ALERTING_HEALTH_CHECK_INTERVAL`**
+  - Purpose: Health check cache TTL for alerting backends
+  - Type: Integer (seconds)
+  - Default: 30
+  - Example: `export ALERTING_HEALTH_CHECK_INTERVAL=60`
+
+- **`MIMIR_URL`**
+  - Purpose: Mimir server URL for direct alert queries
+  - Type: URL string
+  - Default: "http://mimir:9009"
+  - Example: `export MIMIR_URL="http://mimir:9009"`
+
+- **`MIMIR_ORG_ID`**
+  - Purpose: Mimir tenant ID for multi-tenancy
+  - Type: String
+  - Default: "anonymous"
+  - Example: `export MIMIR_ORG_ID="tenant-1"`
+
+- **`OBSERVABILITY_ALERTING_BACKEND`**
+  - Purpose: Direct alerting backend selection (when fallback disabled)
+  - Type: String ("grafana" | "mimir" | "stub")
+  - Default: "grafana"
+  - Example: `export OBSERVABILITY_ALERTING_BACKEND="mimir"`
+
 #### Cloud Provider Integration
 
 ##### AWS

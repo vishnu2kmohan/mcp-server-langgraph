@@ -4,12 +4,14 @@
   Each folder becomes a separate ConfigMap with grafana_folder annotation.
   The sidecar uses folderAnnotation to organize dashboards into folders.
 
-  Dashboard Structure (36 dashboards across 8 folders):
+  Dashboard Structure (38 dashboards across 10 folders):
     AI/          - AI/ML observability (5 dashboards)
     Application/ - Application metrics (14 dashboards)
     Auth/        - Authentication & authorization (4 dashboards)
     Compliance/  - Audit & compliance (3 dashboards)
+    HEART/       - User experience metrics (1 dashboard)
     Infrastructure/ - Infrastructure metrics (5 dashboards)
+    Operations/  - Operational runbooks (1 dashboard)
     Overview/    - High-level overview (1 dashboard)
     Resilience/  - SRE golden signals (2 dashboards)
     WebSocket/   - Real-time streaming (2 dashboards)
@@ -18,7 +20,7 @@
   Canonical: monitoring/grafana/dashboards/
 */ -}}
 
-{{- $folders := list "AI" "Application" "Auth" "Compliance" "Infrastructure" "Overview" "Resilience" "WebSocket" }}
+{{- $folders := list "AI" "Application" "Auth" "Compliance" "HEART" "Infrastructure" "Operations" "Overview" "Resilience" "WebSocket" }}
 {{- range $folder := $folders }}
 {{- $dashboards := $.Files.Glob (printf "dashboards/%s/*.json" $folder) }}
 {{- if $dashboards }}

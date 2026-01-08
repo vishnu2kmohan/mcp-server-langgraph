@@ -1777,7 +1777,7 @@ services:
       - sh
       - -c
       - |
-        mkdir -p /tmp/mimir/data /tmp/mimir/tsdb /tmp/mimir/evaldata /tmp/mimir/ruleconfigs
+        mkdir -p /tmp/mimir/data /tmp/mimir/tsdb /tmp/mimir/evaldata /tmp/mimir/ruleconfigs/anonymous
         chown -R 10001:10001 /tmp/mimir
         echo "Mimir volume permissions set (UID 10001)"
     volumes:
@@ -1944,11 +1944,12 @@ services:
     volumes:
       - ./docker/mimir/mimir-config.yaml:/etc/mimir/mimir-config.yaml:ro
       - ./docker/mimir/alertmanager-fallback.yaml:/etc/mimir/alertmanager-fallback.yaml:ro
-      # Alerting rules for Mimir ruler (auto-loaded on startup)
-      - ./docker/mimir/rules:/tmp/mimir/ruleconfigs:ro
-      # Ruler storage is configured in mimir-config.yaml to use /tmp/mimir/ruleconfigs
-      # which is now mounted from docker/mimir/rules/ with pre-defined alerting rules
+      # Named volume must be listed before bind mounts to subdirectories
       - mimir-data:/tmp/mimir
+      # Alerting rules for Mimir ruler (auto-loaded on startup)
+      # Mimir expects rules in tenant-specific paths: /tmp/mimir/ruleconfigs/<tenant>/
+      # With multitenancy_enabled: false, the tenant is "anonymous"
+      - ./docker/mimir/rules:/tmp/mimir/ruleconfigs/anonymous:ro
     # NOTE: Mimir uses distroless image with no wget/curl
     # See: https://github.com/grafana/mimir/issues/9034
     # Healthcheck disabled; service is still accessible on port 9009

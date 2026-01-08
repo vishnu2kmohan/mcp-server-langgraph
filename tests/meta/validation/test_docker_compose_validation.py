@@ -437,3 +437,98 @@ def test_all_compose_files_found():
     print(f"\n📁 Found {len(compose_files)} Docker Compose files:")
     for f in sorted(compose_files):
         print(f"  - {f.relative_to(PROJECT_ROOT)}")
+
+
+@pytest.mark.xdist_group(name="testdockercomposemimirconfig")
+class TestDockerComposeMimirConfig:
+    """Tests for Mimir ruler configuration in Docker Compose.
+
+    Mimir's filesystem ruler storage expects rules to be organized by tenant.
+    With multitenancy_enabled: false, the tenant is "anonymous", so rules must
+    be mounted at /tmp/mimir/ruleconfigs/anonymous/ (not /tmp/mimir/ruleconfigs/).
+
+    Reference: https://grafana.com/docs/mimir/latest/references/architecture/components/ruler/
+    GitHub Issue: https://github.com/grafana/mimir/issues/6605
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_mimir_rules_mounted_to_anonymous_tenant_path(self):
+        """Mimir rules must be mounted to the anonymous tenant subdirectory.
+
+        When multitenancy is disabled in Mimir, the ruler looks for rules at:
+            /tmp/mimir/ruleconfigs/anonymous/<rule_files>.yaml
+
+        Mounting to /tmp/mimir/ruleconfigs/ directly will result in rules
+        not being loaded by Mimir's ruler.
+        """
+        compose_file = PROJECT_ROOT / "docker-compose.test.yml"
+        if not compose_file.exists():
+            pytest.skip("docker-compose.test.yml not found")
+
+        config = parse_docker_compose(compose_file)
+        services = config.get("services", {})
+
+        # Find the mimir-test service
+        mimir_service = services.get("mimir-test")
+        if not mimir_service:
+            pytest.skip("mimir-test service not found in docker-compose.test.yml")
+
+        volumes = mimir_service.get("volumes", [])
+
+        # Find the rules volume mount
+        rules_mount = None
+        for volume in volumes:
+            if isinstance(volume, str) and "mimir/rules" in volume:
+                rules_mount = volume
+                break
+
+        assert rules_mount, (
+            "No Mimir rules volume mount found in mimir-test service. "
+            "Expected: ./docker/mimir/rules:/tmp/mimir/ruleconfigs/anonymous:ro"
+        )
+
+        # Validate the mount targets the anonymous tenant path
+        assert "/anonymous" in rules_mount, (
+            f"Mimir rules must be mounted to the 'anonymous' tenant subdirectory.\n"
+            f"Current mount: {rules_mount}\n"
+            f"Expected: ./docker/mimir/rules:/tmp/mimir/ruleconfigs/anonymous:ro\n\n"
+            f"When multitenancy_enabled: false, Mimir's ruler looks for rules at:\n"
+            f"  /tmp/mimir/ruleconfigs/anonymous/<rule_files>.yaml\n\n"
+            f"Reference: https://grafana.com/docs/mimir/latest/references/architecture/components/ruler/"
+        )
+
+    def test_mimir_init_creates_anonymous_directory(self):
+        """mimir-init container must create the anonymous tenant directory.
+
+        The init container sets up volume permissions and creates directories.
+        It must create /tmp/mimir/ruleconfigs/anonymous/ for rules to be loaded.
+        """
+        compose_file = PROJECT_ROOT / "docker-compose.test.yml"
+        if not compose_file.exists():
+            pytest.skip("docker-compose.test.yml not found")
+
+        config = parse_docker_compose(compose_file)
+        services = config.get("services", {})
+
+        # Find the mimir-init service
+        mimir_init = services.get("mimir-init")
+        if not mimir_init:
+            pytest.skip("mimir-init service not found in docker-compose.test.yml")
+
+        # Get the command (handles both list and string formats)
+        command = mimir_init.get("command", [])
+        if isinstance(command, list):
+            command_str = " ".join(str(part) for part in command)
+        else:
+            command_str = str(command)
+
+        assert "ruleconfigs/anonymous" in command_str, (
+            f"mimir-init must create the anonymous tenant directory.\n"
+            f"Current command: {command_str}\n"
+            f"Expected mkdir to include: /tmp/mimir/ruleconfigs/anonymous\n\n"
+            f"Mimir's filesystem ruler requires rules in tenant-specific paths.\n"
+            f"With multitenancy_enabled: false, the tenant is 'anonymous'."
+        )

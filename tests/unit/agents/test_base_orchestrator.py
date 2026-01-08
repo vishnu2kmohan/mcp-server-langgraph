@@ -18,6 +18,8 @@ from typing import Any
 
 import pytest
 
+from mcp_server_langgraph.core.numeric import safe_average
+
 pytestmark = [pytest.mark.unit, pytest.mark.agents]
 
 
@@ -452,7 +454,7 @@ class TestBaseOrchestratorGenerics:
                 )
 
             def synthesize(self, results: list[CustomResult]) -> dict[str, Any]:
-                return {"avg_score": sum(r.custom_score for r in results) / len(results)}
+                return {"avg_score": safe_average([r.custom_score for r in results])}
 
         orchestrator = CustomResultOrchestrator()
         assert orchestrator is not None

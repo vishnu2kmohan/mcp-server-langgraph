@@ -872,6 +872,7 @@ markers = [
     "ai: AI UX service tests (persona analysis, disclosure, nudges, error recovery)",
     "feature_flags: Feature flag configuration and toggle tests",
     "observability: OpenTelemetry/metrics/logging tests",
+    "alerting: Alerting backend and fallback chain tests",
     "metrics: Prometheus/OTel metrics instrumentation tests",
     "monitoring: Cost metrics and usage tracking tests",
     "cost: Cost tracking, billing, and organizational budget tests",
@@ -1138,6 +1139,7 @@ authz-proxy = [
     "pybreaker>=1.2.0",  # Circuit breaker pattern
     # Logging
     "structlog>=24.0.0",
+    "python-json-logger>=4.0.0",  # JSON log formatting for observability module
     # Metrics
     "prometheus-client>=0.20.0",  # Prometheus metrics endpoint
 ]

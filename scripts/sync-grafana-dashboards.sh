@@ -29,8 +29,8 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 SOURCE_DIR="${PROJECT_ROOT}/monitoring/grafana/dashboards"
 DEST_DIR="${PROJECT_ROOT}/deployments/helm/mcp-server-langgraph/dashboards"
 
-# Dashboard folders to sync
-FOLDERS=(AI Application Auth Compliance Infrastructure Overview Resilience WebSocket)
+# Dashboard folders to sync (must match Helm template folder list)
+FOLDERS=(AI Application Auth Compliance HEART Infrastructure Operations Overview Resilience WebSocket)
 
 # Options
 DRY_RUN=false

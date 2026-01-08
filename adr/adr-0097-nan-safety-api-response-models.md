@@ -118,7 +118,7 @@ class MetricsResponse(BaseModel):
         return safe_float(v)
 ```
 
-### 3. Coverage Requirements
+### 4. Coverage Requirements
 
 | Model Category | Fields to Protect | Priority |
 |----------------|-------------------|----------|
@@ -128,7 +128,7 @@ class MetricsResponse(BaseModel):
 | Duration fields (ms, seconds) | All | High |
 | Rate/ratio fields | All | Medium |
 
-### 4. Testing Pattern
+### 5. Testing Pattern
 
 All response models MUST have TDD test coverage for NaN handling:
 
@@ -161,7 +161,7 @@ def test_response_model_json_serializable(self) -> None:
     assert parsed["field"] == 0.0
 ```
 
-### 5. Validation Script
+### 6. Validation Script
 
 Pre-commit hook validates that response models use safe_float:
 

@@ -258,6 +258,14 @@ config:
   observabilityBackend: "opentelemetry"  # opentelemetry, langsmith, both
   langsmithTracing: "false"
 
+  # Alerting Backend Configuration (ADR-0098)
+  # Fallback chain: Grafana -> Mimir -> Stub
+  alertingFallbackEnabled: "false"  # Enable resilient alerting fallback chain
+  alertingHealthCheckInterval: "30"  # Health check cache TTL in seconds
+  alertingBackend: "grafana"  # Direct backend: grafana, mimir, stub (when fallback disabled)
+  mimirUrl: "http://mimir:9009"  # Mimir server URL
+  mimirOrgId: "anonymous"  # Mimir tenant ID for multi-tenancy
+
   # Authentication
   authProvider: "keycloak"  # inmemory, keycloak
   authMode: "token"  # token (JWT), session

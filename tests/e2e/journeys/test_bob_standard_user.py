@@ -25,6 +25,8 @@ from datetime import UTC, datetime
 
 import pytest
 
+from mcp_server_langgraph.core.numeric import safe_average
+
 pytestmark = [
     pytest.mark.e2e,
     pytest.mark.journey,
@@ -237,7 +239,7 @@ class TestBobStandardUserJourney:
         finally:
             task_duration_ms = (time.time() - task_start_time) * 1000
             success_rate = (messages_received / messages_sent * 100) if messages_sent > 0 else 0
-            avg_response_time = sum(response_times) / len(response_times) if response_times else 0
+            avg_response_time = safe_average(response_times)
 
             heart_metrics = {
                 "task_name": "chat_messages_task_completion",

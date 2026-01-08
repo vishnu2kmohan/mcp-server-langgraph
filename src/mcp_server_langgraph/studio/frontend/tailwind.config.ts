@@ -119,6 +119,21 @@ export default {
           700: '#7e22ce',
           800: '#6b21a8',
           900: '#581c87',
+          950: '#3b0764',
+        },
+        // Info semantic colors (cyan theme for informational content, cloud/infrastructure)
+        info: {
+          50: '#ecfeff',
+          100: '#cffafe',
+          200: '#a5f3fc',
+          300: '#67e8f9',
+          400: '#22d3ee',
+          500: '#06b6d4', // Main info cyan
+          600: '#0891b2',
+          700: '#0e7490',
+          800: '#155e75',
+          900: '#164e63',
+          950: '#083344',
         },
       },
       fontFamily: {

@@ -11,6 +11,8 @@ from collections.abc import Callable
 
 import pytest
 
+from mcp_server_langgraph.core.numeric import safe_average
+
 
 class PercentileBenchmark:
     """
@@ -152,7 +154,7 @@ class PercentileBenchmark:
 
         sorted_times = sorted(self._times)
         return {
-            "mean": sum(self._times) / len(self._times),
+            "mean": safe_average(self._times),
             "p50": self._calculate_percentile(50),
             "p95": self._calculate_percentile(95),
             "p99": self._calculate_percentile(99),

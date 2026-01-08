@@ -98,6 +98,9 @@ ruler:
       store: inmemory
 
 # Ruler storage - must be COMPLETELY different path from ruler.rule_path (no prefix overlap)
+# IMPORTANT: With multitenancy_enabled: false, Mimir uses tenant "anonymous"
+# Rules must be placed in: /tmp/mimir/ruleconfigs/anonymous/<rule_files>.yaml
+# The docker-compose mounts docker/mimir/rules/ -> /tmp/mimir/ruleconfigs/anonymous/
 ruler_storage:
   backend: filesystem
   filesystem:

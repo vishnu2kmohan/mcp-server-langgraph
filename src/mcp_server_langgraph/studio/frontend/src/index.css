@@ -17,6 +17,48 @@
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-brand-primary;
   }
+
+  /* CSS Custom Properties for programmatic/JS usage */
+  :root {
+    /* Primary color scale */
+    --color-primary-50: theme("colors.primary.50");
+    --color-primary-100: theme("colors.primary.100");
+    --color-primary-200: theme("colors.primary.200");
+    --color-primary-300: theme("colors.primary.300");
+    --color-primary-400: theme("colors.primary.400");
+    --color-primary-500: theme("colors.primary.500");
+    --color-primary-600: theme("colors.primary.600");
+    --color-primary-700: theme("colors.primary.700");
+    --color-primary-800: theme("colors.primary.800");
+    --color-primary-900: theme("colors.primary.900");
+
+    /* Success color scale */
+    --color-success-50: theme("colors.success.50");
+    --color-success-100: theme("colors.success.100");
+    --color-success-500: theme("colors.success.500");
+    --color-success-600: theme("colors.success.600");
+
+    /* Warning color scale */
+    --color-warning-50: theme("colors.warning.50");
+    --color-warning-100: theme("colors.warning.100");
+    --color-warning-500: theme("colors.warning.500");
+    --color-warning-600: theme("colors.warning.600");
+
+    /* Error color scale */
+    --color-error-50: theme("colors.error.50");
+    --color-error-100: theme("colors.error.100");
+    --color-error-500: theme("colors.error.500");
+    --color-error-600: theme("colors.error.600");
+
+    /* Grafana brand colors (for observability integration) */
+    --color-grafana-500: theme("colors.grafana.500");
+    --color-grafana-600: theme("colors.grafana.600");
+
+    /* AI/Insight semantic colors (purple theme) */
+    --color-insight-400: theme("colors.insight.400");
+    --color-insight-500: theme("colors.insight.500");
+    --color-insight-600: theme("colors.insight.600");
+  }
 }
 
 /* Component styles */
@@ -45,6 +87,211 @@
     @apply rounded-md border border-gray-300 px-3 py-2 text-sm;
     @apply focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary;
     @apply dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100;
+  }
+
+  /* ==========================================================================
+   * Global Status Badges
+   * Semantic status styling for use across all components (not just DevTools)
+   * WCAG 2.2 compliant with dark mode support
+   * ========================================================================== */
+
+  /* Status badges (global) - use for tags, indicators, and status chips */
+  .badge-success {
+    @apply bg-success-100 text-success-700;
+    @apply dark:bg-success-900/50 dark:text-success-300;
+  }
+
+  .badge-warning {
+    @apply bg-warning-100 text-warning-700;
+    @apply dark:bg-warning-900/50 dark:text-warning-300;
+  }
+
+  .badge-error {
+    @apply bg-error-100 text-error-700;
+    @apply dark:bg-error-900/50 dark:text-error-300;
+  }
+
+  .badge-info {
+    @apply bg-primary-100 text-primary-700;
+    @apply dark:bg-primary-900/50 dark:text-primary-300;
+  }
+
+  .badge-neutral {
+    @apply bg-gray-100 text-gray-700;
+    @apply dark:bg-gray-700 dark:text-gray-300;
+  }
+
+  /* Status text colors (global) - use for inline status indicators */
+  .text-status-success {
+    @apply text-success-600 dark:text-success-400;
+  }
+
+  .text-status-warning {
+    @apply text-warning-600 dark:text-warning-400;
+  }
+
+  .text-status-error {
+    @apply text-error-600 dark:text-error-400;
+  }
+
+  .text-status-info {
+    @apply text-primary-600 dark:text-primary-400;
+  }
+
+  /* Interactive states (global) - use for hover effects on clickable elements */
+  .interactive-danger {
+    @apply hover:bg-error-100 dark:hover:bg-error-900/30;
+    @apply hover:text-error-600 dark:hover:text-error-400;
+  }
+
+  .interactive-primary {
+    @apply hover:bg-primary-100 dark:hover:bg-primary-900/30;
+    @apply hover:text-primary-600 dark:hover:text-primary-400;
+  }
+
+  .interactive-success {
+    @apply hover:bg-success-100 dark:hover:bg-success-900/30;
+    @apply hover:text-success-600 dark:hover:text-success-400;
+  }
+
+  .interactive-warning {
+    @apply hover:bg-warning-100 dark:hover:bg-warning-900/30;
+    @apply hover:text-warning-600 dark:hover:text-warning-400;
+  }
+
+  /* ==========================================================================
+   * DevTools Component Classes
+   * Semantic styling for DevTools tabs with WCAG 2.2 accessibility compliance
+   * ========================================================================== */
+
+  /* DevTools status badges - used in LogsTab, ConsoleTab */
+  .devtools-badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded uppercase;
+  }
+
+  .devtools-badge-debug {
+    @apply devtools-badge bg-gray-100 text-gray-700;
+    @apply dark:bg-gray-700 dark:text-gray-300;
+  }
+
+  .devtools-badge-info {
+    @apply devtools-badge bg-primary-100 text-primary-700;
+    @apply dark:bg-primary-900/50 dark:text-primary-300;
+  }
+
+  .devtools-badge-warning {
+    @apply devtools-badge bg-warning-100 text-warning-700;
+    @apply dark:bg-warning-900/50 dark:text-warning-300;
+  }
+
+  .devtools-badge-error {
+    @apply devtools-badge bg-error-100 text-error-700;
+    @apply dark:bg-error-900/50 dark:text-error-300;
+  }
+
+  .devtools-badge-success {
+    @apply devtools-badge bg-success-100 text-success-700;
+    @apply dark:bg-success-900/50 dark:text-success-300;
+  }
+
+  /* DevTools semantic text colors */
+  .devtools-text-success {
+    @apply text-success-600 dark:text-success-400;
+  }
+
+  .devtools-text-warning {
+    @apply text-warning-600 dark:text-warning-400;
+  }
+
+  .devtools-text-error {
+    @apply text-error-600 dark:text-error-400;
+  }
+
+  .devtools-text-info {
+    @apply text-primary-600 dark:text-primary-400;
+  }
+
+  .devtools-text-neutral {
+    @apply text-gray-500 dark:text-gray-400;
+  }
+
+  /* DevTools interactive button - ensures WCAG 2.5.8 touch target size on mobile */
+  .devtools-btn {
+    @apply inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm;
+    @apply transition-colors duration-150;
+    @apply hover:bg-gray-100 dark:hover:bg-gray-800;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1;
+  }
+
+  /* WCAG 2.5.8: Minimum 44x44px touch target on touch devices */
+  @media (pointer: coarse) {
+    .devtools-btn {
+      @apply min-h-[44px] min-w-[44px];
+    }
+  }
+
+  /* ==========================================================================
+   * Touch Target Utilities (WCAG 2.5.8 Compliance)
+   * Ensures minimum 44x44px touch targets on touch devices
+   * ========================================================================== */
+
+  /* Generic touch target - use on any clickable element */
+  .touch-target {
+    @apply relative;
+  }
+
+  /* Expand click area without affecting layout */
+  .touch-target::before {
+    content: "";
+    @apply absolute inset-0;
+    /* Extend beyond visible bounds on touch devices */
+    @media (pointer: coarse) {
+      @apply -m-2;
+      min-width: 44px;
+      min-height: 44px;
+    }
+  }
+
+  /* Icon button touch target - for small icon-only buttons */
+  .touch-target-icon {
+    @apply relative inline-flex items-center justify-center;
+    @apply min-w-[32px] min-h-[32px]; /* Desktop default */
+  }
+
+  @media (pointer: coarse) {
+    .touch-target-icon {
+      @apply min-w-[44px] min-h-[44px]; /* WCAG 2.5.8 touch minimum */
+    }
+  }
+
+  /* ==========================================================================
+   * Brand Component Classes
+   * ========================================================================== */
+
+  /* Grafana brand button */
+  .btn-grafana {
+    @apply inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md;
+    @apply bg-grafana-500 text-white;
+    @apply hover:bg-grafana-600;
+    @apply dark:bg-grafana-600 dark:hover:bg-grafana-500;
+    @apply transition-colors duration-150;
+  }
+
+  /* AI Insight indicator badge */
+  .devtools-badge-insight {
+    @apply devtools-badge bg-insight-100 text-insight-700;
+    @apply dark:bg-insight-900/50 dark:text-insight-300;
+  }
+
+  /* AI Insight container */
+  .devtools-insight-container {
+    @apply bg-insight-50 border border-insight-200 rounded-lg;
+    @apply dark:bg-insight-900/30 dark:border-insight-700;
+  }
+
+  /* AI Insight text */
+  .devtools-text-insight {
+    @apply text-insight-600 dark:text-insight-400;
   }
 }
 

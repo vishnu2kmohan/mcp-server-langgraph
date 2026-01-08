@@ -113,6 +113,16 @@ export default tseslint.config(
           message:
             'Use camelCase field names (e.g., alertId, startedAt, userId). API responses are now transformed via RTK Query transformResponse. See ADR-0091.',
         },
+        // Design System: Enforce semantic colors over raw Tailwind colors
+        // Use error-*, success-*, warning-*, primary-* instead of red-*, green-*, yellow-*, blue-*
+        // Use insight-* instead of purple-*, grafana-* instead of orange-*, info-* instead of cyan-*
+        // See plan: ~/.claude/plans/playful-toasting-emerson.md
+        {
+          selector:
+            "Literal[value=/\\b(text|bg|border|ring|hover:text|hover:bg|hover:border|focus:ring)-(red|green|blue|yellow|amber|purple|orange|cyan)-\\d+/]",
+          message:
+            'Use semantic colors (error-*, success-*, warning-*, primary-*, insight-*, grafana-*, info-*) instead of raw colors (red-*, green-*, blue-*, yellow-*, amber-*, purple-*, orange-*, cyan-*). See src/utils/colors.ts for utilities.',
+        },
       ],
     },
   },

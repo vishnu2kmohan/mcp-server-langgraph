@@ -26,25 +26,63 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Default shard count - 200 shards for ~2-3 test files per shard
-# With 481 test files, 200 shards = ~2.4 files each
-# This prevents OOM by keeping memory under 4GB per shard
-# Increased from 80 to 200 due to severe memory accumulation in jsdom
+# =============================================================================
+# Shard Count Calculation
+# =============================================================================
+# Memory budget: 4GB heap per shard (safe for most systems)
+# Memory per test file: ~300-500MB (jsdom + React Testing Library + MSW)
+# Safe files per shard: 4GB / 400MB = ~10 files
+# With 622 test files, need ~62 shards minimum
+#
+# Using 200 shards for maximum memory safety:
+# - 622 files / 200 shards = ~3 files per shard
+# - 3 files × 400MB = 1.2GB per shard (very safe for 4GB limit)
+# - Accounts for outlier tests that use 800MB+ each
+#
+# Known heavy tests (800MB+ each):
+# - session-hooks-integration.test.ts
+# - StudioShellLayout.*.test.tsx
+# - useMCPConnection.test.ts
+# - AlertDetailPanel.test.tsx
+# - CanvasShortcutsMenu.test.tsx
+#
+# Trade-off: 200 shards × 15s overhead = ~50min total vs 10min parallel
 SHARD_COUNT=200
 
 run_shard() {
     local shard_num=$1
     local total_shards=$2
-    echo -e "${YELLOW}=== Running Shard $shard_num/$total_shards ===${NC}"
+    local max_retries=2
+    local retry=0
 
-    # Run with single fork to prevent OOM, using vitest native sharding
-    VITEST_MAX_FORKS=1 npm test -- --run --shard="$shard_num/$total_shards" 2>&1 || {
-        echo -e "${RED}Shard $shard_num/$total_shards failed${NC}"
-        return 1
-    }
+    while [ $retry -le $max_retries ]; do
+        if [ $retry -gt 0 ]; then
+            echo -e "${YELLOW}=== Retrying Shard $shard_num/$total_shards (attempt $((retry + 1))/$((max_retries + 1))) ===${NC}"
+            # Increase heap for retry attempts (OOM mitigation)
+            local heap_size=$((4096 + retry * 2048))
+        else
+            echo -e "${YELLOW}=== Running Shard $shard_num/$total_shards ===${NC}"
+            local heap_size=4096
+        fi
 
-    echo -e "${GREEN}Shard $shard_num/$total_shards completed${NC}"
-    echo ""
+        # Run with single fork and adaptive heap to prevent OOM
+        VITEST_HEAP_SIZE=$heap_size VITEST_MAX_FORKS=1 \
+            NODE_OPTIONS="--max-old-space-size=$heap_size --expose-gc" \
+            npm run test:single -- --shard="$shard_num/$total_shards" 2>&1 && {
+            echo -e "${GREEN}Shard $shard_num/$total_shards completed${NC}"
+            echo ""
+            return 0
+        }
+
+        retry=$((retry + 1))
+        if [ $retry -le $max_retries ]; then
+            echo -e "${YELLOW}Shard failed, will retry with more heap...${NC}"
+            sleep 2
+        fi
+    done
+
+    echo -e "${RED}Shard $shard_num/$total_shards failed after $((max_retries + 1)) attempts${NC}"
+    return 1
 }
 
 # Parse arguments

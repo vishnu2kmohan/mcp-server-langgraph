@@ -136,6 +136,111 @@ fontFamily: {
 }
 ```
 
+## Semantic Colors
+
+The design system uses **semantic color names** instead of raw Tailwind colors:
+
+| Semantic Color | Use Case | Light Mode | Dark Mode |
+|----------------|----------|------------|-----------|
+| `error-*` | Errors, destructive actions | `error-600` | `error-400` |
+| `success-*` | Success, confirmations | `success-600` | `success-400` |
+| `warning-*` | Warnings, cautions | `warning-600` | `warning-400` |
+| `primary-*` | Primary actions | `primary-600` | `primary-400` |
+| `info-*` | Informational, cloud/infrastructure | `info-600` | `info-400` |
+| `insight-*` | AI features, suggestions | `insight-600` | `insight-400` |
+| `grafana-*` | Observability, Grafana | `grafana-500` | `grafana-400` |
+
+### Color Mapping Reference
+
+| Raw Color | Semantic | Example |
+|-----------|----------|---------|
+| `red-*` | `error-*` | `text-red-500` → `text-error-500` |
+| `green-*` | `success-*` | `bg-green-100` → `bg-success-100` |
+| `blue-*` | `primary-*` | `border-blue-500` → `border-primary-500` |
+| `yellow-*`, `amber-*` | `warning-*` | `text-yellow-600` → `text-warning-600` |
+| `cyan-*` | `info-*` | `text-cyan-500` → `text-info-500` |
+| `purple-*` | `insight-*` | `text-purple-500` → `text-insight-500` |
+| `orange-*` | `grafana-*` | Use `GRAFANA_COLORS` constant |
+
+### ESLint Color Enforcement
+
+```javascript
+// eslint.config.js - prevents raw color usage
+{
+  selector: "Literal[value=/\\b(text|bg|border|ring|hover:border)-(red|green|blue|yellow|amber|cyan|purple|orange)-\\d+/]",
+  message: "Use semantic colors (error-*, success-*, warning-*, primary-*, info-*, insight-*, grafana-*)",
+}
+```
+
+## Color Utilities
+
+### Global Utilities (`src/utils/colors.ts`)
+
+```typescript
+import {
+  STATUS_BADGE_STYLES,    // Badge styles by status
+  INTERACTIVE_COLORS,     // Hover states by type
+  CONFIDENCE_COLORS,      // AI confidence levels
+  AI_INSIGHT_COLORS,      // AI feature styling
+  GRAFANA_COLORS,         // Grafana integration
+  getStatusBadgeStyle,    // Dynamic badge style
+  getConfidenceColor,     // Color by score
+  getRiskLevelColor,      // Risk level colors
+  getComplianceStatusColor, // Compliance colors
+  getAIInsightStyle,      // AI style variants
+  getGrafanaButtonStyle,  // Grafana button
+} from '../utils/colors';
+```
+
+### AI Insight Colors
+
+```typescript
+AI_INSIGHT_COLORS.text   // text-insight-600 dark:text-insight-400
+AI_INSIGHT_COLORS.bg     // bg-insight-50 dark:bg-insight-900/30
+AI_INSIGHT_COLORS.badge  // Full badge styling
+```
+
+### Grafana Colors
+
+```typescript
+GRAFANA_COLORS.primary   // #F46800 (official brand)
+GRAFANA_COLORS.button    // Button styling
+GRAFANA_COLORS.text      // Text styling
+```
+
+## Reusable UI Components
+
+### StatusBadge
+
+```tsx
+import { StatusBadge } from '../components/UI';
+
+<StatusBadge status="success">Active</StatusBadge>
+<StatusBadge status="error" showIcon>Failed</StatusBadge>
+<StatusBadge status="warning" size="sm" pill>Pending</StatusBadge>
+```
+
+### ConfidenceIndicator
+
+```tsx
+import { ConfidenceIndicator } from '../components/UI';
+
+<ConfidenceIndicator score={0.85} />           // "85%"
+<ConfidenceIndicator score={0.85} label="AI" /> // "AI: 85%"
+```
+
+Color thresholds: High (≥0.9) → success, Medium (≥0.7) → warning, Low (<0.7) → error
+
+### RiskBadge
+
+```tsx
+import { RiskBadge } from '../components/UI';
+
+<RiskBadge level="low" />       // Green
+<RiskBadge level="high" showIcon /> // Red with icon
+<RiskBadge level="critical" label="Severity" />
+```
+
 ## Component Variants (CVA)
 
 All primitives use [class-variance-authority](https://cva.style/) for type-safe variants.

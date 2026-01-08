@@ -258,3 +258,90 @@ class TestTopologyFields:
 
         for field in non_topology_fields:
             assert field not in topology_fields, f"{field} should not affect topology"
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_semantic_tool_selection_config")
+class TestSemanticToolSelectionConfig:
+    """Test semantic tool selection configuration fields."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_enable_semantic_tool_selection_default_false(self):
+        """enable_semantic_tool_selection should default to False."""
+        from mcp_server_langgraph.core.agent_config import AgentConfig
+
+        config = AgentConfig()
+
+        # Off by default for backwards compatibility
+        assert hasattr(config, "enable_semantic_tool_selection")
+        assert config.enable_semantic_tool_selection is False
+
+    def test_max_selected_tools_default_value(self):
+        """max_selected_tools should default to 10."""
+        from mcp_server_langgraph.core.agent_config import AgentConfig
+
+        config = AgentConfig()
+
+        assert hasattr(config, "max_selected_tools")
+        assert config.max_selected_tools == 10
+
+    def test_semantic_tool_search_threshold_default_value(self):
+        """semantic_tool_search_threshold should default to 0.5."""
+        from mcp_server_langgraph.core.agent_config import AgentConfig
+
+        config = AgentConfig()
+
+        assert hasattr(config, "semantic_tool_search_threshold")
+        assert config.semantic_tool_search_threshold == 0.5
+
+    def test_enable_semantic_tool_selection_is_topology_field(self):
+        """enable_semantic_tool_selection should affect graph topology."""
+        from mcp_server_langgraph.core.agent_config import AgentConfig
+
+        config = AgentConfig()
+
+        # Should be in topology fields (adds select_tools node)
+        assert "enable_semantic_tool_selection" in config.topology_fields
+
+    def test_semantic_tool_selection_changes_graph_version(self):
+        """Enabling semantic tool selection should change graph version."""
+        from mcp_server_langgraph.core.agent_config import AgentConfig
+
+        config_without = AgentConfig(enable_semantic_tool_selection=False)
+        config_with = AgentConfig(enable_semantic_tool_selection=True)
+
+        # Different topology = different graph version
+        assert config_without.graph_version != config_with.graph_version
+
+    def test_max_selected_tools_does_not_affect_topology(self):
+        """max_selected_tools should not affect graph topology."""
+        from mcp_server_langgraph.core.agent_config import AgentConfig
+
+        config1 = AgentConfig(max_selected_tools=5)
+        config2 = AgentConfig(max_selected_tools=20)
+
+        # Same topology (behavior-only field)
+        assert config1.graph_version == config2.graph_version
+
+    def test_semantic_tool_selection_from_settings(self, monkeypatch):
+        """AgentConfig.from_settings should extract semantic tool selection fields."""
+        monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
+        monkeypatch.setenv("ENVIRONMENT", "test")
+
+        from mcp_server_langgraph.core.agent_config import AgentConfig
+        from mcp_server_langgraph.core.config import Settings
+
+        settings = Settings(
+            enable_semantic_tool_selection=True,
+            max_selected_tools=15,
+            semantic_tool_search_threshold=0.7,
+        )
+
+        config = AgentConfig.from_settings(settings)
+
+        assert config.enable_semantic_tool_selection is True
+        assert config.max_selected_tools == 15
+        assert config.semantic_tool_search_threshold == 0.7

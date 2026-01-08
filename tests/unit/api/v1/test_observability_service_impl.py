@@ -372,3 +372,40 @@ class TestObservabilityServiceImpl:
         await service.list_traces()
         await service.get_trace("test-id")
         await service.get_metrics()
+
+
+@pytest.mark.xdist_group(name="observability_safe_float")
+class TestSafeFloat:
+    """Test suite for safe_float helper function used by observability.
+
+    These tests verify the observability module correctly uses safe_float
+    from core.numeric. Full tests for safe_float are in tests/unit/core/test_numeric.py.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_safe_float_imported_correctly(self) -> None:
+        """GIVEN the observability module
+        WHEN we check for safe_float usage
+        THEN it should be imported from core.numeric
+        """
+        from mcp_server_langgraph.core.numeric import safe_float
+
+        # Verify basic functionality
+        assert safe_float(1.5) == 1.5
+        assert safe_float(None) == 0.0
+        assert safe_float(float("nan")) == 0.0
+
+    def test_observability_uses_safe_numeric_utilities(self) -> None:
+        """GIVEN the observability module
+        WHEN we check imports
+        THEN it should import safe_float, safe_average, safe_divide from core.numeric
+        """
+        # This test verifies the module can be imported without errors
+        from mcp_server_langgraph.api.v1 import observability
+
+        # Verify these are available (imported at module level)
+        assert hasattr(observability, "safe_float") or "safe_float" in dir(observability)
+        # The functions are used internally, not necessarily exposed

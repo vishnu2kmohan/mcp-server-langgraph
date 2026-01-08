@@ -114,6 +114,8 @@ docker/
 # Include keycloak healthcheck script (needed by Dockerfile.keycloak)
 !docker/keycloak/
 !docker/keycloak/healthcheck.sh
+# Include uvicorn log config (needed by Dockerfile.authz-proxy)
+!docker/uvicorn-log-config.yaml
 
 # ==============================================================================
 # Documentation (not needed in image)

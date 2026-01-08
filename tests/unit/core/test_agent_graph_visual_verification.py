@@ -15,6 +15,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from mcp_server_langgraph.core.numeric import safe_average
+
 if TYPE_CHECKING:
     pass
 
@@ -943,7 +945,7 @@ class TestMultiURLVerification:
         ]
 
         # Average score: (0.90 + 0.80 + 0.60) / 3 = 0.767
-        avg_score = sum(r.overall_score for r in results) / len(results)
+        avg_score = safe_average([r.overall_score for r in results])
         all_passed = all(r.passed for r in results)
 
         assert avg_score == pytest.approx(0.767, rel=0.01)

@@ -157,3 +157,34 @@ export function getComplianceStatusColor(status: ComplianceStatus): string {
       return "text-gray-600 dark:text-gray-400";
   }
 }
+
+// =============================================================================
+// Info Color Utilities (cyan semantic alias)
+// =============================================================================
+
+/** Style variants for info elements */
+export type InfoStyleVariant = "text" | "bg" | "badge" | "border";
+
+/**
+ * Info semantic colors for informational content, cloud/infrastructure indicators.
+ * Uses cyan (#06b6d4) as the distinctive info color.
+ */
+export const INFO_COLORS = {
+  /** Text styles for info labels */
+  text: "text-info-600 dark:text-info-400",
+  /** Background styles for info containers */
+  bg: "bg-info-50 dark:bg-info-900/30",
+  /** Badge styles for info indicators */
+  badge: "bg-info-100 text-info-700 dark:bg-info-900/50 dark:text-info-300",
+  /** Border styles for info containers */
+  border: "border-info-200 dark:border-info-800",
+} as const;
+
+/**
+ * Get info style classes by variant.
+ * @param variant - The style variant (text, bg, badge, border)
+ * @returns Tailwind classes for the requested variant
+ */
+export function getInfoStyle(variant: InfoStyleVariant): string {
+  return INFO_COLORS[variant];
+}

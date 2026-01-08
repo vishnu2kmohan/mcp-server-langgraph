@@ -267,6 +267,112 @@ describe("DevTools Re-exports", () => {
 });
 
 // =============================================================================
+// Tests: Insight (AI) and Grafana Color Utilities
+// =============================================================================
+
+describe("AI Insight Color Utilities", () => {
+  describe("AI_INSIGHT_COLORS", () => {
+    it("should define all insight color variants", async () => {
+      const { AI_INSIGHT_COLORS } = await import("./colors");
+      expect(AI_INSIGHT_COLORS.primary).toBeDefined();
+      expect(AI_INSIGHT_COLORS.glow).toBeDefined();
+      expect(AI_INSIGHT_COLORS.text).toBeDefined();
+      expect(AI_INSIGHT_COLORS.bg).toBeDefined();
+      expect(AI_INSIGHT_COLORS.badge).toBeDefined();
+    });
+
+    it("should use semantic insight-* classes NOT purple-*", async () => {
+      const { AI_INSIGHT_COLORS } = await import("./colors");
+      // Text should use insight-*, not purple-*
+      expect(AI_INSIGHT_COLORS.text).toMatch(/text-insight-/);
+      expect(AI_INSIGHT_COLORS.text).not.toMatch(/purple-/);
+      // Background should use insight-*, not purple-*
+      expect(AI_INSIGHT_COLORS.bg).toMatch(/bg-insight-/);
+      expect(AI_INSIGHT_COLORS.bg).not.toMatch(/purple-/);
+      // Badge should use insight-*, not purple-*
+      expect(AI_INSIGHT_COLORS.badge).toMatch(/insight-/);
+      expect(AI_INSIGHT_COLORS.badge).not.toMatch(/purple-/);
+    });
+
+    it("should include dark mode variants for text styles", async () => {
+      const { AI_INSIGHT_COLORS } = await import("./colors");
+      expect(AI_INSIGHT_COLORS.text).toMatch(/dark:text-insight-/);
+    });
+
+    it("should include dark mode variants for background styles", async () => {
+      const { AI_INSIGHT_COLORS } = await import("./colors");
+      expect(AI_INSIGHT_COLORS.bg).toMatch(/dark:bg-insight-/);
+    });
+
+    it("should include dark mode variants for badge styles", async () => {
+      const { AI_INSIGHT_COLORS } = await import("./colors");
+      expect(AI_INSIGHT_COLORS.badge).toMatch(/dark:bg-insight-/);
+    });
+  });
+
+  describe("getAIInsightStyle", () => {
+    it("should return text style for text variant", async () => {
+      const { getAIInsightStyle, AI_INSIGHT_COLORS } = await import("./colors");
+      expect(getAIInsightStyle("text")).toBe(AI_INSIGHT_COLORS.text);
+    });
+
+    it("should return bg style for bg variant", async () => {
+      const { getAIInsightStyle, AI_INSIGHT_COLORS } = await import("./colors");
+      expect(getAIInsightStyle("bg")).toBe(AI_INSIGHT_COLORS.bg);
+    });
+
+    it("should return badge style for badge variant", async () => {
+      const { getAIInsightStyle, AI_INSIGHT_COLORS } = await import("./colors");
+      expect(getAIInsightStyle("badge")).toBe(AI_INSIGHT_COLORS.badge);
+    });
+  });
+});
+
+describe("Grafana Color Utilities", () => {
+  describe("GRAFANA_COLORS", () => {
+    it("should define all grafana color variants", async () => {
+      const { GRAFANA_COLORS } = await import("./colors");
+      expect(GRAFANA_COLORS.primary).toBeDefined();
+      expect(GRAFANA_COLORS.button).toBeDefined();
+      expect(GRAFANA_COLORS.text).toBeDefined();
+    });
+
+    it("should use official Grafana brand orange", async () => {
+      const { GRAFANA_COLORS } = await import("./colors");
+      expect(GRAFANA_COLORS.primary).toBe("#F46800");
+    });
+
+    it("should use semantic grafana-* classes NOT orange-*", async () => {
+      const { GRAFANA_COLORS } = await import("./colors");
+      // Button should use grafana-*, not orange-*
+      expect(GRAFANA_COLORS.button).toMatch(/bg-grafana-/);
+      expect(GRAFANA_COLORS.button).not.toMatch(/orange-/);
+      // Text should use grafana-*, not orange-*
+      expect(GRAFANA_COLORS.text).toMatch(/text-grafana-/);
+      expect(GRAFANA_COLORS.text).not.toMatch(/orange-/);
+    });
+
+    it("should include dark mode variants for button styles", async () => {
+      const { GRAFANA_COLORS } = await import("./colors");
+      expect(GRAFANA_COLORS.button).toMatch(/dark:bg-grafana-/);
+    });
+
+    it("should include dark mode variants for text styles", async () => {
+      const { GRAFANA_COLORS } = await import("./colors");
+      expect(GRAFANA_COLORS.text).toMatch(/dark:text-grafana-/);
+    });
+  });
+
+  describe("getGrafanaButtonStyle", () => {
+    it("should return the button style", async () => {
+      const { getGrafanaButtonStyle, GRAFANA_COLORS } =
+        await import("./colors");
+      expect(getGrafanaButtonStyle()).toBe(GRAFANA_COLORS.button);
+    });
+  });
+});
+
+// =============================================================================
 // Tests: WCAG 2.2 Accessibility Compliance
 // =============================================================================
 
@@ -320,6 +426,72 @@ describe("WCAG 2.2 Accessibility Compliance", () => {
         expect(style).not.toMatch(/text-base/);
         expect(style).not.toMatch(/text-lg/);
       });
+    });
+  });
+});
+
+// =============================================================================
+// Tests: Info Color Utilities (cyan semantic alias)
+// =============================================================================
+
+describe("Info Color Utilities", () => {
+  describe("INFO_COLORS", () => {
+    it("should use semantic info-* classes NOT cyan-*", async () => {
+      const { INFO_COLORS } = await import("./colors");
+      expect(INFO_COLORS.text).toMatch(/text-info-/);
+      expect(INFO_COLORS.text).not.toMatch(/cyan-/);
+    });
+
+    it("should define all style variants", async () => {
+      const { INFO_COLORS } = await import("./colors");
+      expect(INFO_COLORS.text).toBeDefined();
+      expect(INFO_COLORS.bg).toBeDefined();
+      expect(INFO_COLORS.badge).toBeDefined();
+      expect(INFO_COLORS.border).toBeDefined();
+    });
+
+    it("should include dark mode variants", async () => {
+      const { INFO_COLORS } = await import("./colors");
+      expect(INFO_COLORS.text).toMatch(/dark:/);
+      expect(INFO_COLORS.bg).toMatch(/dark:/);
+      expect(INFO_COLORS.badge).toMatch(/dark:/);
+      expect(INFO_COLORS.border).toMatch(/dark:/);
+    });
+
+    it("should have proper contrast ratios (600 light / 400 dark for text)", async () => {
+      const { INFO_COLORS } = await import("./colors");
+      expect(INFO_COLORS.text).toMatch(/text-info-600/);
+      expect(INFO_COLORS.text).toMatch(/dark:text-info-400/);
+    });
+
+    it("should have subtle background (50 light / 900 with opacity dark)", async () => {
+      const { INFO_COLORS } = await import("./colors");
+      expect(INFO_COLORS.bg).toMatch(/bg-info-50/);
+      expect(INFO_COLORS.bg).toMatch(/dark:bg-info-900/);
+    });
+  });
+
+  describe("getInfoStyle", () => {
+    it("should return text style for text variant", async () => {
+      const { getInfoStyle } = await import("./colors");
+      expect(getInfoStyle("text")).toMatch(/text-info-/);
+    });
+
+    it("should return bg style for bg variant", async () => {
+      const { getInfoStyle } = await import("./colors");
+      expect(getInfoStyle("bg")).toMatch(/bg-info-/);
+    });
+
+    it("should return badge style for badge variant", async () => {
+      const { getInfoStyle } = await import("./colors");
+      const badge = getInfoStyle("badge");
+      expect(badge).toMatch(/bg-info-/);
+      expect(badge).toMatch(/text-info-/);
+    });
+
+    it("should return border style for border variant", async () => {
+      const { getInfoStyle } = await import("./colors");
+      expect(getInfoStyle("border")).toMatch(/border-info-/);
     });
   });
 });

@@ -103,6 +103,18 @@ spec:
         - name: LANGSMITH_TRACING
           value: {{ .Values.config.langsmithTracing | quote }}
 
+        # Alerting Backend Configuration (ADR-0098)
+        - name: ALERTING_FALLBACK_ENABLED
+          value: {{ .Values.config.alertingFallbackEnabled | quote }}
+        - name: ALERTING_HEALTH_CHECK_INTERVAL
+          value: {{ .Values.config.alertingHealthCheckInterval | quote }}
+        - name: OBSERVABILITY_ALERTING_BACKEND
+          value: {{ .Values.config.alertingBackend | quote }}
+        - name: MIMIR_URL
+          value: {{ .Values.config.mimirUrl | quote }}
+        - name: MIMIR_ORG_ID
+          value: {{ .Values.config.mimirOrgId | quote }}
+
         # Authentication Configuration
         - name: AUTH_PROVIDER
           value: {{ .Values.config.authProvider | quote }}
