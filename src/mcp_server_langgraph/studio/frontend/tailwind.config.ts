@@ -94,6 +94,32 @@ export default {
           'ai-bubble': '#f9fafb', // Assistant message background (gray-50)
           'ai-bubble-dark': '#1f2937', // Assistant message dark mode (gray-800)
         },
+        // Grafana brand colors for observability integration
+        grafana: {
+          50: '#fff8f3',
+          100: '#ffefe5',
+          200: '#ffd9c2',
+          300: '#ffbe94',
+          400: '#ff9a5c',
+          500: '#F46800', // Official Grafana brand orange
+          600: '#db5d00',
+          700: '#b84e00',
+          800: '#944000',
+          900: '#763300',
+        },
+        // AI/Insights semantic colors (purple theme for AI features)
+        insight: {
+          50: '#faf5ff',
+          100: '#f3e8ff',
+          200: '#e9d5ff',
+          300: '#d8b4fe',
+          400: '#c084fc',
+          500: '#a855f7', // Main AI insight purple
+          600: '#9333ea',
+          700: '#7e22ce',
+          800: '#6b21a8',
+          900: '#581c87',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
