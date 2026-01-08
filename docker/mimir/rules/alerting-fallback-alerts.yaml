@@ -1,0 +1,132 @@
+# Alerting Fallback Chain Rules (ADR-0098)
+# ==========================================
+# Alerting rules for monitoring the alerting backend fallback chain.
+# These alerts help detect when the primary alerting backend (Grafana)
+# is failing and fallbacks to Mimir or Stub are activated.
+#
+# Alert Severity Levels:
+#   - critical: All alerting backends are failing
+#   - warning: Primary backend failing, fallback active
+#   - info: Elevated fallback rate detected
+
+groups:
+  # ===========================================================================
+  # Alerting Fallback Chain Health
+  # ===========================================================================
+  - name: alerting-fallback-health
+    interval: 30s
+    rules:
+      # High fallback activation rate (warning)
+      - alert: AlertingFallbackActivated
+        expr: |
+          sum(rate(alerting_fallback_activations_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: alerting
+          component: fallback
+        annotations:
+          summary: "Alerting backend fallback is active"
+          description: "Alerting fallback chain is activating at {{ $value | humanize }} activations/sec. Primary backend may be unhealthy."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#alertingfallbackactivated"
+
+      # Sustained high fallback rate (critical)
+      - alert: AlertingFallbackSustained
+        expr: |
+          sum(increase(alerting_fallback_activations_total[15m])) > 10
+        for: 15m
+        labels:
+          severity: critical
+          service: alerting
+          component: fallback
+        annotations:
+          summary: "Sustained alerting fallback activity"
+          description: "More than 10 fallback activations in the last 15 minutes. Primary alerting backend is persistently failing."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#alertingfallbacksustained"
+
+      # All alerting backends failing
+      - alert: AlertingBackendsDown
+        expr: |
+          sum(rate(alerting_backend_errors_total[5m])) > 0
+          and
+          sum(rate(alerting_health_checks_total{result="healthy"}[5m])) == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: alerting
+          component: fallback
+        annotations:
+          summary: "All alerting backends are failing"
+          description: "No healthy alerting backends detected. Alert data may be unavailable."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#alertingbackendsdown"
+
+      # High backend error rate
+      - alert: AlertingBackendErrorsHigh
+        expr: |
+          sum(rate(alerting_backend_errors_total[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          service: alerting
+          component: fallback
+        annotations:
+          summary: "High alerting backend error rate"
+          description: "Alerting backend errors occurring at {{ $value | humanize }} errors/sec."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#alertingbackenderrorshigh"
+
+      # Health check failure rate high
+      - alert: AlertingHealthChecksFailing
+        expr: |
+          sum(rate(alerting_health_checks_total{result!="healthy"}[5m]))
+          /
+          sum(rate(alerting_health_checks_total[5m]))
+          > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          service: alerting
+          component: fallback
+        annotations:
+          summary: "Alerting health check failure rate high"
+          description: "More than 30% of alerting backend health checks are failing."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#alertinghealthchecksfailing"
+
+  # ===========================================================================
+  # Alerting Backend Specific Alerts
+  # ===========================================================================
+  - name: alerting-backend-specific
+    interval: 30s
+    rules:
+      # Grafana alerting backend down (primary)
+      - alert: GrafanaAlertingDown
+        expr: |
+          sum(rate(alerting_health_checks_total{backend="GrafanaAlertingClient", result!="healthy"}[5m]))
+          /
+          sum(rate(alerting_health_checks_total{backend="GrafanaAlertingClient"}[5m]))
+          > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          service: alerting
+          component: grafana
+        annotations:
+          summary: "Grafana alerting backend is failing"
+          description: "Primary alerting backend (Grafana) is failing health checks. Fallback to Mimir may be active."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#grafanaalertingdown"
+
+      # Mimir alerting backend down (fallback)
+      - alert: MimirAlertingDown
+        expr: |
+          sum(rate(alerting_health_checks_total{backend="MimirAlertingClient", result!="healthy"}[5m]))
+          /
+          sum(rate(alerting_health_checks_total{backend="MimirAlertingClient"}[5m]))
+          > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          service: alerting
+          component: mimir
+        annotations:
+          summary: "Mimir alerting backend is failing"
+          description: "Fallback alerting backend (Mimir) is failing health checks. Only stub backend may be available."
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#mimiralertingdown"

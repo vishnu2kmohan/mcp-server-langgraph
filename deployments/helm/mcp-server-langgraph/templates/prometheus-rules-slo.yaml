@@ -1,0 +1,12 @@
+{{- if index .Values "kube-prometheus-stack" "enabled" }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "mcp-server-langgraph.fullname" . }}-slo-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mcp-server-langgraph.labels" . | nindent 4 }}
+    prometheus: kube-prometheus
+spec:
+  {{- .Files.Get "prometheus-rules/slo.yaml" | nindent 2 }}
+{{- end }}

@@ -1,0 +1,153 @@
+# Alerting Fallback Chain Rules (ADR-0098)
+# ==========================================
+# Alerting rules for monitoring the alerting backend fallback chain.
+# These alerts help detect when the primary alerting backend (Grafana)
+# is failing and fallbacks to Mimir or Stub are activated.
+
+groups:
+- name: alerting.fallback.health
+  interval: 30s
+  rules:
+  - alert: AlertingFallbackActivated
+    expr: sum(rate(alerting_fallback_activations_total[5m])) > 0.1
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Alerting backend fallback is active'
+      description: |
+        Alerting fallback chain is activating at {{ $value | humanize }} activations/sec.
+        Primary backend may be unhealthy.
+
+        Impact: Alert queries are being served by fallback backends.
+
+        Investigate:
+        1. Check Grafana health: kubectl logs -l app=grafana
+        2. Check Mimir health: kubectl logs -l app=mimir
+        3. Review DevTools AlertsTab for any issues
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#alertingfallbackactivated'
+      dashboard_url: '{{ grafana_url }}/d/alerting-fallback-metrics'
+
+  - alert: AlertingFallbackSustained
+    expr: sum(increase(alerting_fallback_activations_total[15m])) > 10
+    for: 15m
+    labels:
+      severity: critical
+      team: platform
+    annotations:
+      summary: 'Sustained alerting fallback activity'
+      description: |
+        More than 10 fallback activations in the last 15 minutes.
+        Primary alerting backend is persistently failing.
+
+        Impact: Alert availability depends entirely on fallback backends.
+
+        Immediate Action Required:
+        1. Investigate Grafana health immediately
+        2. Check network connectivity between services
+        3. Review LGTM stack health dashboard
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#alertingfallbacksustained'
+      dashboard_url: '{{ grafana_url }}/d/alerting-fallback-metrics'
+
+  - alert: AlertingBackendsDown
+    expr: |
+      sum(rate(alerting_backend_errors_total[5m])) > 0
+      and
+      sum(rate(alerting_health_checks_total{result="healthy"}[5m])) == 0
+    for: 5m
+    labels:
+      severity: critical
+      team: platform
+    annotations:
+      summary: 'All alerting backends are failing'
+      description: |
+        No healthy alerting backends detected. Alert data may be unavailable.
+
+        Impact: DevTools AlertsTab and alert queries will return empty results.
+
+        Immediate Action Required:
+        1. Check all alerting backends: Grafana, Mimir, Stub
+        2. Verify LGTM stack is running
+        3. Consider restarting affected services
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#alertingbackendsdown'
+      dashboard_url: '{{ grafana_url }}/d/alerting-fallback-metrics'
+
+  - alert: AlertingBackendErrorsHigh
+    expr: sum(rate(alerting_backend_errors_total[5m])) > 0.5
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'High alerting backend error rate'
+      description: |
+        Alerting backend errors occurring at {{ $value | humanize }} errors/sec.
+
+        Investigate:
+        1. Check backend connectivity
+        2. Review error types in metrics
+        3. Check for API timeouts
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#alertingbackenderrorshigh'
+      dashboard_url: '{{ grafana_url }}/d/alerting-fallback-metrics'
+
+  - alert: AlertingHealthChecksFailing
+    expr: |
+      sum(rate(alerting_health_checks_total{result!="healthy"}[5m]))
+      /
+      sum(rate(alerting_health_checks_total[5m]))
+      > 0.3
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Alerting health check failure rate high'
+      description: |
+        More than 30% of alerting backend health checks are failing.
+
+        Investigate:
+        1. Review health check logs
+        2. Check backend /ready endpoints
+        3. Verify network connectivity
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#alertinghealthchecksfailing'
+      dashboard_url: '{{ grafana_url }}/d/alerting-fallback-metrics'
+
+- name: alerting.backend.specific
+  interval: 30s
+  rules:
+  - alert: GrafanaAlertingDown
+    expr: |
+      sum(rate(alerting_health_checks_total{backend="GrafanaAlertingClient", result!="healthy"}[5m]))
+      /
+      sum(rate(alerting_health_checks_total{backend="GrafanaAlertingClient"}[5m]))
+      > 0.5
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Grafana alerting backend is failing'
+      description: |
+        Primary alerting backend (Grafana) is failing health checks.
+        Fallback to Mimir may be active.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#grafanaalertingdown'
+      dashboard_url: '{{ grafana_url }}/d/alerting-fallback-metrics'
+
+  - alert: MimirAlertingDown
+    expr: |
+      sum(rate(alerting_health_checks_total{backend="MimirAlertingClient", result!="healthy"}[5m]))
+      /
+      sum(rate(alerting_health_checks_total{backend="MimirAlertingClient"}[5m]))
+      > 0.5
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Mimir alerting backend is failing'
+      description: |
+        Fallback alerting backend (Mimir) is failing health checks.
+        Only stub backend may be available.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alerting-fallback.md#mimiralertingdown'
+      dashboard_url: '{{ grafana_url }}/d/alerting-fallback-metrics'

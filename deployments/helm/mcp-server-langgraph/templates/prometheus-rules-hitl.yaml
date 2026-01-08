@@ -2,11 +2,11 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: {{ include "mcp-server-langgraph.fullname" . }}-sla-alerts
+  name: {{ include "mcp-server-langgraph.fullname" . }}-hitl-alerts
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "mcp-server-langgraph.labels" . | nindent 4 }}
     prometheus: kube-prometheus
 spec:
-  {{- .Files.Get "prometheus-rules/sla.yaml" | nindent 2 }}
+  {{- .Files.Get "prometheus-rules/hitl.yaml" | nindent 2 }}
 {{- end }}

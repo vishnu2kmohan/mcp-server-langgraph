@@ -1,0 +1,73 @@
+# WebSocket Protocol Version Alerting Rules
+# ==========================================
+# Detects when client-server protocol version mismatches occur, indicating
+# deployment issues or outdated client caching.
+#
+# Reference: ADR-0076 - WebSocket Protocol Versioning Strategy
+# Migrated from: monitoring/grafana/alerting.yml (Grafana-native rules)
+
+groups:
+  - name: websocket-protocol-version
+    interval: 1m
+    rules:
+      # -------------------------------------------------------------------------
+      # Protocol Version Mismatch Rate Alert (Warning)
+      # -------------------------------------------------------------------------
+      - alert: WebSocketProtocolVersionMismatch
+        expr: |
+          sum(rate(websocket_connections_rejected_total{reason="protocol_version_mismatch"}[5m])) * 60 > 5
+        for: 2m
+        labels:
+          severity: warning
+          component: websocket
+          team: platform
+        annotations:
+          summary: "WebSocket protocol version mismatches detected"
+          description: |
+            Protocol Version Drift Detected: {{ $value | printf "%.1f" }} mismatches/min
+
+            Clients are connecting with incompatible protocol versions and being rejected
+            with close code 4009. This typically indicates:
+
+            1. Recent deployment: Server updated but clients have cached old version
+            2. CDN caching: Static assets not invalidated after deployment
+            3. Browser caching: Users need to refresh the page
+
+            Recommended Actions:
+            1. Check recent deployments for protocol version changes
+            2. Verify CDN cache invalidation for frontend assets
+            3. Review client version distribution in logs
+            4. Consider prompting users to refresh via notification
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/websocket-operations.md#protocol-version-mismatch"
+          dashboard_url: "{{ grafana_url }}/d/websocket-telemetry/websocket-telemetry"
+
+      # -------------------------------------------------------------------------
+      # Sustained Protocol Version Mismatch Alert (Critical)
+      # -------------------------------------------------------------------------
+      - alert: WebSocketProtocolVersionMismatchCritical
+        expr: |
+          sum(rate(websocket_connections_rejected_total{reason="protocol_version_mismatch"}[15m])) * 60 > 10
+        for: 10m
+        labels:
+          severity: critical
+          component: websocket
+          team: platform
+        annotations:
+          summary: "Sustained WebSocket protocol version mismatches - deployment issue likely"
+          description: |
+            Critical Protocol Drift: {{ $value | printf "%.1f" }} mismatches/min sustained for 10+ minutes
+
+            This sustained rate indicates a deployment or configuration issue that is
+            preventing users from connecting to the application.
+
+            Immediate Actions Required:
+            1. Verify deployment status: Check if recent deployment completed successfully
+            2. Check rollback options: Consider rolling back if mismatch started with deployment
+            3. Force cache invalidation: Invalidate CDN and instruct users to hard refresh
+            4. Monitor user impact: Check for elevated support tickets or error reports
+
+            Root Cause Investigation:
+            - Query: {job="websocket"} |= "protocol_version_mismatch"
+            - Dashboard: /d/websocket-telemetry/websocket-telemetry
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/websocket-operations.md#critical-protocol-version-drift"
+          dashboard_url: "{{ grafana_url }}/d/websocket-telemetry/websocket-telemetry"

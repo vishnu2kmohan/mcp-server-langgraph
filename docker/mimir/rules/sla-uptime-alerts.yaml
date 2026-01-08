@@ -1,3 +1,7 @@
+# Synced from: monitoring/prometheus/rules/sla-uptime-alerts.yaml
+# Namespace for Mimir ruler compatibility
+namespace: sla-uptime
+
 groups:
 - name: sla_uptime
   interval: 5m
@@ -20,7 +24,7 @@ groups:
         System uptime {{ $value | humanizePercentage }} is below SLA target of 99.9% for the last 5 minutes.
       dashboard: '{{ grafana_url }}/d/sla/sla-dashboard'
       runbook_url: |-
-        https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slauotimebreach
+        https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slauptimebreach
   - alert: SLAUptimeAtRisk
     expr: |
       (

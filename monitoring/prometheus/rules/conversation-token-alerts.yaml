@@ -1,0 +1,235 @@
+# Prometheus Alerting Rules for Conversation Token Usage
+# Reference: Phase 4.1 Audit - Full Conversation in LangGraph State
+# Dashboard: conversation-token-usage
+#
+# Metrics Used:
+#   - chat_conversation_message_count: Histogram of messages per conversation
+#   - chat_conversation_token_estimate: Histogram of estimated tokens per conversation
+#   - chat_conversation_messages_by_role_total: Counter by role (user, assistant, system)
+#
+# Usage:
+#   1. Copy to Prometheus rules directory
+#   2. Add to prometheus.yml under rule_files
+#   3. Reload Prometheus: curl -X POST http://prometheus:9090/-/reload
+#
+groups:
+  - name: conversation_token_usage
+    interval: 1m
+    rules:
+      # High Token Usage Warning (approaching context window limits)
+      # Most models have 128K-200K context windows; warn at 100K
+      - alert: ConversationTokenUsageHigh
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(chat_conversation_token_estimate_bucket[5m])) by (le)
+          ) > 100000
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+          category: context_window
+          component: chat
+        annotations:
+          summary: "High conversation token usage detected (p95 > 100K)"
+          description: |
+            P95 token estimate is {{ $value | printf "%.0f" }} tokens (threshold: 100,000).
+
+            This indicates conversations are approaching context window limits.
+
+            Possible causes:
+            - Long conversation histories without summarization
+            - Large system prompts
+            - Verbose assistant responses
+
+            Actions:
+            1. Review conversation compaction settings
+            2. Consider implementing sliding window or summarization
+            3. Check for runaway multi-turn conversations
+          runbook_url: "https://docs/runbooks/CONVERSATION_TOKENS.md#high-token-usage"
+          dashboard_url: "{{ grafana_url }}/d/conversation-token-usage"
+
+      # Critical Token Usage (near context window limit)
+      - alert: ConversationTokenUsageCritical
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(chat_conversation_token_estimate_bucket[5m])) by (le)
+          ) > 150000
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+          category: context_window
+          component: chat
+        annotations:
+          summary: "Critical conversation token usage (p95 > 150K)"
+          description: |
+            P95 token estimate is {{ $value | printf "%.0f" }} tokens (threshold: 150,000).
+
+            Conversations are near or exceeding model context limits.
+            This may cause truncation, errors, or degraded responses.
+
+            Immediate actions:
+            1. Check for stuck or runaway conversations
+            2. Review system prompt sizes
+            3. Enable conversation compaction if disabled
+            4. Consider session resets for affected users
+          runbook_url: "https://docs/runbooks/CONVERSATION_TOKENS.md#critical-token-usage"
+          dashboard_url: "{{ grafana_url }}/d/conversation-token-usage"
+
+      # Message Count Spike (unusual conversation length)
+      - alert: ConversationMessageCountSpike
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(chat_conversation_message_count_bucket[5m])) by (le)
+          ) > 50
+        for: 15m
+        labels:
+          severity: warning
+          team: platform
+          category: usage_pattern
+          component: chat
+        annotations:
+          summary: "Unusual conversation length detected (p95 > 50 messages)"
+          description: |
+            P95 message count is {{ $value | printf "%.0f" }} messages per conversation.
+
+            This may indicate:
+            - Users having very long conversations
+            - Automation or scripted usage
+            - Potential abuse patterns
+            - Need for conversation summarization
+
+            Actions:
+            1. Review conversation patterns
+            2. Check for automated/bot traffic
+            3. Consider session limits
+          runbook_url: "https://docs/runbooks/CONVERSATION_TOKENS.md#message-count-spike"
+          dashboard_url: "{{ grafana_url }}/d/conversation-token-usage"
+
+      # High System Message Percentage (unusual configuration)
+      - alert: ConversationSystemMessageRatioHigh
+        expr: |
+          (
+            sum(rate(chat_conversation_messages_by_role_total{role="system"}[15m]))
+            /
+            sum(rate(chat_conversation_messages_by_role_total[15m]))
+          ) > 0.25
+        for: 15m
+        labels:
+          severity: warning
+          team: platform
+          category: configuration
+          component: chat
+        annotations:
+          summary: "High system message ratio (>25%)"
+          description: |
+            System messages account for {{ $value | humanizePercentage }} of all messages.
+
+            This is unusual and may indicate:
+            - Multiple system prompts being injected
+            - Misconfiguration in prompt templates
+            - Dynamic context overloading system prompt slot
+
+            Actions:
+            1. Review system prompt configuration
+            2. Check dynamic context injection patterns
+            3. Audit prompt template usage
+          runbook_url: "https://docs/runbooks/CONVERSATION_TOKENS.md#system-message-ratio"
+          dashboard_url: "{{ grafana_url }}/d/conversation-token-usage"
+
+      # Unbalanced User/Assistant Ratio (conversation flow issue)
+      - alert: ConversationRoleImbalance
+        expr: |
+          (
+            sum(rate(chat_conversation_messages_by_role_total{role="user"}[15m]))
+            /
+            sum(rate(chat_conversation_messages_by_role_total{role="assistant"}[15m]))
+          ) > 3
+        for: 15m
+        labels:
+          severity: info
+          team: platform
+          category: usage_pattern
+          component: chat
+        annotations:
+          summary: "Unbalanced user/assistant message ratio (>3:1)"
+          description: |
+            User to assistant message ratio is {{ $value | printf "%.1f" }}:1.
+
+            This may indicate:
+            - Users sending multiple messages before assistant responds
+            - Incomplete conversations (assistant not responding)
+            - Batch message patterns
+
+            This is informational; investigate if persistent.
+          runbook_url: "https://docs/runbooks/CONVERSATION_TOKENS.md#role-imbalance"
+          dashboard_url: "{{ grafana_url }}/d/conversation-token-usage"
+
+      # No Conversation Activity (potential outage indicator)
+      - alert: ConversationNoActivity
+        expr: |
+          sum(increase(chat_conversation_message_count_count[15m])) == 0
+        for: 15m
+        labels:
+          severity: warning
+          team: platform
+          category: availability
+          component: chat
+        annotations:
+          summary: "No conversation activity detected in 15 minutes"
+          description: |
+            No conversations have been processed in the last 15 minutes.
+
+            This may indicate:
+            - Service outage
+            - Authentication issues
+            - Network problems
+            - Low traffic period (verify against expected patterns)
+
+            Actions:
+            1. Check chat service health
+            2. Review authentication status
+            3. Check LLM provider connectivity
+          runbook_url: "https://docs/runbooks/CONVERSATION_TOKENS.md#no-activity"
+          dashboard_url: "{{ grafana_url }}/d/conversation-token-usage"
+
+  - name: conversation_recording_rules
+    interval: 30s
+    rules:
+      # Pre-compute token estimate p95 for dashboard efficiency
+      - record: chat_conversation:token_estimate_p95:5m
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(chat_conversation_token_estimate_bucket[5m])) by (le)
+          )
+        labels:
+          quantile: "0.95"
+
+      # Pre-compute token estimate p50 for dashboard efficiency
+      - record: chat_conversation:token_estimate_p50:5m
+        expr: |
+          histogram_quantile(0.50,
+            sum(rate(chat_conversation_token_estimate_bucket[5m])) by (le)
+          )
+        labels:
+          quantile: "0.50"
+
+      # Pre-compute message count p95
+      - record: chat_conversation:message_count_p95:5m
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(chat_conversation_message_count_bucket[5m])) by (le)
+          )
+        labels:
+          quantile: "0.95"
+
+      # Pre-compute messages by role rate
+      - record: chat_conversation:messages_by_role_rate:5m
+        expr: sum(rate(chat_conversation_messages_by_role_total[5m])) by (role)
+
+      # Pre-compute average tokens per conversation
+      - record: chat_conversation:avg_tokens:5m
+        expr: |
+          sum(rate(chat_conversation_token_estimate_sum[5m]))
+          /
+          sum(rate(chat_conversation_token_estimate_count[5m]))

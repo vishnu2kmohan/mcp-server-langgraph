@@ -176,17 +176,7 @@ groups:
           description: "Unable to connect to OpenFGA service. Authorization checks may fail."
           runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/openfga-down.md"
 
-      - alert: KeycloakDown
-        expr: |
-            up{job="keycloak"} == 0
-        for: 2m
-        labels:
-          severity: critical
-          component: keycloak
-        annotations:
-          summary: "Keycloak service is down"
-          description: "Keycloak SSO service is unavailable. Authentication will fail."
-          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/keycloak-down.md"
+      # KeycloakDown alert is defined in lgtm.yaml - not duplicated here
 
       - alert: KeycloakHighLatency
         expr: |
