@@ -276,11 +276,16 @@ class Settings(BaseSettings):
     enable_parallel_execution: bool = False  # Enable parallel tool execution
     max_parallel_tools: int = 5  # Maximum concurrent tool executions
 
-    # Semantic Tool Selection - Anthropic Tool Search Tool Pattern
-    # Uses vector embeddings to select relevant tools before binding to LLM
-    # Reduces token usage with many tools (50+) by 34-64%
-    enable_semantic_tool_selection: bool = False  # Enable semantic tool discovery
+    # Semantic Search for Tools, Skills, and Memories - ADR-0099
+    # Uses vector embeddings to select relevant capabilities before binding to LLM
+    # Reduces token usage with many tools (50+) by 34-64% (Anthropic Tool Search Tool pattern)
+    # Graph nodes added: retrieve_tools, retrieve_skills, retrieve_memories
+    enable_semantic_tool_search: bool = False  # FF_ENABLE_SEMANTIC_TOOL_SEARCH
+    enable_semantic_skill_search: bool = False  # FF_ENABLE_SEMANTIC_SKILL_SEARCH
+    enable_semantic_memory_search: bool = False  # FF_ENABLE_SEMANTIC_MEMORY_SEARCH
     max_selected_tools: int = 10  # Maximum tools to select via semantic search
+    max_selected_skills: int = 5  # Maximum skills to select via semantic search
+    max_retrieved_memories: int = 10  # Maximum memories to retrieve via semantic search
     semantic_tool_search_threshold: float = 0.5  # Minimum similarity score (0-1)
 
     # Streaming Configuration - MCP WebSocket Streaming
@@ -394,6 +399,12 @@ class Settings(BaseSettings):
     # SECURITY: Mock authorization disabled by default in production
     # Override with ENABLE_MOCK_AUTHORIZATION=true if needed for staging/testing
     enable_mock_authorization: bool | None = None  # None = auto-determine based on environment
+
+    # Authorization Cache Warming (ADR-0099)
+    # Pre-warm authorization cache with known user/resource combinations on startup
+    # Format: List of dicts with user_id, relation, object_type, and optional object_id
+    # Example: [{"user_id": "user:service", "relation": "viewer", "object_type": "tool_index"}]
+    auth_cache_warm_entries: list[dict[str, str]] = []
 
     # Keycloak Settings
     # Internal URL for backend-to-backend communication (token exchange, introspection)

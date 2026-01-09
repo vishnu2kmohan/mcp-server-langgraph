@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest",
     "test:run": "bash scripts/run-tests-sharded.sh",
+    "test:parallel": "bash scripts/run-tests-sharded.sh --parallel",
     "test:quick": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest run --shard=1/50",
     "test:ui": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest --ui",
     "test:coverage": "bash scripts/run-tests-sharded.sh",

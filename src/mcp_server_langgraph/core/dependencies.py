@@ -41,6 +41,7 @@ _service_principal_manager: ServicePrincipalManager | None = None
 _api_key_manager: APIKeyManager | None = None
 _user_provider: UserProvider | None = None
 _token_denylist: TokenDenylist | None = None
+_semantic_index_manager: Any = None  # SemanticIndexManager | None
 
 
 def get_keycloak_client() -> KeycloakClient:
@@ -486,6 +487,111 @@ def get_token_denylist() -> TokenDenylist:
 
 
 # ==============================================================================
+# Semantic Index Manager (ADR-0099)
+# ==============================================================================
+
+
+def get_semantic_index_manager() -> Any:
+    """
+    Get SemanticIndexManager instance (singleton).
+
+    Returns the cached SemanticIndexManager for semantic tool/skill/memory search.
+    Returns None if not initialized (call set_semantic_index_manager during startup).
+
+    ADR-0099: Semantic Tool Selection for Dynamic Capability Discovery
+
+    Returns:
+        SemanticIndexManager instance or None if not initialized
+
+    Example:
+        # In bootstrap/lifespan
+        from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
+
+        manager = SemanticIndexManager(embedder=..., qdrant_client=...)
+        set_semantic_index_manager(manager)
+
+        # Later in code
+        manager = get_semantic_index_manager()
+        if manager:
+            tools = await manager.search_tools(query, user_id)
+    """
+    return _semantic_index_manager
+
+
+def set_semantic_index_manager(manager: Any) -> None:
+    """
+    Set the SemanticIndexManager singleton instance.
+
+    Called during app startup to initialize the manager.
+    The manager handles semantic search for tools, skills, and memories.
+
+    Args:
+        manager: SemanticIndexManager instance to cache
+
+    Example:
+        from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
+
+        manager = SemanticIndexManager(embedder=embedder, qdrant_client=client)
+        set_semantic_index_manager(manager)
+    """
+    global _semantic_index_manager
+    _semantic_index_manager = manager
+    logger.debug("SemanticIndexManager singleton initialized")
+
+
+# ==============================================================================
+# Decision Trace Repository (ADR-0101 Context Graphs)
+# ==============================================================================
+
+# Singleton instance for decision trace repository
+_decision_trace_repository: Any = None
+
+
+def get_decision_trace_repository() -> Any:
+    """
+    Get DecisionTraceRepository instance (singleton).
+
+    Returns the cached PostgresDecisionTraceRepository for decision trace storage.
+    Returns None if not initialized (context graph disabled).
+
+    ADR-0101: Context Graphs - Decision Trace Capture
+
+    Returns:
+        DecisionTraceRepositoryBase instance or None if not initialized
+
+    Example:
+        # In GDPR data export/deletion
+        repo = get_decision_trace_repository()
+        if repo:
+            traces = await repo.get_by_user(user_id)
+    """
+    return _decision_trace_repository
+
+
+def set_decision_trace_repository(repository: Any) -> None:
+    """
+    Set the DecisionTraceRepository singleton instance.
+
+    Called during app startup (bootstrap/context_graph.py) to initialize
+    the repository when FF_ENABLE_CONTEXT_GRAPH=true.
+
+    Args:
+        repository: DecisionTraceRepositoryBase instance to cache
+
+    Example:
+        from mcp_server_langgraph.repositories.decision_trace import (
+            PostgresDecisionTraceRepository,
+        )
+
+        repo = PostgresDecisionTraceRepository(session_factory=get_async_session)
+        set_decision_trace_repository(repo)
+    """
+    global _decision_trace_repository
+    _decision_trace_repository = repository
+    logger.debug("DecisionTraceRepository singleton initialized")
+
+
+# ==============================================================================
 # Testing Utilities (CODEX Finding #6)
 # ==============================================================================
 
@@ -508,7 +614,7 @@ def reset_singleton_dependencies() -> None:
 
     WARNING: This should ONLY be used in tests. Never call in production code.
     """
-    global _keycloak_client, _openfga_client, _service_principal_manager, _api_key_manager, _user_provider, _token_denylist
+    global _keycloak_client, _openfga_client, _service_principal_manager, _api_key_manager, _user_provider, _token_denylist, _semantic_index_manager, _decision_trace_repository
 
     _keycloak_client = None
     _openfga_client = None
@@ -516,6 +622,8 @@ def reset_singleton_dependencies() -> None:
     _api_key_manager = None
     _user_provider = None
     _token_denylist = None
+    _semantic_index_manager = None
+    _decision_trace_repository = None
 
 
 # ==============================================================================

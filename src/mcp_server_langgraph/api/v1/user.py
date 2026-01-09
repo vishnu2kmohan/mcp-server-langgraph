@@ -217,6 +217,7 @@ PERSONA_VISIBLE_MODULES: dict[str, list[str]] = {
         "mcp",
         "vectors",
         "files",
+        "skills",
         # Observability
         "traces",
         "observability",
@@ -254,6 +255,7 @@ PERSONA_VISIBLE_MODULES: dict[str, list[str]] = {
         "mcp",
         "vectors",
         "files",
+        "skills",
         # Observability
         "traces",
         "cost",
@@ -298,6 +300,8 @@ PERSONA_VISIBLE_MODULES: dict[str, list[str]] = {
         "projects",
         "chat",
         "workflows",
+        # Skills - read-only browsing (viewer access via OpenFGA)
+        "skills",
         "help",
     ],
 }

@@ -848,6 +848,7 @@ markers = [
     "timeout: Custom timeout override for pytest-timeout plugin (used for meta-tests running subprocesses)",
     "auth: Authentication/authorization tests",
     "authorization: Authorization tuple parity tests (OpenFGA configuration)",
+    "partner_access: Cross-tenant partner access pattern tests (ADR-0068 Phase 9)",
     "auth_flow: End-to-end authentication flow tests (Keycloak, OAuth2, OpenFGA)",
     "keycloak: Keycloak-specific integration tests (realm, client, user management)",
     "sso: SSO browser-based authentication flow tests (OAuth2 Authorization Code + PKCE)",
@@ -871,6 +872,7 @@ markers = [
     "sub_persona: Sub-persona authorization tests (admin, alice, bob personas)",
     "ai: AI UX service tests (persona analysis, disclosure, nudges, error recovery)",
     "feature_flags: Feature flag configuration and toggle tests",
+    "context_graph: Context graph decision trace tests (ADR-0101)",
     "observability: OpenTelemetry/metrics/logging tests",
     "alerting: Alerting backend and fallback chain tests",
     "metrics: Prometheus/OTel metrics instrumentation tests",
@@ -985,6 +987,9 @@ markers = [
     "diagram_intelligence: Diagram intelligence AI tests (validation, diagram-to-code)",
     "conversation_intelligence: Conversation intelligence AI tests (intent, context, goals)",
     "kb_focus: KB Focus Mode tests (ADR-0094, Perplexity-style context retrieval control)",
+    "adr0099: ADR-0099 semantic tool selection tests (semantic search for tools, skills, memories)",
+    "bootstrap: Application bootstrap and initialization tests (semantic index, auth, dependencies)",
+    "service_principal: Service principal authentication tests (non-interactive OAuth2, M2M)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

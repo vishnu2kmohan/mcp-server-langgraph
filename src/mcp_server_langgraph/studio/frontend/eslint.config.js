@@ -116,6 +116,7 @@ export default tseslint.config(
         // Design System: Enforce semantic colors over raw Tailwind colors
         // Use error-*, success-*, warning-*, primary-* instead of red-*, green-*, yellow-*, blue-*
         // Use insight-* instead of purple-*, grafana-* instead of orange-*, info-* instead of cyan-*
+        // Use neutral-* instead of gray-* (recommended but not enforced due to 4000+ usages)
         // See plan: ~/.claude/plans/playful-toasting-emerson.md
         {
           selector:
@@ -123,6 +124,15 @@ export default tseslint.config(
           message:
             'Use semantic colors (error-*, success-*, warning-*, primary-*, insight-*, grafana-*, info-*) instead of raw colors (red-*, green-*, blue-*, yellow-*, amber-*, purple-*, orange-*, cyan-*). See src/utils/colors.ts for utilities.',
         },
+        // Design System: Suggest neutral-* instead of gray-* for new code
+        // Note: This is informational only (4000+ existing usages). Migration is tracked in plan.
+        // New code should prefer neutral-* for consistency with other semantic colors.
+        // {
+        //   selector:
+        //     "Literal[value=/\\b(text|bg|border|divide)-(gray)-\\d+/]",
+        //   message:
+        //     'Consider using neutral-* instead of gray-* for semantic consistency. See src/utils/colors.ts for NEUTRAL_COLORS utilities.',
+        // },
       ],
     },
   },

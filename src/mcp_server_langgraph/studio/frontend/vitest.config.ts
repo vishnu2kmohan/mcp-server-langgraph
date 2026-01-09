@@ -194,8 +194,10 @@ export default defineConfig({
 
     // Restart workers after running this many tests to prevent memory accumulation
     // This helps prevent OOM by recycling workers with fresh heap
+    // Optimized from 1 to 3: Still safe with 4GB heap, but 3x less overhead
+    // Memory calculation: 3 files × 400MB avg = 1.2GB max, well within 4GB limit
     restartWorkers: true,
-    restartWorkersAfter: 1, // Restart after every test file to clear accumulated memory
+    restartWorkersAfter: 3, // Restart after 3 test files (balance of safety + speed)
 
     // Teardown timeout - give workers time to clean up gracefully
     teardownTimeout: 10000, // Increased from 5s to 10s for GC time

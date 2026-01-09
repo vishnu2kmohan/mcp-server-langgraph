@@ -157,10 +157,13 @@ class DataDeletionService:
             if self.gdpr_storage:
                 await self._safe_delete("consents", self._delete_user_consents, user_id, deleted_items, errors)
 
-            # 6. Anonymize audit logs (don't delete for compliance)
+            # 6. Delete decision traces (ADR-0101 Context Graphs)
+            await self._safe_delete("decision_traces", self._delete_decision_traces, user_id, deleted_items, errors)
+
+            # 7. Anonymize audit logs (don't delete for compliance)
             await self._safe_anonymize("audit_logs", self._anonymize_user_audit_logs, user_id, anonymized_items, errors)
 
-            # 7. Delete user profile/account
+            # 8. Delete user profile/account
             try:
                 count = await self._delete_user_profile(user_id)
                 deleted_items["user_profile"] = count
@@ -170,7 +173,7 @@ class DataDeletionService:
                 errors.append(error_msg)
                 logger.error(error_msg, exc_info=True)
 
-            # 8. Create final audit record (anonymized)
+            # 9. Create final audit record (anonymized)
             audit_record_id = await self._create_deletion_audit_record(
                 user_id=user_id, username=username, reason=reason, deleted_items=deleted_items, errors=errors
             )
@@ -374,3 +377,41 @@ class DataDeletionService:
         )
 
         return audit_record_id
+
+    def _get_decision_trace_repository(self) -> "Any":
+        """Get decision trace repository from dependencies.
+
+        Returns the repository if available, None otherwise.
+        Used for GDPR deletion of decision traces (ADR-0101 Context Graphs).
+        """
+        from typing import Any
+
+        try:
+            from mcp_server_langgraph.core.dependencies import (
+                get_decision_trace_repository,
+            )
+
+            return get_decision_trace_repository()
+        except Exception as e:
+            logger.debug(f"Decision trace repository not available: {e}")
+            return None
+
+    async def _delete_decision_traces(self, user_id: str) -> int:
+        """Delete user decision traces for GDPR compliance (ADR-0101 Context Graphs).
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            Number of decision traces deleted
+        """
+        repo = self._get_decision_trace_repository()
+        if repo is None:
+            return 0
+
+        try:
+            count = await repo.delete_by_user(user_id)
+            return count
+        except Exception as e:
+            logger.error(f"Failed to delete user decision traces: {e}", exc_info=True)
+            raise

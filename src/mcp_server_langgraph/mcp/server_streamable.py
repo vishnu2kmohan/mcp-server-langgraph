@@ -53,6 +53,7 @@ from mcp_server_langgraph.mcp.resources import (
 )
 from mcp_server_langgraph.mcp.handlers.skills import SkillsToolHandler
 from mcp_server_langgraph.mcp.handlers.agents import AgentsToolHandler
+from mcp_server_langgraph.skills.adapters import create_skill_search_tool
 from mcp_server_langgraph.sdk.hooks import DEFAULT_SECURITY_HOOKS
 from mcp_server_langgraph.mcp.sampling import (
     ModelPreferences,
@@ -602,9 +603,19 @@ class MCPAgentStreamableServer:
         self.resource_handler = create_studio_resource_handler()
 
         # Initialize Skills and Agents handlers (ADR-0072)
+        # Create SkillSearchTool for semantic search if enabled and configured
+        skill_search_tool = None
+        if feature_flags.enable_semantic_skill_search:
+            skill_search_tool = create_skill_search_tool()
+            if skill_search_tool:
+                logger.info("SkillSearchTool created for semantic skill search")
+            else:
+                logger.debug("SkillSearchTool not created (missing configuration)")
+
         self.skills_handler = SkillsToolHandler(
             auth=self.auth,
             agent_graph=self.agent_graph,
+            skill_search_tool=skill_search_tool,
         )
         self.agents_handler = AgentsToolHandler(
             auth=self.auth,

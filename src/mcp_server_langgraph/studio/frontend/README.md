@@ -82,9 +82,14 @@ The frontend uses a **Studio Shell Layout** pattern:
 
 Additional frontend-specific documentation is in `docs-internal/frontend/`:
 
+- **`DESIGN_SYSTEM.md`** - Design tokens, UI components, AI-Native patterns
+  - Semantic colors, CVA variants, accessibility
+  - AIEmptyState, CommandPaletteContext, WidgetArtifact
+  - Chat Input features and feature flags
 - `FRONTEND_API_AUDIT.md` - API endpoint usage
 - `STATE_MANAGEMENT_PATTERNS.md` - Redux patterns
 - `MCP_CONNECTIONS_FEATURE.md` - MCP connections spec
+- `feature-flags-mapping.md` - Feature flag documentation
 - `bundle-baseline.md` - Bundle size tracking
 
 ## Metrics

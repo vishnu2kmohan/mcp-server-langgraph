@@ -131,8 +131,8 @@ class RouterOutputWithDiscovery(RouterOutput):
         discovered_skills: Skills found via semantic search (list[SkillIndexEntry])
     """
 
-    discovered_tools: list = Field(default_factory=list)
-    discovered_skills: list = Field(default_factory=list)
+    discovered_tools: list[Any] = Field(default_factory=list)
+    discovered_skills: list[Any] = Field(default_factory=list)
 
 
 # Default fallback for parse errors or low confidence
@@ -315,6 +315,7 @@ class RouterAgent:
         self,
         message: str,
         semantic_index: Any,
+        user_id: str,
         tools_available: list[str] | None = None,
         persona: str | None = None,
         max_tools: int = 10,
@@ -329,6 +330,7 @@ class RouterAgent:
         Args:
             message: User message to classify
             semantic_index: SemanticIndexManager instance for semantic search
+            user_id: User identifier for authorization (e.g., "user:alice")
             tools_available: List of available tools (optional, merged with discovered)
             persona: Current persona context (optional)
             max_tools: Maximum number of tools to discover (default 10)
@@ -337,18 +339,22 @@ class RouterAgent:
         Returns:
             RouterOutputWithDiscovery with classification and discovered capabilities
         """
-        discovered_tools: list = []
-        discovered_skills: list = []
+        discovered_tools: list[Any] = []
+        discovered_skills: list[Any] = []
 
-        # Semantic search for tools and skills
+        # Semantic search for tools and skills (with authorization via user_id)
         try:
-            discovered_tools = await semantic_index.search_tools(query=message, limit=max_tools)
+            discovered_tools = await semantic_index.search_tools(
+                query=message, user_id=user_id, limit=max_tools
+            )
         except Exception as e:
             logger.warning(f"Semantic tool search failed: {e}")
             discovered_tools = []
 
         try:
-            discovered_skills = await semantic_index.search_skills(query=message, limit=max_skills)
+            discovered_skills = await semantic_index.search_skills(
+                query=message, user_id=user_id, limit=max_skills
+            )
         except Exception as e:
             logger.warning(f"Semantic skill search failed: {e}")
             discovered_skills = []

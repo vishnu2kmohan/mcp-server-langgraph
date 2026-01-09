@@ -89,6 +89,18 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
         app.state.audit_service = state.storage.audit_service if state.storage else None
         app.state.websocket_lifecycle = state.websocket.mcp_lifecycle_manager if state.websocket else None
 
+        # Context graph decision emitter for decision trace capture (ADR-0101)
+        app.state.decision_emitter = state.context_graph.emitter if state.context_graph else None
+
+        # Register marketplace admin router if available
+        if state.skills and state.skills.marketplace_router:
+            app.include_router(
+                state.skills.marketplace_router,
+                prefix="/api/v1/admin",
+                tags=["marketplace-admin"],
+            )
+            logger.info("Marketplace admin router registered at /api/v1/admin/marketplaces")
+
         # Global setters are now called within bootstrap/storage.py:init_storage()
         # This consolidates initialization logic in bootstrap modules.
         # See: set_audit_service, set_audit_event_broadcaster,

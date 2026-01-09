@@ -1048,8 +1048,8 @@ services:
       qdrant-test:
         condition: service_healthy
     # Create default collection(s) for E2E testing
-    # - mcp_context: Default collection matching config.qdrant_collection_name (384 dims for MiniLM)
-    # - Vector size 384 matches all-MiniLM-L6-v2 embedding model (default in config.py)
+    # - mcp_context: Default collection matching config.qdrant_collection_name
+    # - Vector size 768 matches Vertex AI text-embedding-005 model
     command:
       - /bin/sh
       - -c
@@ -1067,17 +1067,17 @@ services:
         done
 
         # Create mcp_context collection if it doesn't exist
-        # Vector size: 384 (all-MiniLM-L6-v2)
+        # Vector size: 768 (Vertex AI text-embedding-005)
         # Distance: Cosine (default for semantic similarity)
         COLLECTION_EXISTS=$$(curl -sf http://qdrant:6333/collections/mcp_context 2>/dev/null | grep -c '"status":"ok"' || true)
 
         if [ "$$COLLECTION_EXISTS" = "0" ]; then
-          echo "Creating mcp_context collection (384 dimensions, Cosine)..."
+          echo "Creating mcp_context collection (768 dimensions, Cosine)..."
           curl -X PUT http://qdrant:6333/collections/mcp_context \
             -H "Content-Type: application/json" \
             -d '{
               "vectors": {
-                "size": 384,
+                "size": 768,
                 "distance": "Cosine"
               }
             }'
@@ -1229,6 +1229,12 @@ services:
       # Vector Database (Qdrant)
       # -----------------------------------------------------------------------
       - QDRANT_URL=http://qdrant-test:6333
+      # Embedding configuration for semantic search (ADR-0099)
+      # Vertex AI text-embedding-005 (768 dimensions) - requires GCP ADC credentials
+      # See: https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/text-embeddings-api
+      - EMBEDDING_PROVIDER=google_vertex
+      - EMBEDDING_MODEL_NAME=text-embedding-005
+      - EMBEDDING_DIMENSIONS=768
       # OpenTelemetry configuration for distributed tracing
       # Alloy receives OTLP telemetry and forwards to Tempo (traces), Mimir (metrics), Loki (logs)
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
@@ -1290,6 +1296,11 @@ services:
       - FF_ENABLE_AI_ONBOARDING=true     # AI onboarding personalization
       - FF_ENABLE_AI_METRICS_INSIGHTS=true # AI HEART metrics insights
       - FF_ENABLE_AI_PERSONA_ANALYSIS=true # AI persona behavior analysis
+      # -----------------------------------------------------------------------
+      # Shell Chat Input Features (Sprint 1 - Chat Input Gap Fix)
+      # -----------------------------------------------------------------------
+      - FF_ENABLE_MODEL_SELECTOR_IN_SHELL=true  # Model selection dropdown in shell
+      - FF_ENABLE_URL_FETCH_IN_SHELL=true       # URL content fetch (#url pattern) in shell
       # -----------------------------------------------------------------------
       # LLM Factory Streaming (Production-Ready Resilient Streaming)
       # -----------------------------------------------------------------------
@@ -1368,9 +1379,19 @@ services:
       - FF_ENABLE_MULTI_PATTERN_EXECUTION=true     # ReACT, programmatic, orchestrator modes
       - FF_ENABLE_USER_CAPABILITY_SELECTION=true   # UI tool/skill selectors
       - FF_ENABLE_PROGRESSIVE_SKILL_LOADING=true   # 4-stage progressive skill loading
-      - FF_ENABLE_SEMANTIC_SKILL_SEARCH=true       # Vector-based skill discovery
-      - FF_ENABLE_SEMANTIC_MEMORY_RETRIEVAL=true   # Vector-based memory search
       - FF_ENABLE_HITL_UNDO_ROLLBACK=true          # Reversible actions with undo
+      # -----------------------------------------------------------------------
+      # ADR-0099 Semantic Search for Tools, Skills, and Memories
+      # -----------------------------------------------------------------------
+      # Enables semantic search for dynamic capability discovery
+      # Reduces token usage by 34-64% with 50+ tools (Anthropic Tool Search Tool pattern)
+      - FF_ENABLE_SEMANTIC_TOOL_SEARCH=true      # Adds retrieve_tools node
+      - FF_ENABLE_SEMANTIC_SKILL_SEARCH=true     # Adds retrieve_skills node
+      - FF_ENABLE_SEMANTIC_MEMORY_SEARCH=true    # Adds retrieve_memories node
+      - MAX_SELECTED_TOOLS=10                    # Maximum tools to bind per request
+      - MAX_SELECTED_SKILLS=5                    # Maximum skills to bind per request
+      - MAX_RETRIEVED_MEMORIES=10                # Maximum memories to retrieve per request
+      - SEMANTIC_TOOL_SEARCH_THRESHOLD=0.5       # Minimum similarity score (0.0-1.0)
       # -----------------------------------------------------------------------
       # Semantic Search Audit Feature Flags (ADR-0094/0095)
       # -----------------------------------------------------------------------

@@ -264,12 +264,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `postgres/` - PostgreSQL repositories
     - `redis/` - Redis cache layer
 
-- **OpenFGA Authorization Model Updates** (ADR-0068):
-  - Added `vector_store` type for Qdrant collection access control
-  - Added `authz` type for OpenFGA Playground access
-  - Added `service_principal` type for service account delegation
-  - Sample tuples updated from 10 to 21 for comprehensive testing
-  - Seed script for automated OpenFGA initialization
+- **OpenFGA Authorization Model Audit Completion** (ADR-0068, Phases 0-9):
+  - **Phase 0 - Critical Fixes**:
+    - Fixed monotonic chain in `system` type: admin → developer → user → viewer
+    - Removed invalid `role` type and `resource:*` references from role_mappings.yaml
+    - Added CI validation workflow (`.github/workflows/openfga-validate.yml`)
+  - **Phase 1 - Security Tightening**:
+    - Removed overbroad org-based permission propagation for sensitive types
+    - Added `ops` relation to `observability` type for narrower access
+    - Added permission boundary tests
+  - **Phase 2 - Tenant Isolation**:
+    - Added `organization` relation to `api_key` and `skill` types
+    - No viewer propagation for tenant isolation
+  - **Phase 3 - Org Context Enforcement**:
+    - Added `user_in_context` relation to `organization` type
+    - Feature flags: `FF_OPENFGA_ORG_CONTEXT_ENFORCEMENT`, `FF_OPENFGA_ORG_CONTEXT_FAIL_CLOSED`
+    - Authorization service updated with contextual tuple injection
+  - **Phase 4 - Parent-Child Hierarchies**:
+    - Added `project` relation to `artifact` type for hierarchy inheritance
+    - Server depth/breadth limits configured
+  - **Phase 5 - Service Principal Parity**:
+    - Extended metadata to include `service_principal` in all user-accepting relations (14+ types)
+    - Added `acts_as` tuples for service principal delegation
+  - **Phase 6 - Conditions**:
+    - Added `time_bound_share` and `subscription_tier` conditions
+    - Feature flag: `FF_OPENFGA_CONDITIONS_ENABLED`
+    - Requires OpenFGA v1.11.2+
+  - **Phase 7 - Sample Tuples Hygiene**:
+    - Expanded from 10 to 960+ tuples with full persona coverage
+    - Added comments for documentation
+  - **Phase 8 - Modularization**:
+    - Split model.json into 9 modular .fga files in `config/openfga/modules/`
+    - Added `compose_model.py` for extraction and validation
+  - **Phase 9 - Partner Access Pattern**:
+    - Added `partner` type for cross-tenant resource sharing
+    - `source_org` and `target_org` relations for org-to-org partnerships
+  - **Tests**: 100+ unit tests, 2 integration tests, 67 pytest markers including `partner_access`
+  - **Files**: `config/openfga/model.json`, `config/openfga/sample-tuples.json`, `config/role_mappings.yaml`
 
 - **MCP WebSocket Handler** - MCP 2025-11-25 compliant WebSocket:
   - JSON-RPC 2.0 message handling

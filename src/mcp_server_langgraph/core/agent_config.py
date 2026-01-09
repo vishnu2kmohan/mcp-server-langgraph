@@ -44,7 +44,9 @@ _TOPOLOGY_FIELDS: frozenset[str] = frozenset(
         "enable_dynamic_context_loading",
         "enable_checkpointing",
         "enable_tool_calling",
-        "enable_semantic_tool_selection",
+        "enable_semantic_tool_search",
+        "enable_semantic_skill_search",
+        "enable_semantic_memory_search",
     }
 )
 
@@ -92,11 +94,16 @@ class AgentConfig:
     # This enables true agentic behavior where the LLM decides when to use tools
     enable_tool_calling: bool = True
 
-    # Semantic Tool Selection (adds select_tools node for dynamic tool binding)
-    # When enabled, uses semantic search to select relevant tools based on query
-    # before binding them to the LLM. Reduces token usage with many tools (50+).
-    enable_semantic_tool_selection: bool = False
+    # Semantic Search for Tools, Skills, and Memories (ADR-0099)
+    # Adds retrieve_tools, retrieve_skills, and/or retrieve_memories nodes
+    # Uses Qdrant vector search for dynamic capability discovery
+    # Reduces token usage by 34-64% with many tools/skills (Anthropic Tool Search Tool pattern)
+    enable_semantic_tool_search: bool = False  # Adds retrieve_tools node
+    enable_semantic_skill_search: bool = False  # Adds retrieve_skills node
+    enable_semantic_memory_search: bool = False  # Adds retrieve_memories node
     max_selected_tools: int = 10
+    max_selected_skills: int = 5
+    max_retrieved_memories: int = 10
     semantic_tool_search_threshold: float = 0.5
 
     # Checkpointing
@@ -125,7 +132,9 @@ class AgentConfig:
             self.enable_dynamic_context_loading,
             self.enable_checkpointing,
             self.enable_tool_calling,
-            self.enable_semantic_tool_selection,
+            self.enable_semantic_tool_search,
+            self.enable_semantic_skill_search,
+            self.enable_semantic_memory_search,
         )
         hash_input = str(topology_values).encode()
         return sha256(hash_input).hexdigest()[:8]
@@ -175,9 +184,13 @@ class AgentConfig:
             max_parallel_tools=getattr(settings, "max_parallel_tools", 5),
             # Tool Calling
             enable_tool_calling=getattr(settings, "enable_tool_calling", True),
-            # Semantic Tool Selection
-            enable_semantic_tool_selection=getattr(settings, "enable_semantic_tool_selection", False),
+            # Semantic Search for Tools, Skills, and Memories (ADR-0099)
+            enable_semantic_tool_search=getattr(settings, "enable_semantic_tool_search", False),
+            enable_semantic_skill_search=getattr(settings, "enable_semantic_skill_search", False),
+            enable_semantic_memory_search=getattr(settings, "enable_semantic_memory_search", False),
             max_selected_tools=getattr(settings, "max_selected_tools", 10),
+            max_selected_skills=getattr(settings, "max_selected_skills", 5),
+            max_retrieved_memories=getattr(settings, "max_retrieved_memories", 10),
             semantic_tool_search_threshold=getattr(settings, "semantic_tool_search_threshold", 0.5),
             # Checkpointing
             enable_checkpointing=getattr(settings, "enable_checkpointing", True),

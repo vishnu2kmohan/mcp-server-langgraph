@@ -33,6 +33,7 @@ class UserDataExport(BaseModel):
     preferences: dict[str, Any] = Field(default_factory=dict, description="User preferences and settings")
     audit_log: list[dict[str, Any]] = Field(default_factory=list, description="User activity audit log")
     consents: list[dict[str, Any]] = Field(default_factory=list, description="Consent records")
+    decision_traces: list[dict[str, Any]] = Field(default_factory=list, description="Decision traces (ADR-0101 Context Graphs)")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     model_config = ConfigDict(
@@ -121,6 +122,7 @@ class DataExportService:
             preferences = await self._get_user_preferences(user_id)
             audit_log = await self._get_user_audit_log(user_id)
             consents = await self._get_user_consents(user_id)
+            decision_traces = await self._get_user_decision_traces(user_id)
 
             export = UserDataExport(
                 export_id=export_id,
@@ -134,6 +136,7 @@ class DataExportService:
                 preferences=preferences,
                 audit_log=audit_log,
                 consents=consents,
+                decision_traces=decision_traces,
                 metadata={"export_reason": "user_request", "gdpr_article": "15"},
             )
 
@@ -360,4 +363,33 @@ class DataExportService:
             return [consent.model_dump() for consent in consents]
         except Exception as e:
             logger.error(f"Failed to retrieve user consents: {e}", exc_info=True)
+            return []
+
+    def _get_decision_trace_repository(self) -> Any:
+        """Get decision trace repository from dependencies.
+
+        Returns the repository if available, None otherwise.
+        Used for GDPR data export of decision traces (ADR-0101 Context Graphs).
+        """
+        try:
+            from mcp_server_langgraph.core.dependencies import (
+                get_decision_trace_repository,
+            )
+
+            return get_decision_trace_repository()
+        except Exception as e:
+            logger.debug(f"Decision trace repository not available: {e}")
+            return None
+
+    async def _get_user_decision_traces(self, user_id: str) -> list[dict[str, Any]]:
+        """Get user decision traces for GDPR export (ADR-0101 Context Graphs)."""
+        repo = self._get_decision_trace_repository()
+        if repo is None:
+            return []
+
+        try:
+            traces = await repo.get_by_user(user_id)
+            return traces
+        except Exception as e:
+            logger.error(f"Failed to retrieve user decision traces: {e}", exc_info=True)
             return []

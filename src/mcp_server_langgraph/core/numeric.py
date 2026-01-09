@@ -102,6 +102,7 @@ See Also:
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from typing import Annotated, overload
 
 from pydantic import BeforeValidator, Field
@@ -144,14 +145,15 @@ def safe_float(value: float | None, default: float = 0.0) -> float:
     return float(value)
 
 
-def safe_average(values: list[float], default: float = 0.0) -> float:
-    """Compute average, handling empty lists and NaN values.
+def safe_average(values: Sequence[float], default: float = 0.0) -> float:
+    """Compute average, handling empty sequences and NaN values.
 
     Filters out NaN/Inf values before computing the average.
     Returns default if no valid values remain.
 
     Args:
-        values: List of float values (may contain NaN/Inf)
+        values: Sequence of numeric values (may contain NaN/Inf).
+                Accepts list[float], list[int], or any Sequence[float].
         default: Default value if no valid values exist
 
     Returns:
@@ -164,6 +166,8 @@ def safe_average(values: list[float], default: float = 0.0) -> float:
         0.0
         >>> safe_average([float('nan'), 1.0, 2.0])
         1.5
+        >>> safe_average([1, 2, 3])  # Also accepts integers
+        2.0
     """
     valid = [v for v in values if v is not None and not math.isnan(v) and not math.isinf(v)]
     if not valid:

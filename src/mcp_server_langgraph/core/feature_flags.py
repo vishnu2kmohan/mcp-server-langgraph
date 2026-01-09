@@ -147,6 +147,21 @@ class FeatureFlags(BaseSettings):
         description="Cache authorization check results for N seconds (0=disabled)",
     )
 
+    openfga_org_context_enforcement: bool = Field(
+        default=False,
+        description="Require org context in authorization checks. When enabled, contextual tuples are injected for org-scoped authorization (ADR-0068 Phase 3).",
+    )
+
+    openfga_org_context_fail_closed: bool = Field(
+        default=True,
+        description="Fail closed when org context is missing and enforcement is enabled. When True, missing context denies access.",
+    )
+
+    openfga_conditions_enabled: bool = Field(
+        default=False,
+        description="Enable OpenFGA condition evaluation in authorization checks. Requires OpenFGA v1.11.2+. When enabled, condition context (time_bound_share, subscription_tier) is passed to authorization checks (ADR-0068 Phase 6).",
+    )
+
     # Keycloak Features
     enable_keycloak: bool = Field(
         default=True,
@@ -526,6 +541,21 @@ class FeatureFlags(BaseSettings):
         description="Show user and assistant avatars in chat messages (Sprint 3.1 feature)",
     )
 
+    # Shell-specific features (Sprint 4 - Chat Input Feature Gap)
+    enable_model_selector_in_shell: bool = Field(
+        default=False,
+        description="Enable model selector in StudioShell chat input. "
+        "When enabled, shows model selection dropdown in the shell's ConnectedConversationPanel. "
+        "Set FF_ENABLE_MODEL_SELECTOR_IN_SHELL=true to enable.",
+    )
+
+    enable_url_fetch_in_shell: bool = Field(
+        default=False,
+        description="Enable URL content fetching (#url pattern) in StudioShell chat input. "
+        "When enabled, users can use #url to fetch and include web content in their messages. "
+        "Set FF_ENABLE_URL_FETCH_IN_SHELL=true to enable.",
+    )
+
     # UX Enhancement Features (Priority 1-3 from competitive analysis)
     enable_user_preferences_sync: bool = Field(
         default=True,
@@ -752,6 +782,42 @@ class FeatureFlags(BaseSettings):
         description="Enable skills marketplace integration with Anthropic skills repo. "
         "Fetches skills from https://github.com/anthropics/skills and custom marketplaces. "
         "Set FF_ENABLE_SKILLS_MARKETPLACE=false to disable.",
+    )
+
+    skills_marketplace_rate_limit: int = Field(
+        default=10,
+        ge=1,
+        le=100,
+        description="Rate limit for skills marketplace API requests (requests per second). "
+        "Prevents API abuse and respects GitHub/registry rate limits. "
+        "Set FF_SKILLS_MARKETPLACE_RATE_LIMIT=5 for conservative limits.",
+    )
+
+    skills_marketplace_retry_max_attempts: int = Field(
+        default=3,
+        ge=1,
+        le=10,
+        description="Maximum retry attempts for transient marketplace API errors (5xx). "
+        "Uses exponential backoff between retries. "
+        "Set FF_SKILLS_MARKETPLACE_RETRY_MAX_ATTEMPTS=5 for more resilience.",
+    )
+
+    skills_marketplace_retry_base_delay: float = Field(
+        default=0.1,
+        ge=0.01,
+        le=5.0,
+        description="Base delay in seconds for exponential backoff on marketplace retries. "
+        "Actual delay is base_delay * 2^(attempt-1). "
+        "Set FF_SKILLS_MARKETPLACE_RETRY_BASE_DELAY=0.5 for slower backoff.",
+    )
+
+    skills_marketplace_max_concurrent_fetches: int = Field(
+        default=5,
+        ge=1,
+        le=50,
+        description="Maximum number of concurrent skill metadata fetches. "
+        "Limits parallel API calls to prevent overwhelming the registry. "
+        "Set FF_SKILLS_MARKETPLACE_MAX_CONCURRENT_FETCHES=10 for higher throughput.",
     )
 
     enable_pii_tokenization: bool = Field(
@@ -1025,18 +1091,30 @@ class FeatureFlags(BaseSettings):
         "Part of ADR-0092. Set FF_ENABLE_PROGRESSIVE_SKILL_LOADING=true to activate.",
     )
 
+    # ADR-0099: Semantic Search for Tools, Skills, and Memories
+    # These flags control semantic search-based node injection into the agent graph.
+    # All three use Qdrant vector search for dynamic capability discovery.
+
+    enable_semantic_tool_search: bool = Field(
+        default=False,
+        description="Enable vector-based semantic tool discovery. "
+        "Uses embeddings to find relevant tools based on user query. "
+        "Reduces token usage by 34-64% with 50+ tools (Anthropic Tool Search Tool pattern). "
+        "Part of ADR-0099. Set FF_ENABLE_SEMANTIC_TOOL_SEARCH=true to activate.",
+    )
+
     enable_semantic_skill_search: bool = Field(
         default=False,
         description="Enable vector-based semantic skill discovery. "
         "Uses embeddings to find relevant skills based on task description. "
-        "Part of ADR-0092. Set FF_ENABLE_SEMANTIC_SKILL_SEARCH=true to activate.",
+        "Part of ADR-0092/ADR-0099. Set FF_ENABLE_SEMANTIC_SKILL_SEARCH=true to activate.",
     )
 
-    enable_semantic_memory_retrieval: bool = Field(
+    enable_semantic_memory_search: bool = Field(
         default=False,
-        description="Enable vector-based semantic memory retrieval. "
+        description="Enable vector-based semantic memory search. "
         "Uses embeddings to find relevant memories for context enrichment. "
-        "Part of ADR-0092. Set FF_ENABLE_SEMANTIC_MEMORY_RETRIEVAL=true to activate.",
+        "Part of ADR-0092/ADR-0099. Set FF_ENABLE_SEMANTIC_MEMORY_SEARCH=true to activate.",
     )
 
     enable_hitl_undo_rollback: bool = Field(
@@ -1395,6 +1473,74 @@ class FeatureFlags(BaseSettings):
         ge=60,
         le=6000,
         description="Default rate limit for WebSocket messages per minute (60-6000)",
+    )
+
+    # =========================================================================
+    # Context Graph - Decision Trace Capture (ADR-0101)
+    # =========================================================================
+    # Context Graphs capture decision traces (the "WHY" behind agent decisions)
+    # as first-class, searchable data for precedent lookup and learning.
+    # Based on Foundation Capital's "Context Graphs: AI's Trillion-Dollar Opportunity"
+    # =========================================================================
+
+    enable_context_graph: bool = Field(
+        default=False,
+        description="Enable context graph decision trace capture (FF_ENABLE_CONTEXT_GRAPH). "
+        "When enabled, captures decision rationale for routing, tool selection, and approvals. "
+        "Opt-in feature for searchable precedent data.",
+    )
+
+    enable_precedent_search: bool = Field(
+        default=False,
+        description="Enable semantic precedent search in Qdrant (FF_ENABLE_PRECEDENT_SEARCH). "
+        "Allows searching similar past decisions for learning and reference. "
+        "Requires enable_context_graph=true and Qdrant vector store.",
+    )
+
+    context_graph_async_persistence: bool = Field(
+        default=True,
+        description="Persist decision traces asynchronously to avoid blocking hot path "
+        "(FF_CONTEXT_GRAPH_ASYNC_PERSISTENCE). Uses background worker with batching.",
+    )
+
+    context_graph_batch_size: int = Field(
+        default=100,
+        ge=1,
+        le=1000,
+        description="Batch size for async decision trace persistence (FF_CONTEXT_GRAPH_BATCH_SIZE). "
+        "Higher values improve throughput, lower values reduce latency.",
+    )
+
+    context_graph_retention_days: int = Field(
+        default=2555,
+        ge=30,
+        le=3650,
+        description="Retention period for decision traces in days (FF_CONTEXT_GRAPH_RETENTION_DAYS). "
+        "Default ~7 years (2555 days). Traces older than this are automatically deleted.",
+    )
+
+    context_graph_sampling_rate: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description="Sampling rate for decision trace capture (FF_CONTEXT_GRAPH_SAMPLING_RATE). "
+        "1.0 captures all decisions, 0.5 captures 50%. Use lower values for high-volume production.",
+    )
+
+    precedent_search_min_score: float = Field(
+        default=0.5,
+        ge=0.0,
+        le=1.0,
+        description="Minimum similarity score for precedent search results (FF_PRECEDENT_SEARCH_MIN_SCORE). "
+        "Results below this threshold are filtered out. Higher values improve precision.",
+    )
+
+    precedent_search_max_results: int = Field(
+        default=10,
+        ge=1,
+        le=100,
+        description="Maximum precedent search results to return (FF_PRECEDENT_SEARCH_MAX_RESULTS). "
+        "Limits the number of similar past decisions returned.",
     )
 
     model_config = SettingsConfigDict(

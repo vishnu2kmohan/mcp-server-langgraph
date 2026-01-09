@@ -80,6 +80,9 @@ from mcp_server_langgraph.api.v1.plan_templates import plan_templates_router
 # WebSocket metrics collection (frontend reconnection telemetry)
 from mcp_server_langgraph.api.v1.websocket_metrics import router as websocket_metrics_router
 
+# Context graph decision trace endpoints (ADR-0101)
+from mcp_server_langgraph.api.v1.context_graph import router as context_graph_router
+
 # Note: marketplace_admin uses factory pattern (create_marketplace_router) requiring DI
 # It is registered separately during application bootstrap if marketplace feature is enabled
 
@@ -195,6 +198,9 @@ v1_router.include_router(studio_ai_router, prefix="/studio", tags=["studio-ai"])
 
 # Include agentic memory endpoints (Phase 1.2: enable_agentic_memory)
 v1_router.include_router(memory_router, prefix="/memory", tags=["memory"])
+
+# Include context graph decision trace endpoints (ADR-0101)
+v1_router.include_router(context_graph_router)
 
 # Include background agents endpoints (Phase 3.2: canvas_agents)
 v1_router.include_router(background_agents_router, tags=["background-agents"])

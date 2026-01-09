@@ -68,8 +68,12 @@ class AgentState(TypedDict):
     refinement_attempts: int | None
     user_request: str | None
 
-    # Semantic tool selection (Anthropic Tool Search Tool pattern)
+    # Semantic tool/skill selection (Anthropic Tool Search Tool pattern)
     selected_tools: list[str] | None
+    selected_skills: list[str] | None
+
+    # Semantic memory retrieval for context enrichment
+    retrieved_memories: list[str] | None
 
 
 # Comparison keywords that indicate multi-faceted queries
@@ -222,10 +226,366 @@ async def _load_dynamic_context_impl(
     return {k: v for k, v in state.items() if k != "messages"}
 
 
+async def _retrieve_tools_impl(
+    state: dict[str, Any],
+    semantic_index_manager: Any | None,
+    max_selected_tools: int = 10,
+) -> dict[str, Any]:
+    """
+    Select tools based on user query via semantic search.
+
+    This function is extracted for testability. It implements:
+    - Anthropic Tool Search Tool pattern
+    - LangGraph Many Tools pattern
+    - Graceful fallback to all tools on error
+
+    Args:
+        state: Current agent state with messages
+        semantic_index_manager: SemanticIndexManager instance or None
+        max_selected_tools: Maximum tools to select (from config)
+
+    Returns:
+        Updated state with selected_tools populated
+    """
+    from mcp_server_langgraph.observability.telemetry import logger
+
+    # Get the last user message for semantic search
+    messages = state.get("messages", [])
+    last_message = messages[-1] if messages else None
+
+    if not last_message:
+        # No message to search with - use all tools
+        state["selected_tools"] = None
+        logger.debug("No message for semantic tool selection, using all tools")
+        return {k: v for k, v in state.items() if k != "messages"}
+
+    # Extract query text from message
+    if hasattr(last_message, "content"):
+        query = last_message.content if isinstance(last_message.content, str) else str(last_message.content)
+    else:
+        query = str(last_message)
+
+    # Short queries may not benefit from semantic search
+    if len(query.strip()) < 10:
+        state["selected_tools"] = None
+        logger.debug("Query too short for semantic tool selection, using all tools")
+        return {k: v for k, v in state.items() if k != "messages"}
+
+    try:
+        # Use semantic index manager if available (ADR-0099)
+        if semantic_index_manager is not None:
+            logger.info(f"Semantic tool selection query: '{query[:50]}...'")
+
+            # Get user_id from state for authorization (ADR-0068)
+            user_id = state.get("user_id") or "user:anonymous"
+
+            # Search for relevant tools using semantic similarity
+            tool_entries = await semantic_index_manager.search_tools(
+                query=query,
+                user_id=user_id,
+                limit=max_selected_tools,
+            )
+
+            if tool_entries:
+                # Extract tool names from search results
+                state["selected_tools"] = [entry.name for entry in tool_entries]
+                logger.info(
+                    f"Semantic tool selection: selected {len(state['selected_tools'])} tools: "
+                    f"{state['selected_tools']}"
+                )
+            else:
+                # No tools found - fall back to all tools
+                state["selected_tools"] = None
+                logger.info("Semantic tool selection: no matching tools, using all tools")
+        else:
+            # No semantic index manager provided - use all tools
+            state["selected_tools"] = None
+            logger.debug("Semantic tool selection: manager not configured, using all tools")
+
+    except Exception as e:
+        # Graceful fallback - use all tools if semantic search fails
+        logger.warning(f"Semantic tool selection failed, falling back to all tools: {e}")
+        state["selected_tools"] = None
+
+    return {k: v for k, v in state.items() if k != "messages"}
+
+
+async def _retrieve_skills_impl(
+    state: dict[str, Any],
+    semantic_index_manager: Any | None,
+    max_selected_skills: int = 5,
+) -> dict[str, Any]:
+    """
+    Retrieve skills based on user query via semantic search.
+
+    This function is extracted for testability. It implements:
+    - Anthropic Tool Search Tool pattern for skills
+    - LangGraph Many Tools pattern for skill discovery
+    - Graceful fallback to all skills on error
+
+    Args:
+        state: Current agent state with messages
+        semantic_index_manager: SemanticIndexManager instance or None
+        max_selected_skills: Maximum skills to select (from config)
+
+    Returns:
+        Updated state with selected_skills populated
+    """
+    from mcp_server_langgraph.observability.telemetry import logger
+
+    # Get the last user message for semantic search
+    messages = state.get("messages", [])
+    last_message = messages[-1] if messages else None
+
+    if not last_message:
+        # No message to search with - use all skills
+        state["selected_skills"] = None
+        logger.debug("No message for semantic skill selection, using all skills")
+        return {k: v for k, v in state.items() if k != "messages"}
+
+    # Extract query text from message
+    if hasattr(last_message, "content"):
+        query = last_message.content if isinstance(last_message.content, str) else str(last_message.content)
+    else:
+        query = str(last_message)
+
+    # Short queries may not benefit from semantic search
+    if len(query.strip()) < 10:
+        state["selected_skills"] = None
+        logger.debug("Query too short for semantic skill selection, using all skills")
+        return {k: v for k, v in state.items() if k != "messages"}
+
+    try:
+        # Use semantic index manager if available (ADR-0099)
+        if semantic_index_manager is not None:
+            logger.info(f"Semantic skill selection query: '{query[:50]}...'")
+
+            # Get user_id from state for authorization (ADR-0068)
+            user_id = state.get("user_id") or "user:anonymous"
+
+            # Search for relevant skills using semantic similarity
+            skill_entries = await semantic_index_manager.search_skills(
+                query=query,
+                user_id=user_id,
+                limit=max_selected_skills,
+            )
+
+            if skill_entries:
+                # Extract skill names from search results
+                state["selected_skills"] = [entry.name for entry in skill_entries]
+                logger.info(
+                    f"Semantic skill selection: selected {len(state['selected_skills'])} skills: "
+                    f"{state['selected_skills']}"
+                )
+            else:
+                # No skills found - fall back to all skills
+                state["selected_skills"] = None
+                logger.info("Semantic skill selection: no matching skills, using all skills")
+        else:
+            # No semantic index manager provided - use all skills
+            state["selected_skills"] = None
+            logger.debug("Semantic skill selection: manager not configured, using all skills")
+
+    except Exception as e:
+        # Graceful fallback - use all skills if semantic search fails
+        logger.warning(f"Semantic skill selection failed, falling back to all skills: {e}")
+        state["selected_skills"] = None
+
+    return {k: v for k, v in state.items() if k != "messages"}
+
+
+async def _retrieve_memories_impl(
+    state: dict[str, Any],
+    semantic_index_manager: Any | None,
+    max_retrieved_memories: int = 10,
+) -> dict[str, Any]:
+    """
+    Retrieve memories based on user query via semantic search.
+
+    This function is extracted for testability. It implements:
+    - Semantic memory retrieval for context enrichment
+    - Graceful fallback when no memories found or search fails
+
+    Args:
+        state: Current agent state with messages
+        semantic_index_manager: SemanticIndexManager instance or None
+        max_retrieved_memories: Maximum memories to retrieve (from config)
+
+    Returns:
+        Updated state with retrieved_memories populated
+    """
+    from mcp_server_langgraph.observability.telemetry import logger
+
+    # Get the last user message for semantic search
+    messages = state.get("messages", [])
+    last_message = messages[-1] if messages else None
+
+    if not last_message:
+        # No message to search with - no context enrichment
+        state["retrieved_memories"] = None
+        logger.debug("No message for memory retrieval, skipping")
+        return {k: v for k, v in state.items() if k != "messages"}
+
+    # Extract query text from message
+    if hasattr(last_message, "content"):
+        query = last_message.content if isinstance(last_message.content, str) else str(last_message.content)
+    else:
+        query = str(last_message)
+
+    # Short queries may not benefit from memory search
+    if len(query.strip()) < 10:
+        state["retrieved_memories"] = None
+        logger.debug("Query too short for memory retrieval, skipping")
+        return {k: v for k, v in state.items() if k != "messages"}
+
+    try:
+        # Use semantic index manager if available (ADR-0099)
+        if semantic_index_manager is not None:
+            logger.info(f"Semantic memory retrieval query: '{query[:50]}...'")
+
+            # Get user_id from state for user-scoped memory search (ADR-0068)
+            user_id = state.get("user_id") or "user:anonymous"
+
+            # Search for relevant memories using semantic similarity
+            # User searches their own memories (current_user_id == search_user_id)
+            memory_entries = await semantic_index_manager.search_memories(
+                query=query,
+                current_user_id=user_id,
+                search_user_id=user_id,
+                limit=max_retrieved_memories,
+            )
+
+            if memory_entries:
+                # Extract memory contents from search results
+                state["retrieved_memories"] = [entry.content for entry in memory_entries]
+                logger.info(
+                    f"Semantic memory retrieval: retrieved {len(state['retrieved_memories'])} memories"
+                )
+            else:
+                # No memories found - no context enrichment
+                state["retrieved_memories"] = None
+                logger.info("Semantic memory retrieval: no matching memories found")
+        else:
+            # No semantic index manager provided - no memory retrieval
+            state["retrieved_memories"] = None
+            logger.debug("Semantic memory retrieval: manager not configured, skipping")
+
+    except Exception as e:
+        # Graceful fallback - skip memory retrieval if search fails
+        logger.warning(f"Semantic memory retrieval failed, skipping: {e}")
+        state["retrieved_memories"] = None
+
+    return {k: v for k, v in state.items() if k != "messages"}
+
+
+async def _generate_response_impl(
+    state: dict[str, Any],
+    model: Any,
+    bound_tools: list[Any],
+    model_with_tools: Any | None,
+    pydantic_agent: Any | None,
+) -> dict[str, Any]:
+    """
+    Generate response implementation with dynamic tool binding support.
+
+    This is a testable helper function for the generate_response node.
+    It implements ADR-0099 dynamic tool binding:
+    - If state["selected_tools"] contains tool names, bind only those tools
+    - If state["selected_tools"] is None or empty, use all bound tools
+
+    Args:
+        state: Current agent state with messages and optional selected_tools
+        model: Base LLM model (without tools bound)
+        bound_tools: List of all available tool objects
+        model_with_tools: Model pre-bound with all tools (fallback)
+        pydantic_agent: Optional Pydantic AI agent for typed responses
+
+    Returns:
+        Updated state with response message
+    """
+    from langchain_core.messages import SystemMessage
+
+    from mcp_server_langgraph.observability.telemetry import logger
+
+    messages_list = list(state["messages"])
+
+    refinement_attempts = state.get("refinement_attempts") or 0
+    if refinement_attempts > 0 and state.get("verification_feedback"):
+        refinement_prompt = SystemMessage(
+            content=f"<refinement_guidance>\n"
+            f"Previous response had issues. Please refine based on this feedback:\n"
+            f"{state['verification_feedback']}\n"
+            f"</refinement_guidance>"
+        )
+        messages_list = [refinement_prompt] + messages_list
+
+    # Determine which model to use based on selected_tools (ADR-0099)
+    selected_tool_names = state.get("selected_tools")
+
+    if selected_tool_names and len(selected_tool_names) > 0 and bound_tools:
+        # Filter tools to only those selected by semantic search
+        filtered_tools = [t for t in bound_tools if t.name in selected_tool_names]
+
+        if filtered_tools and hasattr(model, "bind_tools"):
+            # Dynamically bind only the selected tools
+            model_for_response = model.bind_tools(filtered_tools)
+            logger.info(
+                f"Dynamic tool binding: using {len(filtered_tools)} of {len(bound_tools)} tools "
+                f"(selected: {selected_tool_names})"
+            )
+        elif model_with_tools is not None:
+            # Fall back to pre-bound model if binding fails
+            model_for_response = model_with_tools
+            logger.warning("Dynamic tool binding failed, using all tools")
+        else:
+            # No tools available
+            model_for_response = model
+    elif model_with_tools is not None:
+        # No selection or empty selection - use all tools
+        model_for_response = model_with_tools
+    else:
+        # No tools bound at all
+        model_for_response = model
+
+    # Generate response
+    if pydantic_agent:
+        try:
+            typed_response = await pydantic_agent.generate_response(
+                messages_list,
+                context={
+                    "user_id": state.get("user_id", "unknown"),
+                    "routing_confidence": str(state.get("routing_confidence", 0.0)),
+                    "refinement_attempt": str(refinement_attempts),
+                },
+            )
+            from langchain_core.messages import AIMessage
+
+            response = AIMessage(content=typed_response.content)
+            logger.info(f"Pydantic AI response generated, confidence: {typed_response.confidence}")
+        except Exception as e:
+            logger.error(f"Pydantic AI response failed: {e}")
+            response = await model_for_response.ainvoke(messages_list)  # type: ignore[arg-type]
+    else:
+        response = await model_for_response.ainvoke(messages_list)  # type: ignore[arg-type]
+
+    # Check if the LLM generated tool calls (when tool calling is enabled)
+    # If tool_calls are present, route to use_tools to execute them
+    tool_calls = getattr(response, "tool_calls", None)
+    if tool_calls and len(tool_calls) > 0:
+        state["next_action"] = "use_tools"
+        logger.info(f"LLM generated {len(tool_calls)} tool call(s), routing to use_tools")
+    else:
+        # No tool calls - proceed with verification or end
+        state["next_action"] = "end"
+
+    return {**state, "messages": [response]}
+
+
 def build_agent_graph(
     config: AgentConfig,
     checkpointer: Any | None = None,
     settings: Any | None = None,
+    semantic_index_manager: Any | None = None,
 ) -> Any:
     """
     Build a LangGraph agent graph based on AgentConfig.
@@ -241,6 +601,9 @@ def build_agent_graph(
                       If None and enable_checkpointing=True, uses MemorySaver.
         settings: Optional Settings object for LLM configuration.
                   If None, uses global settings.
+        semantic_index_manager: Optional SemanticIndexManager for semantic tool
+                                selection (ADR-0099). If provided, enables dynamic
+                                tool selection based on query similarity.
 
     Returns:
         Compiled LangGraph StateGraph
@@ -264,7 +627,7 @@ def build_agent_graph(
     # Bind tools to model if tool calling is enabled
     # This allows the LLM to autonomously decide when to call tools
     model_with_tools = model
-    bound_tools: list = []
+    bound_tools: list[Any] = []
     if config.enable_tool_calling:
         try:
             from mcp_server_langgraph.tools import get_all_tools
@@ -362,8 +725,8 @@ def build_agent_graph(
 
         return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
 
-    async def select_tools(state: AgentState) -> AgentState:
-        """Dynamically select tools based on user query via semantic search.
+    async def retrieve_tools(state: AgentState) -> AgentState:
+        """Dynamically retrieve tools based on user query via semantic search.
 
         Implements the Anthropic Tool Search Tool pattern and LangGraph's
         Many Tools pattern. Uses semantic embeddings to find relevant tools
@@ -372,46 +735,46 @@ def build_agent_graph(
         When semantic search fails or returns no results, falls back to
         using all available tools (graceful degradation).
         """
-        # Get the last user message for semantic search
-        last_message = state["messages"][-1] if state["messages"] else None
+        # Delegate to testable helper function
+        return await _retrieve_tools_impl(
+            state=dict(state),
+            semantic_index_manager=semantic_index_manager,
+            max_selected_tools=config.max_selected_tools,
+        )  # type: ignore[return-value]
 
-        if not last_message:
-            # No message to search with - use all tools
-            state["selected_tools"] = None
-            logger.debug("No message for semantic tool selection, using all tools")
-            return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
+    async def retrieve_skills(state: AgentState) -> AgentState:
+        """Dynamically retrieve skills based on user query via semantic search.
 
-        # Extract query text from message
-        if hasattr(last_message, "content"):
-            query = last_message.content if isinstance(last_message.content, str) else str(last_message.content)
-        else:
-            query = str(last_message)
+        Implements the Anthropic Tool Search Tool pattern for skill discovery.
+        Uses semantic embeddings to find relevant skills before binding them
+        to the LLM, enabling progressive skill loading.
 
-        # Short queries may not benefit from semantic search
-        if len(query.strip()) < 10:
-            state["selected_tools"] = None
-            logger.debug("Query too short for semantic tool selection, using all tools")
-            return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
+        When semantic search fails or returns no results, falls back to
+        using all available skills (graceful degradation).
+        """
+        # Delegate to testable helper function
+        return await _retrieve_skills_impl(
+            state=dict(state),
+            semantic_index_manager=semantic_index_manager,
+            max_selected_skills=config.max_selected_skills,
+        )  # type: ignore[return-value]
 
-        try:
-            # Try to use semantic index manager if available
+    async def retrieve_memories(state: AgentState) -> AgentState:
+        """Retrieve relevant memories for context enrichment via semantic search.
 
-            # Check if we have a semantic index available (would be injected via dependency)
-            # For now, we use a placeholder that will be integrated via dependency injection
-            # This enables the graph structure while allowing future integration
-            logger.info(f"Semantic tool selection query: '{query[:50]}...'")
+        Implements semantic memory retrieval for the agent. Uses embeddings
+        to find relevant memories (preferences, facts, history) to enrich
+        the context before LLM invocation.
 
-            # Placeholder: In full integration, SemanticIndexManager would be passed as a dependency
-            # For now, we set selected_tools to None to use all tools (graceful fallback)
-            state["selected_tools"] = None
-            logger.info("Semantic tool selection: using all tools (integration pending)")
-
-        except Exception as e:
-            # Graceful fallback - use all tools if semantic search fails
-            logger.warning(f"Semantic tool selection failed, falling back to all tools: {e}")
-            state["selected_tools"] = None
-
-        return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
+        When semantic search fails or returns no results, continues without
+        memory context (graceful degradation).
+        """
+        # Delegate to testable helper function
+        return await _retrieve_memories_impl(
+            state=dict(state),
+            semantic_index_manager=semantic_index_manager,
+            max_retrieved_memories=config.max_retrieved_memories,
+        )  # type: ignore[return-value]
 
     async def route_input(state: AgentState) -> AgentState:
         """Route based on message type with Pydantic AI for type-safe decisions."""
@@ -554,48 +917,18 @@ def build_agent_graph(
             return await _execute_tools_serial(tool_calls)
 
     async def generate_response(state: AgentState) -> AgentState:
-        """Generate final response using LLM."""
-        messages_list = list(state["messages"])
+        """Generate final response using LLM with dynamic tool binding (ADR-0099).
 
-        refinement_attempts = state.get("refinement_attempts") or 0
-        if refinement_attempts > 0 and state.get("verification_feedback"):
-            refinement_prompt = SystemMessage(
-                content=f"<refinement_guidance>\n"
-                f"Previous response had issues. Please refine based on this feedback:\n"
-                f"{state['verification_feedback']}\n"
-                f"</refinement_guidance>"
-            )
-            messages_list = [refinement_prompt] + messages_list
-
-        if pydantic_agent:
-            try:
-                typed_response = await pydantic_agent.generate_response(
-                    messages_list,
-                    context={
-                        "user_id": state.get("user_id", "unknown"),
-                        "routing_confidence": str(state.get("routing_confidence", 0.0)),
-                        "refinement_attempt": str(refinement_attempts),
-                    },
-                )
-                response = AIMessage(content=typed_response.content)
-                logger.info(f"Pydantic AI response generated, confidence: {typed_response.confidence}")
-            except Exception as e:
-                logger.error(f"Pydantic AI response failed: {e}")
-                response = await model_with_tools.ainvoke(messages_list)  # type: ignore[arg-type]
-        else:
-            response = await model_with_tools.ainvoke(messages_list)  # type: ignore[arg-type]
-
-        # Check if the LLM generated tool calls (when tool calling is enabled)
-        # If tool_calls are present, route to use_tools to execute them
-        tool_calls = getattr(response, "tool_calls", None)
-        if tool_calls and len(tool_calls) > 0:
-            state["next_action"] = "use_tools"
-            logger.info(f"LLM generated {len(tool_calls)} tool call(s), routing to use_tools")
-        else:
-            # No tool calls - proceed with verification or end
-            state["next_action"] = "end"
-
-        return {**state, "messages": [response]}
+        When semantic tool selection is enabled, this node uses only the tools
+        selected by the retrieve_tools node, reducing token usage significantly.
+        """
+        return await _generate_response_impl(
+            state=dict(state),
+            model=model,
+            bound_tools=bound_tools,
+            model_with_tools=model_with_tools,
+            pydantic_agent=pydantic_agent,
+        )  # type: ignore[return-value]
 
     async def verify_response(state: AgentState) -> AgentState:
         """Verify response quality using LLM-as-judge pattern.
@@ -740,11 +1073,41 @@ def build_agent_graph(
     # Determine the node that comes before router (for semantic tool selection)
     pre_router_node: str = "router"  # What to connect TO router
 
-    # Add semantic tool selection node if enabled (Anthropic Tool Search Tool pattern)
-    if config.enable_semantic_tool_selection:
-        workflow.add_node("select_tools", select_tools)
-        pre_router_node = "select_tools"  # select_tools comes before router
-        workflow.add_edge("select_tools", "router")
+    # Add semantic tool retrieval node if enabled (Anthropic Tool Search Tool pattern)
+    if config.enable_semantic_tool_search:
+        workflow.add_node("retrieve_tools", retrieve_tools)
+        pre_router_node = "retrieve_tools"  # retrieve_tools comes before router
+        workflow.add_edge("retrieve_tools", "router")
+
+    # Add semantic skill retrieval node if enabled (ADR-0099)
+    if config.enable_semantic_skill_search:
+        workflow.add_node("retrieve_skills", retrieve_skills)
+        # retrieve_skills comes before router (or before retrieve_tools if that's before router)
+        if config.enable_semantic_tool_search:
+            # Chain: retrieve_skills -> retrieve_tools -> router
+            workflow.add_edge("retrieve_skills", "retrieve_tools")
+            pre_router_node = "retrieve_skills"
+        else:
+            # Chain: retrieve_skills -> router
+            workflow.add_edge("retrieve_skills", "router")
+            pre_router_node = "retrieve_skills"
+
+    # Add semantic memory retrieval node if enabled (ADR-0099)
+    if config.enable_semantic_memory_search:
+        workflow.add_node("retrieve_memories", retrieve_memories)
+        # retrieve_memories comes first in the semantic search chain
+        if config.enable_semantic_skill_search:
+            # Chain: retrieve_memories -> retrieve_skills -> ...
+            workflow.add_edge("retrieve_memories", "retrieve_skills")
+            pre_router_node = "retrieve_memories"
+        elif config.enable_semantic_tool_search:
+            # Chain: retrieve_memories -> retrieve_tools -> router
+            workflow.add_edge("retrieve_memories", "retrieve_tools")
+            pre_router_node = "retrieve_memories"
+        else:
+            # Chain: retrieve_memories -> router
+            workflow.add_edge("retrieve_memories", "router")
+            pre_router_node = "retrieve_memories"
 
     # Add optional nodes and wire edges based on config
     if config.enable_dynamic_context_loading and context_loader:
@@ -767,8 +1130,14 @@ def build_agent_graph(
 
     # Wire START to entry if not already wired
     if entry_node:
-        if config.enable_semantic_tool_selection:
-            workflow.add_edge(START, "select_tools")
+        if config.enable_semantic_memory_search:
+            # retrieve_memories is the first node when memory search is enabled
+            workflow.add_edge(START, "retrieve_memories")
+        elif config.enable_semantic_skill_search:
+            # retrieve_skills is the first node when skill search is enabled
+            workflow.add_edge(START, "retrieve_skills")
+        elif config.enable_semantic_tool_search:
+            workflow.add_edge(START, "retrieve_tools")
         else:
             workflow.add_edge(START, entry_node)
 
@@ -841,7 +1210,7 @@ def build_agent_graph(
             "enable_verification": config.enable_verification,
             "enable_dynamic_context": config.enable_dynamic_context_loading,
             "enable_tool_calling": config.enable_tool_calling,
-            "enable_semantic_tool_selection": config.enable_semantic_tool_selection,
+            "enable_semantic_tool_search": config.enable_semantic_tool_search,
             "bound_tools_count": len(bound_tools),
             "nodes": list(compiled.nodes.keys()),
         },

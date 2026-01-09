@@ -20,17 +20,26 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
-from mcp_server_langgraph.auth.dependencies import require_admin
+from mcp_server_langgraph.auth.dependencies import (
+    require_skill_viewer_global,
+    require_skill_author_global,
+)
 from mcp_server_langgraph.skills.auto_update import get_auto_update_scheduler
 from mcp_server_langgraph.skills.installer import SkillInstaller
-from mcp_server_langgraph.skills.marketplace import MarketplaceClient, MarketplaceRegistry
+from mcp_server_langgraph.skills.marketplace import (
+    MarketplaceRegistry,
+    create_marketplace_client,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin/skills", tags=["skills"])
 
-# Type alias for admin user dependency
-AdminUser = Annotated[dict[str, Any], Depends(require_admin)]
+# Type aliases for OpenFGA authorization dependencies
+# Viewer: Can browse/list skills (admin, alice, bob)
+# Author: Can install/uninstall/update skills (admin, alice)
+SkillViewer = Annotated[dict[str, Any], Depends(require_skill_viewer_global)]
+SkillAuthor = Annotated[dict[str, Any], Depends(require_skill_author_global)]
 
 
 # =============================================================================
@@ -102,13 +111,13 @@ async def list_skills_from_marketplace(
         List of skill metadata dictionaries
     """
     registry = MarketplaceRegistry()
-    client = MarketplaceClient()
+    client = create_marketplace_client()
 
     marketplace = registry.get(marketplace_name)
     if marketplace is None:
         raise ValueError(f"Unknown marketplace: {marketplace_name}")
 
-    skills = await client.list_skills(marketplace)
+    skills = await client.list_skills_with_metadata(marketplace)
 
     # Apply search filter
     if search:
@@ -174,7 +183,7 @@ async def uninstall_skill(skill_name: str) -> bool:
 
 @router.get("/list")
 async def list_marketplace_skills_endpoint(
-    admin_user: AdminUser,
+    user: SkillViewer,
     marketplace: str = Query(default="anthropic", description="Marketplace name"),
     search: str | None = Query(default=None, description="Search query"),
     tags: str | None = Query(default=None, description="Comma-separated tags"),
@@ -214,7 +223,7 @@ async def list_marketplace_skills_endpoint(
 
 @router.post("/install")
 async def install_skill_endpoint(
-    admin_user: AdminUser,
+    user: SkillAuthor,
     request: SkillInstallRequest,
 ) -> dict[str, Any]:
     """Install a skill from a marketplace.
@@ -244,7 +253,7 @@ async def install_skill_endpoint(
 
 @router.get("/installed")
 async def list_installed_skills_endpoint(
-    admin_user: AdminUser,
+    user: SkillViewer,
 ) -> dict[str, Any]:
     """List all installed skills.
 
@@ -267,7 +276,7 @@ async def list_installed_skills_endpoint(
 
 @router.delete("/{skill_name}")
 async def uninstall_skill_endpoint(
-    admin_user: AdminUser,
+    user: SkillAuthor,
     skill_name: str,
 ) -> dict[str, Any]:
     """Uninstall a skill.
@@ -306,10 +315,10 @@ async def uninstall_skill_endpoint(
 
 
 @router.get("/updates")
-async def check_skill_updates(admin_user: AdminUser) -> dict[str, Any]:
+async def check_skill_updates(user: SkillViewer) -> dict[str, Any]:
     """Check for available skill updates.
 
-    Requires admin authorization.
+    Requires skill:viewer authorization (all authenticated users with skill access).
 
     Returns:
         Dict with list of available updates
@@ -340,10 +349,10 @@ async def check_skill_updates(admin_user: AdminUser) -> dict[str, Any]:
 
 
 @router.post("/updates/apply")
-async def apply_skill_updates(admin_user: AdminUser) -> dict[str, Any]:
+async def apply_skill_updates(user: SkillAuthor) -> dict[str, Any]:
     """Apply all available skill updates.
 
-    Requires admin authorization.
+    Requires skill:author authorization (alice and admin can apply updates).
 
     Returns:
         Dict with list of applied updates
