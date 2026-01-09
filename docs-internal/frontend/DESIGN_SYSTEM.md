@@ -149,6 +149,7 @@ The design system uses **semantic color names** instead of raw Tailwind colors:
 | `info-*` | Informational, cloud/infrastructure | `info-600` | `info-400` |
 | `insight-*` | AI features, suggestions | `insight-600` | `insight-400` |
 | `grafana-*` | Observability, Grafana | `grafana-500` | `grafana-400` |
+| `neutral-*` | General UI (text, borders, backgrounds) | `neutral-700` | `neutral-100` |
 
 ### Color Mapping Reference
 
@@ -161,15 +162,17 @@ The design system uses **semantic color names** instead of raw Tailwind colors:
 | `cyan-*` | `info-*` | `text-cyan-500` → `text-info-500` |
 | `purple-*` | `insight-*` | `text-purple-500` → `text-insight-500` |
 | `orange-*` | `grafana-*` | Use `GRAFANA_COLORS` constant |
+| `gray-*` | `neutral-*` | `text-gray-500` → `text-neutral-500` |
 
 ### ESLint Color Enforcement
 
 ```javascript
-// eslint.config.js - prevents raw color usage
+// eslint.config.js - prevents raw color usage (enforced)
 {
   selector: "Literal[value=/\\b(text|bg|border|ring|hover:border)-(red|green|blue|yellow|amber|cyan|purple|orange)-\\d+/]",
   message: "Use semantic colors (error-*, success-*, warning-*, primary-*, info-*, insight-*, grafana-*)",
 }
+// gray-* → neutral-* migration is recommended but not enforced (4000+ existing usages)
 ```
 
 ## Color Utilities
@@ -178,17 +181,26 @@ The design system uses **semantic color names** instead of raw Tailwind colors:
 
 ```typescript
 import {
-  STATUS_BADGE_STYLES,    // Badge styles by status
-  INTERACTIVE_COLORS,     // Hover states by type
-  CONFIDENCE_COLORS,      // AI confidence levels
-  AI_INSIGHT_COLORS,      // AI feature styling
-  GRAFANA_COLORS,         // Grafana integration
-  getStatusBadgeStyle,    // Dynamic badge style
-  getConfidenceColor,     // Color by score
+  // Badge and status styles
+  STATUS_BADGE_STYLES,    // Badge styles by status (success, warning, error, info, neutral)
+  INTERACTIVE_COLORS,     // Hover states by type (danger, primary, success, warning)
+  CONFIDENCE_COLORS,      // AI confidence levels (high, medium, low)
+
+  // Semantic color constants
+  INFO_COLORS,            // Info/informational styling (text, bg, badge, border)
+  NEUTRAL_COLORS,         // General UI styling (text, textMuted, bg, bgHover, border, etc.)
+  AI_INSIGHT_COLORS,      // AI feature styling (text, bg, badge)
+  GRAFANA_COLORS,         // Grafana integration (primary, button, text)
+
+  // Helper functions
+  getStatusBadgeStyle,    // Dynamic badge style by status
+  getConfidenceColor,     // Color by confidence score
   getRiskLevelColor,      // Risk level colors
-  getComplianceStatusColor, // Compliance colors
+  getComplianceStatusColor, // Compliance status colors
+  getInfoStyle,           // Info style by variant
+  getNeutralStyle,        // Neutral style by variant
   getAIInsightStyle,      // AI style variants
-  getGrafanaButtonStyle,  // Grafana button
+  getGrafanaButtonStyle,  // Grafana button styling
 } from '../utils/colors';
 ```
 
@@ -207,6 +219,49 @@ GRAFANA_COLORS.primary   // #F46800 (official brand)
 GRAFANA_COLORS.button    // Button styling
 GRAFANA_COLORS.text      // Text styling
 ```
+
+### Info Colors (Cyan)
+
+For informational content, cloud/infrastructure indicators:
+
+```typescript
+INFO_COLORS.text    // text-info-600 dark:text-info-400
+INFO_COLORS.bg      // bg-info-50 dark:bg-info-900/30
+INFO_COLORS.badge   // bg-info-100 text-info-700 dark:bg-info-900/50 dark:text-info-300
+INFO_COLORS.border  // border-info-200 dark:border-info-800
+
+// Or use the helper function
+getInfoStyle('text')   // Returns text style
+getInfoStyle('badge')  // Returns badge style
+```
+
+### Neutral Colors (Gray)
+
+For general UI elements (text, borders, backgrounds):
+
+```typescript
+// Text variants
+NEUTRAL_COLORS.text       // text-neutral-900 dark:text-neutral-100 (primary text)
+NEUTRAL_COLORS.textMuted  // text-neutral-600 dark:text-neutral-400 (secondary)
+NEUTRAL_COLORS.textSubtle // text-neutral-400 dark:text-neutral-500 (tertiary)
+
+// Background variants
+NEUTRAL_COLORS.bg         // bg-neutral-50 dark:bg-neutral-900 (default)
+NEUTRAL_COLORS.bgHover    // bg-neutral-100 dark:bg-neutral-800 (hover state)
+NEUTRAL_COLORS.bgSelected // bg-neutral-200 dark:bg-neutral-700 (selected state)
+
+// Border variants
+NEUTRAL_COLORS.border      // border-neutral-200 dark:border-neutral-700
+NEUTRAL_COLORS.borderLight // border-neutral-100 dark:border-neutral-800
+NEUTRAL_COLORS.divide      // divide-neutral-200 dark:divide-neutral-700
+
+// Or use the helper function
+getNeutralStyle('text')     // Returns primary text style
+getNeutralStyle('textMuted') // Returns muted text style
+getNeutralStyle('bg')       // Returns default background style
+```
+
+**Note:** `gray-*` is still widely used (4000+ occurrences). New code should prefer `neutral-*` for semantic consistency, but migration is ongoing.
 
 ## Reusable UI Components
 
@@ -438,8 +493,219 @@ Replace custom button implementations:
 + <Button variant="primary">Save</Button>
 ```
 
+## AI-Native Components
+
+### AIEmptyState
+
+AI-powered empty state component with persona-aware suggestions.
+
+```tsx
+import { AIEmptyState } from '../components/EmptyState';
+
+// Basic usage
+<AIEmptyState context="sessions" />
+
+// With search filter distinction
+<AIEmptyState
+  context="workflows"
+  emptyType="no-matches"
+  searchQuery={searchQuery}
+/>
+
+// With custom action (for modals)
+<AIEmptyState
+  context="projects"
+  onAction={() => setShowCreateDialog(true)}
+  actionLabel="Create Project"
+/>
+```
+
+#### Supported Contexts (13 total)
+
+| Context | Icon | Use Case |
+|---------|------|----------|
+| `sessions` | MessageSquare | Chat session list |
+| `projects` | FolderOpen | Project list |
+| `workflows` | GitBranch | Workflow list |
+| `traces` | Activity | Trace explorer |
+| `messages` | MessageCircle | Message thread |
+| `files` | FileText | File browser (legacy) |
+| `artifacts` | FileText | Artifact browser |
+| `alerts` | Bell | Alert panel |
+| `connections` | Plug | MCP connections |
+| `prompts` | FileCode | Prompt library |
+| `tools` | Wrench | MCP tools |
+| `resources` | Database | MCP resources |
+| `audit` | ClipboardList | Audit log |
+
+#### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `context` | `EmptyStateContext` | required | Context identifier |
+| `emptyType` | `"empty" \| "no-matches"` | `"empty"` | Distinguish true empty vs filtered |
+| `searchQuery` | `string` | - | Search query for no-matches title |
+| `onAction` | `() => void` | - | Custom action callback (for modals) |
+| `onNavigate` | `(path: string) => void` | - | Navigation callback |
+| `actionLabel` | `string` | from registry | Override CTA button text |
+| `enableAI` | `boolean` | `true` | Enable AI suggestions |
+
+#### Registry Configuration
+
+Each context has default configuration in `EmptyStateRegistry.ts`:
+
+```typescript
+const DEFAULT_CONFIGS = {
+  artifacts: {
+    title: "No artifacts yet",
+    motivation: "Create or upload artifacts to use in your workflows",
+    ability: "Drag and drop supported",
+    action: "Upload Artifact",
+    target: "modal:artifact-upload",
+  },
+  // ... other contexts
+};
+```
+
+Persona-specific overrides are applied automatically based on user's sub-persona.
+
+---
+
+### CommandPaletteContext
+
+Dynamic command registration for route-aware command palette.
+
+```tsx
+import {
+  CommandPaletteProvider,
+  useCommandPalette
+} from '../contexts/CommandPaletteContext';
+
+// Provider wraps the shell layout
+<CommandPaletteProvider staticCommands={PALETTE_COMMANDS}>
+  <StudioShellLayout />
+</CommandPaletteProvider>
+
+// Register commands dynamically
+function MyComponent() {
+  const { registerCommands, unregisterCommands } = useCommandPalette();
+
+  useEffect(() => {
+    const commands = [
+      { id: 'my-cmd', name: 'My Command', category: 'Custom' }
+    ];
+    registerCommands(commands);
+    return () => unregisterCommands(commands.map(c => c.id));
+  }, []);
+}
+```
+
+#### Route Commands Hook
+
+```tsx
+import { useRouteCommands } from '../hooks/useRouteCommands';
+
+// Auto-registers commands for current route
+function StudioShellLayout() {
+  useRouteCommands(); // Registers workflow commands at /studio/workflows, etc.
+  // ...
+}
+```
+
+See `feature-flags-mapping.md` for complete route-to-command mapping.
+
+---
+
+### WidgetArtifact
+
+Generative UI widget artifact type for dynamic chart/table/text rendering.
+
+```typescript
+// src/types/artifacts.ts
+interface WidgetArtifact extends BaseArtifact {
+  type: "widget";
+  widgetType: "chart" | "table" | "text";
+  config: {
+    id: string;
+    title: string;
+    data: WidgetChartData | WidgetTableData | WidgetTextData;
+  };
+}
+
+// Chart data
+interface WidgetChartData {
+  labels: string[];   // X-axis labels
+  values: number[];   // Y-axis values
+}
+
+// Table data
+interface WidgetTableData {
+  columns: string[];           // Column headers
+  rows: (string | number)[][];  // Row data
+}
+
+// Text data
+interface WidgetTextData {
+  content: string;  // Markdown or plain text
+}
+```
+
+#### Usage in Chat
+
+Widgets are parsed from fenced code blocks with `widget` language:
+
+````markdown
+```widget
+{
+  "type": "chart",
+  "title": "Sales by Quarter",
+  "data": {
+    "labels": ["Q1", "Q2", "Q3", "Q4"],
+    "values": [100, 150, 200, 175]
+  }
+}
+```
+````
+
+The `ArtifactRenderer` component handles widget artifacts:
+
+```tsx
+// ArtifactRenderer.tsx
+case "widget":
+  return <GenerativeWidget config={artifact.config} />;
+```
+
+---
+
+## Chat Input Feature Gap (Sprint 1)
+
+The `ConnectedChatInputForm` component supports advanced features when wired through the shell path:
+
+### Props Added
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `showModelSelector` | `boolean` | Show model dropdown |
+| `selectedModel` | `string` | Current model ID |
+| `availableModels` | `ModelOption[]` | Available models |
+| `onModelChange` | `(id: string) => void` | Model change handler |
+| `modelSupportsThinking` | `boolean` | Enable reasoning UI |
+| `reasoningEffort` | `ReasoningEffortLevel` | Reasoning level |
+| `enableThinking` | `boolean` | Thinking toggle state |
+| `enableUrlFetch` | `boolean` | Enable URL content fetch |
+
+### Feature Flags
+
+| Flag | Purpose |
+|------|---------|
+| `model_selector_in_shell` | Enable model selector in shell |
+| `url_fetch_in_shell` | Enable #url fetch pattern |
+
+---
+
 ## References
 
 - `shared-frontend/README.md` - Full API documentation
 - `studio-frontend/README.md` - Studio-specific features
 - `ADR-077: Design System Consolidation` - Architecture decision
+- `feature-flags-mapping.md` - Feature flag documentation

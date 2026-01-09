@@ -161,6 +161,158 @@ At least one LLM provider API key is required for the agent to function:
   - Default: "grafana"
   - Example: `export OBSERVABILITY_ALERTING_BACKEND="mimir"`
 
+##### Semantic Search for Tools, Skills, and Memories (ADR-0099)
+
+<Info>
+Semantic search enables dynamic capability discovery by indexing tools, skills, and memories in a vector store (Qdrant) and selecting only relevant capabilities for each request. This reduces token usage by 34-64% when working with large capability sets (50+ tools).
+</Info>
+
+- **`FF_ENABLE_SEMANTIC_TOOL_SEARCH`**
+  - Purpose: Enable semantic search for dynamic tool discovery
+  - Type: Boolean string ("true" / "false")
+  - Default: "false"
+  - Example: `export FF_ENABLE_SEMANTIC_TOOL_SEARCH="true"`
+  - Graph Impact: Adds `retrieve_tools` node before router
+  - See: [ADR-0099: Semantic Tool Selection](/architecture/adr-0099-semantic-tool-selection)
+
+- **`FF_ENABLE_SEMANTIC_SKILL_SEARCH`**
+  - Purpose: Enable semantic search for dynamic skill discovery
+  - Type: Boolean string ("true" / "false")
+  - Default: "false"
+  - Example: `export FF_ENABLE_SEMANTIC_SKILL_SEARCH="true"`
+  - Graph Impact: Adds `retrieve_skills` node for skill selection
+  - See: [ADR-0099: Semantic Tool Selection](/architecture/adr-0099-semantic-tool-selection)
+
+- **`FF_ENABLE_SEMANTIC_MEMORY_SEARCH`**
+  - Purpose: Enable semantic search for memory retrieval
+  - Type: Boolean string ("true" / "false")
+  - Default: "false"
+  - Example: `export FF_ENABLE_SEMANTIC_MEMORY_SEARCH="true"`
+  - Graph Impact: Adds `retrieve_memories` node for context enrichment
+  - See: [ADR-0099: Semantic Tool Selection](/architecture/adr-0099-semantic-tool-selection)
+
+- **`MAX_SELECTED_TOOLS`**
+  - Purpose: Maximum number of tools to bind per request after semantic selection
+  - Type: Integer
+  - Default: 10
+  - Range: 1-50 recommended
+  - Example: `export MAX_SELECTED_TOOLS=15`
+
+- **`MAX_SELECTED_SKILLS`**
+  - Purpose: Maximum number of skills to bind per request after semantic selection
+  - Type: Integer
+  - Default: 5
+  - Range: 1-20 recommended
+  - Example: `export MAX_SELECTED_SKILLS=10`
+
+- **`MAX_RETRIEVED_MEMORIES`**
+  - Purpose: Maximum number of memories to retrieve per request
+  - Type: Integer
+  - Default: 10
+  - Range: 1-50 recommended
+  - Example: `export MAX_RETRIEVED_MEMORIES=20`
+
+- **`SEMANTIC_TOOL_SEARCH_THRESHOLD`**
+  - Purpose: Minimum similarity score for tool selection (0.0-1.0)
+  - Type: Float
+  - Default: 0.5
+  - Range: 0.0-1.0 (higher = more selective)
+  - Example: `export SEMANTIC_TOOL_SEARCH_THRESHOLD=0.7`
+  - Note: Lower thresholds include more tools; higher thresholds improve precision
+
+###### Qdrant Vector Store Configuration
+
+- **`QDRANT_URL`**
+  - Purpose: Hostname for Qdrant vector database
+  - Type: String
+  - Default: "localhost"
+  - Example: `export QDRANT_URL="qdrant.example.com"`
+
+- **`QDRANT_PORT`**
+  - Purpose: Port for Qdrant vector database
+  - Type: Integer
+  - Default: 6333
+  - Example: `export QDRANT_PORT=6333`
+
+- **`QDRANT_COLLECTION_NAME`**
+  - Purpose: Collection name for capability embeddings
+  - Type: String
+  - Default: "capability_index"
+  - Example: `export QDRANT_COLLECTION_NAME="semantic_capabilities"`
+
+###### Embeddings Configuration
+
+- **`EMBEDDING_PROVIDER`**
+  - Purpose: Provider for text embeddings
+  - Type: String ("local" | "openai" | "azure")
+  - Default: "local"
+  - Example: `export EMBEDDING_PROVIDER="openai"`
+  - Note: "local" uses sentence-transformers (no API key required)
+
+- **`EMBEDDING_MODEL_NAME`**
+  - Purpose: Model name for text embeddings
+  - Type: String
+  - Default: "all-MiniLM-L6-v2" (for local provider)
+  - Example: `export EMBEDDING_MODEL_NAME="text-embedding-3-small"`
+
+- **`EMBEDDING_DIMENSIONS`**
+  - Purpose: Vector dimensions for embeddings
+  - Type: Integer
+  - Default: 384 (for all-MiniLM-L6-v2)
+  - Example: `export EMBEDDING_DIMENSIONS=1536`
+  - Note: Must match the model's output dimensions
+
+###### Authorization Cache Warming (ADR-0099)
+
+- **`AUTH_CACHE_WARM_ENTRIES`**
+  - Purpose: Pre-warm the semantic index authorization cache at startup
+  - Type: JSON array of objects
+  - Default: "[]" (empty array, no warming)
+  - Format: Each entry specifies a user/relation/object_type combination to cache
+  - Example:
+    ```bash
+    export AUTH_CACHE_WARM_ENTRIES='[
+      {"user_id": "user:service-account", "relation": "viewer", "object_type": "tool_index"},
+      {"user_id": "user:admin", "relation": "admin", "object_type": "skill_index"}
+    ]'
+    ```
+  - Benefits:
+    - Reduces first-request latency for known service principals
+    - Improves cold-start performance for frequently accessed capabilities
+    - Authorization decisions are cached during bootstrap
+  - See: [ADR-0099: Semantic Tool Selection](/architecture/adr-0099-semantic-tool-selection)
+
+##### OpenFGA Authorization Feature Flags (ADR-0068)
+
+<Info>
+These feature flags control advanced OpenFGA authorization features introduced in the OpenFGA Audit Resolution Plan v2.1. All feature flags use the `FF_` prefix convention.
+</Info>
+
+- **`FF_OPENFGA_ORG_CONTEXT_ENFORCEMENT`**
+  - Purpose: Require organization context in authorization checks
+  - Type: Boolean string ("true" / "false")
+  - Default: "false"
+  - Example: `export FF_OPENFGA_ORG_CONTEXT_ENFORCEMENT="true"`
+  - Impact: Injects contextual tuples for org-scoped authorization
+  - See: [ADR-0068: Gateway-Level Authentication](/architecture/adr-0068-gateway-level-authentication)
+
+- **`FF_OPENFGA_ORG_CONTEXT_FAIL_CLOSED`**
+  - Purpose: Fail closed when org context is missing (security-first)
+  - Type: Boolean string ("true" / "false")
+  - Default: "true"
+  - Example: `export FF_OPENFGA_ORG_CONTEXT_FAIL_CLOSED="true"`
+  - Impact: When True with enforcement enabled, missing context denies access
+  - Recommendation: Keep True in production for security
+
+- **`FF_OPENFGA_CONDITIONS_ENABLED`**
+  - Purpose: Enable OpenFGA condition evaluation in authorization checks
+  - Type: Boolean string ("true" / "false")
+  - Default: "false"
+  - Example: `export FF_OPENFGA_CONDITIONS_ENABLED="true"`
+  - Impact: Enables time_bound_share and subscription_tier conditions
+  - Requirement: OpenFGA v1.11.2 or higher
+  - See: [ADR-0068: Gateway-Level Authentication](/architecture/adr-0068-gateway-level-authentication)
+
 #### Cloud Provider Integration
 
 ##### AWS

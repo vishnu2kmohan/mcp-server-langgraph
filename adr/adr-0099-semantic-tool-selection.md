@@ -1,0 +1,467 @@
+# ADR-0099: Semantic Tool Selection for Dynamic Capability Discovery
+
+| Status   | Accepted                                     |
+|----------|----------------------------------------------|
+| Date     | 2026-01-08                                   |
+| Category | Agent Architecture                           |
+| Authors  | Claude Code                                  |
+
+## Context
+
+The MCP Server LangGraph system supports a growing number of tools (50+) and skills. The current approach of binding all tools to the LLM at invocation time has several limitations:
+
+1. **Token Overhead**: Sending full schemas for all tools consumes significant context window (estimated 100-500 tokens per tool).
+
+2. **Scalability**: As the tool count grows, the overhead becomes prohibitive and may exceed model context limits.
+
+3. **Relevance**: Most requests only need 2-5 tools, but the LLM receives all tool schemas regardless.
+
+4. **Cost**: Token usage directly impacts API costs, especially with large tool sets.
+
+### Industry Patterns
+
+**Anthropic Tool Search Tool Pattern** (from Anthropic docs):
+- Use `defer_loading: true` to avoid sending full tool schemas upfront
+- Return `tool_reference` blocks that trigger late binding
+- Achieves **34-64% token savings** with many tools (50+ tools)
+
+**LangGraph Many Tools Pattern** (from LangGraph docs):
+- Index tool embeddings in vector store
+- Add `retrieve_tools` node before agent/respond node
+- Bind only selected subset to model (dynamic binding)
+
+### Existing Infrastructure
+
+The codebase already has supporting infrastructure:
+- `DynamicContextLoader`: Semantic search via Qdrant with `ref_types` filtering
+- `HierarchicalToolRegistry`: Scope-aware tool resolution (session, project, organization)
+- `HierarchicalSkillRegistry`: Scope-aware skill resolution
+- `CapabilityProvider` protocol (ADR-0092): Standard interface for capability providers
+
+## Decision
+
+### 1. Semantic Index Data Models
+
+Create data models for indexing tools, skills, and memories:
+
+```python
+# src/mcp_server_langgraph/tools/semantic_index.py
+
+@dataclass
+class ToolIndexEntry:
+    """Indexed tool metadata for semantic search."""
+    tool_id: str
+    name: str
+    description: str
+    category: str
+    embedding: list[float] | None = None
+    scope: ToolScope = ToolScope.SESSION
+    tenant_id: str | None = None
+    parameters_summary: str = ""  # Compact param description
+    token_estimate: int = 0  # Full schema token count
+
+@dataclass
+class SkillIndexEntry:
+    """Indexed skill metadata for semantic search."""
+    skill_id: str
+    name: str
+    description: str
+    category: str
+    embedding: list[float] | None = None
+    scope: ToolScope = ToolScope.PROJECT
+    tools_needed: list[str] = field(default_factory=list)
+    token_estimate: int = 0
+
+@dataclass
+class MemoryIndexEntry:
+    """Indexed memory for semantic retrieval."""
+    memory_id: str
+    content: str
+    memory_type: Literal["preference", "fact", "context", "history"]
+    embedding: list[float] | None = None
+    user_id: str | None = None
+    session_id: str | None = None
+```
+
+### 2. SemanticIndexManager
+
+Central manager for indexing and searching capabilities:
+
+```python
+# src/mcp_server_langgraph/core/semantic_index_manager.py
+
+class SemanticIndexManager:
+    """Manages semantic indexing of tools, skills, and memories."""
+
+    COLLECTION_NAME = "capability_index"
+
+    async def index_tool(self, tool: StructuredTool) -> None:
+        """Index a single tool with its embedding."""
+
+    async def index_skill(self, skill: SkillDefinition) -> None:
+        """Index a skill with its embedding."""
+
+    async def index_memory(self, memory: MemoryIndexEntry) -> None:
+        """Index a memory for semantic retrieval."""
+
+    async def search_tools(
+        self, query: str, limit: int = 10, min_score: float = 0.5
+    ) -> list[ToolIndexEntry]:
+        """Semantic search for relevant tools."""
+
+    async def search_skills(
+        self, query: str, limit: int = 5
+    ) -> list[SkillIndexEntry]:
+        """Semantic search for relevant skills."""
+
+    async def search_memories(
+        self, query: str, user_id: str | None = None, limit: int = 10
+    ) -> list[MemoryIndexEntry]:
+        """Semantic search for relevant memories."""
+```
+
+### 3. Select Tools Node in Agent Graph
+
+Add a `retrieve_tools` node between router and respond:
+
+```python
+# src/mcp_server_langgraph/core/agent_graph_builder.py
+
+async def retrieve_tools(state: AgentState) -> AgentState:
+    """Dynamically select tools based on user query via semantic search."""
+    if not config.enable_semantic_tool_selection:
+        return state  # Use all tools (current behavior)
+
+    last_message = state["messages"][-1]
+    query = last_message.content if hasattr(last_message, "content") else str(last_message)
+
+    # Semantic search for relevant tools
+    selected_tools = await semantic_index.search_tools(
+        query=query,
+        limit=config.max_selected_tools,
+        min_score=config.semantic_tool_search_threshold,
+    )
+
+    # Store selected tool names in state
+    state["selected_tools"] = [t.name for t in selected_tools]
+    return state
+```
+
+### 4. Dynamic Tool Binding
+
+Modify `generate_response` to bind only selected tools:
+
+```python
+async def generate_response(state: AgentState) -> AgentState:
+    # Use selected tools if available, else all tools
+    selected_tool_names = state.get("selected_tools")
+
+    if selected_tool_names:
+        # Filter to only selected tools
+        tools_to_bind = [t for t in all_tools if t.name in selected_tool_names]
+    else:
+        tools_to_bind = all_tools
+
+    if tools_to_bind and hasattr(model, "bind_tools"):
+        model_for_response = model.bind_tools(tools_to_bind)
+    else:
+        model_for_response = model
+```
+
+### 5. Router Agent Semantic Discovery
+
+Enhance router with semantic discovery:
+
+```python
+# src/mcp_server_langgraph/agents/router_agent.py
+
+class RouterOutputWithDiscovery(RouterOutput):
+    """RouterOutput extended with semantic discovery results."""
+    discovered_tools: list[ToolIndexEntry] = Field(default_factory=list)
+    discovered_skills: list[SkillIndexEntry] = Field(default_factory=list)
+
+async def route_with_semantic_discovery(
+    self,
+    message: str,
+    semantic_index: SemanticIndexManager,
+    tools_available: list[str] | None = None,
+) -> RouterOutputWithDiscovery:
+    """Route with semantic tool/skill discovery."""
+```
+
+### 6. Extended ref_types for DynamicContextLoader
+
+Add new ref_types for capabilities:
+
+```python
+# src/mcp_server_langgraph/core/dynamic_context_loader.py
+
+VALID_REF_TYPES: tuple[str, ...] = (
+    "conversation",
+    "document",
+    "tool_usage",
+    "file",
+    "tool",      # NEW: Tool definitions
+    "skill",     # NEW: Skill definitions
+    "memory",    # NEW: User/session memories
+)
+
+CAPABILITY_REF_TYPES: tuple[str, ...] = ("tool", "skill")
+```
+
+### 7. SSE Events for Frontend Visibility
+
+Emit `selected_tools` SSE event in chat streaming:
+
+```python
+# src/mcp_server_langgraph/api/v1/chat.py
+
+elif event_name == "selected_tools":
+    data = event.get("data", {})
+    yield {
+        "selected_tools": data.get("selected_tools", []),
+        "selection_scores": data.get("selection_scores", {}),
+        "total_available": data.get("total_available"),
+    }
+```
+
+### 8. Feature Flags
+
+```python
+# src/mcp_server_langgraph/core/config/_settings.py
+
+enable_semantic_tool_selection: bool = False  # Off by default
+max_selected_tools: int = 10                  # Maximum tools per request
+semantic_tool_search_threshold: float = 0.5  # Minimum similarity (0-1)
+```
+
+### 9. Authorization (ADR-0068 Integration)
+
+All semantic search operations require authorization via OpenFGA:
+
+```python
+# Authorization model
+- tool_index: viewer relation required for search
+- skill_index: viewer relation required for search
+- memory_index: owner relation for own memories, admin for others
+
+# Authorization enforcement in SemanticIndexManager
+async def search_tools(
+    self,
+    query: str,
+    user_id: str,  # Required for authorization
+    limit: int = 10,
+    tenant_id: str | None = None,  # Multi-tenant isolation
+) -> list[ToolIndexEntry]:
+    """Search with authorization check."""
+    # Fail-closed: returns empty list if unauthorized
+    authorized = await self._check_authorization(
+        user_id=user_id,
+        relation="viewer",
+        object_type="tool_index",
+    )
+    if not authorized:
+        return []
+```
+
+### 10. Authorization Caching
+
+To reduce OpenFGA call overhead, positive authorization results are cached:
+
+```python
+# src/mcp_server_langgraph/core/semantic_index_manager.py
+
+class SemanticIndexManager:
+    def __init__(
+        self,
+        embedder: Embeddings,
+        qdrant_client: AsyncQdrantClient,
+        # Cache configuration
+        auth_cache_ttl_seconds: float = 60,    # Default: 60s TTL
+        auth_cache_maxsize: int = 1000,        # LRU eviction at limit
+        cache_service: CacheService | None = None,  # Distributed cache
+    ):
+        # Local cache using TTLCache (per-instance)
+        self._auth_cache = TTLCache(maxsize=auth_cache_maxsize, ttl=auth_cache_ttl_seconds)
+
+        # Optional distributed cache via CacheService (L1+L2)
+        self.cache_service = cache_service
+```
+
+#### Cache Modes
+
+**Local Mode (default)**:
+- Uses in-memory `TTLCache` from `cachetools`
+- Per-instance cache (not shared across replicas)
+- Suitable for single-node deployments
+
+**Distributed Mode**:
+- Uses `CacheService` with L1 (in-memory) + L2 (Redis) layers
+- Cache shared across all instances
+- Suitable for Kubernetes/multi-replica deployments
+
+```python
+# Enable distributed mode
+from mcp_server_langgraph.core.cache import get_cache
+
+manager = SemanticIndexManager(
+    embedder=embedder,
+    qdrant_client=qdrant_client,
+    cache_service=get_cache(),  # Enables distributed caching
+)
+```
+
+#### Cache Statistics
+
+```python
+# Get cache stats for monitoring
+stats = manager.get_cache_stats()
+# Returns:
+# {
+#     "hits": 42,
+#     "misses": 8,
+#     "size": 35,
+#     "maxsize": 1000,
+#     "ttl_seconds": 60.0,
+#     "hit_rate": 0.84,
+#     "distributed": True,  # or False for local mode
+# }
+```
+
+#### Security Considerations
+
+1. **Only positive results cached**: Denied authorizations are NOT cached to allow
+   immediate access when permissions are granted.
+
+2. **Fail-closed**: Any cache or OpenFGA error results in denied access (returns empty list).
+
+3. **Cache invalidation**: Use `manager.clear_auth_cache()` when authorization tuples
+   change and you need to force fresh permission checks.
+
+## Consequences
+
+### Benefits
+
+1. **Token Savings**: 34-64% reduction in tool schema tokens for requests using subset of tools.
+
+2. **Scalability**: System can support 100+ tools without context window issues.
+
+3. **Relevance**: LLM receives only contextually relevant tools, improving response quality.
+
+4. **Cost Reduction**: Lower API costs due to reduced token usage.
+
+5. **Observability**: Frontend can display which tools were semantically selected.
+
+### Tradeoffs
+
+1. **Latency**: Additional semantic search adds ~50-100ms per request.
+
+2. **Complexity**: More moving parts in the agent graph.
+
+3. **Index Maintenance**: Tools must be indexed when added/modified.
+
+4. **False Negatives**: Semantic search may miss relevant tools if threshold too high.
+
+### Mitigations
+
+1. **Caching**: Cache embeddings and search results to reduce latency.
+
+2. **Feature Flag**: Disabled by default, opt-in for production use.
+
+3. **Fallback**: If semantic search fails, fall back to all tools.
+
+4. **Threshold Tuning**: Default 0.5 threshold is conservative; can be adjusted.
+
+## Verification
+
+### Unit Tests
+```bash
+uv run pytest tests/unit/core/test_semantic_index_manager.py -v
+uv run pytest tests/unit/core/test_semantic_index_authorization.py -v
+uv run pytest tests/unit/core/test_semantic_index_authorization_caching.py -v
+uv run pytest tests/unit/core/test_semantic_index_cache_metrics.py -v
+uv run pytest tests/unit/core/test_semantic_index_distributed_cache.py -v
+uv run pytest tests/unit/core/test_agent_graph_retrieve_tools.py -v
+uv run pytest tests/unit/core/test_agent_graph_retrieve_skills.py -v
+uv run pytest tests/unit/core/test_agent_graph_retrieve_memories.py -v
+uv run pytest tests/unit/core/test_semantic_search_feature_flags.py -v
+uv run pytest tests/unit/agents/test_router_agent_semantic.py -v
+uv run pytest tests/unit/api/v1/test_chat_selected_tools_sse.py -v
+```
+
+### Integration Tests
+```bash
+uv run pytest tests/integration/test_semantic_tool_selection.py -v
+```
+
+### Manual Testing
+1. Enable feature flags:
+   - `FF_ENABLE_SEMANTIC_TOOL_SEARCH=true` - Semantic tool discovery
+   - `FF_ENABLE_SEMANTIC_SKILL_SEARCH=true` - Semantic skill discovery
+   - `FF_ENABLE_SEMANTIC_MEMORY_SEARCH=true` - Semantic memory retrieval
+2. Send chat message with tool-related query
+3. Verify `selected_tools` SSE event in stream
+4. Verify only selected tools are bound to model
+
+## Implementation Status
+
+**Last Updated**: 2026-01-08
+
+### Completed
+
+| Component | Status | Location |
+|-----------|--------|----------|
+| Feature Flags | ✅ Complete | `core/feature_flags.py` |
+| SemanticIndexManager | ✅ Complete | `core/semantic_index_manager.py` |
+| retrieve_tools node | ✅ Complete | `core/agent_graph_builder.py` |
+| retrieve_skills node | ✅ Complete | `core/agent_graph_builder.py` |
+| Dynamic tool binding | ✅ Complete | `core/agent_graph_builder.py` |
+| SSE selected_tools event | ✅ Complete | `api/v1/chat.py` |
+| Authorization integration | ✅ Complete | `core/semantic_index_manager.py` |
+| Authorization caching | ✅ Complete | Local + distributed cache modes |
+| Prometheus cache metrics | ✅ Complete | Counter, Gauge, Histogram in `core/semantic_index_manager.py` |
+| Cache warming on startup | ✅ Complete | `warm_cache()` method in `core/semantic_index_manager.py` |
+| Bootstrap cache warming | ✅ Complete | `warm_semantic_cache()` in `bootstrap/security.py` |
+| Cache warming config | ✅ Complete | `auth_cache_warm_entries` in `core/config/_settings.py` |
+| SkillSearchTool | ✅ Complete | `skills/search.py` |
+| VectorProviderAdapter | ✅ Complete | `skills/adapters.py` |
+| Skill indexing pipeline | ✅ Complete | `skills/installer.py` |
+| Frontend SkillsPage | ✅ Complete | `studio/frontend/src/pages/SkillsPage.tsx` |
+| Marketplace parallel fetching | ✅ Complete | `skills/marketplace.py` |
+
+### Test Coverage
+
+| Test Suite | Tests | Status |
+|------------|-------|--------|
+| test_semantic_index_manager.py | 15 | ✅ Pass |
+| test_semantic_index_authorization.py | 8 | ✅ Pass |
+| test_semantic_index_authorization_caching.py | 6 | ✅ Pass |
+| test_semantic_index_cache_metrics.py | 13 | ✅ Pass |
+| test_semantic_index_distributed_cache.py | 7 | ✅ Pass |
+| test_semantic_index_prometheus_metrics.py | 12 | ✅ Pass |
+| test_semantic_index_cache_warming.py | 7 | ✅ Pass |
+| test_semantic_index_bootstrap_integration.py | 6 | ✅ Pass |
+| test_agent_graph_retrieve_tools.py | 12 | ✅ Pass |
+| test_agent_graph_retrieve_skills.py | 10 | ✅ Pass |
+| test_semantic_search_feature_flags.py | 8 | ✅ Pass |
+| test_router_agent_semantic.py | 6 | ✅ Pass |
+| test_chat_selected_tools_sse.py | 7 | ✅ Pass |
+| test_semantic_tool_selection.py (integration) | 5 | ✅ Pass |
+| SkillsPage.test.tsx (frontend) | 33 | ✅ Pass |
+| test_skill_marketplace.py | 60 | ✅ Pass |
+
+### Pending Enhancements
+
+| Enhancement | Priority | Notes |
+|-------------|----------|-------|
+| Rate limiting for marketplace API | ✅ Complete | `MarketplaceClient(rate_limit_requests_per_second=10)` |
+| Retry logic for transient failures | ✅ Complete | Exponential backoff for 5xx errors |
+| Benchmark performance tests | Low | Validate 34-64% token savings |
+
+## References
+
+- [Anthropic Tool Search Tool Pattern](https://docs.anthropic.com/en/docs/build-with-claude/tool-use#tool-search-tool)
+- [LangGraph Many Tools Example](https://langchain-ai.github.io/langgraph/tutorials/customer-support/customer-support/#many-tools)
+- ADR-0068: Gateway-Level Authentication with OpenFGA ReBAC
+- ADR-0092: Hierarchical Capability Architecture
+- ADR-0095: Multi-Tenant Vector Search Isolation

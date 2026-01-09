@@ -607,6 +607,9 @@
               "architecture/adr-0091-api-response-transformation-strategy",
               "architecture/adr-0092-hierarchical-capability-architecture",
               "architecture/adr-0097-nan-safety-api-response-models",
+              "architecture/adr-0098-mimir-alerting-fallback",
+              "architecture/adr-0099-semantic-tool-selection",
+              "architecture/adr-0100-frontend-ai-native-integration",
               "architecture/adr-0088-frontend-hook-selection-guidance",
               "architecture/adr-0076-sandpack-jsdom-27-mock"
             ]

@@ -265,3 +265,75 @@ http.get('/api/v1/features', () => {
 - ✅ Sprint 1: AIIntelligenceContext extended with new feature types
 - ✅ Sprint 1: All 7 granular flags mapped with fallback to master flag
 - 🔄 Sprint 2: Session Intelligence implementation (in progress)
+
+---
+
+## Sprint 4: Shell-Specific Feature Flags
+
+These flags control advanced features in the StudioShell chat input (Chat Input Feature Gap):
+
+| Flag Name (Backend) | Purpose | Default | Gate |
+|---------------------|---------|---------|------|
+| `enable_model_selector_in_shell` | Show model selection dropdown in shell's ConnectedConversationPanel | `false` | Model selector UI |
+| `enable_url_fetch_in_shell` | Enable #url pattern for fetching web content in shell chat input | `false` | URL fetch pills |
+
+**Environment Variables:**
+- `FF_ENABLE_MODEL_SELECTOR_IN_SHELL=true` - Enable model selector
+- `FF_ENABLE_URL_FETCH_IN_SHELL=true` - Enable URL fetch
+
+**Backend Location:** `src/mcp_server_langgraph/core/feature_flags.py` (lines 529-542)
+
+**Frontend Usage:**
+```typescript
+// In ConnectedConversationPanel.tsx
+const showModelSelector = useFeatureFlag('model_selector_in_shell');
+const enableUrlFetch = useFeatureFlag('url_fetch_in_shell');
+
+// Wire to ConnectedChatInputForm
+<ConnectedChatInputForm
+  showModelSelector={showModelSelector}
+  enableUrlFetch={enableUrlFetch}
+  // ... other props
+/>
+```
+
+---
+
+## Sprint 4: Route-Aware Command Palette
+
+The `useRouteCommands` hook registers route-specific commands with the CommandPaletteContext.
+
+**Supported Routes and Commands:**
+
+| Route | Commands | Category |
+|-------|----------|----------|
+| `/studio/workflows` | New Workflow, Import Workflow, Export Workflow | Workflow |
+| `/studio/observability` | Query Logs, Create Alert Rule, View Traces | Observability |
+| `/studio/connections` | New Connection, Test All Connections | Connections |
+| `/studio/projects` | New Project | Projects |
+| `/studio/settings` | Export Settings, Import Settings | Settings |
+| `/studio/mcp` | Browse Tools, Browse Resources, Browse Prompts | MCP |
+| `/studio/agents` | Configure Agent, Test Agent | Agents |
+| `/studio/artifacts` | Upload Artifact, Search Artifacts | Artifacts |
+| `/studio/cost` | Set Budget, Export Cost Report | Cost |
+| `/studio/help` | Search Docs, Keyboard Shortcuts | Help |
+| `/studio/compliance` | Run Compliance Check, Export Report | Compliance |
+| `/studio/audit` | Export Audit Log, Filter Audit Log | Audit |
+| `/studio/vectors` | Search Vectors, Reindex Vectors | Vectors |
+| `/studio/analytics` | Export Report, Configure Metrics | Analytics |
+| `/studio/skills` | Browse Marketplace, Install Skill | Skills |
+| `/studio/admin` | Manage Users, System Health | Admin |
+
+**Implementation:**
+- `src/hooks/useRouteCommands.ts` - Route command definitions
+- `src/contexts/CommandPaletteContext.tsx` - Command registration/deregistration
+- Commands are automatically registered on mount and unregistered on route change
+
+**Usage:**
+```typescript
+// In any component that needs route-aware commands
+function MyComponent() {
+  useRouteCommands(); // Auto-registers commands for current route
+  // ...
+}
+```
