@@ -2,6 +2,32 @@
   "$schema": "https://openfga.dev/schema/v1.1",
   "schema_version": "1.1",
   "description": "MCP Server LangGraph Authorization Model (ADR-0068)",
+  "conditions": {
+    "time_bound_share": {
+      "name": "time_bound_share",
+      "expression": "current_time < expiry_time",
+      "parameters": {
+        "current_time": {
+          "type_name": "TYPE_NAME_TIMESTAMP"
+        },
+        "expiry_time": {
+          "type_name": "TYPE_NAME_TIMESTAMP"
+        }
+      }
+    },
+    "subscription_tier": {
+      "name": "subscription_tier",
+      "expression": "user_tier == required_tier || user_tier == 'enterprise' || (user_tier == 'premium' && required_tier == 'free')",
+      "parameters": {
+        "user_tier": {
+          "type_name": "TYPE_NAME_STRING"
+        },
+        "required_tier": {
+          "type_name": "TYPE_NAME_STRING"
+        }
+      }
+    }
+  },
   "type_definitions": [
     {
       "type": "user",
@@ -18,6 +44,9 @@
         },
         "admin": {
           "this": {}
+        },
+        "user_in_context": {
+          "this": {}
         }
       },
       "metadata": {
@@ -30,6 +59,13 @@
             ]
           },
           "admin": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "user_in_context": {
             "directly_related_user_types": [
               {
                 "type": "user"
@@ -79,6 +115,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -86,6 +125,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -151,25 +193,6 @@
             ]
           },
           "editor": {
-            "directly_related_user_types": [
-              {
-                "type": "user"
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "type": "role",
-      "relations": {
-        "assignee": {
-          "this": {}
-        }
-      },
-      "metadata": {
-        "relations": {
-          "assignee": {
             "directly_related_user_types": [
               {
                 "type": "user"
@@ -249,16 +272,6 @@
                 "computedUserset": {
                   "relation": "editor"
                 }
-              },
-              {
-                "tupleToUserset": {
-                  "tupleset": {
-                    "relation": "organization"
-                  },
-                  "computedUserset": {
-                    "relation": "member"
-                  }
-                }
               }
             ]
           }
@@ -273,6 +286,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -280,6 +296,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -287,6 +306,120 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
+              }
+            ]
+          },
+          "organization": {
+            "directly_related_user_types": [
+              {
+                "type": "organization"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "artifact",
+      "description": "Artifact storage (files, generated content) - Sprint 4 Route Commands. Phase 4: Added project relation for parent-child hierarchy.",
+      "relations": {
+        "project": {
+          "this": {}
+        },
+        "owner": {
+          "this": {}
+        },
+        "editor": {
+          "union": {
+            "child": [
+              {
+                "this": {}
+              },
+              {
+                "computedUserset": {
+                  "relation": "owner"
+                }
+              },
+              {
+                "tupleToUserset": {
+                  "tupleset": {
+                    "relation": "project"
+                  },
+                  "computedUserset": {
+                    "relation": "editor"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {
+                "this": {}
+              },
+              {
+                "computedUserset": {
+                  "relation": "editor"
+                }
+              },
+              {
+                "tupleToUserset": {
+                  "tupleset": {
+                    "relation": "project"
+                  },
+                  "computedUserset": {
+                    "relation": "viewer"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "project": {
+            "directly_related_user_types": [
+              {
+                "type": "project"
+              }
+            ]
+          },
+          "owner": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "service_principal"
+              }
+            ]
+          },
+          "editor": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "service_principal"
+              }
+            ]
+          },
+          "viewer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -420,16 +553,6 @@
               {
                 "tupleToUserset": {
                   "tupleset": {
-                    "relation": "organization"
-                  },
-                  "computedUserset": {
-                    "relation": "member"
-                  }
-                }
-              },
-              {
-                "tupleToUserset": {
-                  "tupleset": {
                     "relation": "project"
                   },
                   "computedUserset": {
@@ -453,6 +576,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -460,6 +586,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -467,6 +596,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -474,6 +606,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -539,16 +674,6 @@
               {
                 "tupleToUserset": {
                   "tupleset": {
-                    "relation": "organization"
-                  },
-                  "computedUserset": {
-                    "relation": "member"
-                  }
-                }
-              },
-              {
-                "tupleToUserset": {
-                  "tupleset": {
                     "relation": "project"
                   },
                   "computedUserset": {
@@ -572,6 +697,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -579,6 +707,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -586,6 +717,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -685,6 +819,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -692,6 +829,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -699,6 +839,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -706,6 +849,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -721,7 +867,7 @@
     },
     {
       "type": "api_key",
-      "description": "API key management for user authentication",
+      "description": "API key management for user authentication. Per-tenant isolation via organization.",
       "relations": {
         "owner": {
           "this": {}
@@ -735,6 +881,9 @@
           "computedUserset": {
             "relation": "owner"
           }
+        },
+        "organization": {
+          "this": {}
         }
       },
       "metadata": {
@@ -743,6 +892,13 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              }
+            ]
+          },
+          "organization": {
+            "directly_related_user_types": [
+              {
+                "type": "organization"
               }
             ]
           }
@@ -804,6 +960,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -811,6 +970,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -818,6 +980,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -872,6 +1037,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -879,6 +1047,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -894,12 +1065,12 @@
     },
     {
       "type": "observability",
-      "description": "Observability access for /api/v1/observability (traces, metrics, logs)",
+      "description": "Observability access for /api/v1/observability (traces, metrics, logs). PII-sensitive - uses ops relation.",
       "relations": {
         "admin": {
           "this": {}
         },
-        "viewer": {
+        "ops": {
           "union": {
             "child": [
               {
@@ -909,15 +1080,19 @@
                 "computedUserset": {
                   "relation": "admin"
                 }
+              }
+            ]
+          }
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {
+                "this": {}
               },
               {
-                "tupleToUserset": {
-                  "tupleset": {
-                    "relation": "organization"
-                  },
-                  "computedUserset": {
-                    "relation": "member"
-                  }
+                "computedUserset": {
+                  "relation": "ops"
                 }
               }
             ]
@@ -933,6 +1108,19 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
+              }
+            ]
+          },
+          "ops": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -940,6 +1128,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -984,6 +1175,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -991,6 +1185,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -1277,7 +1474,7 @@
     },
     {
       "type": "system",
-      "description": "System-level global access (ADR-0093: admin \u2192 developer, user, viewer)",
+      "description": "System-level global access (ADR-0068: admin → developer → user → viewer monotonic chain)",
       "relations": {
         "admin": {
           "this": {}
@@ -1304,7 +1501,7 @@
               },
               {
                 "computedUserset": {
-                  "relation": "admin"
+                  "relation": "developer"
                 }
               }
             ]
@@ -1318,7 +1515,7 @@
               },
               {
                 "computedUserset": {
-                  "relation": "admin"
+                  "relation": "user"
                 }
               }
             ]
@@ -1389,6 +1586,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -1396,6 +1596,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -1411,7 +1614,7 @@
     },
     {
       "type": "ai",
-      "description": "AI features and suggestions (ADR-0093: admin \u2192 user inheritance)",
+      "description": "AI features and suggestions (ADR-0068: admin → user inheritance)",
       "relations": {
         "user": {
           "union": {
@@ -1572,6 +1775,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -1579,6 +1785,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -1586,6 +1795,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -1601,12 +1813,12 @@
     },
     {
       "type": "skill",
-      "description": "Skill management operations for /api/v1/skills",
+      "description": "Skill management operations for /api/v1/skills. Hierarchy: admin -> author -> viewer. Per-tenant isolation via organization.",
       "relations": {
         "admin": {
           "this": {}
         },
-        "viewer": {
+        "author": {
           "union": {
             "child": [
               {
@@ -1619,6 +1831,23 @@
               }
             ]
           }
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {
+                "this": {}
+              },
+              {
+                "computedUserset": {
+                  "relation": "author"
+                }
+              }
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
         }
       },
       "metadata": {
@@ -1627,6 +1856,19 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
+              }
+            ]
+          },
+          "author": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -1634,6 +1876,16 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
+              }
+            ]
+          },
+          "organization": {
+            "directly_related_user_types": [
+              {
+                "type": "organization"
               }
             ]
           }
@@ -1671,6 +1923,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -1678,6 +1933,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "service_principal"
               }
             ]
           },
@@ -1734,15 +1992,36 @@
     },
     {
       "type": "marketplace",
-      "description": "Marketplace admin operations for /api/v1/marketplace",
+      "description": "Marketplace operations for /api/v1/marketplace. admin: register/manage marketplaces, viewer: browse listings",
       "relations": {
         "admin": {
           "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {
+                "this": {}
+              },
+              {
+                "computedUserset": {
+                  "relation": "admin"
+                }
+              }
+            ]
+          }
         }
       },
       "metadata": {
         "relations": {
           "admin": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "viewer": {
             "directly_related_user_types": [
               {
                 "type": "user"
@@ -1776,6 +2055,278 @@
       },
       "metadata": {
         "relations": {
+          "admin": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "viewer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "tool_index",
+      "description": "Semantic tool search index access for ADR-0099 dynamic tool selection",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {
+                "this": {}
+              },
+              {
+                "computedUserset": {
+                  "relation": "admin"
+                }
+              },
+              {
+                "tupleToUserset": {
+                  "tupleset": {
+                    "relation": "organization"
+                  },
+                  "computedUserset": {
+                    "relation": "member"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "viewer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "organization": {
+            "directly_related_user_types": [
+              {
+                "type": "organization"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "skill_index",
+      "description": "Semantic skill search index access for ADR-0099 dynamic skill discovery",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {
+                "this": {}
+              },
+              {
+                "computedUserset": {
+                  "relation": "admin"
+                }
+              },
+              {
+                "tupleToUserset": {
+                  "tupleset": {
+                    "relation": "organization"
+                  },
+                  "computedUserset": {
+                    "relation": "member"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "viewer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "organization": {
+            "directly_related_user_types": [
+              {
+                "type": "organization"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "memory_index",
+      "description": "Semantic memory search index access for ADR-0099. User-scoped with admin override for privacy.",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "owner"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "admin"
+                }
+              }
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "admin": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "viewer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "organization": {
+            "directly_related_user_types": [
+              {
+                "type": "organization"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "partner",
+      "description": "Cross-tenant partnership for resource sharing between organizations (ADR-0068 Phase 9)",
+      "relations": {
+        "source_org": {
+          "this": {}
+        },
+        "target_org": {
+          "this": {}
+        },
+        "admin": {
+          "union": {
+            "child": [
+              {
+                "this": {}
+              },
+              {
+                "tupleToUserset": {
+                  "tupleset": {
+                    "relation": "source_org"
+                  },
+                  "computedUserset": {
+                    "relation": "admin"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {
+                "this": {}
+              },
+              {
+                "computedUserset": {
+                  "relation": "admin"
+                }
+              },
+              {
+                "tupleToUserset": {
+                  "tupleset": {
+                    "relation": "target_org"
+                  },
+                  "computedUserset": {
+                    "relation": "member"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "source_org": {
+            "directly_related_user_types": [
+              {
+                "type": "organization"
+              }
+            ]
+          },
+          "target_org": {
+            "directly_related_user_types": [
+              {
+                "type": "organization"
+              }
+            ]
+          },
           "admin": {
             "directly_related_user_types": [
               {

@@ -1,0 +1,63 @@
+# Module: 02-resources
+# Description: Main business resources
+# Reference: ADR-0068 Phase 8 - Modularization
+
+model
+  schema 1.1
+
+type tool
+  relations
+    define owner: [user, service_principal]
+    define executor: [user, service_principal] or owner or organization->member
+    define organization: [organization]
+
+# LangGraph workflow definitions for /api/v1/workflows. Can be part of a Project.
+type workflow
+  relations
+    define owner: [user, service_principal]
+    define editor: [user, service_principal] or owner or project->editor
+    define viewer: [user, service_principal] or editor or organization->member or project->viewer
+    define executor: [user, service_principal] or owner or project->executor
+    define organization: [organization]
+    define project: [project]
+
+# Workflow execution instances for /api/v1/sessions. Can be part of a Project.
+type session
+  relations
+    define owner: [user, service_principal]
+    define editor: [user, service_principal] or owner or project->editor
+    define viewer: [user, service_principal] or editor or project->viewer
+    define organization: [organization]
+    define project: [project]
+
+# Unified workspace container for Sessions, Workflows, and Connections. Implements Unified Workspace Paradigm where One Project = Session + Workflow + Connections
+type project
+  relations
+    define owner: [user, service_principal]
+    define editor: [user, service_principal] or owner
+    define viewer: [user, service_principal] or editor or organization->member
+    define executor: [user, service_principal] or owner or organization->member
+    define organization: [organization]
+
+# Artifact storage (files, generated content) - Sprint 4 Route Commands. Phase 4: Added project relation for parent-child hierarchy.
+type artifact
+  relations
+    define project: [project]
+    define owner: [user, service_principal]
+    define editor: [user, service_principal] or owner or project->editor
+    define viewer: [user, service_principal] or editor or project->viewer
+    define organization: [organization]
+
+type conversation
+  relations
+    define owner: [user]
+    define editor: [user] or owner
+    define viewer: [user] or editor
+
+# Qdrant vector database collections (ADR-0068)
+type vector_store
+  relations
+    define owner: [user, service_principal]
+    define editor: [user, service_principal] or owner
+    define viewer: [user, service_principal] or editor
+    define organization: [organization]

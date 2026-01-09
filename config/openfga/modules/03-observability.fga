@@ -1,0 +1,40 @@
+# Module: 03-observability
+# Description: Monitoring and telemetry
+# Reference: ADR-0068 Phase 8 - Modularization
+
+model
+  schema 1.1
+
+# Grafana/monitoring dashboard access control
+type dashboard
+  relations
+    define admin: [user, service_principal]
+    define editor: [user, service_principal] or admin
+    define viewer: [user, service_principal] or editor or organization->member
+    define organization: [organization]
+
+# Loki log aggregation access
+type logs
+  relations
+    define admin: [user]
+    define viewer: [user] or admin
+
+# Tempo distributed tracing access
+type traces
+  relations
+    define admin: [user]
+    define viewer: [user] or admin
+
+# Mimir metrics storage access
+type metrics
+  relations
+    define admin: [user]
+    define viewer: [user] or admin
+
+# Observability access for /api/v1/observability (traces, metrics, logs). PII-sensitive - uses ops relation.
+type observability
+  relations
+    define admin: [user, service_principal]
+    define ops: [user, service_principal] or admin
+    define viewer: [user, service_principal] or ops
+    define organization: [organization]

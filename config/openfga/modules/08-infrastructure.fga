@@ -1,0 +1,37 @@
+# Module: 08-infrastructure
+# Description: Infrastructure access
+# Reference: ADR-0068 Phase 8 - Modularization
+
+model
+  schema 1.1
+
+# Traefik gateway dashboard access
+type gateway
+  relations
+    define admin: [user]
+    define viewer: [user] or admin
+
+# Keycloak identity management access
+type identity
+  relations
+    define admin: [user]
+    define viewer: [user] or admin
+
+# MCP WebSocket protocol access for /api/v1/ws/mcp
+type mcp
+  relations
+    define user: [user]
+    define viewer: user
+
+# MCP WebSocket connections for /api/v1/mcp
+type mcp_connection
+  relations
+    define owner: [user]
+    define viewer: [user] or owner
+
+# MCP connections and integrations for /api/v1/connections
+type connection
+  relations
+    define owner: [user, service_principal]
+    define viewer: [user, service_principal] or owner
+    define organization: [organization]

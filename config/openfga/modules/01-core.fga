@@ -1,0 +1,21 @@
+# Module: 01-core
+# Description: Base identity types
+# Reference: ADR-0068 Phase 8 - Modularization
+
+model
+  schema 1.1
+
+type user
+
+type organization
+  relations
+    define member: [user]
+    define admin: [user]
+    define user_in_context: [user]
+
+type service_principal
+  relations
+    define owner: [user]
+    define acts_as: [user]
+    define viewer: owner
+    define editor: owner

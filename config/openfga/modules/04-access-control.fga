@@ -1,0 +1,36 @@
+# Module: 04-access-control
+# Description: Authentication & authorization
+# Reference: ADR-0068 Phase 8 - Modularization
+
+model
+  schema 1.1
+
+# OpenFGA Playground access control (ADR-0068)
+type authz
+  relations
+    define admin: [user]
+    define viewer: [user] or admin
+
+# System-level global access (ADR-0068: admin → developer → user → viewer monotonic chain)
+type system
+  relations
+    define admin: [user]
+    define developer: [user] or admin
+    define user: [user] or developer
+    define viewer: [user] or user
+
+# API key management for user authentication. Per-tenant isolation via organization.
+type api_key
+  relations
+    define owner: [user]
+    define viewer: owner
+    define revoker: owner
+    define organization: [organization]
+
+# Cross-tenant partnership for resource sharing between organizations (ADR-0068 Phase 9)
+type partner
+  relations
+    define source_org: [organization]
+    define target_org: [organization]
+    define admin: [user] or source_org->admin
+    define viewer: [user] or admin or target_org->member

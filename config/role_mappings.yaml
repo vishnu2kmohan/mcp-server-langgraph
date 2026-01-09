@@ -2,6 +2,15 @@
 #
 # Defines how Keycloak roles, groups, and attributes map to OpenFGA tuples.
 # This file enables flexible, declarative authorization without code changes.
+#
+# AUDIT FIX (2026-01-08):
+# Removed invalid references to non-existent OpenFGA types:
+# - role:* (type removed per Decision 1)
+# - tool:all (removed per Decision 2)
+# - resource:* (type doesn't exist)
+# - team:* (type doesn't exist)
+# - department:* (type doesn't exist)
+# See: OpenFGA Audit Resolution Plan Phase 0 Task 0.2
 
 version: "1.0"
 
@@ -14,32 +23,33 @@ simple_mappings:
     openfga_relation: admin
     openfga_object: system:global
 
-  # Premium role for paid users
+  # Premium role for paid users (maps to user for now)
+  # TODO: Implement premium tier via conditions in Phase 6
   - keycloak_role: premium
     realm: true
-    openfga_relation: assignee
-    openfga_object: role:premium
+    openfga_relation: user
+    openfga_object: system:global
 
   # Standard user role
   - keycloak_role: user
     realm: true
-    openfga_relation: assignee
-    openfga_object: role:user
+    openfga_relation: user
+    openfga_object: system:global
 
-  # Client-specific roles
-  - keycloak_role: executor
-    realm: false  # Client role
-    openfga_relation: executor
-    openfga_object: tool:all
-
-  # Read-only access
+  # Viewer role grants read-only access
   - keycloak_role: viewer
     realm: true
     openfga_relation: viewer
-    openfga_object: resource:all
+    openfga_object: system:global
+
+  # Ops role for observability access (ADR-0093)
+  - keycloak_role: ops
+    realm: true
+    openfga_relation: ops
+    openfga_object: observability:global
 
 # Group-based mappings with regex patterns
-# Uses pattern matching to map group hierarchies to organizations/teams
+# Uses pattern matching to map group hierarchies to organizations
 group_mappings:
   # Top-level groups → Organizations
   # Pattern: /acme → organization:acme
@@ -47,70 +57,37 @@ group_mappings:
     openfga_relation: member
     openfga_object_template: "organization:{group_name}"
 
-  # Nested groups → Teams
-  # Pattern: /acme/engineering → team:engineering
+  # Nested groups also map to organizations
+  # Pattern: /acme/engineering → organization:acme (uses parent org)
+  # Note: Sub-org hierarchy deferred to future phase
   - pattern: "^/([^/]+)/([^/]+)$"
     openfga_relation: member
-    openfga_object_template: "team:{group_name}"
-
-  # Department-specific groups
-  # Pattern: /departments/finance → department:finance
-  - pattern: "^/departments/([^/]+)$"
-    openfga_relation: member
-    openfga_object_template: "department:{group_name}"
+    openfga_object_template: "organization:{group_name}"
 
 # Conditional mappings based on user attributes
 # Maps custom attributes to permissions
 conditional_mappings:
-  # Finance department gets access to financial reports
+  # Finance department gets access to cost dashboards
   - condition:
       attribute: department
       operator: "=="
       value: finance
     openfga_tuples:
       - relation: viewer
-        object: resource:financial-reports
+        object: cost:global
       - relation: viewer
-        object: resource:audit-logs
+        object: dashboard:financial
 
-  # High security clearance gets classified access
-  - condition:
-      attribute: security_clearance
-      operator: ">="
-      value: 3
-    openfga_tuples:
-      - relation: viewer
-        object: resource:classified
-      - relation: viewer
-        object: resource:sensitive
-
-  # Manager role gets additional permissions
+  # Manager role gets observability access
   - condition:
       attribute: job_title
       operator: "in"
       value: [Manager, Director, VP, CEO]
     openfga_tuples:
-      - relation: admin
-        object: resource:team-reports
       - relation: viewer
-        object: resource:hr-data
-
-  # Region-specific access
-  - condition:
-      attribute: region
-      operator: "=="
-      value: EMEA
-    openfga_tuples:
+        object: observability:global
       - relation: viewer
-        object: resource:emea-data
-
-  - condition:
-      attribute: region
-      operator: "=="
-      value: APAC
-    openfga_tuples:
-      - relation: viewer
-        object: resource:apac-data
+        object: dashboard:executive
 
 # Role hierarchies
 # Define role inheritance (higher roles inherit lower role permissions)

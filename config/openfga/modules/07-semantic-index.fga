@@ -1,0 +1,28 @@
+# Module: 07-semantic-index
+# Description: Semantic search indices
+# Reference: ADR-0068 Phase 8 - Modularization
+
+model
+  schema 1.1
+
+# Semantic tool search index access for ADR-0099 dynamic tool selection
+type tool_index
+  relations
+    define admin: [user]
+    define viewer: [user] or admin or organization->member
+    define organization: [organization]
+
+# Semantic skill search index access for ADR-0099 dynamic skill discovery
+type skill_index
+  relations
+    define admin: [user]
+    define viewer: [user] or admin or organization->member
+    define organization: [organization]
+
+# Semantic memory search index access for ADR-0099. User-scoped with admin override for privacy.
+type memory_index
+  relations
+    define owner: [user]
+    define admin: [user]
+    define viewer: owner or admin
+    define organization: [organization]

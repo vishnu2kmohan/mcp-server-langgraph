@@ -1,0 +1,32 @@
+# Module: 00-conditions
+# Description: Conditional authorization expressions
+# Reference: ADR-0068 Phase 6 - Conditions
+
+{
+  "conditions": {
+    "time_bound_share": {
+      "name": "time_bound_share",
+      "expression": "current_time < expiry_time",
+      "parameters": {
+        "current_time": {
+          "type_name": "TYPE_NAME_TIMESTAMP"
+        },
+        "expiry_time": {
+          "type_name": "TYPE_NAME_TIMESTAMP"
+        }
+      }
+    },
+    "subscription_tier": {
+      "name": "subscription_tier",
+      "expression": "user_tier == required_tier || user_tier == 'enterprise' || (user_tier == 'premium' && required_tier == 'free')",
+      "parameters": {
+        "user_tier": {
+          "type_name": "TYPE_NAME_STRING"
+        },
+        "required_tier": {
+          "type_name": "TYPE_NAME_STRING"
+        }
+      }
+    }
+  }
+}

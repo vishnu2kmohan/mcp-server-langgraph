@@ -1,0 +1,20 @@
+# Module: 06-skills
+# Description: Skills and marketplace
+# Reference: ADR-0068 Phase 8 - Modularization
+
+model
+  schema 1.1
+
+# Skill management operations for /api/v1/skills. Hierarchy: admin -> author -> viewer. Per-tenant isolation via organization.
+type skill
+  relations
+    define admin: [user, service_principal]
+    define author: [user, service_principal] or admin
+    define viewer: [user, service_principal] or author
+    define organization: [organization]
+
+# Marketplace operations for /api/v1/marketplace. admin: register/manage marketplaces, viewer: browse listings
+type marketplace
+  relations
+    define admin: [user]
+    define viewer: [user] or admin

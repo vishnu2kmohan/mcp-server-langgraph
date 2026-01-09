@@ -1,0 +1,21 @@
+# Module: 05-ai-agents
+# Description: AI and agent configuration
+# Reference: ADR-0068 Phase 8 - Modularization
+
+model
+  schema 1.1
+
+# AI features and suggestions (ADR-0068: admin → user inheritance)
+type ai
+  relations
+    define user: [user] or admin
+    define admin: [user]
+    define viewer: [user] or user or admin
+
+# Agent configuration and HITL operations for /api/v1/agents
+type agent
+  relations
+    define owner: [user, service_principal]
+    define admin: [user, service_principal] or owner
+    define viewer: [user, service_principal] or admin
+    define organization: [organization]

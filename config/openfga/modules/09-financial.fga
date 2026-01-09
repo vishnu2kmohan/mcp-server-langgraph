@@ -1,0 +1,46 @@
+# Module: 09-financial
+# Description: Financial and compliance
+# Reference: ADR-0068 Phase 8 - Modularization
+
+model
+  schema 1.1
+
+# Cost tracking and analysis for /api/v1/cost
+type cost
+  relations
+    define admin: [user, service_principal]
+    define viewer: [user, service_principal] or admin or organization->member
+    define organization: [organization]
+
+# Budget alerts and cost limits for /api/v1/ws/budget
+type budget
+  relations
+    define admin: [user]
+    define viewer: [user] or admin
+    define organization: [organization]
+
+# Workflow execution tracking for /api/v1/workflow_executions
+type execution
+  relations
+    define owner: [user, service_principal]
+    define viewer: [user, service_principal] or owner
+    define organization: [organization]
+
+# Compliance reports (GDPR, HIPAA, SOC2, FedRAMP) for /api/v1/compliance
+type compliance
+  relations
+    define admin: [user]
+    define viewer: [user] or admin
+
+# System configuration for /api/v1/config
+type config
+  relations
+    define admin: [user]
+    define viewer: [user] or admin
+
+# Real-time chat resources for /api/v1/chat
+type chat
+  relations
+    define owner: [user, service_principal]
+    define viewer: [user, service_principal] or owner
+    define organization: [organization]

@@ -4,25 +4,30 @@
   "metadata": {
     "purpose": "Single source of truth for test user permissions",
     "users": {
-      "admin": "Super user with owner/admin access to all resources. Model inheritance (ADR-0093) ensures admin implicitly has 'user' and 'developer' relations via computed relations.",
+      "admin": "Super user with owner/admin access to all resources. Model inheritance (ADR-0068) ensures admin implicitly has 'user' and 'developer' relations via computed relations.",
       "alice": "Developer user with editor access to vectors (CRUD), viewer access to OpenFGA authz UI",
       "bob": "Basic user with viewer access to vectors (read-only, no OpenFGA authz UI access)"
     },
     "intentional_exclusions": {
       "authz:playground": "bob excluded - only admin/developer should access OpenFGA authorization UI",
       "identity:keycloak": "alice/bob excluded - Keycloak admin access is admin-only for security",
-      "marketplace:default": "alice/bob excluded - marketplace management is admin-only",
+      "marketplace:admin": "alice/bob excluded - marketplace registration/management is admin-only (they have viewer for browsing)",
       "dashboard:alerts": "alice/bob excluded - infrastructure alerts are admin-only",
       "workflow:hitl": "bob excluded - only editors who can approve/reject HITL requests need 'editor' relation",
-      "compliance:default": "bob excluded - compliance reports require security clearance (alice has viewer for compliance-officer sub-persona)"
+      "compliance:default": "bob excluded - compliance reports require security clearance (alice has viewer for compliance-officer sub-persona)",
+      "skill:admin": "alice/bob excluded - skill system administration is admin-only (alice has author for install/update, bob has viewer)"
     },
     "model_inheritance_notes": {
-      "ai_type": "admin → user → viewer (ADR-0093 fix for ai:suggestions bug)",
+      "ai_type": "admin → user → viewer (ADR-0068 fix for ai:suggestions bug)",
       "system_type": "admin → developer, admin → user, admin → viewer",
-      "conversation_type": "owner → editor → viewer"
+      "conversation_type": "owner → editor → viewer",
+      "tool_index_type": "admin → viewer, organization member → viewer",
+      "skill_type": "admin → author → viewer (alice can author skills, bob can view)",
+      "marketplace_type": "admin → viewer (alice/bob can browse, only admin can register)",
+      "memory_index_type": "owner → viewer, admin → viewer (user-scoped with admin override for privacy)"
     },
-    "adr_references": ["ADR-0068 (OpenFGA ReBAC)", "ADR-0091 (API Response Transformation)", "ADR-0093 (Relation Inheritance Patterns - model refactoring)"],
-    "updated": "2026-01-04"
+    "adr_references": ["ADR-0002 (OpenFGA Authorization)", "ADR-0068 (Gateway-Level Auth + OpenFGA Updates)", "ADR-0091 (API Response Transformation)", "ADR-0099 (Semantic Tool Selection)"],
+    "updated": "2026-01-08"
   },
   "tuples": [
     {
@@ -89,54 +94,8 @@
       "object": "conversation:thread_1"
     },
     {
-      "_comment": "Role assignments",
-      "user": "user:alice",
-      "relation": "assignee",
-      "object": "role:premium"
-    },
-    {
-      "user": "user:bob",
-      "relation": "assignee",
-      "object": "role:standard"
-    },
-    {
-      "user": "user:admin",
-      "relation": "assignee",
-      "object": "role:premium"
-    },
-    {
-      "_comment": "=== Sub-Persona Role Memberships (Security Audit) ===",
-      "_section": "Role assignments for differentiated sub-persona access"
-    },
-    {
-      "_comment": "security-admin: admin + security role",
-      "user": "user:admin",
-      "relation": "assignee",
-      "object": "role:security"
-    },
-    {
-      "_comment": "auditor: admin + audit role for compliance monitoring",
-      "user": "user:admin",
-      "relation": "assignee",
-      "object": "role:audit"
-    },
-    {
-      "_comment": "alice-analyst: developer + analyst role",
-      "user": "user:alice",
-      "relation": "assignee",
-      "object": "role:analyst"
-    },
-    {
-      "_comment": "alice-devops: developer + devops role",
-      "user": "user:alice",
-      "relation": "assignee",
-      "object": "role:devops"
-    },
-    {
-      "_comment": "compliance-officer: alice + compliance role",
-      "user": "user:alice",
-      "relation": "assignee",
-      "object": "role:compliance"
+      "_comment": "=== Vector Store permissions (ADR-0068) ===",
+      "_section": "Role:* tuples removed per OpenFGA Audit Phase 0 Task 0.3"
     },
     {
       "_comment": "Vector Store permissions (ADR-0068)",
@@ -160,6 +119,35 @@
       "user": "organization:acme",
       "relation": "organization",
       "object": "vector_store:default"
+    },
+    {
+      "_comment": "Artifact storage permissions (Sprint 4 - Route Commands)",
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "artifact:default"
+    },
+    {
+      "_comment": "Alice has editor (upload/delete) access to artifacts",
+      "user": "user:alice",
+      "relation": "editor",
+      "object": "artifact:default"
+    },
+    {
+      "_comment": "Bob has read-only access to artifacts",
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "artifact:default"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "artifact:default"
+    },
+    {
+      "_comment": "Artifact-Project hierarchy (Phase 4) - enables project-based permission inheritance",
+      "user": "project:default",
+      "relation": "project",
+      "object": "artifact:default"
     },
     {
       "_comment": "OpenFGA Authorization UI (authz-proxy) permissions - bob intentionally excluded",
@@ -222,7 +210,7 @@
       "object": "session:admin_session"
     },
     {
-      "_comment": "API Key permissions",
+      "_comment": "API Key permissions - Phase 2: Added org relation for tenant isolation",
       "user": "user:admin",
       "relation": "owner",
       "object": "api_key:admin_key"
@@ -235,6 +223,22 @@
     {
       "user": "user:bob",
       "relation": "owner",
+      "object": "api_key:bob_key"
+    },
+    {
+      "_comment": "API keys belong to acme org for tenant isolation",
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "api_key:admin_key"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "api_key:alice_key"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
       "object": "api_key:bob_key"
     },
     {
@@ -296,17 +300,19 @@
       "object": "cost:default"
     },
     {
-      "_comment": "Observability permissions (/api/v1/observability)",
+      "_comment": "Observability permissions (/api/v1/observability) - Phase 1: org propagation removed for PII protection",
       "user": "user:admin",
       "relation": "admin",
       "object": "observability:default"
     },
     {
+      "_comment": "Alice gets ops access (developer tier) - inherits viewer",
       "user": "user:alice",
-      "relation": "viewer",
+      "relation": "ops",
       "object": "observability:default"
     },
     {
+      "_comment": "Bob gets direct viewer access (basic user tier)",
       "user": "user:bob",
       "relation": "viewer",
       "object": "observability:default"
@@ -615,7 +621,7 @@
       "object": "connection:default"
     },
     {
-      "_comment": "AI permissions (/api/v1/ai, /api/v1/ws/ai/suggestions) - admin implicitly has 'user' via model inheritance (ADR-0093)",
+      "_comment": "AI permissions (/api/v1/ai, /api/v1/ws/ai/suggestions) - admin implicitly has 'user' via model inheritance (ADR-0068)",
       "user": "user:admin",
       "relation": "admin",
       "object": "ai:suggestions"
@@ -689,20 +695,27 @@
       "object": "agent:default"
     },
     {
-      "_comment": "Skill permissions (/api/v1/skills)",
+      "_comment": "Skill permissions (/api/v1/skills) - Hierarchy: admin -> author -> viewer",
       "user": "user:admin",
       "relation": "admin",
       "object": "skill:default"
     },
     {
+      "_comment": "Alice can author skills (install, uninstall, update)",
       "user": "user:alice",
-      "relation": "viewer",
+      "relation": "author",
       "object": "skill:default"
     },
     {
       "_comment": "Bob can view skills (basic user read-only access)",
       "user": "user:bob",
       "relation": "viewer",
+      "object": "skill:default"
+    },
+    {
+      "_comment": "Skill organization for tenant isolation (Phase 2)",
+      "user": "organization:acme",
+      "relation": "organization",
       "object": "skill:default"
     },
     {
@@ -738,9 +751,21 @@
       "object": "compliance:default"
     },
     {
-      "_comment": "Marketplace permissions (/api/v1/marketplace) - admin only",
+      "_comment": "Marketplace permissions (/api/v1/marketplace) - admin: register/manage, viewer: browse listings",
       "user": "user:admin",
       "relation": "admin",
+      "object": "marketplace:default"
+    },
+    {
+      "_comment": "Alice can browse marketplace listings",
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "marketplace:default"
+    },
+    {
+      "_comment": "Bob can browse marketplace listings",
+      "user": "user:bob",
+      "relation": "viewer",
       "object": "marketplace:default"
     },
     {
@@ -817,6 +842,148 @@
       "user": "organization:acme",
       "relation": "organization",
       "object": "cost:budget"
+    },
+    {
+      "_comment": "=== Semantic Search Index Authorization (ADR-0099) ===",
+      "_section": "Fine-grained access control for semantic tool/skill/memory search"
+    },
+    {
+      "_comment": "Tool Index permissions - admin has full access",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "tool_index:default"
+    },
+    {
+      "_comment": "Tool Index - alice can search tools (viewer relation)",
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "tool_index:default"
+    },
+    {
+      "_comment": "Tool Index - bob can search tools (viewer relation)",
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "tool_index:default"
+    },
+    {
+      "_comment": "Tool Index - organization for tenant isolation",
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "tool_index:default"
+    },
+    {
+      "_comment": "Skill Index permissions - admin has full access",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "skill_index:default"
+    },
+    {
+      "_comment": "Skill Index - alice can search skills (viewer relation)",
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "skill_index:default"
+    },
+    {
+      "_comment": "Skill Index - bob can search skills (viewer relation)",
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "skill_index:default"
+    },
+    {
+      "_comment": "Skill Index - organization for tenant isolation",
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "skill_index:default"
+    },
+    {
+      "_comment": "Memory Index permissions - admin owns alice's memory (can access for debugging)",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "memory_index:alice"
+    },
+    {
+      "_comment": "Memory Index - alice owns her own memory index",
+      "user": "user:alice",
+      "relation": "owner",
+      "object": "memory_index:alice"
+    },
+    {
+      "_comment": "Memory Index permissions - admin owns bob's memory (can access for debugging)",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "memory_index:bob"
+    },
+    {
+      "_comment": "Memory Index - bob owns his own memory index",
+      "user": "user:bob",
+      "relation": "owner",
+      "object": "memory_index:bob"
+    },
+    {
+      "_comment": "Memory Index permissions - admin owns their own memory index",
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "memory_index:admin"
+    },
+    {
+      "_comment": "Memory Index - organization for tenant isolation",
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "memory_index:alice"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "memory_index:bob"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "memory_index:admin"
+    },
+    {
+      "_comment": "=== Service Principal Authorization (ADR-0068 Phase 5) ===",
+      "_section": "Service principals inherit permissions via acts_as relation"
+    },
+    {
+      "_comment": "Service principal batch-etl-job acts as admin for batch processing",
+      "user": "user:admin",
+      "relation": "acts_as",
+      "object": "service_principal:batch-etl-job"
+    },
+    {
+      "_comment": "SP batch-etl-job can execute tool:chat (direct SP permission tuple)",
+      "user": "service_principal:batch-etl-job",
+      "relation": "executor",
+      "object": "tool:chat"
+    },
+    {
+      "_comment": "SP batch-etl-job owns workflow executions (batch processing use case)",
+      "user": "service_principal:batch-etl-job",
+      "relation": "owner",
+      "object": "execution:default"
+    },
+    {
+      "_comment": "=== Partner Access Pattern (ADR-0068 Phase 9) ===",
+      "_section": "Cross-tenant sharing via partner relationships"
+    },
+    {
+      "_comment": "Partnership between acme (source) and partner_org (target)",
+      "user": "organization:acme",
+      "relation": "source_org",
+      "object": "partner:acme_partner_sharing"
+    },
+    {
+      "_comment": "Partner organization that receives shared access",
+      "user": "organization:partner_org",
+      "relation": "target_org",
+      "object": "partner:acme_partner_sharing"
+    },
+    {
+      "_comment": "Admin manages the partnership",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "partner:acme_partner_sharing"
     }
   ]
 }
