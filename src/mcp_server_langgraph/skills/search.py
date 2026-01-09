@@ -54,6 +54,23 @@ class VectorProviderProtocol(Protocol):
         """Search for similar vectors."""
         ...
 
+    async def delete(
+        self,
+        *,
+        collection: str,
+        id: str,
+    ) -> bool:
+        """Delete a vector from the collection.
+
+        Args:
+            collection: Collection/namespace name
+            id: Unique identifier of the vector to delete
+
+        Returns:
+            True if deleted, False if not found
+        """
+        ...
+
 
 @dataclass
 class SkillSearchResult:
@@ -179,3 +196,17 @@ class SkillSearchTool:
             )
             for result in results
         ]
+
+    async def remove_skill(self, skill_id: str) -> bool:
+        """Remove a skill from the search index.
+
+        Args:
+            skill_id: Unique identifier of the skill to remove
+
+        Returns:
+            True if skill was removed, False if not found
+        """
+        return await self._vector_provider.delete(
+            collection=self.COLLECTION,
+            id=skill_id,
+        )

@@ -111,6 +111,28 @@ class VectorProviderAdapter:
             for result in results
         ]
 
+    async def delete(
+        self,
+        *,
+        collection: str,
+        id: str,
+    ) -> bool:
+        """Delete a vector from the collection.
+
+        Args:
+            collection: Collection/namespace name
+            id: Unique identifier of the vector to delete
+
+        Returns:
+            True if deleted (VectorSearchProvider.delete returns None on success)
+        """
+        await self._provider.delete(
+            collection=collection,
+            id=id,
+        )
+        # VectorSearchProvider.delete returns None; we return True to indicate success
+        return True
+
 
 class EmbeddingServiceAdapter:
     """Adapts LangChain Embeddings to EmbeddingServiceProtocol.

@@ -4,12 +4,17 @@ Skills MCP Tool Handler
 Handles skills/list, skills/get, skills/search, skills/execute operations.
 
 Provides MCP interface to the skills system for agent capabilities.
+
+Semantic Search (ADR-0092/ADR-0099):
+When enable_semantic_skill_search=True and SkillSearchTool is available,
+skill search uses vector-based semantic similarity instead of string matching.
 """
 
 from __future__ import annotations
 
 import json
-from typing import Any
+import logging
+from typing import TYPE_CHECKING, Any
 
 from mcp.types import TextContent
 
@@ -17,6 +22,11 @@ from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.mcp.handlers.base import AbstractToolHandler
 from mcp_server_langgraph.skills import Skill, SkillDiscovery, SkillExecutor, SkillRegistry
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.skills.search import SkillSearchTool
+
+logger = logging.getLogger(__name__)
 
 
 class SkillsToolHandler(AbstractToolHandler):
@@ -36,6 +46,7 @@ class SkillsToolHandler(AbstractToolHandler):
         skill_registry: SkillRegistry | None = None,
         skill_discovery: SkillDiscovery | None = None,
         skill_executor: SkillExecutor | None = None,
+        skill_search_tool: "SkillSearchTool | None" = None,
     ) -> None:
         """Initialize skills handler.
 
@@ -45,11 +56,13 @@ class SkillsToolHandler(AbstractToolHandler):
             skill_registry: Optional skill registry (creates default if None)
             skill_discovery: Optional skill discovery (creates default if None)
             skill_executor: Optional skill executor (creates default if None)
+            skill_search_tool: Optional semantic search tool for vector-based search
         """
         super().__init__(auth, agent_graph)
         self.skill_registry = skill_registry or SkillRegistry()
         self.skill_discovery = skill_discovery or SkillDiscovery(registry=self.skill_registry)
         self.skill_executor = skill_executor or SkillExecutor()
+        self.skill_search_tool = skill_search_tool
         self._test_skills: dict[str, Skill] = {}
 
     def register_skill_for_test(
@@ -187,8 +200,11 @@ class SkillsToolHandler(AbstractToolHandler):
     ) -> list[TextContent]:
         """Search skills by query.
 
+        Uses semantic vector search when enable_semantic_skill_search=True
+        and SkillSearchTool is available, otherwise falls back to string matching.
+
         Args:
-            arguments: Must contain 'query'
+            arguments: Must contain 'query', optional 'limit' and 'min_score'
             span: Tracing span
             user_id: User ID
 
@@ -196,18 +212,54 @@ class SkillsToolHandler(AbstractToolHandler):
             List of matching skill summaries
         """
         query = arguments.get("query", "")
+        limit = arguments.get("limit", 10)
+        min_score = arguments.get("min_score", 0.0)
 
-        results = self.skill_discovery.search(query)
+        summaries = []
 
-        # Return summaries for progressive disclosure
-        summaries = [
-            {
-                "name": s.name if isinstance(s, Skill) else s.get("name", ""),
-                "description": s.description if isinstance(s, Skill) else s.get("description", ""),
-                "tags": s.tags if isinstance(s, Skill) else s.get("tags", []),
-            }
-            for s in results
-        ]
+        # Try semantic search if enabled and available
+        if (
+            feature_flags.enable_semantic_skill_search
+            and self.skill_search_tool is not None
+        ):
+            try:
+                semantic_results = await self.skill_search_tool.search(
+                    query,
+                    limit=limit,
+                    min_score=min_score,
+                )
+                summaries = [
+                    {
+                        "name": r.name,
+                        "description": r.description,
+                        "tags": r.tags or [],
+                        "score": r.score,
+                    }
+                    for r in semantic_results
+                ]
+                logger.debug(
+                    "Semantic skill search completed",
+                    extra={"query": query, "results": len(summaries)},
+                )
+            except Exception as e:
+                # Fall back to string search on error
+                logger.warning(
+                    f"Semantic skill search failed, falling back to string search: {e}",
+                    extra={"query": query, "error": str(e)},
+                )
+                summaries = []
+
+        # Fall back to string-based search if semantic search not used or failed
+        if not summaries:
+            results = self.skill_discovery.search(query)
+            summaries = [
+                {
+                    "name": s.name if isinstance(s, Skill) else s.get("name", ""),
+                    "description": s.description if isinstance(s, Skill) else s.get("description", ""),
+                    "tags": s.tags if isinstance(s, Skill) else s.get("tags", []),
+                }
+                for s in results
+            ]
 
         return [
             TextContent(

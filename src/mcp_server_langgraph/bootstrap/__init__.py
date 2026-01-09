@@ -54,6 +54,18 @@ from mcp_server_langgraph.bootstrap.websocket import (
     WebSocketState,
     init_websocket_lifecycle,
 )
+from mcp_server_langgraph.bootstrap.skills import (
+    SkillsState,
+    init_skills,
+)
+from mcp_server_langgraph.bootstrap.context_graph import (
+    ContextGraphState,
+    init_context_graph,
+)
+from mcp_server_langgraph.bootstrap.semantic import (
+    SemanticState,
+    init_semantic,
+)
 from mcp_server_langgraph.core.config.streaming import StreamingSettings
 
 
@@ -71,6 +83,9 @@ class AppState:
     storage: StorageState | None = None
     http: HttpState | None = None
     websocket: WebSocketState | None = None
+    skills: SkillsState | None = None
+    context_graph: ContextGraphState | None = None
+    semantic: SemanticState | None = None
 
     async def cleanup(self) -> None:
         """
@@ -79,6 +94,15 @@ class AppState:
         This should be called during app shutdown to release resources.
         """
         # Cleanup in reverse order of initialization
+        if self.semantic:
+            await self.semantic.cleanup()
+
+        if self.context_graph:
+            await self.context_graph.cleanup()
+
+        if self.skills:
+            await self.skills.cleanup()
+
         if self.websocket:
             await self.websocket.cleanup()
 
@@ -144,12 +168,24 @@ async def bootstrap_all(settings: "Settings") -> AppState:
     )
     websocket = await init_websocket_lifecycle(streaming_settings=streaming_settings)
 
+    # Phase 6: Skills system (async, auto-update scheduler)
+    skills = await init_skills(settings)
+
+    # Phase 7: Context graph (async, decision trace capture)
+    context_graph = await init_context_graph(settings)
+
+    # Phase 8: Semantic index (async, tool/skill/memory search)
+    semantic = await init_semantic(settings)
+
     return AppState(
         telemetry=telemetry,
         security=security,
         storage=storage,
         http=http,
         websocket=websocket,
+        skills=skills,
+        context_graph=context_graph,
+        semantic=semantic,
     )
 
 
@@ -161,9 +197,15 @@ __all__ = [
     "StorageState",
     "HttpState",
     "WebSocketState",
+    "SkillsState",
+    "ContextGraphState",
+    "SemanticState",
     "init_observability",
     "init_auth",
     "init_storage",
     "init_http_client",
     "init_websocket_lifecycle",
+    "init_skills",
+    "init_context_graph",
+    "init_semantic",
 ]

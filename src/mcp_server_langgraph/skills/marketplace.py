@@ -199,18 +199,43 @@ class MarketplaceClient:
 
     Provides methods to list, search, and fetch skills from
     configured marketplaces with local caching.
+
+    Includes rate limiting and retry logic for resilient API access.
     """
 
     DEFAULT_CACHE_TTL = 3600  # 1 hour
+    DEFAULT_RATE_LIMIT = 10  # requests per second
+    DEFAULT_RETRY_MAX_ATTEMPTS = 3
+    DEFAULT_RETRY_BASE_DELAY = 0.1  # seconds
+    DEFAULT_MAX_CONCURRENT_FETCHES = 5  # concurrent skill metadata fetches
 
-    def __init__(self, cache_ttl_seconds: int = DEFAULT_CACHE_TTL) -> None:
+    # Status codes that should trigger retry (transient errors)
+    RETRYABLE_STATUS_CODES = {500, 502, 503, 504}
+
+    def __init__(
+        self,
+        cache_ttl_seconds: int = DEFAULT_CACHE_TTL,
+        rate_limit_requests_per_second: int = DEFAULT_RATE_LIMIT,
+        retry_max_attempts: int = DEFAULT_RETRY_MAX_ATTEMPTS,
+        retry_base_delay: float = DEFAULT_RETRY_BASE_DELAY,
+        max_concurrent_fetches: int = DEFAULT_MAX_CONCURRENT_FETCHES,
+    ) -> None:
         """Initialize marketplace client.
 
         Args:
             cache_ttl_seconds: Cache TTL for marketplace data
+            rate_limit_requests_per_second: Maximum API requests per second
+            retry_max_attempts: Maximum retry attempts for transient failures
+            retry_base_delay: Base delay between retries (exponential backoff)
+            max_concurrent_fetches: Maximum concurrent skill metadata fetches
         """
         self.cache_ttl_seconds = cache_ttl_seconds
+        self.rate_limit_requests_per_second = rate_limit_requests_per_second
+        self.retry_max_attempts = retry_max_attempts
+        self.retry_base_delay = retry_base_delay
+        self.max_concurrent_fetches = max_concurrent_fetches
         self._cache: dict[str, tuple[float, list[dict[str, Any]]]] = {}
+        self._last_request_time: float = 0.0
 
     def _get_cache_key(self, marketplace: MarketplaceConfig) -> str:
         """Generate cache key for a marketplace.
@@ -236,6 +261,94 @@ class MarketplaceClient:
             return False
         timestamp, _ = self._cache[cache_key]
         return (time.time() - timestamp) < self.cache_ttl_seconds
+
+    async def _rate_limit(self) -> None:
+        """Apply rate limiting by sleeping if requests are too frequent.
+
+        Uses simple time-based rate limiting to respect requests_per_second.
+        """
+        import asyncio
+
+        if self.rate_limit_requests_per_second <= 0:
+            return
+
+        min_interval = 1.0 / self.rate_limit_requests_per_second
+        elapsed = time.time() - self._last_request_time
+
+        if elapsed < min_interval:
+            await asyncio.sleep(min_interval - elapsed)
+
+        self._last_request_time = time.time()
+
+    def _should_retry(self, status_code: int) -> bool:
+        """Check if a request should be retried based on status code.
+
+        Args:
+            status_code: HTTP status code from response
+
+        Returns:
+            True if request should be retried (5xx errors), False otherwise
+        """
+        return status_code in self.RETRYABLE_STATUS_CODES
+
+    async def _request_with_retry(
+        self,
+        client: httpx.AsyncClient,
+        url: str,
+        headers: dict[str, str] | None = None,
+    ) -> httpx.Response:
+        """Make HTTP request with exponential backoff retry for transient errors.
+
+        Args:
+            client: httpx AsyncClient instance
+            url: URL to request
+            headers: Optional request headers
+
+        Returns:
+            HTTP response
+
+        Raises:
+            Last exception if all retries exhausted
+        """
+        import asyncio
+
+        last_exception: Exception | None = None
+
+        for attempt in range(self.retry_max_attempts):
+            try:
+                await self._rate_limit()
+
+                if headers:
+                    response = await client.get(url, headers=headers)
+                else:
+                    response = await client.get(url)
+
+                # Don't retry on success or 4xx client errors
+                if response.status_code < 500:
+                    return response
+
+                # Retry on 5xx server errors
+                if self._should_retry(response.status_code):
+                    if attempt < self.retry_max_attempts - 1:
+                        # Exponential backoff
+                        delay = self.retry_base_delay * (2**attempt)
+                        await asyncio.sleep(delay)
+                        continue
+
+                return response
+
+            except Exception as e:
+                last_exception = e
+                if attempt < self.retry_max_attempts - 1:
+                    delay = self.retry_base_delay * (2**attempt)
+                    await asyncio.sleep(delay)
+                    continue
+                raise
+
+        # Should not reach here, but just in case
+        if last_exception:
+            raise last_exception
+        raise RuntimeError("Unexpected retry loop exit")
 
     async def list_skills(
         self,
@@ -319,7 +432,7 @@ class MarketplaceClient:
         api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/skills"
 
         async with httpx.AsyncClient() as client:
-            response = await client.get(api_url)
+            response = await self._request_with_retry(client, api_url)
 
             if response.status_code != 200:
                 return []
@@ -358,7 +471,7 @@ class MarketplaceClient:
         tags_url = f"https://{registry}/v2/{namespace}/{repository}/tags/list"
 
         async with httpx.AsyncClient() as client:
-            response = await client.get(tags_url)
+            response = await self._request_with_retry(client, tags_url)
 
             if response.status_code != 200:
                 return []
@@ -392,7 +505,7 @@ class MarketplaceClient:
         skills_url = f"{base_url}/skills"
 
         async with httpx.AsyncClient() as client:
-            response = await client.get(skills_url)
+            response = await self._request_with_retry(client, skills_url)
 
             if response.status_code != 200:
                 return []
@@ -477,7 +590,7 @@ class MarketplaceClient:
         raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/main/skills/{skill_name}/SKILL.md"
 
         async with httpx.AsyncClient() as client:
-            response = await client.get(raw_url)
+            response = await self._request_with_retry(client, raw_url)
 
             if response.status_code != 200:
                 return None
@@ -516,7 +629,8 @@ class MarketplaceClient:
 
         async with httpx.AsyncClient() as client:
             # Fetch the manifest
-            manifest_response = await client.get(
+            manifest_response = await self._request_with_retry(
+                client,
                 manifest_url,
                 headers={
                     "Accept": "application/vnd.oci.image.manifest.v1+json",
@@ -537,7 +651,7 @@ class MarketplaceClient:
 
             # Fetch the config blob
             blob_url = f"https://{registry}/v2/{namespace}/{repository}/blobs/{config_digest}"
-            config_response = await client.get(blob_url)
+            config_response = await self._request_with_retry(client, blob_url)
 
             if config_response.status_code != 200:
                 return {"name": skill_name}
@@ -570,7 +684,7 @@ class MarketplaceClient:
         skill_url = f"{base_url}/skills/{skill_name}"
 
         async with httpx.AsyncClient() as client:
-            response = await client.get(skill_url)
+            response = await self._request_with_retry(client, skill_url)
 
             if response.status_code != 200:
                 return None
@@ -627,3 +741,102 @@ class MarketplaceClient:
 
         metadata["instructions"] = markdown_content
         return metadata
+
+    async def list_skills_with_metadata(
+        self,
+        marketplace: MarketplaceConfig,
+    ) -> list[dict[str, Any]]:
+        """List skills from a marketplace with full metadata.
+
+        Unlike list_skills() which may return only names/directories,
+        this method fetches and parses SKILL.md for each skill to
+        return full metadata including description, version, tags, and author.
+
+        Performance: Uses bounded parallel fetching via asyncio.gather with
+        semaphore to limit concurrent API calls (max_concurrent_fetches).
+
+        Args:
+            marketplace: Marketplace configuration
+
+        Returns:
+            List of skill metadata dictionaries with full details:
+            - name: Skill name
+            - description: Skill description
+            - version: Skill version
+            - tags: List of tags
+            - author: Skill author (if available)
+        """
+        import asyncio
+
+        # First get the basic skill listing
+        basic_skills = await self.list_skills(marketplace)
+
+        # Filter out skills without names
+        valid_skills = [s for s in basic_skills if s.get("name")]
+
+        if not valid_skills:
+            return []
+
+        # Create semaphore for bounded concurrency
+        semaphore = asyncio.Semaphore(self.max_concurrent_fetches)
+
+        async def fetch_with_fallback(basic_skill: dict[str, Any]) -> dict[str, Any]:
+            """Fetch full skill details with fallback to basic info on error."""
+            skill_name = basic_skill["name"]
+            async with semaphore:
+                try:
+                    full_skill = await self.fetch_skill(marketplace, skill_name)
+                    if full_skill:
+                        # Merge basic and full metadata
+                        merged = {**basic_skill, **full_skill}
+                        # Ensure required fields have defaults
+                        merged.setdefault("description", "")
+                        merged.setdefault("version", "1.0.0")
+                        merged.setdefault("tags", [])
+                        return merged
+                    else:
+                        # fetch_skill returned None (e.g., 404), use basic info
+                        result = dict(basic_skill)
+                        result.setdefault("description", "")
+                        result.setdefault("version", "1.0.0")
+                        result.setdefault("tags", [])
+                        return result
+                except Exception:
+                    # If fetching full metadata fails with exception, use basic info
+                    result = dict(basic_skill)
+                    result.setdefault("description", "")
+                    result.setdefault("version", "1.0.0")
+                    result.setdefault("tags", [])
+                    return result
+
+        # Fetch all skills in parallel with bounded concurrency
+        skills_with_metadata = await asyncio.gather(
+            *(fetch_with_fallback(skill) for skill in valid_skills)
+        )
+
+        return list(skills_with_metadata)
+
+
+
+def create_marketplace_client() -> MarketplaceClient:
+    """Create a MarketplaceClient configured with feature flags.
+
+    Uses feature flag values for rate limiting, retry configuration, and
+    bounded concurrency, allowing runtime configuration via environment variables.
+
+    Returns:
+        MarketplaceClient instance with feature flag configuration
+
+    Example:
+        # Uses FF_SKILLS_MARKETPLACE_RATE_LIMIT, FF_SKILLS_MARKETPLACE_RETRY_MAX_ATTEMPTS, etc.
+        client = create_marketplace_client()
+        skills = await client.list_skills(marketplace)
+    """
+    from mcp_server_langgraph.core.feature_flags import feature_flags
+
+    return MarketplaceClient(
+        rate_limit_requests_per_second=feature_flags.skills_marketplace_rate_limit,
+        retry_max_attempts=feature_flags.skills_marketplace_retry_max_attempts,
+        retry_base_delay=feature_flags.skills_marketplace_retry_base_delay,
+        max_concurrent_fetches=feature_flags.skills_marketplace_max_concurrent_fetches,
+    )

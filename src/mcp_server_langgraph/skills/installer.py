@@ -8,6 +8,10 @@ Uses `uv` for fast, reproducible dependency installation:
 - Preferred: pyproject.toml with `uv sync --frozen`
 - Fallback: requirements.txt with `uv pip install`
 
+Semantic Search Integration (ADR-0092, ADR-0099):
+When skill_search_tool is provided, skills are automatically indexed
+on install and de-indexed on uninstall for semantic search discovery.
+
 Usage:
     from mcp_server_langgraph.skills.installer import SkillInstaller
 
@@ -20,9 +24,12 @@ from __future__ import annotations
 import asyncio
 import logging
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.skills.search import SkillSearchTool
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +66,9 @@ class SkillInstaller:
 
     Handles downloading, dependency resolution, and installation
     of skills into a local directory.
+
+    When skill_search_tool is provided, automatically indexes skills
+    on install and de-indexes on uninstall for semantic search.
     """
 
     DEFAULT_INSTALL_PATH = Path.home() / ".mcp-langgraph" / "skills"
@@ -66,13 +76,16 @@ class SkillInstaller:
     def __init__(
         self,
         install_path: Path | str | None = None,
+        skill_search_tool: "SkillSearchTool | None" = None,
     ) -> None:
         """Initialize skill installer.
 
         Args:
             install_path: Directory to install skills to
+            skill_search_tool: Optional semantic search tool for indexing
         """
         self.install_path = Path(install_path) if install_path else self.DEFAULT_INSTALL_PATH
+        self.skill_search_tool = skill_search_tool
 
     async def install(
         self,
@@ -114,6 +127,24 @@ class SkillInstaller:
                 if deps_installed:
                     logger.info(f"Installed dependencies for {skill_name}")
 
+            # Index skill for semantic search if tool is available
+            if self.skill_search_tool is not None:
+                try:
+                    from mcp_server_langgraph.skills.models import Skill
+
+                    # Create Skill object from skill_data for indexing
+                    skill_obj = Skill(
+                        name=skill_name,
+                        description=skill_data.get("description", f"Skill: {skill_name}"),
+                        instructions=skill_data.get("instructions", ""),
+                        tags=skill_data.get("tags", []),
+                    )
+                    await self.skill_search_tool.index_skill(skill_obj, skill_id=skill_name)
+                    logger.info(f"Indexed skill for semantic search: {skill_name}")
+                except Exception as e:
+                    # Don't fail install if indexing fails
+                    logger.warning(f"Failed to index skill {skill_name}: {e}")
+
             return InstallationResult(
                 success=True,
                 skill_name=skill_name,
@@ -147,12 +178,12 @@ class SkillInstaller:
             Skill data dictionary with name, content, and dependencies
         """
         from mcp_server_langgraph.skills.marketplace import (
-            MarketplaceClient,
             MarketplaceRegistry,
+            create_marketplace_client,
         )
 
         registry = MarketplaceRegistry()
-        client = MarketplaceClient()
+        client = create_marketplace_client()
 
         marketplace = registry.get(source)
         if marketplace is None:
@@ -176,6 +207,15 @@ class SkillInstaller:
         skill_dir = self.install_path / skill_name
         if skill_dir.exists():
             import shutil
+
+            # De-index from semantic search before removing files
+            if self.skill_search_tool is not None:
+                try:
+                    await self.skill_search_tool.remove_skill(skill_name)
+                    logger.info(f"De-indexed skill from semantic search: {skill_name}")
+                except Exception as e:
+                    # Don't fail uninstall if de-indexing fails
+                    logger.warning(f"Failed to de-index skill {skill_name}: {e}")
 
             shutil.rmtree(skill_dir)
             return True
@@ -322,3 +362,82 @@ class SkillInstaller:
         """
         skill_dir = self.install_path / skill_name
         return skill_dir.exists() and (skill_dir / "SKILL.md").exists()
+
+    async def list_marketplace_skills(
+        self,
+        marketplace: str = "anthropic",
+    ) -> list[dict[str, Any]]:
+        """List skills from a marketplace with full metadata.
+
+        Unlike the basic listing which returns only directory names,
+        this method fetches and parses SKILL.md for each skill to
+        return full metadata including description, version, tags, and author.
+
+        Args:
+            marketplace: Marketplace name (default: "anthropic")
+
+        Returns:
+            List of skill metadata dictionaries with keys:
+            - name: Skill name
+            - description: Skill description
+            - version: Skill version
+            - tags: List of tags
+            - author: Skill author (if available)
+
+        Raises:
+            ValueError: If marketplace is not found
+        """
+        from mcp_server_langgraph.skills.marketplace import (
+            MarketplaceRegistry,
+            create_marketplace_client,
+        )
+
+        registry = MarketplaceRegistry()
+        client = create_marketplace_client()
+
+        marketplace_config = registry.get(marketplace)
+        if marketplace_config is None:
+            raise ValueError(f"Unknown marketplace: {marketplace}")
+
+        # Use the enhanced method that fetches full metadata
+        return await client.list_skills_with_metadata(marketplace_config)
+
+    async def install_skill(
+        self,
+        skill_name: str,
+        version: str | None = None,
+        marketplace: str = "anthropic",
+    ) -> InstallationResult:
+        """Install a skill with version tracking for auto-updates.
+
+        This method wraps the basic install() method and integrates
+        with the AutoUpdateScheduler to track installed versions.
+
+        Args:
+            skill_name: Name of skill to install
+            version: Optional specific version to install
+            marketplace: Source marketplace name (default: "anthropic")
+
+        Returns:
+            InstallationResult with installation details
+        """
+        from mcp_server_langgraph.skills.auto_update import get_auto_update_scheduler
+
+        # Perform the installation
+        result = await self.install(skill_name, source=marketplace, version=version)
+
+        # If successful, register with auto-update scheduler for version tracking
+        if result.success:
+            try:
+                scheduler = get_auto_update_scheduler()
+                installed_version = version or result.version or "latest"
+                scheduler.register_installed_skill(
+                    skill_name=skill_name,
+                    version=installed_version,
+                    marketplace=marketplace,
+                )
+            except Exception as e:
+                # Don't fail the installation if version tracking fails
+                logger.warning(f"Failed to register skill version: {e}")
+
+        return result
