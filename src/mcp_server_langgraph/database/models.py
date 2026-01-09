@@ -1,15 +1,29 @@
 """
-SQLAlchemy models for cost tracking persistence.
+SQLAlchemy models for cost tracking and context graph persistence.
 
-This module defines database models for storing LLM token usage and cost metrics
-with PostgreSQL persistence and automatic retention policies.
+This module defines database models for storing:
+- LLM token usage and cost metrics (TokenUsageRecord, BudgetRecord)
+- Context graph decision traces (DecisionTrace, DecisionEdge)
+
+All models use PostgreSQL persistence with automatic retention policies.
 """
 
 from datetime import datetime, UTC
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, Index, Integer, Numeric, String
+from sqlalchemy import (
+    JSON,
+    BigInteger,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column
 
 Base = declarative_base()
@@ -306,3 +320,371 @@ class BudgetRecord(Base):  # type: ignore[misc,valid-type]
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+
+# =============================================================================
+# Context Graph Decision Trace Models (ADR-0101)
+# =============================================================================
+
+
+class DecisionTrace(Base):  # type: ignore[misc,valid-type]
+    """
+    Append-only decision trace for context graphs.
+
+    Captures the WHY behind every agent decision to enable:
+    - Searchable precedent for similar situations
+    - Audit trail for compliance (GDPR, SOC2, FedRAMP)
+    - Feedback loops for continuous improvement
+    - Cross-system synthesis of decision patterns
+
+    Reference: ADR-0101 Context Graphs, Foundation Capital's Context Graph article
+
+    Indexes:
+        - trace_id: Unique identifier lookup
+        - session_id: Per-session decision timeline
+        - user_id: User's decision history (GDPR export/delete)
+        - organization_id: Org-wide decision analytics
+        - decision_type: Filter by decision category
+        - timestamp: Time-range queries and retention
+        - (session_id, sequence_number): Ordered session timeline
+        - (organization_id, timestamp): Org analytics with time filter
+        - outcome: Filter by decision success/failure
+
+    Retention:
+        Records are purged after FF_CONTEXT_GRAPH_RETENTION_DAYS (default: 2555 days)
+        via schedulers/decision_retention.py background job.
+    """
+
+    __tablename__ = "decision_traces"
+
+    # Primary key
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trace_id: Mapped[str] = mapped_column(
+        String(36),
+        unique=True,
+        nullable=False,
+        doc="Unique trace identifier (UUID)",
+    )
+
+    # Context identifiers
+    run_id: Mapped[str] = mapped_column(
+        String(36),
+        nullable=False,
+        doc="LangGraph run ID for correlation",
+    )
+    session_id: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        doc="Session identifier",
+    )
+    workflow_id: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        doc="Workflow identifier (if applicable)",
+    )
+    project_id: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        doc="Project identifier (e.g., 'project:backend')",
+    )
+    organization_id: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        doc="Organization identifier (e.g., 'organization:acme')",
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        doc="User identifier (e.g., 'user:alice')",
+    )
+
+    # Temporal
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        doc="When the decision was made (UTC)",
+    )
+    sequence_number: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        doc="Sequential order within session",
+    )
+
+    # Decision classification
+    decision_type: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        doc="Decision type: routing, tool_selection, skill_selection, model_selection, response, approval, exception",
+    )
+    decision_stage: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        doc="Pipeline stage: context_gathering, policy_check, action, write",
+    )
+
+    # Input context (truncated to prevent bloat)
+    query_text: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+        doc="User query or input that triggered the decision (truncated to 500 chars)",
+    )
+    input_artifacts: Mapped[dict | None] = mapped_column(
+        JSON,
+        nullable=True,
+        doc="Input artifact references (e.g., file IDs, document IDs)",
+    )
+    available_options: Mapped[list | None] = mapped_column(
+        JSON,
+        nullable=True,
+        doc="Options considered (e.g., tool names, skill names) - max 20",
+    )
+    constraints: Mapped[dict | None] = mapped_column(
+        JSON,
+        nullable=True,
+        doc="Active constraints/policies affecting the decision",
+    )
+
+    # Decision output
+    chosen_action: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        doc="The action/tool/skill that was chosen",
+    )
+    selected_items: Mapped[list | None] = mapped_column(
+        JSON,
+        nullable=True,
+        doc="List of selected items if multiple (e.g., tools, skills) - max 20",
+    )
+    confidence: Mapped[Decimal] = mapped_column(
+        Numeric(4, 3),
+        nullable=False,
+        doc="Confidence score for the decision (0.000-1.000)",
+    )
+
+    # Reasoning (WHY - the core value of context graphs)
+    rationale: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+        doc="Explanation for why this decision was made (truncated to 1000 chars)",
+    )
+    reasoning_chain: Mapped[list | None] = mapped_column(
+        JSON,
+        nullable=True,
+        doc="Chain of thought steps (if available)",
+    )
+    policy_version: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+        doc="Version of policy/rules applied (for reproducibility)",
+    )
+    feature_flags_snapshot: Mapped[dict | None] = mapped_column(
+        JSON,
+        nullable=True,
+        doc="Relevant feature flags at decision time",
+    )
+
+    # Approval (HITL - Human-in-the-Loop)
+    requires_approval: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        doc="Whether this decision requires human approval",
+    )
+    approver_id: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        doc="User who approved/rejected (e.g., 'user:manager')",
+    )
+    approval_status: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        doc="Approval status: approved, rejected, pending, expired",
+    )
+    approval_rationale: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        doc="Reason provided for approval/rejection",
+    )
+
+    # Outcome (feedback loop - was the decision good?)
+    outcome: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        doc="Outcome: success, failure, partial, pending",
+    )
+    outcome_details: Mapped[dict | None] = mapped_column(
+        JSON,
+        nullable=True,
+        doc="Detailed outcome information (errors, metrics)",
+    )
+    user_feedback: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        doc="User's explicit feedback on the decision",
+    )
+
+    # Embedding text for semantic search (stored in Qdrant, not Postgres)
+    embedding_text: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        doc="Generated text for embedding (query + rationale)",
+    )
+
+    # OTEL correlation for distributed tracing
+    otel_trace_id: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True,
+        doc="OpenTelemetry trace ID for correlation",
+    )
+    otel_span_id: Mapped[str | None] = mapped_column(
+        String(32),
+        nullable=True,
+        doc="OpenTelemetry span ID for correlation",
+    )
+
+    # Composite indexes for common query patterns
+    __table_args__ = (
+        Index("ix_decision_trace_id", "trace_id"),
+        Index("ix_decision_session", "session_id"),
+        Index("ix_decision_user", "user_id"),
+        Index("ix_decision_org", "organization_id"),
+        Index("ix_decision_type", "decision_type"),
+        Index("ix_decision_timestamp", "timestamp"),
+        Index("ix_decision_session_seq", "session_id", "sequence_number"),
+        Index("ix_decision_org_time", "organization_id", "timestamp"),
+        Index("ix_decision_outcome", "outcome"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<DecisionTrace(trace_id={self.trace_id}, "
+            f"decision_type={self.decision_type}, "
+            f"chosen_action={self.chosen_action})>"
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize for API/GDPR export."""
+        return {
+            "trace_id": self.trace_id,
+            "run_id": self.run_id,
+            "session_id": self.session_id,
+            "workflow_id": self.workflow_id,
+            "project_id": self.project_id,
+            "organization_id": self.organization_id,
+            "user_id": self.user_id,
+            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "decision_type": self.decision_type,
+            "decision_stage": self.decision_stage,
+            "query_text": self.query_text,
+            "chosen_action": self.chosen_action,
+            "confidence": float(self.confidence) if self.confidence else None,
+            "rationale": self.rationale,
+            "outcome": self.outcome,
+        }
+
+
+class DecisionEdge(Base):  # type: ignore[misc,valid-type]
+    """
+    Graph edges connecting decisions to entities.
+
+    Creates the graph structure in context graphs by linking decisions to:
+    - Sessions, workflows, projects (context)
+    - Tools, skills, models (capabilities)
+    - Other decisions (causality)
+    - Users, organizations (actors)
+
+    The edge model enables graph traversal for:
+    - Finding similar past decisions
+    - Understanding decision dependencies
+    - Tracing decision causality chains
+
+    Reference: ADR-0101 Context Graphs
+
+    Indexes:
+        - trace_id: FK to parent decision
+        - (source_type, source_id): Source entity lookup
+        - (target_type, target_id): Target entity lookup
+        - relation: Filter by edge type
+    """
+
+    __tablename__ = "decision_edges"
+
+    # Primary key
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    edge_id: Mapped[str] = mapped_column(
+        String(36),
+        unique=True,
+        nullable=False,
+        doc="Unique edge identifier (UUID)",
+    )
+
+    # FK to decision trace (CASCADE delete when trace is deleted)
+    trace_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("decision_traces.trace_id", ondelete="CASCADE"),
+        nullable=False,
+        doc="Reference to parent decision trace",
+    )
+
+    # Source entity (where the edge comes from)
+    source_type: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        doc="Source entity type: session, workflow, project, user, decision",
+    )
+    source_id: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        doc="Source entity identifier",
+    )
+
+    # Target entity (where the edge points to)
+    target_type: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        doc="Target entity type: tool, skill, model, artifact, decision",
+    )
+    target_id: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        doc="Target entity identifier",
+    )
+
+    # Relation type (describes the edge)
+    relation: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        doc="Relation type: invoked, selected, produced, caused_by, approved_by",
+    )
+    weight: Mapped[Decimal] = mapped_column(
+        Numeric(4, 3),
+        default=Decimal("1.0"),
+        doc="Edge weight for weighted graph operations (0.000-1.000)",
+    )
+    edge_metadata: Mapped[dict | None] = mapped_column(
+        JSON,
+        nullable=True,
+        doc="Additional edge metadata",
+    )
+
+    # Timestamp for edge creation
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        doc="When the edge was created (UTC)",
+    )
+
+    # Indexes
+    __table_args__ = (
+        Index("ix_edge_trace_id", "trace_id"),
+        Index("ix_edge_source", "source_type", "source_id"),
+        Index("ix_edge_target", "target_type", "target_id"),
+        Index("ix_edge_relation", "relation"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<DecisionEdge(edge_id={self.edge_id}, "
+            f"relation={self.relation}, "
+            f"{self.source_type}:{self.source_id} -> {self.target_type}:{self.target_id})>"
+        )

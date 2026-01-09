@@ -420,3 +420,140 @@ class OAuth2StartResponse(BaseModel):
 
     authorization_url: str = Field(description="URL to redirect user to for authorization")
     state: str = Field(description="State parameter for CSRF protection")
+
+
+# =============================================================================
+# Context Graph Decision Trace Models (ADR-0101)
+# =============================================================================
+
+from enum import Enum
+
+
+class DecisionType(str, Enum):
+    """Types of decisions captured in context graph.
+
+    These categories help organize decisions for analysis and precedent search.
+    """
+
+    ROUTING = "routing"
+    TOOL_SELECTION = "tool_selection"
+    SKILL_SELECTION = "skill_selection"
+    MODEL_SELECTION = "model_selection"
+    RESPONSE = "response"
+    APPROVAL = "approval"
+    EXCEPTION = "exception"
+
+
+class DecisionStage(str, Enum):
+    """Stages in decision pipeline.
+
+    Maps to the agent execution phases where decisions occur.
+    """
+
+    CONTEXT_GATHERING = "context_gathering"
+    POLICY_CHECK = "policy_check"
+    ACTION = "action"
+    WRITE = "write"
+
+
+class DecisionOutcome(str, Enum):
+    """Possible decision outcomes.
+
+    Used for feedback loop and precedent filtering.
+    """
+
+    SUCCESS = "success"
+    FAILURE = "failure"
+    PARTIAL = "partial"
+    PENDING = "pending"
+
+
+class DecisionTraceCreate(BaseModel):
+    """Request model for creating a decision trace.
+
+    Used by the DecisionEmitter to capture decision context.
+    Fields are truncated/limited to prevent storage bloat.
+    """
+
+    run_id: str = Field(..., max_length=36, description="LangGraph run ID")
+    session_id: str = Field(..., max_length=255, description="Session identifier")
+    workflow_id: str | None = Field(None, max_length=255, description="Workflow ID (optional)")
+    project_id: str | None = Field(None, max_length=255, description="Project ID (optional)")
+    decision_type: DecisionType = Field(..., description="Type of decision")
+    decision_stage: DecisionStage = Field(..., description="Pipeline stage")
+    query_text: str = Field(..., max_length=500, description="User query (truncated)")
+    chosen_action: str = Field(..., max_length=255, description="Action/tool chosen")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score")
+    rationale: str = Field(..., max_length=1000, description="Why this decision (truncated)")
+    available_options: list[str] | None = Field(
+        None, description="Options considered (max 20)"
+    )
+    selected_items: list[str] | None = Field(
+        None, description="Items selected (max 20)"
+    )
+    policy_version: str | None = Field(None, max_length=100, description="Policy version")
+
+
+class DecisionTraceRead(BaseModel):
+    """Response model for decision trace.
+
+    Used for API responses and GDPR export.
+    Compatible with ORM models via from_attributes.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    trace_id: str = Field(..., description="Unique trace identifier")
+    run_id: str = Field(..., description="LangGraph run ID")
+    session_id: str = Field(..., description="Session identifier")
+    workflow_id: str | None = Field(None, description="Workflow ID (optional)")
+    project_id: str | None = Field(None, description="Project ID (optional)")
+    timestamp: datetime = Field(..., description="When decision was made")
+    decision_type: str = Field(..., description="Type of decision")
+    decision_stage: str = Field(..., description="Pipeline stage")
+    chosen_action: str = Field(..., description="Action/tool chosen")
+    confidence: float = Field(..., description="Confidence score")
+    rationale: str = Field(..., description="Why this decision")
+    outcome: str | None = Field(None, description="Decision outcome")
+    requires_approval: bool = Field(False, description="HITL required")
+    approval_status: str | None = Field(None, description="Approval status")
+
+
+class DecisionTraceSummary(BaseModel):
+    """Summary for list responses.
+
+    Lightweight model for decision trace lists (e.g., session timeline).
+    """
+
+    trace_id: str = Field(..., description="Unique trace identifier")
+    timestamp: datetime = Field(..., description="When decision was made")
+    decision_type: str = Field(..., description="Type of decision")
+    chosen_action: str = Field(..., description="Action/tool chosen")
+    confidence: float = Field(..., description="Confidence score")
+    outcome: str | None = Field(None, description="Decision outcome")
+
+
+class PrecedentSearchRequest(BaseModel):
+    """Request for semantic precedent search.
+
+    Used to find similar past decisions for learning/reference.
+    """
+
+    query: str = Field(..., min_length=3, max_length=500, description="Search query")
+    decision_type: DecisionType | None = Field(
+        None, description="Filter by decision type"
+    )
+    outcome: DecisionOutcome | None = Field(None, description="Filter by outcome")
+    limit: int = Field(10, ge=1, le=100, description="Max results to return")
+
+
+class PrecedentSearchResult(BaseModel):
+    """Result of semantic precedent search.
+
+    Combines the decision trace with its similarity score.
+    """
+
+    trace: DecisionTraceRead = Field(..., description="The matching decision trace")
+    similarity_score: float = Field(
+        ..., ge=0.0, le=1.0, description="Cosine similarity score"
+    )
