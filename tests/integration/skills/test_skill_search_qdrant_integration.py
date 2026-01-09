@@ -69,6 +69,28 @@ def qdrant_available() -> bool:
     return is_port_in_use(TEST_QDRANT_PORT)
 
 
+async def ensure_collection(
+    qdrant_client,
+    collection_name: str,
+    vectors_config,
+) -> None:
+    """Create a fresh collection, deleting if exists.
+
+    Replaces deprecated recreate_collection method (removed in qdrant-client >= 1.16).
+
+    Args:
+        qdrant_client: AsyncQdrantClient instance
+        collection_name: Name of collection to create
+        vectors_config: VectorParams configuration
+    """
+    if await qdrant_client.collection_exists(collection_name):
+        await qdrant_client.delete_collection(collection_name)
+    await qdrant_client.create_collection(
+        collection_name=collection_name,
+        vectors_config=vectors_config,
+    )
+
+
 @pytest.fixture(autouse=True)
 def teardown_gc():
     """Force GC after each test to prevent memory accumulation."""
@@ -89,21 +111,32 @@ def collection_name() -> str:
 
 
 @pytest.fixture
-async def cleanup_collection(qdrant_url: str, collection_name: str):
+async def qdrant_client(qdrant_url: str):
+    """Create and manage AsyncQdrantClient lifecycle.
+
+    Note: qdrant-client >= 1.7.0 removed async context manager support.
+    This fixture properly manages client lifecycle without 'async with'.
+    """
+    if not qdrant_available():
+        pytest.skip("Qdrant not available")
+
+    from qdrant_client import AsyncQdrantClient
+
+    client = AsyncQdrantClient(url=qdrant_url)
+    yield client
+    await client.close()
+
+
+@pytest.fixture
+async def cleanup_collection(qdrant_client, collection_name: str):
     """Fixture to cleanup test collection after tests."""
     yield
 
     # Cleanup after test
-    if not qdrant_available():
-        return
-
     try:
-        from qdrant_client import AsyncQdrantClient
-
-        async with AsyncQdrantClient(url=qdrant_url) as client:
-            collections = await client.get_collections()
-            if any(c.name == collection_name for c in collections.collections):
-                await client.delete_collection(collection_name)
+        collections = await qdrant_client.get_collections()
+        if any(c.name == collection_name for c in collections.collections):
+            await qdrant_client.delete_collection(collection_name)
     except Exception:
         pass  # Best-effort cleanup
 
@@ -141,27 +174,23 @@ class TestSkillSearchQdrantIntegration:
     """Integration tests for SkillSearchTool with real Qdrant."""
 
     @pytest.mark.asyncio
-    async def test_adapter_connects_to_qdrant(self, qdrant_url: str) -> None:
+    async def test_adapter_connects_to_qdrant(self, qdrant_client) -> None:
         """Test VectorProviderAdapter connects to real Qdrant."""
-        from qdrant_client import AsyncQdrantClient
-
         from mcp_server_langgraph.skills.adapters import VectorProviderAdapter
         from mcp_server_langgraph.storage.vectors.qdrant_provider import QdrantVectorProvider
 
-        async with AsyncQdrantClient(url=qdrant_url) as client:
-            # Create provider and adapter
-            provider = QdrantVectorProvider(client=client, vector_size=768)
-            adapter = VectorProviderAdapter(provider)
+        # Create provider and adapter
+        provider = QdrantVectorProvider(client=qdrant_client, vector_size=768)
+        adapter = VectorProviderAdapter(provider)
 
-            assert adapter is not None
-            assert adapter._provider is provider
+        assert adapter is not None
+        assert adapter._provider is provider
 
     @pytest.mark.asyncio
     async def test_skill_indexing_with_real_qdrant(
-        self, qdrant_url: str, collection_name: str, cleanup_collection: None
+        self, qdrant_client, collection_name: str, cleanup_collection: None
     ) -> None:
         """Test indexing skills into real Qdrant collection."""
-        from qdrant_client import AsyncQdrantClient
         from qdrant_client.models import Distance, VectorParams
 
         from mcp_server_langgraph.skills.adapters import VectorProviderAdapter
@@ -169,49 +198,48 @@ class TestSkillSearchQdrantIntegration:
         from mcp_server_langgraph.skills.search import SkillSearchTool
         from mcp_server_langgraph.storage.vectors.qdrant_provider import QdrantVectorProvider
 
-        async with AsyncQdrantClient(url=qdrant_url) as client:
-            # Create collection for test
-            await client.recreate_collection(
-                collection_name=collection_name,
-                vectors_config=VectorParams(size=768, distance=Distance.COSINE),
-            )
+        # Create collection for test
+        await ensure_collection(
+            qdrant_client,
+            collection_name,
+            VectorParams(size=768, distance=Distance.COSINE),
+        )
 
-            # Create provider, adapter, and tool
-            provider = QdrantVectorProvider(client=client, vector_size=768)
-            adapter = VectorProviderAdapter(provider)
-            embedding_service = MockEmbeddingService(vector_size=768)
+        # Create provider, adapter, and tool
+        provider = QdrantVectorProvider(client=qdrant_client, vector_size=768)
+        adapter = VectorProviderAdapter(provider)
+        embedding_service = MockEmbeddingService(vector_size=768)
 
-            # Create custom tool with test collection
-            tool = SkillSearchTool(
-                vector_provider=adapter,
-                embedding_service=embedding_service,
-            )
-            # Override collection name for test isolation
-            tool.COLLECTION = collection_name
+        # Create custom tool with test collection
+        tool = SkillSearchTool(
+            vector_provider=adapter,
+            embedding_service=embedding_service,
+        )
+        # Override collection name for test isolation
+        tool.COLLECTION = collection_name
 
-            # Create test skill
-            skill = Skill(
-                name="code-review",
-                description="Review code for quality, bugs, and best practices",
-                tags=["code", "review", "quality"],
-            )
+        # Create test skill
+        skill = Skill(
+            name="code-review",
+            description="Review code for quality, bugs, and best practices",
+            tags=["code", "review", "quality"],
+        )
 
-            # Index the skill
-            await tool.index_skill(skill, skill_id="skill-001")
+        # Index the skill
+        await tool.index_skill(skill, skill_id="skill-001")
 
-            # Verify embedding service was called
-            assert embedding_service.call_count == 1
+        # Verify embedding service was called
+        assert embedding_service.call_count == 1
 
-            # Verify data was stored in Qdrant
-            count = await client.count(collection_name=collection_name)
-            assert count.count == 1
+        # Verify data was stored in Qdrant
+        count = await qdrant_client.count(collection_name=collection_name)
+        assert count.count == 1
 
     @pytest.mark.asyncio
     async def test_skill_search_with_real_qdrant(
-        self, qdrant_url: str, collection_name: str, cleanup_collection: None
+        self, qdrant_client, collection_name: str, cleanup_collection: None
     ) -> None:
         """Test searching skills in real Qdrant collection."""
-        from qdrant_client import AsyncQdrantClient
         from qdrant_client.models import Distance, VectorParams
 
         from mcp_server_langgraph.skills.adapters import VectorProviderAdapter
@@ -219,66 +247,65 @@ class TestSkillSearchQdrantIntegration:
         from mcp_server_langgraph.skills.search import SkillSearchTool
         from mcp_server_langgraph.storage.vectors.qdrant_provider import QdrantVectorProvider
 
-        async with AsyncQdrantClient(url=qdrant_url) as client:
-            # Create collection for test
-            await client.recreate_collection(
-                collection_name=collection_name,
-                vectors_config=VectorParams(size=768, distance=Distance.COSINE),
-            )
+        # Create collection for test
+        await ensure_collection(
+            qdrant_client,
+            collection_name,
+            VectorParams(size=768, distance=Distance.COSINE),
+        )
 
-            # Setup
-            provider = QdrantVectorProvider(client=client, vector_size=768)
-            adapter = VectorProviderAdapter(provider)
-            embedding_service = MockEmbeddingService(vector_size=768)
+        # Setup
+        provider = QdrantVectorProvider(client=qdrant_client, vector_size=768)
+        adapter = VectorProviderAdapter(provider)
+        embedding_service = MockEmbeddingService(vector_size=768)
 
-            tool = SkillSearchTool(
-                vector_provider=adapter,
-                embedding_service=embedding_service,
-            )
-            tool.COLLECTION = collection_name
+        tool = SkillSearchTool(
+            vector_provider=adapter,
+            embedding_service=embedding_service,
+        )
+        tool.COLLECTION = collection_name
 
-            # Index multiple skills
-            skills = [
-                Skill(
-                    name="code-review",
-                    description="Review code for quality, bugs, and best practices",
-                    tags=["code", "review"],
-                ),
-                Skill(
-                    name="test-generator",
-                    description="Generate unit tests for Python code",
-                    tags=["testing", "code"],
-                ),
-                Skill(
-                    name="documentation-writer",
-                    description="Write documentation for APIs and code",
-                    tags=["docs", "writing"],
-                ),
-            ]
+        # Index multiple skills
+        skills = [
+            Skill(
+                name="code-review",
+                description="Review code for quality, bugs, and best practices",
+                tags=["code", "review"],
+            ),
+            Skill(
+                name="test-generator",
+                description="Generate unit tests for Python code",
+                tags=["testing", "code"],
+            ),
+            Skill(
+                name="documentation-writer",
+                description="Write documentation for APIs and code",
+                tags=["docs", "writing"],
+            ),
+        ]
 
-            for i, skill in enumerate(skills):
-                await tool.index_skill(skill, skill_id=f"skill-{i:03d}")
+        for i, skill in enumerate(skills):
+            await tool.index_skill(skill, skill_id=f"skill-{i:03d}")
 
-            # Verify all skills indexed
-            count = await client.count(collection_name=collection_name)
-            assert count.count == 3
+        # Verify all skills indexed
+        count = await qdrant_client.count(collection_name=collection_name)
+        assert count.count == 3
 
-            # Search for code-related skills
-            results = await tool.search("code quality review", limit=2)
+        # Search for code-related skills
+        results = await tool.search("code quality review", limit=2)
 
-            assert len(results) <= 2
-            # Results should be SkillSearchResult objects
-            for result in results:
-                assert result.skill_id is not None
-                assert result.name is not None
-                assert result.score >= 0
+        assert len(results) <= 2
+        # Results should be SkillSearchResult objects
+        for result in results:
+            assert result.skill_id is not None
+            assert result.name is not None
+            assert result.score >= 0
 
     @pytest.mark.asyncio
     async def test_skill_search_with_min_score_filter(
-        self, qdrant_url: str, collection_name: str, cleanup_collection: None
+        self, qdrant_client, collection_name: str, cleanup_collection: None
     ) -> None:
         """Test searching skills with minimum score threshold."""
-        from qdrant_client import AsyncQdrantClient
         from qdrant_client.models import Distance, VectorParams
 
         from mcp_server_langgraph.skills.adapters import VectorProviderAdapter
@@ -286,73 +313,72 @@ class TestSkillSearchQdrantIntegration:
         from mcp_server_langgraph.skills.search import SkillSearchTool
         from mcp_server_langgraph.storage.vectors.qdrant_provider import QdrantVectorProvider
 
-        async with AsyncQdrantClient(url=qdrant_url) as client:
-            # Create collection
-            await client.recreate_collection(
-                collection_name=collection_name,
-                vectors_config=VectorParams(size=768, distance=Distance.COSINE),
-            )
+        # Create collection
+        await ensure_collection(
+            qdrant_client,
+            collection_name,
+            VectorParams(size=768, distance=Distance.COSINE),
+        )
 
-            # Setup
-            provider = QdrantVectorProvider(client=client, vector_size=768)
-            adapter = VectorProviderAdapter(provider)
-            embedding_service = MockEmbeddingService(vector_size=768)
+        # Setup
+        provider = QdrantVectorProvider(client=qdrant_client, vector_size=768)
+        adapter = VectorProviderAdapter(provider)
+        embedding_service = MockEmbeddingService(vector_size=768)
 
-            tool = SkillSearchTool(
-                vector_provider=adapter,
-                embedding_service=embedding_service,
-            )
-            tool.COLLECTION = collection_name
+        tool = SkillSearchTool(
+            vector_provider=adapter,
+            embedding_service=embedding_service,
+        )
+        tool.COLLECTION = collection_name
 
-            # Index a skill
-            skill = Skill(
-                name="python-debugger",
-                description="Debug Python applications with advanced breakpoints",
-            )
-            await tool.index_skill(skill, skill_id="skill-debug")
+        # Index a skill
+        skill = Skill(
+            name="python-debugger",
+            description="Debug Python applications with advanced breakpoints",
+        )
+        await tool.index_skill(skill, skill_id="skill-debug")
 
-            # Search with high min_score (should filter out low-similarity results)
-            results_high_threshold = await tool.search(
-                "completely unrelated query about cooking recipes",
-                min_score=0.9,
-            )
+        # Search with high min_score (should filter out low-similarity results)
+        results_high_threshold = await tool.search(
+            "completely unrelated query about cooking recipes",
+            min_score=0.9,
+        )
 
-            # High threshold should return fewer or no results
-            # (depends on mock embedding similarity)
-            assert isinstance(results_high_threshold, list)
+        # High threshold should return fewer or no results
+        # (depends on mock embedding similarity)
+        assert isinstance(results_high_threshold, list)
 
     @pytest.mark.asyncio
     async def test_adapter_upsert_with_none_metadata(
-        self, qdrant_url: str, collection_name: str, cleanup_collection: None
+        self, qdrant_client, collection_name: str, cleanup_collection: None
     ) -> None:
         """Test VectorProviderAdapter handles None metadata correctly."""
-        from qdrant_client import AsyncQdrantClient
         from qdrant_client.models import Distance, VectorParams
 
         from mcp_server_langgraph.skills.adapters import VectorProviderAdapter
         from mcp_server_langgraph.storage.vectors.qdrant_provider import QdrantVectorProvider
 
-        async with AsyncQdrantClient(url=qdrant_url) as client:
-            # Create collection
-            await client.recreate_collection(
-                collection_name=collection_name,
-                vectors_config=VectorParams(size=768, distance=Distance.COSINE),
-            )
+        # Create collection
+        await ensure_collection(
+            qdrant_client,
+            collection_name,
+            VectorParams(size=768, distance=Distance.COSINE),
+        )
 
-            provider = QdrantVectorProvider(client=client, vector_size=768)
-            adapter = VectorProviderAdapter(provider)
+        provider = QdrantVectorProvider(client=qdrant_client, vector_size=768)
+        adapter = VectorProviderAdapter(provider)
 
-            # Upsert with None metadata (adapter should convert to {})
-            await adapter.upsert(
-                collection=collection_name,
-                id="test-id",
-                vector=[0.1] * 768,
-                metadata=None,
-            )
+        # Upsert with None metadata (adapter should convert to {})
+        await adapter.upsert(
+            collection=collection_name,
+            id="test-id",
+            vector=[0.1] * 768,
+            metadata=None,
+        )
 
-            # Verify point was stored
-            count = await client.count(collection_name=collection_name)
-            assert count.count == 1
+        # Verify point was stored
+        count = await qdrant_client.count(collection_name=collection_name)
+        assert count.count == 1
 
 
 @pytest.mark.skipif(not qdrant_available(), reason="Qdrant not available")
@@ -360,43 +386,44 @@ class TestVectorProviderAdapterQdrant:
     """Tests for VectorProviderAdapter with real Qdrant operations."""
 
     @pytest.mark.asyncio
-    async def test_search_returns_dict_format(self, qdrant_url: str, collection_name: str, cleanup_collection: None) -> None:
+    async def test_search_returns_dict_format(
+        self, qdrant_client, collection_name: str, cleanup_collection: None
+    ) -> None:
         """Test adapter search returns list of dicts (not VectorSearchResult)."""
-        from qdrant_client import AsyncQdrantClient
         from qdrant_client.models import Distance, VectorParams
 
         from mcp_server_langgraph.skills.adapters import VectorProviderAdapter
         from mcp_server_langgraph.storage.vectors.qdrant_provider import QdrantVectorProvider
 
-        async with AsyncQdrantClient(url=qdrant_url) as client:
-            # Create collection
-            await client.recreate_collection(
-                collection_name=collection_name,
-                vectors_config=VectorParams(size=768, distance=Distance.COSINE),
-            )
+        # Create collection
+        await ensure_collection(
+            qdrant_client,
+            collection_name,
+            VectorParams(size=768, distance=Distance.COSINE),
+        )
 
-            provider = QdrantVectorProvider(client=client, vector_size=768)
-            adapter = VectorProviderAdapter(provider)
+        provider = QdrantVectorProvider(client=qdrant_client, vector_size=768)
+        adapter = VectorProviderAdapter(provider)
 
-            # Insert a vector
-            test_vector = [0.1] * 768
-            await adapter.upsert(
-                collection=collection_name,
-                id="doc-001",
-                vector=test_vector,
-                metadata={"name": "test-skill", "description": "A test skill"},
-            )
+        # Insert a vector
+        test_vector = [0.1] * 768
+        await adapter.upsert(
+            collection=collection_name,
+            id="doc-001",
+            vector=test_vector,
+            metadata={"name": "test-skill", "description": "A test skill"},
+        )
 
-            # Search for similar vectors
-            results = await adapter.search(
-                collection=collection_name,
-                query_vector=test_vector,
-                limit=5,
-            )
+        # Search for similar vectors
+        results = await adapter.search(
+            collection=collection_name,
+            query_vector=test_vector,
+            limit=5,
+        )
 
-            assert len(results) >= 1
-            assert isinstance(results[0], dict)
-            assert "id" in results[0]
-            assert "score" in results[0]
-            assert "metadata" in results[0]
-            assert results[0]["id"] == "doc-001"
+        assert len(results) >= 1
+        assert isinstance(results[0], dict)
+        assert "id" in results[0]
+        assert "score" in results[0]
+        assert "metadata" in results[0]
+        assert results[0]["id"] == "doc-001"

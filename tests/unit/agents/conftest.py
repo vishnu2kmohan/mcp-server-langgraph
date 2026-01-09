@@ -52,6 +52,11 @@ def mock_feature_flags_for_agents(monkeypatch: pytest.MonkeyPatch) -> None:
         # HITL (Human-in-the-Loop) flags
         enable_agent_hitl=True,
         agent_hitl_confidence_threshold=0.7,
+        # Context Graph flags (ADR-0101)
+        enable_context_graph=True,
+        enable_precedent_search=True,
+        context_graph_async_persistence=False,  # Sync for testing
+        context_graph_sampling_rate=1.0,
     )
 
     # Patch at all module levels that use feature_flags

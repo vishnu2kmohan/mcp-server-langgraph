@@ -8,11 +8,19 @@ Uses mock Qdrant client and embedder for isolated testing.
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 pytestmark = pytest.mark.integration
+
+
+@pytest.fixture
+def mock_openfga_client() -> AsyncMock:
+    """Create a mock OpenFGA client that always returns True for authorization."""
+    client = AsyncMock()
+    client.check_permission = AsyncMock(return_value=True)
+    return client
 
 
 @pytest.fixture
@@ -31,7 +39,10 @@ def mock_qdrant_client() -> AsyncMock:
     client.get_collections = AsyncMock(return_value=MagicMock(collections=[]))
     client.create_collection = AsyncMock()
     client.upsert = AsyncMock()
-    client.search = AsyncMock(return_value=[])
+    # query_points returns response with points attribute (qdrant-client >= 1.7)
+    mock_response = MagicMock()
+    mock_response.points = []
+    client.query_points = AsyncMock(return_value=mock_response)
     return client
 
 
@@ -46,7 +57,7 @@ class TestSemanticToolSelectionIntegration:
 
     @pytest.mark.asyncio
     async def test_semantic_index_manager_indexes_and_searches_tools(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
+        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock, mock_openfga_client: AsyncMock
     ) -> None:
         """SemanticIndexManager should index tools and search them."""
         from qdrant_client.models import ScoredPoint
@@ -55,7 +66,7 @@ class TestSemanticToolSelectionIntegration:
         from mcp_server_langgraph.tools.semantic_index import ToolIndexEntry
 
         # Setup mock search results
-        mock_qdrant_client.search.return_value = [
+        mock_qdrant_client.query_points.return_value.points = [
             ScoredPoint(
                 id="tool-123",
                 version=1,
@@ -87,8 +98,16 @@ class TestSemanticToolSelectionIntegration:
         )
         await manager.index_tool(entry)
 
-        # Search for tools
-        results = await manager.search_tools(query="math calculations", limit=5)
+        # Search for tools (with authorization mock)
+        with patch(
+            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+            return_value=mock_openfga_client,
+        ):
+            results = await manager.search_tools(
+                query="math calculations",
+                user_id="user:test_alice",
+                limit=5,
+            )
 
         # Verify results
         assert len(results) == 1
@@ -105,7 +124,7 @@ class TestSemanticToolSelectionIntegration:
         from mcp_server_langgraph.core.agent_graph_builder import build_agent_graph
 
         config = AgentConfig(
-            enable_semantic_tool_selection=True,
+            enable_semantic_tool_search=True,
             enable_verification=False,
             enable_context_compaction=False,
         )
@@ -114,7 +133,7 @@ class TestSemanticToolSelectionIntegration:
 
         # Verify graph structure
         assert graph is not None
-        assert "select_tools" in graph.nodes
+        assert "retrieve_tools" in graph.nodes
         assert "router" in graph.nodes
         assert "tools" in graph.nodes
         assert "respond" in graph.nodes
@@ -127,8 +146,8 @@ class TestSemanticToolSelectionIntegration:
 
         from mcp_server_langgraph.core.agent_config import AgentConfig
 
-        config_without = AgentConfig(enable_semantic_tool_selection=False)
-        config_with = AgentConfig(enable_semantic_tool_selection=True)
+        config_without = AgentConfig(enable_semantic_tool_search=False)
+        config_with = AgentConfig(enable_semantic_tool_search=True)
 
         # Different topology = different graph versions
         assert config_without.graph_version != config_with.graph_version
@@ -171,7 +190,7 @@ class TestSemanticToolSelectionIntegration:
 
     @pytest.mark.asyncio
     async def test_semantic_index_supports_multi_tenant_isolation(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
+        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock, mock_openfga_client: AsyncMock
     ) -> None:
         """SemanticIndexManager should support multi-tenant isolation via tenant_id."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
@@ -181,15 +200,20 @@ class TestSemanticToolSelectionIntegration:
             qdrant_client=mock_qdrant_client,
         )
 
-        # Search with tenant_id filter
-        await manager.search_tools(
-            query="test query",
-            limit=5,
-            tenant_id="tenant-abc",
-        )
+        # Search with tenant_id filter (with authorization mock)
+        with patch(
+            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+            return_value=mock_openfga_client,
+        ):
+            await manager.search_tools(
+                query="test query",
+                user_id="user:test_alice",
+                limit=5,
+                tenant_id="tenant-abc",
+            )
 
         # Verify tenant filter was applied in search
-        call_kwargs = mock_qdrant_client.search.call_args.kwargs
+        call_kwargs = mock_qdrant_client.query_points.call_args.kwargs
         assert "query_filter" in call_kwargs
 
 
@@ -204,7 +228,7 @@ class TestSkillAndMemoryIndexing:
 
     @pytest.mark.asyncio
     async def test_semantic_index_manager_indexes_skills(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
+        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock, mock_openfga_client: AsyncMock
     ) -> None:
         """SemanticIndexManager should index and search skills."""
         from qdrant_client.models import ScoredPoint
@@ -212,7 +236,7 @@ class TestSkillAndMemoryIndexing:
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
         from mcp_server_langgraph.tools.semantic_index import SkillIndexEntry
 
-        mock_qdrant_client.search.return_value = [
+        mock_qdrant_client.query_points.return_value.points = [
             ScoredPoint(
                 id="skill-123",
                 version=1,
@@ -244,15 +268,23 @@ class TestSkillAndMemoryIndexing:
         )
         await manager.index_skill(entry)
 
-        # Search for skills
-        results = await manager.search_skills(query="review my code", limit=5)
+        # Search for skills (with authorization mock)
+        with patch(
+            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+            return_value=mock_openfga_client,
+        ):
+            results = await manager.search_skills(
+                query="review my code",
+                user_id="user:test_alice",
+                limit=5,
+            )
 
         assert len(results) == 1
         assert results[0].name == "code_review"
 
     @pytest.mark.asyncio
     async def test_semantic_index_manager_indexes_memories(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
+        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock, mock_openfga_client: AsyncMock
     ) -> None:
         """SemanticIndexManager should index and search memories."""
         from qdrant_client.models import ScoredPoint
@@ -260,7 +292,7 @@ class TestSkillAndMemoryIndexing:
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
         from mcp_server_langgraph.tools.semantic_index import MemoryIndexEntry
 
-        mock_qdrant_client.search.return_value = [
+        mock_qdrant_client.query_points.return_value.points = [
             ScoredPoint(
                 id="mem-123",
                 version=1,
@@ -271,6 +303,7 @@ class TestSkillAndMemoryIndexing:
                     "memory_type": "preference",
                     "ref_type": "memory",
                     "scope": "session",
+                    "user_id": "user:test_alice",
                 },
                 vector=None,
             )
@@ -286,11 +319,21 @@ class TestSkillAndMemoryIndexing:
             memory_id="mem-123",
             content="User prefers dark mode",
             memory_type="preference",
+            user_id="user:test_alice",
         )
         await manager.index_memory(entry)
 
-        # Search for memories
-        results = await manager.search_memories(query="what are my preferences", limit=5)
+        # Search for memories (with authorization mock)
+        with patch(
+            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+            return_value=mock_openfga_client,
+        ):
+            results = await manager.search_memories(
+                query="what are my preferences",
+                current_user_id="user:test_alice",
+                search_user_id="user:test_alice",
+                limit=5,
+            )
 
         assert len(results) == 1
         assert results[0].content == "User prefers dark mode"

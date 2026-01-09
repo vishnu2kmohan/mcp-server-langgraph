@@ -182,6 +182,7 @@ class TestRouterAgentSemanticDiscovery:
         await agent.route_with_semantic_discovery(
             message="Calculate 2 + 2",
             semantic_index=mock_semantic_index,
+            user_id="user:alice",
         )
 
         # Verify semantic search was called
@@ -200,6 +201,7 @@ class TestRouterAgentSemanticDiscovery:
         result = await agent.route_with_semantic_discovery(
             message="Calculate 2 + 2",
             semantic_index=mock_semantic_index,
+            user_id="user:alice",
         )
 
         assert len(result.discovered_tools) == 1
@@ -217,6 +219,7 @@ class TestRouterAgentSemanticDiscovery:
         result = await agent.route_with_semantic_discovery(
             message="Review my code",
             semantic_index=mock_semantic_index,
+            user_id="user:alice",
         )
 
         assert len(result.discovered_skills) == 1
@@ -234,13 +237,14 @@ class TestRouterAgentSemanticDiscovery:
         await agent.route_with_semantic_discovery(
             message="Help me",
             semantic_index=mock_semantic_index,
+            user_id="user:alice",
             max_tools=5,
             max_skills=3,
         )
 
-        # Verify limits were passed
-        mock_semantic_index.search_tools.assert_called_with(query="Help me", limit=5)
-        mock_semantic_index.search_skills.assert_called_with(query="Help me", limit=3)
+        # Verify limits were passed (user_id is now required for authorization)
+        mock_semantic_index.search_tools.assert_called_with(query="Help me", user_id="user:alice", limit=5)
+        mock_semantic_index.search_skills.assert_called_with(query="Help me", user_id="user:alice", limit=3)
 
     @pytest.mark.asyncio
     async def test_route_with_semantic_discovery_passes_tools_to_route(
@@ -254,6 +258,7 @@ class TestRouterAgentSemanticDiscovery:
         result = await agent.route_with_semantic_discovery(
             message="Calculate 2 + 2",
             semantic_index=mock_semantic_index,
+            user_id="user:alice",
         )
 
         # The discovered tool name should be in the routing context
@@ -273,6 +278,7 @@ class TestRouterAgentSemanticDiscovery:
         result = await agent.route_with_semantic_discovery(
             message="Hello",
             semantic_index=mock_semantic_index,
+            user_id="user:alice",
         )
 
         assert result.discovered_tools == []
@@ -293,6 +299,7 @@ class TestRouterAgentSemanticDiscovery:
         result = await agent.route_with_semantic_discovery(
             message="Hello",
             semantic_index=mock_semantic_index,
+            user_id="user:alice",
         )
 
         # Should still have a valid output with empty discovered lists
