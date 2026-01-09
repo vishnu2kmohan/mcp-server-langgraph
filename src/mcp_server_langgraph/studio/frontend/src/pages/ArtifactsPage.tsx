@@ -1,8 +1,8 @@
 /**
- * FilesPage
+ * ArtifactsPage
  *
- * File browser for session artifacts and uploaded files.
- * Provides file listing, preview, and management capabilities.
+ * Artifact browser for session artifacts and uploaded files.
+ * Provides artifact listing, preview, and management capabilities.
  * Wired to the artifacts API via React Router loader.
  */
 import { useState, useMemo, useCallback } from "react";
@@ -27,10 +27,11 @@ import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 import { devLogger } from "../utils/devLogger";
 import { sessionTelemetry } from "../utils/sessionTelemetry";
-import type { FilesLoaderData } from "../router/loaders";
+import type { ArtifactsLoaderData } from "../router/loaders";
 import type { CanvasArtifact } from "../types/artifacts";
+import { AIEmptyState } from "../components/EmptyState/AIEmptyState";
 
-const logger = devLogger.withPrefix("[FilesPage]");
+const logger = devLogger.withPrefix("[ArtifactsPage]");
 
 // =============================================================================
 // Types
@@ -284,7 +285,7 @@ function FileCard({
 // Main Component
 // =============================================================================
 
-export function FilesPage() {
+export function ArtifactsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
@@ -306,7 +307,9 @@ export function FilesPage() {
   );
 
   // Get artifacts from the router loader
-  const loaderData = useRouteLoaderData("files") as FilesLoaderData | undefined;
+  const loaderData = useRouteLoaderData("artifacts") as
+    | ArtifactsLoaderData
+    | undefined;
   const revalidator = useRevalidator();
   const navigate = useNavigate();
 
@@ -505,12 +508,12 @@ export function FilesPage() {
   if (loaderData?.error) {
     return (
       <div
-        data-testid="files-page-error"
+        data-testid="artifacts-page-error"
         className="flex flex-col items-center justify-center h-full bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400"
       >
         <AlertCircle size={48} className="mb-4 text-error-500" />
         <p className="text-lg font-medium text-gray-900 dark:text-white">
-          Failed to load files
+          Failed to load artifacts
         </p>
         <p className="text-sm mt-1">{loaderData.error}</p>
       </div>
@@ -519,7 +522,7 @@ export function FilesPage() {
 
   return (
     <div
-      data-testid="files-page"
+      data-testid="artifacts-page"
       className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 relative"
     >
       {/* Delete status indicator - optimistic feedback */}
@@ -553,10 +556,10 @@ export function FilesPage() {
         <div className="flex items-center gap-3">
           <FolderOpen size={24} className="text-primary-500" />
           <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Files
+            Artifacts
           </h1>
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            {filteredFiles.length} files
+            {filteredFiles.length} artifacts
           </span>
         </div>
 
@@ -570,7 +573,7 @@ export function FilesPage() {
             <input
               type="text"
               data-testid="file-search"
-              placeholder="Search files..."
+              placeholder="Search artifacts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
@@ -620,12 +623,14 @@ export function FilesPage() {
       {/* File list */}
       <div className="flex-1 overflow-auto p-6">
         {filteredFiles.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-400">
-            <FolderOpen size={48} className="mb-4 opacity-50" />
-            <p className="text-sm">
-              {searchQuery ? "No files match your search" : "No files yet"}
-            </p>
-          </div>
+          // Empty state - AI-enhanced (Sprint 3 Migration)
+          <AIEmptyState
+            context="artifacts"
+            emptyType={searchQuery ? "no-matches" : "empty"}
+            searchQuery={searchQuery || undefined}
+            variant="compact"
+            enableAI={!searchQuery}
+          />
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {filteredFiles.map((file) => (

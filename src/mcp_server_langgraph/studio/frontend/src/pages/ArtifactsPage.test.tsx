@@ -1,16 +1,19 @@
 /**
- * FilesPage Tests
+ * ArtifactsPage Tests
  *
- * TDD tests for the file browser page.
+ * TDD tests for the artifact browser page.
  * Tests cover:
- * - Rendering files from loader data
+ * - Rendering artifacts from loader data
  * - Preview modal functionality
  * - Download (blob creation and trigger)
  * - Delete (confirmation, API call, revalidation)
  * - Search filtering
  * - View mode switching (grid/list)
+ *
+ * Updated: Uses custom test wrapper with Redux provider for AIEmptyState.
  */
 
+import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   render,
@@ -20,10 +23,14 @@ import {
   within,
   cleanup,
 } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
-import { FilesPage } from "./FilesPage";
+import { createMemoryRouter, RouterProvider } from "react-router";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import { ArtifactsPage } from "./ArtifactsPage";
+import personaReducer from "../store/slices/personaSlice";
+import sessionReducer from "../store/slices/sessionSlice";
 import type { CanvasArtifact } from "../types/artifacts";
-import type { FilesLoaderData } from "../router/loaders";
+import type { ArtifactsLoaderData } from "../router/loaders";
 
 // Mock useRouteLoaderData and useRevalidator
 const mockRevalidate = vi.fn();
@@ -44,9 +51,13 @@ import { useRouteLoaderData } from "react-router";
 const mockUseRouteLoaderData = vi.mocked(useRouteLoaderData);
 
 // Mock getAuthToken
-vi.mock("../utils/storage", () => ({
-  getAuthToken: vi.fn(() => "test-token"),
-}));
+vi.mock("../utils/storage", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../utils/storage")>();
+  return {
+    ...actual,
+    getAuthToken: vi.fn(() => "test-token"),
+  };
+});
 
 // Mock devLogger
 vi.mock("../utils/devLogger", () => ({
@@ -57,6 +68,21 @@ vi.mock("../utils/devLogger", () => ({
       error: vi.fn(),
     }),
   },
+}));
+
+// Mock sessionTelemetry
+vi.mock("../utils/sessionTelemetry", () => ({
+  sessionTelemetry: {
+    trackArtifactDelete: vi.fn(),
+  },
+}));
+
+// Mock the API module for RTK Query hooks (used by AIEmptyState)
+vi.mock("../api", () => ({
+  useGetEmptyStateSuggestionsMutation: () => [
+    vi.fn(),
+    { isLoading: false, data: null },
+  ],
 }));
 
 // Sample test artifacts
@@ -95,23 +121,46 @@ const testArtifacts: CanvasArtifact[] = [
   }),
 ];
 
-// Helper to render with router
-const renderFilesPage = () => {
+/**
+ * Custom test wrapper for ArtifactsPage tests.
+ * Provides Redux store with persona state for AIEmptyState.
+ */
+function ArtifactsPageTestWrapper({ children }: { children: ReactNode }) {
+  const store = configureStore({
+    reducer: {
+      persona: personaReducer,
+      session: sessionReducer,
+    },
+  });
+
+  const router = createMemoryRouter([{ path: "*", element: children }], {
+    initialEntries: ["/"],
+  });
+
+  return (
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
+  );
+}
+
+// Helper to render with router and Redux provider
+const renderArtifactsPage = () => {
   return render(
-    <MemoryRouter>
-      <FilesPage />
-    </MemoryRouter>,
+    <ArtifactsPageTestWrapper>
+      <ArtifactsPage />
+    </ArtifactsPageTestWrapper>,
   );
 };
 
-describe("FilesPage", () => {
+describe("ArtifactsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default: return test artifacts
     mockUseRouteLoaderData.mockReturnValue({
       artifacts: testArtifacts,
       total: 3,
-    } as FilesLoaderData);
+    } as ArtifactsLoaderData);
   });
 
   afterEach(() => {
@@ -124,20 +173,20 @@ describe("FilesPage", () => {
   // ===========================================================================
   describe("Rendering", () => {
     it("should render the files page with header", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
-      expect(screen.getByTestId("files-page")).toBeInTheDocument();
-      expect(screen.getByText("Files")).toBeInTheDocument();
+      expect(screen.getByTestId("artifacts-page")).toBeInTheDocument();
+      expect(screen.getByText("Artifacts")).toBeInTheDocument();
     });
 
-    it("should display file count in header", () => {
-      renderFilesPage();
+    it("should display artifact count in header", () => {
+      renderArtifactsPage();
 
-      expect(screen.getByText("3 files")).toBeInTheDocument();
+      expect(screen.getByText("3 artifacts")).toBeInTheDocument();
     });
 
     it("should render files from loader data in grid view by default", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       expect(screen.getByTestId("file-card-art-1")).toBeInTheDocument();
       expect(screen.getByTestId("file-card-art-2")).toBeInTheDocument();
@@ -145,22 +194,22 @@ describe("FilesPage", () => {
     });
 
     it("should show file names with extensions", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       expect(screen.getByText("main.py")).toBeInTheDocument();
       expect(screen.getByText("README.md")).toBeInTheDocument();
       expect(screen.getByText("config.json")).toBeInTheDocument();
     });
 
-    it("should show empty state when no files", () => {
+    it("should show empty state when no artifacts", () => {
       mockUseRouteLoaderData.mockReturnValue({
         artifacts: [],
         total: 0,
-      } as FilesLoaderData);
+      } as ArtifactsLoaderData);
 
-      renderFilesPage();
+      renderArtifactsPage();
 
-      expect(screen.getByText("No files yet")).toBeInTheDocument();
+      expect(screen.getByText("No artifacts yet")).toBeInTheDocument();
     });
 
     it("should show error state when loader fails", () => {
@@ -168,11 +217,11 @@ describe("FilesPage", () => {
         artifacts: [],
         total: 0,
         error: "Network connection lost",
-      } as FilesLoaderData);
+      } as ArtifactsLoaderData);
 
-      renderFilesPage();
+      renderArtifactsPage();
 
-      expect(screen.getByTestId("files-page-error")).toBeInTheDocument();
+      expect(screen.getByTestId("artifacts-page-error")).toBeInTheDocument();
       expect(screen.getByText("Network connection lost")).toBeInTheDocument();
     });
   });
@@ -182,7 +231,7 @@ describe("FilesPage", () => {
   // ===========================================================================
   describe("View Mode", () => {
     it("should switch to list view when list button is clicked", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       fireEvent.click(screen.getByTestId("view-list"));
 
@@ -191,7 +240,7 @@ describe("FilesPage", () => {
     });
 
     it("should switch back to grid view when grid button is clicked", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       // Switch to list first
       fireEvent.click(screen.getByTestId("view-list"));
@@ -208,7 +257,7 @@ describe("FilesPage", () => {
   // ===========================================================================
   describe("Search", () => {
     it("should filter files by search query", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       const searchInput = screen.getByTestId("file-search");
       fireEvent.change(searchInput, { target: { value: "main" } });
@@ -218,24 +267,25 @@ describe("FilesPage", () => {
       expect(screen.queryByTestId("file-card-art-3")).not.toBeInTheDocument();
     });
 
-    it("should show 'No files match' when search has no results", () => {
-      renderFilesPage();
+    it("should show 'No artifacts match' when search has no results", () => {
+      renderArtifactsPage();
 
       const searchInput = screen.getByTestId("file-search");
       fireEvent.change(searchInput, { target: { value: "nonexistent" } });
 
+      // AIEmptyState generates: No {context} matching "{searchQuery}"
       expect(
-        screen.getByText("No files match your search"),
+        screen.getByText('No artifacts matching "nonexistent"'),
       ).toBeInTheDocument();
     });
 
-    it("should update file count based on search results", () => {
-      renderFilesPage();
+    it("should update artifact count based on search results", () => {
+      renderArtifactsPage();
 
       const searchInput = screen.getByTestId("file-search");
       fireEvent.change(searchInput, { target: { value: "main" } });
 
-      expect(screen.getByText("1 files")).toBeInTheDocument();
+      expect(screen.getByText("1 artifacts")).toBeInTheDocument();
     });
   });
 
@@ -244,7 +294,7 @@ describe("FilesPage", () => {
   // ===========================================================================
   describe("Preview", () => {
     it("should open preview modal when clicking on a file card", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       fireEvent.click(screen.getByTestId("file-card-art-1"));
 
@@ -252,7 +302,7 @@ describe("FilesPage", () => {
     });
 
     it("should show file name in preview modal header", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       fireEvent.click(screen.getByTestId("file-card-art-1"));
 
@@ -262,7 +312,7 @@ describe("FilesPage", () => {
     });
 
     it("should show file content in preview modal", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       fireEvent.click(screen.getByTestId("file-card-art-1"));
 
@@ -270,7 +320,7 @@ describe("FilesPage", () => {
     });
 
     it("should close preview modal when clicking the X button", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       // Open preview
       fireEvent.click(screen.getByTestId("file-card-art-1"));
@@ -283,7 +333,7 @@ describe("FilesPage", () => {
     });
 
     it("should close preview modal when clicking backdrop", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       // Open preview
       fireEvent.click(screen.getByTestId("file-card-art-1"));
@@ -322,7 +372,7 @@ describe("FilesPage", () => {
     });
 
     it("should create blob and trigger download when clicking download button", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       // Find and click download button on first file card
       const fileCard = screen.getByTestId("file-card-art-1");
@@ -352,7 +402,7 @@ describe("FilesPage", () => {
     });
 
     it("should download with correct filename", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
       const downloadButton = fileCard.querySelector(
@@ -378,7 +428,7 @@ describe("FilesPage", () => {
     });
 
     it("should allow download from preview modal", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       // Open preview first (no mock needed for this)
       fireEvent.click(screen.getByTestId("file-card-art-1"));
@@ -424,7 +474,7 @@ describe("FilesPage", () => {
     });
 
     it("should show delete confirmation modal when clicking delete button", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
       const deleteButton = fileCard.querySelector(
@@ -437,7 +487,7 @@ describe("FilesPage", () => {
     });
 
     it("should show file name in delete confirmation", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
       const deleteButton = fileCard.querySelector(
@@ -451,7 +501,7 @@ describe("FilesPage", () => {
     });
 
     it("should close confirmation modal when clicking Cancel", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
       const deleteButton = fileCard.querySelector(
@@ -469,7 +519,7 @@ describe("FilesPage", () => {
     });
 
     it("should close confirmation modal when clicking backdrop", () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
       const deleteButton = fileCard.querySelector(
@@ -485,7 +535,7 @@ describe("FilesPage", () => {
     });
 
     it("should call DELETE API when confirming delete", async () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
       const deleteButton = fileCard.querySelector(
@@ -510,7 +560,7 @@ describe("FilesPage", () => {
     });
 
     it("should include auth token in delete request", async () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
       const deleteButton = fileCard.querySelector(
@@ -523,19 +573,17 @@ describe("FilesPage", () => {
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith(
-          "/api/v1/artifacts/art-1",
-          expect.objectContaining({
-            headers: expect.objectContaining({
-              Authorization: "Bearer test-token",
-            }),
-          }),
-        );
+        expect(mockFetch).toHaveBeenCalled();
+        // authenticatedFetch passes a Headers object, check via get()
+        const callArgs = mockFetch.mock.calls[0] as [string, RequestInit];
+        expect(callArgs[0]).toBe("/api/v1/artifacts/art-1");
+        const headers = callArgs[1]?.headers as Headers;
+        expect(headers.get("Authorization")).toBe("Bearer test-token");
       });
     });
 
     it("should call revalidator after successful delete", async () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
       const deleteButton = fileCard.querySelector(
@@ -561,7 +609,7 @@ describe("FilesPage", () => {
           ),
       );
 
-      renderFilesPage();
+      renderArtifactsPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
       const deleteButton = fileCard.querySelector(
@@ -577,7 +625,7 @@ describe("FilesPage", () => {
     });
 
     it("should close confirmation modal after successful delete", async () => {
-      renderFilesPage();
+      renderArtifactsPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
       const deleteButton = fileCard.querySelector(
@@ -599,7 +647,7 @@ describe("FilesPage", () => {
     it("should close confirmation modal even after failed delete", async () => {
       mockFetch.mockResolvedValue({ ok: false, status: 500 });
 
-      renderFilesPage();
+      renderArtifactsPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
       const deleteButton = fileCard.querySelector(
@@ -624,7 +672,7 @@ describe("FilesPage", () => {
   // ===========================================================================
   describe("List View", () => {
     beforeEach(() => {
-      renderFilesPage();
+      renderArtifactsPage();
       fireEvent.click(screen.getByTestId("view-list"));
     });
 
