@@ -11,6 +11,7 @@ import { ArtifactRenderer } from "../Artifacts/ArtifactRenderer";
 import { AIFollowUpSuggestions } from "./AIFollowUpSuggestions";
 import type { FollowUpSuggestion } from "./AIFollowUpSuggestions";
 import { ResponseRating, type RatingValue } from "./ResponseRating";
+import { SelectedToolsDisplay } from "./SelectedToolsDisplay";
 import { TokenUsageDisplay, type ModelProvider } from "./TokenUsageDisplay";
 import type { SourceCitation } from "../../types/api";
 
@@ -57,6 +58,12 @@ export interface ChatMessageProps {
   showAvatar?: boolean;
   /** User initials for avatar (e.g., "JD" for "John Doe") */
   userInitials?: string;
+  /** Semantically selected tools for this message (ADR-0099) */
+  selectedTools?: string[];
+  /** Selection scores for each tool (0-1 scale) from semantic search */
+  selectionScores?: Record<string, number>;
+  /** Total number of tools available for selection (for context) */
+  totalAvailableTools?: number | null;
 }
 
 export function ChatMessage({
@@ -81,6 +88,9 @@ export function ChatMessage({
   showCost = false,
   showAvatar = true,
   userInitials,
+  selectedTools,
+  selectionScores,
+  totalAvailableTools,
 }: ChatMessageProps) {
   const isUser = role === "user";
   const isAssistant = role === "assistant";
@@ -223,6 +233,21 @@ export function ChatMessage({
         >
           {renderContent()}
         </div>
+
+        {/* Selected Tools Display - only for assistant messages (ADR-0099) */}
+        {isAssistant && !isLoading && selectedTools && selectedTools.length > 0 && (
+          <div
+            data-testid="selected-tools-display"
+            className="mt-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/30"
+          >
+            <SelectedToolsDisplay
+              selectedTools={selectedTools}
+              selectionScores={selectionScores || {}}
+              totalAvailableTools={totalAvailableTools}
+              compact
+            />
+          </div>
+        )}
 
         {/* AI Source Citations - only for assistant messages with sources */}
         {isAssistant && sources && sources.length > 0 && (

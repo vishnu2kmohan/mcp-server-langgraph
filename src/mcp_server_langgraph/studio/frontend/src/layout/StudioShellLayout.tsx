@@ -95,6 +95,13 @@ import {
   type AIInterpretation,
 } from "../ai/lazy";
 
+// Import CommandPalette context and route commands (Sprint 4)
+import {
+  CommandPaletteProvider,
+  useCommandPalette,
+} from "../contexts/CommandPaletteContext";
+import { useRouteCommands } from "../hooks/useRouteCommands";
+
 // Import extracted components (de-duplicated from inline versions)
 import { ActivityBar } from "./ActivityBar";
 import { SessionNav } from "./SessionNav";
@@ -177,6 +184,47 @@ const PALETTE_COMMANDS: Command[] = [
     category: "layout",
   },
 ];
+
+// =============================================================================
+// Command Palette Wrapper (Sprint 4)
+// =============================================================================
+
+/**
+ * Wrapper component to bridge CommandPaletteContext with LazyAICommandPalette.
+ * This component consumes the context and passes merged commands to the palette.
+ */
+interface CommandPaletteWrapperProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onExecute: (command: Command | AIInterpretation) => void;
+  onAIInterpret?: (query: string) => Promise<AIInterpretation>;
+}
+
+function CommandPaletteWrapper({
+  isOpen,
+  onClose,
+  onExecute,
+  onAIInterpret,
+}: CommandPaletteWrapperProps) {
+  // Register route-specific commands
+  useRouteCommands();
+
+  // Get merged commands from context
+  const { commands } = useCommandPalette();
+
+  if (!isOpen) return null;
+
+  return (
+    <LazyAICommandPalette
+      commands={commands}
+      isOpen={isOpen}
+      onClose={onClose}
+      onExecute={onExecute}
+      onAIInterpret={onAIInterpret}
+      groupByCategory
+    />
+  );
+}
 
 // =============================================================================
 // StudioShellLayout Component
@@ -793,492 +841,496 @@ export function StudioShellLayout() {
   );
 
   return (
-    <div
-      data-testid="studio-shell"
-      className="studio-shell flex flex-col h-screen bg-white dark:bg-gray-900"
-    >
-      {/* Skip-to-content link (WCAG 2.1 AA - 2.4.1 Bypass Blocks) */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-primary-600 focus:ring-2 focus:ring-primary-500"
+    // Sprint 4: Wrap with CommandPaletteProvider for dynamic route commands
+    <CommandPaletteProvider staticCommands={PALETTE_COMMANDS}>
+      <div
+        data-testid="studio-shell"
+        className="studio-shell flex flex-col h-screen bg-white dark:bg-gray-900"
       >
-        Skip to main content
-      </a>
+        {/* Skip-to-content link (WCAG 2.1 AA - 2.4.1 Bypass Blocks) */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-primary-600 focus:ring-2 focus:ring-primary-500"
+        >
+          Skip to main content
+        </a>
 
-      {/* TopBar - persona-aware header (hidden in focus mode) */}
-      {/* Sprint 2.3 Phase 2: breadcrumbItems provides wayfinding via useBreadcrumb hook */}
-      {/* Sprint 5.1: Add hamburger menu for mobile navigation */}
-      {!focusModeEnabled && (
-        <div className="flex items-center">
-          {/* Sprint 5.1: Hamburger menu for mobile breakpoints */}
-          {showMobileNav && (
-            <div className="flex-shrink-0 p-2">
-              <HamburgerMenu
-                onClick={() => setMobileDrawerOpen(true)}
-                isOpen={mobileDrawerOpen}
+        {/* TopBar - persona-aware header (hidden in focus mode) */}
+        {/* Sprint 2.3 Phase 2: breadcrumbItems provides wayfinding via useBreadcrumb hook */}
+        {/* Sprint 5.1: Add hamburger menu for mobile navigation */}
+        {!focusModeEnabled && (
+          <div className="flex items-center">
+            {/* Sprint 5.1: Hamburger menu for mobile breakpoints */}
+            {showMobileNav && (
+              <div className="flex-shrink-0 p-2">
+                <HamburgerMenu
+                  onClick={() => setMobileDrawerOpen(true)}
+                  isOpen={mobileDrawerOpen}
+                />
+              </div>
+            )}
+            <TopBar
+              breadcrumbItems={
+                breadcrumbItems.length > 0 ? breadcrumbItems : undefined
+              }
+              subPersonaBadge={subPersona || undefined}
+              onUserMenuClick={handleUserMenuClick}
+              pendingApprovals={
+                agentHitlEnabled ? pendingApprovals.length : undefined
+              }
+              onPendingApprovalsClick={
+                agentHitlEnabled ? handlePendingApprovalsClick : undefined
+              }
+              className={showMobileNav ? "flex-1" : undefined}
+            />
+          </div>
+        )}
+
+        {/* Focus Mode Exit Button - shows when in focus mode */}
+        {focusModeEnabled && (
+          <button
+            data-testid="focus-mode-exit"
+            onClick={() => dispatch(setFocusModeEnabled(false))}
+            className="fixed top-2 right-2 z-50 p-2 rounded-lg bg-gray-800/80 hover:bg-gray-700 text-white text-xs transition-opacity opacity-30 hover:opacity-100"
+            aria-label="Exit focus mode (Escape)"
+            title="Exit Focus Mode (Escape or ⌘⇧F)"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
               />
+            </svg>
+          </button>
+        )}
+
+        {/* Main content area with DevTools */}
+        <PanelGroup direction="vertical" className="flex-1">
+          {/* Main horizontal panels */}
+          <Panel
+            id="main-content"
+            order={1}
+            defaultSize={devToolsCollapsed ? 100 : 75}
+            minSize={50}
+          >
+            <div
+              data-testid={
+                focusModeEnabled ? "main-content-focus" : "left-sidebar"
+              }
+              className="flex h-full overflow-hidden"
+            >
+              {/* Activity Bar - fixed width (hidden in focus mode) */}
+              {/* Sprint 4: AI-native navigation predictions enabled via feature flag */}
+              {!focusModeEnabled && (
+                <ActivityBar
+                  ref={activityBarRef}
+                  enableAI={aiSuggestionsEnabled}
+                  reorderByPrediction={aiSuggestionsEnabled}
+                />
+              )}
+
+              {/* Main content area - conditionally render based on route */}
+              {/* Key props force React to unmount/remount when switching between layouts */}
+              {/* This prevents PanelGroup state from persisting across route type changes */}
+              {isChatRoute ? (
+                /* Chat routes: 3-panel canvas layout */
+                <PanelGroup
+                  key="chat-canvas-layout"
+                  direction="horizontal"
+                  onLayout={handlePanelResize}
+                  className="flex-1"
+                >
+                  {/* Session Nav Panel */}
+                  {/* Sprint 4.1: Uses effectiveSessionNavVisible for maximize support */}
+                  {effectiveSessionNavVisible && (
+                    <>
+                      <Panel
+                        id="session-nav"
+                        data-testid="session-nav"
+                        order={1}
+                        defaultSize={
+                          maximizedPanelId === "session-nav"
+                            ? 100
+                            : panelSizes.sessionNav
+                        }
+                        minSize={maximizedPanelId ? undefined : 15}
+                        maxSize={maximizedPanelId ? undefined : 35}
+                      >
+                        <SessionNav
+                          ref={sessionNavRef}
+                          enableEdit
+                          enableContextMenu
+                          enableHover
+                          onRenameSession={handleRenameSession}
+                          enableSimilarSessions={aiSuggestionsEnabled}
+                          userId={currentUserId}
+                        />
+                      </Panel>
+                      {!maximizedPanelId && <ResizeHandle />}
+                    </>
+                  )}
+
+                  {/* Conversation Panel */}
+                  {/* Sprint 4.1: Uses effectiveConversationVisible for maximize support */}
+                  {effectiveConversationVisible && (
+                    <Panel
+                      id="conversation"
+                      order={2}
+                      defaultSize={
+                        maximizedPanelId === "conversation"
+                          ? 100
+                          : canvasCollapsed
+                            ? 80
+                            : panelSizes.conversation
+                      }
+                      minSize={maximizedPanelId ? undefined : 30}
+                    >
+                      <ConnectedConversationPanel
+                        ref={conversationRef}
+                        enableAI={aiSuggestionsEnabled}
+                        enableRealTimeSuggestions={aiSuggestionsEnabled}
+                        enableInlineSuggestions={aiSuggestionsEnabled}
+                        userId={currentUserId}
+                        persona={currentPersona}
+                        currentTokens={tokenCount}
+                        maxTokens={128000}
+                        showContextWarning={tokenCount > 100000}
+                      />
+                    </Panel>
+                  )}
+
+                  {/* Canvas Panel */}
+                  {/* Sprint 4.1: Uses effectiveCanvasVisible for maximize support */}
+                  {effectiveCanvasVisible && (
+                    <>
+                      {!maximizedPanelId && <ResizeHandle />}
+                      <Panel
+                        id="canvas"
+                        data-testid="canvas-panel"
+                        order={3}
+                        defaultSize={
+                          maximizedPanelId === "canvas"
+                            ? 100
+                            : panelSizes.canvas
+                        }
+                        minSize={maximizedPanelId ? undefined : 25}
+                        maxSize={maximizedPanelId ? undefined : 60}
+                      >
+                        <ConnectedCanvasPanel
+                          ref={canvasRef}
+                          userId={currentUserId}
+                          persona={currentPersona}
+                        />
+                      </Panel>
+                    </>
+                  )}
+                </PanelGroup>
+              ) : (
+                /* Full-page routes: Render the routed component via Outlet */
+                /* Suspense boundary handles lazy-loaded routes (e.g., WorkflowsPage, ObservabilityPage) */
+                <div
+                  key="full-page-outlet"
+                  data-testid="route-outlet"
+                  className="flex-1 h-full overflow-auto bg-white dark:bg-gray-900"
+                >
+                  <Suspense
+                    fallback={
+                      <div
+                        className="flex items-center justify-center h-full"
+                        data-testid="route-loading"
+                      >
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            Loading...
+                          </span>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <Outlet />
+                  </Suspense>
+                </div>
+              )}
             </div>
+          </Panel>
+
+          {/* DevTools Panel */}
+          {!devToolsCollapsed && (
+            <>
+              <ResizeHandle vertical />
+              <Panel
+                id="devtools"
+                order={2}
+                defaultSize={devToolsHeight}
+                minSize={10}
+                maxSize={50}
+              >
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center h-full bg-white dark:bg-gray-900">
+                      <span className="text-sm text-gray-400 dark:text-gray-400">
+                        Loading DevTools...
+                      </span>
+                    </div>
+                  }
+                >
+                  <LazyDevToolsPanel />
+                </Suspense>
+              </Panel>
+            </>
           )}
-          <TopBar
-            breadcrumbItems={
-              breadcrumbItems.length > 0 ? breadcrumbItems : undefined
-            }
-            subPersonaBadge={subPersona || undefined}
-            onUserMenuClick={handleUserMenuClick}
+        </PanelGroup>
+
+        {/* StatusBar - context-aware status, connection, model, tokens, DevTools (hidden in focus mode) */}
+        {!focusModeEnabled && (
+          <StatusBar
+            connectionStatus={connectionStatus}
+            reconnectAttempts={wsReconnectAttempts}
+            agentStatus={aiOrchestratorStatus}
+            modelName={modelName ?? undefined}
+            tokenCount={tokenCount > 0 ? tokenCount : undefined}
+            tokenBreakdown={tokenBreakdown}
+            costBreakdown={costBreakdown}
+            // userName removed - redundant with top-bar user display
+            agentCount={backgroundAgents.length}
+            onAgentQueueToggle={handleAgentQueueToggle}
+            agentQueueOpen={showAgentPanel}
             pendingApprovals={
               agentHitlEnabled ? pendingApprovals.length : undefined
             }
             onPendingApprovalsClick={
               agentHitlEnabled ? handlePendingApprovalsClick : undefined
             }
-            className={showMobileNav ? "flex-1" : undefined}
+            devToolsCollapsed={devToolsCollapsed}
+            onDevToolsToggle={() => dispatch(toggleDevTools())}
+            kbStatus={kbFocusEnabled ? kbStatus : undefined}
+            kbStatusMessage={kbFocusEnabled ? kbStatusMessage : undefined}
+            kbContextStats={kbFocusEnabled ? kbContextStats : undefined}
           />
-        </div>
-      )}
-
-      {/* Focus Mode Exit Button - shows when in focus mode */}
-      {focusModeEnabled && (
-        <button
-          data-testid="focus-mode-exit"
-          onClick={() => dispatch(setFocusModeEnabled(false))}
-          className="fixed top-2 right-2 z-50 p-2 rounded-lg bg-gray-800/80 hover:bg-gray-700 text-white text-xs transition-opacity opacity-30 hover:opacity-100"
-          aria-label="Exit focus mode (Escape)"
-          title="Exit Focus Mode (Escape or ⌘⇧F)"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
-            />
-          </svg>
-        </button>
-      )}
-
-      {/* Main content area with DevTools */}
-      <PanelGroup direction="vertical" className="flex-1">
-        {/* Main horizontal panels */}
-        <Panel
-          id="main-content"
-          order={1}
-          defaultSize={devToolsCollapsed ? 100 : 75}
-          minSize={50}
-        >
-          <div
-            data-testid={
-              focusModeEnabled ? "main-content-focus" : "left-sidebar"
-            }
-            className="flex h-full overflow-hidden"
-          >
-            {/* Activity Bar - fixed width (hidden in focus mode) */}
-            {/* Sprint 4: AI-native navigation predictions enabled via feature flag */}
-            {!focusModeEnabled && (
-              <ActivityBar
-                ref={activityBarRef}
-                enableAI={aiSuggestionsEnabled}
-                reorderByPrediction={aiSuggestionsEnabled}
-              />
-            )}
-
-            {/* Main content area - conditionally render based on route */}
-            {/* Key props force React to unmount/remount when switching between layouts */}
-            {/* This prevents PanelGroup state from persisting across route type changes */}
-            {isChatRoute ? (
-              /* Chat routes: 3-panel canvas layout */
-              <PanelGroup
-                key="chat-canvas-layout"
-                direction="horizontal"
-                onLayout={handlePanelResize}
-                className="flex-1"
-              >
-                {/* Session Nav Panel */}
-                {/* Sprint 4.1: Uses effectiveSessionNavVisible for maximize support */}
-                {effectiveSessionNavVisible && (
-                  <>
-                    <Panel
-                      id="session-nav"
-                      data-testid="session-nav"
-                      order={1}
-                      defaultSize={
-                        maximizedPanelId === "session-nav"
-                          ? 100
-                          : panelSizes.sessionNav
-                      }
-                      minSize={maximizedPanelId ? undefined : 15}
-                      maxSize={maximizedPanelId ? undefined : 35}
-                    >
-                      <SessionNav
-                        ref={sessionNavRef}
-                        enableEdit
-                        enableContextMenu
-                        enableHover
-                        onRenameSession={handleRenameSession}
-                        enableSimilarSessions={aiSuggestionsEnabled}
-                        userId={currentUserId}
-                      />
-                    </Panel>
-                    {!maximizedPanelId && <ResizeHandle />}
-                  </>
-                )}
-
-                {/* Conversation Panel */}
-                {/* Sprint 4.1: Uses effectiveConversationVisible for maximize support */}
-                {effectiveConversationVisible && (
-                  <Panel
-                    id="conversation"
-                    order={2}
-                    defaultSize={
-                      maximizedPanelId === "conversation"
-                        ? 100
-                        : canvasCollapsed
-                          ? 80
-                          : panelSizes.conversation
-                    }
-                    minSize={maximizedPanelId ? undefined : 30}
-                  >
-                    <ConnectedConversationPanel
-                      ref={conversationRef}
-                      enableAI={aiSuggestionsEnabled}
-                      enableRealTimeSuggestions={aiSuggestionsEnabled}
-                      enableInlineSuggestions={aiSuggestionsEnabled}
-                      userId={currentUserId}
-                      persona={currentPersona}
-                      currentTokens={tokenCount}
-                      maxTokens={128000}
-                      showContextWarning={tokenCount > 100000}
-                    />
-                  </Panel>
-                )}
-
-                {/* Canvas Panel */}
-                {/* Sprint 4.1: Uses effectiveCanvasVisible for maximize support */}
-                {effectiveCanvasVisible && (
-                  <>
-                    {!maximizedPanelId && <ResizeHandle />}
-                    <Panel
-                      id="canvas"
-                      data-testid="canvas-panel"
-                      order={3}
-                      defaultSize={
-                        maximizedPanelId === "canvas" ? 100 : panelSizes.canvas
-                      }
-                      minSize={maximizedPanelId ? undefined : 25}
-                      maxSize={maximizedPanelId ? undefined : 60}
-                    >
-                      <ConnectedCanvasPanel
-                        ref={canvasRef}
-                        userId={currentUserId}
-                        persona={currentPersona}
-                      />
-                    </Panel>
-                  </>
-                )}
-              </PanelGroup>
-            ) : (
-              /* Full-page routes: Render the routed component via Outlet */
-              /* Suspense boundary handles lazy-loaded routes (e.g., WorkflowsPage, ObservabilityPage) */
-              <div
-                key="full-page-outlet"
-                data-testid="route-outlet"
-                className="flex-1 h-full overflow-auto bg-white dark:bg-gray-900"
-              >
-                <Suspense
-                  fallback={
-                    <div
-                      className="flex items-center justify-center h-full"
-                      data-testid="route-loading"
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          Loading...
-                        </span>
-                      </div>
-                    </div>
-                  }
-                >
-                  <Outlet />
-                </Suspense>
-              </div>
-            )}
-          </div>
-        </Panel>
-
-        {/* DevTools Panel */}
-        {!devToolsCollapsed && (
-          <>
-            <ResizeHandle vertical />
-            <Panel
-              id="devtools"
-              order={2}
-              defaultSize={devToolsHeight}
-              minSize={10}
-              maxSize={50}
-            >
-              <Suspense
-                fallback={
-                  <div className="flex items-center justify-center h-full bg-white dark:bg-gray-900">
-                    <span className="text-sm text-gray-400 dark:text-gray-400">
-                      Loading DevTools...
-                    </span>
-                  </div>
-                }
-              >
-                <LazyDevToolsPanel />
-              </Suspense>
-            </Panel>
-          </>
         )}
-      </PanelGroup>
 
-      {/* StatusBar - context-aware status, connection, model, tokens, DevTools (hidden in focus mode) */}
-      {!focusModeEnabled && (
-        <StatusBar
-          connectionStatus={connectionStatus}
-          reconnectAttempts={wsReconnectAttempts}
-          agentStatus={aiOrchestratorStatus}
-          modelName={modelName ?? undefined}
-          tokenCount={tokenCount > 0 ? tokenCount : undefined}
-          tokenBreakdown={tokenBreakdown}
-          costBreakdown={costBreakdown}
-          // userName removed - redundant with top-bar user display
-          agentCount={backgroundAgents.length}
-          onAgentQueueToggle={handleAgentQueueToggle}
-          agentQueueOpen={showAgentPanel}
-          pendingApprovals={
-            agentHitlEnabled ? pendingApprovals.length : undefined
-          }
-          onPendingApprovalsClick={
-            agentHitlEnabled ? handlePendingApprovalsClick : undefined
-          }
-          devToolsCollapsed={devToolsCollapsed}
-          onDevToolsToggle={() => dispatch(toggleDevTools())}
-          kbStatus={kbFocusEnabled ? kbStatus : undefined}
-          kbStatusMessage={kbFocusEnabled ? kbStatusMessage : undefined}
-          kbContextStats={kbFocusEnabled ? kbContextStats : undefined}
-        />
-      )}
+        {/* Dev mode telemetry viewer (fixed position overlay) */}
+        <TelemetryViewer />
 
-      {/* Dev mode telemetry viewer (fixed position overlay) */}
-      <TelemetryViewer />
+        {/* AI Nudges (Phase 1.3 + 6.3) - contextual hints and feature discovery */}
+        {nudgesEnabled && activeNudge && (
+          <div className="fixed bottom-20 left-16 z-50 max-w-xs">
+            <NudgeTooltip
+              nudge={activeNudge}
+              onDismiss={() => dismiss(activeNudge.id)}
+              onAccept={() => trackAcceptance(activeNudge.id)}
+            />
+          </div>
+        )}
 
-      {/* AI Nudges (Phase 1.3 + 6.3) - contextual hints and feature discovery */}
-      {nudgesEnabled && activeNudge && (
-        <div className="fixed bottom-20 left-16 z-50 max-w-xs">
-          <NudgeTooltip
-            nudge={activeNudge}
-            onDismiss={() => dismiss(activeNudge.id)}
-            onAccept={() => trackAcceptance(activeNudge.id)}
-          />
-        </div>
-      )}
-
-      {/* AI Persona Mismatch Banner (Phase 6.7) */}
-      {personaAnalysisEnabled &&
-        isPersonaMismatch &&
-        !personaBannerDismissed &&
-        personaConfidence >= 0.75 && (
-          <div
-            className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 max-w-lg"
-            role="alert"
-            data-testid="persona-mismatch-banner"
-          >
-            <div className="bg-insight-50 dark:bg-insight-900/30 border border-insight-200 dark:border-insight-700 rounded-lg shadow-lg p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="w-5 h-5 text-insight-600 dark:text-insight-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-insight-800 dark:text-insight-200">
-                    We noticed you&apos;re using advanced features
-                  </h4>
-                  <p className="text-sm text-insight-700 dark:text-insight-300 mt-1">
-                    Your usage pattern suggests you might benefit from{" "}
-                    <strong>{detectedPersona?.replace(/-/g, " ")}</strong>{" "}
-                    capabilities.
-                  </p>
-                  {recommendation && (
-                    <p className="text-sm text-insight-600 dark:text-insight-400 mt-2">
-                      {recommendation}
+        {/* AI Persona Mismatch Banner (Phase 6.7) */}
+        {personaAnalysisEnabled &&
+          isPersonaMismatch &&
+          !personaBannerDismissed &&
+          personaConfidence >= 0.75 && (
+            <div
+              className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 max-w-lg"
+              role="alert"
+              data-testid="persona-mismatch-banner"
+            >
+              <div className="bg-insight-50 dark:bg-insight-900/30 border border-insight-200 dark:border-insight-700 rounded-lg shadow-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="w-5 h-5 text-insight-600 dark:text-insight-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-insight-800 dark:text-insight-200">
+                      We noticed you&apos;re using advanced features
+                    </h4>
+                    <p className="text-sm text-insight-700 dark:text-insight-300 mt-1">
+                      Your usage pattern suggests you might benefit from{" "}
+                      <strong>{detectedPersona?.replace(/-/g, " ")}</strong>{" "}
+                      capabilities.
                     </p>
-                  )}
-                  {behaviorSignals.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {behaviorSignals.slice(0, 3).map((signal, idx) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center px-2 py-0.5 text-xs bg-insight-100 dark:bg-insight-800/50 text-insight-700 dark:text-insight-300 rounded"
-                        >
-                          {signal}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={() => setPersonaBannerDismissed(true)}
-                  className="flex-shrink-0 p-1 text-insight-400 hover:text-insight-600 dark:hover:text-insight-200"
-                  aria-label="Dismiss persona suggestion"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                    {recommendation && (
+                      <p className="text-sm text-insight-600 dark:text-insight-400 mt-2">
+                        {recommendation}
+                      </p>
+                    )}
+                    {behaviorSignals.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {behaviorSignals.slice(0, 3).map((signal, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center px-2 py-0.5 text-xs bg-insight-100 dark:bg-insight-800/50 text-insight-700 dark:text-insight-300 rounded"
+                          >
+                            {signal}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setPersonaBannerDismissed(true)}
+                    className="flex-shrink-0 p-1 text-insight-400 hover:text-insight-600 dark:hover:text-insight-200"
+                    aria-label="Dismiss persona suggestion"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-      {/* AI Cross-Insights Panel (Phase 6+) - shows batch composite analysis results */}
-      {/* Positioned bottom-left to avoid overlap with agent panel (bottom-right) */}
-      {batchAnalysisEnabled &&
-        !crossInsightsDismissed &&
-        !isBatchLoading &&
-        (crossInsights.length > 0 ||
-          batchPersonaResult ||
-          batchDisclosureResult) && (
-          <div
-            className="fixed bottom-16 left-16 z-40 w-80"
-            data-testid="cross-insights-panel-container"
-          >
-            <CrossInsightsPanel
-              crossInsights={crossInsights}
-              personaResult={batchPersonaResult}
-              disclosureResult={batchDisclosureResult}
-              confidence={batchConfidence}
-              isLoading={isBatchLoading}
-              onDismiss={() => setCrossInsightsDismissed(true)}
-              defaultCollapsed={true}
-            />
-          </div>
-        )}
+        {/* AI Cross-Insights Panel (Phase 6+) - shows batch composite analysis results */}
+        {/* Positioned bottom-left to avoid overlap with agent panel (bottom-right) */}
+        {batchAnalysisEnabled &&
+          !crossInsightsDismissed &&
+          !isBatchLoading &&
+          (crossInsights.length > 0 ||
+            batchPersonaResult ||
+            batchDisclosureResult) && (
+            <div
+              className="fixed bottom-16 left-16 z-40 w-80"
+              data-testid="cross-insights-panel-container"
+            >
+              <CrossInsightsPanel
+                crossInsights={crossInsights}
+                personaResult={batchPersonaResult}
+                disclosureResult={batchDisclosureResult}
+                confidence={batchConfidence}
+                isLoading={isBatchLoading}
+                onDismiss={() => setCrossInsightsDismissed(true)}
+                defaultCollapsed={true}
+              />
+            </div>
+          )}
 
-      {/* Keyboard Shortcuts Overlay (? key) - Sprint 3.1 */}
-      <KeyboardShortcutOverlay
-        shortcuts={keyboardShortcuts}
-        isOpen={showShortcuts}
-        onClose={() => setShowShortcuts(false)}
-      />
-
-      {/* AI Command Palette (Cmd+K) - gated by canvas_ai_palette feature flag */}
-      {/* Lazy-loaded to reduce initial bundle size */}
-      {aiCommandPaletteEnabled && (
-        <Suspense fallback={null}>
-          <LazyAICommandPalette
-            commands={PALETTE_COMMANDS}
-            isOpen={showCommandPalette}
-            onClose={() => setShowCommandPalette(false)}
-            onExecute={handleCommandExecute}
-            onAIInterpret={handleAIInterpret}
-            groupByCategory
-          />
-        </Suspense>
-      )}
-
-      {/* Background Agent Panel (floating, bottom-right) - gated by ai_suggestions feature flag */}
-      {/* Lazy-loaded to reduce initial bundle size */}
-      {aiSuggestionsEnabled && backgroundAgents.length > 0 && (
-        <div className="fixed bottom-16 right-4 z-40 w-80">
-          <Suspense fallback={null}>
-            <LazyBackgroundAgentPanel
-              agents={backgroundAgents}
-              onCancel={handleAgentCancel}
-              onRetry={handleAgentRetry}
-            />
-          </Suspense>
-        </div>
-      )}
-
-      {/* Agent Task Queue (side panel, toggled via showAgentPanel) - gated by ai_suggestions feature flag */}
-      {/* Lazy-loaded to reduce initial bundle size */}
-      {aiSuggestionsEnabled && showAgentPanel && (
-        <div className="fixed top-14 right-0 bottom-8 w-80 z-30 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg">
-          <Suspense fallback={null}>
-            <LazyAgentTaskQueue onCancel={handleAgentCancel} />
-          </Suspense>
-        </div>
-      )}
-
-      {/* HITL Agent Approval Dialog (Phase 4 HITL) - gated by agent_hitl feature flag */}
-      {agentHitlEnabled && showApprovalDialog && activeApproval && (
-        <div data-testid="agent-approval-dialog">
-          <AgentApprovalDialog
-            request={activeApproval}
-            isOpen={showApprovalDialog}
-            onClose={closeApprovalDialog}
-            onApprove={(data) => handleApprove(data.requestId, data.reason)}
-            onReject={(data) => handleReject(data.requestId, data.reason)}
-            isApproving={isApproving}
-            isRejecting={isRejecting}
-            currentUser={username ?? undefined}
-          />
-        </div>
-      )}
-
-      {/* HITL Clarification Dialog (Phase 4 HITL) - gated by agent_hitl feature flag */}
-      {agentHitlEnabled && showClarificationDialog && activeClarification && (
-        <div data-testid="clarification-dialog">
-          <ClarificationDialog
-            request={activeClarification}
-            isOpen={showClarificationDialog}
-            onClose={closeClarificationDialog}
-            onRespond={(response) =>
-              handleClarificationRespond(
-                convertUIResponseCamelCaseToAPIResponse(response),
-              )
-            }
-            isSubmitting={isClarificationSubmitting}
-            currentUser={username ?? undefined}
-          />
-        </div>
-      )}
-
-      {/* Sprint 5.1: Mobile Drawer Navigation - gated by mobile_drawer feature flag */}
-      {/* Renders at narrow breakpoints (sm, md) for mobile navigation */}
-      {showMobileNav && (
-        <MobileDrawer
-          isOpen={mobileDrawerOpen}
-          onClose={() => setMobileDrawerOpen(false)}
+        {/* Keyboard Shortcuts Overlay (? key) - Sprint 3.1 */}
+        <KeyboardShortcutOverlay
+          shortcuts={keyboardShortcuts}
+          isOpen={showShortcuts}
+          onClose={() => setShowShortcuts(false)}
         />
-      )}
 
-      {/* Onboarding Wizard (Sprint 3.2) - gated by onboarding_wizard feature flag */}
-      {/* High z-index to ensure it appears above other overlays for first-time users */}
-      <OnboardingWizard
-        isOpen={showOnboarding}
-        onComplete={handleOnboardingComplete}
-        onSkip={handleOnboardingSkip}
-        templates={onboardingTemplates}
-      />
-    </div>
+        {/* AI Command Palette (Cmd+K) - gated by canvas_ai_palette feature flag */}
+        {/* Sprint 4: Uses CommandPaletteWrapper to consume context with route commands */}
+        {/* Lazy-loaded to reduce initial bundle size */}
+        {aiCommandPaletteEnabled && (
+          <Suspense fallback={null}>
+            <CommandPaletteWrapper
+              isOpen={showCommandPalette}
+              onClose={() => setShowCommandPalette(false)}
+              onExecute={handleCommandExecute}
+              onAIInterpret={handleAIInterpret}
+            />
+          </Suspense>
+        )}
+
+        {/* Background Agent Panel (floating, bottom-right) - gated by ai_suggestions feature flag */}
+        {/* Lazy-loaded to reduce initial bundle size */}
+        {aiSuggestionsEnabled && backgroundAgents.length > 0 && (
+          <div className="fixed bottom-16 right-4 z-40 w-80">
+            <Suspense fallback={null}>
+              <LazyBackgroundAgentPanel
+                agents={backgroundAgents}
+                onCancel={handleAgentCancel}
+                onRetry={handleAgentRetry}
+              />
+            </Suspense>
+          </div>
+        )}
+
+        {/* Agent Task Queue (side panel, toggled via showAgentPanel) - gated by ai_suggestions feature flag */}
+        {/* Lazy-loaded to reduce initial bundle size */}
+        {aiSuggestionsEnabled && showAgentPanel && (
+          <div className="fixed top-14 right-0 bottom-8 w-80 z-30 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg">
+            <Suspense fallback={null}>
+              <LazyAgentTaskQueue onCancel={handleAgentCancel} />
+            </Suspense>
+          </div>
+        )}
+
+        {/* HITL Agent Approval Dialog (Phase 4 HITL) - gated by agent_hitl feature flag */}
+        {agentHitlEnabled && showApprovalDialog && activeApproval && (
+          <div data-testid="agent-approval-dialog">
+            <AgentApprovalDialog
+              request={activeApproval}
+              isOpen={showApprovalDialog}
+              onClose={closeApprovalDialog}
+              onApprove={(data) => handleApprove(data.requestId, data.reason)}
+              onReject={(data) => handleReject(data.requestId, data.reason)}
+              isApproving={isApproving}
+              isRejecting={isRejecting}
+              currentUser={username ?? undefined}
+            />
+          </div>
+        )}
+
+        {/* HITL Clarification Dialog (Phase 4 HITL) - gated by agent_hitl feature flag */}
+        {agentHitlEnabled && showClarificationDialog && activeClarification && (
+          <div data-testid="clarification-dialog">
+            <ClarificationDialog
+              request={activeClarification}
+              isOpen={showClarificationDialog}
+              onClose={closeClarificationDialog}
+              onRespond={(response) =>
+                handleClarificationRespond(
+                  convertUIResponseCamelCaseToAPIResponse(response),
+                )
+              }
+              isSubmitting={isClarificationSubmitting}
+              currentUser={username ?? undefined}
+            />
+          </div>
+        )}
+
+        {/* Sprint 5.1: Mobile Drawer Navigation - gated by mobile_drawer feature flag */}
+        {/* Renders at narrow breakpoints (sm, md) for mobile navigation */}
+        {showMobileNav && (
+          <MobileDrawer
+            isOpen={mobileDrawerOpen}
+            onClose={() => setMobileDrawerOpen(false)}
+          />
+        )}
+
+        {/* Onboarding Wizard (Sprint 3.2) - gated by onboarding_wizard feature flag */}
+        {/* High z-index to ensure it appears above other overlays for first-time users */}
+        <OnboardingWizard
+          isOpen={showOnboarding}
+          onComplete={handleOnboardingComplete}
+          onSkip={handleOnboardingSkip}
+          templates={onboardingTemplates}
+        />
+      </div>
+    </CommandPaletteProvider>
   );
 }
 

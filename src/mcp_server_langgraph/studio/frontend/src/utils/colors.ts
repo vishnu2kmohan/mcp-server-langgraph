@@ -188,3 +188,61 @@ export const INFO_COLORS = {
 export function getInfoStyle(variant: InfoStyleVariant): string {
   return INFO_COLORS[variant];
 }
+
+// =============================================================================
+// Neutral Color Utilities (gray semantic alias)
+// =============================================================================
+
+/**
+ * Style variants for neutral UI elements.
+ * More comprehensive than status colors since gray is used everywhere.
+ */
+export type NeutralStyleVariant =
+  | "text"
+  | "textMuted"
+  | "textSubtle"
+  | "bg"
+  | "bgHover"
+  | "bgSelected"
+  | "border"
+  | "borderLight"
+  | "divide";
+
+/**
+ * Neutral semantic colors for general UI elements.
+ * Uses the standard gray palette for non-semantic content.
+ *
+ * Why neutral-* instead of gray-*:
+ * - Semantic naming aligns with other color systems (success, error, etc.)
+ * - Enables easier theme switching without find/replace
+ * - Self-documents the intent (neutral = non-semantic UI element)
+ */
+export const NEUTRAL_COLORS = {
+  /** Primary text (highest contrast) */
+  text: "text-neutral-900 dark:text-neutral-100",
+  /** Muted text (secondary information) */
+  textMuted: "text-neutral-600 dark:text-neutral-400",
+  /** Subtle text (tertiary, less important) */
+  textSubtle: "text-neutral-400 dark:text-neutral-500",
+  /** Default background for cards/panels */
+  bg: "bg-neutral-50 dark:bg-neutral-900",
+  /** Hover background state */
+  bgHover: "bg-neutral-100 dark:bg-neutral-800",
+  /** Selected/active background state */
+  bgSelected: "bg-neutral-200 dark:bg-neutral-700",
+  /** Default border color */
+  border: "border-neutral-200 dark:border-neutral-700",
+  /** Light/subtle border color */
+  borderLight: "border-neutral-100 dark:border-neutral-800",
+  /** Divider/separator lines */
+  divide: "divide-neutral-200 dark:divide-neutral-700",
+} as const;
+
+/**
+ * Get neutral style classes by variant.
+ * @param variant - The style variant (text, textMuted, bg, border, etc.)
+ * @returns Tailwind classes for the requested variant
+ */
+export function getNeutralStyle(variant: NeutralStyleVariant): string {
+  return NEUTRAL_COLORS[variant];
+}

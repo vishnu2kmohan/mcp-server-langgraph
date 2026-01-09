@@ -783,4 +783,195 @@ export function validateUser() {}
       expect(artifactSegment?.artifact?.title).toBe("User Validation Helper");
     });
   });
+
+  // =========================================================================
+  // Widget Parsing Tests (Sprint 4 - GenUI Integration)
+  // =========================================================================
+
+  describe("widget parsing", () => {
+    it("should detect widget artifact type", () => {
+      expect(detectArtifactType("widget")).toBe("widget");
+    });
+
+    it("should parse valid chart widget JSON to WidgetArtifact", () => {
+      const content = `
+\`\`\`widget
+{
+  "type": "chart",
+  "title": "Sales Data",
+  "data": { "labels": ["Q1", "Q2"], "values": [100, 200] }
+}
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+
+      expect(artifactSegment).toBeDefined();
+      expect(artifactSegment?.artifact?.type).toBe("widget");
+      expect(
+        (artifactSegment?.artifact as { widgetType: string }).widgetType,
+      ).toBe("chart");
+      expect(
+        (artifactSegment?.artifact as { config: { title: string } }).config
+          .title,
+      ).toBe("Sales Data");
+    });
+
+    it("should parse valid table widget JSON to WidgetArtifact", () => {
+      const content = `
+\`\`\`widget
+{
+  "type": "table",
+  "title": "Users",
+  "data": { "columns": ["Name", "Age"], "rows": [["Alice", "30"], ["Bob", "25"]] }
+}
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+
+      expect(artifactSegment?.artifact?.type).toBe("widget");
+      expect(
+        (artifactSegment?.artifact as { widgetType: string }).widgetType,
+      ).toBe("table");
+    });
+
+    it("should parse valid text widget JSON to WidgetArtifact", () => {
+      const content = `
+\`\`\`widget
+{
+  "type": "text",
+  "title": "Summary",
+  "data": { "content": "This is a summary." }
+}
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+
+      expect(artifactSegment?.artifact?.type).toBe("widget");
+      expect(
+        (artifactSegment?.artifact as { widgetType: string }).widgetType,
+      ).toBe("text");
+    });
+
+    it("should normalize table 'headers' to 'columns'", () => {
+      const content = `
+\`\`\`widget
+{
+  "type": "table",
+  "title": "Users",
+  "data": { "headers": ["Name", "Age"], "rows": [["Alice", "30"]] }
+}
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+
+      expect(artifactSegment?.artifact?.type).toBe("widget");
+      // Verify normalization: headers should be converted to columns
+      const widgetConfig = (
+        artifactSegment?.artifact as {
+          config: { data: { columns?: string[]; headers?: string[] } };
+        }
+      ).config;
+      expect(widgetConfig.data.columns).toEqual(["Name", "Age"]);
+      expect(widgetConfig.data.headers).toBeUndefined();
+    });
+
+    it("should fall back to JSONArtifact on invalid widget type", () => {
+      const content = `
+\`\`\`widget
+{
+  "type": "invalid",
+  "title": "Test",
+  "data": {}
+}
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+
+      // Falls back to JSON artifact when widget type is invalid
+      expect(artifactSegment?.artifact?.type).toBe("json");
+    });
+
+    it("should fall back to JSONArtifact on invalid JSON", () => {
+      const content = `
+\`\`\`widget
+not valid json
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+
+      // Falls back to JSON artifact (which handles invalid JSON gracefully)
+      expect(artifactSegment?.artifact?.type).toBe("json");
+    });
+
+    it("should fall back to JSONArtifact when missing data field", () => {
+      const content = `
+\`\`\`widget
+{
+  "type": "chart",
+  "title": "No Data"
+}
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+
+      // Falls back when data is missing
+      expect(artifactSegment?.artifact?.type).toBe("json");
+    });
+
+    it("should fall back when chart data has invalid structure", () => {
+      const content = `
+\`\`\`widget
+{
+  "type": "chart",
+  "title": "Invalid Chart",
+  "data": { "wrongKey": ["a", "b"] }
+}
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+
+      // Falls back when chart data structure is invalid
+      expect(artifactSegment?.artifact?.type).toBe("json");
+    });
+
+    it("should generate unique IDs for widget artifacts", () => {
+      const content = `
+\`\`\`widget
+{"type": "text", "data": {"content": "First"}}
+\`\`\`
+
+\`\`\`widget
+{"type": "text", "data": {"content": "Second"}}
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const widgets = segments.filter((s) => s.artifact?.type === "widget");
+
+      expect(widgets).toHaveLength(2);
+      expect(widgets[0].artifact?.id).not.toBe(widgets[1].artifact?.id);
+    });
+
+    it("should use default title when not provided", () => {
+      const content = `
+\`\`\`widget
+{"type": "text", "data": {"content": "No title provided"}}
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+
+      expect(
+        (artifactSegment?.artifact as { config: { title: string } }).config
+          .title,
+      ).toBe("Widget");
+    });
+  });
 });

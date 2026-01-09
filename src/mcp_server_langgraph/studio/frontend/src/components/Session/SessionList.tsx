@@ -41,6 +41,7 @@ import {
   type SessionGroup,
 } from "../../hooks/useSessionIntelligence";
 import type { SessionSummary } from "../../types/session";
+import { AIEmptyState } from "../EmptyState/AIEmptyState";
 
 // ==============================================================================
 // Types
@@ -553,8 +554,15 @@ export function SessionList({
       return elements.length > 0 ? (
         elements
       ) : (
-        <li className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          No sessions found
+        // No matches in grouped view - AI-enhanced (Sprint 3 Migration)
+        <li className="p-4">
+          <AIEmptyState
+            context="sessions"
+            emptyType="no-matches"
+            searchQuery={searchQuery || undefined}
+            variant="inline"
+            enableAI={false}
+          />
         </li>
       );
     }
@@ -562,8 +570,15 @@ export function SessionList({
     // Default: render flat list (filteredSessions)
     if (filteredSessions.length === 0) {
       return (
-        <li className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          No sessions found
+        // No matches in flat view - AI-enhanced (Sprint 3 Migration)
+        <li className="p-4">
+          <AIEmptyState
+            context="sessions"
+            emptyType="no-matches"
+            searchQuery={searchQuery || undefined}
+            variant="inline"
+            enableAI={false}
+          />
         </li>
       );
     }
@@ -593,32 +608,18 @@ export function SessionList({
   }
 
   // ---------------------------------------------------------------------------
-  // Render empty state
+  // Render empty state - AI-enhanced (Sprint 3 Migration)
   // ---------------------------------------------------------------------------
   if (sessions.length === 0) {
     return (
       <div className={`session-list ${className}`}>
-        <div className="p-4 text-center">
-          <MessageSquare
-            className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-400 dark:text-gray-600 dark:text-gray-300 mb-3"
-            aria-hidden="true"
-          />
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            No sessions yet
-          </h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Start a new conversation to begin
-          </p>
-          {onCreate && (
-            <button
-              onClick={onCreate}
-              className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <Plus size={16} />
-              New Session
-            </button>
-          )}
-        </div>
+        <AIEmptyState
+          context="sessions"
+          emptyType="empty"
+          variant="compact"
+          onAction={onCreate}
+          actionLabel="New Session"
+        />
       </div>
     );
   }

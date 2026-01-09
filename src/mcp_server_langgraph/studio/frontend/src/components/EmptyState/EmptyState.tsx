@@ -27,6 +27,10 @@ import {
   Bell,
   Plug,
   Loader2,
+  FileCode,
+  Wrench,
+  Database,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../utils/cn";
@@ -41,8 +45,14 @@ export type EmptyStateContext =
   | "traces"
   | "messages"
   | "files"
+  | "artifacts"
   | "alerts"
-  | "connections";
+  | "connections"
+  // New contexts (Sprint 2)
+  | "prompts"
+  | "tools"
+  | "resources"
+  | "audit";
 
 /**
  * EmptyState display variants
@@ -89,8 +99,14 @@ const CONTEXT_ICONS: Record<EmptyStateContext, LucideIcon> = {
   traces: Activity,
   messages: MessageCircle,
   files: FileText,
+  artifacts: FileText,
   alerts: Bell,
   connections: Plug,
+  // New contexts (Sprint 2)
+  prompts: FileCode,
+  tools: Wrench,
+  resources: Database,
+  audit: ClipboardList,
 };
 
 /**

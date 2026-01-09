@@ -42,7 +42,7 @@ const ROUTE_TO_MODULE: Record<string, ModuleId> = {
   "/studio/workflows": "workflows",
   "/studio/agents": "agents",
   "/studio/mcp": "mcp",
-  "/studio/files": "files",
+  "/studio/artifacts": "artifacts",
   "/studio/traces": "traces",
   "/studio/cost": "cost",
   "/studio/observability": "observability",

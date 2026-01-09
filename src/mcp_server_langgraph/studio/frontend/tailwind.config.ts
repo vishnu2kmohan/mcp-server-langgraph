@@ -135,6 +135,21 @@ export default {
           900: '#164e63',
           950: '#083344',
         },
+        // Neutral semantic colors (gray alias for general UI elements)
+        // Use neutral-* instead of gray-* for better semantic clarity and theming
+        neutral: {
+          50: '#f9fafb',
+          100: '#f3f4f6',
+          200: '#e5e7eb',
+          300: '#d1d5db',
+          400: '#9ca3af',
+          500: '#6b7280',
+          600: '#4b5563',
+          700: '#374151',
+          800: '#1f2937',
+          900: '#111827',
+          950: '#030712',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],

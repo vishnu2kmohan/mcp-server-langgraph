@@ -9,11 +9,11 @@ export {
   chatLoader,
   artifactLoader,
   complianceLoader,
-  filesLoader,
+  artifactsLoader,
   canvasLoaders,
   type SessionsLoaderData,
   type ChatLoaderData,
   type ArtifactLoaderData,
   type ComplianceLoaderData,
-  type FilesLoaderData,
+  type ArtifactsLoaderData,
 } from "./canvasLoaders";

@@ -19,6 +19,15 @@ import { AIEmptyState } from "./AIEmptyState";
 import personaReducer from "../../store/slices/personaSlice";
 import sessionReducer from "../../store/slices/sessionSlice";
 import { api } from "../../api";
+import { clearSuggestionCache } from "../../hooks/useAIEmptyState";
+
+// Mock feature flag - default to enabled for AI empty state
+vi.mock("../../contexts/FeatureFlagContext", () => ({
+  useFeatureFlag: vi.fn((flagName: string) => {
+    if (flagName === "ai_empty_state") return true;
+    return false;
+  }),
+}));
 
 const AI_ENDPOINT = "/api/v1/ai/empty-state/suggestions";
 
@@ -66,6 +75,9 @@ function createWrapper(personaState = {}, sessionState = {}) {
 
 describe("AIEmptyState", () => {
   beforeEach(() => {
+    // Clear module-level cache between tests for isolation
+    clearSuggestionCache();
+
     // Default success response - uses RTK Query API schema
     // API returns: title, description, action_type, action_target, priority, icon?
     // Hook transforms to: text, action, target, confidence, category
@@ -310,6 +322,203 @@ describe("AIEmptyState", () => {
         screen.queryByTestId("empty-state-loading"),
       ).not.toBeInTheDocument();
       expect(screen.getByTestId("empty-state-workflows")).toBeInTheDocument();
+    });
+  });
+
+  // ===========================================================================
+  // New tests for emptyType and onAction props (Sprint 2)
+  // ===========================================================================
+
+  describe("emptyType prop", () => {
+    it("should render default title when emptyType is 'empty'", async () => {
+      const Wrapper = createWrapper();
+      render(
+        <Wrapper>
+          <AIEmptyState context="sessions" emptyType="empty" enableAI={false} />
+        </Wrapper>,
+      );
+
+      // Should show default title from registry
+      expect(screen.getByText(/no sessions/i)).toBeInTheDocument();
+    });
+
+    it("should render 'no matches' title when emptyType is 'no-matches'", async () => {
+      const Wrapper = createWrapper();
+      render(
+        <Wrapper>
+          <AIEmptyState
+            context="sessions"
+            emptyType="no-matches"
+            enableAI={false}
+          />
+        </Wrapper>,
+      );
+
+      // Should show no matches variant
+      expect(screen.getByText(/no sessions found/i)).toBeInTheDocument();
+    });
+
+    it("should include search query in 'no-matches' title", async () => {
+      const Wrapper = createWrapper();
+      render(
+        <Wrapper>
+          <AIEmptyState
+            context="projects"
+            emptyType="no-matches"
+            searchQuery="test-query"
+            enableAI={false}
+          />
+        </Wrapper>,
+      );
+
+      // Should show search query in title
+      expect(
+        screen.getByText(/no projects matching.*test-query/i),
+      ).toBeInTheDocument();
+    });
+
+    it("should default emptyType to 'empty'", async () => {
+      const Wrapper = createWrapper();
+      render(
+        <Wrapper>
+          <AIEmptyState context="files" enableAI={false} />
+        </Wrapper>,
+      );
+
+      // Should show default title (not "no matches" variant)
+      expect(screen.getByText(/no files/i)).toBeInTheDocument();
+      expect(screen.queryByText(/no files found/i)).not.toBeInTheDocument();
+    });
+  });
+
+  describe("onAction prop", () => {
+    it("should call onAction when trigger is clicked", async () => {
+      const mockOnAction = vi.fn();
+
+      const Wrapper = createWrapper();
+      render(
+        <Wrapper>
+          <AIEmptyState
+            context="projects"
+            onAction={mockOnAction}
+            actionLabel="Create Project"
+            enableAI={false}
+          />
+        </Wrapper>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByRole("button")).toBeInTheDocument();
+      });
+
+      await userEvent.click(
+        screen.getByRole("button", { name: /create project/i }),
+      );
+
+      expect(mockOnAction).toHaveBeenCalled();
+    });
+
+    it("should prefer onAction over onNavigate when both provided", async () => {
+      const mockOnAction = vi.fn();
+      const mockOnNavigate = vi.fn();
+
+      const Wrapper = createWrapper();
+      render(
+        <Wrapper>
+          <AIEmptyState
+            context="projects"
+            onAction={mockOnAction}
+            onNavigate={mockOnNavigate}
+            actionLabel="Create Project"
+            enableAI={false}
+          />
+        </Wrapper>,
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /create project/i }),
+        ).toBeInTheDocument();
+      });
+
+      await userEvent.click(
+        screen.getByRole("button", { name: /create project/i }),
+      );
+
+      expect(mockOnAction).toHaveBeenCalled();
+      expect(mockOnNavigate).not.toHaveBeenCalled();
+    });
+
+    it("should use actionLabel prop to override registry action", async () => {
+      const mockOnAction = vi.fn();
+
+      const Wrapper = createWrapper();
+      render(
+        <Wrapper>
+          <AIEmptyState
+            context="workflows"
+            onAction={mockOnAction}
+            actionLabel="Custom Action Label"
+            enableAI={false}
+          />
+        </Wrapper>,
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /custom action label/i }),
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("new contexts (Sprint 2)", () => {
+    it("should render prompts context", async () => {
+      const Wrapper = createWrapper();
+      render(
+        <Wrapper>
+          <AIEmptyState context="prompts" enableAI={false} />
+        </Wrapper>,
+      );
+
+      expect(screen.getByTestId("empty-state-prompts")).toBeInTheDocument();
+      expect(screen.getByText(/no prompts/i)).toBeInTheDocument();
+    });
+
+    it("should render tools context", async () => {
+      const Wrapper = createWrapper();
+      render(
+        <Wrapper>
+          <AIEmptyState context="tools" enableAI={false} />
+        </Wrapper>,
+      );
+
+      expect(screen.getByTestId("empty-state-tools")).toBeInTheDocument();
+      expect(screen.getByText(/no tools/i)).toBeInTheDocument();
+    });
+
+    it("should render resources context", async () => {
+      const Wrapper = createWrapper();
+      render(
+        <Wrapper>
+          <AIEmptyState context="resources" enableAI={false} />
+        </Wrapper>,
+      );
+
+      expect(screen.getByTestId("empty-state-resources")).toBeInTheDocument();
+      expect(screen.getByText(/no resources/i)).toBeInTheDocument();
+    });
+
+    it("should render audit context", async () => {
+      const Wrapper = createWrapper();
+      render(
+        <Wrapper>
+          <AIEmptyState context="audit" enableAI={false} />
+        </Wrapper>,
+      );
+
+      expect(screen.getByTestId("empty-state-audit")).toBeInTheDocument();
+      expect(screen.getByText(/no audit/i)).toBeInTheDocument();
     });
   });
 });

@@ -19,6 +19,7 @@ import type {
   CanvasArtifact,
   CodeArtifact,
   ExecutableArtifact,
+  WidgetArtifact,
 } from "../types/artifacts";
 import { devLogger } from "../utils/devLogger";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
@@ -91,8 +92,29 @@ function mapArtifactTypeToContentType(
     image: "markdown", // Image URLs in markdown
     audio: "markdown",
     video: "markdown",
+    widget: "json", // Widgets stored as JSON config
   };
   return mapping[type] ?? "code";
+}
+
+/**
+ * Type guard: Check if artifact is a WidgetArtifact
+ */
+function isWidgetArtifact(artifact: Artifact): artifact is WidgetArtifact {
+  return artifact.type === "widget";
+}
+
+/**
+ * Extract raw data/content from any artifact type.
+ * WidgetArtifact uses config.data, others use data property directly.
+ */
+function extractArtifactData(artifact: Artifact): unknown {
+  if (isWidgetArtifact(artifact)) {
+    // WidgetArtifact stores data inside config
+    return artifact.config;
+  }
+  // All other artifact types have a 'data' property
+  return (artifact as { data: unknown }).data;
 }
 
 /**
@@ -149,12 +171,14 @@ function toCreateArtifactRequest(
   artifact: Artifact,
   sessionId: string,
 ): ApiCreateArtifactRequest {
-  // CRITICAL: Serialize non-string data (Charts, Tables, JSON objects)
+  // CRITICAL: Serialize non-string data (Charts, Tables, JSON objects, Widgets)
+  // Use helper to extract data from any artifact type (WidgetArtifact uses config)
+  const artifactData = extractArtifactData(artifact);
   let content: string;
-  if (typeof artifact.data === "string") {
-    content = artifact.data;
+  if (typeof artifactData === "string") {
+    content = artifactData;
   } else {
-    content = JSON.stringify(artifact.data, null, 2);
+    content = JSON.stringify(artifactData, null, 2);
   }
 
   // Extract language using type-safe helper
@@ -240,10 +264,12 @@ export function useArtifactExtraction(
       for (const segment of segments) {
         if (segment.type === "artifact" && segment.artifact) {
           // Robust deduplication using full content hash
+          // Use helper to extract data from any artifact type (WidgetArtifact uses config)
+          const artifactData = extractArtifactData(segment.artifact);
           const contentStr =
-            typeof segment.artifact.data === "string"
-              ? segment.artifact.data
-              : JSON.stringify(segment.artifact.data);
+            typeof artifactData === "string"
+              ? artifactData
+              : JSON.stringify(artifactData);
           const hash = hashString(contentStr);
 
           if (extractedHashesRef.current.has(hash)) continue;

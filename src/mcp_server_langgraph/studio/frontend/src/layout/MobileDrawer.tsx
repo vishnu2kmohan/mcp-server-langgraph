@@ -98,10 +98,10 @@ const MOBILE_NAV_ITEMS: MobileNavItem[] = [
     path: "/studio/connections",
   },
   {
-    id: "files",
+    id: "artifacts",
     icon: <FileText size={20} />,
-    label: "Files",
-    path: "/studio/files",
+    label: "Artifacts",
+    path: "/studio/artifacts",
   },
   {
     id: "observability",

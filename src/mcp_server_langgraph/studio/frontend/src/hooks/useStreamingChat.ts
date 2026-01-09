@@ -98,6 +98,12 @@ interface StreamingChatState {
   langgraphEdges: LangGraphEdge[];
   /** Currently active node ID */
   currentNode: string | null;
+  /** Semantically selected tools for this request (ADR-0099) */
+  selectedTools: string[];
+  /** Semantic similarity scores for each selected tool */
+  selectionScores: Record<string, number>;
+  /** Total number of tools available for selection */
+  totalAvailableTools: number | null;
 }
 
 /**
@@ -149,6 +155,9 @@ export function useStreamingChat(): UseStreamingChatReturn {
     langgraphNodes: [],
     langgraphEdges: [],
     currentNode: null,
+    selectedTools: [],
+    selectionScores: {},
+    totalAvailableTools: null,
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -172,6 +181,9 @@ export function useStreamingChat(): UseStreamingChatReturn {
       langgraphNode?: LangGraphNode;
       langgraphEdge?: LangGraphEdge;
       currentNode?: string;
+      selectedTools?: string[];
+      selectionScores?: Record<string, number>;
+      totalAvailableTools?: number;
     } | null => {
       // Check for done signal
       if (line === "data: [DONE]") {
@@ -194,6 +206,9 @@ export function useStreamingChat(): UseStreamingChatReturn {
             langgraphNode?: LangGraphNode;
             langgraphEdge?: LangGraphEdge;
             currentNode?: string;
+            selectedTools?: string[];
+            selectionScores?: Record<string, number>;
+            totalAvailableTools?: number;
           } = {};
 
           // Handle content - support both direct content and delta.content formats
@@ -255,6 +270,17 @@ export function useStreamingChat(): UseStreamingChatReturn {
             result.currentNode = data.current_node;
           }
 
+          // Handle semantic tool selection events (ADR-0099)
+          if (data.selected_tools !== undefined) {
+            result.selectedTools = data.selected_tools;
+          }
+          if (data.selection_scores !== undefined) {
+            result.selectionScores = data.selection_scores;
+          }
+          if (data.total_available !== undefined) {
+            result.totalAvailableTools = data.total_available;
+          }
+
           return result;
         } catch {
           // Ignore non-JSON data lines
@@ -301,6 +327,9 @@ export function useStreamingChat(): UseStreamingChatReturn {
         langgraphNodes: [],
         langgraphEdges: [],
         currentNode: null,
+        selectedTools: [],
+        selectionScores: {},
+        totalAvailableTools: null,
       });
 
       // Build request body matching ChatCompletionRequest
@@ -459,6 +488,17 @@ export function useStreamingChat(): UseStreamingChatReturn {
                   updates.currentNode = parsed.currentNode;
                 }
 
+                // Handle semantic tool selection updates (ADR-0099)
+                if (parsed.selectedTools !== undefined) {
+                  updates.selectedTools = parsed.selectedTools;
+                }
+                if (parsed.selectionScores !== undefined) {
+                  updates.selectionScores = parsed.selectionScores;
+                }
+                if (parsed.totalAvailableTools !== undefined) {
+                  updates.totalAvailableTools = parsed.totalAvailableTools;
+                }
+
                 return { ...prev, ...updates };
               });
             }
@@ -510,6 +550,9 @@ export function useStreamingChat(): UseStreamingChatReturn {
       langgraphNodes: [],
       langgraphEdges: [],
       currentNode: null,
+      selectedTools: [],
+      selectionScores: {},
+      totalAvailableTools: null,
     }));
   }, []);
 

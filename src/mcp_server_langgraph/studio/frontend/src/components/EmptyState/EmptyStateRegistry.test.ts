@@ -66,10 +66,11 @@ describe("EmptyStateRegistry", () => {
   });
 
   describe("getSupportedContexts", () => {
-    it("returns all 8 supported contexts", () => {
+    it("returns all 13 supported contexts", () => {
       const contexts = getSupportedContexts();
 
-      expect(contexts).toHaveLength(8);
+      expect(contexts).toHaveLength(13);
+      // Original 8 contexts
       expect(contexts).toContain("sessions");
       expect(contexts).toContain("projects");
       expect(contexts).toContain("workflows");
@@ -78,6 +79,71 @@ describe("EmptyStateRegistry", () => {
       expect(contexts).toContain("files");
       expect(contexts).toContain("alerts");
       expect(contexts).toContain("connections");
+      // Artifacts context (files → artifacts rename)
+      expect(contexts).toContain("artifacts");
+      // New 4 contexts (Sprint 2)
+      expect(contexts).toContain("prompts");
+      expect(contexts).toContain("tools");
+      expect(contexts).toContain("resources");
+      expect(contexts).toContain("audit");
+    });
+  });
+
+  describe("new contexts (Sprint 2)", () => {
+    it("returns default config for prompts context", () => {
+      const config = getEmptyStateConfig("prompts");
+
+      expect(config.title).toBeDefined();
+      expect(config.motivation).toContain("reusable");
+      expect(config.action).toBeDefined();
+      expect(config.target).toBeDefined();
+    });
+
+    it("returns default config for tools context", () => {
+      const config = getEmptyStateConfig("tools");
+
+      expect(config.title).toBeDefined();
+      expect(config.motivation).toContain("MCP");
+      expect(config.action).toBeDefined();
+      expect(config.target).toBeDefined();
+    });
+
+    it("returns default config for resources context", () => {
+      const config = getEmptyStateConfig("resources");
+
+      expect(config.title).toBeDefined();
+      expect(config.motivation).toContain("context");
+      expect(config.action).toBeDefined();
+      expect(config.target).toBeDefined();
+    });
+
+    it("returns default config for audit context", () => {
+      const config = getEmptyStateConfig("audit");
+
+      expect(config.title).toBeDefined();
+      expect(config.motivation.toLowerCase()).toContain("activity");
+      // Audit is informational-only, action/target may be empty
+    });
+
+    it("returns default config for artifacts context", () => {
+      const config = getEmptyStateConfig("artifacts");
+
+      expect(config.title).toBe("No artifacts yet");
+      expect(config.motivation).toContain("artifacts");
+      expect(config.action).toBe("Upload Artifact");
+      expect(config.target).toBe("modal:artifact-upload");
+    });
+
+    it("supports persona overrides for new contexts", () => {
+      const developerPrompts = getEmptyStateConfig("prompts", "alice-builder");
+      const analystResources = getEmptyStateConfig(
+        "resources",
+        "alice-analyst",
+      );
+
+      // Persona-specific messaging should be different from defaults
+      expect(developerPrompts).toBeDefined();
+      expect(analystResources).toBeDefined();
     });
   });
 

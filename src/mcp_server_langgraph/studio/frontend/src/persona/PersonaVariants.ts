@@ -146,7 +146,8 @@ export type ModuleId =
   | "mcp"
   | "vectors"
   | "connections"
-  | "files"
+  | "artifacts"
+  | "skills"
   // Observability
   | "traces"
   | "observability"
@@ -177,7 +178,8 @@ export const PERSONA_VISIBLE_MODULES: Record<string, ModuleId[]> = {
     "agents",
     "mcp",
     "vectors",
-    "files",
+    "artifacts",
+    "skills",
     // Observability
     "traces",
     "observability",
@@ -214,7 +216,8 @@ export const PERSONA_VISIBLE_MODULES: Record<string, ModuleId[]> = {
     "agents",
     "mcp",
     "vectors",
-    "files",
+    "artifacts",
+    "skills",
     // Observability
     "traces",
     "cost",
@@ -259,6 +262,8 @@ export const PERSONA_VISIBLE_MODULES: Record<string, ModuleId[]> = {
     "projects",
     "chat",
     "workflows",
+    // Skills - read-only browsing (viewer access via OpenFGA)
+    "skills",
     "help",
   ],
 };

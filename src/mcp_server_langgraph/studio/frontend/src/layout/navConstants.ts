@@ -39,10 +39,11 @@ export const NAV_ITEM_IDS = [
   "mcp",
   "vectors",
   "connections",
-  "files",
+  "artifacts",
   "observability",
   "cost",
   "admin",
+  "skills",
   "audit",
   "compliance",
 ] as const;

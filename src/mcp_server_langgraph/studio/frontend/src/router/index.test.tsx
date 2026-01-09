@@ -287,8 +287,8 @@ describe("Router", () => {
       );
       // index + projects + projects/:projectId + workflows + shared-workflows + chat + sessions
       // + mcp + connections + observability + agents + traces + vectors + logs + metrics + alerts
-      // + settings + cost + files + compliance + audit + analytics + help + admin = 24
-      expect(studioRoute?.children?.length).toBe(24);
+      // + settings + cost + artifacts + compliance + audit + analytics + help + admin + skills = 25
+      expect(studioRoute?.children?.length).toBe(25);
     });
 
     it("should have expected number of admin child routes", () => {

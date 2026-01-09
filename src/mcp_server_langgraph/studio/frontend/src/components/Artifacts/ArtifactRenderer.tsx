@@ -27,6 +27,7 @@ import type {
   TextArtifact as TextArtifactType,
   SVGArtifact as SVGArtifactType,
   ExecutableArtifact as ExecutableArtifactType,
+  WidgetArtifact as WidgetArtifactType,
 } from "../../types/artifacts";
 import { ChartArtifact } from "./ChartArtifact";
 import { TableArtifact } from "./TableArtifact";
@@ -35,6 +36,7 @@ import { JSONArtifact } from "./JSONArtifact";
 import { MermaidArtifact } from "./MermaidArtifact";
 import { InteractiveSVGArtifact } from "./InteractiveSVGArtifact";
 import { SandpackExecutor } from "./SandpackExecutor";
+import { GenerativeWidget } from "../../generative/GenerativeWidget";
 
 export interface ArtifactRendererProps {
   artifact?: Artifact;
@@ -393,6 +395,23 @@ export function ArtifactRenderer({
             autoRun={false}
             theme="dark"
           />
+        </div>
+      );
+    }
+
+    case "widget": {
+      const widgetData = artifactToRender as WidgetArtifactType;
+      // Map widget config to GenerativeWidget format
+      // GenerativeWidget expects: { id, type, title, data }
+      const widgetConfig = {
+        id: widgetData.config.id,
+        type: widgetData.widgetType,
+        title: widgetData.config.title,
+        data: widgetData.config.data,
+      };
+      return (
+        <div data-testid="artifact-widget" className={className}>
+          <GenerativeWidget config={widgetConfig} />
         </div>
       );
     }

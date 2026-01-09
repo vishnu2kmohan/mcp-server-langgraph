@@ -717,4 +717,148 @@ Conclusion text.`;
       expect(suggestionsSection).toBeInTheDocument();
     });
   });
+
+  describe("Selected Tools Display (ADR-0099)", () => {
+    it("should display selected tools for assistant messages", () => {
+      const selectedTools = ["calculator", "search", "read_file"];
+      const selectionScores = { calculator: 0.95, search: 0.88, read_file: 0.75 };
+
+      render(
+        <ChatMessage
+          role="assistant"
+          content="Here is the result"
+          timestamp={new Date()}
+          selectedTools={selectedTools}
+          selectionScores={selectionScores}
+        />,
+      );
+
+      expect(screen.getByTestId("selected-tools-display")).toBeInTheDocument();
+      expect(screen.getByText("calculator")).toBeInTheDocument();
+      expect(screen.getByText("search")).toBeInTheDocument();
+      expect(screen.getByText("read_file")).toBeInTheDocument();
+    });
+
+    it("should show selection scores as percentages", () => {
+      const selectedTools = ["calculator"];
+      const selectionScores = { calculator: 0.95 };
+
+      render(
+        <ChatMessage
+          role="assistant"
+          content="Calculated result"
+          timestamp={new Date()}
+          selectedTools={selectedTools}
+          selectionScores={selectionScores}
+        />,
+      );
+
+      expect(screen.getByText("95%")).toBeInTheDocument();
+    });
+
+    it("should show total available tools count when provided", () => {
+      const selectedTools = ["calculator", "search"];
+      const selectionScores = { calculator: 0.9, search: 0.8 };
+
+      render(
+        <ChatMessage
+          role="assistant"
+          content="Result with tool count"
+          timestamp={new Date()}
+          selectedTools={selectedTools}
+          selectionScores={selectionScores}
+          totalAvailableTools={50}
+        />,
+      );
+
+      expect(screen.getByText("(2 of 50)")).toBeInTheDocument();
+    });
+
+    it("should not display selected tools for user messages", () => {
+      const selectedTools = ["calculator"];
+      const selectionScores = { calculator: 0.95 };
+
+      render(
+        <ChatMessage
+          role="user"
+          content="Calculate something"
+          timestamp={new Date()}
+          selectedTools={selectedTools}
+          selectionScores={selectionScores}
+        />,
+      );
+
+      expect(
+        screen.queryByTestId("selected-tools-display"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should not display selected tools when loading", () => {
+      const selectedTools = ["calculator"];
+      const selectionScores = { calculator: 0.95 };
+
+      render(
+        <ChatMessage
+          role="assistant"
+          content=""
+          timestamp={new Date()}
+          isLoading={true}
+          selectedTools={selectedTools}
+          selectionScores={selectionScores}
+        />,
+      );
+
+      expect(
+        screen.queryByTestId("selected-tools-display"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should not display selected tools when array is empty", () => {
+      render(
+        <ChatMessage
+          role="assistant"
+          content="No tools used"
+          timestamp={new Date()}
+          selectedTools={[]}
+          selectionScores={{}}
+        />,
+      );
+
+      expect(
+        screen.queryByTestId("selected-tools-display"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should not display selected tools when props are undefined", () => {
+      render(
+        <ChatMessage
+          role="assistant"
+          content="No tool selection info"
+          timestamp={new Date()}
+        />,
+      );
+
+      expect(
+        screen.queryByTestId("selected-tools-display"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should render in compact mode", () => {
+      const selectedTools = ["calculator", "search"];
+      const selectionScores = { calculator: 0.9, search: 0.8 };
+
+      const { container } = render(
+        <ChatMessage
+          role="assistant"
+          content="Compact display"
+          timestamp={new Date()}
+          selectedTools={selectedTools}
+          selectionScores={selectionScores}
+        />,
+      );
+
+      // SelectedToolsDisplay uses compact mode by default in ChatMessage
+      expect(container.querySelector(".text-xs")).toBeInTheDocument();
+    });
+  });
 });

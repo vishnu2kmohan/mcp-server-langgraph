@@ -10,7 +10,7 @@ import {
   chatLoader,
   sessionsLoader,
   complianceLoader,
-  filesLoader,
+  artifactsLoader,
 } from "./loaders";
 
 /**
@@ -432,15 +432,16 @@ export const router = createBrowserRouter(
                 return { Component: CostPage };
               },
             },
-            // Files - file browser with artifacts loader
+            // Artifacts - artifact browser for session artifacts and uploaded files
             {
-              id: "files",
-              path: "files",
-              handle: { breadcrumb: "Files" },
-              loader: filesLoader,
+              id: "artifacts",
+              path: "artifacts",
+              handle: { breadcrumb: "Artifacts" },
+              loader: artifactsLoader,
               lazy: async () => {
-                const { FilesPage } = await import("../pages/FilesPage");
-                return { Component: FilesPage };
+                const { ArtifactsPage } =
+                  await import("../pages/ArtifactsPage");
+                return { Component: ArtifactsPage };
               },
             },
             // Compliance - requires compliance:read permission
@@ -522,6 +523,25 @@ export const router = createBrowserRouter(
                 const { HelpPage } = await import("../pages/HelpPage");
                 return { Component: HelpPage };
               },
+            },
+            // Skills Marketplace - admin only (install/uninstall capabilities)
+            {
+              path: "skills",
+              handle: { breadcrumb: "Skills" },
+              element: (
+                <PersonaGuard allowedPersonas={["admin"]}>
+                  <Outlet />
+                </PersonaGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { SkillsPage } = await import("../pages/SkillsPage");
+                    return { Component: SkillsPage };
+                  },
+                },
+              ],
             },
             // Admin routes nested under /studio/admin (lazy-loaded with PersonaGuard)
             {

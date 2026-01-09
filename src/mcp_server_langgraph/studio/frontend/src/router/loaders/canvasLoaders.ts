@@ -401,22 +401,22 @@ export async function complianceLoader(
 }
 
 // =============================================================================
-// Files/Artifacts Loader (for FilesPage)
+// Artifacts Loader (for ArtifactsPage)
 // =============================================================================
 
-export interface FilesLoaderData {
+export interface ArtifactsLoaderData {
   artifacts: CanvasArtifact[];
   total: number;
   error?: string;
 }
 
 /**
- * Load all artifacts across sessions for the FilesPage
+ * Load all artifacts across sessions for the ArtifactsPage
  * This provides a unified view of all file-like artifacts
  */
-export async function filesLoader(
+export async function artifactsLoader(
   _args: LoaderFunctionArgs,
-): Promise<FilesLoaderData> {
+): Promise<ArtifactsLoaderData> {
   const result = await fetchJson<{
     items: CanvasArtifact[];
     total?: number;
@@ -427,7 +427,7 @@ export async function filesLoader(
     return {
       artifacts: [],
       total: 0,
-      error: "Failed to load files",
+      error: "Failed to load artifacts",
     };
   }
 
@@ -451,5 +451,5 @@ export const canvasLoaders = {
   chat: chatLoader,
   artifact: artifactLoader,
   compliance: complianceLoader,
-  files: filesLoader,
+  artifacts: artifactsLoader,
 };

@@ -657,7 +657,7 @@ const ROUTE_KEYWORDS: Record<string, string> = {
   chat: "/studio/chat",
   workflows: "/studio/workflows",
   connections: "/studio/connections",
-  files: "/studio/files",
+  artifacts: "/studio/artifacts",
 };
 
 /**

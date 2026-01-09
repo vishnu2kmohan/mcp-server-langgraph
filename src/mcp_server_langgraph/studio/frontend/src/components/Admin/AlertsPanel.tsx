@@ -16,7 +16,6 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   AlertTriangle,
-  AlertCircle,
   Volume2,
   VolumeX,
   Loader2,
@@ -38,6 +37,7 @@ import {
 import type { WebSocketConnectionStatus } from "../../hooks/useRealtimeSync";
 import { AlertGroupsPanel } from "./AlertGroupsPanel";
 import { storage } from "../../utils/storage";
+import { AIEmptyState } from "../EmptyState/AIEmptyState";
 
 // =============================================================================
 // Constants
@@ -443,10 +443,13 @@ export function AlertsPanel({
         {viewMode === "grouped" ? (
           // Grouped View
           filteredGroups.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 text-gray-500 dark:text-gray-400">
-              <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
-              <p>No alert groups matching current filters</p>
-            </div>
+            // No matches in grouped view - AI-enhanced (Sprint 3 Migration)
+            <AIEmptyState
+              context="alerts"
+              emptyType="no-matches"
+              variant="compact"
+              enableAI={false}
+            />
           ) : (
             <AlertGroupsPanel
               groups={filteredGroups}
@@ -458,10 +461,13 @@ export function AlertsPanel({
           )
         ) : // Flat View
         filteredAlerts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-32 text-gray-500 dark:text-gray-400">
-            <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
-            <p>No alerts matching current filters</p>
-          </div>
+          // No matches in flat view - AI-enhanced (Sprint 3 Migration)
+          <AIEmptyState
+            context="alerts"
+            emptyType="no-matches"
+            variant="compact"
+            enableAI={false}
+          />
         ) : (
           <div className="space-y-2">
             {filteredAlerts.map((alert) => (

@@ -16,6 +16,11 @@ import type {
   ExecutableArtifact,
   TextArtifact,
   ChartType,
+  WidgetArtifact,
+  WidgetType,
+  WidgetChartData,
+  WidgetTableData,
+  WidgetTextData,
 } from "../types/artifacts";
 
 // ============================================================================
@@ -62,6 +67,7 @@ const JSON_LANGUAGES = new Set(["json", "jsonc"]);
 const SVG_LANGUAGES = new Set(["svg"]);
 const MDX_LANGUAGES = new Set(["mdx"]);
 const EXECUTABLE_LANGUAGES = new Set(["jsx", "tsx"]);
+const WIDGET_LANGUAGES = new Set(["widget"]);
 
 const CODE_LANGUAGES = new Set([
   "javascript",
@@ -404,6 +410,7 @@ export function detectArtifactType(language: string): ExtendedArtifactType {
   if (SVG_LANGUAGES.has(lang)) return "svg";
   if (MDX_LANGUAGES.has(lang)) return "mdx";
   if (EXECUTABLE_LANGUAGES.has(lang)) return "executable";
+  if (WIDGET_LANGUAGES.has(lang)) return "widget";
   if (CODE_LANGUAGES.has(lang)) return "code";
 
   // Default to code for unknown languages
@@ -566,6 +573,73 @@ function createTextArtifact(code: string): TextArtifact {
   };
 }
 
+/**
+ * Create a widget artifact from JSON code block.
+ * Widget format: { type: "chart"|"table"|"text", title: string, data: {...} }
+ * Returns null if parsing fails or widget type is invalid.
+ */
+function createWidgetArtifact(code: string): WidgetArtifact | null {
+  try {
+    const parsed = JSON.parse(code);
+
+    // Validate widget type
+    const widgetType = parsed.type;
+    if (!["chart", "table", "text"].includes(widgetType)) {
+      return null;
+    }
+
+    // Validate data exists
+    if (!parsed.data) {
+      return null;
+    }
+
+    // Normalize table data (accept both "headers" and "columns")
+    let normalizedData = parsed.data;
+    if (widgetType === "table" && parsed.data?.headers) {
+      normalizedData = {
+        columns: parsed.data.headers as string[],
+        rows: parsed.data.rows as string[][],
+      } as WidgetTableData;
+    }
+
+    // Type-check widget data based on widget type
+    if (widgetType === "chart") {
+      const chartData = normalizedData as WidgetChartData;
+      if (
+        !Array.isArray(chartData.labels) ||
+        !Array.isArray(chartData.values)
+      ) {
+        return null;
+      }
+    } else if (widgetType === "table") {
+      const tableData = normalizedData as WidgetTableData;
+      if (!Array.isArray(tableData.columns) || !Array.isArray(tableData.rows)) {
+        return null;
+      }
+    } else if (widgetType === "text") {
+      const textData = normalizedData as WidgetTextData;
+      if (typeof textData.content !== "string") {
+        return null;
+      }
+    }
+
+    return {
+      id: generateArtifactId(),
+      type: "widget",
+      widgetType: widgetType as WidgetType,
+      title: parsed.title || "Widget",
+      config: {
+        id: generateArtifactId(),
+        title: parsed.title || "Widget",
+        data: normalizedData,
+      },
+    };
+  } catch {
+    // Parsing failed - return null
+    return null;
+  }
+}
+
 // ============================================================================
 // Main Parser
 // ============================================================================
@@ -644,6 +718,14 @@ export function parseArtifacts(content: string): ParsedSegment[] {
       case "table":
         // For now, treat table as code until we implement table parsing
         artifact = createCodeArtifact(block.code, block.language, block.meta);
+        break;
+
+      case "widget":
+        artifact = createWidgetArtifact(block.code);
+        // Fall back to JSON if widget parsing fails
+        if (!artifact) {
+          artifact = createJSONArtifact(block.code, block.meta);
+        }
         break;
 
       default:

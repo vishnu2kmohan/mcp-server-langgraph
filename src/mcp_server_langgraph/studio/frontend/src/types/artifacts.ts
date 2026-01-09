@@ -19,7 +19,8 @@ export type ArtifactType =
   | "svg"
   | "audio"
   | "video"
-  | "executable";
+  | "executable"
+  | "widget";
 
 /**
  * Chart types for ChartArtifact
@@ -300,6 +301,60 @@ export interface ExecutableArtifact extends BaseArtifact {
   result?: ExecutionResult;
 }
 
+// =============================================================================
+// Widget Artifact Types (Sprint 4 - GenUI Integration)
+// =============================================================================
+
+/**
+ * Widget chart data - bar chart with labels and values
+ * Must match GenerativeWidget.tsx ChartData interface
+ */
+export interface WidgetChartData {
+  labels: string[];
+  values: number[];
+}
+
+/**
+ * Widget table data - columns and rows
+ * Must match GenerativeWidget.tsx TableData interface
+ */
+export interface WidgetTableData {
+  columns: string[];
+  rows: string[][];
+}
+
+/**
+ * Widget text data - markdown or plain text content
+ * Must match GenerativeWidget.tsx TextData interface
+ */
+export interface WidgetTextData {
+  content: string;
+}
+
+/**
+ * Widget type discriminator
+ */
+export type WidgetType = "chart" | "table" | "text";
+
+/**
+ * Widget configuration matching GenerativeWidget.tsx WidgetConfig
+ */
+export interface WidgetConfig {
+  id: string;
+  title: string;
+  data: WidgetChartData | WidgetTableData | WidgetTextData;
+}
+
+/**
+ * Widget artifact for GenerativeWidget rendering in chat
+ * Used for AI-generated dynamic UI widgets
+ */
+export interface WidgetArtifact extends BaseArtifact {
+  type: "widget";
+  widgetType: WidgetType;
+  config: WidgetConfig;
+}
+
 /**
  * Union type of all artifacts
  */
@@ -314,7 +369,8 @@ export type Artifact =
   | SVGArtifact
   | AudioArtifact
   | VideoArtifact
-  | ExecutableArtifact;
+  | ExecutableArtifact
+  | WidgetArtifact;
 
 /**
  * Artifact detection result

@@ -49,15 +49,19 @@ const createTestStore = () => {
 };
 
 const mockNavigate = vi.fn();
+const mockRevalidate = vi.fn();
+
 vi.mock("react-router", async () => {
   const actual = await vi.importActual("react-router");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    useRevalidator: () => ({
+      revalidate: mockRevalidate,
+      state: "idle",
+    }),
   };
 });
-
-const mockRevalidate = vi.fn();
 const createMockRouter = () => ({
   revalidate: mockRevalidate,
   state: {
@@ -317,8 +321,9 @@ describe("Session Hooks Integration", () => {
     it("should create session and trigger navigation", async () => {
       const store = createTestStore();
 
+      // useNewChat uses useRevalidator which requires a data router context
       const { result } = renderHook(() => useNewChat(), {
-        wrapper: createWrapper(store),
+        wrapper: createWrapper(store, { withRouter: true }),
       });
 
       await act(async () => {
@@ -341,8 +346,9 @@ describe("Session Hooks Integration", () => {
 
       const store = createTestStore();
 
+      // useNewChat uses useRevalidator which requires a data router context
       const { result } = renderHook(() => useNewChat(), {
-        wrapper: createWrapper(store),
+        wrapper: createWrapper(store, { withRouter: true }),
       });
 
       await act(async () => {

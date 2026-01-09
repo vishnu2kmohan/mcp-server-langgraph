@@ -33,6 +33,7 @@ import {
   Scale,
   ChevronDown,
   ChevronRight,
+  Package,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
@@ -95,7 +96,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     id: "ai-data",
     label: "AI & Data",
-    items: ["agents", "mcp", "vectors", "connections", "files"],
+    items: ["agents", "mcp", "vectors", "connections", "artifacts"],
   },
   {
     id: "observability",
@@ -105,7 +106,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     id: "admin",
     label: "Admin",
-    items: ["admin", "audit", "compliance"],
+    items: ["admin", "skills", "audit", "compliance"],
   },
 ];
 
@@ -114,7 +115,7 @@ const NAV_GROUPS: NavGroup[] = [
  *
  * Organized by functional groups for logical user journey:
  * - Core Work: projects, chat, workflows
- * - AI & Data: agents, mcp, vectors, connections, files
+ * - AI & Data: agents, mcp, vectors, connections, artifacts
  * - Observability: traces, observability, cost
  * - Admin: admin, audit, compliance (persona-gated)
  */
@@ -171,10 +172,10 @@ export const NAV_ITEMS: NavItem[] = [
     group: "ai-data",
   },
   {
-    id: "files",
+    id: "artifacts",
     icon: <FileText size={20} />,
-    label: "Files",
-    path: "/studio/files",
+    label: "Artifacts",
+    path: "/studio/artifacts",
     group: "ai-data",
   },
   // === Observability ===
@@ -198,6 +199,13 @@ export const NAV_ITEMS: NavItem[] = [
     icon: <Shield size={20} />,
     label: "Admin",
     path: "/studio/admin",
+    group: "admin",
+  },
+  {
+    id: "skills",
+    icon: <Package size={20} />,
+    label: "Skills",
+    path: "/studio/skills",
     group: "admin",
   },
   {

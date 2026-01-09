@@ -50,6 +50,22 @@ export interface AIEmptyStateProps {
   onModal?: (modalId: string) => void;
   /** Callback for focus actions */
   onFocus?: (elementId: string) => void;
+
+  // ==========================================================================
+  // New props (Sprint 2 - AIEmptyState Foundation)
+  // ==========================================================================
+
+  /**
+   * Empty state type: "empty" (true empty) or "no-matches" (filtered empty)
+   * @default "empty"
+   */
+  emptyType?: "empty" | "no-matches";
+  /** Search query to display in "no-matches" title */
+  searchQuery?: string;
+  /** Custom action callback (takes precedence over onNavigate/registry target) */
+  onAction?: () => void;
+  /** Custom action label (overrides registry action text) */
+  actionLabel?: string;
 }
 
 /**
@@ -134,6 +150,11 @@ export function AIEmptyState({
   onNavigate,
   onModal,
   onFocus,
+  // New props (Sprint 2)
+  emptyType = "empty",
+  searchQuery,
+  onAction,
+  actionLabel: actionLabelProp,
 }: AIEmptyStateProps): React.ReactElement {
   // Fetch AI suggestions (hook internally uses persona for fallback config)
   const {
@@ -168,14 +189,23 @@ export function AIEmptyState({
     [onNavigate, onModal, onFocus],
   );
 
-  // Handle fallback trigger click
+  // Handle fallback trigger click - onAction takes precedence
   const handleFallbackClick = useCallback(() => {
+    // Custom action takes precedence (for modals, custom handlers)
+    if (onAction) {
+      onAction();
+      return;
+    }
+    // Default to registry navigation/modal behavior
     if (registryConfig.target.startsWith("/")) {
       onNavigate?.(registryConfig.target);
     } else {
       onModal?.(registryConfig.target);
     }
-  }, [registryConfig.target, onNavigate, onModal]);
+  }, [onAction, registryConfig.target, onNavigate, onModal]);
+
+  // Determine action label (prop overrides registry)
+  const actionLabel = actionLabelProp ?? registryConfig.action;
 
   // Determine trigger content
   const trigger =
@@ -187,7 +217,7 @@ export function AIEmptyState({
       />
     ) : (
       <FallbackTrigger
-        action={registryConfig.action}
+        action={actionLabel}
         target={registryConfig.target}
         onClick={handleFallbackClick}
       />
@@ -212,10 +242,13 @@ export function AIEmptyState({
       </button>
     ) : undefined;
 
-  // Use AI or fallback content
+  // Determine title based on emptyType
+  // "no-matches" shows a search-oriented title, "empty" uses registry default
   const title =
-    isAIAvailable && primarySuggestion
-      ? registryConfig.title // Keep registry title even with AI
+    emptyType === "no-matches"
+      ? searchQuery
+        ? `No ${context} matching "${searchQuery}"`
+        : `No ${context} found`
       : registryConfig.title;
 
   const motivation = registryConfig.motivation;

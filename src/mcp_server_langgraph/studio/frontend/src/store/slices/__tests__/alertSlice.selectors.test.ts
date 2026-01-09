@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { configureStore as _configureStore } from "@reduxjs/toolkit";
+import { configureStore } from "@reduxjs/toolkit";
 import _alertReducer, {
   selectSelectedAlert,
   selectCriticalAlertCount,

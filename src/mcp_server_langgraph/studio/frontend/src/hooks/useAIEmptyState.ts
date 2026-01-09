@@ -42,6 +42,44 @@ import {
 } from "../components/EmptyState/EmptyStateRegistry";
 import type { EmptyStateContext } from "../components/EmptyState/EmptyState";
 import { useGetEmptyStateSuggestionsMutation } from "../api";
+import { useFeatureFlag } from "../contexts/FeatureFlagContext";
+
+// ==========================================================================
+// Module-level cache for suggestions (Sprint 2)
+// Persists across hook instances to prevent redundant API calls
+// ==========================================================================
+interface CachedSuggestions {
+  suggestions: AISuggestion[];
+  timestamp: number;
+  persona: string;
+}
+
+const suggestionCache = new Map<string, CachedSuggestions>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Get cache key for context + persona combination
+ */
+function getCacheKey(context: string, persona: string): string {
+  return `empty-state-${context}-${persona}`;
+}
+
+/**
+ * Check if cached data is still valid
+ */
+function isCacheValid(
+  cached: CachedSuggestions | undefined,
+): cached is CachedSuggestions {
+  if (!cached) return false;
+  return Date.now() - cached.timestamp < CACHE_TTL_MS;
+}
+
+/**
+ * Clear all cached suggestions (useful for testing)
+ */
+export function clearSuggestionCache(): void {
+  suggestionCache.clear();
+}
 
 /**
  * AI suggestion from backend
@@ -89,6 +127,8 @@ export interface UseAIEmptyStateResult {
   isAIAvailable: boolean;
   /** Manually refresh suggestions */
   refresh: () => void;
+  /** Whether current data is from cache (Sprint 2) */
+  isFromCache: boolean;
 }
 
 // Map API action types to hook action types
@@ -119,6 +159,10 @@ export function useAIEmptyState(
 ): UseAIEmptyStateResult {
   const { context, enabled = true } = options;
 
+  // Feature flag gate (Sprint 2)
+  const aiEmptyStateEnabled = useFeatureFlag("ai_empty_state");
+  const isEffectivelyEnabled = enabled && aiEmptyStateEnabled;
+
   // RTK Query mutation
   const [fetchSuggestions, { isLoading: isMutationLoading }] =
     useGetEmptyStateSuggestionsMutation();
@@ -132,6 +176,9 @@ export function useAIEmptyState(
   // Effective persona (subPersona takes precedence)
   const effectivePersona = (subPersona || persona || "default") as Persona;
 
+  // Cache key for this context + persona (reserved for future caching implementation)
+  const _cacheKey = getCacheKey(context, effectivePersona);
+
   // State
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
   const [error, setError] = useState<Error | null>(null);
@@ -140,6 +187,7 @@ export function useAIEmptyState(
     null,
   );
   const [isInitialLoad, setIsInitialLoad] = useState(enabled);
+  const [isFromCache, setIsFromCache] = useState(false);
   const isMounted = useRef(true);
 
   // Cleanup on unmount
@@ -157,8 +205,21 @@ export function useAIEmptyState(
    * Fetch suggestions from AI backend via RTK Query
    */
   const doFetch = useCallback(
-    async (forContext: string) => {
+    async (forContext: string, skipCache = false) => {
       setError(null);
+      setIsFromCache(false);
+
+      // Check module-level cache first (Sprint 2)
+      const fetchCacheKey = getCacheKey(forContext, effectivePersona);
+      const cached = suggestionCache.get(fetchCacheKey);
+      if (!skipCache && isCacheValid(cached)) {
+        setSuggestions(cached.suggestions);
+        setIsAIAvailable(true);
+        setIsFromCache(true);
+        setLastFetchedContext(forContext);
+        setIsInitialLoad(false);
+        return;
+      }
 
       try {
         const data = await fetchSuggestions({
@@ -183,6 +244,13 @@ export function useAIEmptyState(
           category: s.action_type,
         }));
 
+        // Store in module-level cache (Sprint 2)
+        suggestionCache.set(fetchCacheKey, {
+          suggestions: transformedSuggestions,
+          timestamp: Date.now(),
+          persona: effectivePersona,
+        });
+
         setSuggestions(transformedSuggestions);
         setIsAIAvailable(true);
       } catch (err) {
@@ -201,15 +269,16 @@ export function useAIEmptyState(
   );
 
   /**
-   * Refresh suggestions
+   * Refresh suggestions (skips cache for manual refresh)
    */
   const refresh = useCallback(() => {
-    doFetch(context);
+    doFetch(context, true); // skipCache = true
   }, [doFetch, context]);
 
   // Initial fetch on mount or context change
   useEffect(() => {
-    if (!enabled) {
+    // Guard: Skip if not effectively enabled (either prop or feature flag)
+    if (!isEffectivelyEnabled) {
       setIsInitialLoad(false);
       return;
     }
@@ -218,7 +287,7 @@ export function useAIEmptyState(
     if (context !== lastFetchedContext) {
       doFetch(context);
     }
-  }, [context, enabled, lastFetchedContext, doFetch]);
+  }, [context, isEffectivelyEnabled, lastFetchedContext, doFetch]);
 
   // Compute loading state
   const isLoading = isInitialLoad || isMutationLoading;
@@ -241,6 +310,7 @@ export function useAIEmptyState(
     error,
     isAIAvailable,
     refresh,
+    isFromCache,
   };
 }
 

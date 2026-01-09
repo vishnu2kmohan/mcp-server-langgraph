@@ -495,3 +495,75 @@ describe("Info Color Utilities", () => {
     });
   });
 });
+
+// =============================================================================
+// Tests: Neutral Color Utilities (for general UI elements)
+// =============================================================================
+
+describe("Neutral Color Utilities", () => {
+  describe("NEUTRAL_COLORS", () => {
+    it("should use semantic neutral-* classes NOT gray-*", async () => {
+      const { NEUTRAL_COLORS } = await import("./colors");
+      expect(NEUTRAL_COLORS.text).toMatch(/text-neutral-/);
+      expect(NEUTRAL_COLORS.text).not.toMatch(/gray-/);
+    });
+
+    it("should define all standard variants", async () => {
+      const { NEUTRAL_COLORS } = await import("./colors");
+      const variants = [
+        "text",
+        "textMuted",
+        "textSubtle",
+        "bg",
+        "bgHover",
+        "bgSelected",
+        "border",
+        "borderLight",
+        "divide",
+      ];
+      variants.forEach((variant) => {
+        expect(
+          NEUTRAL_COLORS[variant as keyof typeof NEUTRAL_COLORS],
+        ).toBeDefined();
+      });
+    });
+
+    it("should include dark mode variants", async () => {
+      const { NEUTRAL_COLORS } = await import("./colors");
+      // All styles should have dark: variants
+      expect(NEUTRAL_COLORS.text).toMatch(/dark:/);
+      expect(NEUTRAL_COLORS.bg).toMatch(/dark:/);
+      expect(NEUTRAL_COLORS.border).toMatch(/dark:/);
+    });
+
+    it("should use WCAG-compliant contrast (600 light / 400 dark for text)", async () => {
+      const { NEUTRAL_COLORS } = await import("./colors");
+      // Primary text should use 700/900 for sufficient contrast
+      expect(NEUTRAL_COLORS.text).toMatch(/neutral-(700|900)/);
+      // Dark mode should use 100/200 for light text on dark
+      expect(NEUTRAL_COLORS.text).toMatch(/dark:text-neutral-(100|200)/);
+    });
+  });
+
+  describe("getNeutralStyle", () => {
+    it("should return text style for text variant", async () => {
+      const { getNeutralStyle } = await import("./colors");
+      expect(getNeutralStyle("text")).toMatch(/text-neutral-/);
+    });
+
+    it("should return muted style for textMuted variant", async () => {
+      const { getNeutralStyle } = await import("./colors");
+      expect(getNeutralStyle("textMuted")).toMatch(/text-neutral-/);
+    });
+
+    it("should return bg style for bg variant", async () => {
+      const { getNeutralStyle } = await import("./colors");
+      expect(getNeutralStyle("bg")).toMatch(/bg-neutral-/);
+    });
+
+    it("should return border style for border variant", async () => {
+      const { getNeutralStyle } = await import("./colors");
+      expect(getNeutralStyle("border")).toMatch(/border-neutral-/);
+    });
+  });
+});

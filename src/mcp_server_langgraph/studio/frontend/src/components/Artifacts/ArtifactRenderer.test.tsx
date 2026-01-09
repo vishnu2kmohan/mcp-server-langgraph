@@ -13,6 +13,20 @@ import { render, screen, cleanup } from "@testing-library/react";
 import { ArtifactRenderer, detectArtifactType } from "./ArtifactRenderer";
 import type { Artifact } from "../../types/artifacts";
 
+// Mock GenerativeWidget for widget tests
+vi.mock("../../generative/GenerativeWidget", () => ({
+  GenerativeWidget: vi.fn(({ config, className }) => (
+    <div
+      data-testid="generative-widget"
+      data-widget-type={config?.type}
+      data-widget-title={config?.title}
+      className={className}
+    >
+      GenerativeWidget Mock
+    </div>
+  )),
+}));
+
 describe("ArtifactRenderer", () => {
   afterEach(() => {
     cleanup();
@@ -181,6 +195,87 @@ describe("ArtifactRenderer", () => {
       render(<ArtifactRenderer artifact={artifact} />);
 
       expect(screen.getByTestId("artifact-image")).toBeInTheDocument();
+    });
+
+    it("should render GenerativeWidget for widget artifact type", () => {
+      const artifact: WidgetArtifact = {
+        id: "8",
+        type: "widget",
+        widgetType: "chart",
+        config: {
+          id: "cfg-1",
+          title: "Test Chart",
+          data: { labels: ["A", "B"], values: [10, 20] },
+        },
+      };
+      render(<ArtifactRenderer artifact={artifact} />);
+
+      expect(screen.getByTestId("artifact-widget")).toBeInTheDocument();
+      expect(screen.getByTestId("generative-widget")).toBeInTheDocument();
+      expect(screen.getByTestId("generative-widget")).toHaveAttribute(
+        "data-widget-type",
+        "chart",
+      );
+      expect(screen.getByTestId("generative-widget")).toHaveAttribute(
+        "data-widget-title",
+        "Test Chart",
+      );
+    });
+
+    it("should render table widget with GenerativeWidget", () => {
+      const artifact: WidgetArtifact = {
+        id: "9",
+        type: "widget",
+        widgetType: "table",
+        config: {
+          id: "cfg-2",
+          title: "User List",
+          data: { columns: ["Name", "Age"], rows: [["Alice", "30"]] },
+        },
+      };
+      render(<ArtifactRenderer artifact={artifact} />);
+
+      expect(screen.getByTestId("artifact-widget")).toBeInTheDocument();
+      expect(screen.getByTestId("generative-widget")).toHaveAttribute(
+        "data-widget-type",
+        "table",
+      );
+    });
+
+    it("should render text widget with GenerativeWidget", () => {
+      const artifact: WidgetArtifact = {
+        id: "10",
+        type: "widget",
+        widgetType: "text",
+        config: {
+          id: "cfg-3",
+          title: "Summary",
+          data: { content: "This is a summary." },
+        },
+      };
+      render(<ArtifactRenderer artifact={artifact} />);
+
+      expect(screen.getByTestId("artifact-widget")).toBeInTheDocument();
+      expect(screen.getByTestId("generative-widget")).toHaveAttribute(
+        "data-widget-type",
+        "text",
+      );
+    });
+
+    it("should pass className to widget container", () => {
+      const artifact: WidgetArtifact = {
+        id: "11",
+        type: "widget",
+        widgetType: "chart",
+        config: {
+          id: "cfg-4",
+          title: "Styled Widget",
+          data: { labels: ["X"], values: [1] },
+        },
+      };
+      render(<ArtifactRenderer artifact={artifact} className="custom-class" />);
+
+      expect(screen.getByTestId("artifact-widget")).toHaveClass("custom-class");
     });
   });
 

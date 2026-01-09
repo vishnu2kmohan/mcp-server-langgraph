@@ -126,6 +126,30 @@ vi.mock("../hooks/useKBStatus", () => ({
   useKBStatus: () => mockKBStatusReturn,
 }));
 
+// Mock useUrlContentFetch hook (Sprint 1 - Chat Input Gap Fix)
+const mockDetectUrls = vi.fn();
+const mockClearUrl = vi.fn();
+const mockUrlContentFetchReturn = {
+  detectedUrls: [] as Array<{ raw: string; url: string }>,
+  detectUrls: mockDetectUrls,
+  fetchUrl: vi.fn(),
+  fetchedContent: [] as Array<{
+    url: string;
+    title?: string;
+    content?: string;
+    error?: string;
+  }>,
+  isLoading: false,
+  loadingUrls: [] as string[],
+  clearContent: vi.fn(),
+  clearUrl: mockClearUrl,
+  getContextString: vi.fn().mockReturnValue(""),
+};
+
+vi.mock("../hooks/useUrlContentFetch", () => ({
+  useUrlContentFetch: () => mockUrlContentFetchReturn,
+}));
+
 // =============================================================================
 // Test Setup
 // =============================================================================
@@ -153,6 +177,11 @@ describe("ConnectedChatInputForm", () => {
     mockKBStatusReturn.isError = false;
     mockKBStatusReturn.isReady = false;
     mockKBStatusReturn.kbStatusForUI = undefined;
+    // Reset URL content fetch mock (Sprint 1)
+    mockUrlContentFetchReturn.detectedUrls = [];
+    mockUrlContentFetchReturn.fetchedContent = [];
+    mockUrlContentFetchReturn.isLoading = false;
+    mockUrlContentFetchReturn.loadingUrls = [];
   });
 
   afterEach(() => {
@@ -761,6 +790,307 @@ describe("ConnectedChatInputForm", () => {
 
       // KB button should still render but may show status
       expect(screen.getByTestId("kb-focus-button")).toBeInTheDocument();
+    });
+  });
+
+  // ===========================================================================
+  // Model Selection Tests (Sprint 1 - Chat Input Gap Fix)
+  // ===========================================================================
+
+  describe("Model Selection", () => {
+    const modelSelectionProps = {
+      showModelSelector: true,
+      selectedModel: "gemini-2.5-flash",
+      availableModels: [
+        {
+          id: "gemini-2.5-flash",
+          name: "Gemini 2.5 Flash",
+          provider: "Google",
+        },
+        {
+          id: "claude-sonnet-4-5",
+          name: "Claude 4.5 Sonnet",
+          provider: "Anthropic",
+        },
+      ],
+      onModelChange: vi.fn(),
+    };
+
+    beforeEach(() => {
+      mockIsEnabled.mockImplementation(
+        (flagName: string) => flagName === "rich_text_chat_input",
+      );
+    });
+
+    it("should pass showModelSelector prop to ChatInputForm", () => {
+      render(
+        <ConnectedChatInputForm {...defaultProps} {...modelSelectionProps} />,
+      );
+
+      // Model selector should be visible when showModelSelector=true
+      expect(screen.getByTestId("model-selector")).toBeInTheDocument();
+    });
+
+    it("should hide model selector when showModelSelector is false", () => {
+      render(
+        <ConnectedChatInputForm {...defaultProps} showModelSelector={false} />,
+      );
+
+      expect(screen.queryByTestId("model-selector")).not.toBeInTheDocument();
+    });
+
+    it("should display selected model in selector", () => {
+      render(
+        <ConnectedChatInputForm {...defaultProps} {...modelSelectionProps} />,
+      );
+
+      expect(screen.getByTestId("model-selector-button")).toHaveTextContent(
+        "gemini-2.5-flash",
+      );
+    });
+
+    it("should call onModelChange when model is selected", async () => {
+      const user = userEvent.setup();
+      const mockOnModelChange = vi.fn();
+
+      render(
+        <ConnectedChatInputForm
+          {...defaultProps}
+          {...modelSelectionProps}
+          onModelChange={mockOnModelChange}
+        />,
+      );
+
+      // Open model selector dropdown
+      await user.click(screen.getByTestId("model-selector-button"));
+
+      // Select a different model
+      await user.click(screen.getByTestId("model-option-claude-sonnet-4-5"));
+
+      expect(mockOnModelChange).toHaveBeenCalledWith("claude-sonnet-4-5");
+    });
+
+    it("should default showModelSelector to false when not provided", () => {
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      expect(screen.queryByTestId("model-selector")).not.toBeInTheDocument();
+    });
+  });
+
+  // ===========================================================================
+  // Reasoning Effort Tests (Sprint 1 - Chat Input Gap Fix)
+  // ===========================================================================
+
+  describe("Reasoning Effort", () => {
+    beforeEach(() => {
+      mockIsEnabled.mockImplementation(
+        (flagName: string) => flagName === "rich_text_chat_input",
+      );
+    });
+
+    it("should pass reasoning effort props when model supports thinking", () => {
+      const mockOnReasoningEffortChange = vi.fn();
+      render(
+        <ConnectedChatInputForm
+          {...defaultProps}
+          modelSupportsThinking={true}
+          reasoningEffort="medium"
+          enableThinking={true}
+          onReasoningEffortChange={mockOnReasoningEffortChange}
+        />,
+      );
+
+      // Reasoning effort selector should be visible when model supports thinking
+      expect(
+        screen.getByTestId("reasoning-effort-selector"),
+      ).toBeInTheDocument();
+    });
+
+    it("should hide reasoning effort selector when model does not support thinking", () => {
+      render(
+        <ConnectedChatInputForm
+          {...defaultProps}
+          modelSupportsThinking={false}
+        />,
+      );
+
+      expect(
+        screen.queryByTestId("reasoning-effort-selector"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should call onReasoningEffortChange when effort level changes", async () => {
+      const user = userEvent.setup();
+      const mockOnReasoningEffortChange = vi.fn();
+
+      render(
+        <ConnectedChatInputForm
+          {...defaultProps}
+          modelSupportsThinking={true}
+          reasoningEffort="medium"
+          enableThinking={true}
+          onReasoningEffortChange={mockOnReasoningEffortChange}
+        />,
+      );
+
+      // ReasoningEffortSelector uses a radiogroup with buttons
+      // Find the High button by its title attribute
+      const highButton = screen.getByTitle(
+        /deep.*comprehensive.*reasoning|thorough.*analysis/i,
+      );
+      await user.click(highButton);
+
+      expect(mockOnReasoningEffortChange).toHaveBeenCalledWith("high");
+    });
+
+    it("should pass enableThinking prop to control thinking toggle", () => {
+      // Thinking toggle only appears in Legacy mode (not RichText mode)
+      mockIsEnabled.mockImplementation(() => false);
+
+      render(
+        <ConnectedChatInputForm
+          {...defaultProps}
+          modelSupportsThinking={true}
+          enableThinking={true}
+          onEnableThinkingChange={vi.fn()}
+        />,
+      );
+
+      // When enableThinking is true, the toggle should be on
+      const thinkingToggle = screen.getByTestId("enable-thinking-toggle");
+      expect(thinkingToggle).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("should call onEnableThinkingChange when thinking toggle is clicked", async () => {
+      // Thinking toggle only appears in Legacy mode (not RichText mode)
+      mockIsEnabled.mockImplementation(() => false);
+
+      const user = userEvent.setup();
+      const mockOnEnableThinkingChange = vi.fn();
+
+      render(
+        <ConnectedChatInputForm
+          {...defaultProps}
+          modelSupportsThinking={true}
+          enableThinking={true}
+          onEnableThinkingChange={mockOnEnableThinkingChange}
+        />,
+      );
+
+      const thinkingToggle = screen.getByTestId("enable-thinking-toggle");
+      await user.click(thinkingToggle);
+
+      expect(mockOnEnableThinkingChange).toHaveBeenCalledWith(false);
+    });
+
+    it("should default modelSupportsThinking to false", () => {
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      expect(
+        screen.queryByTestId("reasoning-effort-selector"),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  // ===========================================================================
+  // URL Fetch Tests (Sprint 1 - Chat Input Gap Fix)
+  // ===========================================================================
+
+  describe("URL Fetch Integration", () => {
+    beforeEach(() => {
+      mockIsEnabled.mockImplementation(
+        (flagName: string) => flagName === "rich_text_chat_input",
+      );
+    });
+
+    it("should enable URL fetch when enableUrlFetch is true", () => {
+      // Set up mock to have detected URLs
+      mockUrlContentFetchReturn.detectedUrls = [
+        { raw: "#https://example.com", url: "https://example.com" },
+      ];
+
+      render(
+        <ConnectedChatInputForm
+          {...defaultProps}
+          enableUrlFetch={true}
+          value="Check this #https://example.com"
+        />,
+      );
+
+      // URL fetch indicator should appear when URL pattern detected
+      expect(screen.getByTestId("url-fetch-indicator")).toBeInTheDocument();
+    });
+
+    it("should not show URL fetch indicator when enableUrlFetch is false", () => {
+      render(
+        <ConnectedChatInputForm
+          {...defaultProps}
+          enableUrlFetch={false}
+          value="Check this #https://example.com"
+        />,
+      );
+
+      expect(
+        screen.queryByTestId("url-fetch-indicator"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should show loading state while URL is being fetched", () => {
+      // Set up mock to have loading URLs
+      mockUrlContentFetchReturn.detectedUrls = [
+        { raw: "#https://example.com", url: "https://example.com" },
+      ];
+      mockUrlContentFetchReturn.loadingUrls = ["https://example.com"];
+      mockUrlContentFetchReturn.isLoading = true;
+
+      render(
+        <ConnectedChatInputForm
+          {...defaultProps}
+          enableUrlFetch={true}
+          value="Check this #https://example.com"
+        />,
+      );
+
+      // URL fetch loading indicator should be visible during fetch
+      expect(screen.getByTestId("url-fetch-loading")).toBeInTheDocument();
+    });
+
+    it("should display fetched URL content badge", () => {
+      // Set up mock to have fetched content
+      mockUrlContentFetchReturn.detectedUrls = [
+        { raw: "#https://example.com", url: "https://example.com" },
+      ];
+      mockUrlContentFetchReturn.fetchedContent = [
+        {
+          url: "https://example.com",
+          title: "Example Domain",
+          content: "This domain is for use in illustrative examples.",
+        },
+      ];
+
+      render(
+        <ConnectedChatInputForm
+          {...defaultProps}
+          enableUrlFetch={true}
+          value="Check this #https://example.com"
+        />,
+      );
+
+      // Fetched URL badge should show after successful fetch
+      expect(screen.getByTestId("url-fetched-badge")).toBeInTheDocument();
+    });
+
+    it("should default enableUrlFetch to false", () => {
+      render(
+        <ConnectedChatInputForm
+          {...defaultProps}
+          value="Check this #https://example.com"
+        />,
+      );
+
+      expect(
+        screen.queryByTestId("url-fetch-indicator"),
+      ).not.toBeInTheDocument();
     });
   });
 });

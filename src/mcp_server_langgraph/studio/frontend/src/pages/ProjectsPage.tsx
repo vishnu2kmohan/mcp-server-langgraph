@@ -33,6 +33,7 @@ import {
   useDeleteProjectMutation,
 } from "../api";
 import { SkeletonList, ErrorState, ConfirmDialog } from "../components/UI";
+import { AIEmptyState } from "../components/EmptyState/AIEmptyState";
 
 // Sort options for projects
 const SORT_OPTIONS = [
@@ -443,25 +444,12 @@ export function ProjectsPage() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {projects.length === 0 ? (
-          // Empty state
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <FolderKanban className="w-16 h-16 text-gray-300 dark:text-gray-600 dark:text-gray-300 mb-4" />
-            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-              No projects yet
-            </h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
-              Projects are unified workspaces that contain your sessions,
-              workflows, and connections. Create your first project to get
-              started.
-            </p>
-            <button
-              onClick={() => setShowCreateDialog(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-            >
-              <Plus className="w-5 h-5" />
-              Create Project
-            </button>
-          </div>
+          // Empty state - AI-enhanced (Sprint 3 Migration)
+          <AIEmptyState
+            context="projects"
+            onAction={() => setShowCreateDialog(true)}
+            actionLabel="Create Project"
+          />
         ) : (
           <>
             {viewMode === "grid" ? (

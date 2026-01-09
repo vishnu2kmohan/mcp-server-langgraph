@@ -94,6 +94,14 @@ const DEFAULT_CONFIGS: Record<EmptyStateContext, EmptyStateConfig> = {
     action: "Upload Files",
     target: "modal:file-upload",
   },
+  artifacts: {
+    title: "No artifacts yet",
+    motivation:
+      "Create or upload artifacts to use in your workflows and sessions",
+    ability: "Drag and drop supported",
+    action: "Upload Artifact",
+    target: "modal:artifact-upload",
+  },
   alerts: {
     title: "No alerts",
     motivation: "System alerts will appear here when triggered",
@@ -106,6 +114,34 @@ const DEFAULT_CONFIGS: Record<EmptyStateContext, EmptyStateConfig> = {
     ability: "Quick connection setup",
     action: "Add Connection",
     target: "/studio/connections/new",
+  },
+  // New contexts (Sprint 2)
+  prompts: {
+    title: "No prompts yet",
+    motivation: "Create reusable prompts for common tasks",
+    ability: "Takes less than a minute",
+    action: "Create Prompt",
+    target: "/studio/prompts/new",
+  },
+  tools: {
+    title: "No tools available",
+    motivation: "Connect MCP servers to access tools",
+    ability: "Add a connection first",
+    action: "Add Connection",
+    target: "/studio/connections",
+  },
+  resources: {
+    title: "No resources found",
+    motivation: "Resources provide context for your AI",
+    ability: "Browse or upload resources",
+    action: "Browse Resources",
+    target: "/studio/resources",
+  },
+  audit: {
+    title: "No audit events",
+    motivation: "Activity will appear here as you use the system",
+    action: "View Dashboard",
+    target: "/studio/admin/dashboard",
   },
 };
 
@@ -225,6 +261,48 @@ const PERSONA_OVERRIDES: Partial<
       motivation: "Connect production services and monitoring tools",
       action: "Add Server",
       target: "/studio/connections/new",
+    },
+  },
+  // New context persona overrides (Sprint 2)
+  prompts: {
+    "alice-builder": {
+      motivation: "Store code snippets and debugging prompts",
+      action: "New Code Prompt",
+      target: "/studio/prompts/new",
+    },
+    "alice-analyst": {
+      motivation: "Create templates for data analysis workflows",
+      action: "New Analysis Prompt",
+      target: "/studio/prompts/new",
+    },
+  },
+  resources: {
+    "alice-analyst": {
+      motivation: "Connect datasets and reports for analysis",
+      action: "Import Data",
+      target: "/studio/resources/import",
+    },
+    admin: {
+      motivation: "Manage organization-wide knowledge resources",
+      action: "Manage Resources",
+      target: "/studio/admin/resources",
+    },
+  },
+  audit: {
+    admin: {
+      motivation: "Review all system activity and user actions",
+      action: "View Audit Logs",
+      target: "/studio/admin/audit",
+    },
+    "security-admin": {
+      motivation: "Monitor security-related events and access patterns",
+      action: "Security Audit",
+      target: "/studio/admin/security/audit",
+    },
+    "compliance-officer": {
+      motivation: "Review compliance-related activity for reporting",
+      action: "Compliance Report",
+      target: "/studio/compliance/audit",
     },
   },
 };

@@ -16,14 +16,8 @@
 
 import { useState, lazy, Suspense } from "react";
 import { useChatAutoScroll } from "../../hooks/useChatAutoScroll";
-import {
-  MessageSquare,
-  RefreshCw,
-  ExternalLink,
-  Loader2,
-  Bot,
-  User,
-} from "lucide-react";
+import { RefreshCw, ExternalLink, Loader2, Bot, User } from "lucide-react";
+import { AIEmptyState } from "../EmptyState/AIEmptyState";
 import { ConfidenceIndicator } from "./ConfidenceIndicator";
 import { MessageActions } from "./MessageActions";
 import { MarkdownContent } from "./MarkdownContent";
@@ -194,10 +188,8 @@ export function ChatMessages({
   if (messages.length === 0 && !isStreaming && !isSending) {
     return (
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
-          <MessageSquare size={48} className="mb-4 opacity-50" />
-          <p>No messages yet. Start a conversation!</p>
-        </div>
+        {/* Empty state - AI-enhanced (Sprint 3 Migration) */}
+        <AIEmptyState context="messages" emptyType="empty" variant="inline" />
         <div ref={messagesEndRef} data-testid="messages-end" />
       </div>
     );

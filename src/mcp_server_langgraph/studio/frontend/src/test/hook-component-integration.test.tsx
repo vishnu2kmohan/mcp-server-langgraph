@@ -23,6 +23,7 @@ import {
 } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
+import { MemoryRouter } from "react-router";
 import { http, HttpResponse, delay } from "msw";
 import { server } from "../mocks/server";
 
@@ -59,7 +60,11 @@ const TestWrapper = ({
 }: {
   children: React.ReactNode;
   store?: ReturnType<typeof createTestStore>;
-}) => <Provider store={store}>{children}</Provider>;
+}) => (
+  <MemoryRouter>
+    <Provider store={store}>{children}</Provider>
+  </MemoryRouter>
+);
 
 // =============================================================================
 // useNudges + NudgeTooltip Integration
@@ -116,7 +121,7 @@ describe("useNudges + NudgeTooltip Integration", () => {
       );
     }
 
-    render(<NudgeIntegration />);
+    render(<NudgeIntegration />, { wrapper: TestWrapper });
 
     // Wait for nudge to appear
     await waitFor(
@@ -167,7 +172,7 @@ describe("useNudges + NudgeTooltip Integration", () => {
       );
     }
 
-    render(<NudgeIntegration />);
+    render(<NudgeIntegration />, { wrapper: TestWrapper });
 
     // Wait for nudge
     await waitFor(() => {
@@ -228,7 +233,7 @@ describe("useNudges + NudgeTooltip Integration", () => {
       );
     }
 
-    render(<NudgeIntegration />);
+    render(<NudgeIntegration />, { wrapper: TestWrapper });
 
     // Wait for nudge
     await waitFor(() => {

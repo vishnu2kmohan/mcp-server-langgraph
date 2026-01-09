@@ -67,6 +67,7 @@ import {
   COMMON_SHORTCUTS,
 } from "../hooks/useKeyboardShortcuts";
 import { useConnectionsRealtimeWebSocket } from "../hooks/useConnectionsRealtimeWebSocket";
+import { AIEmptyState } from "../components/EmptyState/AIEmptyState";
 
 // Status badge colors
 const statusColors: Record<ConnectionStatus, string> = {
@@ -588,24 +589,13 @@ export function ConnectionsPage() {
         </button>
       </div>
 
-      {/* Empty State */}
+      {/* Empty State - AI-enhanced (Sprint 3 Migration) */}
       {connections.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Server className="w-16 h-16 text-gray-300 dark:text-gray-600 dark:text-gray-300 mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            No Connections
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">
-            Add your first MCP server connection to get started.
-          </p>
-          <button
-            onClick={handleAddClick}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
-          >
-            <Plus className="w-4 h-4" />
-            Add Connection
-          </button>
-        </div>
+        <AIEmptyState
+          context="connections"
+          onAction={handleAddClick}
+          actionLabel="Add Connection"
+        />
       )}
 
       {/* Bulk Actions Bar */}

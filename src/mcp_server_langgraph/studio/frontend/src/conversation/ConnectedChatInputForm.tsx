@@ -13,15 +13,18 @@
  * This replaces the basic conversation/ChatInput.tsx and provides
  * a consistent, feature-rich chat experience throughout the app.
  */
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import {
   ChatInputForm,
   type SlashCommand,
+  type ModelOption,
 } from "../components/Chat/ChatInputForm";
 import type { KBFocusMode } from "../components/Chat/KnowledgeBaseFocus";
+import type { ReasoningEffortLevel } from "../components/Chat/ReasoningEffortSelector";
 import { useFileUpload } from "../hooks/useFileUpload";
 import { useVoiceInput } from "../hooks/useVoiceInput";
 import { useKBStatus } from "../hooks/useKBStatus";
+import { useUrlContentFetch } from "../hooks/useUrlContentFetch";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
 import { useAppSelector } from "../store/hooks";
 import { selectSubmitOnEnter } from "../store/slices/uiSlice";
@@ -63,6 +66,41 @@ export interface ConnectedChatInputFormProps {
   kbFocusValue?: KBFocusMode;
   /** Callback when KB focus mode changes (for lifting state to parent) */
   onKBFocusChange?: (mode: KBFocusMode) => void;
+
+  // ==========================================================================
+  // Model Selection Props (Sprint 1 - Chat Input Gap Fix)
+  // ==========================================================================
+
+  /** Whether to show the model selector dropdown */
+  showModelSelector?: boolean;
+  /** Currently selected model ID */
+  selectedModel?: string;
+  /** Available models for selection */
+  availableModels?: ModelOption[];
+  /** Callback when model selection changes */
+  onModelChange?: (modelId: string) => void;
+
+  // ==========================================================================
+  // Reasoning Effort Props (Sprint 1 - Chat Input Gap Fix)
+  // ==========================================================================
+
+  /** Whether the current model supports extended thinking */
+  modelSupportsThinking?: boolean;
+  /** Current reasoning effort level */
+  reasoningEffort?: ReasoningEffortLevel;
+  /** Callback when reasoning effort level changes */
+  onReasoningEffortChange?: (level: ReasoningEffortLevel) => void;
+  /** Whether thinking is enabled for supported models */
+  enableThinking?: boolean;
+  /** Callback when thinking enabled state changes */
+  onEnableThinkingChange?: (enabled: boolean) => void;
+
+  // ==========================================================================
+  // URL Fetch Props (Sprint 1 - Chat Input Gap Fix)
+  // ==========================================================================
+
+  /** Enable URL content fetching when #https://... detected */
+  enableUrlFetch?: boolean;
 }
 
 // =============================================================================
@@ -101,6 +139,19 @@ export function ConnectedChatInputForm({
   autoFocus = false,
   kbFocusValue,
   onKBFocusChange,
+  // Model selection (Sprint 1)
+  showModelSelector = false,
+  selectedModel,
+  availableModels = [],
+  onModelChange,
+  // Reasoning effort (Sprint 1)
+  modelSupportsThinking = false,
+  reasoningEffort = "medium",
+  onReasoningEffortChange,
+  enableThinking = false,
+  onEnableThinkingChange,
+  // URL fetch (Sprint 1)
+  enableUrlFetch = false,
 }: ConnectedChatInputFormProps) {
   // =============================================================================
   // Feature Flags & UI State
@@ -121,6 +172,22 @@ export function ConnectedChatInputForm({
     useState<KBFocusMode>("all");
   // Use controlled value if provided, otherwise use internal state
   const kbFocusMode = kbFocusValue ?? internalKbFocusMode;
+
+  // =============================================================================
+  // URL Content Fetch Hook (Sprint 1 - Chat Input Gap Fix)
+  // =============================================================================
+  const { fetchedContent, loadingUrls, clearUrl, detectUrls } =
+    useUrlContentFetch({
+      autoFetch: enableUrlFetch,
+      debounceMs: 500,
+    });
+
+  // Detect URLs in input when enableUrlFetch is true
+  useEffect(() => {
+    if (enableUrlFetch) {
+      detectUrls(value);
+    }
+  }, [enableUrlFetch, value, detectUrls]);
 
   // =============================================================================
   // File Upload Hook
@@ -267,6 +334,26 @@ export function ConnectedChatInputForm({
       onKBFocusChange={handleKBFocusModeChange}
       kbStatus={kbStatusForUI}
       kbStatusMessage={kbStatusMessage}
+      // Model selection (Sprint 1 - Chat Input Gap Fix)
+      showModelSelector={showModelSelector}
+      selectedModel={selectedModel}
+      availableModels={availableModels}
+      onModelChange={onModelChange}
+      // Reasoning effort (Sprint 1 - Chat Input Gap Fix)
+      modelSupportsThinking={modelSupportsThinking}
+      reasoningEffort={reasoningEffort}
+      onReasoningEffortChange={onReasoningEffortChange}
+      enableThinking={enableThinking}
+      onEnableThinkingChange={onEnableThinkingChange}
+      // URL fetch (Sprint 1 - Chat Input Gap Fix)
+      enableUrlFetch={enableUrlFetch}
+      urlFetchLoading={loadingUrls}
+      fetchedUrls={fetchedContent.map((c) => ({
+        url: c.url,
+        title: c.title,
+        content: c.content || "",
+      }))}
+      onRemoveFetchedUrl={clearUrl}
     />
   );
 }
