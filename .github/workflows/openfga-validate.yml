@@ -1,0 +1,180 @@
+# OpenFGA Model Validation Workflow
+# ==================================
+# Validates OpenFGA authorization model and relationship tuples.
+#
+# Reference: OpenFGA Audit Resolution Plan Phase 0 Tasks 0.5 & 0.6
+#
+# This workflow runs on:
+# - Pull requests modifying OpenFGA config files
+# - Pushes to main branch
+# - Manual dispatch
+#
+# Validation includes:
+# 1. Model syntax validation (fga model validate)
+# 2. Model inheritance invariant tests (pytest)
+# 3. Model + tuples compatibility check (fga tuple write)
+
+name: OpenFGA Model Validation
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'config/openfga/**'
+      - 'tests/unit/auth/test_openfga_model*.py'
+      - '.github/workflows/openfga-validate.yml'
+  push:
+    branches: [main, master]
+    paths:
+      - 'config/openfga/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate-model-syntax:
+    name: Validate Model Syntax
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install OpenFGA CLI
+        run: |
+          # Download and install OpenFGA CLI
+          curl -sSL https://github.com/openfga/cli/releases/latest/download/fga_linux_amd64.tar.gz | tar xz
+          sudo mv fga /usr/local/bin/
+          fga --version
+
+      - name: Validate OpenFGA Model Syntax
+        run: |
+          echo "Validating OpenFGA model.json syntax..."
+          fga model validate --file config/openfga/model.json
+          echo "Model syntax validation passed."
+
+  validate-model-invariants:
+    name: Validate Model Invariants
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: '3.12'
+          extras: 'dev'
+
+      - name: Run Model Inheritance Tests
+        run: |
+          echo "Running OpenFGA model inheritance invariant tests..."
+          uv run --frozen pytest tests/unit/auth/test_openfga_model_inheritance.py -v --tb=short
+          echo "All model invariant tests passed."
+
+  validate-model-tuples-compatibility:
+    name: Validate Model + Tuples Compatibility
+    runs-on: ubuntu-latest
+    needs: [validate-model-syntax]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: openfga_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      openfga:
+        image: openfga/openfga:v1.11.2
+        ports:
+          - 8080:8080
+          - 8081:8081
+        env:
+          OPENFGA_DATASTORE_ENGINE: postgres
+          OPENFGA_DATASTORE_URI: postgres://postgres:postgres@postgres:5432/openfga_test?sslmode=disable
+        options: >-
+          --health-cmd "/openfga healthcheck"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install OpenFGA CLI
+        run: |
+          curl -sSL https://github.com/openfga/cli/releases/latest/download/fga_linux_amd64.tar.gz | tar xz
+          sudo mv fga /usr/local/bin/
+          fga --version
+
+      - name: Wait for OpenFGA
+        run: |
+          echo "Waiting for OpenFGA to be ready..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:8080/health > /dev/null 2>&1; then
+              echo "OpenFGA is ready"
+              break
+            fi
+            echo "Waiting... attempt $i/30"
+            sleep 2
+          done
+
+      - name: Run OpenFGA Migrations
+        run: |
+          docker run --rm --network host openfga/openfga:v1.11.2 migrate \
+            --datastore-engine postgres \
+            --datastore-uri 'postgres://postgres:postgres@localhost:5432/openfga_test?sslmode=disable'
+
+      - name: Create Store and Write Model
+        id: create-store
+        run: |
+          echo "Creating OpenFGA store..."
+          STORE_RESULT=$(fga store create --name "ci-test-store" --api-url http://localhost:8080)
+          STORE_ID=$(echo "$STORE_RESULT" | jq -r '.store.id')
+          echo "Store ID: $STORE_ID"
+          echo "store_id=$STORE_ID" >> $GITHUB_OUTPUT
+
+          echo "Writing OpenFGA model..."
+          fga model write --file config/openfga/model.json --store-id "$STORE_ID" --api-url http://localhost:8080
+          echo "Model written successfully."
+
+      - name: Write Tuples to Validate Compatibility
+        run: |
+          STORE_ID="${{ steps.create-store.outputs.store_id }}"
+          echo "Writing sample tuples to store $STORE_ID..."
+
+          # Write tuples from sample-tuples.json
+          fga tuple write --file config/openfga/sample-tuples.json --store-id "$STORE_ID" --api-url http://localhost:8080
+          echo "Tuples written successfully."
+
+      - name: Verify Tuples Loaded
+        run: |
+          STORE_ID="${{ steps.create-store.outputs.store_id }}"
+          echo "Verifying tuples loaded..."
+
+          # Read tuples to verify they exist
+          TUPLE_COUNT=$(fga tuple read --store-id "$STORE_ID" --api-url http://localhost:8080 | jq '.tuples | length')
+          echo "Loaded $TUPLE_COUNT tuples"
+
+          if [ "$TUPLE_COUNT" -eq 0 ]; then
+            echo "ERROR: No tuples loaded!"
+            exit 1
+          fi
+
+          echo "Model + Tuples compatibility validation passed."
