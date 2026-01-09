@@ -214,6 +214,39 @@ type UserInfoResponse = components["schemas"]["UserInfoResponse"];
 type UserInfoResponseCamelCase = SnakeToCamelCaseDeep<UserInfoResponse>;
 
 // =============================================================================
+// Skills Marketplace Types
+// =============================================================================
+
+/** Metadata for a skill in the marketplace */
+export interface SkillMetadata {
+  name: string;
+  description: string;
+  version: string;
+  author?: string;
+  tags: string[];
+  source?: string;
+}
+
+/** Information about an available skill update */
+export interface SkillUpdate {
+  skillName: string;
+  currentVersion: string;
+  newVersion: string;
+  marketplace: string;
+  changelog?: string;
+}
+
+/** Marketplace configuration information */
+export interface MarketplaceInfo {
+  name: string;
+  uri: string;
+  type: "github" | "oci" | "registry";
+  trusted: boolean;
+  autoSync: boolean;
+  requiresApproval: boolean;
+}
+
+// =============================================================================
 // AI UX Generated Types (ADR-0091: Use generated types at API boundary)
 // =============================================================================
 
@@ -492,6 +525,10 @@ export const api = createApi({
     "AgentRequest",
     "AIUx",
     "Mcp",
+    "Skills",
+    "Marketplace",
+    "DecisionTrace",
+    "SessionTraces",
   ],
   endpoints: (builder) => ({
     // Feature Flags
@@ -3564,6 +3601,119 @@ export const api = createApi({
         { type: "Mcp", id: "TASKS" },
       ],
     }),
+
+    // ========================================================================
+    // Skills Marketplace Endpoints
+    // ========================================================================
+
+    /**
+     * List skills from a marketplace
+     *
+     * Supports semantic search when search query provided:
+     * - limit: Maximum number of results (default: 10)
+     * - min_score: Minimum similarity score threshold 0-1 (default: 0.0)
+     */
+    listMarketplaceSkills: builder.query<
+      {
+        skills: SkillMetadata[];
+        total: number;
+        marketplace: string;
+        cached: boolean;
+      },
+      {
+        marketplace?: string;
+        search?: string;
+        tags?: string[];
+        limit?: number;
+        min_score?: number;
+      }
+    >({
+      query: (params) => ({
+        url: "/admin/skills/list",
+        params: {
+          marketplace: params.marketplace || "anthropic",
+          search: params.search,
+          tags: params.tags?.join(","),
+          limit: params.limit,
+          min_score: params.min_score,
+        },
+      }),
+      providesTags: ["Skills"],
+    }),
+
+    /**
+     * Install a skill from a marketplace
+     */
+    installSkill: builder.mutation<
+      SkillMetadata,
+      { skillName: string; marketplace?: string; version?: string }
+    >({
+      query: ({ skillName, marketplace = "anthropic", version }) => ({
+        url: "/admin/skills/install",
+        method: "POST",
+        body: {
+          skill_name: skillName,
+          marketplace,
+          version,
+        },
+      }),
+      invalidatesTags: ["Skills"],
+    }),
+
+    /**
+     * List installed skills
+     */
+    listInstalledSkills: builder.query<
+      { skills: string[]; count: number },
+      void
+    >({
+      query: () => "/admin/skills/installed",
+      providesTags: ["Skills"],
+    }),
+
+    /**
+     * Uninstall a skill
+     */
+    uninstallSkill: builder.mutation<
+      { success: boolean; skill_name: string; message: string },
+      string
+    >({
+      query: (skillName) => ({
+        url: `/admin/skills/${skillName}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Skills"],
+    }),
+
+    /**
+     * Check for skill updates
+     */
+    checkSkillUpdates: builder.query<SkillUpdate[], void>({
+      query: () => "/admin/skills/updates",
+      providesTags: ["Skills"],
+    }),
+
+    /**
+     * Apply available skill updates
+     */
+    applySkillUpdates: builder.mutation<
+      { applied: number; results: Array<{ skill: string; success: boolean }> },
+      void
+    >({
+      query: () => ({
+        url: "/admin/skills/updates/apply",
+        method: "POST",
+      }),
+      invalidatesTags: ["Skills"],
+    }),
+
+    /**
+     * List registered marketplaces
+     */
+    listMarketplaces: builder.query<{ marketplaces: MarketplaceInfo[] }, void>({
+      query: () => "/admin/marketplaces",
+      providesTags: ["Marketplace"],
+    }),
   }),
 });
 
@@ -3798,4 +3948,12 @@ export const {
   useListMcpTasksQuery,
   useGetMcpTaskQuery,
   useCancelMcpTaskMutation,
+  // Skills Marketplace Endpoints
+  useListMarketplaceSkillsQuery,
+  useInstallSkillMutation,
+  useListInstalledSkillsQuery,
+  useUninstallSkillMutation,
+  useCheckSkillUpdatesQuery,
+  useApplySkillUpdatesMutation,
+  useListMarketplacesQuery,
 } = api;
