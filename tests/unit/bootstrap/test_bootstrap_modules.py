@@ -445,3 +445,133 @@ class TestBootstrapStreamingSettingsWiring:
             assert manager.metrics_cleanup_interval == 900
 
             await state.cleanup()
+
+
+# =============================================================================
+# NEW: Tests for Skills Bootstrap - TDD RED Phase
+# =============================================================================
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_skills_bootstrap")
+class TestSkillsBootstrap:
+    """Test skills system initialization.
+
+    The skills bootstrap module should:
+    1. Initialize the AutoUpdateScheduler if skills marketplace is enabled
+    2. Register installed skills from disk
+    3. Provide cleanup for scheduler shutdown
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_import_skills_bootstrap(self):
+        """Skills bootstrap module should be importable."""
+        from mcp_server_langgraph.bootstrap import skills
+
+        assert skills is not None
+        assert hasattr(skills, "init_skills")
+        assert hasattr(skills, "SkillsState")
+
+    @pytest.mark.asyncio
+    async def test_init_skills_returns_skills_state(self):
+        """init_skills should return a SkillsState."""
+        from mcp_server_langgraph.bootstrap.skills import (
+            init_skills,
+            SkillsState,
+        )
+        from mcp_server_langgraph.core.config import Settings
+
+        settings = Settings()
+        result = await init_skills(settings)
+        assert isinstance(result, SkillsState)
+
+    @pytest.mark.asyncio
+    async def test_skills_state_has_auto_update_scheduler(self):
+        """SkillsState should have auto_update_scheduler attribute."""
+        from mcp_server_langgraph.bootstrap.skills import SkillsState
+
+        state = SkillsState()
+        assert hasattr(state, "auto_update_scheduler")
+
+    @pytest.mark.asyncio
+    async def test_skills_state_cleanup_stops_scheduler(self):
+        """SkillsState.cleanup() should stop the scheduler."""
+        from mcp_server_langgraph.bootstrap.skills import SkillsState
+
+        mock_scheduler = MagicMock()
+        mock_scheduler.stop = AsyncMock()
+        state = SkillsState(auto_update_scheduler=mock_scheduler)
+
+        await state.cleanup()
+        mock_scheduler.stop.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_init_skills_respects_feature_flag(self):
+        """init_skills should not start scheduler if marketplace disabled."""
+        from mcp_server_langgraph.bootstrap.skills import init_skills
+        from mcp_server_langgraph.core.config import Settings
+
+        # Disable skills marketplace
+        settings = Settings()
+
+        with patch("mcp_server_langgraph.skills.auto_update.is_auto_update_enabled", return_value=False):
+            result = await init_skills(settings)
+
+        # Scheduler should be None when disabled
+        assert result.auto_update_scheduler is None
+
+    @pytest.mark.asyncio
+    async def test_init_skills_starts_scheduler_when_enabled(self):
+        """init_skills should start scheduler when marketplace enabled."""
+        from mcp_server_langgraph.bootstrap.skills import init_skills
+        from mcp_server_langgraph.core.config import Settings
+
+        settings = Settings()
+
+        with patch("mcp_server_langgraph.skills.auto_update.is_auto_update_enabled", return_value=True):
+            with patch("mcp_server_langgraph.skills.auto_update.AutoUpdateScheduler") as mock_scheduler_class:
+                mock_scheduler = MagicMock()
+                mock_scheduler.start = AsyncMock()
+                mock_scheduler_class.return_value = mock_scheduler
+
+                result = await init_skills(settings)
+
+                assert result.auto_update_scheduler is mock_scheduler
+                mock_scheduler.start.assert_called_once()
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_bootstrap_skills_integration")
+class TestBootstrapSkillsIntegration:
+    """Test skills bootstrap integration with bootstrap_all."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_app_state_has_skills_component(self):
+        """AppState should have skills state component."""
+        from mcp_server_langgraph.bootstrap import AppState
+
+        state = AppState()
+        assert hasattr(state, "skills")
+
+    @pytest.mark.asyncio
+    async def test_bootstrap_all_initializes_skills(self):
+        """bootstrap_all should initialize skills state."""
+        from mcp_server_langgraph.bootstrap import bootstrap_all
+        from mcp_server_langgraph.core.config import Settings
+
+        settings = Settings()
+
+        with patch("mcp_server_langgraph.skills.auto_update.is_auto_update_enabled", return_value=False):
+            state = await bootstrap_all(settings)
+
+            assert hasattr(state, "skills")
+            assert state.skills is not None
+
+            await state.cleanup()

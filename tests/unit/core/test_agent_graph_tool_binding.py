@@ -331,7 +331,7 @@ class TestDynamicToolBinding:
         from mcp_server_langgraph.core.agent_graph_builder import build_agent_graph
 
         config = AgentConfig(
-            enable_semantic_tool_selection=True,
+            enable_semantic_tool_search=True,
             enable_tool_calling=True,
             enable_verification=False,
             enable_context_compaction=False,
@@ -339,8 +339,8 @@ class TestDynamicToolBinding:
 
         graph = build_agent_graph(config)
 
-        # Graph should have both select_tools and respond nodes
-        assert "select_tools" in graph.nodes
+        # Graph should have both retrieve_tools and respond nodes
+        assert "retrieve_tools" in graph.nodes
         assert "respond" in graph.nodes
 
     @pytest.mark.asyncio
@@ -390,7 +390,7 @@ class TestDynamicToolBinding:
         from mcp_server_langgraph.core.agent_config import AgentConfig
 
         config = AgentConfig(
-            enable_semantic_tool_selection=True,
+            enable_semantic_tool_search=True,
             max_selected_tools=5,
         )
 
@@ -407,7 +407,7 @@ class TestDynamicToolBinding:
         from mcp_server_langgraph.core.agent_graph_builder import build_agent_graph
 
         config = AgentConfig(
-            enable_semantic_tool_selection=True,
+            enable_semantic_tool_search=True,
             enable_tool_calling=True,
             enable_verification=False,
         )
@@ -428,7 +428,7 @@ class TestDynamicToolBinding:
         from mcp_server_langgraph.core.agent_graph_builder import build_agent_graph
 
         config = AgentConfig(
-            enable_semantic_tool_selection=True,
+            enable_semantic_tool_search=True,
             enable_tool_calling=True,
             max_selected_tools=10,
             semantic_tool_search_threshold=0.5,
@@ -439,7 +439,210 @@ class TestDynamicToolBinding:
         graph = build_agent_graph(config)
 
         # Verify the complete tool selection flow
-        assert "select_tools" in graph.nodes
+        assert "retrieve_tools" in graph.nodes
         assert "router" in graph.nodes
         assert "tools" in graph.nodes
         assert "respond" in graph.nodes
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_dynamic_tool_filtering")
+class TestDynamicToolFiltering:
+    """Test that generate_response actually filters tools based on selected_tools."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_generate_response_filters_tools_when_selected_tools_present(self, monkeypatch):
+        """generate_response should bind only selected tools when state has selected_tools.
+
+        This is the core test for ADR-0099 dynamic tool binding:
+        When semantic search selects specific tools, the LLM should only receive
+        those tools in its context, not all available tools.
+        """
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
+        monkeypatch.setenv("ENVIRONMENT", "test")
+
+        from langchain_core.messages import HumanMessage, AIMessage
+        from mcp_server_langgraph.core.agent_graph_builder import (
+            _generate_response_impl,
+            AgentState,
+        )
+
+        # Create mock tools
+        mock_calculator = MagicMock()
+        mock_calculator.name = "calculator"
+        mock_search = MagicMock()
+        mock_search.name = "search"
+        mock_translate = MagicMock()
+        mock_translate.name = "translate"
+
+        all_tools = [mock_calculator, mock_search, mock_translate]
+
+        # Create mock model
+        mock_model = MagicMock()
+        mock_model_with_filtered_tools = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model_with_filtered_tools)
+        mock_model_with_filtered_tools.ainvoke = AsyncMock(
+            return_value=AIMessage(content="Response using selected tools")
+        )
+
+        # State with only calculator and search selected
+        state: AgentState = {
+            "messages": [HumanMessage(content="Calculate 2+2")],
+            "next_action": "respond",
+            "user_id": "user:test",
+            "request_id": None,
+            "session_id": None,
+            "routing_confidence": None,
+            "reasoning": None,
+            "compaction_applied": None,
+            "original_message_count": None,
+            "kb_focus": None,
+            "verification_passed": None,
+            "verification_score": None,
+            "verification_feedback": None,
+            "refinement_attempts": None,
+            "user_request": None,
+            "selected_tools": ["calculator", "search"],  # Only 2 of 3 tools selected
+        }
+
+        # Call the implementation helper
+        result = await _generate_response_impl(
+            state=state,
+            model=mock_model,
+            bound_tools=all_tools,
+            model_with_tools=None,  # Force dynamic binding path
+            pydantic_agent=None,
+        )
+
+        # Verify that bind_tools was called with only the selected tools
+        mock_model.bind_tools.assert_called_once()
+        bound_tool_names = [t.name for t in mock_model.bind_tools.call_args[0][0]]
+        assert set(bound_tool_names) == {"calculator", "search"}
+        assert "translate" not in bound_tool_names
+
+        # Verify the filtered model was used for inference
+        mock_model_with_filtered_tools.ainvoke.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_generate_response_uses_all_tools_when_selected_tools_is_none(self, monkeypatch):
+        """generate_response should use all tools when selected_tools is None."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
+        monkeypatch.setenv("ENVIRONMENT", "test")
+
+        from langchain_core.messages import HumanMessage, AIMessage
+        from mcp_server_langgraph.core.agent_graph_builder import (
+            _generate_response_impl,
+            AgentState,
+        )
+
+        # Create mock tools
+        mock_tool1 = MagicMock()
+        mock_tool1.name = "tool1"
+        mock_tool2 = MagicMock()
+        mock_tool2.name = "tool2"
+        all_tools = [mock_tool1, mock_tool2]
+
+        # Create pre-bound model (all tools)
+        mock_model_with_all_tools = MagicMock()
+        mock_model_with_all_tools.ainvoke = AsyncMock(
+            return_value=AIMessage(content="Response using all tools")
+        )
+
+        mock_model = MagicMock()
+
+        # State without selected_tools (None)
+        state: AgentState = {
+            "messages": [HumanMessage(content="Hello")],
+            "next_action": "respond",
+            "user_id": "user:test",
+            "request_id": None,
+            "session_id": None,
+            "routing_confidence": None,
+            "reasoning": None,
+            "compaction_applied": None,
+            "original_message_count": None,
+            "kb_focus": None,
+            "verification_passed": None,
+            "verification_score": None,
+            "verification_feedback": None,
+            "refinement_attempts": None,
+            "user_request": None,
+            "selected_tools": None,  # No selection - use all tools
+        }
+
+        result = await _generate_response_impl(
+            state=state,
+            model=mock_model,
+            bound_tools=all_tools,
+            model_with_tools=mock_model_with_all_tools,  # Pre-bound with all tools
+            pydantic_agent=None,
+        )
+
+        # Verify the pre-bound model with all tools was used
+        mock_model_with_all_tools.ainvoke.assert_called_once()
+        # bind_tools should NOT have been called since we use the pre-bound model
+        mock_model.bind_tools.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_generate_response_handles_empty_selected_tools(self, monkeypatch):
+        """generate_response should handle empty selected_tools list gracefully."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
+        monkeypatch.setenv("ENVIRONMENT", "test")
+
+        from langchain_core.messages import HumanMessage, AIMessage
+        from mcp_server_langgraph.core.agent_graph_builder import (
+            _generate_response_impl,
+            AgentState,
+        )
+
+        mock_model = MagicMock()
+        mock_model_no_tools = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model_no_tools)
+        mock_model_no_tools.ainvoke = AsyncMock(
+            return_value=AIMessage(content="Response without tools")
+        )
+
+        mock_model_with_all_tools = MagicMock()
+        mock_model_with_all_tools.ainvoke = AsyncMock(
+            return_value=AIMessage(content="Response with all tools")
+        )
+
+        state: AgentState = {
+            "messages": [HumanMessage(content="Hello")],
+            "next_action": "respond",
+            "user_id": "user:test",
+            "request_id": None,
+            "session_id": None,
+            "routing_confidence": None,
+            "reasoning": None,
+            "compaction_applied": None,
+            "original_message_count": None,
+            "kb_focus": None,
+            "verification_passed": None,
+            "verification_score": None,
+            "verification_feedback": None,
+            "refinement_attempts": None,
+            "user_request": None,
+            "selected_tools": [],  # Empty list - fall back to all tools
+        }
+
+        result = await _generate_response_impl(
+            state=state,
+            model=mock_model,
+            bound_tools=[MagicMock()],
+            model_with_tools=mock_model_with_all_tools,
+            pydantic_agent=None,
+        )
+
+        # Empty selection should fall back to all tools
+        mock_model_with_all_tools.ainvoke.assert_called_once()

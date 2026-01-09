@@ -108,6 +108,15 @@ class MockFeatureFlags:
         enable_hooks_mcp_extension: bool = False,
         # Rate limiting flags
         enable_distributed_rate_limiting: bool = False,
+        # Context Graph flags (ADR-0101)
+        enable_context_graph: bool = False,
+        enable_precedent_search: bool = False,
+        context_graph_async_persistence: bool = True,
+        context_graph_batch_size: int = 100,
+        context_graph_retention_days: int = 2555,
+        context_graph_sampling_rate: float = 1.0,
+        precedent_search_min_score: float = 0.5,
+        precedent_search_max_results: int = 10,
     ) -> None:
         """Initialize MockFeatureFlags with configurable defaults.
 
@@ -217,6 +226,16 @@ class MockFeatureFlags:
 
         # Rate limiting flags
         self.enable_distributed_rate_limiting = enable_distributed_rate_limiting
+
+        # Context Graph flags (ADR-0101)
+        self.enable_context_graph = enable_context_graph
+        self.enable_precedent_search = enable_precedent_search
+        self.context_graph_async_persistence = context_graph_async_persistence
+        self.context_graph_batch_size = context_graph_batch_size
+        self.context_graph_retention_days = context_graph_retention_days
+        self.context_graph_sampling_rate = context_graph_sampling_rate
+        self.precedent_search_min_score = precedent_search_min_score
+        self.precedent_search_max_results = precedent_search_max_results
 
     def is_feature_enabled(self, feature_name: str) -> bool:
         """Check if a feature is enabled.

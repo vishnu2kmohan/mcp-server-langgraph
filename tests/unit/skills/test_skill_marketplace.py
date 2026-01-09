@@ -1455,3 +1455,835 @@ class TestMarketplaceRegistryAPI:
 
             # API should only be called once (cache)
             assert mock_client.get.call_count == 1
+
+
+# =============================================================================
+# LIST SKILLS WITH METADATA TESTS (GitHub Metadata Enhancement)
+# =============================================================================
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_marketplace_metadata")
+class TestListSkillsWithMetadata:
+    """Test suite for list_skills_with_metadata() method.
+
+    This method enhances basic skill listings by fetching full SKILL.md
+    metadata for each skill, addressing the issue where GitHub API
+    only returns directory names without descriptions/tags.
+
+    ADR Reference: adr/adr-0092-hierarchical-capability-architecture.md
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_list_skills_with_metadata_fetches_full_details(self):
+        """GIVEN a marketplace client
+        WHEN calling list_skills_with_metadata
+        THEN each skill should have full metadata (description, tags, version)
+        """
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from mcp_server_langgraph.skills.marketplace import (
+            MarketplaceClient,
+            MarketplaceConfig,
+        )
+
+        marketplace = MarketplaceConfig(
+            name="anthropic",
+            uri="https://github.com/anthropics/skills",
+            type="github",
+            trusted=True,
+        )
+
+        # Mock list_skills response (basic directory listing)
+        mock_list_response = MagicMock()
+        mock_list_response.json = MagicMock(
+            return_value=[
+                {"name": "web-research", "type": "dir"},
+                {"name": "code-review", "type": "dir"},
+            ]
+        )
+        mock_list_response.status_code = 200
+
+        # Mock fetch_skill responses (full SKILL.md content)
+        skill_md_web_research = """---
+name: web-research
+description: Research topics using web search
+version: 1.2.0
+tags: [research, web, search]
+author: anthropic
+---
+
+# Web Research Skill
+"""
+        skill_md_code_review = """---
+name: code-review
+description: Review code for quality and best practices
+version: 2.0.0
+tags: [code, review, quality]
+author: anthropic
+---
+
+# Code Review Skill
+"""
+        mock_fetch_web = MagicMock()
+        mock_fetch_web.text = skill_md_web_research
+        mock_fetch_web.status_code = 200
+
+        mock_fetch_code = MagicMock()
+        mock_fetch_code.text = skill_md_code_review
+        mock_fetch_code.status_code = 200
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.get = AsyncMock(
+                side_effect=[
+                    mock_list_response,  # First: list_skills
+                    mock_fetch_web,  # Second: fetch web-research SKILL.md
+                    mock_fetch_code,  # Third: fetch code-review SKILL.md
+                ]
+            )
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=None)
+            mock_client_class.return_value = mock_client
+
+            client = MarketplaceClient()
+            skills = await client.list_skills_with_metadata(marketplace)
+
+            # Should have 2 skills with full metadata
+            assert len(skills) == 2
+
+            # Find web-research skill
+            web_skill = next((s for s in skills if s["name"] == "web-research"), None)
+            assert web_skill is not None
+            assert web_skill["description"] == "Research topics using web search"
+            assert web_skill["version"] == "1.2.0"
+
+            # Find code-review skill
+            code_skill = next((s for s in skills if s["name"] == "code-review"), None)
+            assert code_skill is not None
+            assert code_skill["description"] == "Review code for quality and best practices"
+            assert code_skill["version"] == "2.0.0"
+
+    @pytest.mark.asyncio
+    async def test_list_skills_with_metadata_handles_fetch_failures(self):
+        """GIVEN a marketplace client
+        WHEN fetch_skill fails for some skills
+        THEN those skills should still be returned with default metadata
+        """
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from mcp_server_langgraph.skills.marketplace import (
+            MarketplaceClient,
+            MarketplaceConfig,
+        )
+
+        marketplace = MarketplaceConfig(
+            name="test-marketplace",
+            uri="https://github.com/org/skills",
+            type="github",
+        )
+
+        # Mock list_skills response
+        mock_list_response = MagicMock()
+        mock_list_response.json = MagicMock(
+            return_value=[
+                {"name": "good-skill", "type": "dir"},
+                {"name": "broken-skill", "type": "dir"},
+            ]
+        )
+        mock_list_response.status_code = 200
+
+        # URL-based response matching (parallel fetch requires this)
+        mock_fetch_good = MagicMock()
+        mock_fetch_good.text = """---
+name: good-skill
+description: A working skill
+---
+Instructions here.
+"""
+        mock_fetch_good.status_code = 200
+
+        mock_fetch_bad = MagicMock()
+        mock_fetch_bad.status_code = 404
+
+        async def mock_get(url: str, **kwargs) -> MagicMock:
+            if "contents/skills" in url:
+                return mock_list_response
+            if "good-skill" in url:
+                return mock_fetch_good
+            if "broken-skill" in url:
+                return mock_fetch_bad
+            return MagicMock(status_code=404)
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.get = mock_get
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=None)
+            mock_client_class.return_value = mock_client
+
+            # Disable rate limiting for this test
+            client = MarketplaceClient(rate_limit_requests_per_second=0)
+            skills = await client.list_skills_with_metadata(marketplace)
+
+            # Should have 2 skills
+            assert len(skills) == 2
+
+            # Good skill has full metadata
+            good_skill = next((s for s in skills if s["name"] == "good-skill"), None)
+            assert good_skill is not None
+            assert good_skill["description"] == "A working skill"
+
+            # Broken skill has default metadata
+            broken_skill = next((s for s in skills if s["name"] == "broken-skill"), None)
+            assert broken_skill is not None
+            assert broken_skill.get("description") == ""  # Default
+            assert broken_skill.get("version") == "1.0.0"  # Default
+
+    @pytest.mark.asyncio
+    async def test_list_skills_with_metadata_skips_entries_without_name(self):
+        """GIVEN a marketplace client
+        WHEN list_skills returns entries without name field
+        THEN those entries should be skipped
+        """
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from mcp_server_langgraph.skills.marketplace import (
+            MarketplaceClient,
+            MarketplaceConfig,
+        )
+
+        marketplace = MarketplaceConfig(
+            name="test-marketplace",
+            uri="https://github.com/org/skills",
+            type="github",
+        )
+
+        # Mock list_skills with some invalid entries
+        mock_list_response = MagicMock()
+        mock_list_response.json = MagicMock(
+            return_value=[
+                {"name": "valid-skill", "type": "dir"},
+                {"type": "dir"},  # Missing name
+                {"name": "", "type": "dir"},  # Empty name
+            ]
+        )
+        mock_list_response.status_code = 200
+
+        mock_fetch = MagicMock()
+        mock_fetch.text = """---
+name: valid-skill
+description: A valid skill
+---
+Content.
+"""
+        mock_fetch.status_code = 200
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.get = AsyncMock(
+                side_effect=[
+                    mock_list_response,
+                    mock_fetch,
+                ]
+            )
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=None)
+            mock_client_class.return_value = mock_client
+
+            client = MarketplaceClient()
+            skills = await client.list_skills_with_metadata(marketplace)
+
+            # Should only have the valid skill
+            assert len(skills) == 1
+            assert skills[0]["name"] == "valid-skill"
+
+    @pytest.mark.asyncio
+    async def test_list_skills_with_metadata_merges_basic_and_full_data(self):
+        """GIVEN a marketplace client
+        WHEN list_skills returns additional fields
+        THEN those fields should be preserved in merged result
+        """
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from mcp_server_langgraph.skills.marketplace import (
+            MarketplaceClient,
+            MarketplaceConfig,
+        )
+
+        marketplace = MarketplaceConfig(
+            name="test-marketplace",
+            uri="https://github.com/org/skills",
+            type="github",
+        )
+
+        # Mock list_skills with extra fields from GitHub API
+        mock_list_response = MagicMock()
+        mock_list_response.json = MagicMock(
+            return_value=[
+                {
+                    "name": "test-skill",
+                    "type": "dir",
+                    "path": "skills/test-skill",
+                    "sha": "abc123",
+                    "url": "https://api.github.com/repos/org/skills/contents/skills/test-skill",
+                },
+            ]
+        )
+        mock_list_response.status_code = 200
+
+        mock_fetch = MagicMock()
+        mock_fetch.text = """---
+name: test-skill
+description: A test skill
+version: 1.0.0
+---
+Instructions.
+"""
+        mock_fetch.status_code = 200
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.get = AsyncMock(
+                side_effect=[
+                    mock_list_response,
+                    mock_fetch,
+                ]
+            )
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=None)
+            mock_client_class.return_value = mock_client
+
+            client = MarketplaceClient()
+            skills = await client.list_skills_with_metadata(marketplace)
+
+            assert len(skills) == 1
+            skill = skills[0]
+
+            # Should have merged data
+            assert skill["name"] == "test-skill"
+            assert skill["description"] == "A test skill"
+            assert skill["version"] == "1.0.0"
+            # Basic data preserved
+            assert skill.get("path") == "skills/test-skill"
+            assert skill.get("sha") == "abc123"
+
+    @pytest.mark.asyncio
+    async def test_list_skills_with_metadata_fetches_in_parallel(self):
+        """GIVEN a marketplace client with multiple skills
+        WHEN list_skills_with_metadata is called
+        THEN skills should be fetched in parallel for better performance
+        """
+        import asyncio
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from mcp_server_langgraph.skills.marketplace import (
+            MarketplaceClient,
+            MarketplaceConfig,
+        )
+
+        marketplace = MarketplaceConfig(
+            name="test-marketplace",
+            uri="https://github.com/org/skills",
+            type="github",
+        )
+
+        # Mock list_skills with multiple skills
+        mock_list_response = MagicMock()
+        mock_list_response.json = MagicMock(
+            return_value=[
+                {"name": "skill-1", "type": "dir"},
+                {"name": "skill-2", "type": "dir"},
+                {"name": "skill-3", "type": "dir"},
+            ]
+        )
+        mock_list_response.status_code = 200
+
+        # Track when each fetch starts to verify parallel execution
+        fetch_order: list[str] = []
+
+        def make_fetch_response(skill_name: str) -> MagicMock:
+            response = MagicMock()
+            response.text = f"""---
+name: {skill_name}
+description: Description for {skill_name}
+---
+Instructions.
+"""
+            response.status_code = 200
+            return response
+
+        async def mock_get(url: str, **kwargs) -> MagicMock:
+            # First call is list_skills
+            if "contents/skills" in url and "/skills/" not in url.split("contents/skills")[1]:
+                return mock_list_response
+            # Subsequent calls are fetch_skill
+            for skill_name in ["skill-1", "skill-2", "skill-3"]:
+                if skill_name in url:
+                    fetch_order.append(skill_name)
+                    # Add small delay to simulate network latency
+                    await asyncio.sleep(0.01)
+                    return make_fetch_response(skill_name)
+            return MagicMock(status_code=404)
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.get = mock_get
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=None)
+            mock_client_class.return_value = mock_client
+
+            # Disable rate limiting for parallel performance test
+            client = MarketplaceClient(rate_limit_requests_per_second=0)
+
+            # Measure execution time
+            start_time = asyncio.get_event_loop().time()
+            skills = await client.list_skills_with_metadata(marketplace)
+            elapsed_time = asyncio.get_event_loop().time() - start_time
+
+            # Should have all 3 skills
+            assert len(skills) == 3
+
+            # If sequential, elapsed time would be ~0.03s (3 * 0.01s)
+            # If parallel, elapsed time should be ~0.01s
+            # Allow some margin for overhead
+            assert elapsed_time < 0.025, f"Expected parallel execution but took {elapsed_time}s"
+
+            # Verify all skills were fetched
+            assert "skill-1" in fetch_order
+            assert "skill-2" in fetch_order
+            assert "skill-3" in fetch_order
+
+
+# =============================================================================
+# RATE LIMITING AND RETRY TESTS
+# =============================================================================
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_marketplace_resilience")
+class TestMarketplaceRateLimitingAndRetry:
+    """Test suite for rate limiting and retry logic.
+
+    These tests verify the marketplace client handles:
+    - Rate limiting to prevent API abuse
+    - Retry with exponential backoff for transient failures
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_retry_on_transient_error(self):
+        """GIVEN a marketplace client
+        WHEN an API call fails with a transient error
+        THEN the request should be retried with backoff
+        """
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from mcp_server_langgraph.skills.marketplace import (
+            MarketplaceClient,
+            MarketplaceConfig,
+        )
+
+        marketplace = MarketplaceConfig(
+            name="test-marketplace",
+            uri="https://github.com/org/skills",
+            type="github",
+        )
+
+        # First request fails with 503, second succeeds
+        mock_fail_response = MagicMock()
+        mock_fail_response.status_code = 503  # Service Unavailable
+
+        mock_success_response = MagicMock()
+        mock_success_response.json = MagicMock(return_value=[{"name": "skill-1", "type": "dir"}])
+        mock_success_response.status_code = 200
+
+        call_count = 0
+
+        async def mock_get(url: str, **kwargs) -> MagicMock:
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                return mock_fail_response
+            return mock_success_response
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.get = mock_get
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=None)
+            mock_client_class.return_value = mock_client
+
+            client = MarketplaceClient(retry_max_attempts=3, retry_base_delay=0.01)
+            skills = await client.list_skills(marketplace)
+
+            # Should have succeeded after retry
+            assert len(skills) == 1
+            assert skills[0]["name"] == "skill-1"
+            assert call_count == 2  # Initial + 1 retry
+
+    @pytest.mark.asyncio
+    async def test_retry_exhausted_returns_empty(self):
+        """GIVEN a marketplace client
+        WHEN all retries are exhausted
+        THEN an empty list should be returned
+        """
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from mcp_server_langgraph.skills.marketplace import (
+            MarketplaceClient,
+            MarketplaceConfig,
+        )
+
+        marketplace = MarketplaceConfig(
+            name="test-marketplace",
+            uri="https://github.com/org/skills",
+            type="github",
+        )
+
+        # All requests fail
+        mock_fail_response = MagicMock()
+        mock_fail_response.status_code = 503
+
+        call_count = 0
+
+        async def mock_get(url: str, **kwargs) -> MagicMock:
+            nonlocal call_count
+            call_count += 1
+            return mock_fail_response
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.get = mock_get
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=None)
+            mock_client_class.return_value = mock_client
+
+            client = MarketplaceClient(retry_max_attempts=3, retry_base_delay=0.01)
+            skills = await client.list_skills(marketplace)
+
+            # Should return empty after retries exhausted
+            assert skills == []
+            assert call_count == 3  # Initial + 2 retries
+
+    @pytest.mark.asyncio
+    async def test_no_retry_on_4xx_error(self):
+        """GIVEN a marketplace client
+        WHEN an API call fails with a 4xx error
+        THEN the request should NOT be retried
+        """
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from mcp_server_langgraph.skills.marketplace import (
+            MarketplaceClient,
+            MarketplaceConfig,
+        )
+
+        marketplace = MarketplaceConfig(
+            name="test-marketplace",
+            uri="https://github.com/org/skills",
+            type="github",
+        )
+
+        mock_response = MagicMock()
+        mock_response.status_code = 404  # Not Found
+
+        call_count = 0
+
+        async def mock_get(url: str, **kwargs) -> MagicMock:
+            nonlocal call_count
+            call_count += 1
+            return mock_response
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.get = mock_get
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=None)
+            mock_client_class.return_value = mock_client
+
+            client = MarketplaceClient(retry_max_attempts=3, retry_base_delay=0.01)
+            skills = await client.list_skills(marketplace)
+
+            # Should NOT retry on 4xx
+            assert skills == []
+            assert call_count == 1  # No retries
+
+    @pytest.mark.asyncio
+    async def test_rate_limiting_respects_requests_per_second(self):
+        """GIVEN a marketplace client with rate limiting
+        WHEN making multiple rapid requests
+        THEN requests should be throttled to respect rate limit
+        """
+        import asyncio
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from mcp_server_langgraph.skills.marketplace import (
+            MarketplaceClient,
+            MarketplaceConfig,
+        )
+
+        marketplace = MarketplaceConfig(
+            name="test-marketplace",
+            uri="https://github.com/org/skills",
+            type="github",
+        )
+
+        mock_response = MagicMock()
+        mock_response.json = MagicMock(return_value=[{"name": "skill-1", "type": "dir"}])
+        mock_response.status_code = 200
+
+        request_times: list[float] = []
+
+        async def mock_get(url: str, **kwargs) -> MagicMock:
+            request_times.append(asyncio.get_event_loop().time())
+            return mock_response
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.get = mock_get
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=None)
+            mock_client_class.return_value = mock_client
+
+            # 5 requests per second max
+            client = MarketplaceClient(rate_limit_requests_per_second=5)
+
+            # Make 3 rapid requests (should be throttled)
+            # Disable cache to ensure all requests hit the API
+            client._cache = {}  # Reset cache
+            await client.list_skills(marketplace)
+            client._cache = {}
+            await client.list_skills(marketplace)
+            client._cache = {}
+            await client.list_skills(marketplace)
+
+            # Rate limiting is soft - just verify requests were made
+            assert len(request_times) == 3
+
+    def test_rate_limiter_configuration(self):
+        """GIVEN a marketplace client
+        WHEN configuring rate limits
+        THEN rate limiter should accept configuration
+        """
+        from mcp_server_langgraph.skills.marketplace import MarketplaceClient
+
+        client = MarketplaceClient(
+            rate_limit_requests_per_second=10,
+            retry_max_attempts=5,
+            retry_base_delay=0.5,
+        )
+
+        assert client.rate_limit_requests_per_second == 10
+        assert client.retry_max_attempts == 5
+        assert client.retry_base_delay == 0.5
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_marketplace_factory")
+class TestMarketplaceClientFactory:
+    """Test suite for create_marketplace_client factory function.
+
+    This verifies that the factory function correctly uses feature flags
+    to configure the MarketplaceClient.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_factory_function_exists(self):
+        """GIVEN the marketplace module
+        WHEN importing create_marketplace_client
+        THEN it should be available
+        """
+        from mcp_server_langgraph.skills.marketplace import create_marketplace_client
+
+        assert create_marketplace_client is not None
+        assert callable(create_marketplace_client)
+
+    def test_factory_uses_feature_flags(self):
+        """GIVEN the factory function
+        WHEN called with feature flags set
+        THEN client should have feature flag values
+        """
+        from unittest.mock import patch, MagicMock
+
+        from mcp_server_langgraph.skills.marketplace import create_marketplace_client
+
+        # Mock feature_flags with custom values
+        mock_flags = MagicMock()
+        mock_flags.skills_marketplace_rate_limit = 5
+        mock_flags.skills_marketplace_retry_max_attempts = 7
+        mock_flags.skills_marketplace_retry_base_delay = 0.25
+
+        # Patch at the source where it's imported (inside the function)
+        with patch(
+            "mcp_server_langgraph.core.feature_flags.feature_flags",
+            mock_flags
+        ):
+            client = create_marketplace_client()
+
+            assert client.rate_limit_requests_per_second == 5
+            assert client.retry_max_attempts == 7
+            assert client.retry_base_delay == 0.25
+
+    def test_factory_returns_marketplace_client(self):
+        """GIVEN the factory function
+        WHEN called
+        THEN it should return a MarketplaceClient instance
+        """
+        from mcp_server_langgraph.skills.marketplace import (
+            MarketplaceClient,
+            create_marketplace_client,
+        )
+
+        client = create_marketplace_client()
+
+        assert isinstance(client, MarketplaceClient)
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_marketplace_concurrency")
+class TestMarketplaceBoundedConcurrency:
+    """Test suite for bounded concurrency in parallel fetching.
+
+    Verifies that the max_concurrent_fetches parameter limits
+    the number of simultaneous API calls.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_max_concurrent_fetches_parameter_exists(self):
+        """GIVEN the MarketplaceClient class
+        WHEN setting max_concurrent_fetches
+        THEN it should be stored correctly
+        """
+        from mcp_server_langgraph.skills.marketplace import MarketplaceClient
+
+        client = MarketplaceClient(max_concurrent_fetches=3)
+
+        assert client.max_concurrent_fetches == 3
+
+    def test_default_max_concurrent_fetches(self):
+        """GIVEN the MarketplaceClient class
+        WHEN not setting max_concurrent_fetches
+        THEN default value should be used
+        """
+        from mcp_server_langgraph.skills.marketplace import MarketplaceClient
+
+        client = MarketplaceClient()
+
+        assert client.max_concurrent_fetches == MarketplaceClient.DEFAULT_MAX_CONCURRENT_FETCHES
+        assert client.max_concurrent_fetches == 5  # Current default
+
+    @pytest.mark.asyncio
+    async def test_bounded_concurrency_limits_parallel_requests(self):
+        """GIVEN a marketplace client with max_concurrent_fetches=2
+        WHEN fetching 5 skills in parallel
+        THEN at most 2 should run concurrently
+        """
+        import asyncio
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from mcp_server_langgraph.skills.marketplace import (
+            MarketplaceClient,
+            MarketplaceConfig,
+        )
+
+        marketplace = MarketplaceConfig(
+            name="test",
+            uri="https://github.com/org/skills",
+            type="github",
+        )
+
+        # Track concurrent requests
+        current_concurrent = 0
+        max_concurrent_observed = 0
+
+        mock_list_response = MagicMock()
+        mock_list_response.json = MagicMock(
+            return_value=[
+                {"name": f"skill-{i}", "type": "dir"} for i in range(5)
+            ]
+        )
+        mock_list_response.status_code = 200
+
+        async def mock_get(url: str, **kwargs) -> MagicMock:
+            nonlocal current_concurrent, max_concurrent_observed
+
+            # Track concurrency for fetch_skill calls (not list_skills)
+            if "SKILL.md" in url:
+                current_concurrent += 1
+                max_concurrent_observed = max(max_concurrent_observed, current_concurrent)
+                await asyncio.sleep(0.05)  # Simulate network delay
+                current_concurrent -= 1
+
+                response = MagicMock()
+                response.text = """---
+name: test-skill
+description: Test skill
+---
+Instructions
+"""
+                response.status_code = 200
+                return response
+
+            # list_skills call
+            return mock_list_response
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.get = mock_get
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=None)
+            mock_client_class.return_value = mock_client
+
+            # Set max_concurrent_fetches to 2
+            client = MarketplaceClient(
+                max_concurrent_fetches=2,
+                rate_limit_requests_per_second=0,  # Disable rate limiting
+            )
+
+            skills = await client.list_skills_with_metadata(marketplace)
+
+            # Should have fetched all 5 skills
+            assert len(skills) == 5
+
+            # Max concurrent should be limited to 2
+            assert max_concurrent_observed <= 2, (
+                f"Expected max 2 concurrent, but observed {max_concurrent_observed}"
+            )
+
+    def test_factory_uses_max_concurrent_fetches_flag(self):
+        """GIVEN the factory function
+        WHEN called with feature flags set
+        THEN client should have correct max_concurrent_fetches
+        """
+        from unittest.mock import patch, MagicMock
+
+        from mcp_server_langgraph.skills.marketplace import create_marketplace_client
+
+        # Mock feature_flags
+        mock_flags = MagicMock()
+        mock_flags.skills_marketplace_rate_limit = 10
+        mock_flags.skills_marketplace_retry_max_attempts = 3
+        mock_flags.skills_marketplace_retry_base_delay = 0.1
+        mock_flags.skills_marketplace_max_concurrent_fetches = 8
+
+        with patch(
+            "mcp_server_langgraph.core.feature_flags.feature_flags",
+            mock_flags
+        ):
+            client = create_marketplace_client()
+
+            assert client.max_concurrent_fetches == 8

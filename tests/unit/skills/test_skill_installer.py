@@ -577,3 +577,338 @@ class TestSkillInstallerExceptionHandling:
         # Error should be logged (uses logger.exception which includes traceback)
         mock_logger.exception.assert_called_once()
         assert "Failed to install dependencies" in str(mock_logger.exception.call_args)
+
+
+# =============================================================================
+# NEW: Tests for list_marketplace_skills() - TDD RED Phase
+# =============================================================================
+
+
+@pytest.mark.xdist_group(name="test_skill_installer_list_marketplace")
+class TestSkillInstallerListMarketplaceSkills:
+    """Test suite for list_marketplace_skills() method.
+
+    This method fetches skills from a marketplace with full metadata
+    (name, description, version, tags, author) instead of just directory names.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_list_marketplace_skills_exists(self) -> None:
+        """GIVEN a SkillInstaller
+        WHEN calling list_marketplace_skills
+        THEN the method should exist and be callable
+        """
+        installer = SkillInstaller()
+        assert hasattr(installer, "list_marketplace_skills")
+        assert callable(installer.list_marketplace_skills)
+
+    @pytest.mark.asyncio
+    async def test_list_marketplace_skills_returns_list(self, tmp_path: Path) -> None:
+        """GIVEN a valid marketplace
+        WHEN listing marketplace skills
+        THEN a list of skill metadata dictionaries should be returned
+        """
+        installer = SkillInstaller(install_path=tmp_path)
+
+        with patch("mcp_server_langgraph.skills.marketplace.MarketplaceRegistry") as mock_registry_class:
+            with patch("mcp_server_langgraph.skills.marketplace.MarketplaceClient") as mock_client_class:
+                # Setup registry mock
+                mock_registry = MagicMock()
+                mock_marketplace = MagicMock()
+                mock_marketplace.type = "github"
+                mock_marketplace.uri = "https://github.com/anthropics/skills"
+                mock_registry.get.return_value = mock_marketplace
+                mock_registry_class.return_value = mock_registry
+
+                # Setup client mock with full metadata
+                mock_client = MagicMock()
+                mock_client.list_skills_with_metadata = AsyncMock(
+                    return_value=[
+                        {
+                            "name": "web-research",
+                            "description": "Research topics on the web",
+                            "version": "1.0.0",
+                            "tags": ["research", "web"],
+                            "author": "Anthropic",
+                        },
+                        {
+                            "name": "code-review",
+                            "description": "Review code changes",
+                            "version": "1.2.0",
+                            "tags": ["code", "review"],
+                            "author": "Anthropic",
+                        },
+                    ]
+                )
+                mock_client_class.return_value = mock_client
+
+                result = await installer.list_marketplace_skills("anthropic")
+
+                assert isinstance(result, list)
+                assert len(result) == 2
+
+    @pytest.mark.asyncio
+    async def test_list_marketplace_skills_returns_full_metadata(self, tmp_path: Path) -> None:
+        """GIVEN a marketplace with skills
+        WHEN listing marketplace skills
+        THEN each skill should have name, description, version, tags, and author
+        """
+        installer = SkillInstaller(install_path=tmp_path)
+
+        with patch("mcp_server_langgraph.skills.marketplace.MarketplaceRegistry") as mock_registry_class:
+            with patch("mcp_server_langgraph.skills.marketplace.MarketplaceClient") as mock_client_class:
+                mock_registry = MagicMock()
+                mock_marketplace = MagicMock()
+                mock_registry.get.return_value = mock_marketplace
+                mock_registry_class.return_value = mock_registry
+
+                mock_client = MagicMock()
+                mock_client.list_skills_with_metadata = AsyncMock(
+                    return_value=[
+                        {
+                            "name": "web-research",
+                            "description": "Research topics on the web",
+                            "version": "1.0.0",
+                            "tags": ["research", "web"],
+                            "author": "Anthropic",
+                        },
+                    ]
+                )
+                mock_client_class.return_value = mock_client
+
+                result = await installer.list_marketplace_skills("anthropic")
+
+                assert len(result) == 1
+                skill = result[0]
+                assert "name" in skill
+                assert "description" in skill
+                assert "version" in skill
+                assert "tags" in skill
+                assert skill["name"] == "web-research"
+                assert skill["version"] == "1.0.0"
+
+    @pytest.mark.asyncio
+    async def test_list_marketplace_skills_unknown_marketplace(self, tmp_path: Path) -> None:
+        """GIVEN an unknown marketplace name
+        WHEN listing marketplace skills
+        THEN ValueError should be raised
+        """
+        installer = SkillInstaller(install_path=tmp_path)
+
+        with patch("mcp_server_langgraph.skills.marketplace.MarketplaceRegistry") as mock_registry_class:
+            mock_registry = MagicMock()
+            mock_registry.get.return_value = None
+            mock_registry_class.return_value = mock_registry
+
+            with pytest.raises(ValueError, match="Unknown marketplace"):
+                await installer.list_marketplace_skills("unknown-marketplace")
+
+    @pytest.mark.asyncio
+    async def test_list_marketplace_skills_empty_marketplace(self, tmp_path: Path) -> None:
+        """GIVEN an empty marketplace
+        WHEN listing marketplace skills
+        THEN empty list should be returned
+        """
+        installer = SkillInstaller(install_path=tmp_path)
+
+        with patch("mcp_server_langgraph.skills.marketplace.MarketplaceRegistry") as mock_registry_class:
+            with patch("mcp_server_langgraph.skills.marketplace.MarketplaceClient") as mock_client_class:
+                mock_registry = MagicMock()
+                mock_marketplace = MagicMock()
+                mock_registry.get.return_value = mock_marketplace
+                mock_registry_class.return_value = mock_registry
+
+                mock_client = MagicMock()
+                mock_client.list_skills_with_metadata = AsyncMock(return_value=[])
+                mock_client_class.return_value = mock_client
+
+                result = await installer.list_marketplace_skills("anthropic")
+
+                assert result == []
+
+
+# =============================================================================
+# NEW: Tests for install_skill() - TDD RED Phase
+# =============================================================================
+
+
+@pytest.mark.xdist_group(name="test_skill_installer_install_skill")
+class TestSkillInstallerInstallSkillMethod:
+    """Test suite for install_skill() method.
+
+    This method wraps install() and integrates with version tracking
+    for the auto-update system.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_install_skill_exists(self) -> None:
+        """GIVEN a SkillInstaller
+        WHEN checking for install_skill method
+        THEN the method should exist and be callable
+        """
+        installer = SkillInstaller()
+        assert hasattr(installer, "install_skill")
+        assert callable(installer.install_skill)
+
+    @pytest.mark.asyncio
+    async def test_install_skill_installs_skill(self, tmp_path: Path) -> None:
+        """GIVEN a valid skill name
+        WHEN calling install_skill
+        THEN the skill should be installed
+        """
+        installer = SkillInstaller(install_path=tmp_path)
+
+        with patch.object(
+            installer,
+            "_fetch_skill_from_marketplace",
+            new_callable=AsyncMock,
+            return_value={
+                "name": "test-skill",
+                "description": "A test skill",
+                "content": "---\nname: test-skill\nversion: 1.0.0\n---\n# Test Skill",
+                "version": "1.0.0",
+            },
+        ):
+            result = await installer.install_skill("test-skill")
+
+            assert result.success is True
+            assert result.skill_name == "test-skill"
+            assert (tmp_path / "test-skill" / "SKILL.md").exists()
+
+    @pytest.mark.asyncio
+    async def test_install_skill_with_version(self, tmp_path: Path) -> None:
+        """GIVEN a skill name and version
+        WHEN calling install_skill
+        THEN the specific version should be installed
+        """
+        installer = SkillInstaller(install_path=tmp_path)
+
+        with patch.object(
+            installer,
+            "_fetch_skill_from_marketplace",
+            new_callable=AsyncMock,
+            return_value={
+                "name": "versioned-skill",
+                "content": "---\nname: versioned-skill\nversion: 2.0.0\n---\n# Skill",
+                "version": "2.0.0",
+            },
+        ):
+            result = await installer.install_skill("versioned-skill", version="2.0.0")
+
+            assert result.success is True
+            assert result.version == "2.0.0"
+
+    @pytest.mark.asyncio
+    async def test_install_skill_with_marketplace(self, tmp_path: Path) -> None:
+        """GIVEN a skill name and marketplace
+        WHEN calling install_skill
+        THEN the skill should be fetched from the correct marketplace
+        """
+        installer = SkillInstaller(install_path=tmp_path)
+
+        with patch.object(
+            installer,
+            "_fetch_skill_from_marketplace",
+            new_callable=AsyncMock,
+            return_value={
+                "name": "enterprise-skill",
+                "content": "# Enterprise Skill",
+            },
+        ) as mock_fetch:
+            await installer.install_skill("enterprise-skill", marketplace="enterprise")
+
+            mock_fetch.assert_called_once_with("enterprise-skill", "enterprise")
+
+    @pytest.mark.asyncio
+    async def test_install_skill_returns_installation_result(self, tmp_path: Path) -> None:
+        """GIVEN a successful installation
+        WHEN checking the result
+        THEN it should be an InstallationResult with all fields populated
+        """
+        from mcp_server_langgraph.skills.installer import InstallationResult
+
+        installer = SkillInstaller(install_path=tmp_path)
+
+        with patch.object(
+            installer,
+            "_fetch_skill_from_marketplace",
+            new_callable=AsyncMock,
+            return_value={
+                "name": "result-skill",
+                "content": "# Result Skill",
+            },
+        ):
+            result = await installer.install_skill("result-skill")
+
+            assert isinstance(result, InstallationResult)
+            assert result.success is True
+            assert result.skill_name == "result-skill"
+            assert result.installed_path is not None
+
+    @pytest.mark.asyncio
+    async def test_install_skill_notifies_auto_update_scheduler(self, tmp_path: Path) -> None:
+        """GIVEN a successful installation
+        WHEN install_skill completes
+        THEN the auto-update scheduler should be notified of the installed version
+        """
+        installer = SkillInstaller(install_path=tmp_path)
+
+        with patch.object(
+            installer,
+            "_fetch_skill_from_marketplace",
+            new_callable=AsyncMock,
+            return_value={
+                "name": "tracked-skill",
+                "content": "---\nname: tracked-skill\nversion: 1.5.0\n---\n# Tracked Skill",
+                "version": "1.5.0",
+            },
+        ):
+            with patch(
+                "mcp_server_langgraph.skills.auto_update.get_auto_update_scheduler"
+            ) as mock_get_scheduler:
+                mock_scheduler = MagicMock()
+                mock_get_scheduler.return_value = mock_scheduler
+
+                result = await installer.install_skill(
+                    "tracked-skill", version="1.5.0", marketplace="anthropic"
+                )
+
+                assert result.success is True
+                mock_scheduler.register_installed_skill.assert_called_once_with(
+                    skill_name="tracked-skill",
+                    version="1.5.0",
+                    marketplace="anthropic",
+                )
+
+    @pytest.mark.asyncio
+    async def test_install_skill_failure_does_not_notify_scheduler(self, tmp_path: Path) -> None:
+        """GIVEN a failed installation
+        WHEN install_skill fails
+        THEN the auto-update scheduler should NOT be notified
+        """
+        installer = SkillInstaller(install_path=tmp_path)
+
+        with patch.object(
+            installer,
+            "_fetch_skill_from_marketplace",
+            new_callable=AsyncMock,
+            side_effect=Exception("Marketplace error"),
+        ):
+            with patch(
+                "mcp_server_langgraph.skills.auto_update.get_auto_update_scheduler"
+            ) as mock_get_scheduler:
+                mock_scheduler = MagicMock()
+                mock_get_scheduler.return_value = mock_scheduler
+
+                result = await installer.install_skill("failing-skill")
+
+                assert result.success is False
+                mock_scheduler.register_installed_skill.assert_not_called()

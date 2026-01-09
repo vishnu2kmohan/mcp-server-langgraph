@@ -20,7 +20,10 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from mcp_server_langgraph.auth.dependencies import require_admin
+from mcp_server_langgraph.auth.dependencies import (
+    require_skill_viewer_global,
+    require_skill_author_global,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.skills, pytest.mark.api]
 
@@ -30,21 +33,27 @@ pytestmark = [pytest.mark.unit, pytest.mark.skills, pytest.mark.api]
 # =============================================================================
 
 
-def mock_require_admin() -> dict[str, str]:
-    """Mock admin dependency for testing."""
-    return {"user_id": "admin-test-user", "roles": ["admin"]}
+def mock_skill_viewer() -> dict[str, str]:
+    """Mock skill viewer dependency for testing (all users can view)."""
+    return {"user_id": "bob", "sub": "bob", "roles": ["user"]}
+
+
+def mock_skill_author() -> dict[str, str]:
+    """Mock skill author dependency for testing (alice/admin can author)."""
+    return {"user_id": "alice", "sub": "alice", "roles": ["author"]}
 
 
 @pytest.fixture
 def client() -> Generator[TestClient, None, None]:
-    """Create a test client with admin auth bypassed."""
+    """Create a test client with OpenFGA auth bypassed."""
     from mcp_server_langgraph.api.v1.skills import router
 
     app = FastAPI()
     app.include_router(router)
 
-    # Override the require_admin dependency
-    app.dependency_overrides[require_admin] = mock_require_admin
+    # Override OpenFGA authorization dependencies
+    app.dependency_overrides[require_skill_viewer_global] = mock_skill_viewer
+    app.dependency_overrides[require_skill_author_global] = mock_skill_author
 
     yield TestClient(app)
 
@@ -418,3 +427,201 @@ class TestUninstallSkill:
             response = client.delete("/admin/skills/nonexistent-skill")
 
         assert response.status_code == 404
+
+
+# =============================================================================
+# Test: Check Skill Updates
+# =============================================================================
+
+
+@pytest.mark.xdist_group(name="skills_updates_api")
+class TestCheckSkillUpdates:
+    """Test GET /admin/skills/updates endpoint."""
+
+    def teardown_method(self) -> None:
+        gc.collect()
+
+    def test_check_updates_returns_available_updates(
+        self,
+        client: TestClient,
+    ) -> None:
+        """Test checking for updates returns available updates."""
+        from mcp_server_langgraph.skills.auto_update import SkillUpdate
+
+        mock_updates = [
+            SkillUpdate(
+                skill_name="web-research",
+                current_version="1.0.0",
+                new_version="1.1.0",
+                marketplace="anthropic",
+                changelog="Bug fixes and improvements",
+            ),
+            SkillUpdate(
+                skill_name="code-review",
+                current_version="2.0.0",
+                new_version="2.1.0",
+                marketplace="anthropic",
+                changelog="New features",
+            ),
+        ]
+
+        mock_scheduler = AsyncMock()
+        mock_scheduler.check_updates_available = AsyncMock(return_value=mock_updates)
+
+        with patch(
+            "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
+            return_value=mock_scheduler,
+        ):
+            response = client.get("/admin/skills/updates")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "updates" in data
+        assert data["count"] == 2
+        assert data["updates"][0]["skill_name"] == "web-research"
+        assert data["updates"][0]["current_version"] == "1.0.0"
+        assert data["updates"][0]["new_version"] == "1.1.0"
+        assert data["updates"][1]["skill_name"] == "code-review"
+
+    def test_check_updates_returns_empty_when_no_updates(
+        self,
+        client: TestClient,
+    ) -> None:
+        """Test checking for updates returns empty list when no updates available."""
+        mock_scheduler = AsyncMock()
+        mock_scheduler.check_updates_available = AsyncMock(return_value=[])
+
+        with patch(
+            "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
+            return_value=mock_scheduler,
+        ):
+            response = client.get("/admin/skills/updates")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["updates"] == []
+        assert data["count"] == 0
+
+    def test_check_updates_handles_scheduler_error(
+        self,
+        client: TestClient,
+    ) -> None:
+        """Test that scheduler errors are handled gracefully."""
+        mock_scheduler = AsyncMock()
+        mock_scheduler.check_updates_available = AsyncMock(
+            side_effect=RuntimeError("Scheduler unavailable")
+        )
+
+        with patch(
+            "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
+            return_value=mock_scheduler,
+        ):
+            response = client.get("/admin/skills/updates")
+
+        assert response.status_code == 500
+        data = response.json()
+        assert "detail" in data
+        assert "Failed to check updates" in data["detail"]
+
+
+# =============================================================================
+# Test: Apply Skill Updates
+# =============================================================================
+
+
+@pytest.mark.xdist_group(name="skills_apply_updates_api")
+class TestApplySkillUpdates:
+    """Test POST /admin/skills/updates/apply endpoint."""
+
+    def teardown_method(self) -> None:
+        gc.collect()
+
+    def test_apply_updates_success(
+        self,
+        client: TestClient,
+    ) -> None:
+        """Test applying updates returns success results."""
+        mock_results = [
+            {"skill_name": "web-research", "success": True, "version": "1.1.0"},
+            {"skill_name": "code-review", "success": True, "version": "2.1.0"},
+        ]
+
+        mock_scheduler = AsyncMock()
+        mock_scheduler.apply_updates = AsyncMock(return_value=mock_results)
+
+        with patch(
+            "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
+            return_value=mock_scheduler,
+        ):
+            response = client.post("/admin/skills/updates/apply")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "applied" in data
+        assert data["count"] == 2
+        assert data["success_count"] == 2
+
+    def test_apply_updates_partial_success(
+        self,
+        client: TestClient,
+    ) -> None:
+        """Test applying updates with partial success."""
+        mock_results = [
+            {"skill_name": "web-research", "success": True, "version": "1.1.0"},
+            {"skill_name": "code-review", "success": False, "error": "Network error"},
+        ]
+
+        mock_scheduler = AsyncMock()
+        mock_scheduler.apply_updates = AsyncMock(return_value=mock_results)
+
+        with patch(
+            "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
+            return_value=mock_scheduler,
+        ):
+            response = client.post("/admin/skills/updates/apply")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["count"] == 2
+        assert data["success_count"] == 1
+
+    def test_apply_updates_no_updates_available(
+        self,
+        client: TestClient,
+    ) -> None:
+        """Test applying updates when none available returns empty list."""
+        mock_scheduler = AsyncMock()
+        mock_scheduler.apply_updates = AsyncMock(return_value=[])
+
+        with patch(
+            "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
+            return_value=mock_scheduler,
+        ):
+            response = client.post("/admin/skills/updates/apply")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["applied"] == []
+        assert data["count"] == 0
+        assert data["success_count"] == 0
+
+    def test_apply_updates_handles_scheduler_error(
+        self,
+        client: TestClient,
+    ) -> None:
+        """Test that scheduler errors are handled gracefully."""
+        mock_scheduler = AsyncMock()
+        mock_scheduler.apply_updates = AsyncMock(
+            side_effect=RuntimeError("Update failed")
+        )
+
+        with patch(
+            "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
+            return_value=mock_scheduler,
+        ):
+            response = client.post("/admin/skills/updates/apply")
+
+        assert response.status_code == 500
+        data = response.json()
+        assert "detail" in data
+        assert "Failed to apply updates" in data["detail"]

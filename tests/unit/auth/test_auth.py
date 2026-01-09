@@ -139,7 +139,7 @@ class TestAuthMiddleware:
         result = await auth.authorize(user_id=get_user_id("alice"), relation="executor", resource="tool:chat")
         assert result is True
         mock_openfga.check_permission.assert_called_once_with(
-            user=get_user_id("alice"), relation="executor", object="tool:chat", context=None
+            user=get_user_id("alice"), relation="executor", object="tool:chat", context={"contextual_tuples": []}
         )
 
     @pytest.mark.asyncio

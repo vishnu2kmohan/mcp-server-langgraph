@@ -239,34 +239,34 @@ class TestADR0092OptionalFeatureFlags:
 
             assert flags.enable_semantic_skill_search is True
 
-    def test_enable_semantic_memory_retrieval_exists(self) -> None:
-        """Test enable_semantic_memory_retrieval flag exists with default False."""
+    def test_enable_semantic_memory_search_exists(self) -> None:
+        """Test enable_semantic_memory_search flag exists with default False."""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
-        assert hasattr(flags, "enable_semantic_memory_retrieval")
-        assert flags.enable_semantic_memory_retrieval is False
+        assert hasattr(flags, "enable_semantic_memory_search")
+        assert flags.enable_semantic_memory_search is False
 
-    def test_enable_semantic_memory_retrieval_can_be_enabled(self) -> None:
-        """Test enable_semantic_memory_retrieval can be set to True."""
+    def test_enable_semantic_memory_search_can_be_enabled(self) -> None:
+        """Test enable_semantic_memory_search can be set to True."""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
-        flags = FeatureFlags(enable_semantic_memory_retrieval=True)
+        flags = FeatureFlags(enable_semantic_memory_search=True)
 
-        assert flags.enable_semantic_memory_retrieval is True
+        assert flags.enable_semantic_memory_search is True
 
-    def test_enable_semantic_memory_retrieval_env_override(self) -> None:
-        """Test enable_semantic_memory_retrieval respects environment variable."""
+    def test_enable_semantic_memory_search_env_override(self) -> None:
+        """Test enable_semantic_memory_search respects environment variable."""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         with patch.dict(
             os.environ,
-            {"FF_ENABLE_SEMANTIC_MEMORY_RETRIEVAL": "true"},
+            {"FF_ENABLE_SEMANTIC_MEMORY_SEARCH": "true"},
         ):
             flags = FeatureFlags()
 
-            assert flags.enable_semantic_memory_retrieval is True
+            assert flags.enable_semantic_memory_search is True
 
     def test_enable_hitl_undo_rollback_exists(self) -> None:
         """Test enable_hitl_undo_rollback flag exists with default False."""
@@ -356,7 +356,7 @@ class TestADR0092FeatureFlagIntegration:
         assert flags.enable_user_capability_selection is False
         assert flags.enable_progressive_skill_loading is False
         assert flags.enable_semantic_skill_search is False
-        assert flags.enable_semantic_memory_retrieval is False
+        assert flags.enable_semantic_memory_search is False
         assert flags.enable_hitl_undo_rollback is False
 
     def test_adr0092_flags_can_be_enabled_together(self) -> None:
@@ -437,3 +437,75 @@ class TestHierarchicalCapabilityProviderMasterFlag:
         # When capability_resolution is enabled (without master), should also work
         flags = FeatureFlags(enable_capability_resolution=True)
         assert flags.is_hierarchical_capability_enabled is True
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="ui_shell_feature_flags")
+class TestUIShellFeatureFlags:
+    """Tests for UI shell feature flags (model selector, URL fetch in shell).
+
+    Sprint 4: Chat Input Feature Gap - feature flags for shell-specific features.
+    Reference: Plan Part 1 - Chat Input Gap Fix.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_enable_model_selector_in_shell_exists(self) -> None:
+        """Test enable_model_selector_in_shell flag exists with default False."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        assert hasattr(flags, "enable_model_selector_in_shell")
+        assert flags.enable_model_selector_in_shell is False
+
+    def test_enable_model_selector_in_shell_can_be_enabled(self) -> None:
+        """Test enable_model_selector_in_shell can be set to True."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_model_selector_in_shell=True)
+
+        assert flags.enable_model_selector_in_shell is True
+
+    def test_enable_model_selector_in_shell_env_override(self) -> None:
+        """Test enable_model_selector_in_shell respects environment variable."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        with patch.dict(
+            os.environ,
+            {"FF_ENABLE_MODEL_SELECTOR_IN_SHELL": "true"},
+        ):
+            flags = FeatureFlags()
+
+            assert flags.enable_model_selector_in_shell is True
+
+    def test_enable_url_fetch_in_shell_exists(self) -> None:
+        """Test enable_url_fetch_in_shell flag exists with default False."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+
+        assert hasattr(flags, "enable_url_fetch_in_shell")
+        assert flags.enable_url_fetch_in_shell is False
+
+    def test_enable_url_fetch_in_shell_can_be_enabled(self) -> None:
+        """Test enable_url_fetch_in_shell can be set to True."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_url_fetch_in_shell=True)
+
+        assert flags.enable_url_fetch_in_shell is True
+
+    def test_enable_url_fetch_in_shell_env_override(self) -> None:
+        """Test enable_url_fetch_in_shell respects environment variable."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        with patch.dict(
+            os.environ,
+            {"FF_ENABLE_URL_FETCH_IN_SHELL": "true"},
+        ):
+            flags = FeatureFlags()
+
+            assert flags.enable_url_fetch_in_shell is True

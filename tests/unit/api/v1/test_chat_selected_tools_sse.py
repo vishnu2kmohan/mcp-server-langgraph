@@ -38,7 +38,7 @@ class TestSelectedToolsSSEEvent:
             # Node start event
             {
                 "event": "on_chain_start",
-                "metadata": {"langgraph_node": "select_tools"},
+                "metadata": {"langgraph_node": "retrieve_tools"},
             },
             # Custom event for selected_tools
             {
@@ -52,7 +52,7 @@ class TestSelectedToolsSSEEvent:
             # Node end event
             {
                 "event": "on_chain_end",
-                "metadata": {"langgraph_node": "select_tools"},
+                "metadata": {"langgraph_node": "retrieve_tools"},
             },
         ]
 
