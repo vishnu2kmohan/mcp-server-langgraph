@@ -9,7 +9,7 @@ GREEN Phase: Implementation in core/semantic_index_manager.py will make them pas
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -32,7 +32,19 @@ def mock_qdrant_client() -> AsyncMock:
     client.get_collections = AsyncMock(return_value=MagicMock(collections=[]))
     client.create_collection = AsyncMock()
     client.upsert = AsyncMock()
-    client.search = AsyncMock(return_value=[])
+    # query_points returns response with points attribute (qdrant-client >= 1.7)
+    mock_response = MagicMock()
+    mock_response.points = []
+    client.query_points = AsyncMock(return_value=mock_response)
+    return client
+
+
+@pytest.fixture
+def mock_openfga_client() -> AsyncMock:
+    """Create a mock OpenFGA client that allows all access."""
+    client = AsyncMock()
+    # Default: allow all access for basic unit tests
+    client.check_permission = AsyncMock(return_value=True)
     return client
 
 
@@ -177,7 +189,9 @@ class TestSemanticIndexManagerToolSearch:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_search_tools_returns_entries(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
+    async def test_search_tools_returns_entries(
+        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock, mock_openfga_client: AsyncMock
+    ) -> None:
         """search_tools should return ToolIndexEntry list."""
         from qdrant_client.models import ScoredPoint
 
@@ -185,7 +199,7 @@ class TestSemanticIndexManagerToolSearch:
         from mcp_server_langgraph.tools.semantic_index import ToolIndexEntry
 
         # Mock search result
-        mock_qdrant_client.search.return_value = [
+        mock_qdrant_client.query_points.return_value.points = [
             ScoredPoint(
                 id="tool-123",
                 version=1,
@@ -207,7 +221,11 @@ class TestSemanticIndexManagerToolSearch:
             qdrant_client=mock_qdrant_client,
         )
 
-        results = await manager.search_tools(query="math operations", limit=10)
+        with patch(
+            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+            return_value=mock_openfga_client,
+        ):
+            results = await manager.search_tools(query="math operations", user_id="user:alice", limit=10)
 
         assert len(results) == 1
         assert isinstance(results[0], ToolIndexEntry)
@@ -215,7 +233,9 @@ class TestSemanticIndexManagerToolSearch:
         assert results[0].tool_id == "tool-123"
 
     @pytest.mark.asyncio
-    async def test_search_tools_with_min_score(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
+    async def test_search_tools_with_min_score(
+        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock, mock_openfga_client: AsyncMock
+    ) -> None:
         """search_tools should filter by minimum score."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
@@ -224,14 +244,20 @@ class TestSemanticIndexManagerToolSearch:
             qdrant_client=mock_qdrant_client,
         )
 
-        await manager.search_tools(query="test", limit=5, min_score=0.8)
+        with patch(
+            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+            return_value=mock_openfga_client,
+        ):
+            await manager.search_tools(query="test", user_id="user:alice", limit=5, min_score=0.8)
 
         # Verify search was called with score_threshold
-        call_kwargs = mock_qdrant_client.search.call_args.kwargs
+        call_kwargs = mock_qdrant_client.query_points.call_args.kwargs
         assert call_kwargs.get("score_threshold") == 0.8
 
     @pytest.mark.asyncio
-    async def test_search_tools_with_category_filter(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
+    async def test_search_tools_with_category_filter(
+        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock, mock_openfga_client: AsyncMock
+    ) -> None:
         """search_tools should filter by category."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
@@ -240,14 +266,20 @@ class TestSemanticIndexManagerToolSearch:
             qdrant_client=mock_qdrant_client,
         )
 
-        await manager.search_tools(query="test", limit=5, category="math")
+        with patch(
+            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+            return_value=mock_openfga_client,
+        ):
+            await manager.search_tools(query="test", user_id="user:alice", limit=5, category="math")
 
         # Verify filter was applied
-        call_kwargs = mock_qdrant_client.search.call_args.kwargs
+        call_kwargs = mock_qdrant_client.query_points.call_args.kwargs
         assert "query_filter" in call_kwargs
 
     @pytest.mark.asyncio
-    async def test_search_tools_with_tenant_id(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
+    async def test_search_tools_with_tenant_id(
+        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock, mock_openfga_client: AsyncMock
+    ) -> None:
         """search_tools should filter by tenant_id for multi-tenant isolation."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
@@ -256,10 +288,14 @@ class TestSemanticIndexManagerToolSearch:
             qdrant_client=mock_qdrant_client,
         )
 
-        await manager.search_tools(query="test", limit=5, tenant_id="tenant-abc")
+        with patch(
+            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+            return_value=mock_openfga_client,
+        ):
+            await manager.search_tools(query="test", user_id="user:alice", limit=5, tenant_id="tenant-abc")
 
         # Verify tenant filter was applied
-        call_kwargs = mock_qdrant_client.search.call_args.kwargs
+        call_kwargs = mock_qdrant_client.query_points.call_args.kwargs
         assert "query_filter" in call_kwargs
 
 
@@ -296,14 +332,16 @@ class TestSemanticIndexManagerSkillIndexing:
         mock_qdrant_client.upsert.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_search_skills(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
+    async def test_search_skills(
+        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock, mock_openfga_client: AsyncMock
+    ) -> None:
         """search_skills should return SkillIndexEntry list."""
         from qdrant_client.models import ScoredPoint
 
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
         from mcp_server_langgraph.tools.semantic_index import SkillIndexEntry
 
-        mock_qdrant_client.search.return_value = [
+        mock_qdrant_client.query_points.return_value.points = [
             ScoredPoint(
                 id="skill-123",
                 version=1,
@@ -326,7 +364,11 @@ class TestSemanticIndexManagerSkillIndexing:
             qdrant_client=mock_qdrant_client,
         )
 
-        results = await manager.search_skills(query="review my code", limit=5)
+        with patch(
+            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+            return_value=mock_openfga_client,
+        ):
+            results = await manager.search_skills(query="review my code", user_id="user:alice", limit=5)
 
         assert len(results) == 1
         assert isinstance(results[0], SkillIndexEntry)
@@ -365,14 +407,16 @@ class TestSemanticIndexManagerMemoryIndexing:
         mock_qdrant_client.upsert.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_search_memories(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
+    async def test_search_memories(
+        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock, mock_openfga_client: AsyncMock
+    ) -> None:
         """search_memories should return MemoryIndexEntry list."""
         from qdrant_client.models import ScoredPoint
 
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
         from mcp_server_langgraph.tools.semantic_index import MemoryIndexEntry
 
-        mock_qdrant_client.search.return_value = [
+        mock_qdrant_client.query_points.return_value.points = [
             ScoredPoint(
                 id="mem-123",
                 version=1,
@@ -383,6 +427,7 @@ class TestSemanticIndexManagerMemoryIndexing:
                     "memory_type": "preference",
                     "ref_type": "memory",
                     "scope": "session",
+                    "user_id": "user:alice",
                 },
                 vector=None,
             )
@@ -393,7 +438,16 @@ class TestSemanticIndexManagerMemoryIndexing:
             qdrant_client=mock_qdrant_client,
         )
 
-        results = await manager.search_memories(query="what are my preferences", limit=5)
+        with patch(
+            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+            return_value=mock_openfga_client,
+        ):
+            results = await manager.search_memories(
+                query="what are my preferences",
+                current_user_id="user:alice",
+                search_user_id="user:alice",
+                limit=5,
+            )
 
         assert len(results) == 1
         assert isinstance(results[0], MemoryIndexEntry)
