@@ -7,13 +7,20 @@ Endpoints:
 - GET /context-graph/sessions/{session_id}/traces - Get traces for a session
 - POST /context-graph/precedents/search - Search for similar past decisions
 
-Reference: ADR-0101 Context Graphs
+Authorization:
+- Traces are scoped to sessions - requires viewer access to session
+- Precedent search is scoped to user's organization
+
+Reference: ADR-0101 Context Graphs, ADR-0068 Gateway-Level Authentication
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from starlette.requests import Request
 
 from mcp_server_langgraph.auth.dependencies import get_current_user
+from mcp_server_langgraph.auth.metrics import log_authorization_denied
 from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.storage.models import (
     DecisionTraceRead,
@@ -23,6 +30,62 @@ from mcp_server_langgraph.storage.models import (
 )
 
 router = APIRouter(prefix="/context-graph", tags=["context-graph"])
+
+
+def get_authorization_service(request: Request) -> Any:
+    """Get authorization service from app state.
+
+    Returns the authorization middleware/service for OpenFGA checks.
+    Falls back to None if not available (for testing).
+    """
+    return getattr(request.app.state, "auth_middleware", None)
+
+
+def _get_user_id(user: dict[str, Any]) -> str:
+    """Extract user ID from authenticated user dict.
+
+    Formats as 'user:xxx' for OpenFGA compatibility.
+    """
+    user_id = user.get("sub") or user.get("user_id") or "anonymous"
+    if not user_id.startswith("user:"):
+        user_id = f"user:{user_id}"
+    return user_id
+
+
+async def _check_session_authorization(
+    session_id: str,
+    user: dict[str, Any],
+    auth_service: Any,
+    relation: str = "viewer",
+) -> bool:
+    """Check if user has access to a session.
+
+    Args:
+        session_id: The session ID to check access for
+        user: Authenticated user dict
+        auth_service: Authorization service for OpenFGA checks
+        relation: Required relation (default: viewer)
+
+    Returns:
+        True if authorized, False otherwise
+    """
+    if auth_service is None:
+        # Fallback: Allow if auth service not configured (dev mode)
+        return True
+
+    user_id = _get_user_id(user)
+    resource = f"session:{session_id}"
+
+    try:
+        authorized = await auth_service.authorize(
+            user_id=user_id,
+            relation=relation,
+            resource=resource,
+        )
+        return authorized
+    except Exception:
+        # Log error but fail closed for security
+        return False
 
 
 def get_decision_repository(request: Request):
@@ -46,13 +109,17 @@ _get_repository = get_decision_repository
 @router.get("/traces/{trace_id}", response_model=DecisionTraceRead)
 async def get_trace(
     trace_id: str,
+    request: Request,
     repo=Depends(get_decision_repository),
     current_user=Depends(get_current_user),
 ):
     """Get a specific decision trace.
 
+    Authorization: Requires viewer access to the trace's session.
+
     Args:
         trace_id: The trace ID to retrieve
+        request: FastAPI request for auth service access
         repo: Decision trace repository (injected)
         current_user: Authenticated user (injected)
 
@@ -60,19 +127,44 @@ async def get_trace(
         DecisionTraceRead with full trace data
 
     Raises:
+        HTTPException: 403 if not authorized to view trace
         HTTPException: 404 if trace not found
         HTTPException: 503 if context graph not enabled
     """
     trace = await repo.get_by_id(trace_id)
     if not trace:
-        raise HTTPException(404, "Trace not found")
-    # TODO: Add OpenFGA authorization check
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Trace not found")
+
+    # Authorization: User must have viewer access to the session
+    auth_service = get_authorization_service(request)
+    authorized = await _check_session_authorization(
+        session_id=trace.session_id,
+        user=current_user,
+        auth_service=auth_service,
+        relation="viewer",
+    )
+
+    if not authorized:
+        user_id = _get_user_id(current_user)
+        resource = f"session:{trace.session_id}"
+        log_authorization_denied(
+            user_id=user_id,
+            relation="viewer",
+            resource=resource,
+            reason="permission_denied",
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Not authorized: {user_id} cannot view traces for {resource}",
+        )
+
     return trace
 
 
 @router.get("/sessions/{session_id}/traces", response_model=list[DecisionTraceSummary])
 async def get_session_traces(
     session_id: str,
+    request: Request,
     limit: int = Query(default=100, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
     repo=Depends(get_decision_repository),
@@ -80,8 +172,11 @@ async def get_session_traces(
 ):
     """Get decision traces for a session.
 
+    Authorization: Requires viewer access to the session.
+
     Args:
         session_id: The session ID to get traces for
+        request: FastAPI request for auth service access
         limit: Max traces to return (default 100, max 1000)
         offset: Pagination offset (default 0)
         repo: Decision trace repository (injected)
@@ -89,7 +184,33 @@ async def get_session_traces(
 
     Returns:
         List of DecisionTraceSummary objects
+
+    Raises:
+        HTTPException: 403 if not authorized to view session traces
     """
+    # Authorization: User must have viewer access to the session
+    auth_service = get_authorization_service(request)
+    authorized = await _check_session_authorization(
+        session_id=session_id,
+        user=current_user,
+        auth_service=auth_service,
+        relation="viewer",
+    )
+
+    if not authorized:
+        user_id = _get_user_id(current_user)
+        resource = f"session:{session_id}"
+        log_authorization_denied(
+            user_id=user_id,
+            relation="viewer",
+            resource=resource,
+            reason="permission_denied",
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Not authorized: {user_id} cannot view traces for {resource}",
+        )
+
     return await repo.get_by_session(
         session_id=session_id,
         limit=limit,
@@ -101,15 +222,20 @@ async def get_session_traces(
 async def search_precedents(
     body: PrecedentSearchRequest,
     request: Request,
+    repo=Depends(get_decision_repository),
     current_user=Depends(get_current_user),
 ):
     """Search for similar past decisions.
 
     Uses semantic search to find precedents that match the query.
+    Results are scoped to the user's organization for security.
+
+    Authorization: Results are scoped to user's organization.
 
     Args:
         body: Search parameters including query text
         request: FastAPI request for app state access
+        repo: Decision trace repository (injected)
         current_user: Authenticated user (injected)
 
     Returns:
@@ -128,16 +254,20 @@ async def search_precedents(
     if not manager:
         raise HTTPException(503, "Semantic index manager not configured")
 
+    # Extract user ID and organization ID from current_user dict
+    user_id = current_user.get("sub") or current_user.get("user_id") or "anonymous"
+    organization_id = current_user.get("organization_id") or "default"
+
+    # Search is scoped to user's organization for security
     results = await manager.search_precedents(
         query=body.query,
-        user_id=current_user.user_id,
-        organization_id=current_user.organization_id,
+        user_id=user_id,
+        organization_id=organization_id,
         limit=body.limit,
         decision_type=body.decision_type.value if body.decision_type else None,
     )
 
     # Fetch full traces
-    repo = _get_repository(request)
     output = []
     for r in results:
         trace = await repo.get_by_id(r["trace_id"])
