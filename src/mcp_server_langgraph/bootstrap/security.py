@@ -5,11 +5,14 @@ Initializes authentication and authorization components:
 - AuthMiddleware for JWT validation
 - OpenFGA client for fine-grained authorization
 - User provider based on AUTH_PROVIDER setting
+- Semantic index manager cache warming (ADR-0099)
 """
 
 import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+
+from mcp_server_langgraph.core.dependencies import get_semantic_index_manager
 
 
 logger = logging.getLogger(__name__)
@@ -135,3 +138,39 @@ async def init_auth(settings: "Settings") -> SecurityState:
         openfga_client=openfga_client,
         user_provider=user_provider,
     )
+
+
+async def warm_semantic_cache(settings: "Settings") -> int:
+    """
+    Pre-warm the semantic index authorization cache.
+
+    Uses AUTH_CACHE_WARM_ENTRIES from settings to warm the cache
+    with known user/resource combinations on startup.
+
+    This reduces first-request latency for known service principals
+    and frequently accessed resources.
+
+    Args:
+        settings: Application settings with auth_cache_warm_entries
+
+    Returns:
+        Number of entries successfully warmed (authorized and cached)
+
+    Example:
+        # In bootstrap/lifespan
+        warmed = await warm_semantic_cache(settings)
+        logger.info(f"Warmed {warmed} cache entries")
+    """
+    entries = settings.auth_cache_warm_entries
+    if not entries:
+        logger.debug("No cache warming entries configured, skipping")
+        return 0
+
+    manager = get_semantic_index_manager()
+    if manager is None:
+        logger.warning("Semantic index manager not available, skipping cache warming")
+        return 0
+
+    warmed: int = await manager.warm_cache(entries)
+    logger.info(f"Semantic index cache warmed: {warmed}/{len(entries)} entries")
+    return warmed

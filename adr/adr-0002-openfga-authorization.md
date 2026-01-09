@@ -171,6 +171,35 @@ if user.has_role('admin') or user.has_role('premium'):
 
 ### Authorization Model
 
+The authorization model defines 37 types across multiple domains:
+
+**Core Identity**:
+- `user` - Individual users
+- `organization` - Multi-tenant organizations with `member`, `admin`, `user_in_context` relations
+- `service_principal` - Automated services with `acts_as` for permission inheritance
+
+**Resource Types**:
+- `tool` - MCP tools with `owner`, `executor`, `organization` relations
+- `conversation` - Chat threads with `owner`, `editor`, `viewer` relations
+- `vector_store` - Qdrant collections with RBAC hierarchy
+- `artifact` - Files and generated content with project hierarchy
+- `workflow`, `session`, `project` - LangGraph execution resources
+
+**Access Control**:
+- `authz` - OpenFGA Playground access
+- `system` - System-level access (admin → developer → user → viewer monotonic chain)
+- `ai` - AI features (admin → user inheritance)
+- `skill` - Skills (admin → author → viewer hierarchy)
+
+**Infrastructure**:
+- `dashboard`, `logs`, `traces`, `metrics`, `gateway`, `identity` - Observability
+- `budget`, `cost`, `compliance` - Financial and compliance
+- `mcp`, `mcp_connection`, `connection` - MCP protocol
+
+**Semantic Search** (ADR-0099):
+- `tool_index`, `skill_index`, `memory_index` - Vector search indices
+
+**Example Model (schema 1.1)**:
 ```yaml
 model
   schema 1.1
@@ -181,18 +210,34 @@ type organization
   relations
     define member: [user]
     define admin: [user] or member
+    define user_in_context: [user]  # For contextual tuples (ADR-0068 Phase 3)
 
 type tool
   relations
     define organization: [organization]
-    define owner: [user]
-    define executor: [user] or owner or organization.member
+    define owner: [user, service_principal]
+    define executor: [user, service_principal] or owner or organization.member
 
 type conversation
   relations
     define owner: [user]
     define viewer: [user, user:*] or owner
     define editor: [user] or owner
+
+type system
+  relations
+    define admin: [user]
+    define developer: [user] or admin
+    define user: [user] or developer
+    define viewer: [user] or user  # Monotonic: admin→developer→user→viewer
+```
+
+**Conditions (OpenFGA v1.11.2+)**:
+```json
+"conditions": {
+  "time_bound_share": {"expression": "current_time < expiry_time"},
+  "subscription_tier": {"expression": "user_tier == required_tier || user_tier == 'enterprise'"}
+}
 ```
 
 ### Usage

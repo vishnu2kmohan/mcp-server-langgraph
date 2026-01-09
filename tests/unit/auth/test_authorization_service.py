@@ -58,7 +58,7 @@ class TestAuthorizationServiceOpenFGA:
             user="user:alice",
             relation="executor",
             object="tool:chat",
-            context=None,
+            context={"contextual_tuples": []},
         )
 
     @pytest.mark.asyncio
@@ -181,6 +181,8 @@ class TestAuthorizationServiceFallback:
         mock_settings = MagicMock()
         mock_settings.environment = "test"
         mock_settings.allow_auth_fallback = True
+        mock_settings.openfga_org_context_enforcement = False
+        mock_settings.openfga_org_context_fail_closed = False
 
         mock_user_provider = AsyncMock(spec=["get_user_by_username"])  # async-mock-configured
         mock_user_data = MagicMock()
@@ -214,6 +216,8 @@ class TestAuthorizationServiceFallback:
         mock_settings = MagicMock()
         mock_settings.environment = "test"
         mock_settings.allow_auth_fallback = True
+        mock_settings.openfga_org_context_enforcement = False
+        mock_settings.openfga_org_context_fail_closed = False
 
         mock_user_provider = AsyncMock(spec=["get_user_by_username"])  # async-mock-configured
         mock_user_data = MagicMock()
@@ -247,6 +251,8 @@ class TestAuthorizationServiceFallback:
         mock_settings = MagicMock()
         mock_settings.environment = "test"
         mock_settings.allow_auth_fallback = True
+        mock_settings.openfga_org_context_enforcement = False
+        mock_settings.openfga_org_context_fail_closed = False
 
         mock_user_provider = AsyncMock(spec=["get_user_by_username"])  # async-mock-configured
         mock_user_data = MagicMock()
@@ -280,6 +286,8 @@ class TestAuthorizationServiceFallback:
         mock_settings = MagicMock()
         mock_settings.environment = "test"
         mock_settings.allow_auth_fallback = True
+        mock_settings.openfga_org_context_enforcement = False
+        mock_settings.openfga_org_context_fail_closed = False
 
         mock_user_provider = AsyncMock(spec=["get_user_by_username"])  # async-mock-configured
         mock_user_data = MagicMock()
@@ -334,12 +342,13 @@ class TestAuthorizationServiceWithContext:
             context=context,
         )
 
-        # Assert
+        # Assert - context is enhanced with contextual_tuples by the service
+        expected_context = {**context, "contextual_tuples": []}
         mock_openfga.check_permission.assert_called_once_with(
             user="user:alice",
             relation="executor",
             object="tool:chat",
-            context=context,
+            context=expected_context,
         )
 
 

@@ -105,12 +105,12 @@ class TestModelJsonStructure:
         type_defs = model_data["type_definitions"]
         type_names = [t.get("type") for t in type_defs]
 
+        # Note: 'role' type removed per OpenFGA Audit Phase 0 Task 0.3 (unused)
         required_types = [
             "user",
             "organization",
             "tool",
             "conversation",
-            "role",
             "service_principal",
             "vector_store",
             "authz",

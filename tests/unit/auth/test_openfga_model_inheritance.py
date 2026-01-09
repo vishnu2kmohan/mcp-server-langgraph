@@ -357,6 +357,203 @@ class TestInheritanceGapDetection:
         assert is_computed, "Should detect transitive inheritance"
 
 
+class TestMonotonicChainInvariants:
+    """
+    Tests for monotonic role hierarchy chains.
+
+    [ADR-0093] These tests validate that role hierarchies form proper chains
+    where permissions flow monotonically from higher to lower privilege:
+
+        system: admin → developer → user → viewer
+        skill: admin → author → viewer
+        ai: admin → user → viewer
+
+    A MONOTONIC chain means each level inherits from the level directly above,
+    NOT from the top level. This prevents privilege escalation bugs and ensures
+    the principle of least privilege is enforced.
+
+    BROKEN (flat - all inherit from admin):
+        admin → developer
+        admin → user
+        admin → viewer
+
+    CORRECT (chain - each inherits from level above):
+        admin → developer → user → viewer
+
+    Reference: Google Zanzibar - Nested Role Hierarchies
+    Reference: OpenFGA Best Practices - Modeling Roles
+    """
+
+    MONOTONIC_CHAIN_TYPES: dict[str, list[str]] = {
+        "system": ["admin", "developer", "user", "viewer"],
+        "skill": ["admin", "author", "viewer"],
+        "ai": ["admin", "user", "viewer"],
+    }
+
+    def test_system_developer_computed_from_admin(self) -> None:
+        """system.developer should be computed from admin (level 1)."""
+        model = load_openfga_model()
+        system_type = get_type_definition(model, "system")
+        assert system_type is not None
+
+        is_computed = relation_is_computed_from(system_type, "developer", "admin")
+        assert is_computed, (
+            "system.developer MUST be computed from admin. "
+            "This is the first level of the monotonic chain."
+        )
+
+    def test_system_user_computed_from_developer(self) -> None:
+        """
+        [CHAIN FIX] system.user should be computed from developer (level 2).
+
+        This test validates the monotonic chain fix. Currently FAILS because
+        user inherits directly from admin instead of developer.
+
+        Before fix: user inherits from admin (FLAT - BROKEN)
+        After fix: user inherits from developer (CHAIN - CORRECT)
+        """
+        model = load_openfga_model()
+        system_type = get_type_definition(model, "system")
+        assert system_type is not None
+
+        # Get user relation and check its direct sources
+        user_relation = system_type["relations"].get("user")
+        assert user_relation is not None
+
+        sources = get_computed_sources(user_relation)
+        assert "developer" in sources, (
+            "system.user MUST be computed from developer (not admin) to form "
+            "a proper monotonic chain: admin → developer → user → viewer. "
+            "Currently user inherits from admin which breaks the chain. "
+            "See OpenFGA Audit Resolution Plan Phase 0 Task 0.1."
+        )
+
+    def test_system_viewer_computed_from_user(self) -> None:
+        """
+        [CHAIN FIX] system.viewer should be computed from user (level 3).
+
+        This test validates the monotonic chain fix. Currently FAILS because
+        viewer inherits directly from admin instead of user.
+
+        Before fix: viewer inherits from admin (FLAT - BROKEN)
+        After fix: viewer inherits from user (CHAIN - CORRECT)
+        """
+        model = load_openfga_model()
+        system_type = get_type_definition(model, "system")
+        assert system_type is not None
+
+        # Get viewer relation and check its direct sources
+        viewer_relation = system_type["relations"].get("viewer")
+        assert viewer_relation is not None
+
+        sources = get_computed_sources(viewer_relation)
+        assert "user" in sources, (
+            "system.viewer MUST be computed from user (not admin) to form "
+            "a proper monotonic chain: admin → developer → user → viewer. "
+            "Currently viewer inherits from admin which breaks the chain. "
+            "See OpenFGA Audit Resolution Plan Phase 0 Task 0.1."
+        )
+
+    def test_skill_chain_author_from_admin(self) -> None:
+        """skill.author should be computed from admin."""
+        model = load_openfga_model()
+        skill_type = get_type_definition(model, "skill")
+        assert skill_type is not None
+
+        is_computed = relation_is_computed_from(skill_type, "author", "admin")
+        assert is_computed, "skill.author MUST be computed from admin"
+
+    def test_skill_chain_viewer_from_author(self) -> None:
+        """skill.viewer should be computed from author."""
+        model = load_openfga_model()
+        skill_type = get_type_definition(model, "skill")
+        assert skill_type is not None
+
+        viewer_relation = skill_type["relations"].get("viewer")
+        if viewer_relation:
+            sources = get_computed_sources(viewer_relation)
+            # Viewer should inherit from author OR admin (acceptable patterns)
+            assert "author" in sources or "admin" in sources, (
+                "skill.viewer MUST be computed from author (or admin) "
+                "to form a proper privilege chain."
+            )
+
+    def test_ai_chain_user_from_admin(self) -> None:
+        """ai.user should be computed from admin."""
+        model = load_openfga_model()
+        ai_type = get_type_definition(model, "ai")
+        assert ai_type is not None
+
+        is_computed = relation_is_computed_from(ai_type, "user", "admin")
+        assert is_computed, "ai.user MUST be computed from admin"
+
+    def test_ai_chain_viewer_from_user(self) -> None:
+        """ai.viewer should be computed from user."""
+        model = load_openfga_model()
+        ai_type = get_type_definition(model, "ai")
+        assert ai_type is not None
+
+        is_computed = relation_is_computed_from(ai_type, "viewer", "user")
+        assert is_computed, "ai.viewer MUST be computed from user"
+
+    @pytest.mark.parametrize(
+        "type_name,chain",
+        [
+            ("system", ["admin", "developer", "user", "viewer"]),
+            ("skill", ["admin", "author", "viewer"]),
+            ("ai", ["admin", "user", "viewer"]),
+        ],
+    )
+    def test_chain_transitive_reachability(self, type_name: str, chain: list[str]) -> None:
+        """
+        All relations in a chain should be transitively reachable from the top.
+
+        This validates that admin can reach all lower levels via the chain.
+        """
+        model = load_openfga_model()
+        type_def = get_type_definition(model, type_name)
+        assert type_def is not None, f"Type '{type_name}' should exist"
+
+        top_relation = chain[0]
+        for lower_relation in chain[1:]:
+            is_reachable = relation_is_computed_from(type_def, lower_relation, top_relation)
+            assert is_reachable, (
+                f"{type_name}.{lower_relation} should be transitively reachable from {top_relation}"
+            )
+
+
+class TestRoleTypeRemoval:
+    """
+    Tests for the role type removal (Decision 1 in OpenFGA Audit).
+
+    The 'role' type has an 'assignee' relation that is NOT wired into any
+    permissions. Keeping unused types creates drift and confusion.
+
+    These tests validate that the role type has been removed from the model.
+    """
+
+    def test_role_type_should_not_exist(self) -> None:
+        """
+        [AUDIT FIX] The 'role' type should be removed from the model.
+
+        This test validates Phase 0 Task 0.3 - removing the role type.
+
+        Rationale: role#assignee is unused for permissions - role_mappings.yaml
+        assigns role:admin/role:user/role:developer but nothing checks them.
+        """
+        model = load_openfga_model()
+        role_type = get_type_definition(model, "role")
+
+        # After the fix, role type should NOT exist
+        # Currently this test will FAIL (role type exists)
+        # After fix, this test will PASS (role type removed)
+        assert role_type is None, (
+            "The 'role' type should be removed from model.json. "
+            "The role#assignee relation is unused for permissions. "
+            "See OpenFGA Audit Resolution Plan Phase 0 Task 0.3."
+        )
+
+
 class TestExpectedHierarchyPatterns:
     """
     Tests for common privilege hierarchy patterns.

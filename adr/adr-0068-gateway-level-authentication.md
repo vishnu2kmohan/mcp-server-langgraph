@@ -152,8 +152,134 @@ Full API gateway. Overkill for test infrastructure.
 5. [ ] Update tests to handle authentication
 6. [ ] Document auth flow for developers
 
+## OpenFGA Authorization Model Updates (2026-01)
+
+As part of the comprehensive authorization audit aligned with this ADR, the following OpenFGA model improvements were implemented:
+
+### Organization Context Enforcement (Phase 3)
+
+Added `user_in_context` relation to `organization` type for contextual tuples:
+```json
+{
+  "type": "organization",
+  "relations": {
+    "member": {"this": {}},
+    "admin": {"this": {}},
+    "user_in_context": {"this": {}}
+  }
+}
+```
+
+**Feature Flags** (use FF_ prefix per naming convention):
+- `FF_OPENFGA_ORG_CONTEXT_ENFORCEMENT=true` - Require org context in authorization checks
+- `FF_OPENFGA_ORG_CONTEXT_FAIL_CLOSED=true` - Fail closed when org context missing
+
+### Conditions Support (Phase 6)
+
+Added conditional authorization for time-bound and tier-based access:
+
+```json
+"conditions": {
+  "time_bound_share": {
+    "expression": "current_time < expiry_time",
+    "parameters": {
+      "current_time": {"type_name": "TYPE_NAME_TIMESTAMP"},
+      "expiry_time": {"type_name": "TYPE_NAME_TIMESTAMP"}
+    }
+  },
+  "subscription_tier": {
+    "expression": "user_tier == required_tier || user_tier == 'enterprise' || (user_tier == 'premium' && required_tier == 'free')",
+    "parameters": {
+      "user_tier": {"type_name": "TYPE_NAME_STRING"},
+      "required_tier": {"type_name": "TYPE_NAME_STRING"}
+    }
+  }
+}
+```
+
+**Feature Flag**: `FF_OPENFGA_CONDITIONS_ENABLED=false` (default OFF for gradual rollout)
+
+**Server Requirement**: OpenFGA v1.11.2 or higher
+
+### System Type Hierarchy Fix
+
+Fixed monotonic chain in `system` type to properly inherit:
+- `admin` → `developer` → `user` → `viewer`
+
+Previously all relations incorrectly inherited directly from `admin`.
+
+### Service Principal Parity (Phase 5)
+
+Extended metadata to include `service_principal` in all user-accepting relations across 14+ types:
+- `tool`, `workflow`, `session`, `artifact`, `project`, `agent`, `skill`
+- `vector_store`, `dashboard`, `cost`, `observability`, `connection`, `execution`
+
+See also: [ADR-0039](adr-0039-openfga-permission-inheritance.md) for `acts_as` pattern.
+
+### Partner Access Pattern (Phase 9)
+
+Added cross-tenant partnership model for resource sharing between organizations:
+
+```json
+{
+  "type": "partner",
+  "relations": {
+    "source_org": {"this": {}},
+    "target_org": {"this": {}},
+    "admin": {
+      "union": {
+        "child": [
+          {"this": {}},
+          {"tupleToUserset": {"tupleset": {"relation": "source_org"}, "computedUserset": {"relation": "admin"}}}
+        ]
+      }
+    },
+    "viewer": {
+      "union": {
+        "child": [
+          {"this": {}},
+          {"computedUserset": {"relation": "admin"}},
+          {"tupleToUserset": {"tupleset": {"relation": "target_org"}, "computedUserset": {"relation": "member"}}}
+        ]
+      }
+    }
+  }
+}
+```
+
+**Key Features**:
+- `source_org` - Organization sharing resources
+- `target_org` - Organization receiving access
+- `admin` - Inherits from source org admins
+- `viewer` - Target org members can view shared resources
+
+**Usage Pattern**:
+```python
+# Create partnership tuple
+await openfga_client.write_tuple(
+    user="organization:acme",
+    relation="source_org",
+    object="partner:acme-widgets-partnership"
+)
+await openfga_client.write_tuple(
+    user="organization:widgets-inc",
+    relation="target_org",
+    object="partner:acme-widgets-partnership"
+)
+
+# Now widgets-inc members can view resources shared via this partnership
+```
+
+**Modular Definition**: See `config/openfga/modules/04-access-control.fga`
+
+### Removed Types
+
+Removed deprecated `role` type per OpenFGA audit (Phase 0 Task 0.3). Role-based access is handled via Keycloak groups mapped to organization membership, not a separate `role` type.
+
 ## References
 
 - [Traefik ForwardAuth Middleware](https://doc.traefik.io/traefik/middlewares/http/forwardauth/)
 - [traefik-forward-auth](https://github.com/thomseddon/traefik-forward-auth)
 - [Keycloak OIDC Configuration](https://www.keycloak.org/docs/latest/securing_apps/)
+- [OpenFGA Conditions](https://openfga.dev/docs/modeling/conditions)
+- [OpenFGA Organization Context](https://openfga.dev/docs/modeling/organization-context-authorization)

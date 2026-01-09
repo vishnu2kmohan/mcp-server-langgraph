@@ -71,7 +71,8 @@ class AuthorizationService:
             user_id: User identifier (e.g., "user:alice")
             relation: Relation to check (e.g., "executor", "viewer")
             resource: Resource identifier (e.g., "tool:chat")
-            context: Additional context for authorization
+            context: Additional context for authorization, including:
+                - org_context: Organization ID for contextual tuple injection (Phase 3)
 
         Returns:
             True if authorized, False otherwise
@@ -80,6 +81,34 @@ class AuthorizationService:
             span.set_attribute("user.id", user_id)
             span.set_attribute("auth.relation", relation)
             span.set_attribute("auth.resource", resource)
+
+            # Phase 3: Check org context enforcement settings
+            org_context_enforcement = (
+                getattr(self.settings, "openfga_org_context_enforcement", False)
+                if self.settings else False
+            )
+            org_context_fail_closed = (
+                getattr(self.settings, "openfga_org_context_fail_closed", True)
+                if self.settings else True
+            )
+
+            # Extract org_context from context dict
+            org_context = context.get("org_context") if context else None
+
+            # Fail closed if org context enforcement is enabled and context is missing
+            if org_context_enforcement and org_context_fail_closed and org_context is None:
+                logger.warning(
+                    "Authorization denied - missing org context with enforcement enabled",
+                    extra={
+                        "user_id": user_id,
+                        "relation": relation,
+                        "resource": resource,
+                        "org_context_enforcement": org_context_enforcement,
+                        "org_context_fail_closed": org_context_fail_closed,
+                    },
+                )
+                span.set_attribute("auth.denied_reason", "missing_org_context")
+                return False
 
             # Validate resource and relation if registry is configured (OCP pattern)
             if self.resource_registry is not None:
@@ -114,11 +143,19 @@ class AuthorizationService:
             # Use OpenFGA if available
             if self.openfga:
                 try:
+                    # Build enhanced context with contextual tuples for org context enforcement
+                    enhanced_context = self._build_enhanced_context(
+                        user_id=user_id,
+                        org_context=org_context,
+                        org_context_enforcement=org_context_enforcement,
+                        original_context=context,
+                    )
+
                     authorized = await self.openfga.check_permission(
                         user=user_id,
                         relation=relation,
                         object=resource,
-                        context=context,
+                        context=enhanced_context,
                     )
 
                     span.set_attribute("auth.authorized", authorized)
@@ -129,6 +166,10 @@ class AuthorizationService:
                             "relation": relation,
                             "resource": resource,
                             "authorized": authorized,
+                            "org_context": org_context,
+                            "has_contextual_tuples": bool(
+                                enhanced_context and enhanced_context.get("contextual_tuples")
+                            ),
                         },
                     )
 
@@ -149,6 +190,61 @@ class AuthorizationService:
 
             # Fallback authorization when OpenFGA not available
             return await self._fallback_authorize(user_id, relation, resource)
+
+    def _build_enhanced_context(
+        self,
+        user_id: str,
+        org_context: str | None,
+        org_context_enforcement: bool,
+        original_context: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        """
+        Build enhanced context with contextual tuples for org context enforcement.
+
+        Phase 3 implementation: Inject contextual tuples for org-scoped authorization.
+
+        Args:
+            user_id: User identifier (e.g., "user:alice")
+            org_context: Organization ID for contextual tuple
+            org_context_enforcement: Whether org context enforcement is enabled
+            original_context: Original context dict from caller
+
+        Returns:
+            Enhanced context dict with contextual_tuples if applicable
+        """
+        enhanced_context: dict[str, Any] = {}
+
+        # Copy original context if provided
+        if original_context:
+            enhanced_context.update(original_context)
+
+        # Initialize contextual_tuples list
+        contextual_tuples: list[dict[str, str]] = []
+
+        # Add org context tuple if enforcement is enabled and context is provided
+        if org_context_enforcement and org_context:
+            contextual_tuples.append({
+                "user": user_id,
+                "relation": "user_in_context",
+                "object": f"organization:{org_context}",
+            })
+            logger.debug(
+                "Added org context tuple for authorization",
+                extra={
+                    "user_id": user_id,
+                    "org_context": org_context,
+                    "tuple": {
+                        "user": user_id,
+                        "relation": "user_in_context",
+                        "object": f"organization:{org_context}",
+                    },
+                },
+            )
+
+        # Add contextual_tuples to context
+        enhanced_context["contextual_tuples"] = contextual_tuples
+
+        return enhanced_context
 
     async def _fallback_authorize(
         self,

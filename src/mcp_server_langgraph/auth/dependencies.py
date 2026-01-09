@@ -788,6 +788,203 @@ if FASTAPI_AVAILABLE:
         """
         return await _create_resource_auth_dependency("skill", "admin", "skill_id")(request, skill_id)
 
+    async def require_skill_author(
+        request: Request,
+        skill_id: str = Path(...),
+    ) -> Any:
+        """
+        Require author access to a skill.
+
+        Use for: POST /skills/{skill_id}/install, DELETE /skills/{skill_id}
+        Author can install, uninstall, and update skills.
+        """
+        return await _create_resource_auth_dependency("skill", "author", "skill_id")(request, skill_id)
+
+    # ============================================================================
+    # Skill Marketplace Authorization Dependencies (singleton-based)
+    # These use skill:default and marketplace:default for global operations
+    # ============================================================================
+
+    async def require_skill_viewer_global(
+        request: Request,
+    ) -> dict[str, Any]:
+        """
+        Require viewer access to skill:default for global skill operations.
+
+        Use for: GET /admin/skills/list, GET /admin/skills/installed, GET /admin/skills/updates
+        All users with skill:viewer can browse and list skills.
+        """
+        user = await get_current_user(request)
+
+        auth = get_auth_middleware_from_request(request)
+        if auth is None:
+            auth = _global_auth_middleware
+        if auth is None:
+            logger.warning("No auth middleware available, skipping skill viewer check")
+            return user
+
+        user_id = user.get("sub") or user.get("user_id") or ""
+        if not user_id.startswith("user:"):
+            user_id = f"user:{user_id}"
+
+        authorized = await auth.authorize(
+            user_id=user_id,
+            relation="viewer",
+            resource="skill:default",
+        )
+
+        if not authorized:
+            from mcp_server_langgraph.auth.metrics import log_authorization_denied
+
+            log_authorization_denied(
+                user_id=user_id,
+                relation="viewer",
+                resource="skill:default",
+                reason="permission_denied",
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Not authorized: {user_id} cannot view skills",
+            )
+
+        return user
+
+    async def require_skill_author_global(
+        request: Request,
+    ) -> dict[str, Any]:
+        """
+        Require author access to skill:default for global skill authoring operations.
+
+        Use for: POST /admin/skills/install, DELETE /admin/skills/{name}, POST /admin/skills/updates/apply
+        Authors (alice) can install, uninstall, and apply updates.
+        """
+        user = await get_current_user(request)
+
+        auth = get_auth_middleware_from_request(request)
+        if auth is None:
+            auth = _global_auth_middleware
+        if auth is None:
+            logger.warning("No auth middleware available, skipping skill author check")
+            return user
+
+        user_id = user.get("sub") or user.get("user_id") or ""
+        if not user_id.startswith("user:"):
+            user_id = f"user:{user_id}"
+
+        authorized = await auth.authorize(
+            user_id=user_id,
+            relation="author",
+            resource="skill:default",
+        )
+
+        if not authorized:
+            from mcp_server_langgraph.auth.metrics import log_authorization_denied
+
+            log_authorization_denied(
+                user_id=user_id,
+                relation="author",
+                resource="skill:default",
+                reason="permission_denied",
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Not authorized: {user_id} cannot author skills",
+            )
+
+        return user
+
+    async def require_marketplace_viewer(
+        request: Request,
+    ) -> dict[str, Any]:
+        """
+        Require viewer access to marketplace:default for browsing listings.
+
+        Use for: GET /admin/skills/list (alternative to skill:viewer)
+        Users with marketplace:viewer can browse marketplace listings.
+        """
+        user = await get_current_user(request)
+
+        auth = get_auth_middleware_from_request(request)
+        if auth is None:
+            auth = _global_auth_middleware
+        if auth is None:
+            logger.warning("No auth middleware available, skipping marketplace viewer check")
+            return user
+
+        user_id = user.get("sub") or user.get("user_id") or ""
+        if not user_id.startswith("user:"):
+            user_id = f"user:{user_id}"
+
+        authorized = await auth.authorize(
+            user_id=user_id,
+            relation="viewer",
+            resource="marketplace:default",
+        )
+
+        if not authorized:
+            from mcp_server_langgraph.auth.metrics import log_authorization_denied
+
+            log_authorization_denied(
+                user_id=user_id,
+                relation="viewer",
+                resource="marketplace:default",
+                reason="permission_denied",
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Not authorized: {user_id} cannot view marketplace",
+            )
+
+        return user
+
+    async def require_marketplace_admin(
+        request: Request,
+    ) -> dict[str, Any]:
+        """
+        Require admin access to marketplace:default for registration/management.
+
+        Use for: POST /api/v1/marketplaces, DELETE /api/v1/marketplaces/{name}
+        Only admins can register new marketplaces or manage skill availability.
+        """
+        user = await get_current_user(request)
+
+        auth = get_auth_middleware_from_request(request)
+        if auth is None:
+            auth = _global_auth_middleware
+        if auth is None:
+            logger.warning("No auth middleware available, skipping marketplace admin check")
+            return user
+
+        user_id = user.get("sub") or user.get("user_id") or ""
+        if not user_id.startswith("user:"):
+            user_id = f"user:{user_id}"
+
+        authorized = await auth.authorize(
+            user_id=user_id,
+            relation="admin",
+            resource="marketplace:default",
+        )
+
+        if not authorized:
+            from mcp_server_langgraph.auth.metrics import log_authorization_denied
+
+            log_authorization_denied(
+                user_id=user_id,
+                relation="admin",
+                resource="marketplace:default",
+                reason="permission_denied",
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Not authorized: {user_id} cannot administer marketplace",
+            )
+
+        return user
+
     # ============================================================================
     # Execution Authorization Dependencies
     # ============================================================================
@@ -903,41 +1100,6 @@ if FASTAPI_AVAILABLE:
             auth = _global_auth_middleware
         if auth is None:
             logger.warning("No auth middleware, skipping compliance auth check")
-            return user
-
-        user_id = user.get("sub") or user.get("user_id") or ""
-        if not user_id.startswith("user:"):
-            user_id = f"user:{user_id}"
-
-        authorized = await auth.authorize(user_id=user_id, relation="admin", resource=resource)
-        if not authorized:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Not authorized: {user_id} cannot admin {resource}",
-            )
-        return user
-
-    # ============================================================================
-    # Marketplace Authorization Dependencies
-    # ============================================================================
-
-    async def require_marketplace_admin(
-        request: Request,
-    ) -> Any:
-        """
-        Require admin access to marketplace.
-
-        Use for: POST/PUT/DELETE /marketplace/*
-        Checks against 'marketplace:default' resource.
-        """
-        user = await get_current_user(request)
-        resource = "marketplace:default"
-
-        auth = get_auth_middleware_from_request(request)
-        if auth is None:
-            auth = _global_auth_middleware
-        if auth is None:
-            logger.warning("No auth middleware, skipping marketplace auth check")
             return user
 
         user_id = user.get("sub") or user.get("user_id") or ""
@@ -1132,9 +1294,13 @@ if FASTAPI_AVAILABLE:
             "require_agent_viewer",
             "require_agent_admin",
             "require_agent_owner",
-            # Skill authorization
+            # Skill authorization (path-based)
             "require_skill_viewer",
             "require_skill_admin",
+            "require_skill_author",
+            # Skill authorization (global singleton - skill:default)
+            "require_skill_viewer_global",
+            "require_skill_author_global",
             # Execution authorization
             "require_execution_viewer",
             "require_execution_owner",
@@ -1145,7 +1311,8 @@ if FASTAPI_AVAILABLE:
             # Compliance authorization
             "require_compliance_viewer",
             "require_compliance_admin",
-            # Marketplace authorization
+            # Marketplace authorization (global singleton - marketplace:default)
+            "require_marketplace_viewer",
             "require_marketplace_admin",
             # Config authorization
             "require_config_viewer",
