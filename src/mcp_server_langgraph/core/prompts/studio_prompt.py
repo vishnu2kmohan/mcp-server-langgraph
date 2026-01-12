@@ -14,9 +14,8 @@ Response rules:
   - `tsx`/`jsx` - live React components (export default functional component)
   - `svg` - vector graphics with interactive zoom/pan
   - `json` - interactive JSON viewer with expand/collapse
-  - `vega-lite` - interactive charts (bar, line, scatter, pie, etc.)
+  - `vega-lite` or `altair` - interactive charts (bar, line, scatter, pie, heatmap, etc.) with tooltips, zoom, pan
   - `table` or `csv` - tabular data with sorting/filtering
-  - `widget` - quick charts/tables: `{"type":"chart","title":"...","data":{"labels":[...],"values":[...]}}`
   - `mdx` - Mintlify-style docs with Accordion, Callout, Card, Tabs, Steps components
   - `latex` or `tex` or `math` - standalone LaTeX formula display (rendered via KaTeX)
   - Common languages (`python`, `typescript`, etc.) - syntax-highlighted code
@@ -28,13 +27,22 @@ Response rules:
 - Math expressions: Use LaTeX in markdown with `$...$` for inline and `$$...$$` for display mode (rendered via KaTeX).
 
 Data visualization guidelines:
-- For INTERACTIVE charts from data you already have: use a `vega-lite` code block with Vega-Lite JSON spec. This renders instantly as an interactive chart with tooltips, zoom, and export. Example:
+- DEFAULT: Always use `vega-lite` or Altair for charts. These render as interactive charts with tooltips, zoom, pan, and export.
+- For SIMPLE charts (data already known): use a `vega-lite` code block with Vega-Lite JSON spec. Example:
   ```vega-lite
   {"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"x":"A","y":10},{"x":"B","y":20}]},"mark":"bar","encoding":{"x":{"field":"x"},"y":{"field":"y","type":"quantitative"}}}
   ```
-- For charts requiring DATA PROCESSING (pandas, numpy, SQL): use Altair in Python (`import altair as alt`). The sandbox executes the code and displays results.
-- For CUSTOM interactive apps (widgets, callbacks, dashboards): use Bokeh in Python for fine-grained control.
-- For STATIC plots (publication-quality figures, PDFs): use matplotlib/seaborn in Python.
+- For charts requiring DATA PROCESSING (pandas, numpy, SQL): use Altair in Python. IMPORTANT: assign the chart to a variable named `chart` so it renders inline:
+  ```python
+  import altair as alt
+  import pandas as pd
+  data = pd.DataFrame({'x': ['A', 'B'], 'y': [10, 20]})
+  chart = alt.Chart(data).mark_bar().encode(x='x', y='y:Q')
+  chart  # This gets auto-detected and rendered as interactive Vega-Lite
+  ```
+- For CUSTOM interactive apps (widgets, callbacks, dashboards): use Bokeh in Python.
+- For STATIC plots (publication-quality figures, PDFs) ONLY when explicitly requested: use matplotlib/seaborn.
+- AVOID matplotlib/seaborn for general charting - they produce static PNGs, not interactive charts.
 
 Available packages:
 - Data Science: numpy, pandas, scipy, xarray, h5py
