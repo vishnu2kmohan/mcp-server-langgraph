@@ -28,6 +28,8 @@ import {
 } from "../../hooks/useAIEmptyState";
 import { cn } from "../../utils/cn";
 
+import { Button } from "@/components/UI";
+
 /**
  * AIEmptyState component props
  */
@@ -81,7 +83,7 @@ function AISuggestionTrigger({
   onClick: () => void;
 }): React.ReactElement {
   return (
-    <button
+    <Button
       type="button"
       onClick={onClick}
       className={cn(
@@ -100,7 +102,7 @@ function AISuggestionTrigger({
       )}
       <span>{suggestion.text}</span>
       {suggestion.action === "navigate" && <ArrowRight size={16} />}
-    </button>
+    </Button>
   );
 }
 
@@ -117,20 +119,20 @@ function FallbackTrigger({
   onClick: () => void;
 }): React.ReactElement {
   return (
-    <button
+    <Button
       type="button"
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-2 px-4 py-2 rounded-lg",
-        "bg-gray-600 hover:bg-gray-700 text-white",
+        "bg-neutral-600 hover:bg-neutral-700 text-white",
         "transition-colors duration-150",
-        "focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2",
+        "focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2",
       )}
       data-target={target}
     >
       <span>{action}</span>
       <ArrowRight size={16} />
-    </button>
+    </Button>
   );
 }
 
@@ -227,19 +229,19 @@ export function AIEmptyState({
   const secondSuggestion = suggestions[1];
   const secondaryTrigger =
     isAIAvailable && suggestions.length > 1 && secondSuggestion ? (
-      <button
+      <Button
         type="button"
         onClick={() => handleSuggestionClick(secondSuggestion)}
         className={cn(
           "inline-flex items-center gap-2 px-4 py-2 rounded-lg",
-          "border border-gray-300 dark:border-gray-600",
-          "text-gray-700 dark:text-gray-300",
-          "hover:bg-gray-50 dark:hover:bg-gray-800",
+          "border border-neutral-300 dark:border-neutral-600",
+          "text-neutral-700 dark:text-neutral-300",
+          "hover:bg-neutral-50 dark:hover:bg-neutral-800",
           "transition-colors duration-150",
         )}
       >
         <span>{secondSuggestion.text}</span>
-      </button>
+      </Button>
     ) : undefined;
 
   // Determine title based on emptyType

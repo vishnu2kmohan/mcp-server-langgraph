@@ -12,6 +12,8 @@
 
 import { useState, type ReactNode } from "react";
 
+import { Button } from "@/components/UI";
+
 /**
  * Custom action configuration
  */
@@ -110,112 +112,115 @@ export function BulkActionBar({
     <div
       role="toolbar"
       aria-label="Bulk actions"
-      className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between shadow-lg ${className}`}
+      className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 px-4 py-3 flex items-center justify-between shadow-lg ${className}`}
     >
       {/* Selection count */}
       <div className="flex items-center gap-4">
         <span
           role="status"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
         >
           {selectedCount} selected
         </span>
-        <button
+        <Button
+          className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
           type="button"
           aria-label="Clear selection"
           onClick={onClearSelection}
-          className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
         >
           Clear
-        </button>
+        </Button>
       </div>
-
       {/* Actions */}
       <div className="flex items-center gap-2">
         {/* Custom actions */}
         {customActions.map((action) => (
-          <button
+          <Button
+            variant="secondary"
+            className="px-3 py-1.5 text-sm rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300"
             key={action.label}
             type="button"
             onClick={() => handleCustomActionClick(action)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"
           >
             {action.icon}
             {action.label}
-          </button>
+          </Button>
         ))}
 
         {/* Delete button */}
-        <button
+        <Button
+          variant="danger"
+          className="px-3 py-1.5 text-sm rounded-md bg-error-100 hover:bg-error-200 dark:bg-error-900 dark:hover:bg-error-800 text-error-700 dark:text-error-300"
           type="button"
           onClick={handleDeleteClick}
-          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md bg-error-100 hover:bg-error-200 dark:bg-error-900 dark:hover:bg-error-800 text-error-700 dark:text-error-300"
         >
           Delete
-        </button>
+        </Button>
       </div>
-
       {/* Delete confirmation dialog */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 max-w-sm mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
               Are you sure?
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
               This will delete {selectedCount} items. This action cannot be
               undone.
             </p>
             <div className="flex justify-end gap-2">
-              <button
+              <Button
+                variant="secondary"
+                className="px-3 py-1.5 text-sm rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300"
                 type="button"
                 onClick={handleDeleteCancel}
                 disabled={isDeleting}
-                className="px-3 py-1.5 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-50"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                className="px-3 py-1.5 text-sm rounded-md bg-error-600 hover:bg-error-700 text-white"
                 type="button"
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
-                className="px-3 py-1.5 text-sm font-medium rounded-md bg-error-600 hover:bg-error-700 text-white disabled:opacity-50"
               >
                 {isDeleting ? "Deleting..." : "Confirm"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
-
       {/* Custom action confirmation dialog */}
       {pendingCustomAction && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 max-w-sm mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
               Are you sure?
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
               {pendingCustomAction.confirmMessage ||
                 `This will affect ${selectedCount} items.`}
             </p>
             <div className="flex justify-end gap-2">
-              <button
+              <Button
+                variant="secondary"
+                className="px-3 py-1.5 text-sm rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300"
                 type="button"
                 onClick={handleCustomActionCancel}
                 disabled={isCustomActionLoading}
-                className="px-3 py-1.5 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-50"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                className="px-3 py-1.5 text-sm rounded-md bg-error-600 hover:bg-error-700 text-white"
                 type="button"
                 onClick={handleCustomActionConfirm}
                 disabled={isCustomActionLoading}
-                className="px-3 py-1.5 text-sm font-medium rounded-md bg-error-600 hover:bg-error-700 text-white disabled:opacity-50"
               >
                 {isCustomActionLoading ? "Processing..." : "Confirm"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

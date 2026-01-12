@@ -206,7 +206,7 @@ export function useStudioAI(options: UseStudioAIOptions): UseStudioAIResult {
 
       // Create result entries for each analysis in the response
       for (const [taskType, analysisData] of Object.entries(analysesMap)) {
-        const isFailed = data.failed_analyses?.includes(taskType);
+        const isFailed = data.failedAnalyses?.includes(taskType);
         analysisResults.push({
           task_type: taskType,
           success: !isFailed,
@@ -219,7 +219,7 @@ export function useStudioAI(options: UseStudioAIOptions): UseStudioAIResult {
       }
 
       // Add entries for failed analyses not in the analyses map
-      for (const failedType of data.failed_analyses || []) {
+      for (const failedType of data.failedAnalyses || []) {
         if (!analysesMap[failedType]) {
           analysisResults.push({
             task_type: failedType,
@@ -232,9 +232,9 @@ export function useStudioAI(options: UseStudioAIOptions): UseStudioAIResult {
 
       setResults(analysisResults);
       setAnalyses(analysesMap);
-      setCrossInsights(data.cross_insights || []);
-      setFailedAnalyses(data.failed_analyses || []);
-      setTotalCost(data.total_cost || "0");
+      setCrossInsights(data.crossInsights || []);
+      setFailedAnalyses(data.failedAnalyses || []);
+      setTotalCost(data.totalCost || "0");
     } catch (err) {
       const errorToSet =
         err instanceof Error ? err : new Error("Studio AI analysis failed");

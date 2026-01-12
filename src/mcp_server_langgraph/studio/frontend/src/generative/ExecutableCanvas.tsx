@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { cn } from "../utils/cn";
 
+import { Button, Textarea } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -84,93 +86,94 @@ export function ExecutableCanvas({
       role="region"
       aria-label={config.title}
       className={cn(
-        "flex flex-col bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden",
+        "flex flex-col bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/50">
         <div className="flex items-center gap-3">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">
+          <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
             {config.title}
           </h3>
-          <span className="px-2 py-0.5 text-xs rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+          <span className="px-2 py-0.5 text-xs rounded bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400">
             {config.language}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           {/* View mode toggles */}
-          <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded">
-            <button
+          <div className="flex items-center border border-neutral-200 dark:border-neutral-700 rounded">
+            <Button
               data-testid="view-split"
               type="button"
               onClick={() => setViewMode("split")}
               className={cn(
                 "p-1.5",
                 viewMode === "split"
-                  ? "bg-gray-200 dark:bg-gray-700"
-                  : "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
+                  ? "bg-neutral-200 dark:bg-neutral-700"
+                  : "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
               )}
               aria-label="Split view"
             >
               <Columns size={14} />
-            </button>
-            <button
+            </Button>
+            <Button
               data-testid="view-code-only"
               type="button"
               onClick={() => setViewMode("code")}
               className={cn(
                 "p-1.5",
                 viewMode === "code"
-                  ? "bg-gray-200 dark:bg-gray-700"
-                  : "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
+                  ? "bg-neutral-200 dark:bg-neutral-700"
+                  : "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
               )}
               aria-label="Code only"
             >
               <Code size={14} />
-            </button>
-            <button
+            </Button>
+            <Button
               data-testid="view-preview-only"
               type="button"
               onClick={() => setViewMode("preview")}
               className={cn(
                 "p-1.5",
                 viewMode === "preview"
-                  ? "bg-gray-200 dark:bg-gray-700"
-                  : "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
+                  ? "bg-neutral-200 dark:bg-neutral-700"
+                  : "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
               )}
               aria-label="Preview only"
             >
               <Eye size={14} />
-            </button>
+            </Button>
           </div>
 
           {/* Run/Stop button */}
           {isRunning ? (
-            <button
+            <Button
+              variant="danger"
+              className="flex px-3 py-1.5 text-sm bg-error-500 text-white rounded hover:bg-error-600"
               data-testid="stop-button"
               type="button"
               onClick={onStop}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-error-500 text-white rounded hover:bg-error-600 transition-colors"
             >
               <Square size={14} />
               Stop
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
+              variant="success"
+              className="flex px-3 py-1.5 text-sm bg-success-500 text-white rounded hover:bg-success-600"
               data-testid="run-button"
               type="button"
               onClick={handleRun}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-success-500 text-white rounded hover:bg-success-600 transition-colors"
             >
               <Play size={14} />
               Run
-            </button>
+            </Button>
           )}
         </div>
       </div>
-
       {/* Main content */}
       <div
         data-testid={
@@ -189,17 +192,17 @@ export function ExecutableCanvas({
             className={cn(
               "flex flex-col",
               viewMode === "split"
-                ? "w-1/2 border-r border-gray-200 dark:border-gray-700"
+                ? "w-1/2 border-r border-neutral-200 dark:border-neutral-700"
                 : "flex-1",
             )}
           >
-            <textarea
+            <Textarea
+              className="flex-1 p-4 font-mono text-sm bg-neutral-900 text-neutral-100 resize-none"
               data-testid="code-input"
               value={code}
               onChange={handleCodeChange}
               spellCheck={false}
               aria-label={`${config.language} code editor for ${config.title}`}
-              className="flex-1 p-4 font-mono text-sm bg-gray-900 text-gray-100 resize-none focus:outline-none"
             />
           </div>
         )}
@@ -216,7 +219,7 @@ export function ExecutableCanvas({
             {isPreviewLoading ? (
               <div
                 data-testid="preview-loading"
-                className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900"
+                className="flex-1 flex items-center justify-center bg-neutral-50 dark:bg-neutral-900"
               >
                 <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
               </div>
@@ -231,7 +234,6 @@ export function ExecutableCanvas({
           </div>
         )}
       </div>
-
       {/* Error Panel */}
       {error && (
         <div
@@ -244,28 +246,27 @@ export function ExecutableCanvas({
           </span>
         </div>
       )}
-
       {/* Console Panel */}
       {consoleOutput.length > 0 && (
         <div
           data-testid="console-panel"
-          className="border-t border-gray-200 dark:border-gray-700"
+          className="border-t border-neutral-200 dark:border-neutral-700"
         >
-          <div className="flex items-center justify-between px-4 py-1 bg-gray-100 dark:bg-gray-800">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-between px-4 py-1 bg-neutral-100 dark:bg-neutral-800">
+            <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
               Console
             </span>
-            <button
+            <Button
+              className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300"
               data-testid="clear-console"
               type="button"
               onClick={onClearConsole}
-              className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
               aria-label="Clear console"
             >
               <Trash2 size={12} />
-            </button>
+            </Button>
           </div>
-          <div className="max-h-32 overflow-y-auto p-2 font-mono text-xs bg-gray-900 text-gray-100">
+          <div className="max-h-32 overflow-y-auto p-2 font-mono text-xs bg-neutral-900 text-neutral-100">
             {consoleOutput.map((line, index) => (
               <div key={index} className="py-0.5">
                 {line}

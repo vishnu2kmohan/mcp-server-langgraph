@@ -21,6 +21,8 @@ import { X, GitCompare, Columns, List, Plus, Minus } from "lucide-react";
 
 import { cn } from "../../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -130,15 +132,18 @@ export function WorkflowDiffViewer({
     <div
       data-testid="diff-viewer"
       className={cn(
-        "flex flex-col h-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg",
+        "flex flex-col h-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center gap-2">
-          <GitCompare size={16} className="text-gray-500 dark:text-gray-400" />
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <GitCompare
+            size={16}
+            className="text-neutral-500 dark:text-neutral-400"
+          />
+          <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
             Compare Versions
           </h3>
         </div>
@@ -147,23 +152,23 @@ export function WorkflowDiffViewer({
           {/* Mode toggle */}
           <div
             data-testid="diff-mode-toggle"
-            className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-md p-0.5"
+            className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-md p-0.5"
           >
-            <button
+            <Button
               type="button"
               onClick={() => handleModeChange("side-by-side")}
               className={cn(
                 "flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium",
                 "transition-colors",
                 mode === "side-by-side"
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300",
+                  ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm"
+                  : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300",
               )}
             >
               <Columns size={12} />
               Split
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               aria-label="Unified"
               onClick={() => handleModeChange("unified")}
@@ -171,43 +176,42 @@ export function WorkflowDiffViewer({
                 "flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium",
                 "transition-colors",
                 mode === "unified"
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300",
+                  ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm"
+                  : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300",
               )}
             >
               <List size={12} />
               Unified
-            </button>
+            </Button>
           </div>
 
           {/* Close button */}
           {onClose && (
-            <button
+            <Button
+              variant="secondary"
+              className="p-1 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400"
               type="button"
               aria-label="Close"
               onClick={onClose}
-              className="p-1 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
             >
               <X size={16} />
-            </button>
+            </Button>
           )}
         </div>
       </div>
-
       {/* Version labels */}
-      <div className="flex items-center justify-between px-4 py-1.5 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 text-xs">
-        <span className="text-gray-600 dark:text-gray-400">
+      <div className="flex items-center justify-between px-4 py-1.5 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700 text-xs">
+        <span className="text-neutral-600 dark:text-neutral-400">
           v{versionA.versionNumber} - {versionA.commitMessage || "No message"}
         </span>
-        <span className="text-gray-600 dark:text-gray-400">
+        <span className="text-neutral-600 dark:text-neutral-400">
           v{versionB.versionNumber} - {versionB.commitMessage || "No message"}
         </span>
       </div>
-
       {/* Diff summary */}
       <div
         data-testid="diff-summary"
-        className="flex items-center gap-4 px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700"
+        className="flex items-center gap-4 px-4 py-2 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700"
       >
         {diffSummary.hasChanges ? (
           <>
@@ -247,35 +251,34 @@ export function WorkflowDiffViewer({
             )}
           </>
         ) : (
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">
             No changes between versions
           </span>
         )}
       </div>
-
       {/* Diff content */}
       <div className="flex-1 overflow-hidden">
         {mode === "side-by-side" ? (
           <div
             data-testid="side-by-side-view"
-            className="flex h-full divide-x divide-gray-200 dark:divide-gray-700"
+            className="flex h-full divide-x divide-neutral-200 dark:divide-neutral-700"
           >
             {/* Left pane (Version A) */}
             <div className="flex-1 overflow-auto">
-              <pre className="p-4 text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-pre-wrap">
+              <pre className="p-4 text-xs text-neutral-700 dark:text-neutral-300 font-mono whitespace-pre-wrap">
                 {jsonA}
               </pre>
             </div>
             {/* Right pane (Version B) */}
             <div className="flex-1 overflow-auto">
-              <pre className="p-4 text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-pre-wrap">
+              <pre className="p-4 text-xs text-neutral-700 dark:text-neutral-300 font-mono whitespace-pre-wrap">
                 {jsonB}
               </pre>
             </div>
           </div>
         ) : (
           <div data-testid="unified-view" className="h-full overflow-auto">
-            <pre className="p-4 text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-pre-wrap">
+            <pre className="p-4 text-xs text-neutral-700 dark:text-neutral-300 font-mono whitespace-pre-wrap">
               {/* Unified diff view - show both with labels */}
               <span className="text-error-600 dark:text-error-400">
                 --- v{versionA.versionNumber}

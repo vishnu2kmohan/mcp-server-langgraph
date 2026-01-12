@@ -37,6 +37,7 @@ import { useFollowUpSuggestions } from "../../hooks/useFollowUpSuggestions";
 import { useUrlContentFetch } from "../../hooks/useUrlContentFetch";
 import { useSlashCommands } from "../../hooks/useSlashCommands";
 import { useInlineSuggestions } from "../../hooks/useInlineSuggestions";
+import { useAISuggestionsWebSocket } from "../../hooks/useAISuggestionsWebSocket";
 import { useSessionAutoName } from "../../hooks/useSessionAutoName";
 import type { SlashCommand } from "./SlashCommandMenu";
 import {
@@ -46,7 +47,13 @@ import {
   type RatingValue,
   type ModelProvider,
 } from "./ChatMessages";
+import type { HallucinationReport } from "./HallucinationIndicator";
 import type { FollowUpSuggestion } from "./AIFollowUpSuggestions";
+import {
+  SessionGoalTracker,
+  type GoalSetData,
+  type GoalResult,
+} from "./SessionGoalTracker";
 import { ChatInputForm } from "./ChatInputForm";
 import { ChatSuggestions, type ChatSuggestion } from "./ChatSuggestions";
 import type { MentionOption } from "./RichTextInput";
@@ -56,9 +63,13 @@ import {
   type PresetName,
 } from "./StylePresets";
 import { Loader2, MessageSquare } from "lucide-react";
+import { recordSignal } from "../../analytics/gsm/SignalsRegistry";
 // SlashCommandMenu and ReasoningEffortSelector handled internally by ChatInputForm
 import { useFeatureFlag } from "../../contexts/FeatureFlagContext";
-import { useSubmitMessageRatingMutation } from "../../api";
+import {
+  useSubmitMessageRatingMutation,
+  useSubmitHallucinationReportMutation,
+} from "../../api";
 
 // =============================================================================
 // Thinking Model Detection
@@ -225,15 +236,33 @@ export function ChatDocument({
   const [messageRatings, setMessageRatings] = useState<
     Record<string, RatingValue>
   >({});
+  // Hallucination reports state (tracks which messages have been reported)
+  const [reportedMessages, setReportedMessages] = useState<Set<string>>(
+    new Set(),
+  );
+  // Session goal tracking state
+  const [currentGoal, setCurrentGoal] = useState<string | undefined>(undefined);
   // RTK Query mutation for persisting ratings to backend
   const [submitRating, { isLoading: isRatingSubmitting }] =
     useSubmitMessageRatingMutation();
+  // RTK Query mutation for persisting hallucination reports to backend
+  const [submitHallucinationReport] = useSubmitHallucinationReportMutation();
   const dispatch = useAppDispatch();
 
   // Feature flags
   const enableInteractiveArtifacts = useFeatureFlag("interactive_artifacts");
   const enableAiSuggestions = useFeatureFlag("ai_suggestions");
+  const enableWebSocketSuggestions = useFeatureFlag("ai_suggestions_websocket");
   const showChatAvatars = useFeatureFlag("show_chat_avatars");
+  const enableSessionGoalTracker = useFeatureFlag("session_goal_tracker");
+  const enableHallucinationReporting = useFeatureFlag(
+    "hallucination_reporting",
+  );
+
+  // Track previous sessionId for WebSocket context updates
+  const prevSessionIdRef = useRef<string | undefined>(undefined);
+  // Track cursor position for WebSocket suggestions
+  const cursorPositionRef = useRef<number>(0);
 
   // Redux selectors
   const currentSession = useAppSelector(selectCurrentSession);
@@ -512,6 +541,109 @@ Type \`/\` to see available commands.`,
     updateInlineSuggestionInput,
   ]);
 
+  // =============================================================================
+  // WebSocket Inline Suggestions (ai_suggestions_websocket feature flag)
+  // Uses WebSocket for lower-latency suggestions with cursor position awareness
+  // Falls back to REST-based useInlineSuggestions when WebSocket is disconnected
+  // =============================================================================
+  const useWebSocketForSuggestions =
+    enableWebSocketSuggestions &&
+    enableAiSuggestions &&
+    !isStreaming &&
+    !isSending &&
+    !!currentSession?.id;
+
+  const {
+    status: wsStatus,
+    currentSuggestion: wsSuggestion,
+    isPending: wsIsPending,
+    requestSuggestion: wsRequestSuggestion,
+    acceptSuggestion: wsAcceptSuggestion,
+    rejectSuggestion: wsRejectSuggestion,
+    updateContext: wsUpdateContext,
+    clearSuggestion: wsClearSuggestion,
+  } = useAISuggestionsWebSocket({
+    enabled: useWebSocketForSuggestions,
+    sessionId: currentSession?.id,
+    onSuggestion: (suggestion) => {
+      // Append accepted suggestion to input when received
+      setInput((prev) => prev + suggestion.text);
+    },
+  });
+
+  // Request WebSocket suggestion when input changes (debounced via hook internally)
+  useEffect(() => {
+    if (
+      useWebSocketForSuggestions &&
+      wsStatus === "connected" &&
+      input.length > 3
+    ) {
+      wsRequestSuggestion(input, cursorPositionRef.current);
+    }
+  }, [input, useWebSocketForSuggestions, wsStatus, wsRequestSuggestion]);
+
+  // Update WebSocket context when session changes
+  useEffect(() => {
+    if (
+      useWebSocketForSuggestions &&
+      wsStatus === "connected" &&
+      currentSession?.id &&
+      currentSession.id !== prevSessionIdRef.current
+    ) {
+      wsUpdateContext(`Session: ${currentSession.id}`);
+      prevSessionIdRef.current = currentSession.id;
+    }
+  }, [
+    currentSession?.id,
+    useWebSocketForSuggestions,
+    wsStatus,
+    wsUpdateContext,
+  ]);
+
+  // Determine if WebSocket is active and connected
+  const isWebSocketActive =
+    useWebSocketForSuggestions && wsStatus === "connected";
+
+  // Resolve which suggestion values to use:
+  // Priority: WebSocket (when connected) > REST hook
+  const effectiveInlineSuggestion = isWebSocketActive
+    ? wsSuggestion?.text || ""
+    : inlineSuggestion;
+
+  const effectiveIsSuggestionLoading = isWebSocketActive
+    ? wsIsPending
+    : isSuggestionLoading;
+
+  // Accept suggestion handler - works with WebSocket or REST
+  const handleAcceptSuggestion = useCallback(() => {
+    if (isWebSocketActive && wsSuggestion?.suggestionId) {
+      wsAcceptSuggestion(wsSuggestion.suggestionId);
+    } else {
+      handleAcceptInlineSuggestion();
+    }
+  }, [
+    isWebSocketActive,
+    wsSuggestion,
+    wsAcceptSuggestion,
+    handleAcceptInlineSuggestion,
+  ]);
+
+  // Dismiss suggestion handler - works with WebSocket or REST
+  const handleDismissSuggestion = useCallback(() => {
+    if (isWebSocketActive && wsSuggestion?.suggestionId) {
+      wsRejectSuggestion(wsSuggestion.suggestionId);
+    } else {
+      wsClearSuggestion();
+    }
+    handleDismissInlineSuggestion();
+  }, [
+    isWebSocketActive,
+    wsSuggestion,
+    wsRejectSuggestion,
+    wsClearSuggestion,
+    handleDismissInlineSuggestion,
+  ]);
+
   // Session auto-naming (AI-powered title generation like ChatGPT/Claude)
   // Triggers after first user message for sessions with default names
   const { isGenerating: _isGeneratingTitle } = useSessionAutoName({
@@ -629,6 +761,98 @@ Type \`/\` to see available commands.`,
     },
     [currentSession?.id, messageRatings, submitRating],
   );
+
+  // Handle hallucination report - tracks reported messages and persists to backend
+  // Categories are now aligned between frontend and backend (no mapping needed)
+  const handleReportHallucination = useCallback(
+    (report: HallucinationReport) => {
+      // Mark message as reported (optimistic update)
+      setReportedMessages((prev) => new Set([...prev, report.messageId]));
+
+      // Record analytics signals for HEART metrics
+      recordSignal("ai_hallucination_reported", 1, {
+        sessionId: currentSession?.id,
+        messageId: report.messageId,
+      });
+      recordSignal("ai_hallucination_category", report.category, {
+        sessionId: currentSession?.id,
+        messageId: report.messageId,
+      });
+
+      // Persist to backend
+      if (currentSession?.id) {
+        submitHallucinationReport({
+          message_id: report.messageId,
+          session_id: currentSession.id,
+          category: report.category, // Direct pass-through (aligned with backend)
+          description: report.details,
+          severity: "medium", // Default severity
+        })
+          .unwrap()
+          .then(() => {
+            toast.success("Thank you for reporting this issue", {
+              description: "Your feedback helps us improve AI accuracy.",
+              duration: 3000,
+            });
+          })
+          .catch((error) => {
+            // Revert optimistic update on failure
+            setReportedMessages((prev) => {
+              const updated = new Set(prev);
+              updated.delete(report.messageId);
+              return updated;
+            });
+            console.error("[HallucinationReport] Failed to submit:", error);
+            toast.error("Failed to submit report", {
+              description: "Please try again later.",
+              duration: 3000,
+            });
+          });
+      } else {
+        // Fallback for no session - local-only feedback
+        console.info("[HallucinationReport] No session, local only:", report);
+        toast.success("Thank you for reporting this issue", {
+          description: "Your feedback helps us improve AI accuracy.",
+          duration: 3000,
+        });
+      }
+    },
+    [currentSession?.id, submitHallucinationReport],
+  );
+
+  // Handle session goal set - stores goal for tracking
+  const handleGoalSet = useCallback((data: GoalSetData) => {
+    setCurrentGoal(data.goal);
+    toast.success("Goal set", {
+      description: data.goal,
+      duration: 2000,
+    });
+    // TODO: Persist goal to backend when API is available
+    console.info("[SessionGoal] Set:", data);
+  }, []);
+
+  // Handle session goal completion - tracks achievement result
+  const handleGoalComplete = useCallback((result: GoalResult) => {
+    const achievementText =
+      result.achieved === true
+        ? "achieved"
+        : result.achieved === "partial"
+          ? "partially achieved"
+          : "not achieved";
+    toast.info(`Goal ${achievementText}`, {
+      description: result.goal,
+      duration: 3000,
+    });
+    // Clear the goal after completion
+    setCurrentGoal(undefined);
+    // TODO: Persist goal result to backend for analytics
+    console.info("[SessionGoal] Complete:", result);
+  }, []);
+
+  // Handle session goal clear - removes current goal
+  const handleGoalClear = useCallback(() => {
+    setCurrentGoal(undefined);
+  }, []);
 
   // Determine model provider from selected model for cost calculation
   const modelProvider: ModelProvider = useMemo(() => {
@@ -866,7 +1090,7 @@ Type \`/\` to see available commands.`,
         data-testid="chat-document"
         className={cn(
           "flex items-center justify-center h-full",
-          "bg-white dark:bg-gray-900",
+          "bg-white dark:bg-neutral-900",
           className,
         )}
       >
@@ -882,8 +1106,8 @@ Type \`/\` to see available commands.`,
         data-testid="chat-document"
         className={cn(
           "flex flex-col items-center justify-center h-full",
-          "bg-white dark:bg-gray-900",
-          "text-gray-500 dark:text-gray-400",
+          "bg-white dark:bg-neutral-900",
+          "text-neutral-500 dark:text-neutral-400",
           className,
         )}
       >
@@ -911,14 +1135,33 @@ Type \`/\` to see available commands.`,
       data-testid="chat-document"
       className={cn(
         "flex flex-col h-full",
-        "bg-white dark:bg-gray-900",
+        "bg-white dark:bg-neutral-900",
         compact && "text-sm",
         className,
       )}
     >
+      {/* Session Goal Tracker - helps users track conversation goals */}
+      {enableSessionGoalTracker && currentSession && (
+        <div className="px-4 py-2 border-b border-neutral-200 dark:border-neutral-700">
+          <SessionGoalTracker
+            sessionId={currentSession.id}
+            currentGoal={currentGoal}
+            onGoalSet={handleGoalSet}
+            onGoalComplete={handleGoalComplete}
+            onGoalClear={handleGoalClear}
+            compact={compact}
+          />
+        </div>
+      )}
+
       {/* Messages */}
       <ChatMessages
-        messages={messages as Message[]}
+        messages={
+          messages.map((m) => ({
+            ...m,
+            isReported: reportedMessages.has(m.id),
+          })) as Message[]
+        }
         isStreaming={isStreaming}
         streamingContent={streamingContent}
         isSending={isSending}
@@ -945,6 +1188,10 @@ Type \`/\` to see available commands.`,
         onRateMessage={handleRateMessage}
         onRatingFeedback={handleRatingFeedback}
         isRatingSubmitting={isRatingSubmitting}
+        // Hallucination Reporting props (gated by feature flag)
+        onReportHallucination={
+          enableHallucinationReporting ? handleReportHallucination : undefined
+        }
         // Token Usage Display props
         showTokenUsage={true}
         modelProvider={modelProvider}
@@ -955,7 +1202,7 @@ Type \`/\` to see available commands.`,
 
       {/* Style Presets Selector */}
       {showStylePresets && (
-        <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700">
+        <div className="px-4 py-2 border-t border-neutral-200 dark:border-neutral-700">
           <StylePresets
             onSelect={handleStylePresetChange}
             activePreset={activePreset}
@@ -1013,11 +1260,16 @@ Type \`/\` to see available commands.`,
         slashCommands={enableSlashCommands ? slashCommands : undefined}
         onSlashCommandSelect={handleSlashCommandSelect}
         // Inline AI suggestions props (VSCode Copilot style)
+        // Uses WebSocket when available, falls back to REST
         enableInlineSuggestions={enableAiSuggestions}
-        inlineSuggestion={inlineSuggestion}
-        isSuggestionLoading={isSuggestionLoading}
-        onAcceptSuggestion={handleAcceptInlineSuggestion}
-        onDismissSuggestion={handleDismissInlineSuggestion}
+        inlineSuggestion={effectiveInlineSuggestion}
+        isSuggestionLoading={effectiveIsSuggestionLoading}
+        onAcceptSuggestion={handleAcceptSuggestion}
+        onDismissSuggestion={handleDismissSuggestion}
+        // Cursor position tracking for WebSocket suggestions
+        onCursorPositionChange={(pos) => {
+          cursorPositionRef.current = pos;
+        }}
       />
     </div>
   );

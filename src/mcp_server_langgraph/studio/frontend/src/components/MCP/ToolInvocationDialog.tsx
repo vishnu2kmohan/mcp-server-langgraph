@@ -14,6 +14,8 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useListMcpToolsQuery, useInvokeMcpToolMutation } from "../../api";
 
+import { Button, Input, Select } from "@/components/UI";
+
 export interface ToolInvocationDialogProps {
   open: boolean;
   onClose: () => void;
@@ -163,12 +165,11 @@ export function ToolInvocationDialog({
         onClick={onClose}
         aria-hidden="true"
       />
-
       {/* Dialog content */}
-      <div className="relative z-10 w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
+      <div className="relative z-10 w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-neutral-800">
         <h2
           id="tool-invocation-title"
-          className="mb-4 text-xl font-semibold text-gray-900 dark:text-white"
+          className="mb-4 text-xl font-semibold text-neutral-900 dark:text-white"
         >
           Invoke Tool
         </h2>
@@ -176,7 +177,7 @@ export function ToolInvocationDialog({
         {/* Loading state */}
         {isLoadingTools && (
           <div className="flex items-center justify-center py-8">
-            <span className="text-gray-500 dark:text-gray-400">
+            <span className="text-neutral-500 dark:text-neutral-400">
               Loading tools...
             </span>
           </div>
@@ -196,15 +197,15 @@ export function ToolInvocationDialog({
             <div>
               <label
                 htmlFor="tool-select"
-                className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
               >
                 Select Tool
               </label>
-              <select
+              <Select
+                className="px-3 py-2 text-neutral-900 -500 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
                 id="tool-select"
                 value={selectedToolName}
                 onChange={handleToolSelect}
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               >
                 <option value="">-- Select a tool --</option>
                 {toolsData?.tools.map((tool) => (
@@ -212,12 +213,12 @@ export function ToolInvocationDialog({
                     {tool.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             {/* Tool description */}
             {selectedTool && (
-              <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-600 dark:text-gray-300 dark:bg-gray-700/50 dark:text-gray-400">
+              <div className="rounded-md bg-neutral-50 p-3 text-sm text-neutral-600 dark:text-neutral-300 dark:bg-neutral-700/50 dark:text-neutral-400">
                 {selectedTool.description}
               </div>
             )}
@@ -225,14 +226,14 @@ export function ToolInvocationDialog({
             {/* Tool arguments */}
             {selectedTool && toolArguments.length > 0 && (
               <div className="space-y-3">
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   Arguments
                 </h3>
                 {toolArguments.map((arg) => (
                   <div key={arg.name}>
                     <label
                       htmlFor={`arg-${arg.name}`}
-                      className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
                     >
                       {arg.name}
                       {arg.required && (
@@ -240,18 +241,17 @@ export function ToolInvocationDialog({
                       )}
                     </label>
                     {arg.description && (
-                      <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+                      <p className="mb-1 text-xs text-neutral-500 dark:text-neutral-400">
                         {arg.description}
                       </p>
                     )}
-                    <input
+                    <Input
+                      className="px-3 py-2 text-neutral-900 -500 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
                       id={`arg-${arg.name}`}
-                      type="text"
                       value={argumentValues[arg.name] || ""}
                       onChange={(e) =>
                         handleArgumentChange(arg.name, e.target.value)
                       }
-                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder={arg.type}
                     />
                   </div>
@@ -283,21 +283,23 @@ export function ToolInvocationDialog({
 
         {/* Dialog actions */}
         <div className="mt-6 flex justify-end gap-3">
-          <button
+          <Button
+            variant="secondary"
+            className="rounded-md border border-neutral-300 dark:border-neutral-600 bg-white px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 focus:ring-primary-500 focus:ring-offset-2 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600"
             type="button"
             onClick={onClose}
-            className="rounded-md border border-gray-300 dark:border-gray-600 bg-white px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            className="rounded-md bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700 focus:ring-primary-500 focus:ring-offset-2"
             type="button"
             onClick={handleInvoke}
             disabled={!isFormValid || isInvoking}
-            className="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isInvoking ? "Invoking..." : "Invoke"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

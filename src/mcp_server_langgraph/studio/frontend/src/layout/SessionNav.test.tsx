@@ -5,7 +5,7 @@
  * Tests session grouping, search, and navigation.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup, act } from "@testing-library/react";
+import { render, screen, cleanup, act, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -417,6 +417,134 @@ describe("SessionNav Inline Editing", () => {
 
     // Should show session names that can be edited
     expect(screen.getByText("Today's Chat")).toBeInTheDocument();
+  });
+
+  it("should navigate to session on single click even with enableEdit=true", async () => {
+    // GIVEN: SessionNav with enableEdit=true
+    const user = userEvent.setup();
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableEdit onRenameSession={vi.fn()} />
+      </Wrapper>,
+    );
+
+    // WHEN: User single-clicks on a session (not the current one)
+    const sessionItem = screen.getByText("Yesterday's Chat");
+    await user.click(sessionItem);
+
+    // THEN: Should navigate to that session (after debounce delay)
+    await waitFor(
+      () => {
+        expect(mockNavigate).toHaveBeenCalledWith("/studio/chat/session-2");
+      },
+      { timeout: 500 },
+    );
+  });
+
+  it("should enter edit mode on double-click when enableEdit=true", async () => {
+    // GIVEN: SessionNav with enableEdit=true
+    const user = userEvent.setup();
+    const mockRename = vi.fn();
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableEdit onRenameSession={mockRename} />
+      </Wrapper>,
+    );
+
+    // WHEN: User double-clicks on a session
+    const sessionItem = screen.getByText("Yesterday's Chat");
+    await user.dblClick(sessionItem);
+
+    // THEN: Should enter edit mode (input field should appear)
+    const editInput = await screen.findByRole("textbox", {
+      name: /rename session/i,
+    });
+    expect(editInput).toBeInTheDocument();
+    expect(editInput).toHaveValue("Yesterday's Chat");
+  });
+
+  it("should NOT navigate on double-click when entering edit mode", async () => {
+    // GIVEN: SessionNav with enableEdit=true
+    const user = userEvent.setup();
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableEdit onRenameSession={vi.fn()} />
+      </Wrapper>,
+    );
+
+    // WHEN: User double-clicks on a session
+    const sessionItem = screen.getByText("Yesterday's Chat");
+    await user.dblClick(sessionItem);
+
+    // Wait for any pending debounce to complete
+    await waitFor(
+      () => {
+        // Should be in edit mode
+        expect(
+          screen.getByRole("textbox", { name: /rename session/i }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 500 },
+    );
+
+    // THEN: Should NOT have navigated (double-click cancels the pending navigation)
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("should save edited name and exit edit mode on Enter", async () => {
+    // GIVEN: SessionNav in edit mode
+    const user = userEvent.setup();
+    const mockRename = vi.fn();
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableEdit onRenameSession={mockRename} />
+      </Wrapper>,
+    );
+
+    // Enter edit mode via double-click
+    const sessionItem = screen.getByText("Yesterday's Chat");
+    await user.dblClick(sessionItem);
+
+    // WHEN: User types new name and presses Enter
+    const editInput = await screen.findByRole("textbox", {
+      name: /rename session/i,
+    });
+    await user.clear(editInput);
+    await user.type(editInput, "Renamed Session{Enter}");
+
+    // THEN: Should call onRenameSession with new name
+    expect(mockRename).toHaveBeenCalledWith("session-2", "Renamed Session");
+  });
+
+  it("should cancel edit mode on Escape without saving", async () => {
+    // GIVEN: SessionNav in edit mode
+    const user = userEvent.setup();
+    const mockRename = vi.fn();
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableEdit onRenameSession={mockRename} />
+      </Wrapper>,
+    );
+
+    // Enter edit mode via double-click
+    const sessionItem = screen.getByText("Yesterday's Chat");
+    await user.dblClick(sessionItem);
+
+    // WHEN: User presses Escape
+    const editInput = await screen.findByRole("textbox", {
+      name: /rename session/i,
+    });
+    await user.type(editInput, "New Name{Escape}");
+
+    // THEN: Should exit edit mode without calling onRenameSession
+    expect(mockRename).not.toHaveBeenCalled();
+    // Should revert to displaying the original name
+    expect(screen.getByText("Yesterday's Chat")).toBeInTheDocument();
   });
 
   it("should show context menu on right-click when enableContextMenu is true", async () => {

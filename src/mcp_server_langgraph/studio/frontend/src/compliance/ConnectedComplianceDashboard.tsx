@@ -20,6 +20,8 @@ import {
 } from "./ComplianceDashboard";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -148,7 +150,7 @@ export function ConnectedComplianceDashboard({
         <p className="text-error-700 dark:text-error-300 mb-4">
           Failed to load compliance data
         </p>
-        <button
+        <Button
           data-testid="retry-button"
           type="button"
           onClick={handleRetry}
@@ -160,7 +162,7 @@ export function ConnectedComplianceDashboard({
         >
           <RefreshCw size={16} />
           Retry
-        </button>
+        </Button>
       </div>
     );
   }

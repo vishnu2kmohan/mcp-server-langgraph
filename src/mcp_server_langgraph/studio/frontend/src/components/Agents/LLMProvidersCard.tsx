@@ -30,10 +30,10 @@ export function LLMProvidersCard({ providers }: LLMProvidersCardProps) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
       <div className="flex items-center gap-3 mb-4">
         <Cloud size={24} className="text-info-500" />
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
           LLM Providers
         </h2>
         <span className="px-2 py-1 text-xs bg-info-100 dark:bg-info-900/30 text-info-700 dark:text-info-400 rounded-full">
@@ -45,12 +45,12 @@ export function LLMProvidersCard({ providers }: LLMProvidersCardProps) {
         {providers.map((provider) => (
           <div
             key={provider.name}
-            className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-info-500 transition-colors"
+            className="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:border-info-500 transition-colors"
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
                     {provider.displayName}
                   </h3>
                   {provider.requiresApiKey ? (
@@ -65,21 +65,21 @@ export function LLMProvidersCard({ providers }: LLMProvidersCardProps) {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                   {provider.description}
                 </p>
               </div>
             </div>
 
             <div className="mt-3">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+              <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
                 Supported Model Types:
               </div>
               <div className="flex flex-wrap gap-1">
                 {provider.supportedModelTypes.map((modelType) => (
                   <span
                     key={modelType}
-                    className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded"
+                    className="px-2 py-0.5 text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded"
                   >
                     {modelType}
                   </span>
@@ -88,7 +88,7 @@ export function LLMProvidersCard({ providers }: LLMProvidersCardProps) {
             </div>
 
             {provider.apiKeyEnvVar && (
-              <div className="mt-2 text-xs text-gray-400 dark:text-gray-400">
+              <div className="mt-2 text-xs text-neutral-400 dark:text-neutral-400">
                 Env: <code className="font-mono">{provider.apiKeyEnvVar}</code>
               </div>
             )}

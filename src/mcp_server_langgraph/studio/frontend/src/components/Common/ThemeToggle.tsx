@@ -15,6 +15,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Sun, Moon, Monitor, Check } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -55,7 +57,7 @@ export function ThemeToggle({
   onThemeChange,
   variant = "cycle",
   compact = false,
-  className = "",
+  className: _className = "",
 }: ThemeToggleProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -119,7 +121,9 @@ export function ThemeToggle({
 
   return (
     <div ref={dropdownRef} className="relative">
-      <button
+      <Button
+        variant="secondary"
+        className="px-3 py-2 rounded-md text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:ring-primary-500"
         type="button"
         onClick={handleClick}
         aria-label={`Theme: ${config.label}`}
@@ -128,7 +132,6 @@ export function ThemeToggle({
         aria-expanded={variant === "dropdown" ? isDropdownOpen : undefined}
         onMouseEnter={() => compact && setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
-        className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${className}`}
       >
         <Icon
           size={18}
@@ -138,24 +141,22 @@ export function ThemeToggle({
         {!compact && (
           <span className="text-sm font-medium">{config.label}</span>
         )}
-      </button>
-
+      </Button>
       {/* Tooltip for compact mode */}
       {compact && showTooltip && (
         <div
           role="tooltip"
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-50"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-900 dark:bg-neutral-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-50"
         >
           {config.label}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-900 dark:border-t-neutral-700" />
         </div>
       )}
-
       {/* Dropdown menu */}
       {variant === "dropdown" && isDropdownOpen && (
         <div
           role="menu"
-          className="absolute top-full right-0 mt-1 w-40 rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black/5 dark:ring-white/10 z-50"
+          className="absolute top-full right-0 mt-1 w-40 rounded-md bg-white dark:bg-neutral-900 shadow-lg ring-1 ring-black/5 dark:ring-white/10 z-50"
         >
           <div className="py-1">
             {THEME_CYCLE.map((themeOption) => {
@@ -164,11 +165,12 @@ export function ThemeToggle({
               const isSelected = theme === themeOption;
 
               return (
-                <button
+                <Button
+                  variant="secondary"
+                  className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800"
                   key={themeOption}
                   role="menuitem"
                   onClick={() => handleSelectTheme(themeOption)}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
                 >
                   <OptionIcon size={16} className="flex-shrink-0" />
                   <span className="flex-1 text-left">{optionConfig.label}</span>
@@ -178,7 +180,7 @@ export function ThemeToggle({
                       className="text-primary-600 dark:text-primary-400"
                     />
                   )}
-                </button>
+                </Button>
               );
             })}
           </div>

@@ -10,6 +10,8 @@ import { Save, Loader2, CheckCircle, ExternalLink } from "lucide-react";
 import { useBootstrapWorkflowMutation } from "../../api";
 import type { BootstrapWorkflowResponseCamelCase } from "../../types/api";
 
+import { Button } from "@/components/UI";
+
 interface SaveAsWorkflowButtonProps {
   sessionId: string;
   disabled?: boolean;
@@ -88,10 +90,11 @@ export function SaveAsWorkflowButton({
 
   return (
     <div className="relative">
-      <button
+      <Button
+        variant="secondary"
+        className="flex px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
         onClick={handleSaveAsWorkflow}
         disabled={disabled || isLoading}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {isLoading ? (
           <Loader2 size={16} className="animate-spin" />
@@ -101,8 +104,7 @@ export function SaveAsWorkflowButton({
           <Save size={16} />
         )}
         {isLoading ? "Saving..." : success ? "Saved!" : "Save as Workflow"}
-      </button>
-
+      </Button>
       {/* Success Message */}
       {success && (
         <div className="absolute top-full right-0 mt-2 p-4 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg shadow-lg min-w-[300px] z-10">
@@ -126,7 +128,6 @@ export function SaveAsWorkflowButton({
           </div>
         </div>
       )}
-
       {/* Error Message */}
       {error && (
         <div className="absolute top-full right-0 mt-2 p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg shadow-lg min-w-[300px] z-10">

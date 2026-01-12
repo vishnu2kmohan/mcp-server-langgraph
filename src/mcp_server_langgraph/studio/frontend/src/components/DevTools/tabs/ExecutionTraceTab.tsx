@@ -27,6 +27,8 @@ import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 import type { ExecutionTraceTabProps } from "../types";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Subcomponents
 // =============================================================================
@@ -48,7 +50,10 @@ function StepStatusIcon({ status, stepId }: StepStatusIconProps) {
         <Play {...iconProps} className="text-primary-500 animate-pulse" />
       )}
       {status === "pending" && (
-        <Clock {...iconProps} className="text-gray-400 dark:text-gray-400" />
+        <Clock
+          {...iconProps}
+          className="text-neutral-400 dark:text-neutral-400"
+        />
       )}
       {status === "error" && (
         <AlertCircle {...iconProps} className="text-error-500" />
@@ -56,7 +61,7 @@ function StepStatusIcon({ status, stepId }: StepStatusIconProps) {
       {status === "skipped" && (
         <SkipForward
           {...iconProps}
-          className="text-gray-400 dark:text-gray-400"
+          className="text-neutral-400 dark:text-neutral-400"
         />
       )}
     </span>
@@ -86,8 +91,8 @@ function ExecutionStepRow({
       data-current={isCurrent}
       className={cn(
         "flex items-center gap-2 px-2 py-1.5 cursor-pointer",
-        "border-b border-gray-100 dark:border-gray-800",
-        "hover:bg-gray-50 dark:hover:bg-gray-800/50",
+        "border-b border-neutral-100 dark:border-neutral-800",
+        "hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
         isSelected && "bg-primary-50 dark:bg-primary-900/20",
         isCurrent &&
           "bg-warning-50 dark:bg-warning-900/20 border-l-2 border-l-warning-500",
@@ -95,40 +100,41 @@ function ExecutionStepRow({
       onClick={onSelect}
     >
       {/* Expand button */}
-      <button
+      <Button
+        variant="secondary"
+        className="p-0.5 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
         data-testid={`expand-step-${step.id}`}
         type="button"
         onClick={(e) => {
           e.stopPropagation();
           onToggleExpand();
         }}
-        className="p-0.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
         aria-expanded={isExpanded}
         aria-label={
           isExpanded ? `Collapse ${step.nodeName}` : `Expand ${step.nodeName}`
         }
       >
         {isExpanded ? (
-          <ChevronDown size={12} className="text-gray-500 dark:text-gray-400" />
+          <ChevronDown
+            size={12}
+            className="text-neutral-500 dark:text-neutral-400"
+          />
         ) : (
           <ChevronRight
             size={12}
-            className="text-gray-500 dark:text-gray-400"
+            className="text-neutral-500 dark:text-neutral-400"
           />
         )}
-      </button>
-
+      </Button>
       {/* Status icon */}
       <StepStatusIcon status={step.status} stepId={step.id} />
-
       {/* Step name */}
-      <span className="flex-1 text-sm text-gray-700 dark:text-gray-300">
+      <span className="flex-1 text-sm text-neutral-700 dark:text-neutral-300">
         {step.nodeName}
       </span>
-
       {/* Duration */}
       {step.duration > 0 && (
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-neutral-500 dark:text-neutral-400">
           {step.duration}ms
         </span>
       )}
@@ -144,16 +150,16 @@ function StepDetails({ step }: StepDetailsProps) {
   return (
     <div
       data-testid={`step-details-${step.id}`}
-      className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 text-xs"
+      className="px-4 py-2 bg-neutral-50 dark:bg-neutral-800/50 text-xs"
     >
       <div className="grid grid-cols-1 gap-3">
         {/* Input */}
         {step.input && (
           <div data-testid={`step-input-${step.id}`}>
-            <span className="text-gray-500 dark:text-gray-400 font-medium">
+            <span className="text-neutral-500 dark:text-neutral-400 font-medium">
               Input:
             </span>
-            <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded text-gray-700 dark:text-gray-300 overflow-x-auto">
+            <pre className="mt-1 p-2 bg-neutral-100 dark:bg-neutral-800 rounded text-neutral-700 dark:text-neutral-300 overflow-x-auto">
               {JSON.stringify(step.input, null, 2)}
             </pre>
           </div>
@@ -162,10 +168,10 @@ function StepDetails({ step }: StepDetailsProps) {
         {/* Output */}
         {step.output && (
           <div data-testid={`step-output-${step.id}`}>
-            <span className="text-gray-500 dark:text-gray-400 font-medium">
+            <span className="text-neutral-500 dark:text-neutral-400 font-medium">
               Output:
             </span>
-            <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded text-gray-700 dark:text-gray-300 overflow-x-auto">
+            <pre className="mt-1 p-2 bg-neutral-100 dark:bg-neutral-800 rounded text-neutral-700 dark:text-neutral-300 overflow-x-auto">
               {JSON.stringify(step.output, null, 2)}
             </pre>
           </div>
@@ -180,16 +186,16 @@ function StepDetails({ step }: StepDetailsProps) {
         )}
 
         {/* Metadata */}
-        <div className="grid grid-cols-2 gap-2 text-gray-500 dark:text-gray-400">
+        <div className="grid grid-cols-2 gap-2 text-neutral-500 dark:text-neutral-400">
           <div>
             <span>Node ID:</span>
-            <span className="ml-2 text-gray-700 dark:text-gray-300">
+            <span className="ml-2 text-neutral-700 dark:text-neutral-300">
               {step.nodeId}
             </span>
           </div>
           <div>
             <span>Status:</span>
-            <span className="ml-2 text-gray-700 dark:text-gray-300 capitalize">
+            <span className="ml-2 text-neutral-700 dark:text-neutral-300 capitalize">
               {step.status}
             </span>
           </div>
@@ -262,7 +268,7 @@ export function ExecutionTraceTab({
     return (
       <div
         data-testid="execution-trace-tab"
-        className="flex flex-col h-full bg-white dark:bg-gray-900"
+        className="flex flex-col h-full bg-white dark:bg-neutral-900"
       >
         <div
           data-testid="execution-trace-loading"
@@ -279,7 +285,7 @@ export function ExecutionTraceTab({
     return (
       <div
         data-testid="execution-trace-tab"
-        className="flex flex-col h-full bg-white dark:bg-gray-900"
+        className="flex flex-col h-full bg-white dark:bg-neutral-900"
       >
         <div
           data-testid="execution-trace-error"
@@ -300,11 +306,11 @@ export function ExecutionTraceTab({
     return (
       <div
         data-testid="execution-trace-tab"
-        className="flex flex-col h-full bg-white dark:bg-gray-900"
+        className="flex flex-col h-full bg-white dark:bg-neutral-900"
       >
         <div
           data-testid="execution-trace-empty"
-          className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-400"
+          className="flex-1 flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-400"
         >
           <Workflow size={32} className="mb-2 opacity-50" />
           <p className="text-sm">No execution data available</p>
@@ -319,21 +325,21 @@ export function ExecutionTraceTab({
   return (
     <div
       data-testid="execution-trace-tab"
-      className="flex flex-col h-full bg-white dark:bg-gray-900"
+      className="flex flex-col h-full bg-white dark:bg-neutral-900"
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
         {/* Workflow indicator */}
         <div className="flex items-center gap-1.5">
           <Workflow
             size={14}
-            className="text-gray-500 dark:text-gray-400"
+            className="text-neutral-500 dark:text-neutral-400"
             aria-hidden="true"
           />
-          <h3 className="text-xs text-gray-600 dark:text-gray-400">
+          <h3 className="text-xs text-neutral-600 dark:text-neutral-400">
             Execution
           </h3>
-          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded">
             {workflowId}
           </span>
         </div>
@@ -342,28 +348,28 @@ export function ExecutionTraceTab({
         <div className="flex-1" />
 
         {/* Step count */}
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-neutral-500 dark:text-neutral-400">
           {filteredSteps.filter((s) => s.status === "completed").length}/
           {filteredSteps.length} steps
           {timeline.timeWindow && filteredSteps.length !== steps.length && (
-            <span className="ml-1 text-gray-400 dark:text-gray-400">
+            <span className="ml-1 text-neutral-400 dark:text-neutral-400">
               ({steps.length} total)
             </span>
           )}
         </span>
 
         {/* Refresh button */}
-        <button
+        <Button
+          variant="secondary"
+          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400"
           data-testid="refresh-execution-button"
           type="button"
           onClick={refetch}
-          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
           aria-label="Refresh execution"
         >
           <RefreshCw size={14} />
-        </button>
+        </Button>
       </div>
-
       {/* Steps list - filtered by timeline window for time-travel debugging */}
       <div className="flex-1 overflow-y-auto">
         {filteredSteps.map((step) => (

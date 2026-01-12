@@ -75,7 +75,7 @@ function getStatusStyles(status: BudgetStatusType): {
 
 /** Get icon for entity type */
 function EntityIcon({ entityType }: { entityType: EntityType }) {
-  const className = "w-5 h-5 text-gray-400 dark:text-gray-400";
+  const className = "w-5 h-5 text-neutral-400 dark:text-neutral-400";
 
   switch (entityType) {
     case "organization":
@@ -116,7 +116,7 @@ export function BudgetStatusCard({
     return (
       <div
         data-testid="budget-status-skeleton"
-        className={`p-4 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}
+        className={`p-4 rounded-lg border border-neutral-200 dark:border-neutral-700 ${className}`}
       >
         <div className="flex items-center gap-3 mb-3">
           <Skeleton className="w-5 h-5 rounded" />
@@ -149,7 +149,7 @@ export function BudgetStatusCard({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <EntityIcon entityType={status.entityType} />
-          <span className="font-medium text-gray-900 dark:text-gray-100">
+          <span className="font-medium text-neutral-900 dark:text-neutral-100">
             {displayName}
           </span>
         </div>
@@ -166,7 +166,7 @@ export function BudgetStatusCard({
         aria-valuenow={status.percentUsed}
         aria-valuemin={0}
         aria-valuemax={100}
-        className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-3"
+        className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden mb-3"
       >
         <div
           className={`h-full ${styles.progressColor} transition-all duration-300`}
@@ -177,14 +177,18 @@ export function BudgetStatusCard({
       {/* Stats */}
       <div className="flex justify-between text-sm">
         <div>
-          <span className="text-gray-500 dark:text-gray-400">Spent: </span>
-          <span className="font-medium text-gray-900 dark:text-gray-100">
+          <span className="text-neutral-500 dark:text-neutral-400">
+            Spent:{" "}
+          </span>
+          <span className="font-medium text-neutral-900 dark:text-neutral-100">
             {formatCurrency(status.currentSpend)}
           </span>
         </div>
         <div>
-          <span className="text-gray-500 dark:text-gray-400">Limit: </span>
-          <span className="font-medium text-gray-900 dark:text-gray-100">
+          <span className="text-neutral-500 dark:text-neutral-400">
+            Limit:{" "}
+          </span>
+          <span className="font-medium text-neutral-900 dark:text-neutral-100">
             {formatCurrency(status.monthlyLimitUsd)}
           </span>
         </div>
@@ -195,14 +199,14 @@ export function BudgetStatusCard({
         <span className={`text-2xl font-bold ${styles.textColor}`}>
           {status.percentUsed.toFixed(0)}%
         </span>
-        <span className="text-gray-500 dark:text-gray-400 text-sm ml-1">
+        <span className="text-neutral-500 dark:text-neutral-400 text-sm ml-1">
           used
         </span>
       </div>
 
       {/* Remaining */}
       {!compact && (
-        <div className="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
           {parseFloat(status.remaining) >= 0 ? (
             <>Remaining: {formatCurrency(status.remaining)}</>
           ) : (

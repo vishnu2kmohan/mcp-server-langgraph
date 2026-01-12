@@ -13,6 +13,8 @@
 import { Sparkles, Check, X, Loader2, Wand2, Bug } from "lucide-react";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -58,7 +60,7 @@ function getSuggestionIcon(type: SuggestionType) {
 function getConfidenceColor(confidence: number): string {
   if (confidence >= 0.9) return "text-success-600 dark:text-success-400";
   if (confidence >= 0.7) return "text-warning-600 dark:text-warning-400";
-  return "text-gray-500 dark:text-gray-400";
+  return "text-neutral-500 dark:text-neutral-400";
 }
 
 // =============================================================================
@@ -79,9 +81,9 @@ export function InlineSuggestions({
         data-testid="inline-suggestions"
         className={cn(
           "flex items-center gap-2 p-3 rounded-lg",
-          "bg-gray-50 dark:bg-gray-800",
-          "border border-gray-200 dark:border-gray-700",
-          "text-sm text-gray-500 dark:text-gray-400",
+          "bg-neutral-50 dark:bg-neutral-800",
+          "border border-neutral-200 dark:border-neutral-700",
+          "text-sm text-neutral-500 dark:text-neutral-400",
           className,
         )}
       >
@@ -98,9 +100,9 @@ export function InlineSuggestions({
         data-testid="inline-suggestions"
         className={cn(
           "flex items-center gap-2 p-3 rounded-lg",
-          "bg-gray-50 dark:bg-gray-800",
-          "border border-gray-200 dark:border-gray-700",
-          "text-sm text-gray-500 dark:text-gray-400",
+          "bg-neutral-50 dark:bg-neutral-800",
+          "border border-neutral-200 dark:border-neutral-700",
+          "text-sm text-neutral-500 dark:text-neutral-400",
           className,
         )}
       >
@@ -116,7 +118,7 @@ export function InlineSuggestions({
       data-testid="inline-suggestions"
       className={cn("flex flex-col gap-2", className)}
     >
-      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-1">
+      <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400 mb-1">
         <Sparkles size={12} />
         <span>AI Suggestions</span>
       </div>
@@ -125,8 +127,8 @@ export function InlineSuggestions({
           key={suggestion.id}
           className={cn(
             "flex items-start gap-3 p-3 rounded-lg",
-            "bg-gray-50 dark:bg-gray-800",
-            "border border-gray-200 dark:border-gray-700",
+            "bg-neutral-50 dark:bg-neutral-800",
+            "border border-neutral-200 dark:border-neutral-700",
             "hover:border-primary-300 dark:hover:border-primary-700",
             "transition-colors",
           )}
@@ -143,8 +145,8 @@ export function InlineSuggestions({
               <span
                 className={cn(
                   "px-1.5 py-0.5 rounded text-xs font-medium",
-                  "bg-gray-100 dark:bg-gray-700",
-                  "text-gray-600 dark:text-gray-300",
+                  "bg-neutral-100 dark:bg-neutral-700",
+                  "text-neutral-600 dark:text-neutral-300",
                 )}
               >
                 {suggestion.type}
@@ -160,14 +162,14 @@ export function InlineSuggestions({
               </span>
             </div>
             {/* Suggestion text */}
-            <p className="text-sm text-gray-700 dark:text-gray-300">
+            <p className="text-sm text-neutral-700 dark:text-neutral-300">
               {suggestion.content}
             </p>
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-1 flex-shrink-0">
-            <button
+            <Button
               type="button"
               aria-label="Accept suggestion"
               onClick={() => onAccept(suggestion)}
@@ -178,19 +180,19 @@ export function InlineSuggestions({
               )}
             >
               <Check size={14} />
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               aria-label="Dismiss suggestion"
               onClick={() => onDismiss(suggestion)}
               className={cn(
                 "p-1.5 rounded",
-                "text-gray-400 dark:text-gray-400 hover:text-error-500 hover:bg-error-100 dark:hover:bg-error-900/30",
+                "text-neutral-400 dark:text-neutral-400 hover:text-error-500 hover:bg-error-100 dark:hover:bg-error-900/30",
                 "transition-colors",
               )}
             >
               <X size={14} />
-            </button>
+            </Button>
           </div>
         </div>
       ))}

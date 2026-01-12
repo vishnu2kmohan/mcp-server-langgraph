@@ -3,12 +3,66 @@
  *
  * Displays usage information relative to tier limits.
  * Shows progress bar, current/max values, and warning states.
+ * Uses CVA for type-safe variant and tier styling.
+ *
  * Part of Bob's user journey - surfacing tier limits to prevent confusion.
  */
 
+import { cva, type VariantProps } from "class-variance-authority";
 import { AlertTriangle } from "lucide-react";
+import { cn } from "../../utils/cn";
 
-export interface TierUsageBarProps {
+/**
+ * TierUsageBar variant styles using CVA
+ */
+export const tierUsageBarVariants = cva(
+  // Base styles
+  "flex items-center gap-3",
+  {
+    variants: {
+      variant: {
+        default: "",
+        compact: "",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
+
+/**
+ * Tier badge styles using CVA
+ */
+export const tierBadgeVariants = cva(
+  "text-xs px-2 py-0.5 rounded-full whitespace-nowrap",
+  {
+    variants: {
+      tier: {
+        dedicated:
+          "bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400",
+        hybrid:
+          "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400",
+        shared:
+          "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300",
+      },
+    },
+    defaultVariants: {
+      tier: "shared",
+    },
+  },
+);
+
+export type TierUsageBarVariant = NonNullable<
+  VariantProps<typeof tierUsageBarVariants>["variant"]
+>;
+export type TierType = NonNullable<
+  VariantProps<typeof tierBadgeVariants>["tier"]
+>;
+
+export interface TierUsageBarProps extends VariantProps<
+  typeof tierUsageBarVariants
+> {
   /** Current usage count */
   current: number;
   /** Maximum allowed for this tier (-1 for unlimited) */
@@ -16,9 +70,24 @@ export interface TierUsageBarProps {
   /** Label describing what's being measured */
   label: string;
   /** Organization tier name */
-  tier?: "shared" | "hybrid" | "dedicated";
-  /** Display variant */
-  variant?: "default" | "compact";
+  tier?: TierType;
+}
+
+/**
+ * Get progress bar color based on usage percentage
+ */
+function getProgressColor(percentage: number, isUnlimited: boolean): string {
+  if (isUnlimited) return "bg-success-500";
+  if (percentage >= 100) return "bg-error-500";
+  if (percentage >= 80) return "bg-warning-500";
+  return "bg-primary-500";
+}
+
+/**
+ * Format tier name for display
+ */
+function formatTierName(tierName: string): string {
+  return tierName.charAt(0).toUpperCase() + tierName.slice(1);
 }
 
 /**
@@ -39,52 +108,24 @@ export function TierUsageBar({
   max,
   label,
   tier,
-  variant = "default",
+  variant,
 }: TierUsageBarProps) {
+  const resolvedVariant = variant ?? "default";
   const isUnlimited = max === -1;
   const percentage = isUnlimited ? 100 : max > 0 ? (current / max) * 100 : 0;
   const clampedPercentage = Math.min(100, Math.max(0, percentage));
-
-  // Determine color based on usage percentage
-  const getProgressColor = () => {
-    if (isUnlimited) return "bg-success-500";
-    if (percentage >= 100) return "bg-error-500";
-    if (percentage >= 80) return "bg-warning-500";
-    return "bg-primary-500";
-  };
-
   const shouldShowWarning = !isUnlimited && percentage >= 80;
 
-  // Format tier name for display
-  const formatTierName = (tierName: string) => {
-    return tierName.charAt(0).toUpperCase() + tierName.slice(1);
-  };
-
-  // Get tier badge color
-  const getTierBadgeStyle = () => {
-    switch (tier) {
-      case "dedicated":
-        return "bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400";
-      case "hybrid":
-        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
-      case "shared":
-      default:
-        return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
-    }
-  };
-
   return (
-    <div className="flex items-center gap-3">
+    <div className={cn(tierUsageBarVariants({ variant }))}>
       {/* Label and Tier Badge */}
-      {variant !== "compact" && (
+      {resolvedVariant !== "compact" && (
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate">
             {label}
           </span>
           {tier && (
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${getTierBadgeStyle()}`}
-            >
+            <span className={tierBadgeVariants({ tier })}>
               {formatTierName(tier)}
             </span>
           )}
@@ -100,17 +141,20 @@ export function TierUsageBar({
           aria-valuenow={current}
           aria-valuemin={0}
           aria-valuemax={isUnlimited ? current : max}
-          className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+          className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden"
         >
           <div
             data-testid="tier-usage-fill"
-            className={`h-full transition-all duration-300 ${getProgressColor()}`}
+            className={cn(
+              "h-full transition-all duration-300",
+              getProgressColor(percentage, isUnlimited),
+            )}
             style={{ width: `${clampedPercentage}%` }}
           />
         </div>
 
         {/* Usage Count */}
-        <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+        <div className="flex items-center gap-1 text-sm text-neutral-600 dark:text-neutral-400 whitespace-nowrap">
           {shouldShowWarning && (
             <AlertTriangle
               size={14}
@@ -121,7 +165,7 @@ export function TierUsageBar({
           {isUnlimited ? (
             <>
               <span className="font-medium">{current}</span>
-              <span className="text-gray-400 dark:text-gray-400">
+              <span className="text-neutral-400 dark:text-neutral-400">
                 / Unlimited
               </span>
             </>
@@ -134,10 +178,8 @@ export function TierUsageBar({
       </div>
 
       {/* Compact variant tier badge */}
-      {variant === "compact" && tier && (
-        <span
-          className={`text-xs px-2 py-0.5 rounded-full ${getTierBadgeStyle()}`}
-        >
+      {resolvedVariant === "compact" && tier && (
+        <span className={tierBadgeVariants({ tier })}>
           {formatTierName(tier)}
         </span>
       )}

@@ -22,6 +22,8 @@ import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type { StateTabProps } from "../types";
 import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 
+import { Button, Input } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -146,24 +148,25 @@ function StateNodeRow({
     if (typeof node.value === "boolean") {
       return "text-insight-600 dark:text-insight-400";
     }
-    return "text-gray-600 dark:text-gray-400";
+    return "text-neutral-600 dark:text-neutral-400";
   }, [node.value]);
 
   return (
     <div
       className={cn(
-        "flex items-center py-0.5 hover:bg-gray-50 dark:hover:bg-gray-800/50",
+        "flex items-center py-0.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
         isMatch && "bg-warning-50 dark:bg-warning-900/20",
       )}
       style={{ paddingLeft: `${depth * 16 + 8}px` }}
     >
       {/* Expand/collapse button */}
       {hasChildren ? (
-        <button
+        <Button
+          variant="secondary"
+          className="p-0.5 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
           data-testid={`expand-${node.path.replace(/\./g, "-")}`}
           type="button"
           onClick={onToggle}
-          className="p-0.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
           aria-expanded={isExpanded}
           aria-label={
             isExpanded ? `Collapse ${node.key}` : `Expand ${node.key}`
@@ -172,26 +175,23 @@ function StateNodeRow({
           {isExpanded ? (
             <ChevronDown
               size={12}
-              className="text-gray-500 dark:text-gray-400"
+              className="text-neutral-500 dark:text-neutral-400"
             />
           ) : (
             <ChevronRight
               size={12}
-              className="text-gray-500 dark:text-gray-400"
+              className="text-neutral-500 dark:text-neutral-400"
             />
           )}
-        </button>
+        </Button>
       ) : (
         <span className="w-4" />
       )}
-
       {/* Key */}
-      <span className="ml-1 text-sm text-gray-700 dark:text-gray-300 font-medium">
+      <span className="ml-1 text-sm text-neutral-700 dark:text-neutral-300 font-medium">
         {node.key}
       </span>
-
-      <span className="text-gray-400 dark:text-gray-400 mx-1">:</span>
-
+      <span className="text-neutral-400 dark:text-neutral-400 mx-1">:</span>
       {/* Value */}
       <span className={cn("text-sm", valueColor)}>
         {formatValue(node.value)}
@@ -359,29 +359,29 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
   return (
     <div
       data-testid="state-tab"
-      className="flex flex-col h-full bg-white dark:bg-gray-900"
+      className="flex flex-col h-full bg-white dark:bg-neutral-900"
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
         {/* Context indicator */}
         <div className="flex items-center gap-1.5">
           <Database
             size={14}
-            className="text-gray-500 dark:text-gray-400"
+            className="text-neutral-500 dark:text-neutral-400"
             aria-hidden="true"
           />
-          <span className="text-xs text-gray-600 dark:text-gray-400 capitalize">
+          <span className="text-xs text-neutral-600 dark:text-neutral-400 capitalize">
             {context}
           </span>
           {contextEntityId && (
-            <span className="text-xs text-gray-500 dark:text-gray-400 ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
+            <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded">
               {contextEntityId}
             </span>
           )}
         </div>
 
         {/* Time-travel toggle */}
-        <button
+        <Button
           data-testid="time-travel-toggle"
           type="button"
           onClick={toggleTimeTravel}
@@ -389,14 +389,14 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
             "flex items-center gap-1 px-2 py-0.5 rounded text-xs",
             timeTravelEnabled
               ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400",
+              : "bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
           )}
           aria-pressed={timeTravelEnabled}
           aria-label="Toggle time-travel debugging"
         >
           <Clock size={10} />
           {timeTravelEnabled ? "Recording" : "Paused"}
-        </button>
+        </Button>
 
         {/* Spacer */}
         <div className="flex-1" />
@@ -405,19 +405,18 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
         <div className="relative">
           <Search
             size={12}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
             aria-hidden="true"
           />
-          <input
+          <Input
             data-testid="state-search"
-            type="text"
             placeholder="Search state..."
             value={searchTerm}
             onChange={handleSearchChange}
             className={cn(
               "pl-6 pr-2 py-1 text-xs",
-              "bg-white dark:bg-gray-900",
-              "border border-gray-200 dark:border-gray-700 rounded",
+              "bg-white dark:bg-neutral-900",
+              "border border-neutral-200 dark:border-neutral-700 rounded",
               "focus:outline-none focus:ring-1 focus:ring-primary-500",
               "w-40",
             )}
@@ -426,17 +425,17 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
         </div>
 
         {/* Refresh button */}
-        <button
+        <Button
+          variant="secondary"
+          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400"
           data-testid="refresh-button"
           type="button"
           onClick={handleRefresh}
-          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
           aria-label="Refresh state"
         >
           <RefreshCw size={14} />
-        </button>
+        </Button>
       </div>
-
       {/* State tree - syncs with unified TimelineBar for time-travel */}
       <div className="flex-1 overflow-y-auto p-2" key={refreshKey}>
         <StateTree state={stateToDisplay} searchTerm={searchTerm} />

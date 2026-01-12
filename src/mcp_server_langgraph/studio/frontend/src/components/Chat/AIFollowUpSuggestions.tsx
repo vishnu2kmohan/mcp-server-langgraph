@@ -26,6 +26,8 @@ import {
   ThumbsDown,
 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 /** Feedback type for suggestions */
 export type SuggestionFeedbackType = "positive" | "negative";
 
@@ -134,7 +136,7 @@ export function AIFollowUpSuggestions({
         data-testid="suggestions-loading"
         className={`flex flex-col gap-2 ${className}`}
       >
-        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
           <Sparkles size={12} className="animate-pulse" />
           <span>Generating follow-up questions...</span>
         </div>
@@ -143,7 +145,7 @@ export function AIFollowUpSuggestions({
             <div
               key={i}
               data-testid="skeleton-suggestion"
-              className="h-8 rounded-full bg-gray-100 dark:bg-gray-700 animate-pulse"
+              className="h-8 rounded-full bg-neutral-100 dark:bg-neutral-700 animate-pulse"
               style={{ width: `${80 + i * 20}px` }}
             />
           ))}
@@ -165,11 +167,10 @@ export function AIFollowUpSuggestions({
       className={`flex flex-col gap-2 ${textSize} ${className}`}
     >
       {/* Header */}
-      <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+      <div className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
         <Sparkles size={compact ? 10 : 12} />
         <span className="text-xs">Related questions to explore</span>
       </div>
-
       {/* Suggestions */}
       <div className="flex flex-wrap gap-2">
         {visibleSuggestions.map((suggestion) => {
@@ -181,7 +182,9 @@ export function AIFollowUpSuggestions({
               key={suggestion.id}
               className="group relative inline-flex items-center"
             >
-              <button
+              <Button
+                variant="primary"
+                className=".5 px-3 py-1.5 rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-900/40 border border-primary-200 dark:border-primary-800"
                 type="button"
                 onClick={() => onSelect(suggestion)}
                 onKeyDown={(e) => {
@@ -191,18 +194,6 @@ export function AIFollowUpSuggestions({
                   }
                 }}
                 disabled={disabled}
-                className={`
-                  inline-flex items-center gap-1.5
-                  px-3 py-1.5 rounded-full
-                  bg-primary-50 dark:bg-primary-900/20
-                  text-primary-700 dark:text-primary-300
-                  hover:bg-primary-100 dark:hover:bg-primary-900/40
-                  border border-primary-200 dark:border-primary-800
-                  transition-colors cursor-pointer
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  ${compact ? "px-2 py-1" : "px-3 py-1.5"}
-                  ${onFeedback ? "pr-14" : ""}
-                `}
               >
                 <span data-testid="suggestion-icon">
                   <Icon size={compact ? 10 : 12} />
@@ -215,12 +206,13 @@ export function AIFollowUpSuggestions({
                 <span className="truncate max-w-[200px]">
                   {suggestion.text}
                 </span>
-              </button>
-
+              </Button>
               {/* Feedback buttons (thumbs up/down) */}
               {onFeedback && (
                 <div className="absolute right-1 flex items-center gap-0.5">
-                  <button
+                  <Button
+                    variant="success"
+                    className="p-1 rounded-full text-neutral-400 dark:text-neutral-500 hover:text-success-600 dark:hover:text-success-400 hover:bg-success-50 dark:hover:bg-success-900/20"
                     type="button"
                     data-testid="feedback-positive"
                     onClick={(e) => {
@@ -228,19 +220,13 @@ export function AIFollowUpSuggestions({
                       onFeedback(suggestion, "positive");
                     }}
                     disabled={disabled}
-                    className={`
-                      p-1 rounded-full
-                      text-gray-400 dark:text-gray-500
-                      hover:text-success-600 dark:hover:text-success-400
-                      hover:bg-success-50 dark:hover:bg-success-900/20
-                      transition-colors
-                      disabled:opacity-50 disabled:cursor-not-allowed
-                    `}
                     aria-label="Helpful suggestion"
                   >
                     <ThumbsUp size={compact ? 10 : 12} />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="danger"
+                    className="p-1 rounded-full text-neutral-400 dark:text-neutral-500 hover:text-error-600 dark:hover:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20"
                     type="button"
                     data-testid="feedback-negative"
                     onClick={(e) => {
@@ -248,18 +234,10 @@ export function AIFollowUpSuggestions({
                       onFeedback(suggestion, "negative");
                     }}
                     disabled={disabled}
-                    className={`
-                      p-1 rounded-full
-                      text-gray-400 dark:text-gray-500
-                      hover:text-error-600 dark:hover:text-error-400
-                      hover:bg-error-50 dark:hover:bg-error-900/20
-                      transition-colors
-                      disabled:opacity-50 disabled:cursor-not-allowed
-                    `}
                     aria-label="Not helpful suggestion"
                   >
                     <ThumbsDown size={compact ? 10 : 12} />
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>

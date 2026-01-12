@@ -28,6 +28,8 @@ import {
   Check,
 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -162,81 +164,83 @@ export function ErrorRecovery({
               {error.code}
             </code>
           </h3>
-          <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+          <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
             {error.message}
           </p>
         </div>
       </div>
-
       {/* Suggestions */}
       {suggestions && suggestions.length > 0 && (
         <div className="mt-3 ml-8">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">
             Try:
           </p>
-          <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-400 space-y-0.5">
+          <ul className="list-disc list-inside text-sm text-neutral-600 dark:text-neutral-400 space-y-0.5">
             {suggestions.map((suggestion, index) => (
               <li key={index}>{suggestion}</li>
             ))}
           </ul>
         </div>
       )}
-
       {/* Actions */}
       <div className="mt-4 ml-8 flex flex-wrap items-center gap-2">
         {onRetry && (
-          <button
+          <Button
+            variant="primary"
+            className=".5 px-3 py-1.5 text-sm text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:ring-primary-500"
             type="button"
             onClick={onRetry}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <RefreshCw size={14} />
             Retry
-          </button>
+          </Button>
         )}
         {onReport && (
-          <button
+          <Button
+            variant="secondary"
+            className=".5 px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:ring-primary-500"
             type="button"
             onClick={onReport}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <Bug size={14} />
             Report
-          </button>
+          </Button>
         )}
         {onDismiss && (
-          <button
+          <Button
+            className=".5 px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 focus:ring-primary-500"
             type="button"
             onClick={onDismiss}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <X size={14} />
             Dismiss
-          </button>
+          </Button>
         )}
-        <button
+        <Button
+          size="sm"
+          className="px-2 py-1 text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-200 focus:ring-primary-500"
           type="button"
           onClick={() => setShowDetails(!showDetails)}
           aria-label={showDetails ? "Hide details" : "Show details"}
-          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           {showDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           Details
-        </button>
+        </Button>
       </div>
-
       {/* Details */}
       {showDetails && (
         <div className="mt-3 ml-8 p-3 bg-white/50 dark:bg-black/20 rounded-md">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
               Error Details
             </span>
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
+              className="px-2 py-0.5 text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-200 bg-neutral-100 dark:bg-neutral-800 rounded focus:ring-primary-500"
               type="button"
               onClick={handleCopy}
               aria-label="Copy error details"
-              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-200 bg-gray-100 dark:bg-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               {copied ? (
                 <>
@@ -249,33 +253,33 @@ export function ErrorRecovery({
                   Copy
                 </>
               )}
-            </button>
+            </Button>
           </div>
           <dl className="text-xs space-y-1">
             <div className="flex">
-              <dt className="font-medium text-gray-500 dark:text-gray-400 w-20">
+              <dt className="font-medium text-neutral-500 dark:text-neutral-400 w-20">
                 Code:
               </dt>
-              <dd className="font-mono text-gray-700 dark:text-gray-300">
+              <dd className="font-mono text-neutral-700 dark:text-neutral-300">
                 {error.code}
               </dd>
             </div>
             {error.traceId && (
               <div className="flex">
-                <dt className="font-medium text-gray-500 dark:text-gray-400 w-20">
+                <dt className="font-medium text-neutral-500 dark:text-neutral-400 w-20">
                   Trace ID:
                 </dt>
-                <dd className="font-mono text-gray-700 dark:text-gray-300">
+                <dd className="font-mono text-neutral-700 dark:text-neutral-300">
                   {error.traceId}
                 </dd>
               </div>
             )}
             {error.timestamp && (
               <div className="flex">
-                <dt className="font-medium text-gray-500 dark:text-gray-400 w-20">
+                <dt className="font-medium text-neutral-500 dark:text-neutral-400 w-20">
                   Time:
                 </dt>
-                <dd className="font-mono text-gray-700 dark:text-gray-300">
+                <dd className="font-mono text-neutral-700 dark:text-neutral-300">
                   {new Date(error.timestamp).toLocaleString()}
                 </dd>
               </div>

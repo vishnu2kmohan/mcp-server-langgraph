@@ -17,6 +17,8 @@ import {
 import type { CanvasArtifact } from "../types/artifacts";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -71,33 +73,33 @@ function DeleteConfirmDialog({ onConfirm, onCancel }: DeleteDialogProps) {
     >
       <div
         className={cn(
-          "bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm mx-4",
+          "bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 max-w-sm mx-4",
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+        <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
           Delete Artifact?
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
           This action cannot be undone. The artifact and all its versions will
           be permanently deleted.
         </p>
         <div className="flex justify-end gap-2">
-          <button
+          <Button
             data-testid="cancel-delete-button"
             type="button"
             onClick={onCancel}
             className={cn(
               "px-4 py-2 rounded-lg text-sm font-medium",
-              "text-gray-700 dark:text-gray-300",
-              "bg-gray-100 dark:bg-gray-700",
-              "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600",
+              "text-neutral-700 dark:text-neutral-300",
+              "bg-neutral-100 dark:bg-neutral-700",
+              "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600",
               "transition-colors",
             )}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             data-testid="confirm-delete-button"
             type="button"
             onClick={onConfirm}
@@ -108,7 +110,7 @@ function DeleteConfirmDialog({ onConfirm, onCancel }: DeleteDialogProps) {
             )}
           >
             Delete
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -136,13 +138,13 @@ function ExportMenu({ onExport, onClose }: ExportMenuProps) {
       data-testid="export-menu"
       className={cn(
         "absolute top-full right-0 mt-1 z-10",
-        "bg-white dark:bg-gray-800 rounded-lg shadow-lg",
-        "border border-gray-200 dark:border-gray-700",
+        "bg-white dark:bg-neutral-800 rounded-lg shadow-lg",
+        "border border-neutral-200 dark:border-neutral-700",
         "py-1 min-w-32",
       )}
     >
       {formats.map(({ format, label }) => (
-        <button
+        <Button
           key={format}
           type="button"
           onClick={() => {
@@ -151,13 +153,13 @@ function ExportMenu({ onExport, onClose }: ExportMenuProps) {
           }}
           className={cn(
             "w-full px-4 py-2 text-left text-sm",
-            "text-gray-700 dark:text-gray-300",
-            "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+            "text-neutral-700 dark:text-neutral-300",
+            "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
             "transition-colors",
           )}
         >
           {label}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -187,7 +189,7 @@ function ActionButton({
   testId,
 }: ActionButtonProps) {
   return (
-    <button
+    <Button
       data-testid={testId}
       type="button"
       disabled={disabled}
@@ -198,7 +200,7 @@ function ActionButton({
         "flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium",
         "transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500",
         variant === "default" &&
-          "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+          "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
         variant === "danger" &&
           "text-error-600 dark:text-error-400 hover:bg-error-100 dark:hover:bg-error-900/30",
         disabled && "opacity-50 cursor-not-allowed",
@@ -206,7 +208,7 @@ function ActionButton({
     >
       <Icon size={14} data-testid={`${testId?.replace("-button", "")}-icon`} />
       {!compact && <span>{label}</span>}
-    </button>
+    </Button>
   );
 }
 
@@ -287,7 +289,6 @@ export function ArtifactActions({
           testId="copy-button"
         />
       )}
-
       {/* Fork button */}
       <ActionButton
         icon={GitFork}
@@ -297,10 +298,9 @@ export function ArtifactActions({
         onClick={handleFork}
         testId="fork-button"
       />
-
       {/* Export button with dropdown */}
       <div className="relative">
-        <button
+        <Button
           type="button"
           disabled={disabled}
           onClick={() => setShowExportMenu(!showExportMenu)}
@@ -309,14 +309,14 @@ export function ArtifactActions({
           className={cn(
             "flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium",
             "transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500",
-            "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+            "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
             disabled && "opacity-50 cursor-not-allowed",
           )}
         >
           <Download size={14} data-testid="export-icon" />
           {!compact && <span>Export</span>}
           <ChevronDown size={12} />
-        </button>
+        </Button>
         {showExportMenu && (
           <ExportMenu
             onExport={handleExport}
@@ -324,7 +324,6 @@ export function ArtifactActions({
           />
         )}
       </div>
-
       {/* Share button (optional) */}
       {shareable && (
         <ActionButton
@@ -336,7 +335,6 @@ export function ArtifactActions({
           testId="share-button"
         />
       )}
-
       {/* Delete button (optional) */}
       {deletable && (
         <ActionButton
@@ -349,7 +347,6 @@ export function ArtifactActions({
           testId="delete-button"
         />
       )}
-
       {/* Delete confirmation dialog */}
       {showDeleteDialog && (
         <DeleteConfirmDialog

@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import katex from "katex";
 
+import { Button } from "@/components/UI";
+
 /**
  * LaTeXArtifact props
  */
@@ -182,8 +184,8 @@ export function LaTeXArtifact({
   );
 
   const containerClasses = isFullscreen
-    ? "fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-auto"
-    : `rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden ${className}`;
+    ? "fixed inset-0 z-50 bg-white dark:bg-neutral-900 overflow-auto"
+    : `rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-hidden ${className}`;
 
   return (
     <div
@@ -196,16 +198,16 @@ export function LaTeXArtifact({
       tabIndex={0}
     >
       {/* Header with title and actions */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between px-4 py-2 bg-neutral-50 dark:bg-neutral-700/50 border-b border-neutral-200 dark:border-neutral-700">
         {title ? (
           <span
             data-testid="latex-title"
-            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
           >
             {title}
           </span>
         ) : (
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
             LaTeX
           </span>
         )}
@@ -213,45 +215,51 @@ export function LaTeXArtifact({
         <div className="flex items-center gap-2">
           {/* Zoom controls */}
           <div className="flex items-center gap-1">
-            <button
+            <Button
+              variant="secondary"
+              className="p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded"
               onClick={handleZoomOut}
-              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded transition-colors"
               aria-label="Zoom out"
             >
               <ZoomOut size={14} />
-            </button>
-            <span className="text-xs text-gray-500 dark:text-gray-400 w-10 text-center">
+            </Button>
+            <span className="text-xs text-neutral-500 dark:text-neutral-400 w-10 text-center">
               {Math.round(zoom * 100)}%
             </span>
-            <button
+            <Button
+              variant="secondary"
+              className="p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded"
               onClick={handleZoomIn}
-              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded transition-colors"
               aria-label="Zoom in"
             >
               <ZoomIn size={14} />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
+              className="p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded"
               onClick={handleResetZoom}
-              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded transition-colors"
               aria-label="Reset zoom"
             >
               <RotateCcw size={14} />
-            </button>
+            </Button>
           </div>
 
           {/* Fullscreen toggle */}
-          <button
+          <Button
+            variant="secondary"
+            className="p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded"
             onClick={handleToggleFullscreen}
-            className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded transition-colors"
             aria-label="Toggle fullscreen"
           >
             {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-          </button>
+          </Button>
 
           {/* Copy button */}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex px-2 py-1 text-xs text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded"
             onClick={handleCopy}
-            className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded transition-colors"
             aria-label={copied ? "Copied" : "Copy LaTeX"}
           >
             {copied ? (
@@ -265,10 +273,9 @@ export function LaTeXArtifact({
                 <span>Copy</span>
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* LaTeX content */}
       <div
         className={`p-4 ${isFullscreen ? "min-h-[calc(100vh-60px)] flex items-center justify-center" : ""}`}
@@ -284,7 +291,7 @@ export function LaTeXArtifact({
             </div>
 
             {/* Show raw LaTeX */}
-            <pre className="p-3 bg-gray-50 dark:bg-gray-900 rounded text-sm text-gray-700 dark:text-gray-300 font-mono overflow-x-auto">
+            <pre className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded text-sm text-neutral-700 dark:text-neutral-300 font-mono overflow-x-auto">
               {content}
             </pre>
           </div>

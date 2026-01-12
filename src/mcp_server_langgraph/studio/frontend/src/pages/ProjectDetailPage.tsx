@@ -37,6 +37,8 @@ import {
 import { SessionsTab } from "../components/Project/SessionsTab";
 import { WorkflowsTab } from "../components/Project/WorkflowsTab";
 
+import { Button, Input, Select } from "@/components/UI";
+
 // ============================================================================
 // Dialog Components
 // ============================================================================
@@ -54,17 +56,17 @@ function Dialog({ isOpen, onClose, title, children }: DialogProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+      <div className="relative bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+          <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
             {title}
           </h3>
-          <button
+          <Button
+            className="p-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
             onClick={onClose}
-            className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
         <div className="p-4">{children}</div>
       </div>
@@ -107,53 +109,54 @@ function AddConnectionDialog({
         <div className="mb-4">
           <label
             htmlFor="connection-name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
           >
             Connection Name
           </label>
-          <input
+          <Input
+            className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
             id="connection-name"
-            type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter connection name"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             autoFocus
           />
         </div>
         <div className="mb-4">
           <label
             htmlFor="connection-type"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
           >
             Connection Type
           </label>
-          <select
+          <Select
+            className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
             id="connection-type"
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="mcp_server">MCP Server</option>
             <option value="vector_store">Vector Store</option>
             <option value="api_key">API Key</option>
-          </select>
+          </Select>
         </div>
         <div className="flex justify-end gap-2">
-          <button
+          <Button
+            variant="secondary"
+            className="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             type="submit"
             disabled={!name.trim() || isSubmitting}
-            className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
           >
             {isSubmitting ? "Adding..." : "Add"}
-          </button>
+          </Button>
         </div>
       </form>
     </Dialog>
@@ -191,53 +194,54 @@ function AddMemberDialog({ isOpen, onClose, onSubmit }: AddMemberDialogProps) {
         <div className="mb-4">
           <label
             htmlFor="user-id"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
           >
             User ID
           </label>
-          <input
+          <Input
+            className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
             id="user-id"
-            type="text"
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
             placeholder="Enter user ID"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             autoFocus
           />
         </div>
         <div className="mb-4">
           <label
             htmlFor="member-role"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
           >
             Role
           </label>
-          <select
+          <Select
+            className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
             id="member-role"
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="editor">Editor</option>
             <option value="viewer">Viewer</option>
             <option value="executor">Executor</option>
-          </select>
+          </Select>
         </div>
         <div className="flex justify-end gap-2">
-          <button
+          <Button
+            variant="secondary"
+            className="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             type="submit"
             disabled={!userId.trim() || isSubmitting}
-            className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
           >
             {isSubmitting ? "Adding..." : "Add"}
-          </button>
+          </Button>
         </div>
       </form>
     </Dialog>
@@ -316,7 +320,7 @@ export function ProjectDetailPage() {
       label: "Workflows",
       icon: <GitBranch className="w-4 h-4" />,
       count: project?.workflowCount,
-      featureFlag: "enable_workflows_feature",
+      featureFlag: "workflows",
     },
     {
       id: "connections",
@@ -328,13 +332,13 @@ export function ProjectDetailPage() {
       id: "observability",
       label: "Observability",
       icon: <Activity className="w-4 h-4" />,
-      featureFlag: "enable_observability_ui",
+      featureFlag: "observability",
     },
     {
       id: "cost",
       label: "Cost",
       icon: <DollarSign className="w-4 h-4" />,
-      featureFlag: "enable_cost_dashboard",
+      featureFlag: "cost_dashboard",
     },
     {
       id: "members",
@@ -364,7 +368,7 @@ export function ProjectDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
           <RefreshCw className="w-5 h-5 animate-spin" />
           <span>Loading project...</span>
         </div>
@@ -379,12 +383,13 @@ export function ProjectDetailPage() {
         <div className="text-error-500 dark:text-error-400">
           Error: {error || "Project not found"}
         </div>
-        <button
-          onClick={handleBack}
+        <Button
+          variant="primary"
           className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          onClick={handleBack}
         >
           Back to Projects
-        </button>
+        </Button>
       </div>
     );
   }
@@ -392,68 +397,66 @@ export function ProjectDetailPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center gap-4">
-          <button
+          <Button
+            variant="secondary"
+            className="p-2 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
             onClick={handleBack}
-            className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
           >
             <ArrowLeft className="w-5 h-5" />
-          </button>
+          </Button>
           <div className="flex-1">
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
               {project.name}
             </h1>
             {project.description && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 {project.description}
               </p>
             )}
           </div>
-          <button
+          <Button
+            variant="secondary"
+            className="p-2 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
             onClick={() => refetch()}
-            className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             title={isFetching ? "Syncing..." : "Refresh (auto-syncs every 30s)"}
             data-testid="project-refresh-button"
           >
             <RefreshCw
               className={`w-5 h-5 ${isFetching ? "animate-spin" : ""}`}
             />
-          </button>
-          <button
-            className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
+          </Button>
+          <Button
+            variant="secondary"
+            className="p-2 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
             title="Settings"
           >
             <Settings className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Tabs */}
-      <div className="px-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="px-6 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex gap-1">
           {tabs.map((tab) => (
-            <button
+            <Button
+              size="lg"
+              className="flex px-4 py-3 text-sm border-b-2"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.id
-                  ? "border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-              }`}
             >
               {tab.icon}
               <span>{tab.label}</span>
               {tab.count !== undefined && (
-                <span className="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded">
+                <span className="px-1.5 py-0.5 text-xs bg-neutral-100 dark:bg-neutral-700 rounded">
                   {tab.count}
                 </span>
               )}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
-
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {activeTab === "sessions" && (
@@ -532,19 +535,20 @@ function ConnectionsTab({
         onSubmit={handleAddConnection}
       />
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+        <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
           Connections
         </h2>
-        <button
+        <Button
+          variant="primary"
+          className="flex px-3 py-1.5 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700"
           onClick={() => setShowDialog(true)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700"
         >
           <Plus className="w-4 h-4" />
           Add Connection
-        </button>
+        </Button>
       </div>
       {connections.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+        <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
           No connections yet. Add MCP servers, vector stores, or API
           integrations.
         </div>
@@ -553,13 +557,13 @@ function ConnectionsTab({
           {connections.map((connection) => (
             <div
               key={connection.id}
-              className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+              className="flex items-center justify-between p-4 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg"
             >
               <div>
-                <div className="font-medium text-gray-900 dark:text-gray-100">
+                <div className="font-medium text-neutral-900 dark:text-neutral-100">
                   {connection.name}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-sm text-neutral-500 dark:text-neutral-400">
                   {connection.type}
                 </div>
               </div>
@@ -567,7 +571,7 @@ function ConnectionsTab({
                 className={`px-2 py-0.5 text-xs rounded-full ${
                   connection.status === "active"
                     ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                    : "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
                 }`}
               >
                 {connection.status}
@@ -609,7 +613,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-500 dark:text-gray-400">
+      <div className="flex items-center justify-center py-12 text-neutral-500 dark:text-neutral-400">
         Loading...
       </div>
     );
@@ -619,12 +623,13 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-4">
         <div className="text-error-500 dark:text-error-400">{error}</div>
-        <button
-          onClick={() => refetchObservability()}
+        <Button
+          variant="primary"
           className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          onClick={() => refetchObservability()}
         >
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -633,35 +638,35 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+        <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
             Total Traces
           </h3>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             {data?.traceCount ?? 0}
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+        <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
             Total Requests
           </h3>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             {data?.requestsTotal ?? 0}
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+        <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
             Total Errors
           </h3>
           <div className="text-2xl font-semibold text-error-600 dark:text-error-400">
             {data?.errorsTotal ?? 0}
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+        <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
             Avg Latency
           </h3>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             {data?.avgLatencyMs ?? 0}ms
           </div>
         </div>
@@ -669,11 +674,11 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
 
       {/* Navigation Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+        <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+          <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
             Traces
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
             View traces from sessions and workflows in this project.
           </p>
           <a
@@ -683,11 +688,11 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
             View traces →
           </a>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+        <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+          <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
             Metrics
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
             View aggregated metrics for this project.
           </p>
           <a
@@ -697,11 +702,11 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
             View metrics →
           </a>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+        <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+          <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
             Logs
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
             View logs from sessions and workflows.
           </p>
           <a
@@ -711,11 +716,11 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
             View logs →
           </a>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+        <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+          <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
             Alerts
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
             View active alerts for this project.
           </p>
           <a
@@ -728,9 +733,9 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
       </div>
 
       {/* Recent Logs */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">
+      <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+        <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+          <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
             Recent Logs
           </h3>
           <a
@@ -742,7 +747,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
         </div>
         <div className="p-4">
           {logs.length === 0 ? (
-            <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+            <div className="text-center py-4 text-neutral-500 dark:text-neutral-400">
               No logs available
             </div>
           ) : (
@@ -750,7 +755,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
               {logs.slice(0, 10).map((log) => (
                 <div
                   key={log.id}
-                  className="flex items-start gap-3 p-2 bg-gray-50 dark:bg-gray-900 rounded text-sm"
+                  className="flex items-start gap-3 p-2 bg-neutral-50 dark:bg-neutral-900 rounded text-sm"
                 >
                   <span
                     className={`px-1.5 py-0.5 rounded text-xs font-medium ${
@@ -763,10 +768,10 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
                   >
                     {log.level}
                   </span>
-                  <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap text-xs">
+                  <span className="text-neutral-500 dark:text-neutral-400 whitespace-nowrap text-xs">
                     {new Date(log.timestamp).toLocaleTimeString()}
                   </span>
-                  <span className="text-gray-900 dark:text-gray-100 flex-1">
+                  <span className="text-neutral-900 dark:text-neutral-100 flex-1">
                     {log.message}
                   </span>
                 </div>
@@ -777,9 +782,9 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
       </div>
 
       {/* Active Alerts */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">
+      <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+        <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+          <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
             Active Alerts
           </h3>
           <a
@@ -791,7 +796,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
         </div>
         <div className="p-4">
           {alerts.length === 0 ? (
-            <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+            <div className="text-center py-4 text-neutral-500 dark:text-neutral-400">
               No active alerts
             </div>
           ) : (
@@ -799,7 +804,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
               {alerts.slice(0, 5).map((alert) => (
                 <div
                   key={alert.id}
-                  className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded border-l-4 border-l-red-500"
+                  className="flex items-start gap-3 p-3 bg-neutral-50 dark:bg-neutral-900 rounded border-l-4 border-l-red-500"
                 >
                   <span
                     className={`px-1.5 py-0.5 rounded text-xs font-medium ${
@@ -813,10 +818,10 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
                     {alert.severity}
                   </span>
                   <div className="flex-1">
-                    <div className="text-gray-900 dark:text-gray-100 text-sm">
+                    <div className="text-neutral-900 dark:text-neutral-100 text-sm">
                       {alert.message}
                     </div>
-                    <div className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                    <div className="text-neutral-500 dark:text-neutral-400 text-xs mt-1">
                       {new Date(alert.created_at).toLocaleString()}
                     </div>
                   </div>
@@ -854,7 +859,7 @@ function CostTab({ projectId }: { projectId: string }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-500 dark:text-gray-400">
+      <div className="flex items-center justify-center py-12 text-neutral-500 dark:text-neutral-400">
         Loading...
       </div>
     );
@@ -864,12 +869,13 @@ function CostTab({ projectId }: { projectId: string }) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-4">
         <div className="text-error-500 dark:text-error-400">{error}</div>
-        <button
-          onClick={() => refetchCost()}
+        <Button
+          variant="primary"
           className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          onClick={() => refetchCost()}
         >
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -885,51 +891,51 @@ function CostTab({ projectId }: { projectId: string }) {
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+        <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
             Total Cost
           </h3>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             {formattedCost}
           </div>
-          <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">
             This month
           </p>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+        <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
             Total Tokens
           </h3>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             {formattedTokens}
           </div>
-          <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">
             Prompt + Completion
           </p>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+        <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
             Sessions
           </h3>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             {data?.session_count || 0}
           </div>
-          <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">
             Active this month
           </p>
         </div>
       </div>
 
       {/* Cost by Model */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+      <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+        <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+          <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
             Cost by Model
           </h3>
         </div>
         <div className="p-4">
           {(modelCosts || []).length === 0 ? (
-            <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+            <div className="text-center py-4 text-neutral-500 dark:text-neutral-400">
               No model data available
             </div>
           ) : (
@@ -937,17 +943,17 @@ function CostTab({ projectId }: { projectId: string }) {
               {(modelCosts || []).map((model) => (
                 <div
                   key={model.model}
-                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg"
+                  className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg"
                 >
                   <div>
-                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                    <div className="font-medium text-neutral-900 dark:text-neutral-100">
                       {model.model}
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <div className="text-sm text-neutral-500 dark:text-neutral-400">
                       {model.tokens.toLocaleString()} tokens
                     </div>
                   </div>
-                  <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  <div className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                     {formatCurrency(model.cost)}
                   </div>
                 </div>
@@ -1018,19 +1024,20 @@ function MembersTab({
         onSubmit={handleAddMember}
       />
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+        <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
           Members
         </h2>
-        <button
+        <Button
+          variant="primary"
+          className="flex px-3 py-1.5 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700"
           onClick={() => setShowDialog(true)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700"
         >
           <Plus className="w-4 h-4" />
           Add Member
-        </button>
+        </Button>
       </div>
       {members.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+        <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
           No members added yet. Invite team members to collaborate.
         </div>
       ) : (
@@ -1038,30 +1045,31 @@ function MembersTab({
           {members.map((member, index) => (
             <div
               key={index}
-              className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+              className="flex items-center justify-between p-4 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                  <Users className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                <div className="w-10 h-10 bg-neutral-200 dark:bg-neutral-700 rounded-full flex items-center justify-center">
+                  <Users className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
                 </div>
                 <div>
-                  <div className="font-medium text-gray-900 dark:text-gray-100">
+                  <div className="font-medium text-neutral-900 dark:text-neutral-100">
                     {member.userId}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-neutral-500 dark:text-neutral-400">
                     Added {new Date(member.addedAt).toLocaleDateString()}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 {member.role !== "owner" && (
-                  <button
+                  <Button
+                    variant="danger"
+                    className="p-1.5 text-neutral-400 dark:text-neutral-400 hover:text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
                     aria-label="Remove member"
                     onClick={() => handleRemoveMember(member.userId)}
-                    className="p-1.5 text-gray-400 dark:text-gray-400 hover:text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
                   >
                     <Trash2 className="w-4 h-4" />
-                  </button>
+                  </Button>
                 )}
                 <span
                   className={`px-2 py-0.5 text-xs rounded-full ${
@@ -1069,7 +1077,7 @@ function MembersTab({
                       ? "bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400"
                       : member.role === "editor"
                         ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
-                        : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                        : "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
                   }`}
                 >
                   {member.role}

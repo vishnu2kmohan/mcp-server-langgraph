@@ -23,20 +23,26 @@ import type {
   CodeArtifact as CodeArtifactType,
   MermaidArtifact as MermaidArtifactType,
   JSONArtifact as JSONArtifactType,
+  HTMLArtifact as HTMLArtifactType,
   ImageArtifact as ImageArtifactType,
   TextArtifact as TextArtifactType,
   SVGArtifact as SVGArtifactType,
   ExecutableArtifact as ExecutableArtifactType,
   WidgetArtifact as WidgetArtifactType,
+  VegaLiteArtifact as VegaLiteArtifactType,
+  LaTeXArtifact as LaTeXArtifactType,
 } from "../../types/artifacts";
 import { ChartArtifact } from "./ChartArtifact";
 import { TableArtifact } from "./TableArtifact";
 import { CodeArtifact } from "./CodeArtifact";
 import { JSONArtifact } from "./JSONArtifact";
+import { HTMLArtifact } from "./HTMLArtifact";
 import { MermaidArtifact } from "./MermaidArtifact";
 import { InteractiveSVGArtifact } from "./InteractiveSVGArtifact";
 import { SandpackExecutor } from "./SandpackExecutor";
 import { GenerativeWidget } from "../../generative/GenerativeWidget";
+import { VegaLiteArtifact } from "./VegaLiteArtifact";
+import { LaTeXArtifact } from "./LaTeXArtifact";
 
 export interface ArtifactRendererProps {
   artifact?: Artifact;
@@ -287,6 +293,19 @@ export function ArtifactRenderer({
         </div>
       );
 
+    case "html": {
+      const htmlData = artifactToRender as HTMLArtifactType;
+      return (
+        <div data-testid="artifact-html" className={className}>
+          <HTMLArtifact
+            data={htmlData.data}
+            title={artifactToRender.title}
+            height={htmlData.config?.height}
+          />
+        </div>
+      );
+    }
+
     case "mermaid":
       return (
         <div className={className}>
@@ -416,12 +435,38 @@ export function ArtifactRenderer({
       );
     }
 
+    case "vega-lite": {
+      const vegaData = artifactToRender as VegaLiteArtifactType;
+      return (
+        <div data-testid="artifact-vega-lite" className={className}>
+          <VegaLiteArtifact
+            spec={vegaData.data}
+            title={artifactToRender.title}
+            config={vegaData.config}
+          />
+        </div>
+      );
+    }
+
+    case "latex": {
+      const latexData = artifactToRender as LaTeXArtifactType;
+      return (
+        <div data-testid="artifact-latex" className={className}>
+          <LaTeXArtifact
+            content={latexData.data}
+            title={artifactToRender.title}
+            displayMode={latexData.config?.displayMode}
+          />
+        </div>
+      );
+    }
+
     case "text":
     default:
       return (
         <div
           data-testid="artifact-text"
-          className={`p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-700 dark:text-gray-300 whitespace-pre-wrap ${className}`}
+          className={`p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap ${className}`}
         >
           {(artifactToRender as TextArtifactType).data}
         </div>

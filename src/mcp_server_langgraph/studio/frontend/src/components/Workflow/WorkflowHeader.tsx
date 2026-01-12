@@ -7,6 +7,8 @@
 
 import { Sun, Moon, Settings, HelpCircle } from "lucide-react";
 
+import { Button, Input } from "@/components/UI";
+
 export interface WorkflowHeaderProps {
   workflowName: string;
   onNameChange: (name: string) => void;
@@ -28,15 +30,15 @@ export function WorkflowHeader({
     <header
       className={`px-6 py-4 border-b ${
         isDarkMode
-          ? "bg-gray-800 border-gray-700"
-          : "bg-white border-gray-200 dark:border-gray-700"
+          ? "bg-neutral-800 border-neutral-700"
+          : "bg-white border-neutral-200 dark:border-neutral-700"
       }`}
     >
       <div className="flex items-center justify-between">
         <div>
           <h1
             className={`text-2xl font-bold ${
-              isDarkMode ? "text-white" : "text-gray-900"
+              isDarkMode ? "text-white" : "text-neutral-900"
             }`}
           >
             Visual Workflow Builder
@@ -44,8 +46,8 @@ export function WorkflowHeader({
           <p
             className={`text-sm ${
               isDarkMode
-                ? "text-gray-400 dark:text-gray-400"
-                : "text-gray-500 dark:text-gray-400"
+                ? "text-neutral-400 dark:text-neutral-400"
+                : "text-neutral-500 dark:text-neutral-400"
             }`}
           >
             MCP Server with LangGraph - Build agents visually, export to code
@@ -53,53 +55,40 @@ export function WorkflowHeader({
         </div>
 
         <div className="flex gap-2 items-center">
-          <input
-            type="text"
+          <Input
             value={workflowName}
             onChange={(e) => onNameChange(e.target.value)}
             className={`px-3 py-2 border rounded-md ${
-              isDarkMode ? "bg-gray-800 border-gray-600 text-white" : ""
+              isDarkMode ? "bg-neutral-800 border-neutral-600 text-white" : ""
             }`}
             placeholder="Workflow name"
           />
-          <button
+          <Button
+            className="p-2 rounded-lg"
             onClick={onToggleDarkMode}
-            className={`p-2 rounded-lg transition-colors ${
-              isDarkMode
-                ? "bg-gray-700 text-warning-400 hover:bg-gray-600"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700"
-            }`}
             title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
             aria-label={
               isDarkMode ? "Switch to light mode" : "Switch to dark mode"
             }
           >
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-          <button
+          </Button>
+          <Button
+            className="p-2 rounded-lg"
             onClick={onOpenSettings}
-            className={`p-2 rounded-lg transition-colors ${
-              isDarkMode
-                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700"
-            }`}
             title="Settings"
             aria-label="Settings"
           >
             <Settings size={20} />
-          </button>
-          <button
+          </Button>
+          <Button
+            className="p-2 rounded-lg"
             onClick={onOpenHelp}
-            className={`p-2 rounded-lg transition-colors ${
-              isDarkMode
-                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700"
-            }`}
             title="Help"
             aria-label="Help"
           >
             <HelpCircle size={20} />
-          </button>
+          </Button>
         </div>
       </div>
     </header>

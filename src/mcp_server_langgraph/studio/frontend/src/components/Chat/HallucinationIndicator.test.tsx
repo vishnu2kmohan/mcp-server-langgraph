@@ -55,8 +55,8 @@ describe("HallucinationIndicator", () => {
 
       expect(screen.getByText(/factual error/i)).toBeInTheDocument();
       expect(screen.getByText(/outdated information/i)).toBeInTheDocument();
-      expect(screen.getByText(/incorrect citation/i)).toBeInTheDocument();
-      expect(screen.getByText(/made up information/i)).toBeInTheDocument();
+      expect(screen.getByText(/made up source/i)).toBeInTheDocument();
+      expect(screen.getByText(/other issue/i)).toBeInTheDocument();
     });
 
     it("should allow selecting a category", () => {
@@ -68,7 +68,15 @@ describe("HallucinationIndicator", () => {
         .closest("button");
       fireEvent.click(factualErrorButton!);
 
-      expect(factualErrorButton).toHaveAttribute("aria-pressed", "true");
+      // Uses radiogroup pattern with aria-checked (not aria-pressed)
+      expect(factualErrorButton).toHaveAttribute("aria-checked", "true");
+    });
+
+    it("should use radiogroup pattern for single selection", () => {
+      render(<HallucinationIndicator {...defaultProps} />);
+      fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
+
+      expect(screen.getByRole("radiogroup")).toBeInTheDocument();
     });
 
     it("should have optional details textarea", () => {
@@ -201,6 +209,51 @@ describe("HallucinationIndicator", () => {
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-modal", "true");
+    });
+
+    it("should have aria-labelledby and aria-describedby on dialog", () => {
+      render(<HallucinationIndicator {...defaultProps} />);
+      fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
+
+      const dialog = screen.getByRole("dialog");
+      expect(dialog).toHaveAttribute("aria-labelledby");
+      expect(dialog).toHaveAttribute("aria-describedby");
+    });
+
+    it("should close dialog on ESC key", () => {
+      render(<HallucinationIndicator {...defaultProps} />);
+      fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+      fireEvent.keyDown(document, { key: "Escape" });
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("should have role=status with aria-label for reported state", () => {
+      render(<HallucinationIndicator {...defaultProps} isReported={true} />);
+      const status = screen.getByRole("status");
+      expect(status).toHaveAttribute(
+        "aria-label",
+        "This message has been reported as inaccurate",
+      );
+    });
+
+    it("should have role=status with aria-live for thank you message", () => {
+      render(<HallucinationIndicator {...defaultProps} />);
+      fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
+      fireEvent.click(screen.getByText(/factual error/i).closest("button")!);
+      fireEvent.click(screen.getByRole("button", { name: /submit/i }));
+
+      const status = screen.getByRole("status");
+      expect(status).toHaveAttribute("aria-live", "polite");
+    });
+
+    it("should have associated label for details textarea", () => {
+      render(<HallucinationIndicator {...defaultProps} />);
+      fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
+
+      const textarea = screen.getByLabelText(/additional details/i);
+      expect(textarea).toHaveAttribute("id", "hallucination-details");
     });
   });
 });

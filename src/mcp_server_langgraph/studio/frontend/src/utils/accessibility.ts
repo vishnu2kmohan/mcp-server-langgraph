@@ -121,10 +121,10 @@ export function meetsWCAGAAA(
  */
 export const colorPalette = {
   // Text colors
-  textPrimary: "#1f2937", // gray-800
-  textSecondary: "#4b5563", // gray-600
-  textMuted: "#9ca3af", // gray-400
-  textDisabled: "#d1d5db", // gray-300
+  textPrimary: "#1f2937", // neutral-800
+  textSecondary: "#4b5563", // neutral-600
+  textMuted: "#9ca3af", // neutral-400
+  textDisabled: "#d1d5db", // neutral-300
 
   // Background colors
   bgWhite: "#ffffff",

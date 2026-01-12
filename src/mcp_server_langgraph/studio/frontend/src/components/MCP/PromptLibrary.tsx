@@ -10,6 +10,8 @@ import { useListAggregatedPromptsQuery } from "../../api";
 import { Badge } from "../UI/Badge";
 import { Card } from "../UI/Card";
 
+import { Button, Input } from "@/components/UI";
+
 export interface PromptLibraryProps {
   /** Optional filter by server name */
   serverFilter?: string;
@@ -112,22 +114,21 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
     <div className="flex flex-col gap-4">
       {/* Search input */}
       <div className="relative">
-        <input
-          type="text"
+        <Input
           placeholder="Search prompts..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className={cn(
             "w-full px-4 py-2 rounded-lg border",
-            "border-gray-300 dark:border-gray-600",
-            "bg-white dark:bg-gray-800",
-            "text-gray-900 dark:text-gray-100",
-            "placeholder-gray-500 dark:placeholder-gray-400",
+            "border-neutral-300 dark:border-neutral-600",
+            "bg-white dark:bg-neutral-800",
+            "text-neutral-900 dark:text-neutral-100",
+            "placeholder-neutral-500 dark:placeholder-neutral-400",
             "focus:outline-none focus:ring-2 focus:ring-brand-primary",
           )}
         />
         <svg
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-400"
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 dark:text-neutral-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -141,11 +142,10 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
           />
         </svg>
       </div>
-
       {/* Prompt list */}
       <div className="flex flex-col gap-2">
         {filteredPrompts.length === 0 ? (
-          <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+          <div className="p-4 text-center text-neutral-500 dark:text-neutral-400">
             No prompts found
           </div>
         ) : (
@@ -156,7 +156,7 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                 key={prompt.qualifiedName}
                 variant="default"
                 padding="sm"
-                className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                className="hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
               >
                 <div className="flex flex-col">
                   {/* Header row */}
@@ -164,7 +164,7 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                     {/* Prompt info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
+                        <span className="font-mono text-sm font-medium text-neutral-900 dark:text-neutral-100">
                           {prompt.qualifiedName}
                         </span>
                         <Badge variant="outline" size="sm">
@@ -172,12 +172,12 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                         </Badge>
                       </div>
                       {prompt.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">
                           {prompt.description}
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                        <span className="text-xs text-neutral-500 dark:text-neutral-400">
                           {prompt.arguments.length} arguments
                         </span>
                       </div>
@@ -186,21 +186,21 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                     {/* Actions */}
                     <div className="flex items-center gap-2">
                       {prompt.arguments.length > 0 && (
-                        <button
+                        <Button
                           type="button"
                           onClick={() => toggleExpanded(prompt.qualifiedName)}
                           aria-label="Expand"
                           className={cn(
                             "p-1.5 rounded-md",
-                            "text-gray-500 dark:text-gray-400",
-                            "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                            "text-neutral-500 dark:text-neutral-400",
+                            "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
                             "focus:outline-none focus:ring-2 focus:ring-brand-primary",
                           )}
                         >
                           <ChevronIcon expanded={isExpanded} />
-                        </button>
+                        </Button>
                       )}
-                      <button
+                      <Button
                         type="button"
                         onClick={() => handleTest(prompt.qualifiedName)}
                         className={cn(
@@ -212,14 +212,14 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                         )}
                       >
                         Test
-                      </button>
+                      </Button>
                     </div>
                   </div>
 
                   {/* Expanded arguments */}
                   {isExpanded && prompt.arguments.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
-                      <h5 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">
+                    <div className="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800">
+                      <h5 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase mb-2">
                         Arguments
                       </h5>
                       <div className="space-y-2">
@@ -228,7 +228,7 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                             key={arg.name}
                             className="flex items-start gap-2 text-sm"
                           >
-                            <span className="font-mono text-gray-900 dark:text-gray-100">
+                            <span className="font-mono text-neutral-900 dark:text-neutral-100">
                               {arg.name}
                             </span>
                             {arg.required && (
@@ -237,7 +237,7 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                               </Badge>
                             )}
                             {arg.description && (
-                              <span className="text-gray-500 dark:text-gray-400">
+                              <span className="text-neutral-500 dark:text-neutral-400">
                                 - {arg.description}
                               </span>
                             )}

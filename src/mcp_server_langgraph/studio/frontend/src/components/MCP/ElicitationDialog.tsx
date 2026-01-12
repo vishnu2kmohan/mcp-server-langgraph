@@ -13,6 +13,8 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useRequestMcpElicitationMutation } from "../../api";
 
+import { Button, Textarea } from "@/components/UI";
+
 export interface ElicitationDialogProps {
   open: boolean;
   onClose: () => void;
@@ -116,12 +118,11 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
         onClick={onClose}
         aria-hidden="true"
       />
-
       {/* Dialog content */}
-      <div className="relative z-10 w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
+      <div className="relative z-10 w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-neutral-800">
         <h2
           id="elicitation-dialog-title"
-          className="mb-4 text-xl font-semibold text-gray-900 dark:text-white"
+          className="mb-4 text-xl font-semibold text-neutral-900 dark:text-white"
         >
           Request User Input
         </h2>
@@ -131,15 +132,15 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
           <div>
             <label
               htmlFor="elicitation-message"
-              className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
             >
               Message
             </label>
-            <textarea
+            <Textarea
+              className="px-3 py-2 text-neutral-900 -500 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
               id="elicitation-message"
               value={message}
               onChange={handleMessageChange}
-              className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               rows={3}
               placeholder="Enter the message to display to the user"
             />
@@ -149,18 +150,18 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
           <div>
             <label
               htmlFor="elicitation-schema"
-              className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
             >
               Schema (Optional JSON)
             </label>
-            <textarea
+            <Textarea
               id="elicitation-schema"
               value={schemaText}
               onChange={handleSchemaChange}
-              className={`w-full rounded-md border px-3 py-2 text-gray-900 focus:outline-none focus:ring-1 dark:bg-gray-700 dark:text-white ${
+              className={`w-full rounded-md border px-3 py-2 text-neutral-900 focus:outline-none focus:ring-1 dark:bg-neutral-700 dark:text-white ${
                 schemaError
                   ? "border-error-500 focus:border-error-500 focus:ring-error-500"
-                  : "border-gray-300 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600"
+                  : "border-neutral-300 dark:border-neutral-600 focus:border-primary-500 focus:ring-primary-500 dark:border-neutral-600"
               }`}
               rows={4}
               placeholder='{"type": "object", "properties": {"name": {"type": "string"}}}'
@@ -204,21 +205,23 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
 
         {/* Dialog actions */}
         <div className="mt-6 flex justify-end gap-3">
-          <button
+          <Button
+            variant="secondary"
+            className="rounded-md border border-neutral-300 dark:border-neutral-600 bg-white px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 focus:ring-primary-500 focus:ring-offset-2 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600"
             type="button"
             onClick={onClose}
-            className="rounded-md border border-gray-300 dark:border-gray-600 bg-white px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            className="rounded-md bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700 focus:ring-primary-500 focus:ring-offset-2"
             type="button"
             onClick={handleSend}
             disabled={!isFormValid || isLoading}
-            className="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isLoading ? "Sending..." : "Send"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

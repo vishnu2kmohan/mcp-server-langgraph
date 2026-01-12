@@ -55,11 +55,17 @@ import { useArtifactExtraction } from "../hooks/useArtifactExtraction";
 import { useInlineSuggestions } from "../hooks/useInlineSuggestions";
 import { useDebounce } from "../hooks/useDebounce";
 import { ConversationPanel } from "./ConversationPanel";
-import type { SlashCommand } from "../components/Chat/ChatInputForm";
+import type {
+  SlashCommand,
+  ModelOption,
+} from "../components/Chat/ChatInputForm";
+import type { ReasoningEffortLevel } from "../components/Chat/ReasoningEffortSelector";
 import type { KBFocusMode } from "../hooks/useStreamingChat";
 import type { ChatLoaderData } from "../router/loaders";
 import { devLogger } from "../utils/devLogger";
 import { cn } from "../utils/cn";
+
+import { Button } from "@/components/UI";
 
 const logger = devLogger.withPrefix("[ConnectedConversationPanel]");
 
@@ -88,6 +94,40 @@ export interface ConnectedConversationPanelProps {
   currentTokens?: number;
   /** Maximum tokens (for context optimization) */
   maxTokens?: number;
+
+  // ===========================================================================
+  // Model Selection Props (Sprint 1 - Chat Input Gap Fix)
+  // ===========================================================================
+
+  /** Whether to show the model selector dropdown */
+  showModelSelector?: boolean;
+  /** Currently selected model ID */
+  selectedModel?: string;
+  /** Available models for selection */
+  availableModels?: ModelOption[];
+  /** Callback when model selection changes */
+  onModelChange?: (modelId: string) => void;
+  /** Whether models are currently loading from API */
+  isModelsLoading?: boolean;
+  /** Recently used model IDs (most recent first) */
+  recentModels?: string[];
+  /** Whether to show search input in model dropdown (for large model lists) */
+  enableModelSearch?: boolean;
+
+  // ===========================================================================
+  // Reasoning Effort Props (Sprint 1 - Chat Input Gap Fix)
+  // ===========================================================================
+
+  /** Whether the current model supports extended thinking */
+  modelSupportsThinking?: boolean;
+  /** Current reasoning effort level */
+  reasoningEffort?: ReasoningEffortLevel;
+  /** Callback when reasoning effort level changes */
+  onReasoningEffortChange?: (level: ReasoningEffortLevel) => void;
+  /** Whether thinking is enabled for supported models */
+  enableThinking?: boolean;
+  /** Callback when thinking enabled state changes */
+  onEnableThinkingChange?: (enabled: boolean) => void;
 }
 
 // =============================================================================
@@ -131,6 +171,20 @@ export const ConnectedConversationPanel = forwardRef<
     showGoals = false,
     currentTokens = 0,
     maxTokens = 128000,
+    // Model selection (Sprint 1)
+    showModelSelector = false,
+    selectedModel,
+    availableModels = [],
+    onModelChange,
+    isModelsLoading = false,
+    recentModels = [],
+    enableModelSearch = false,
+    // Reasoning effort (Sprint 1)
+    modelSupportsThinking = false,
+    reasoningEffort = "medium",
+    onReasoningEffortChange,
+    enableThinking = false,
+    onEnableThinkingChange,
   },
   ref,
 ) {
@@ -468,8 +522,13 @@ export const ConnectedConversationPanel = forwardRef<
 
         // 2. Start streaming response from LLM
         // This calls POST /api/v1/chat/completions/stream
-        // Pass KB focus mode to control context retrieval strategy
-        startStream(effectiveSessionId, content, { kbFocus: kbFocusMode });
+        // Pass model, reasoning options, and KB focus mode
+        startStream(effectiveSessionId, content, {
+          model: selectedModel,
+          reasoningEffort: modelSupportsThinking ? reasoningEffort : undefined,
+          enableThinking: modelSupportsThinking ? enableThinking : undefined,
+          kbFocus: kbFocusMode,
+        });
 
         // 3. Trigger revalidation to sync loader data
         revalidateMessages();
@@ -487,6 +546,10 @@ export const ConnectedConversationPanel = forwardRef<
       currentSession?.id,
       startStream,
       kbFocusMode,
+      selectedModel,
+      reasoningEffort,
+      enableThinking,
+      modelSupportsThinking,
     ],
   );
 
@@ -580,17 +643,17 @@ export const ConnectedConversationPanel = forwardRef<
             <span className="font-medium">Streaming Error: </span>
             <span>{streamingError}</span>
           </div>
-          <button
+          <Button
+            variant="danger"
+            className="p-1 hover:bg-error-100 dark:hover:bg-error-800/50 rounded"
             data-testid="dismiss-streaming-error"
             onClick={() => setIsStreamingErrorDismissed(true)}
-            className="p-1 hover:bg-error-100 dark:hover:bg-error-800/50 rounded"
             aria-label="Dismiss error"
           >
             <X size={14} />
-          </button>
+          </Button>
         </div>
       )}
-
       {/* Thinking Content Display (Phase 3.4) */}
       {thinkingContent && isStreaming && (
         <div
@@ -613,12 +676,12 @@ export const ConnectedConversationPanel = forwardRef<
                 {thinkingTokens.toLocaleString()}
               </span>
             )}
-            <button
+            <Button
+              className="ml-auto p-1 hover:bg-insight-100 dark:hover:bg-insight-800/50 rounded"
               data-testid="toggle-thinking-content"
               onClick={() =>
                 setIsThinkingContentCollapsed(!isThinkingContentCollapsed)
               }
-              className="ml-auto p-1 hover:bg-insight-100 dark:hover:bg-insight-800/50 rounded"
               aria-label={
                 isThinkingContentCollapsed
                   ? "Expand thinking content"
@@ -630,7 +693,7 @@ export const ConnectedConversationPanel = forwardRef<
               ) : (
                 <ChevronUp size={14} />
               )}
-            </button>
+            </Button>
           </div>
           {!isThinkingContentCollapsed && (
             <div className="pl-6 text-xs text-insight-600 dark:text-insight-400 whitespace-pre-wrap max-h-24 overflow-y-auto">
@@ -639,7 +702,6 @@ export const ConnectedConversationPanel = forwardRef<
           )}
         </div>
       )}
-
       {/* Goal Tracker (Sprint 3) */}
       {enableAI && showGoals && goalTracking.primaryGoal && (
         <div
@@ -663,7 +725,6 @@ export const ConnectedConversationPanel = forwardRef<
           </div>
         </div>
       )}
-
       {/* Context Warning (Sprint 3) */}
       {shouldShowContextWarning && (
         <div
@@ -687,7 +748,6 @@ export const ConnectedConversationPanel = forwardRef<
           </div>
         </div>
       )}
-
       {/* Intent Indicator (Sprint 3) */}
       {enableAI && intentDetection.intent && inputQuery.length >= 3 && (
         <div
@@ -713,7 +773,6 @@ export const ConnectedConversationPanel = forwardRef<
           </span>
         </div>
       )}
-
       {/* AI Suggestions Status Indicator (Real-time WebSocket) */}
       {enableRealTimeSuggestions && (
         <div
@@ -727,13 +786,16 @@ export const ConnectedConversationPanel = forwardRef<
               ? "bg-error-50 dark:bg-error-900/20 border-error-200 dark:border-error-800"
               : aiSuggestionsConnected
                 ? "bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-800"
-                : "bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700",
+                : "bg-neutral-50 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-700",
           )}
         >
           {aiSuggestionsConnected ? (
             <Wifi size={12} className="text-success-500" />
           ) : (
-            <WifiOff size={12} className="text-gray-400 dark:text-gray-400" />
+            <WifiOff
+              size={12}
+              className="text-neutral-400 dark:text-neutral-400"
+            />
           )}
           <span
             className={cn(
@@ -742,7 +804,7 @@ export const ConnectedConversationPanel = forwardRef<
                 ? "text-error-600 dark:text-error-400"
                 : aiSuggestionsConnected
                   ? "text-success-600 dark:text-success-400"
-                  : "text-gray-500 dark:text-gray-400",
+                  : "text-neutral-500 dark:text-neutral-400",
             )}
           >
             {aiSuggestionsError
@@ -753,7 +815,6 @@ export const ConnectedConversationPanel = forwardRef<
           </span>
         </div>
       )}
-
       {/* Banner Suggestions (Real-time AI UX) */}
       {enableRealTimeSuggestions &&
         bannerSuggestions.map((suggestion: Suggestion) => (
@@ -776,20 +837,20 @@ export const ConnectedConversationPanel = forwardRef<
                   : "text-info-500",
               )}
             />
-            <div className="flex-1 text-sm text-gray-700 dark:text-gray-300">
+            <div className="flex-1 text-sm text-neutral-700 dark:text-neutral-300">
               {suggestion.message}
             </div>
-            <button
+            <Button
+              variant="secondary"
+              className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
               data-testid="dismiss-suggestion-button"
               onClick={() => dismissSuggestion(suggestion.id)}
-              className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
               aria-label="Dismiss suggestion"
             >
-              <X size={14} className="text-gray-400 dark:text-gray-400" />
-            </button>
+              <X size={14} className="text-neutral-400 dark:text-neutral-400" />
+            </Button>
           </div>
         ))}
-
       {/* Spotlight Suggestions (Real-time AI UX - High Priority) */}
       {enableRealTimeSuggestions &&
         spotlightSuggestions.map((suggestion: Suggestion) => (
@@ -810,17 +871,16 @@ export const ConnectedConversationPanel = forwardRef<
             <div className="flex-1 text-sm font-medium text-insight-700 dark:text-insight-300">
               {suggestion.message}
             </div>
-            <button
+            <Button
+              className="p-1 hover:bg-insight-200 dark:hover:bg-insight-700 rounded"
               data-testid="dismiss-suggestion-button"
               onClick={() => dismissSuggestion(suggestion.id)}
-              className="p-1 hover:bg-insight-200 dark:hover:bg-insight-700 rounded"
               aria-label="Dismiss suggestion"
             >
               <X size={14} className="text-insight-400" />
-            </button>
+            </Button>
           </div>
         ))}
-
       {/* Tooltip Suggestions (Real-time AI UX) */}
       {enableRealTimeSuggestions &&
         tooltipSuggestions.map((suggestion: Suggestion) => (
@@ -829,33 +889,33 @@ export const ConnectedConversationPanel = forwardRef<
             data-testid="ai-suggestion-tooltip"
             className={cn(
               "flex items-center gap-2 px-4 py-1.5",
-              "bg-gray-50 dark:bg-gray-800/50",
-              "border-b border-gray-200 dark:border-gray-700",
+              "bg-neutral-50 dark:bg-neutral-800/50",
+              "border-b border-neutral-200 dark:border-neutral-700",
             )}
           >
             <Lightbulb
               size={12}
-              className="flex-shrink-0 text-gray-400 dark:text-gray-400"
+              className="flex-shrink-0 text-neutral-400 dark:text-neutral-400"
             />
-            <div className="flex-1 text-xs text-gray-600 dark:text-gray-400">
+            <div className="flex-1 text-xs text-neutral-600 dark:text-neutral-400">
               {suggestion.targetElement && (
-                <span className="font-mono text-xs text-gray-400 dark:text-gray-400 mr-2">
+                <span className="font-mono text-xs text-neutral-400 dark:text-neutral-400 mr-2">
                   [{suggestion.targetElement}]
                 </span>
               )}
               {suggestion.message}
             </div>
-            <button
+            <Button
+              variant="secondary"
+              className="p-0.5 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
               data-testid="dismiss-suggestion-button"
               onClick={() => dismissSuggestion(suggestion.id)}
-              className="p-0.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
               aria-label="Dismiss suggestion"
             >
-              <X size={12} className="text-gray-400 dark:text-gray-400" />
-            </button>
+              <X size={12} className="text-neutral-400 dark:text-neutral-400" />
+            </Button>
           </div>
         ))}
-
       <ConversationPanel
         data-testid="connected-conversation-panel"
         messages={messages}
@@ -879,6 +939,20 @@ export const ConnectedConversationPanel = forwardRef<
         // KB Focus mode (controlled - lifted from ConnectedChatInputForm)
         kbFocusValue={kbFocusMode}
         onKBFocusChange={setKbFocusMode}
+        // Model selection (Sprint 1)
+        showModelSelector={showModelSelector}
+        selectedModel={selectedModel}
+        availableModels={availableModels}
+        onModelChange={onModelChange}
+        isModelsLoading={isModelsLoading}
+        recentModels={recentModels}
+        enableModelSearch={enableModelSearch}
+        // Reasoning effort (Sprint 1)
+        modelSupportsThinking={modelSupportsThinking}
+        reasoningEffort={reasoningEffort}
+        onReasoningEffortChange={onReasoningEffortChange}
+        enableThinking={enableThinking}
+        onEnableThinkingChange={onEnableThinkingChange}
       />
     </div>
   );

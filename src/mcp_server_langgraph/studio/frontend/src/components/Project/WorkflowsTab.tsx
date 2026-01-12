@@ -12,6 +12,8 @@ import { BulkActionBar } from "../UI/BulkActionBar";
 import { authenticatedFetch } from "../../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../../utils/intendedRoute";
 
+import { Button, Input, Select, Checkbox } from "@/components/UI";
+
 // ============================================================================
 // Sort Types
 // ============================================================================
@@ -52,17 +54,17 @@ function Dialog({ isOpen, onClose, title, children }: DialogProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+      <div className="relative bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+          <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
             {title}
           </h3>
-          <button
+          <Button
+            className="p-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
             onClick={onClose}
-            className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
         <div className="p-4">{children}</div>
       </div>
@@ -98,35 +100,36 @@ function CreateWorkflowDialog({
         <div className="mb-4">
           <label
             htmlFor="workflow-name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
           >
             Workflow Name
           </label>
-          <input
+          <Input
+            className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
             id="workflow-name"
-            type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter workflow name"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             autoFocus
           />
         </div>
         <div className="flex justify-end gap-2">
-          <button
+          <Button
+            variant="secondary"
+            className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             type="submit"
             disabled={!name.trim()}
-            className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
           >
             Create
-          </button>
+          </Button>
         </div>
       </form>
     </Dialog>
@@ -240,8 +243,7 @@ export function WorkflowsTab({
   };
 
   // Bulk selection handlers
-  const handleSelectWorkflow = (workflowId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation
+  const handleSelectWorkflow = (workflowId: string) => {
     setSelectedWorkflows((prev) => {
       const next = new Set(prev);
       if (next.has(workflowId)) {
@@ -294,64 +296,59 @@ export function WorkflowsTab({
       />
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+          <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
             Workflows
           </h2>
           {filteredWorkflows.length > 0 && (
-            <label className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={
-                  selectedWorkflows.size === filteredWorkflows.length &&
-                  filteredWorkflows.length > 0
-                }
-                onChange={handleSelectAll}
-                aria-label="Select all workflows"
-                className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
-              />
-              Select All
-            </label>
+            <Checkbox
+              checked={
+                selectedWorkflows.size === filteredWorkflows.length &&
+                filteredWorkflows.length > 0
+              }
+              onChange={handleSelectAll}
+              label="Select All"
+              size="sm"
+            />
           )}
         </div>
-        <button
+        <Button
+          variant="primary"
+          className="flex px-3 py-1.5 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700"
           onClick={() => setShowDialog(true)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700"
         >
           <Plus className="w-4 h-4" />
           New Workflow
-        </button>
+        </Button>
       </div>
-
       {/* Search and Sort Controls */}
       {workflows.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-400" />
-            <input
-              type="text"
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+            <Input
+              className="pl-10 pr-4 py-2 text-neutral-900 dark:text-white focus:ring-primary-500"
               placeholder="Search workflows..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
-          <select
+          <Select
+            size="lg"
+            className="px-4 py-2 text-neutral-900 dark:text-white focus:ring-primary-500"
             aria-label="Sort by"
             value={sortBy}
             onChange={handleSortChange}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
           >
             <option value="createdAt">Date Created</option>
             <option value="name">Name</option>
-          </select>
+          </Select>
         </div>
       )}
-
       {/* Empty search results */}
       {filteredWorkflows.length === 0 &&
         searchQuery &&
         workflows.length > 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400">
+          <div className="flex flex-col items-center justify-center py-12 text-neutral-500 dark:text-neutral-400">
             <Search className="w-12 h-12 mb-4 opacity-50" />
             <p className="text-lg font-medium">
               No workflows match your search
@@ -360,7 +357,7 @@ export function WorkflowsTab({
           </div>
         )}
       {workflows.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+        <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
           No workflows yet. Create a workflow to automate your AI tasks.
         </div>
       ) : filteredWorkflows.length > 0 ? (
@@ -368,41 +365,40 @@ export function WorkflowsTab({
           {filteredWorkflows.map((workflow) => (
             <div
               key={workflow.id}
-              className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-sm cursor-pointer"
+              className="flex items-center gap-3 p-4 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:shadow-sm cursor-pointer"
               onClick={() => navigate(`/studio/workflows?id=${workflow.id}`)}
             >
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={selectedWorkflows.has(workflow.id)}
-                onChange={() => {}}
-                onClick={(e) => handleSelectWorkflow(workflow.id, e)}
-                className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 flex-shrink-0"
+                onChange={() => handleSelectWorkflow(workflow.id)}
+                onClick={(e) => e.stopPropagation()}
+                size="sm"
               />
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-gray-900 dark:text-gray-100">
+                <div className="font-medium text-neutral-900 dark:text-neutral-100">
                   {workflow.name}
                 </div>
                 {workflow.createdAt && (
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-neutral-500 dark:text-neutral-400">
                     Created {new Date(workflow.createdAt).toLocaleDateString()}
                   </div>
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  variant="danger"
+                  className="p-1.5 text-neutral-400 dark:text-neutral-400 hover:text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
                   aria-label="Remove workflow"
                   onClick={(e) => handleRemoveWorkflow(workflow.id, e)}
-                  className="p-1.5 text-gray-400 dark:text-gray-400 hover:text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
                 >
                   <Trash2 className="w-4 h-4" />
-                </button>
-                <GitBranch className="w-5 h-5 text-gray-400 dark:text-gray-400" />
+                </Button>
+                <GitBranch className="w-5 h-5 text-neutral-400 dark:text-neutral-400" />
               </div>
             </div>
           ))}
         </div>
       ) : null}
-
       {/* Bulk Action Bar */}
       <BulkActionBar
         selectedCount={selectedWorkflows.size}

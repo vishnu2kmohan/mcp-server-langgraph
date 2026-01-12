@@ -24,6 +24,8 @@
 import { Component, createRef, type ReactNode, type RefObject } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -161,7 +163,6 @@ export class ErrorBoundary extends Component<
         <p className="mb-4 max-w-md text-sm text-error-600 dark:text-error-300">
           {error?.message || "An unexpected error occurred"}
         </p>
-
         {showDetails && error && (
           <details className="mb-4 w-full max-w-lg text-left">
             <summary className="cursor-pointer text-sm font-medium text-error-700 dark:text-error-300">
@@ -173,16 +174,16 @@ export class ErrorBoundary extends Component<
             </pre>
           </details>
         )}
-
-        <button
+        <Button
+          variant="danger"
+          className="rounded-md bg-error-600 px-4 py-2 text-sm text-white hover:bg-error-700 focus:ring-error-500 focus:ring-offset-2 dark:bg-error-700 dark:hover:bg-error-600"
           ref={this.retryButtonRef}
           type="button"
           onClick={this.resetErrorBoundary}
-          className="inline-flex items-center gap-2 rounded-md bg-error-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-error-700 focus:outline-none focus:ring-2 focus:ring-error-500 focus:ring-offset-2 dark:bg-error-700 dark:hover:bg-error-600"
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
           Try Again
-        </button>
+        </Button>
       </div>
     );
   }

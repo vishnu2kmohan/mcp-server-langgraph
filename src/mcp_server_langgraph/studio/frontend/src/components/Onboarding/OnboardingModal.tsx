@@ -17,6 +17,8 @@ import {
   RefreshCw,
 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 export interface WorkflowTemplate {
   id: string;
   name: string;
@@ -83,50 +85,47 @@ export function OnboardingModal({
       aria-labelledby="onboarding-title"
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-5 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center justify-between">
             <div>
               <h2
                 id="onboarding-title"
-                className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
+                className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2"
               >
                 <Sparkles className="w-6 h-6 text-primary-500" />
                 Welcome to Agent Studio
               </h2>
-              <p className="mt-1 text-gray-600 dark:text-gray-400">
+              <p className="mt-1 text-neutral-600 dark:text-neutral-400">
                 Choose a template to get started, or start from scratch
               </p>
             </div>
-            <button
+            <Button
+              variant="secondary"
+              className="p-2 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
               onClick={onClose}
               aria-label="Close"
-              className="p-2 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Category Filters */}
         {!isLoading && !error && templates.length > 0 && (
-          <div className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 flex gap-2 overflow-x-auto">
+          <div className="px-6 py-3 border-b border-neutral-200 dark:border-neutral-700 flex gap-2 overflow-x-auto">
             {categories.map((cat) => (
-              <button
+              <Button
+                className="px-3 py-1.5 rounded-full text-sm"
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 aria-label={cat === "all" ? "All categories" : cat}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === cat
-                    ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                }`}
               >
                 {cat === "all"
                   ? "All"
                   : cat.charAt(0).toUpperCase() + cat.slice(1)}
-              </button>
+              </Button>
             ))}
           </div>
         )}
@@ -140,7 +139,7 @@ export function OnboardingModal({
                 data-testid="loading-spinner"
                 className="w-8 h-8 animate-spin text-primary-500"
               />
-              <p className="mt-4 text-gray-600 dark:text-gray-400">
+              <p className="mt-4 text-neutral-600 dark:text-neutral-400">
                 Loading templates...
               </p>
             </div>
@@ -151,20 +150,21 @@ export function OnboardingModal({
             <div className="flex flex-col items-center justify-center py-12">
               <p className="text-error-600 dark:text-error-400 mb-4">{error}</p>
               {onRetry && (
-                <button
+                <Button
+                  variant="primary"
+                  className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                   onClick={onRetry}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Retry
-                </button>
+                </Button>
               )}
             </div>
           )}
 
           {/* Empty State */}
           {!isLoading && !error && templates.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400">
+            <div className="flex flex-col items-center justify-center py-12 text-neutral-500 dark:text-neutral-400">
               <FileCode className="w-12 h-12 mb-4 opacity-50" />
               <p>No templates available</p>
             </div>
@@ -174,57 +174,59 @@ export function OnboardingModal({
           {!isLoading && !error && filteredTemplates.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredTemplates.map((template) => (
-                <button
+                <Button
+                  variant="primary"
+                  className="flex items-start p-4 text-left rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-primary-500 dark:hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/10 group"
                   key={template.id}
                   onClick={() => onSelectTemplate(template)}
-                  className="flex items-start gap-4 p-4 text-left rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all group"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 group-hover:bg-primary-100 group-hover:text-primary-600 dark:group-hover:bg-primary-900/30 dark:group-hover:text-primary-400 transition-colors">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center text-neutral-600 dark:text-neutral-400 group-hover:bg-primary-100 group-hover:text-primary-600 dark:group-hover:bg-primary-900/30 dark:group-hover:text-primary-400 transition-colors">
                     {getCategoryIcon(template.category)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                    <h3 className="font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-primary-600 dark:group-hover:text-primary-400">
                       {template.name}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1 line-clamp-2">
                       {template.description}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                      <span className="px-2 py-0.5 text-xs rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400">
                         {template.category}
                       </span>
                       {template.tags.slice(0, 2).map((tag) => (
                         <span
                           key={tag}
-                          className="px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                          className="px-2 py-0.5 text-xs rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
                         >
                           {tag}
                         </span>
                       ))}
                     </div>
                   </div>
-                </button>
+                </Button>
               ))}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50">
-          <button
+        <div className="px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-between bg-neutral-50 dark:bg-neutral-800/50">
+          <Button
+            variant="secondary"
+            className="flex px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded-lg"
             onClick={() => onSelectTemplate(null)}
             aria-label="Start from scratch"
-            className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <FileCode className="w-4 h-4" />
             Start from scratch
-          </button>
-          <button
+          </Button>
+          <Button
+            className="px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
           >
             Skip for now
-          </button>
+          </Button>
         </div>
       </div>
     </div>

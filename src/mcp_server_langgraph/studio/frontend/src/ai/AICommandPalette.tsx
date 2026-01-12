@@ -7,6 +7,8 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Search, Sparkles, Command as CommandIcon } from "lucide-react";
 import { cn } from "../utils/cn";
 
+import { Input } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -180,20 +182,22 @@ export function AICommandPalette({
       )}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+      <div className="w-full max-w-xl bg-white dark:bg-neutral-800 rounded-xl shadow-2xl overflow-hidden">
         {/* Search Input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <Search size={18} className="text-gray-400 dark:text-gray-400" />
-          <input
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+          <Search
+            size={18}
+            className="text-neutral-400 dark:text-neutral-400"
+          />
+          <Input
+            className="flex-1 bg-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-400"
             ref={inputRef}
             data-testid="command-search"
-            type="text"
             role="combobox"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="flex-1 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none"
             aria-autocomplete="list"
             aria-expanded="true"
             aria-controls="command-listbox"
@@ -212,7 +216,7 @@ export function AICommandPalette({
           {filteredCommands.length === 0 && !aiSuggestion && !isLoadingAI && (
             <div
               data-testid="no-results"
-              className="p-4 text-center text-gray-500 dark:text-gray-400"
+              className="p-4 text-center text-neutral-500 dark:text-neutral-400"
             >
               No commands found
             </div>
@@ -221,7 +225,7 @@ export function AICommandPalette({
           {groupByCategory && groupedCommands
             ? Object.entries(groupedCommands).map(([category, cmds]) => (
                 <div key={category} data-testid={`category-${category}`}>
-                  <div className="px-4 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-900/50">
+                  <div className="px-4 py-1 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase bg-neutral-50 dark:bg-neutral-900/50">
                     {category}
                   </div>
                   {cmds.map((cmd, _index) => {
@@ -235,27 +239,27 @@ export function AICommandPalette({
                         onClick={() => handleExecute(cmd)}
                         className={cn(
                           "flex items-center justify-between px-4 py-2 cursor-pointer",
-                          "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                          "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
                           globalIndex === selectedIndex &&
-                            "selected bg-gray-100 dark:bg-gray-700",
+                            "selected bg-neutral-100 dark:bg-neutral-700",
                         )}
                       >
                         <div className="flex items-center gap-3">
                           <CommandIcon
                             size={16}
-                            className="text-gray-400 dark:text-gray-400"
+                            className="text-neutral-400 dark:text-neutral-400"
                           />
                           <div>
-                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                               {cmd.name}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400">
                               {cmd.description}
                             </div>
                           </div>
                         </div>
                         {cmd.shortcut && (
-                          <kbd className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded">
+                          <kbd className="px-2 py-0.5 text-xs bg-neutral-100 dark:bg-neutral-700 rounded">
                             {cmd.shortcut}
                           </kbd>
                         )}
@@ -273,27 +277,27 @@ export function AICommandPalette({
                   onClick={() => handleExecute(cmd)}
                   className={cn(
                     "flex items-center justify-between px-4 py-2 cursor-pointer",
-                    "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                    "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
                     index === selectedIndex &&
-                      "selected bg-gray-100 dark:bg-gray-700",
+                      "selected bg-neutral-100 dark:bg-neutral-700",
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <CommandIcon
                       size={16}
-                      className="text-gray-400 dark:text-gray-400"
+                      className="text-neutral-400 dark:text-neutral-400"
                     />
                     <div>
-                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                         {cmd.name}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400">
                         {cmd.description}
                       </div>
                     </div>
                   </div>
                   {cmd.shortcut && (
-                    <kbd className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded">
+                    <kbd className="px-2 py-0.5 text-xs bg-neutral-100 dark:bg-neutral-700 rounded">
                       {cmd.shortcut}
                     </kbd>
                   )}
@@ -310,7 +314,7 @@ export function AICommandPalette({
               className={cn(
                 "flex items-center gap-3 px-4 py-2 cursor-pointer",
                 "hover:bg-primary-50 dark:hover:bg-primary-900/20",
-                "border-t border-gray-200 dark:border-gray-700",
+                "border-t border-neutral-200 dark:border-neutral-700",
                 selectedIndex >= filteredCommands.length &&
                   "bg-primary-50 dark:bg-primary-900/20",
               )}
@@ -318,7 +322,7 @@ export function AICommandPalette({
               <Sparkles size={16} className="text-primary-500" />
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                     {aiSuggestion.action}
                   </span>
                   <span
@@ -328,7 +332,7 @@ export function AICommandPalette({
                     AI
                   </span>
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">
+                <div className="text-xs text-neutral-500 dark:text-neutral-400">
                   Confidence: {Math.round(aiSuggestion.confidence * 100)}%
                 </div>
               </div>

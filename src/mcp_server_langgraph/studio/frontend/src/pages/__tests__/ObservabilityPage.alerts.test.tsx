@@ -454,7 +454,7 @@ describe("ObservabilityPage - Alerts", () => {
       await waitFor(() => {
         const silencedBadge = screen.getByText("silenced");
         expect(silencedBadge).toBeInTheDocument();
-        expect(silencedBadge).toHaveClass("bg-gray-100");
+        expect(silencedBadge).toHaveClass("bg-neutral-100");
       });
     });
   });

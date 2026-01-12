@@ -721,7 +721,11 @@ Conclusion text.`;
   describe("Selected Tools Display (ADR-0099)", () => {
     it("should display selected tools for assistant messages", () => {
       const selectedTools = ["calculator", "search", "read_file"];
-      const selectionScores = { calculator: 0.95, search: 0.88, read_file: 0.75 };
+      const selectionScores = {
+        calculator: 0.95,
+        search: 0.88,
+        read_file: 0.75,
+      };
 
       render(
         <ChatMessage

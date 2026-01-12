@@ -14,6 +14,8 @@ import {
   type AIRecoverySuggestion,
 } from "../../hooks/useAIErrorRecovery";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -194,17 +196,15 @@ export function ErrorRecoveryPanel({
           )}
         </div>
       </div>
-
       {/* Root Cause */}
       {analysis && <p className="root-cause">{analysis.rootCause}</p>}
-
       {/* Suggestions */}
       <div className="suggestions">
         {hasSuggestions ? (
           analysis.suggestions.map((suggestion, index) => (
-            <button
-              key={index}
+            <Button
               className="suggestion-button"
+              key={index}
               onClick={() => handleSuggestionClick(suggestion)}
               aria-label={suggestion.label}
             >
@@ -226,11 +226,11 @@ export function ErrorRecoveryPanel({
                     </span>
                   )}
               </span>
-            </button>
+            </Button>
           ))
         ) : (
           // Fallback suggestion when no AI suggestions
-          <button
+          <Button
             className="suggestion-button"
             onClick={() => onRetry?.()}
             aria-label="Try again"
@@ -241,10 +241,9 @@ export function ErrorRecoveryPanel({
             <span className="suggestion-content">
               <span className="suggestion-label">Try again</span>
             </span>
-          </button>
+          </Button>
         )}
       </div>
-
       {/* Similar Issues */}
       {showSimilarIssues &&
         analysis?.similarIssues &&
@@ -263,16 +262,14 @@ export function ErrorRecoveryPanel({
             </ul>
           </div>
         )}
-
       {/* Dismiss Button */}
-      <button
+      <Button
         className="dismiss-button"
         onClick={onDismiss}
         aria-label="Dismiss"
       >
         Dismiss
-      </button>
-
+      </Button>
       {/* Analysis Error Notice */}
       {analysisError && (
         <p className="analysis-error">

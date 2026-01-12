@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { cn } from "../utils/cn";
 
+import { Button, Input, Select, Checkbox } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -138,11 +140,11 @@ export function ComplianceGuides({
   return (
     <div
       data-testid="compliance-guides"
-      className={cn("bg-white dark:bg-gray-800 rounded-lg", className)}
+      className={cn("bg-white dark:bg-neutral-800 rounded-lg", className)}
     >
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
+      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+        <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-3">
           Compliance Guides
         </h3>
 
@@ -151,46 +153,45 @@ export function ComplianceGuides({
           <div className="flex-1 relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
             />
-            <input
+            <Input
+              className="pl-9 pr-3 py-2 text-sm bg-neutral-50 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:ring-primary-500"
               type="search"
               role="searchbox"
               data-testid="guide-search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search guides..."
-              className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
-          <select
+          <Select
+            className="px-3 py-2 text-sm bg-neutral-50 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
             data-testid="framework-filter"
             value={frameworkFilter}
             onChange={(e) =>
               setFrameworkFilter(e.target.value as ComplianceFramework | "all")
             }
-            className="px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="all">All Frameworks</option>
             <option value="soc2">SOC-2</option>
             <option value="hipaa">HIPAA</option>
             <option value="gdpr">GDPR</option>
             <option value="fedramp">FedRAMP</option>
-          </select>
+          </Select>
         </div>
       </div>
-
       {/* Guide List */}
-      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
         {guides.length === 0 && (
-          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+          <div className="p-8 text-center text-neutral-500 dark:text-neutral-400">
             <FileText size={32} className="mx-auto mb-2 opacity-50" />
             <p>No compliance guides available</p>
           </div>
         )}
 
         {guides.length > 0 && filteredGuides.length === 0 && (
-          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+          <div className="p-8 text-center text-neutral-500 dark:text-neutral-400">
             <Search size={32} className="mx-auto mb-2 opacity-50" />
             <p>No guides found matching your search</p>
           </div>
@@ -203,27 +204,28 @@ export function ComplianceGuides({
           return (
             <div key={guide.id}>
               {/* Guide Header */}
-              <button
+              <Button
+                variant="secondary"
+                className="w-full flex items-start p-4 text-left hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
                 type="button"
                 data-testid={`guide-${guide.id}`}
                 aria-expanded={isExpanded}
                 onClick={() => handleGuideClick(guide.id)}
-                className="w-full flex items-start gap-3 p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               >
                 {isExpanded ? (
                   <ChevronDown
                     size={18}
-                    className="text-gray-400 dark:text-gray-400 mt-0.5 flex-shrink-0"
+                    className="text-neutral-400 dark:text-neutral-400 mt-0.5 flex-shrink-0"
                   />
                 ) : (
                   <ChevronRight
                     size={18}
-                    className="text-gray-400 dark:text-gray-400 mt-0.5 flex-shrink-0"
+                    className="text-neutral-400 dark:text-neutral-400 mt-0.5 flex-shrink-0"
                   />
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                       {guide.title}
                     </span>
                     <span
@@ -236,7 +238,7 @@ export function ComplianceGuides({
                       {FRAMEWORK_LABELS[guide.framework]}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
                     {guide.summary}
                   </p>
                   {enableProgress && completedCount > 0 && (
@@ -245,22 +247,23 @@ export function ComplianceGuides({
                     </p>
                   )}
                 </div>
-              </button>
-
+              </Button>
               {/* Expanded Content */}
               {isExpanded && (
                 <div className="px-4 pb-4 pl-12">
                   {/* Actions */}
                   <div className="flex justify-end mb-3">
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="flex px-2 py-1 text-xs text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
                       type="button"
                       data-testid="print-guide"
                       onClick={(e) => handlePrint(guide, e)}
-                      className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
                     >
                       <Printer size={14} />
                       Print
-                    </button>
+                    </Button>
                   </div>
 
                   {/* Steps */}
@@ -277,26 +280,26 @@ export function ComplianceGuides({
                             "flex items-start gap-3 p-3 rounded-lg border",
                             isCompleted
                               ? "bg-success-50 dark:bg-success-900/10 border-success-200 dark:border-success-800"
-                              : "bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700",
+                              : "bg-neutral-50 dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-700",
                           )}
                         >
                           {enableProgress ? (
-                            <input
-                              type="checkbox"
+                            <Checkbox
                               checked={isCompleted}
                               onChange={() => handleStepToggle(guide.id, index)}
-                              className="mt-0.5 w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-500 focus:ring-primary-500"
+                              size="sm"
+                              className="mt-0.5"
                             />
                           ) : (
-                            <div className="mt-0.5 w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs text-gray-600 dark:text-gray-400">
+                            <div className="mt-0.5 w-5 h-5 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xs text-neutral-600 dark:text-neutral-400">
                               {index + 1}
                             </div>
                           )}
                           <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                               {step.title}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400">
                               {step.description}
                             </div>
                           </div>
@@ -313,7 +316,7 @@ export function ComplianceGuides({
 
                   {/* Progress Summary */}
                   {enableProgress && (
-                    <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
                       {completedCount} of {guide.steps.length} steps complete
                     </div>
                   )}

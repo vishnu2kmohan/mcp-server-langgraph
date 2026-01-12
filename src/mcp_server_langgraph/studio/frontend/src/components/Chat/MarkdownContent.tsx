@@ -52,12 +52,12 @@ const SandpackExecutor = lazy(() => import("../Artifacts/SandpackExecutor"));
  */
 export function DiagramLoadingFallback() {
   return (
-    <div className="my-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 animate-pulse">
-      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+    <div className="my-2 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 animate-pulse">
+      <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
         <Loader2 size={16} className="animate-spin" />
         <span className="text-sm">Loading diagram...</span>
       </div>
-      <div className="mt-3 h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div className="mt-3 h-32 bg-neutral-200 dark:bg-neutral-700 rounded" />
     </div>
   );
 }
@@ -67,13 +67,13 @@ export function DiagramLoadingFallback() {
  */
 export function CodeLoadingFallback() {
   return (
-    <div className="my-2 bg-gray-900 rounded-lg overflow-hidden animate-pulse">
+    <div className="my-2 bg-neutral-900 rounded-lg overflow-hidden animate-pulse">
       <div className="p-4">
-        <div className="h-4 bg-gray-700 rounded w-1/4 mb-3" />
+        <div className="h-4 bg-neutral-700 rounded w-1/4 mb-3" />
         <div className="space-y-2">
-          <div className="h-3 bg-gray-800 rounded w-3/4" />
-          <div className="h-3 bg-gray-800 rounded w-1/2" />
-          <div className="h-3 bg-gray-800 rounded w-2/3" />
+          <div className="h-3 bg-neutral-800 rounded w-3/4" />
+          <div className="h-3 bg-neutral-800 rounded w-1/2" />
+          <div className="h-3 bg-neutral-800 rounded w-2/3" />
         </div>
       </div>
     </div>
@@ -85,18 +85,18 @@ export function CodeLoadingFallback() {
  */
 export function SandpackLoadingFallback() {
   return (
-    <div className="my-2 bg-gray-900 rounded-lg overflow-hidden animate-pulse border border-gray-700">
-      <div className="flex items-center gap-2 p-3 bg-gray-800 border-b border-gray-700">
-        <div className="h-4 bg-gray-700 rounded w-32" />
-        <div className="ml-auto h-6 w-16 bg-gray-700 rounded" />
+    <div className="my-2 bg-neutral-900 rounded-lg overflow-hidden animate-pulse border border-neutral-700">
+      <div className="flex items-center gap-2 p-3 bg-neutral-800 border-b border-neutral-700">
+        <div className="h-4 bg-neutral-700 rounded w-32" />
+        <div className="ml-auto h-6 w-16 bg-neutral-700 rounded" />
       </div>
       <div className="p-4 space-y-2">
-        <div className="h-3 bg-gray-800 rounded w-2/3" />
-        <div className="h-3 bg-gray-800 rounded w-1/2" />
-        <div className="h-3 bg-gray-800 rounded w-3/4" />
+        <div className="h-3 bg-neutral-800 rounded w-2/3" />
+        <div className="h-3 bg-neutral-800 rounded w-1/2" />
+        <div className="h-3 bg-neutral-800 rounded w-3/4" />
       </div>
-      <div className="p-4 bg-gray-800 border-t border-gray-700">
-        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+      <div className="p-4 bg-neutral-800 border-t border-neutral-700">
+        <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
           <Loader2 size={14} className="animate-spin" />
           <span className="text-xs">Loading interactive editor...</span>
         </div>
@@ -131,13 +131,13 @@ function StreamingArtifactPlaceholder({ language }: { language?: string }) {
   return (
     <div
       data-testid="streaming-artifact-placeholder"
-      className="my-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+      className="my-2 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
     >
-      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+      <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
         <Loader2 size={16} className="animate-spin" />
         <span className="text-sm">Generating {getLabel()}...</span>
       </div>
-      <div className="mt-3 h-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+      <div className="mt-3 h-24 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse" />
     </div>
   );
 }
@@ -327,7 +327,7 @@ function MarkdownContentImpl({
 
         return (
           <code
-            className="bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm font-mono text-pink-600 dark:text-pink-400"
+            className="bg-neutral-200 dark:bg-neutral-700 px-1.5 py-0.5 rounded text-sm font-mono text-pink-600 dark:text-pink-400"
             {...props}
           >
             {children}
@@ -404,7 +404,7 @@ function MarkdownContentImpl({
         ...props
       }: React.BlockquoteHTMLAttributes<HTMLQuoteElement>) => (
         <blockquote
-          className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-400 my-2"
+          className="border-l-4 border-neutral-300 dark:border-neutral-600 pl-4 italic text-neutral-600 dark:text-neutral-400 my-2"
           {...props}
         >
           {children}
@@ -417,7 +417,7 @@ function MarkdownContentImpl({
       }: React.TableHTMLAttributes<HTMLTableElement>) => (
         <div className="overflow-x-auto my-2">
           <table
-            className="min-w-full border-collapse border border-gray-300 dark:border-gray-600"
+            className="min-w-full border-collapse border border-neutral-300 dark:border-neutral-600"
             {...props}
           >
             {children}
@@ -429,7 +429,7 @@ function MarkdownContentImpl({
         ...props
       }: React.ThHTMLAttributes<HTMLTableHeaderCellElement>) => (
         <th
-          className="border border-gray-300 dark:border-gray-600 px-3 py-2 bg-gray-100 dark:bg-gray-700 font-semibold text-left"
+          className="border border-neutral-300 dark:border-neutral-600 px-3 py-2 bg-neutral-100 dark:bg-neutral-700 font-semibold text-left"
           {...props}
         >
           {children}
@@ -440,7 +440,7 @@ function MarkdownContentImpl({
         ...props
       }: React.TdHTMLAttributes<HTMLTableDataCellElement>) => (
         <td
-          className="border border-gray-300 dark:border-gray-600 px-3 py-2"
+          className="border border-neutral-300 dark:border-neutral-600 px-3 py-2"
           {...props}
         >
           {children}
@@ -448,7 +448,10 @@ function MarkdownContentImpl({
       ),
       // Horizontal rule
       hr: (props: React.HTMLAttributes<HTMLHRElement>) => (
-        <hr className="my-4 border-gray-300 dark:border-gray-600" {...props} />
+        <hr
+          className="my-4 border-neutral-300 dark:border-neutral-600"
+          {...props}
+        />
       ),
     }),
     [enableInteractiveArtifacts, isStreaming],

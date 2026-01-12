@@ -7,6 +7,8 @@
 
 import { Download, X } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 export interface InstallPromptProps {
   /** Whether the app can be installed */
   canInstall: boolean;
@@ -55,7 +57,6 @@ export function InstallPrompt({
         className={`h-5 w-5 flex-shrink-0 ${isInstalling ? "animate-bounce" : ""}`}
         aria-hidden="true"
       />
-
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium">
           {isInstalling ? "Installing app..." : "Install this app"}
@@ -66,27 +67,27 @@ export function InstallPrompt({
           </p>
         )}
       </div>
-
       <div className="flex items-center gap-2 flex-shrink-0">
-        <button
+        <Button
+          variant="secondary"
+          className="px-3 py-1.5 text-sm bg-white text-emerald-600 rounded hover:bg-emerald-50"
           type="button"
           onClick={onInstall}
           disabled={isInstalling}
-          className="px-3 py-1.5 text-sm font-medium bg-white text-emerald-600 rounded hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Install app now"
         >
           Install
-        </button>
-        <button
+        </Button>
+        <Button
+          className="p-1.5 text-emerald-100 hover:text-white hover:bg-emerald-700 rounded"
           type="button"
           onClick={onDismiss}
           disabled={isInstalling}
-          className="p-1.5 text-emerald-100 hover:text-white hover:bg-emerald-700 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="No thanks, maybe later"
         >
           <X className="h-4 w-4" aria-hidden="true" />
           <span className="sr-only">No thanks</span>
-        </button>
+        </Button>
       </div>
     </div>
   );

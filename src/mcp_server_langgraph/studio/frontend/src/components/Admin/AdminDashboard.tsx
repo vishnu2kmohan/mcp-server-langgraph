@@ -15,6 +15,7 @@ import { AlertsPanel } from "./AlertsPanel";
 import { AlertDetailPanel } from "./AlertDetailPanel";
 import { RemediationApprovalDialog } from "./RemediationApprovalDialog";
 import { BatchApprovalPanel } from "./BatchApprovalPanel";
+import { AIQualityMetricsCard } from "./AIQualityMetricsCard";
 import {
   AgentApprovalAuditLog,
   type AuditEntry,
@@ -41,8 +42,11 @@ import {
   useListPendingAgentRequestsQuery,
   useBatchApproveAgentRequestsMutation,
   useBatchRejectAgentRequestsMutation,
+  useGetFeatureFlagsQuery,
 } from "../../api";
 import type { WebSocketConnectionStatus } from "../../hooks/useRealtimeSync";
+
+import { Button } from "@/components/UI";
 
 export interface SystemHealth {
   status: "healthy" | "degraded" | "unhealthy";
@@ -108,6 +112,10 @@ export function AdminDashboard({
 
   // User selector for attribution
   const currentUsername = useAppSelector(selectUsername);
+
+  // Feature flags
+  const { data: featureFlags } = useGetFeatureFlagsQuery();
+  const showAiQualityMetrics = featureFlags?.ai_quality_metrics ?? true;
 
   // Keyboard shortcuts for tab navigation
   const goToOverview = useCallback(() => setActiveTab("overview"), []);
@@ -354,35 +362,31 @@ export function AdminDashboard({
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
           Admin Dashboard
         </h1>
-        <button
+        <Button
+          variant="primary"
+          className="flex px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700"
           onClick={onRefresh}
-          className="flex items-center gap-2 px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
           aria-label="Refresh dashboard"
         >
           <RefreshCw className="w-4 h-4" />
           Refresh
-        </button>
+        </Button>
       </div>
-
       {/* Tabs */}
       <div
         role="tablist"
-        className="flex border-b border-gray-200 dark:border-gray-700"
+        className="flex border-b border-neutral-200 dark:border-neutral-700"
       >
         {tabs.map((tab) => (
-          <button
+          <Button
+            className="flex px-4 py-2 text-sm border-b-2"
             key={tab.id}
             role="tab"
             aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === tab.id
-                ? "border-primary-600 text-primary-600 dark:text-primary-400"
-                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-            }`}
           >
             {tab.icon === "alert" && <AlertTriangle className="w-4 h-4" />}
             {tab.icon === "agent" && <UserCheck className="w-4 h-4" />}
@@ -395,62 +399,61 @@ export function AdminDashboard({
                 {tab.badge}
               </span>
             )}
-          </button>
+          </Button>
         ))}
       </div>
-
       {/* Tab Content */}
       {activeTab === "overview" && (
         <>
           {/* System Health Section */}
-          <section className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <section className="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
               System Health
             </h2>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* Status */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+              <div className="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div
                     data-testid="health-status"
                     className={`w-3 h-3 rounded-full ${getHealthColor(systemHealth.status)}`}
                   />
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                  <span className="text-sm text-neutral-600 dark:text-neutral-300">
                     Status
                   </span>
                 </div>
-                <span className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
+                <span className="text-lg font-semibold text-neutral-900 dark:text-white capitalize">
                   {systemHealth.status}
                 </span>
               </div>
 
               {/* Uptime */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <span className="text-sm text-gray-600 dark:text-gray-300 block mb-2">
+              <div className="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-4">
+                <span className="text-sm text-neutral-600 dark:text-neutral-300 block mb-2">
                   Uptime
                 </span>
-                <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                <span className="text-lg font-semibold text-neutral-900 dark:text-white">
                   {systemHealth.uptime}%
                 </span>
               </div>
 
               {/* Active Users */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <span className="text-sm text-gray-600 dark:text-gray-300 block mb-2">
+              <div className="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-4">
+                <span className="text-sm text-neutral-600 dark:text-neutral-300 block mb-2">
                   Active Users
                 </span>
-                <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                <span className="text-lg font-semibold text-neutral-900 dark:text-white">
                   {systemHealth.activeUsers}
                 </span>
               </div>
 
               {/* Error Rate */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <span className="text-sm text-gray-600 dark:text-gray-300 block mb-2">
+              <div className="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-4">
+                <span className="text-sm text-neutral-600 dark:text-neutral-300 block mb-2">
                   Error Rate
                 </span>
-                <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                <span className="text-lg font-semibold text-neutral-900 dark:text-white">
                   {systemHealth.errorRate}%
                 </span>
               </div>
@@ -458,8 +461,8 @@ export function AdminDashboard({
           </section>
 
           {/* HEART Metrics Section */}
-          <section className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <section className="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
               HEART Metrics
             </h2>
 
@@ -474,9 +477,13 @@ export function AdminDashboard({
               />
             </div>
           </section>
+
+          {/* AI Quality Metrics Section (feature-flagged) */}
+          {showAiQualityMetrics && (
+            <AIQualityMetricsCard timeframe="7d" showToggle />
+          )}
         </>
       )}
-
       {activeTab === "users" && (
         <UserManager
           users={users}
@@ -487,14 +494,13 @@ export function AdminDashboard({
           onInvite={onInvite}
         />
       )}
-
       {activeTab === "alerts" && (
         <div
           data-testid="alerts-container"
           className="grid grid-cols-1 lg:grid-cols-2 gap-6"
         >
           {/* Alerts Panel */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden">
             <AlertsPanel
               onSelectAlert={handleSelectAlert}
               onSoundToggle={handleSoundToggle}
@@ -504,7 +510,7 @@ export function AdminDashboard({
           </div>
 
           {/* Alert Detail Panel */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden">
             <AlertDetailPanel
               alert={selectedAlert ?? null}
               recommendation={recommendation ?? null}
@@ -519,11 +525,10 @@ export function AdminDashboard({
           </div>
         </div>
       )}
-
       {activeTab === "agent-requests" && (
         <div data-testid="agent-requests-container" className="space-y-6">
           {/* Batch Approval Panel */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden">
             <BatchApprovalPanel
               approvals={pendingAgentRequests?.approvals ?? []}
               onBatchApprove={handleBatchApproveAgents}
@@ -535,7 +540,7 @@ export function AdminDashboard({
           </div>
 
           {/* Audit Log */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden">
             <AgentApprovalAuditLog
               entries={mockAuditEntries}
               isLoading={agentRequestsLoading}
@@ -544,7 +549,6 @@ export function AdminDashboard({
           </div>
         </div>
       )}
-
       {/* Remediation Approval Dialog */}
       {selectedRemediation && recommendation && (
         <RemediationApprovalDialog
@@ -577,8 +581,8 @@ function MetricCard({ label, value }: MetricCardProps) {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-      <span className="text-sm text-gray-600 dark:text-gray-300 block mb-2">
+    <div className="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-4">
+      <span className="text-sm text-neutral-600 dark:text-neutral-300 block mb-2">
         {label}
       </span>
       <span className={`text-lg font-semibold ${getColor(value)}`}>

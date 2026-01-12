@@ -117,8 +117,8 @@ function FrameworkCard({ name, icon, summary }: FrameworkCardProps) {
   return (
     <div
       className={cn(
-        "rounded-lg border border-gray-200 dark:border-gray-700",
-        "bg-white dark:bg-gray-900 p-4",
+        "rounded-lg border border-neutral-200 dark:border-neutral-700",
+        "bg-white dark:bg-neutral-900 p-4",
         "hover:border-primary-300 dark:hover:border-primary-700",
         "transition-colors cursor-pointer",
       )}
@@ -126,7 +126,7 @@ function FrameworkCard({ name, icon, summary }: FrameworkCardProps) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {icon}
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
             {name}
           </h3>
         </div>
@@ -145,7 +145,7 @@ function FrameworkCard({ name, icon, summary }: FrameworkCardProps) {
       </div>
 
       <div className="flex items-center justify-between text-sm">
-        <span className="text-gray-500 dark:text-gray-400">
+        <span className="text-neutral-500 dark:text-neutral-400">
           {summary.compliantCount}/{summary.totalCount} controls
         </span>
         {summary.status === "partial" && (
@@ -185,7 +185,7 @@ export function ComplianceDashboard({
   if (isLoading) {
     return (
       <div data-testid="compliance-dashboard" className={cn("p-6", className)}>
-        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
           <Loader2 size={16} className="animate-spin" />
           <span>Loading compliance data...</span>
         </div>
@@ -199,16 +199,16 @@ export function ComplianceDashboard({
       <div
         data-testid="compliance-dashboard"
         className={cn(
-          "rounded-lg border border-gray-200 dark:border-gray-700",
-          "bg-white dark:bg-gray-900 p-8 text-center",
+          "rounded-lg border border-neutral-200 dark:border-neutral-700",
+          "bg-white dark:bg-neutral-900 p-8 text-center",
           className,
         )}
       >
         <LayoutDashboard
           size={32}
-          className="mx-auto mb-3 text-gray-400 dark:text-gray-400"
+          className="mx-auto mb-3 text-neutral-400 dark:text-neutral-400"
         />
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-neutral-500 dark:text-neutral-400">
           No compliance data available
         </p>
       </div>
@@ -224,7 +224,7 @@ export function ComplianceDashboard({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <LayoutDashboard size={20} className="text-primary-500" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
             Compliance Overview
           </h2>
         </div>

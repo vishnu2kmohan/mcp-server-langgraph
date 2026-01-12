@@ -17,6 +17,8 @@
 import { Eye, Volume2, Palette, Type, Focus, RotateCcw } from "lucide-react";
 import { useAccessibility, FontSize } from "../../hooks/useAccessibility";
 
+import { Button, Toggle } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -27,10 +29,10 @@ export interface AccessibilitySettingsProps {
 }
 
 // ==============================================================================
-// Toggle Component
+// Setting Toggle Component (with icon wrapper)
 // ==============================================================================
 
-interface ToggleProps {
+interface SettingToggleProps {
   id: string;
   testId: string;
   checked: boolean;
@@ -40,7 +42,7 @@ interface ToggleProps {
   icon: React.ReactNode;
 }
 
-function Toggle({
+function SettingToggle({
   id,
   testId,
   checked,
@@ -48,48 +50,22 @@ function Toggle({
   label,
   description,
   icon,
-}: ToggleProps) {
+}: SettingToggleProps) {
   return (
-    <div className="flex items-start gap-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-      <div className="text-gray-500 dark:text-gray-400 mt-0.5">{icon}</div>
-      <div className="flex-1 min-w-0">
-        <label
-          htmlFor={id}
-          className="block text-sm font-medium text-gray-900 dark:text-gray-100"
-        >
-          {label}
-        </label>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          {description}
-        </p>
+    <div className="flex items-start gap-4 p-4 rounded-lg bg-neutral-50 dark:bg-neutral-800/50">
+      <div className="text-neutral-500 dark:text-neutral-400 mt-0.5">
+        {icon}
       </div>
-      <button
-        id={id}
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        data-testid={testId}
-        onClick={() => onChange(!checked)}
-        onKeyDown={(e) => {
-          if (e.key === " " || e.key === "Enter") {
-            e.preventDefault();
-            onChange(!checked);
-          }
-        }}
-        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-          checked
-            ? "bg-primary-600"
-            : "bg-gray-200 dark:bg-gray-700 dark:bg-gray-600"
-        }`}
-      >
-        <span className="sr-only">{label}</span>
-        <span
-          aria-hidden="true"
-          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-            checked ? "translate-x-5" : "translate-x-0"
-          }`}
+      <div className="flex-1 min-w-0">
+        <Toggle
+          id={id}
+          data-testid={testId}
+          checked={checked}
+          onChange={onChange}
+          label={label}
+          description={description}
         />
-      </button>
+      </div>
     </div>
   );
 }
@@ -111,15 +87,15 @@ function FontSizeSelector({ value, onChange }: FontSizeSelectorProps) {
   ];
 
   return (
-    <div className="flex items-start gap-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-      <div className="text-gray-500 dark:text-gray-400 mt-0.5">
+    <div className="flex items-start gap-4 p-4 rounded-lg bg-neutral-50 dark:bg-neutral-800/50">
+      <div className="text-neutral-500 dark:text-neutral-400 mt-0.5">
         <Type size={20} />
       </div>
       <div className="flex-1 min-w-0">
-        <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+        <span className="block text-sm font-medium text-neutral-900 dark:text-neutral-100">
           Font Size
         </span>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
           Adjust text size for better readability
         </p>
         <div
@@ -128,18 +104,14 @@ function FontSizeSelector({ value, onChange }: FontSizeSelectorProps) {
           aria-label="Font size"
         >
           {sizes.map((size) => (
-            <button
+            <Button
+              className="flex flex-col px-4 py-2 rounded-lg border-2 focus:ring-primary-500 focus:ring-offset-2"
               key={size.key}
               type="button"
               role="radio"
               aria-checked={value === size.key}
               data-testid={`font-size-${size.key}`}
               onClick={() => onChange(size.key)}
-              className={`flex flex-col items-center justify-center px-4 py-2 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                value === size.key
-                  ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                  : "border-gray-200 dark:border-gray-700 dark:border-gray-600 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300"
-              }`}
             >
               <span
                 className={`font-medium ${
@@ -153,7 +125,7 @@ function FontSizeSelector({ value, onChange }: FontSizeSelectorProps) {
                 {size.sample}
               </span>
               <span className="text-xs mt-1">{size.label}</span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -188,16 +160,15 @@ export function AccessibilitySettings({
       className={`space-y-6 ${className}`}
     >
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
           Accessibility
         </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
           Customize accessibility features to improve your experience
         </p>
       </div>
-
       <div className="space-y-3">
-        <Toggle
+        <SettingToggle
           id="screen-reader-mode"
           testId="screen-reader-toggle"
           checked={screenReaderMode}
@@ -207,7 +178,7 @@ export function AccessibilitySettings({
           icon={<Volume2 size={20} />}
         />
 
-        <Toggle
+        <SettingToggle
           id="reduced-motion"
           testId="reduced-motion-toggle"
           checked={reducedMotion}
@@ -217,7 +188,7 @@ export function AccessibilitySettings({
           icon={<Eye size={20} />}
         />
 
-        <Toggle
+        <SettingToggle
           id="high-contrast"
           testId="high-contrast-toggle"
           checked={highContrast}
@@ -229,7 +200,7 @@ export function AccessibilitySettings({
 
         <FontSizeSelector value={fontSize} onChange={setFontSize} />
 
-        <Toggle
+        <SettingToggle
           id="enhanced-focus"
           testId="enhanced-focus-toggle"
           checked={enhancedFocus}
@@ -239,16 +210,16 @@ export function AccessibilitySettings({
           icon={<Focus size={20} />}
         />
       </div>
-
-      <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-        <button
+      <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
+        <Button
+          variant="secondary"
+          className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:ring-primary-500 focus:ring-offset-2"
           type="button"
           onClick={resetToDefaults}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
         >
           <RotateCcw size={16} />
           Reset to Defaults
-        </button>
+        </Button>
       </div>
     </div>
   );

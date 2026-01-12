@@ -35,6 +35,8 @@ import {
 } from "../api";
 import { useFeatureFlags } from "../contexts/FeatureFlagContext";
 
+import { Button, Input } from "@/components/UI";
+
 type SkillsTab = "browse" | "installed" | "updates";
 
 /** Helper to extract error message from RTK Query errors */
@@ -75,7 +77,7 @@ export function SkillsPage() {
 
   // Feature flag check
   const { isEnabled, isLoading: isFlagsLoading } = useFeatureFlags();
-  const isMarketplaceEnabled = isEnabled("enable_skills_marketplace");
+  const isMarketplaceEnabled = isEnabled("skills_marketplace");
 
   // RTK Query hooks - must be called before any early returns (React rules of hooks)
   const {
@@ -248,27 +250,22 @@ export function SkillsPage() {
           </h1>
         </div>
 
-        <button
+        <Button
+          className="flex px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary rounded-md"
           onClick={handleRefresh}
           disabled={isLoading}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary rounded-md transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           Refresh
-        </button>
+        </Button>
       </div>
-
       {/* Tabs */}
       <div className="flex items-center gap-1 px-6 py-2 border-b border-border-primary bg-surface-secondary/50">
         {tabs.map((tab) => (
-          <button
+          <Button
+            className="flex px-4 py-2 text-sm rounded-md"
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-              activeTab === tab.id
-                ? "bg-accent-primary/10 text-accent-primary"
-                : "text-text-secondary hover:text-text-primary hover:bg-surface-secondary"
-            }`}
           >
             <tab.icon className="w-4 h-4" />
             {tab.label}
@@ -277,21 +274,19 @@ export function SkillsPage() {
                 {tab.count}
               </span>
             )}
-          </button>
+          </Button>
         ))}
       </div>
-
       {/* Search and Filters (Browse tab only) */}
       {activeTab === "browse" && (
         <div className="flex items-center gap-4 px-6 py-3 border-b border-border-primary">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary" />
-            <input
-              type="text"
+            <Input
+              className="pl-9 pr-4 py-2 text-sm bg-surface-secondary border-border-primary text-text-primary placeholder-text-tertiary focus:ring-accent-primary/20 -primary"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search skills..."
-              className="w-full pl-9 pr-4 py-2 text-sm bg-surface-secondary border border-border-primary rounded-md text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent-primary/20 focus:border-accent-primary"
             />
           </div>
 
@@ -300,7 +295,9 @@ export function SkillsPage() {
               <Filter className="w-4 h-4 text-text-tertiary" />
               <div className="flex gap-1 flex-wrap">
                 {availableTags.slice(0, 5).map((tag) => (
-                  <button
+                  <Button
+                    size="sm"
+                    className="px-2 py-1 text-xs rounded-full"
                     key={tag}
                     onClick={() =>
                       setSelectedTags((prev) =>
@@ -309,21 +306,15 @@ export function SkillsPage() {
                           : [...prev, tag],
                       )
                     }
-                    className={`px-2 py-1 text-xs rounded-full transition-colors ${
-                      selectedTags.includes(tag)
-                        ? "bg-accent-primary text-white"
-                        : "bg-surface-tertiary text-text-secondary hover:bg-surface-quaternary"
-                    }`}
                   >
                     {tag}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
           )}
         </div>
       )}
-
       {/* Error Banner */}
       {actionError && (
         <div className="mx-6 mt-4 p-4 bg-semantic-error/10 border border-semantic-error/30 rounded-lg flex items-start gap-3">
@@ -334,9 +325,9 @@ export function SkillsPage() {
             </p>
             <p className="text-sm text-text-secondary mt-1">{actionError}</p>
           </div>
-          <button
+          <Button
+            className="text-text-tertiary hover:text-text-primary"
             onClick={() => setActionError(null)}
-            className="text-text-tertiary hover:text-text-primary transition-colors"
             aria-label="Dismiss error"
           >
             <svg
@@ -352,10 +343,9 @@ export function SkillsPage() {
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
-          </button>
+          </Button>
         </div>
       )}
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {isLoading ? (
@@ -480,14 +470,14 @@ function InstalledContent({
             <span className="font-medium text-text-primary">{skillName}</span>
             <CheckCircle className="w-4 h-4 text-semantic-success" />
           </div>
-          <button
+          <Button
+            className="flex px-3 py-1.5 text-sm text-semantic-error hover:bg-semantic-error/10 rounded-md"
             onClick={() => onUninstall(skillName)}
             disabled={isUninstalling}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-semantic-error hover:bg-semantic-error/10 rounded-md transition-colors disabled:opacity-50"
           >
             <Trash2 className="w-4 h-4" />
             Uninstall
-          </button>
+          </Button>
         </div>
       ))}
     </div>
@@ -520,10 +510,10 @@ function UpdatesContent({
         <p className="text-text-secondary">
           {updates.length} update(s) available
         </p>
-        <button
+        <Button
+          className="flex px-4 py-2 bg-accent-primary text-white rounded-md hover:bg-accent-primary/90"
           onClick={onApplyAll}
           disabled={isApplying}
-          className="flex items-center gap-2 px-4 py-2 bg-accent-primary text-white rounded-md hover:bg-accent-primary/90 transition-colors disabled:opacity-50"
         >
           {isApplying ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -531,7 +521,7 @@ function UpdatesContent({
             <ArrowUpCircle className="w-4 h-4" />
           )}
           Apply All Updates
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -560,11 +550,9 @@ function SkillCard({
           v{skill.version}
         </span>
       </div>
-
       <p className="text-sm text-text-secondary mb-3 line-clamp-2">
         {skill.description || "No description available"}
       </p>
-
       {skill.tags && skill.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {skill.tags.slice(0, 3).map((tag) => (
@@ -577,7 +565,6 @@ function SkillCard({
           ))}
         </div>
       )}
-
       <div className="mt-auto pt-3 border-t border-border-primary">
         {isInstalled ? (
           <div className="flex items-center gap-2 text-semantic-success">
@@ -585,10 +572,10 @@ function SkillCard({
             <span className="text-sm">Installed</span>
           </div>
         ) : (
-          <button
+          <Button
+            className="flex px-3 py-1.5 text-sm bg-accent-primary text-white rounded-md hover:bg-accent-primary/90"
             onClick={onInstall}
             disabled={isInstalling}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm bg-accent-primary text-white rounded-md hover:bg-accent-primary/90 transition-colors disabled:opacity-50"
           >
             {isInstalling ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -596,7 +583,7 @@ function SkillCard({
               <Download className="w-4 h-4" />
             )}
             Install
-          </button>
+          </Button>
         )}
       </div>
     </div>

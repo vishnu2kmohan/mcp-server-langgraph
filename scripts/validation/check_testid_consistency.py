@@ -57,6 +57,15 @@ KNOWN_UNMATCHED_TESTIDS: frozenset[str] = frozenset(
         "left-sidebar",  # ios-pwa.spec.ts - layout component
         # Persona indicator
         "persona-indicator",  # websocket-status.spec.ts - status bar indicator
+        # DataFrame rendering e2e tests - fallback selectors for code execution
+        "code-artifact",  # dataframe-rendering.spec.ts - fallback for canvas-artifact
+        "stdout",  # dataframe-rendering.spec.ts - code execution output
+        "stderr",  # dataframe-rendering.spec.ts - code execution error output
+        # File operations e2e tests
+        "files-page",  # file-operations.spec.ts - files navigation
+        # Hallucination reporting e2e tests
+        "assistant-message",  # hallucination-reporting.spec.ts - fallback selector
+        "user-message",  # hallucination-reporting.spec.ts - fallback selector
     }
 )
 

@@ -21,6 +21,19 @@ import type { SnakeToCamelCaseDeep } from "../api/transforms";
 export type SortOrder = "asc" | "desc";
 
 /**
+ * Model lifecycle status.
+ *
+ * Used by the model selector to indicate model maturity and deprecation status.
+ * Matches the backend ModelStatus type in model_registry.py.
+ *
+ * - current: Production-ready, actively maintained models
+ * - preview: Experimental or beta models (may have bugs or limited features)
+ * - legacy: Older models superseded by newer versions (still functional)
+ * - deprecated: Models scheduled for removal (shows sunset date warning)
+ */
+export type ModelStatus = "current" | "preview" | "legacy" | "deprecated";
+
+/**
  * Cursor-based pagination metadata from backend.
  *
  * IMPORTANT: `count` is the number of items in the CURRENT page, NOT total count.
@@ -190,6 +203,19 @@ export interface ProjectListParams
 }
 
 /**
+ * Cost query parameters (camelCase for frontend use)
+ * Either provide period OR startDate/endDate, not both
+ */
+export interface CostQueryParams {
+  /** Preset period like "day", "week", "month", "30d" */
+  period?: string;
+  /** Custom start date (YYYY-MM-DD) - takes precedence over period */
+  startDate?: string;
+  /** Custom end date (YYYY-MM-DD) - takes precedence over period */
+  endDate?: string;
+}
+
+/**
  * Cost history query parameters
  */
 export interface CostHistoryParams {
@@ -249,6 +275,10 @@ export interface FeatureFlags {
   multi_agent_strategy?: "orchestrator" | "peer" | "hybrid";
   /** Enable notification preferences */
   notification_preferences?: boolean;
+  /** Enable hallucination reporting in chat UI (flag AI responses as inaccurate) */
+  hallucination_reporting?: boolean;
+  /** Enable AI Quality Metrics card in Admin Dashboard */
+  ai_quality_metrics?: boolean;
   /** Enable MCP WebSocket connections */
   mcp_websocket?: boolean;
   /** Enable interactive artifact rendering in chat messages (Sandpack for JSX/TSX/MDX) */
@@ -285,6 +315,8 @@ export interface FeatureFlags {
   theme_customization?: boolean;
   /** Enable confirmation dialogs */
   confirmation_dialogs?: boolean;
+  /** Enable enhanced model selector (Sprint 1: recent models, search, capability badges) */
+  enhanced_model_selector?: boolean;
 
   // ==========================================================================
   // Studio Canvas Shell Feature Flags (Phase 0+)
@@ -1827,6 +1859,113 @@ export interface MessageRatingResponse {
 }
 
 // =============================================================================
+// Hallucination Reporting
+// =============================================================================
+
+/**
+ * Category of hallucination being reported
+ */
+export type HallucinationCategory =
+  | "factual_error"
+  | "outdated_info"
+  | "made_up_source"
+  | "other";
+
+/**
+ * Severity level for hallucination reports
+ */
+export type HallucinationSeverity = "low" | "medium" | "high";
+
+/**
+ * Request to submit a hallucination report
+ * POST /api/v1/feedback/hallucination
+ */
+export interface HallucinationReportRequest {
+  /** The message ID being reported */
+  message_id: string;
+  /** The session ID containing the message */
+  session_id: string;
+  /** Category of hallucination */
+  category: HallucinationCategory;
+  /** User description of the issue */
+  description: string;
+  /** Severity level (optional, defaults to medium) */
+  severity?: HallucinationSeverity;
+}
+
+/**
+ * Response after hallucination report submission
+ */
+export interface HallucinationReportResponse {
+  success: boolean;
+  report_id?: string;
+  message_id: string;
+  category: HallucinationCategory;
+}
+
+/**
+ * HallucinationReportResponse type with camelCase keys (after RTK Query transformation).
+ */
+export type HallucinationReportResponseCamelCase =
+  SnakeToCamelCaseDeep<HallucinationReportResponse>;
+
+/**
+ * Counts by hallucination category.
+ * Used in FeedbackSummaryResponse.
+ */
+export interface HallucinationCategoryCounts {
+  /** Count of factual error reports */
+  factual_error: number;
+  /** Count of outdated information reports */
+  outdated_info: number;
+  /** Count of made up source reports */
+  made_up_source: number;
+  /** Count of other category reports */
+  other: number;
+}
+
+/**
+ * HallucinationCategoryCounts type with camelCase keys (after RTK Query transformation).
+ */
+export type HallucinationCategoryCountsCamelCase =
+  SnakeToCamelCaseDeep<HallucinationCategoryCounts>;
+
+/**
+ * Aggregated feedback summary response.
+ * GET /api/v1/feedback/summary
+ */
+export interface FeedbackSummaryResponse {
+  /** Time period for aggregation (e.g., "7d", "30d", "90d") */
+  timeframe: string;
+  /** Total number of feedback entries */
+  total_feedback: number;
+  /** Count of positive ratings */
+  positive_count: number;
+  /** Count of negative ratings */
+  negative_count: number;
+  /** Positive rating percentage (0.0 - 1.0) */
+  positive_rate: number;
+  /** Total hallucination reports */
+  hallucination_reports: number;
+  /** Breakdown by hallucination category */
+  hallucination_categories?: HallucinationCategoryCounts;
+}
+
+/**
+ * FeedbackSummaryResponse type with camelCase keys (after RTK Query transformation).
+ */
+export type FeedbackSummaryResponseCamelCase =
+  SnakeToCamelCaseDeep<FeedbackSummaryResponse>;
+
+/**
+ * Parameters for getFeedbackSummary query.
+ */
+export interface FeedbackSummaryParams {
+  /** Time period for aggregation (default: "7d") */
+  timeframe?: string;
+}
+
+// =============================================================================
 // Admin User Management
 // =============================================================================
 
@@ -2595,4 +2734,78 @@ export interface McpTask {
  */
 export interface McpTaskListResponse {
   tasks: McpTask[];
+}
+
+// =============================================================================
+// Studio Analyze Types (ADR-0091 Phase 9)
+// =============================================================================
+
+/**
+ * Task categories for Studio AI analysis
+ */
+export type StudioAnalyzeTaskCategory =
+  | "UX"
+  | "SESSION"
+  | "CONVERSATION"
+  | "CANVAS"
+  | "DIAGRAM"
+  | "TRACE"
+  | "HITL"
+  | "COMMAND";
+
+/**
+ * Individual task request for Studio AI analysis
+ */
+export interface StudioAnalyzeTaskRequest {
+  category: StudioAnalyzeTaskCategory | string;
+  type: string;
+  data?: Record<string, unknown>;
+}
+
+/**
+ * Request model for unified Studio AI analysis.
+ * Matches backend StudioAnalyzeRequest schema.
+ */
+export interface StudioAnalyzeRequest {
+  user_id: string;
+  session_id: string;
+  persona?: string | null;
+  tasks: StudioAnalyzeTaskRequest[];
+  context?: Record<string, unknown>;
+}
+
+/**
+ * CamelCase version of StudioAnalyzeRequest for frontend use.
+ */
+export interface StudioAnalyzeRequestCamelCase {
+  userId: string;
+  sessionId: string;
+  persona?: string | null;
+  tasks: StudioAnalyzeTaskRequest[];
+  context?: Record<string, unknown>;
+}
+
+/**
+ * Response model for unified Studio AI analysis.
+ * Matches backend StudioAnalyzeResponse schema.
+ */
+export interface StudioAnalyzeResponse {
+  user_id: string;
+  session_id: string;
+  analyses?: Record<string, unknown>;
+  cross_insights?: string[];
+  failed_analyses?: string[];
+  total_cost: string;
+}
+
+/**
+ * CamelCase version of StudioAnalyzeResponse for frontend use.
+ */
+export interface StudioAnalyzeResponseCamelCase {
+  userId: string;
+  sessionId: string;
+  analyses?: Record<string, unknown>;
+  crossInsights?: string[];
+  failedAnalyses?: string[];
+  totalCost: string;
 }

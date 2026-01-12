@@ -10,6 +10,8 @@
 
 import { Sparkles, Scale, Target } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -110,7 +112,8 @@ export function StylePresets({
         const isActive = activePreset === presetName;
 
         return (
-          <button
+          <Button
+            className=".5 rounded-lg focus:ring-primary-500/50"
             key={presetName}
             data-testid={`preset-${presetName}`}
             type="button"
@@ -120,23 +123,10 @@ export function StylePresets({
             title={preset.description}
             aria-label={`${preset.label} style: ${preset.description}`}
             aria-pressed={isActive}
-            className={`
-              inline-flex items-center gap-1.5
-              ${compact ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-sm"}
-              rounded-lg font-medium
-              transition-colors
-              focus:outline-none focus:ring-2 focus:ring-primary-500/50
-              ${
-                isActive
-                  ? "bg-primary-600 text-white"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700"
-              }
-              ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-            `}
           >
             <Icon size={compact ? 12 : 14} />
             <span>{preset.label}</span>
-          </button>
+          </Button>
         );
       })}
     </div>

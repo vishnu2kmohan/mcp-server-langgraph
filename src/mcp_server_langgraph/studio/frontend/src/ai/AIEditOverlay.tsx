@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { cn } from "../utils/cn";
 
+import { Button, Input } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -154,60 +156,59 @@ export function AIEditOverlay({
       aria-label="AI Edit"
       onKeyDown={handleKeyDown}
       className={cn(
-        "absolute z-50 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700",
+        "absolute z-50 w-96 bg-white dark:bg-neutral-800 rounded-lg shadow-xl border border-neutral-200 dark:border-neutral-700",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 rounded-t-lg">
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/50 rounded-t-lg">
         <Sparkles size={16} className="text-primary-500" />
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+        <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
           AI Edit
         </span>
       </div>
-
       {/* Selection Preview */}
       <div
         data-testid="selection-preview"
-        className="px-4 py-2 border-b border-gray-200 dark:border-gray-700"
+        className="px-4 py-2 border-b border-neutral-200 dark:border-neutral-700"
       >
-        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
           Selected code (lines {selection.start.line}-{selection.end.line})
         </div>
-        <pre className="text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded max-h-20 overflow-auto text-gray-700 dark:text-gray-300 font-mono">
+        <pre className="text-xs bg-neutral-100 dark:bg-neutral-800 p-2 rounded max-h-20 overflow-auto text-neutral-700 dark:text-neutral-300 font-mono">
           {selection.content.slice(0, 200)}
           {selection.content.length > 200 && "..."}
         </pre>
       </div>
-
       {/* Instruction Input */}
       {!editResult && !error && (
         <div className="p-4">
-          <input
+          <Input
+            className="px-3 py-2 text-sm bg-neutral-50 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:ring-primary-500"
             ref={inputRef}
             data-testid="instruction-input"
-            type="text"
             value={instruction}
             onChange={(e) => setInstruction(e.target.value)}
             placeholder="Describe the change you want..."
             disabled={isLoading}
-            className="w-full px-3 py-2 text-sm rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <div className="flex justify-end gap-2 mt-3">
-            <button
+            <Button
+              variant="secondary"
+              className="px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
               data-testid="cancel-edit"
               type="button"
               onClick={onCancel}
-              className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
+              className="flex px-3 py-1.5 text-sm bg-primary-500 text-white rounded hover:bg-primary-600"
               data-testid="submit-edit"
               type="button"
               onClick={handleSubmit}
               disabled={isLoading || !instruction.trim()}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-primary-500 text-white rounded hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading && (
                 <Loader2
@@ -217,11 +218,10 @@ export function AIEditOverlay({
                 />
               )}
               Generate
-            </button>
+            </Button>
           </div>
         </div>
       )}
-
       {/* Error State */}
       {error && (
         <div className="p-4">
@@ -230,33 +230,34 @@ export function AIEditOverlay({
             <span className="text-sm">{error}</span>
           </div>
           <div className="flex justify-end gap-2">
-            <button
+            <Button
+              variant="secondary"
+              className="px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
               data-testid="cancel-edit"
               type="button"
               onClick={onCancel}
-              className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="danger"
+              className="flex px-3 py-1.5 text-sm bg-error-500 text-white rounded hover:bg-error-600"
               data-testid="retry-button"
               type="button"
               onClick={handleRetry}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-error-500 text-white rounded hover:bg-error-600 transition-colors"
             >
               <RefreshCw size={14} />
               Retry
-            </button>
+            </Button>
           </div>
         </div>
       )}
-
       {/* Diff Preview */}
       {editResult && (
         <div className="p-4">
           <div
             data-testid="diff-preview"
-            className="bg-gray-900 rounded-lg overflow-hidden mb-3 max-h-48 overflow-y-auto"
+            className="bg-neutral-900 rounded-lg overflow-hidden mb-3 max-h-48 overflow-y-auto"
           >
             <pre className="text-xs font-mono p-2">
               {editResult.diff.map((line, index) => (
@@ -268,7 +269,8 @@ export function AIEditOverlay({
                     line.type === "add" && "bg-success-900/30 text-success-400",
                     line.type === "remove" &&
                       "bg-error-900/30 text-error-400 line-through",
-                    line.type === "same" && "text-gray-400 dark:text-gray-400",
+                    line.type === "same" &&
+                      "text-neutral-400 dark:text-neutral-400",
                   )}
                 >
                   {line.type === "add" && "+ "}
@@ -281,34 +283,37 @@ export function AIEditOverlay({
           </div>
 
           <div className="flex justify-between">
-            <button
+            <Button
+              variant="secondary"
+              className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
               data-testid="regenerate-button"
               type="button"
               onClick={handleRegenerate}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
             >
               <RefreshCw size={14} />
               Regenerate
-            </button>
+            </Button>
             <div className="flex gap-2">
-              <button
+              <Button
+                variant="secondary"
+                className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
                 data-testid="cancel-edit"
                 type="button"
                 onClick={onCancel}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
               >
                 <X size={14} />
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="success"
+                className="flex px-3 py-1.5 text-sm bg-success-500 text-white rounded hover:bg-success-600"
                 data-testid="apply-edit"
                 type="button"
                 onClick={() => onApply(editResult.newContent)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-success-500 text-white rounded hover:bg-success-600 transition-colors"
               >
                 <Check size={14} />
                 Apply
-              </button>
+              </Button>
             </div>
           </div>
         </div>

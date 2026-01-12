@@ -23,6 +23,8 @@ import {
 } from "react";
 import { AlertTriangle, AlertCircle, Loader2 } from "lucide-react";
 
+import { Button, Input } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -180,7 +182,7 @@ export function ConfirmationDialog({
     },
   };
 
-  const { button: buttonStyle, icon } = severityStyles[severity];
+  const { button: _buttonStyle, icon } = severityStyles[severity];
 
   return (
     <div
@@ -197,7 +199,7 @@ export function ConfirmationDialog({
         data-severity={severity}
         onClick={handleDialogClick}
         onKeyDown={handleKeyDown}
-        className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 shadow-xl"
+        className="w-full max-w-md rounded-lg bg-white dark:bg-neutral-900 shadow-xl"
       >
         <div className="p-6">
           {/* Header */}
@@ -206,13 +208,13 @@ export function ConfirmationDialog({
             <div className="flex-1">
               <h2
                 id={titleId}
-                className="text-lg font-semibold text-gray-900 dark:text-gray-100"
+                className="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
               >
                 {title}
               </h2>
               <p
                 id={descriptionId}
-                className="mt-2 text-sm text-gray-600 dark:text-gray-400"
+                className="mt-2 text-sm text-neutral-600 dark:text-neutral-400"
               >
                 {message}
               </p>
@@ -222,37 +224,38 @@ export function ConfirmationDialog({
           {/* Type-to-confirm input */}
           {requiresConfirmText && (
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
                 Type <span className="font-mono font-bold">{confirmText}</span>{" "}
                 to confirm
               </label>
-              <input
-                type="text"
+              <Input
+                variant="error"
+                className="mt-1 px-3 py-2 text-sm -500 focus:ring-error-500"
                 value={typedText}
                 onChange={(e) => setTypedText(e.target.value)}
                 placeholder={`Type ${confirmText} to confirm`}
-                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:border-error-500 focus:outline-none focus:ring-1 focus:ring-error-500"
               />
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
-          <button
+        <div className="flex justify-end gap-3 border-t border-neutral-200 dark:border-neutral-700 px-6 py-4">
+          <Button
+            variant="secondary"
+            className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded-md hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 focus:ring-neutral-500"
             type="button"
             onClick={onCancel}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {cancelLabel}
-          </button>
-          <button
+          </Button>
+          <Button
+            className="px-4 py-2 text-sm text-white rounded-md focus:ring-offset-2 flex"
             ref={confirmButtonRef}
             type="button"
             onClick={handleConfirm}
             disabled={isConfirmDisabled}
-            className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${buttonStyle}`}
           >
             {isLoading && (
               <Loader2
@@ -262,7 +265,7 @@ export function ConfirmationDialog({
               />
             )}
             {confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

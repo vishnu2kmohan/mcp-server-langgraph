@@ -255,7 +255,7 @@ describe("ObservabilityPage - Logs", () => {
       await waitFor(() => {
         const debugBadge = screen.getByText("debug");
         expect(debugBadge).toBeInTheDocument();
-        expect(debugBadge).toHaveClass("bg-gray-100");
+        expect(debugBadge).toHaveClass("bg-neutral-100");
       });
     });
 

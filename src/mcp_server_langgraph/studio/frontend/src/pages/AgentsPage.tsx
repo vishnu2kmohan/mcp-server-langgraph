@@ -16,7 +16,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { Cpu, RefreshCw, Wrench, Check, X } from "lucide-react";
 import { useGetAgentConfigQuery } from "../api";
-import { ErrorState } from "../components/UI";
+import { ErrorState, Button, Select, Toggle, Slider } from "../components/UI";
 import {
   ThinkingBudgetCard,
   FeatureFlagsCard,
@@ -77,12 +77,12 @@ export function AgentsPage() {
     refetch();
   };
 
-  const handleTemperatureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalTemperature(parseFloat(e.target.value));
+  const handleTemperatureChange = (value: number) => {
+    setLocalTemperature(value);
   };
 
-  const handleVerificationToggle = () => {
-    setLocalVerification(!localVerification);
+  const handleVerificationToggle = (checked: boolean) => {
+    setLocalVerification(checked);
   };
 
   if (isLoading) {
@@ -112,36 +112,36 @@ export function AgentsPage() {
   const tools = config?.tools ?? [];
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
               {pageConfig.title}
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               {pageConfig.description}
             </p>
           </div>
-          <button
+          <Button
+            variant="secondary"
+            className="flex px-4 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
             onClick={handleRefresh}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
           >
             <RefreshCw size={16} />
             Refresh
-          </button>
+          </Button>
         </div>
       </header>
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Model Configuration Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
             <div className="flex items-center gap-3 mb-4">
               <Cpu size={24} className="text-primary-500" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
                 Model Configuration
               </h2>
             </div>
@@ -151,77 +151,66 @@ export function AgentsPage() {
               <div>
                 <label
                   htmlFor="model-select"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
                 >
                   Model
                 </label>
-                <select
+                <Select
+                  className="px-3 py-2 bg-neutral-100 text-neutral-900 dark:text-neutral-100 cursor-not-allowed"
                   id="model-select"
                   value={model}
                   disabled
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 cursor-not-allowed"
                 >
                   <option value={model}>{model}</option>
-                </select>
+                </Select>
                 {provider && (
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                     Provider: {provider}
                   </p>
                 )}
               </div>
 
               {/* Temperature Slider */}
-              <div>
-                <label
-                  htmlFor="temperature-slider"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Temperature: {localTemperature.toFixed(1)}
-                </label>
-                <input
-                  id="temperature-slider"
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={localTemperature}
-                  onChange={handleTemperatureChange}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  <span>Precise (0.0)</span>
-                  <span>Creative (1.0)</span>
-                </div>
-              </div>
+              <Slider
+                id="temperature-slider"
+                value={localTemperature}
+                onChange={handleTemperatureChange}
+                min={0}
+                max={1}
+                step={0.1}
+                label="Temperature"
+                showValue
+                formatValue={(v) => v.toFixed(1)}
+                marks={[
+                  { value: 0, label: "Precise (0.0)" },
+                  { value: 1, label: "Creative (1.0)" },
+                ]}
+              />
 
               {/* Verification Toggle */}
               <div className="flex items-center justify-between">
                 <div>
                   <label
                     htmlFor="verification-toggle"
-                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
                   >
                     Enable Verification
                   </label>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                     Verify agent responses before executing
                   </p>
                 </div>
-                <div className="flex items-center">
-                  <input
+                <div className="flex items-center gap-2">
+                  <Toggle
                     id="verification-toggle"
-                    type="checkbox"
                     checked={localVerification}
                     onChange={handleVerificationToggle}
-                    className="w-5 h-5 text-primary-600 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+                    aria-label="Enable Verification"
                   />
                   {localVerification ? (
-                    <Check size={16} className="ml-2 text-success-500" />
+                    <Check size={16} className="text-success-500" />
                   ) : (
-                    <X
-                      size={16}
-                      className="ml-2 text-gray-400 dark:text-gray-400"
-                    />
+                    <X size={16} className="text-neutral-400" />
                   )}
                 </div>
               </div>
@@ -229,10 +218,10 @@ export function AgentsPage() {
           </div>
 
           {/* Tools Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
             <div className="flex items-center gap-3 mb-4">
               <Wrench size={24} className="text-insight-500" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
                 Available Tools
               </h2>
               <span className="px-2 py-1 text-xs bg-insight-100 dark:bg-insight-900/30 text-insight-700 dark:text-insight-400 rounded-full">
@@ -241,7 +230,7 @@ export function AgentsPage() {
             </div>
 
             {tools.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-neutral-500 dark:text-neutral-400">
                 No tools available
               </p>
             ) : (
@@ -249,16 +238,16 @@ export function AgentsPage() {
                 {tools.map((tool) => (
                   <div
                     key={tool.name}
-                    className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-500 transition-colors"
+                    className="p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:border-primary-500 transition-colors"
                   >
                     <div className="flex items-center gap-2">
                       <Wrench size={16} className="text-insight-500" />
                       <div>
-                        <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                        <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
                           {tool.name}
                         </h3>
                         {tool.description && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                          <p className="text-sm text-neutral-500 dark:text-neutral-400">
                             {tool.description}
                           </p>
                         )}

@@ -17,6 +17,8 @@ import {
   useReadMcpResourceMutation,
 } from "../../api";
 
+import { Button } from "@/components/UI";
+
 export interface ResourceViewerProps {
   open: boolean;
   onClose: () => void;
@@ -138,21 +140,21 @@ export function ResourceViewer({
         onClick={onClose}
         aria-hidden="true"
       />
-
       {/* Dialog content */}
-      <div className="relative z-10 flex h-[80vh] w-full max-w-4xl flex-col rounded-lg bg-white shadow-xl dark:bg-gray-800">
+      <div className="relative z-10 flex h-[80vh] w-full max-w-4xl flex-col rounded-lg bg-white shadow-xl dark:bg-neutral-800">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 p-4 dark:border-gray-700">
+        <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700 p-4 dark:border-neutral-700">
           <h2
             id="resource-viewer-title"
-            className="text-xl font-semibold text-gray-900 dark:text-white"
+            className="text-xl font-semibold text-neutral-900 dark:text-white"
           >
             Resource Viewer
           </h2>
-          <button
+          <Button
+            variant="secondary"
+            className="rounded-md p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-200"
             type="button"
             onClick={onClose}
-            className="rounded-md p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
             aria-label="Close"
           >
             <svg
@@ -168,13 +170,13 @@ export function ResourceViewer({
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
-          </button>
+          </Button>
         </div>
 
         {/* Loading state */}
         {isLoadingResources && (
           <div className="flex flex-1 items-center justify-center">
-            <span className="text-gray-500 dark:text-gray-400">
+            <span className="text-neutral-500 dark:text-neutral-400">
               Loading resources...
             </span>
           </div>
@@ -193,36 +195,33 @@ export function ResourceViewer({
         {!isLoadingResources && !resourcesError && (
           <div className="flex flex-1 overflow-hidden">
             {/* Resource list */}
-            <div className="w-1/3 overflow-y-auto border-r border-gray-200 dark:border-gray-700">
+            <div className="w-1/3 overflow-y-auto border-r border-neutral-200 dark:border-neutral-700">
               {resourcesData?.resources.length === 0 ? (
-                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                <div className="p-4 text-center text-neutral-500 dark:text-neutral-400">
                   No resources available
                 </div>
               ) : (
-                <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                <ul className="divide-y divide-neutral-200 dark:divide-neutral-700">
                   {resourcesData?.resources.map((resource) => (
                     <li key={resource.uri}>
-                      <button
+                      <Button
+                        variant="secondary"
+                        className="w-full p-3 text-left hover:bg-neutral-50 dark:hover:bg-neutral-700"
                         type="button"
                         onClick={() => handleResourceSelect(resource.uri)}
-                        className={`w-full p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                          selectedUri === resource.uri
-                            ? "bg-primary-50 dark:bg-primary-900/20"
-                            : ""
-                        }`}
                       >
-                        <div className="font-medium text-gray-900 dark:text-white">
+                        <div className="font-medium text-neutral-900 dark:text-white">
                           {resource.name}
                         </div>
                         {resource.title && (
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                          <div className="text-sm text-neutral-600 dark:text-neutral-400">
                             {resource.title}
                           </div>
                         )}
-                        <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        <div className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                           {resource.mimeType}
                         </div>
-                      </button>
+                      </Button>
                     </li>
                   ))}
                 </ul>
@@ -233,12 +232,12 @@ export function ResourceViewer({
             <div className="flex w-2/3 flex-col overflow-hidden">
               {/* Resource details */}
               {selectedResource && (
-                <div className="border-b border-gray-200 dark:border-gray-700 p-4 dark:border-gray-700">
-                  <h3 className="font-medium text-gray-900 dark:text-white">
+                <div className="border-b border-neutral-200 dark:border-neutral-700 p-4 dark:border-neutral-700">
+                  <h3 className="font-medium text-neutral-900 dark:text-white">
                     {selectedResource.name}
                   </h3>
                   {selectedResource.description && (
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
                       {selectedResource.description}
                     </p>
                   )}
@@ -248,13 +247,13 @@ export function ResourceViewer({
               {/* Content display */}
               <div className="flex-1 overflow-auto p-4">
                 {!selectedUri && (
-                  <div className="flex h-full items-center justify-center text-gray-500 dark:text-gray-400">
+                  <div className="flex h-full items-center justify-center text-neutral-500 dark:text-neutral-400">
                     Select a resource to view its content
                   </div>
                 )}
 
                 {isReadingContent && (
-                  <div className="flex h-full items-center justify-center text-gray-500 dark:text-gray-400">
+                  <div className="flex h-full items-center justify-center text-neutral-500 dark:text-neutral-400">
                     Loading content...
                   </div>
                 )}
@@ -269,10 +268,11 @@ export function ResourceViewer({
                   <div className="relative">
                     {/* Copy button */}
                     {content.text && (
-                      <button
+                      <Button
+                        variant="secondary"
+                        className="absolute right-2 top-2 rounded-md bg-neutral-100 dark:bg-neutral-800 p-2 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600"
                         type="button"
                         onClick={handleCopy}
-                        className="absolute right-2 top-2 rounded-md bg-gray-100 dark:bg-gray-800 p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                         aria-label="Copy"
                       >
                         <svg
@@ -288,12 +288,12 @@ export function ResourceViewer({
                             d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                           />
                         </svg>
-                      </button>
+                      </Button>
                     )}
 
                     {/* Text content */}
                     {content.text && (
-                      <pre className="whitespace-pre-wrap rounded-md bg-gray-50 p-4 text-sm text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                      <pre className="whitespace-pre-wrap rounded-md bg-neutral-50 p-4 text-sm text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200">
                         {content.text}
                       </pre>
                     )}
@@ -310,11 +310,11 @@ export function ResourceViewer({
                     {/* Binary content (other) */}
                     {content.blob &&
                       !content.mimeType?.startsWith("image/") && (
-                        <div className="rounded-md bg-gray-50 p-4 dark:bg-gray-900">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="rounded-md bg-neutral-50 p-4 dark:bg-neutral-900">
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400">
                             Binary content ({content.mimeType})
                           </p>
-                          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
                             {content.blob.length} characters (base64 encoded)
                           </p>
                         </div>

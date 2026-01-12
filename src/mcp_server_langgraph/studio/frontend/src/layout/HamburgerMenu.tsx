@@ -13,6 +13,8 @@ import { forwardRef } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 export interface HamburgerMenuProps {
   /** Click handler to toggle drawer */
   onClick: () => void;
@@ -25,7 +27,7 @@ export interface HamburgerMenuProps {
 export const HamburgerMenu = forwardRef<HTMLButtonElement, HamburgerMenuProps>(
   function HamburgerMenu({ onClick, isOpen = false, className }, ref) {
     return (
-      <button
+      <Button
         ref={ref}
         type="button"
         data-testid="hamburger-menu"
@@ -35,8 +37,8 @@ export const HamburgerMenu = forwardRef<HTMLButtonElement, HamburgerMenuProps>(
         aria-controls="mobile-drawer"
         className={cn(
           "p-2 rounded-lg transition-colors",
-          "text-gray-600 dark:text-gray-300",
-          "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
+          "text-neutral-600 dark:text-neutral-300",
+          "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
           "focus:outline-none focus:ring-2 focus:ring-primary-500",
           className,
         )}
@@ -46,7 +48,7 @@ export const HamburgerMenu = forwardRef<HTMLButtonElement, HamburgerMenuProps>(
         ) : (
           <Menu size={24} data-testid="hamburger-icon" />
         )}
-      </button>
+      </Button>
     );
   },
 );

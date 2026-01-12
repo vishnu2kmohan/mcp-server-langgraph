@@ -37,6 +37,7 @@ import { cn } from "../utils/cn";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
 import { InlineEdit } from "../components/UI/InlineEdit";
 import { Tooltip } from "../components/UI/Tooltip";
+import { Button } from "../components/UI";
 
 // AI Components (Phase 4) - lazy-loaded for reduced bundle size
 import { LazyAIEditOverlay, type Selection } from "../ai/lazy";
@@ -126,7 +127,7 @@ function ArtifactTabBar({
   enableHover = false,
 }: ArtifactTabBarProps) {
   return (
-    <div className="flex gap-1 p-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+    <div className="flex gap-1 p-2 border-b border-neutral-200 dark:border-neutral-700 overflow-x-auto">
       {artifacts.map((artifact) => {
         const isActive = artifact.id === selectedId;
         const isAI =
@@ -147,27 +148,29 @@ function ArtifactTabBar({
           artifact.editMetadata?.language || artifact.contentType;
         const hoverContent = (
           <div className="space-y-1.5 min-w-40 max-w-56">
-            <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-400">
+            <div className="flex items-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-400">
               <Code size={12} />
               <span className="capitalize">{artifact.type}</span>
               {language && (
                 <>
-                  <span className="text-gray-600 dark:text-gray-300">•</span>
+                  <span className="text-neutral-600 dark:text-neutral-300">
+                    •
+                  </span>
                   <span className="capitalize">{language}</span>
                 </>
               )}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-400">
+            <div className="flex items-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-400">
               <FileCode2 size={12} />
               <span>
                 {lineCount} line{lineCount === 1 ? "" : "s"}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-400">
+            <div className="flex items-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-400">
               <Clock size={12} />
               <span>Created {formatArtifactDate(artifact.createdAt)}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-400">
+            <div className="flex items-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-400">
               {isAI ? (
                 <>
                   <Bot size={12} className="text-insight-400" />
@@ -184,7 +187,7 @@ function ArtifactTabBar({
         );
 
         const tabButton = (
-          <button
+          <Button
             key={artifact.id}
             data-testid={`artifact-tab-${artifact.id}`}
             type="button"
@@ -195,7 +198,7 @@ function ArtifactTabBar({
               isActive &&
                 "active bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
               !isActive &&
-                "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
             )}
           >
             <FileCode2 size={14} />
@@ -216,7 +219,7 @@ function ArtifactTabBar({
                 className="w-1.5 h-1.5 rounded-full bg-insight-500"
               />
             )}
-          </button>
+          </Button>
         );
 
         return enableHover ? (
@@ -427,16 +430,16 @@ export function CanvasWorkspace({
         data-testid="canvas-workspace"
         className={cn(
           "flex flex-col items-center justify-center h-full",
-          "bg-gray-50 dark:bg-gray-800",
+          "bg-neutral-50 dark:bg-neutral-800",
           className,
         )}
       >
         <FileCode2
           size={48}
-          className="text-gray-400 dark:text-gray-400 mb-4"
+          className="text-neutral-400 dark:text-neutral-400 mb-4"
         />
-        <p className="text-gray-500 dark:text-gray-400">No artifacts</p>
-        <p className="text-sm text-gray-400 dark:text-gray-400">
+        <p className="text-neutral-500 dark:text-neutral-400">No artifacts</p>
+        <p className="text-sm text-neutral-400 dark:text-neutral-400">
           Artifacts will appear here when generated
         </p>
       </div>
@@ -457,14 +460,13 @@ export function CanvasWorkspace({
         onRename={onRenameArtifact}
         enableHover={enableArtifactHover}
       />
-
       {/* Main workspace area - single pane with tab switching */}
       <div
         data-testid="panel-editor"
         className="flex-1 flex flex-col overflow-hidden"
       >
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-200 dark:border-neutral-700">
           <CanvasTabs
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -482,7 +484,7 @@ export function CanvasWorkspace({
                 {isCodeArtifact && (
                   <>
                     {!hasTriggeredCodeAnalysis && !codeAnalysis.isLoading ? (
-                      <button
+                      <Button
                         type="button"
                         data-testid="analyze-code-trigger"
                         onClick={() => {
@@ -498,9 +500,9 @@ export function CanvasWorkspace({
                       >
                         <Sparkles size={12} aria-hidden="true" />
                         Analyze
-                      </button>
+                      </Button>
                     ) : codeAnalysis.isLoading ? (
-                      <span className="flex items-center gap-1 text-gray-400 dark:text-gray-400">
+                      <span className="flex items-center gap-1 text-neutral-400 dark:text-neutral-400">
                         <Loader2
                           size={12}
                           className="animate-spin"
@@ -564,7 +566,7 @@ export function CanvasWorkspace({
                   <>
                     {!hasTriggeredDiagramAnalysis &&
                     !diagramAnalysis.isLoading ? (
-                      <button
+                      <Button
                         type="button"
                         data-testid="analyze-diagram-trigger"
                         onClick={() => {
@@ -580,9 +582,9 @@ export function CanvasWorkspace({
                       >
                         <Sparkles size={12} aria-hidden="true" />
                         Validate
-                      </button>
+                      </Button>
                     ) : diagramAnalysis.isLoading ? (
-                      <span className="flex items-center gap-1 text-gray-400 dark:text-gray-400">
+                      <span className="flex items-center gap-1 text-neutral-400 dark:text-neutral-400">
                         <Loader2
                           size={12}
                           className="animate-spin"
@@ -676,7 +678,7 @@ export function CanvasWorkspace({
                 <Suspense
                   fallback={
                     <div className="flex items-center justify-center h-32">
-                      <Loader2 className="animate-spin text-gray-400 dark:text-gray-400" />
+                      <Loader2 className="animate-spin text-neutral-400 dark:text-neutral-400" />
                     </div>
                   }
                 >
@@ -696,7 +698,7 @@ export function CanvasWorkspace({
           {/* Data View */}
           {selectedArtifact && activeTab === "data" && (
             <div data-testid="data-view">
-              <pre className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800 p-4 rounded-lg overflow-auto">
+              <pre className="text-sm text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap font-mono bg-neutral-50 dark:bg-neutral-800 p-4 rounded-lg overflow-auto">
                 {selectedArtifact.contentType === "json"
                   ? JSON.stringify(
                       JSON.parse(selectedArtifact.content),
@@ -709,7 +711,6 @@ export function CanvasWorkspace({
           )}
         </div>
       </div>
-
       {/* AI Edit Overlay (Phase 4) - gated by canvas_ai_palette feature flag */}
       {/* Lazy-loaded to reduce initial bundle size */}
       {aiEditEnabled && aiEditSelection && (

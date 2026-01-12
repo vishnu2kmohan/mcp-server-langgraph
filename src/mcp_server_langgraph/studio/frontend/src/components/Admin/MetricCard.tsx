@@ -86,14 +86,14 @@ export function MetricCard({
   return (
     <div
       data-testid="metric-card"
-      className={`bg-gray-50 dark:bg-gray-700 rounded-lg ${getVariantPadding(variant)}`}
+      className={`bg-neutral-50 dark:bg-neutral-700 rounded-lg ${getVariantPadding(variant)}`}
     >
       {/* Header with label and icon */}
       <div className="flex items-center gap-2 mb-2">
         {icon && (
-          <span className="text-gray-500 dark:text-gray-400">{icon}</span>
+          <span className="text-neutral-500 dark:text-neutral-400">{icon}</span>
         )}
-        <span className="text-sm text-gray-600 dark:text-gray-300">
+        <span className="text-sm text-neutral-600 dark:text-neutral-300">
           {label}
         </span>
       </div>
@@ -132,7 +132,7 @@ export function MetricCard({
 
       {/* Description */}
       {description && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
           {description}
         </p>
       )}

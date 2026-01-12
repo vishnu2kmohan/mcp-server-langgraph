@@ -20,6 +20,8 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { Search, Command as CommandIcon, Clock } from "lucide-react";
 import { Command } from "../../hooks/useCommandPalette";
 
+import { Input } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -196,15 +198,17 @@ export function GenericCommandPalette({
         className="absolute inset-0 bg-black/50"
         onClick={onClose}
       />
-
       {/* Modal */}
-      <div className="relative w-full max-w-lg bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-lg bg-white dark:bg-neutral-800 rounded-xl shadow-2xl overflow-hidden">
         {/* Search Input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <Search size={18} className="text-gray-400 dark:text-gray-400" />
-          <input
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+          <Search
+            size={18}
+            className="text-neutral-400 dark:text-neutral-400"
+          />
+          <Input
+            className="flex-1 bg-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 outline-none"
             ref={inputRef}
-            type="text"
             role="combobox"
             aria-label="Search commands"
             aria-expanded="true"
@@ -217,9 +221,8 @@ export function GenericCommandPalette({
             placeholder="Type a command or search..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 outline-none"
           />
-          <kbd className="px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded">
+          <kbd className="px-2 py-0.5 text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-700 rounded">
             ESC
           </kbd>
         </div>
@@ -234,7 +237,7 @@ export function GenericCommandPalette({
           {/* Recent Commands */}
           {!query && recentCommands.length > 0 && (
             <>
-              <li className="px-4 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
+              <li className="px-4 py-1.5 text-xs font-medium text-neutral-500 dark:text-neutral-400 flex items-center gap-2">
                 <Clock size={12} />
                 Recent
               </li>
@@ -250,34 +253,34 @@ export function GenericCommandPalette({
                     className={`flex items-center justify-between px-4 py-2 cursor-pointer ${
                       selectedIndex === currentIndex
                         ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                        : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                        : "hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <CommandIcon
                         size={16}
-                        className="text-gray-400 dark:text-gray-400"
+                        className="text-neutral-400 dark:text-neutral-400"
                       />
-                      <span className="text-sm text-gray-900 dark:text-gray-100">
+                      <span className="text-sm text-neutral-900 dark:text-neutral-100">
                         {cmd.label}
                       </span>
                     </div>
                     {cmd.shortcut && (
-                      <kbd className="px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded">
+                      <kbd className="px-2 py-0.5 text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-700 rounded">
                         {cmd.shortcut}
                       </kbd>
                     )}
                   </li>
                 );
               })}
-              <li className="my-2 border-t border-gray-200 dark:border-gray-700" />
+              <li className="my-2 border-t border-neutral-200 dark:border-neutral-700" />
             </>
           )}
 
           {/* Commands by Category */}
           {filteredCommands.length === 0 ? (
             <li
-              className="px-4 py-8 text-center text-gray-500 dark:text-gray-400"
+              className="px-4 py-8 text-center text-neutral-500 dark:text-neutral-400"
               role="option"
               aria-selected={false}
             >
@@ -287,7 +290,7 @@ export function GenericCommandPalette({
             Object.entries(commandsByCategory).flatMap(([category, cmds]) => [
               <li
                 key={`cat-${category}`}
-                className="px-4 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400"
+                className="px-4 py-1.5 text-xs font-medium text-neutral-500 dark:text-neutral-400"
                 role="presentation"
               >
                 {category}
@@ -306,20 +309,20 @@ export function GenericCommandPalette({
                     className={`flex items-center justify-between px-4 py-2 cursor-pointer ${
                       selectedIndex === currentIndex
                         ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                        : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                        : "hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <CommandIcon
                         size={16}
-                        className="text-gray-400 dark:text-gray-400"
+                        className="text-neutral-400 dark:text-neutral-400"
                       />
-                      <span className="text-sm text-gray-900 dark:text-gray-100">
+                      <span className="text-sm text-neutral-900 dark:text-neutral-100">
                         {cmd.label}
                       </span>
                     </div>
                     {cmd.shortcut && (
-                      <kbd className="px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded">
+                      <kbd className="px-2 py-0.5 text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-700 rounded">
                         {cmd.shortcut}
                       </kbd>
                     )}
@@ -331,21 +334,21 @@ export function GenericCommandPalette({
         </ul>
 
         {/* Footer */}
-        <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 flex gap-4">
+        <div className="px-4 py-2 border-t border-neutral-200 dark:border-neutral-700 text-xs text-neutral-500 dark:text-neutral-400 flex gap-4">
           <span>
-            <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
+            <kbd className="px-1 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded">
               ↑↓
             </kbd>{" "}
             Navigate
           </span>
           <span>
-            <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
+            <kbd className="px-1 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded">
               ↵
             </kbd>{" "}
             Execute
           </span>
           <span>
-            <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
+            <kbd className="px-1 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded">
               ESC
             </kbd>{" "}
             Close

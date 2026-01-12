@@ -4,6 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 import packageJson from './package.json';
 
+// Check if building for Storybook (Storybook sets this env var)
+const isStorybook = process.env.STORYBOOK === 'true';
+
 // https://vitejs.dev/config/
 export default defineConfig({
   // Inject version and build info at compile time
@@ -13,7 +16,9 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    VitePWA({
+    // Exclude VitePWA when building for Storybook (Storybook's globals-runtime.js
+    // exceeds the maximumFileSizeToCacheInBytes limit and causes build failures)
+    !isStorybook && VitePWA({
       registerType: 'prompt',
       includeAssets: ['icons/*.png', 'icons/*.svg'],
       manifest: false, // Use existing manifest.json in public/
@@ -81,7 +86,7 @@ export default defineConfig({
         enabled: false, // Disable SW in development
       },
     }),
-  ],
+  ].filter(Boolean),
   // Base path for production deployment behind Traefik /studio prefix
   base: '/studio/',
   resolve: {

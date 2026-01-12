@@ -41,6 +41,8 @@ import type {
   DisclosureAnalysisResult,
 } from "../../hooks/useBatchCompositeAnalysis";
 
+import { Button } from "@/components/UI";
+
 /**
  * Props for CrossInsightsPanel
  */
@@ -127,13 +129,13 @@ export function CrossInsightsPanel({
     disclosureResult.currentLevel !== disclosureResult.recommendedLevel;
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+    <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            className="flex text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
             aria-label="Toggle insights panel"
           >
             {isCollapsed ? (
@@ -145,7 +147,7 @@ export function CrossInsightsPanel({
             <h3 role="heading" aria-level={3} className="font-semibold text-sm">
               AI Insights
             </h3>
-          </button>
+          </Button>
 
           {/* Confidence indicator */}
           {!isLoading && confidence > 0 && (
@@ -161,16 +163,15 @@ export function CrossInsightsPanel({
 
         {/* Dismiss button */}
         {onDismiss && (
-          <button
+          <Button
+            className="text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300"
             onClick={onDismiss}
-            className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
             aria-label="Dismiss insights panel"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         )}
       </div>
-
       {/* Content */}
       {!isCollapsed && (
         <div className="transition-all duration-200">
@@ -181,7 +182,7 @@ export function CrossInsightsPanel({
               data-testid="insights-loading"
             >
               <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
-              <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+              <span className="ml-2 text-sm text-neutral-500 dark:text-neutral-400">
                 Analyzing patterns...
               </span>
             </div>
@@ -189,7 +190,7 @@ export function CrossInsightsPanel({
 
           {/* Empty state */}
           {!isLoading && !hasContent && (
-            <div className="py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+            <div className="py-6 text-center text-neutral-500 dark:text-neutral-400 text-sm">
               No insights available
             </div>
           )}
@@ -256,14 +257,14 @@ export function CrossInsightsPanel({
               {/* Cross insights list */}
               {hasInsights && (
                 <div>
-                  <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                  <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-2">
                     Cross-Service Insights
                   </h4>
                   <ul role="list" className="space-y-2">
                     {crossInsights.map((insight, index) => (
                       <li
                         key={index}
-                        className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                        className="flex items-start gap-2 text-sm text-neutral-700 dark:text-neutral-300"
                       >
                         <Sparkles className="w-4 h-4 text-insight-500 flex-shrink-0 mt-0.5" />
                         <span>{insight}</span>
@@ -277,7 +278,7 @@ export function CrossInsightsPanel({
               {personaResult?.uiAdaptations &&
                 personaResult.uiAdaptations.length > 0 && (
                   <div>
-                    <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-2">
                       Recommended Adaptations
                     </h4>
                     <div className="flex flex-wrap gap-2">
@@ -301,7 +302,7 @@ export function CrossInsightsPanel({
               {disclosureResult?.unlockFeatures &&
                 disclosureResult.unlockFeatures.length > 0 && (
                   <div>
-                    <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-2">
                       Features to Unlock
                     </h4>
                     <div className="flex flex-wrap gap-2">

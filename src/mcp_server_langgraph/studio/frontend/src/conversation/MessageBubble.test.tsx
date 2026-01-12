@@ -37,6 +37,24 @@ const messageWithCode: ChatMessage = {
   timestamp: Date.parse("2024-01-01T12:02:00Z"), // 1704110520000
 };
 
+const messageWithThinking: ChatMessage = {
+  id: "msg-4",
+  role: "assistant",
+  content: "The answer is 42.",
+  timestamp: Date.parse("2024-01-01T12:03:00Z"),
+  thinkingContent:
+    "Let me think about this step by step...\n1. First consideration\n2. Second consideration",
+  thinkingTokens: 150,
+  modelName: "claude-opus-4-5-20251101",
+};
+
+const messageWithoutThinking: ChatMessage = {
+  id: "msg-5",
+  role: "assistant",
+  content: "Hello!",
+  timestamp: Date.parse("2024-01-01T12:04:00Z"),
+};
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -175,6 +193,50 @@ describe("MessageBubble", () => {
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe("Thinking Trace", () => {
+    it("should render thinking trace when message has thinkingContent", () => {
+      render(<MessageBubble message={messageWithThinking} />);
+      expect(screen.getByTestId("llm-thinking-trace")).toBeInTheDocument();
+    });
+
+    it("should not render thinking trace when message has no thinkingContent", () => {
+      render(<MessageBubble message={messageWithoutThinking} />);
+      expect(
+        screen.queryByTestId("llm-thinking-trace"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should render thinking trace collapsed by default for historical messages", () => {
+      render(<MessageBubble message={messageWithThinking} />);
+      // The thinking content should not be visible (collapsed)
+      expect(screen.queryByTestId("thinking-content")).not.toBeInTheDocument();
+    });
+
+    it("should expand thinking trace when toggle is clicked", () => {
+      render(<MessageBubble message={messageWithThinking} />);
+      const toggleButton = screen.getByLabelText(/toggle thinking/i);
+      fireEvent.click(toggleButton);
+      expect(screen.getByTestId("thinking-content")).toBeInTheDocument();
+    });
+
+    it("should display thinking tokens when provided", () => {
+      render(<MessageBubble message={messageWithThinking} />);
+      // Token count should be visible in header even when collapsed
+      expect(screen.getByText(/150 tokens/i)).toBeInTheDocument();
+    });
+
+    it("should not render thinking trace for user messages even if thinkingContent exists", () => {
+      const userMsgWithThinking: ChatMessage = {
+        ...userMessage,
+        thinkingContent: "Some thinking",
+      };
+      render(<MessageBubble message={userMsgWithThinking} />);
+      expect(
+        screen.queryByTestId("llm-thinking-trace"),
+      ).not.toBeInTheDocument();
     });
   });
 });

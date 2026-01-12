@@ -8,6 +8,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, ArrowRight, ArrowLeft, CheckCircle } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 export interface TourStep {
   target: string;
   title: string;
@@ -93,12 +95,11 @@ export function GuidedTour({
         data-testid="tour-backdrop"
         className="fixed inset-0 z-[65] bg-black/30 pointer-events-none"
       />
-
       {/* Tooltip */}
       <div
         role="tooltip"
         aria-live="polite"
-        className="fixed z-[70] max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700"
+        className="fixed z-[70] max-w-sm bg-white dark:bg-neutral-800 rounded-xl shadow-2xl border border-neutral-200 dark:border-neutral-700"
         style={{
           top: "50%",
           left: "50%",
@@ -106,22 +107,22 @@ export function GuidedTour({
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
             {currentStep.title}
           </h3>
-          <button
+          <Button
+            className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded"
             onClick={handleSkip}
             aria-label="Skip"
-            className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 rounded"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
         <div className="px-4 py-3">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
             {currentStep.content}
           </p>
         </div>
@@ -137,50 +138,52 @@ export function GuidedTour({
                   ? "bg-primary-500"
                   : index < currentStepIndex
                     ? "bg-primary-300"
-                    : "bg-gray-300 dark:bg-gray-600"
+                    : "bg-neutral-300 dark:bg-neutral-600"
               }`}
             />
           ))}
         </div>
 
         {/* Step Counter */}
-        <div className="text-center text-xs text-gray-500 dark:text-gray-400 pb-2">
+        <div className="text-center text-xs text-neutral-500 dark:text-neutral-400 pb-2">
           {currentStepIndex + 1} of {steps.length}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 rounded-b-xl">
           <div>
             {!isFirstStep && (
-              <button
+              <Button
+                className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
                 onClick={handlePrevious}
                 aria-label="Previous"
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
               >
                 <ArrowLeft className="w-3 h-3" />
                 Previous
-              </button>
+              </Button>
             )}
           </div>
           <div className="flex items-center gap-2">
             {isLastStep ? (
-              <button
+              <Button
+                variant="success"
+                className="flex px-4 py-1.5 text-sm bg-success-600 text-white rounded-lg hover:bg-success-700"
                 onClick={handleNext}
                 aria-label="Finish"
-                className="flex items-center gap-1 px-4 py-1.5 text-sm bg-success-600 text-white rounded-lg hover:bg-success-700"
               >
                 Finish
                 <CheckCircle className="w-3 h-3" />
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
+                variant="primary"
+                className="flex px-4 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                 onClick={handleNext}
                 aria-label="Next"
-                className="flex items-center gap-1 px-4 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700"
               >
                 Next
                 <ArrowRight className="w-3 h-3" />
-              </button>
+              </Button>
             )}
           </div>
         </div>

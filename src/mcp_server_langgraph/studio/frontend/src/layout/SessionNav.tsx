@@ -12,7 +12,7 @@
  * - AI-powered session intelligence (Sprint 2)
  */
 /* eslint-disable react-refresh/only-export-components -- Exports groupSessionsByDate utility alongside component */
-import { useCallback, useMemo, useState, forwardRef } from "react";
+import { useCallback, useMemo, useState, forwardRef, useRef } from "react";
 import { useNavigate, useRouteLoaderData, useParams } from "react-router";
 import {
   Plus,
@@ -34,6 +34,7 @@ import {
   type ContextMenuItem,
 } from "../components/UI/ContextMenu";
 import { Tooltip } from "../components/UI/Tooltip";
+import { Button, Input } from "../components/UI";
 
 // =============================================================================
 // Types
@@ -165,6 +166,12 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
     const navigate = useNavigate();
     const { sessionId: currentSessionId } = useParams();
     const [searchQuery, setSearchQuery] = useState("");
+    // Track which session is currently being edited (double-click to edit)
+    const [editingSessionId, setEditingSessionId] = useState<string | null>(
+      null,
+    );
+    // Ref to track click timeout for distinguishing single vs double click
+    const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Hook for creating new chat sessions
     const { createNewChat, isCreating } = useNewChat();
@@ -283,10 +290,51 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
       // Session display name
       const displayName = session.name || `Session ${session.id.slice(0, 8)}`;
 
-      // Handle session rename
+      // Handle session rename and exit edit mode
       const handleRename = (newName: string) => {
         onRenameSession?.(session.id, newName);
+        setEditingSessionId(null);
       };
+
+      // Handle cancel edit mode
+      const handleCancelEdit = () => {
+        setEditingSessionId(null);
+      };
+
+      // Handle click with debounce for distinguishing single vs double click
+      // Single-click navigates (after delay), double-click enters edit mode
+      const handleClick = () => {
+        if (enableEdit) {
+          // When editing is enabled, delay navigation to allow double-click detection
+          if (clickTimeoutRef.current) {
+            clearTimeout(clickTimeoutRef.current);
+          }
+          clickTimeoutRef.current = setTimeout(() => {
+            handleSessionClick(session);
+            clickTimeoutRef.current = null;
+          }, 200); // 200ms delay to detect double-click
+        } else {
+          // When editing is disabled, navigate immediately
+          handleSessionClick(session);
+        }
+      };
+
+      // Handle double-click to enter edit mode (when enableEdit is true)
+      const handleDoubleClick = (e: React.MouseEvent) => {
+        if (enableEdit) {
+          e.preventDefault();
+          e.stopPropagation();
+          // Cancel the pending single-click navigation
+          if (clickTimeoutRef.current) {
+            clearTimeout(clickTimeoutRef.current);
+            clickTimeoutRef.current = null;
+          }
+          setEditingSessionId(session.id);
+        }
+      };
+
+      // Check if this session is currently being edited
+      const isEditing = editingSessionId === session.id;
 
       // Get session metadata for hover tooltip
       const metadata = sessionMetadata[session.id];
@@ -295,12 +343,12 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
       // Build hover tooltip content
       const hoverContent = (
         <div className="space-y-1.5 min-w-48 max-w-64">
-          <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-400">
+          <div className="flex items-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-400">
             <Clock size={12} />
             <span>Created {formatRelativeTime(createdAt)}</span>
           </div>
           {metadata?.messageCount !== undefined && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-400">
+            <div className="flex items-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-400">
               <MessageSquare size={12} />
               <span>
                 {metadata.messageCount} message
@@ -309,7 +357,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
             </div>
           )}
           {metadata?.firstMessage && (
-            <p className="text-xs text-gray-300 italic border-t border-gray-600 pt-1.5 mt-1.5">
+            <p className="text-xs text-neutral-300 italic border-t border-neutral-600 pt-1.5 mt-1.5">
               {truncateMessage(metadata.firstMessage)}
             </p>
           )}
@@ -317,6 +365,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
       );
 
       // Standard session item with optional inline edit and context menu
+      // Single-click navigates, double-click enters edit mode (when enableEdit is true)
       const sessionContent = (
         <div
           className={cn(
@@ -324,25 +373,28 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
             "transition-colors",
             session.id === currentSessionId
               ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+              : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
           )}
         >
-          {enableEdit ? (
+          {isEditing ? (
             <InlineEdit
               value={displayName}
               onSave={handleRename}
+              onCancel={handleCancelEdit}
               placeholder="Session name"
               aria-label={`Rename session ${displayName}`}
               className="w-full"
+              startInEditMode
             />
           ) : (
-            <button
-              type="button"
-              onClick={() => handleSessionClick(session)}
+            <Button
               className="w-full text-left truncate"
+              type="button"
+              onClick={handleClick}
+              onDoubleClick={handleDoubleClick}
             >
               {displayName}
-            </button>
+            </Button>
           )}
         </div>
       );
@@ -376,14 +428,14 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
         aria-label="Session navigation"
         className={cn(
           "flex flex-col h-full",
-          "bg-gray-50 dark:bg-gray-800",
-          "border-r border-gray-200 dark:border-gray-700",
+          "bg-neutral-50 dark:bg-neutral-800",
+          "border-r border-neutral-200 dark:border-neutral-700",
           className,
         )}
       >
         {/* Header with New Chat button */}
-        <div className="p-2 border-b border-gray-200 dark:border-gray-700">
-          <button
+        <div className="p-2 border-b border-neutral-200 dark:border-neutral-700">
+          <Button
             type="button"
             data-testid="new-chat-button"
             onClick={handleNewChat}
@@ -399,19 +451,17 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
           >
             <Plus size={16} className={cn(isCreating && "animate-spin")} />
             <span>{isCreating ? "Creating..." : "New Chat"}</span>
-          </button>
+          </Button>
         </div>
-
         {/* Search */}
         <div className="p-2">
           <div className="relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
               aria-hidden="true"
             />
-            <input
-              type="text"
+            <Input
               data-testid="session-search"
               placeholder="Search sessions..."
               value={searchQuery}
@@ -419,19 +469,18 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
               aria-label="Search sessions"
               className={cn(
                 "w-full pl-9 pr-3 py-2 rounded-lg text-sm",
-                "bg-white dark:bg-gray-900",
-                "border border-gray-200 dark:border-gray-700",
+                "bg-white dark:bg-neutral-900",
+                "border border-neutral-200 dark:border-neutral-700",
                 "focus:outline-none focus:ring-2 focus:ring-primary-500",
-                "placeholder-gray-400",
+                "placeholder-neutral-400",
               )}
             />
           </div>
         </div>
-
         {/* Session list */}
         <div className="flex-1 overflow-y-auto p-2" aria-label="Sessions">
           {filteredSessions.length === 0 ? (
-            <div className="text-sm text-gray-500 dark:text-gray-400 italic text-center mt-4">
+            <div className="text-sm text-neutral-500 dark:text-neutral-400 italic text-center mt-4">
               {searchQuery ? "No matching sessions" : "No sessions yet"}
             </div>
           ) : (
@@ -443,7 +492,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
                 >
                   <h3
                     id="today-sessions-heading"
-                    className="text-xs text-gray-400 dark:text-gray-400 uppercase tracking-wider mb-2"
+                    className="text-xs text-neutral-400 dark:text-neutral-400 uppercase tracking-wider mb-2"
                   >
                     Today
                   </h3>
@@ -459,7 +508,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
                 >
                   <h3
                     id="yesterday-sessions-heading"
-                    className="text-xs text-gray-400 dark:text-gray-400 uppercase tracking-wider mb-2"
+                    className="text-xs text-neutral-400 dark:text-neutral-400 uppercase tracking-wider mb-2"
                   >
                     Yesterday
                   </h3>
@@ -475,7 +524,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
                 >
                   <h3
                     id="older-sessions-heading"
-                    className="text-xs text-gray-400 dark:text-gray-400 uppercase tracking-wider mb-2"
+                    className="text-xs text-neutral-400 dark:text-neutral-400 uppercase tracking-wider mb-2"
                   >
                     Older
                   </h3>
@@ -487,10 +536,9 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
             </>
           )}
         </div>
-
         {/* Similar Sessions Panel - shown at bottom when enabled */}
         {enableSimilarSessions && currentSessionId && (
-          <div className="border-t border-gray-200 dark:border-gray-700">
+          <div className="border-t border-neutral-200 dark:border-neutral-700">
             <SimilarSessionsPanel
               sessionId={currentSessionId}
               userId={userId}

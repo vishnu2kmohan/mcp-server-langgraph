@@ -121,6 +121,10 @@ import {
   toggleDevTools,
 } from "../store/slices/devToolsSlice";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { toast } from "sonner";
+import { useGetAvailableModelsQuery, useGetServerConfigQuery } from "../api";
+
+import { Button } from "@/components/UI";
 
 const logger = devLogger.withPrefix("[StudioShell]");
 
@@ -251,6 +255,204 @@ export function StudioShellLayout() {
   const [showAgentPanel, setShowAgentPanel] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
 
+  // Model selection state (Sprint 1 - Chat Input Gap Fix)
+  // Initialize from localStorage if available, otherwise undefined (will be set from server config)
+  const [selectedModel, setSelectedModel] = useState<string | undefined>(() => {
+    return storage.get<string>(STORAGE_KEYS.SELECTED_MODEL);
+  });
+  const [reasoningEffort, setReasoningEffort] = useState<
+    "low" | "medium" | "high"
+  >(() => {
+    const stored = storage.get<string>(STORAGE_KEYS.REASONING_EFFORT);
+    if (stored === "low" || stored === "medium" || stored === "high") {
+      return stored;
+    }
+    return "medium";
+  });
+  const [enableThinking, setEnableThinking] = useState(() => {
+    const stored = storage.get<boolean>(STORAGE_KEYS.ENABLE_THINKING);
+    return stored !== undefined ? stored : true;
+  });
+
+  // Recent models state (Sprint 1 - Enhanced Model Selector)
+  // Tracks the last 5 models used for quick access in the dropdown
+  const [recentModels, setRecentModels] = useState<string[]>(() => {
+    const stored = storage.get<string[]>(STORAGE_KEYS.RECENT_MODELS);
+    return stored ?? [];
+  });
+
+  // Fetch server config for default model (12-Factor App compliance)
+  const { data: serverConfig, isLoading: isServerConfigLoading } =
+    useGetServerConfigQuery();
+
+  // Fetch available models from API (12-Factor App - single source of truth)
+  const {
+    data: fetchedModels,
+    isLoading: isModelsLoading,
+    isError: isModelsError,
+  } = useGetAvailableModelsQuery();
+
+  // Fallback models when API fails (graceful degradation)
+  const fallbackModels = useMemo(
+    () => [
+      {
+        id: "claude-3-5-sonnet",
+        name: "Claude 3.5 Sonnet",
+        provider: "anthropic",
+        supportsThinking: true,
+      },
+      {
+        id: "gpt-4o",
+        name: "GPT-4o",
+        provider: "openai",
+        supportsThinking: false,
+      },
+      {
+        id: "gemini-2.5-flash",
+        name: "Gemini 2.5 Flash",
+        provider: "google",
+        supportsThinking: false,
+      },
+    ],
+    [],
+  );
+
+  // Use fetched models or fallback on error
+  const effectiveModels = useMemo(() => {
+    if (isModelsError || (!isModelsLoading && !fetchedModels)) {
+      return fallbackModels;
+    }
+    return fetchedModels ?? [];
+  }, [fetchedModels, isModelsLoading, isModelsError, fallbackModels]);
+
+  // Sync default model from server config when loaded
+  // Only set once - don't override user's selection
+  const hasSetDefaultModel = useRef(false);
+  useEffect(() => {
+    if (
+      !hasSetDefaultModel.current &&
+      serverConfig?.modelName &&
+      !selectedModel
+    ) {
+      setSelectedModel(serverConfig.modelName);
+      hasSetDefaultModel.current = true;
+      logger.debug(
+        "Set default model from server config:",
+        serverConfig.modelName,
+      );
+    }
+  }, [serverConfig?.modelName, selectedModel]);
+
+  // Fallback: if server config doesn't load, use first available model
+  useEffect(() => {
+    if (
+      !hasSetDefaultModel.current &&
+      !isServerConfigLoading &&
+      !serverConfig?.modelName &&
+      effectiveModels.length > 0 &&
+      !selectedModel
+    ) {
+      const firstModel = effectiveModels[0];
+      if (firstModel) {
+        setSelectedModel(firstModel.id);
+        hasSetDefaultModel.current = true;
+        logger.debug("Set default model from available models:", firstModel.id);
+      }
+    }
+  }, [
+    isServerConfigLoading,
+    serverConfig?.modelName,
+    effectiveModels,
+    selectedModel,
+  ]);
+
+  // Available models from API, transformed to expected format
+  const availableModels = useMemo(() => {
+    return effectiveModels.map((model) => ({
+      id: model.id,
+      name: model.name,
+      provider: model.provider,
+    }));
+  }, [effectiveModels]);
+
+  // Combined loading state for model-related data
+  const isModelDataLoading = isModelsLoading || isServerConfigLoading;
+
+  // Validate selected model against available models
+  // If the selected model is not in the list, fall back to first available
+  useEffect(() => {
+    // Skip validation while loading
+    if (isModelDataLoading || effectiveModels.length === 0) return;
+
+    // Skip if no model is selected yet (initial load)
+    if (!selectedModel) return;
+
+    // Check if selected model exists in available models
+    const modelExists = effectiveModels.some((m) => m.id === selectedModel);
+
+    if (!modelExists) {
+      // Selected model is invalid, fall back to first available
+      const firstModel = effectiveModels[0];
+      if (firstModel) {
+        logger.warn(
+          `Selected model "${selectedModel}" not in available models. Falling back to "${firstModel.id}"`,
+        );
+        setSelectedModel(firstModel.id);
+      }
+    }
+  }, [selectedModel, effectiveModels, isModelDataLoading]);
+
+  // Show error toast when models API fails
+  // Track previous error state to prevent duplicate toasts on re-renders
+  const prevModelsErrorRef = useRef(false);
+  useEffect(() => {
+    if (isModelsError && !prevModelsErrorRef.current) {
+      toast.error("Failed to load models. Using fallback models.");
+      logger.warn("Models API failed, using fallback models");
+    }
+    prevModelsErrorRef.current = isModelsError;
+  }, [isModelsError]);
+
+  // Persist model selection to localStorage when it changes
+  useEffect(() => {
+    if (selectedModel) {
+      storage.set(STORAGE_KEYS.SELECTED_MODEL, selectedModel);
+    }
+  }, [selectedModel]);
+
+  // Persist reasoning effort to localStorage when it changes
+  useEffect(() => {
+    storage.set(STORAGE_KEYS.REASONING_EFFORT, reasoningEffort);
+  }, [reasoningEffort]);
+
+  // Persist enable thinking to localStorage when it changes
+  useEffect(() => {
+    storage.set(STORAGE_KEYS.ENABLE_THINKING, enableThinking);
+  }, [enableThinking]);
+
+  // Update and persist recent models when selected model changes
+  // Adds selected model to front, removes duplicates, limits to 5 entries
+  useEffect(() => {
+    if (!selectedModel) return;
+
+    setRecentModels((prev) => {
+      // Remove the current model if it exists (to move it to front)
+      const filtered = prev.filter((id) => id !== selectedModel);
+      // Add current model to front and limit to 5
+      const updated = [selectedModel, ...filtered].slice(0, 5);
+      // Persist to localStorage
+      storage.set(STORAGE_KEYS.RECENT_MODELS, updated);
+      return updated;
+    });
+  }, [selectedModel]);
+
+  // Determine if selected model supports extended thinking (from API data)
+  const modelSupportsThinking = useMemo(() => {
+    if (!selectedModel) return false;
+    const model = effectiveModels.find((m) => m.id === selectedModel);
+    return model?.supportsThinking ?? false;
+  }, [effectiveModels, selectedModel]);
+
   // Panel refs for keyboard navigation (Phase 5 - useCanvasKeyboardNav integration)
   // Note: ActivityBar and SessionNav use HTMLElement (nav elements), while
   // ConnectedConversationPanel and ConnectedCanvasPanel use HTMLDivElement
@@ -281,6 +483,10 @@ export function StudioShellLayout() {
   const mobileDrawerEnabled = useFeatureFlag("mobile_drawer");
   // KB Focus feature flag (DynamicContextLoader integration)
   const kbFocusEnabled = useFeatureFlag("kb_focus");
+  // Sprint 1: Enhanced Model Selector feature flag (recent models, search, capability badges)
+  const enhancedModelSelectorEnabled = useFeatureFlag(
+    "enhanced_model_selector",
+  );
 
   // KB Status for StatusBar indicator (DynamicContextLoader integration)
   const {
@@ -845,7 +1051,7 @@ export function StudioShellLayout() {
     <CommandPaletteProvider staticCommands={PALETTE_COMMANDS}>
       <div
         data-testid="studio-shell"
-        className="studio-shell flex flex-col h-screen bg-white dark:bg-gray-900"
+        className="studio-shell flex flex-col h-screen bg-white dark:bg-neutral-900"
       >
         {/* Skip-to-content link (WCAG 2.1 AA - 2.4.1 Bypass Blocks) */}
         <a
@@ -888,10 +1094,12 @@ export function StudioShellLayout() {
 
         {/* Focus Mode Exit Button - shows when in focus mode */}
         {focusModeEnabled && (
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
+            className="fixed top-2 right-2 z-50 p-2 rounded-lg bg-neutral-800/80 hover:bg-neutral-700 text-white text-xs -opacity opacity-30 hover:opacity-100"
             data-testid="focus-mode-exit"
             onClick={() => dispatch(setFocusModeEnabled(false))}
-            className="fixed top-2 right-2 z-50 p-2 rounded-lg bg-gray-800/80 hover:bg-gray-700 text-white text-xs transition-opacity opacity-30 hover:opacity-100"
             aria-label="Exit focus mode (Escape)"
             title="Exit Focus Mode (Escape or ⌘⇧F)"
           >
@@ -908,7 +1116,7 @@ export function StudioShellLayout() {
                 d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
               />
             </svg>
-          </button>
+          </Button>
         )}
 
         {/* Main content area with DevTools */}
@@ -976,7 +1184,6 @@ export function StudioShellLayout() {
                       {!maximizedPanelId && <ResizeHandle />}
                     </>
                   )}
-
                   {/* Conversation Panel */}
                   {/* Sprint 4.1: Uses effectiveConversationVisible for maximize support */}
                   {effectiveConversationVisible && (
@@ -1002,10 +1209,31 @@ export function StudioShellLayout() {
                         currentTokens={tokenCount}
                         maxTokens={128000}
                         showContextWarning={tokenCount > 100000}
+                        // Model selection (Sprint 1 - Chat Input Gap Fix)
+                        showModelSelector
+                        selectedModel={selectedModel}
+                        availableModels={availableModels}
+                        onModelChange={setSelectedModel}
+                        isModelsLoading={isModelDataLoading}
+                        // Enhanced model selector features (gated by feature flag)
+                        recentModels={
+                          enhancedModelSelectorEnabled
+                            ? recentModels
+                            : undefined
+                        }
+                        enableModelSearch={
+                          enhancedModelSelectorEnabled &&
+                          availableModels.length > 5
+                        }
+                        // Reasoning effort
+                        modelSupportsThinking={modelSupportsThinking}
+                        reasoningEffort={reasoningEffort}
+                        onReasoningEffortChange={setReasoningEffort}
+                        enableThinking={enableThinking}
+                        onEnableThinkingChange={setEnableThinking}
                       />
                     </Panel>
                   )}
-
                   {/* Canvas Panel */}
                   {/* Sprint 4.1: Uses effectiveCanvasVisible for maximize support */}
                   {effectiveCanvasVisible && (
@@ -1038,7 +1266,7 @@ export function StudioShellLayout() {
                 <div
                   key="full-page-outlet"
                   data-testid="route-outlet"
-                  className="flex-1 h-full overflow-auto bg-white dark:bg-gray-900"
+                  className="flex-1 h-full overflow-auto bg-white dark:bg-neutral-900"
                 >
                   <Suspense
                     fallback={
@@ -1048,7 +1276,7 @@ export function StudioShellLayout() {
                       >
                         <div className="flex flex-col items-center gap-2">
                           <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                          <span className="text-sm text-neutral-500 dark:text-neutral-400">
                             Loading...
                           </span>
                         </div>
@@ -1075,8 +1303,8 @@ export function StudioShellLayout() {
               >
                 <Suspense
                   fallback={
-                    <div className="flex items-center justify-center h-full bg-white dark:bg-gray-900">
-                      <span className="text-sm text-gray-400 dark:text-gray-400">
+                    <div className="flex items-center justify-center h-full bg-white dark:bg-neutral-900">
+                      <span className="text-sm text-neutral-400 dark:text-neutral-400">
                         Loading DevTools...
                       </span>
                     </div>
@@ -1185,9 +1413,9 @@ export function StudioShellLayout() {
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => setPersonaBannerDismissed(true)}
+                  <Button
                     className="flex-shrink-0 p-1 text-insight-400 hover:text-insight-600 dark:hover:text-insight-200"
+                    onClick={() => setPersonaBannerDismissed(true)}
                     aria-label="Dismiss persona suggestion"
                   >
                     <svg
@@ -1203,7 +1431,7 @@ export function StudioShellLayout() {
                         d="M6 18L18 6M6 6l12 12"
                       />
                     </svg>
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -1271,7 +1499,7 @@ export function StudioShellLayout() {
         {/* Agent Task Queue (side panel, toggled via showAgentPanel) - gated by ai_suggestions feature flag */}
         {/* Lazy-loaded to reduce initial bundle size */}
         {aiSuggestionsEnabled && showAgentPanel && (
-          <div className="fixed top-14 right-0 bottom-8 w-80 z-30 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg">
+          <div className="fixed top-14 right-0 bottom-8 w-80 z-30 border-l border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg">
             <Suspense fallback={null}>
               <LazyAgentTaskQueue onCancel={handleAgentCancel} />
             </Suspense>

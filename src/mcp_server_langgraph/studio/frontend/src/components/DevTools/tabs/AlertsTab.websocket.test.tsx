@@ -288,7 +288,7 @@ describe("AlertsTab WebSocket Integration", () => {
 
       const statusIndicator = screen.getByTitle(/websocket: disconnected/i);
       expect(statusIndicator).toBeInTheDocument();
-      expect(statusIndicator).toHaveClass("bg-gray-400");
+      expect(statusIndicator).toHaveClass("bg-neutral-400");
     });
 
     it("should show error status", () => {

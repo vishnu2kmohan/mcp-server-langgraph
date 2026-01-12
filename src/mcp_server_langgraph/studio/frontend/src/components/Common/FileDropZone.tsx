@@ -14,6 +14,8 @@
 import { useState, useRef, useCallback, ReactNode } from "react";
 import { Upload, FileUp } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -144,7 +146,7 @@ export function FileDropZone({
         ${
           isDragging
             ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-            : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:border-gray-500 dark:hover:border-gray-500"
+            : "border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:border-neutral-500 dark:hover:border-neutral-500"
         }
         ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
         ${className}
@@ -161,49 +163,42 @@ export function FileDropZone({
         aria-hidden="true"
         disabled={disabled}
       />
-
       {/* Default content or custom children */}
       {children || (
         <>
           <div
             className={`
               mb-4 p-4 rounded-full
-              ${isDragging ? "bg-primary-100 dark:bg-primary-800" : "bg-gray-100 dark:bg-gray-700"}
+              ${isDragging ? "bg-primary-100 dark:bg-primary-800" : "bg-neutral-100 dark:bg-neutral-700"}
             `}
           >
             {isDragging ? (
               <FileUp className="w-8 h-8 text-primary-500" aria-hidden="true" />
             ) : (
               <Upload
-                className="w-8 h-8 text-gray-400 dark:text-gray-400"
+                className="w-8 h-8 text-neutral-400 dark:text-neutral-400"
                 aria-hidden="true"
               />
             )}
           </div>
 
-          <p className="text-sm text-gray-600 dark:text-gray-400 text-center mb-2">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 text-center mb-2">
             {isDragging ? "Drop files here" : "Drag and drop files here, or"}
           </p>
 
           {!isDragging && (
-            <button
+            <Button
+              className="px-4 py-2 text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 focus:underline"
               type="button"
               onClick={handleBrowseClick}
               disabled={disabled}
-              className="
-                px-4 py-2 text-sm font-medium
-                text-primary-600 dark:text-primary-400
-                hover:text-primary-700 dark:hover:text-primary-300
-                focus:outline-none focus:underline
-                disabled:opacity-50 disabled:cursor-not-allowed
-              "
             >
               Browse files
-            </button>
+            </Button>
           )}
 
           {accept && (
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
               Accepted: {accept}
             </p>
           )}

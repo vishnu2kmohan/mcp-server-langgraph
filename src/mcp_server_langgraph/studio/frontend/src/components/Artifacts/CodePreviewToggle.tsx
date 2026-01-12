@@ -7,6 +7,8 @@
 
 import { type HTMLAttributes } from "react";
 
+import { Button } from "@/components/UI";
+
 export type ViewMode = "code" | "preview";
 
 export interface CodePreviewToggleProps extends Omit<
@@ -56,13 +58,13 @@ export function CodePreviewToggle({
       role="group"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex rounded-lg border border-gray-200 dark:border-gray-700 p-0.5",
-        "bg-gray-100 dark:bg-gray-800",
+        "inline-flex rounded-lg border border-neutral-200 dark:border-neutral-700 p-0.5",
+        "bg-neutral-100 dark:bg-neutral-800",
         className,
       )}
       {...props}
     >
-      <button
+      <Button
         type="button"
         onClick={handleCodeClick}
         aria-pressed={mode === "code"}
@@ -71,12 +73,12 @@ export function CodePreviewToggle({
           "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1",
           mode === "code"
             ? "bg-primary-500 text-white shadow-sm"
-            : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200",
+            : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200",
         )}
       >
         Code
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         onClick={handlePreviewClick}
         aria-pressed={mode === "preview"}
@@ -87,12 +89,12 @@ export function CodePreviewToggle({
           "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1",
           mode === "preview"
             ? "bg-primary-500 text-white shadow-sm"
-            : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200",
+            : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200",
           !previewSupported && "opacity-50 cursor-not-allowed",
         )}
       >
         Preview
-      </button>
+      </Button>
     </div>
   );
 }

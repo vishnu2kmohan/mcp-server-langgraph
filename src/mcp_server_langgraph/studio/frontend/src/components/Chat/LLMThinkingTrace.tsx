@@ -26,6 +26,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -149,10 +151,10 @@ export function LLMThinkingTrace({
         <div className="flex items-center gap-1">
           {/* Copy Button (only when expanded) */}
           {isExpanded && (
-            <button
+            <Button
+              className="p-1 rounded hover:bg-violet-200 dark:hover:bg-violet-800 text-violet-600 dark:text-violet-400"
               onClick={handleCopy}
               aria-label="Copy thinking content"
-              className="p-1 rounded hover:bg-violet-200 dark:hover:bg-violet-800 text-violet-600 dark:text-violet-400 transition-colors"
             >
               {copied ? (
                 <span className="flex items-center gap-1 text-xs text-success-600">
@@ -162,25 +164,24 @@ export function LLMThinkingTrace({
               ) : (
                 <Copy size={14} />
               )}
-            </button>
+            </Button>
           )}
 
           {/* Toggle Button */}
-          <button
+          <Button
+            className="p-1 rounded hover:bg-violet-200 dark:hover:bg-violet-800 text-violet-600 dark:text-violet-400"
             onClick={onToggle}
             aria-label="Toggle thinking trace"
             aria-expanded={isExpanded}
-            className="p-1 rounded hover:bg-violet-200 dark:hover:bg-violet-800 text-violet-600 dark:text-violet-400 transition-colors"
           >
             {isExpanded ? (
               <ChevronUp size={16} data-testid="chevron-icon" />
             ) : (
               <ChevronDown size={16} data-testid="chevron-icon" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Content */}
       {isExpanded && (
         <div className="p-3">
@@ -193,12 +194,13 @@ export function LLMThinkingTrace({
 
           {/* Show More/Less for long content */}
           {isLongContent && (
-            <button
-              onClick={() => setShowFullContent(!showFullContent)}
+            <Button
+              size="sm"
               className="mt-2 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-200 underline"
+              onClick={() => setShowFullContent(!showFullContent)}
             >
               {showFullContent ? "Show less" : "Show more"}
-            </button>
+            </Button>
           )}
         </div>
       )}

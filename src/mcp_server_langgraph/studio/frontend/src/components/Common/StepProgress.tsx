@@ -15,6 +15,8 @@
 
 import { Check, AlertCircle } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -73,8 +75,8 @@ const SIZE_CLASSES: Record<
 const STATUS_CLASSES: Record<StepStatus, { circle: string; text: string }> = {
   pending: {
     circle:
-      "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-400",
-    text: "text-gray-500 dark:text-gray-400",
+      "bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600 text-neutral-400 dark:text-neutral-400",
+    text: "text-neutral-500 dark:text-neutral-400",
   },
   current: {
     circle:
@@ -84,7 +86,7 @@ const STATUS_CLASSES: Record<StepStatus, { circle: string; text: string }> = {
   completed: {
     circle:
       "bg-success-600 dark:bg-success-500 border-success-600 dark:border-success-500 text-white",
-    text: "text-gray-700 dark:text-gray-300",
+    text: "text-neutral-700 dark:text-neutral-300",
   },
   error: {
     circle:
@@ -190,18 +192,14 @@ export function StepProgress({
             >
               {/* Step circle */}
               {isClickable ? (
-                <button
+                <Button
+                  className="flex rounded-full border-2"
                   type="button"
                   data-testid={`step-${step.id}`}
                   data-status={status}
                   aria-current={status === "current" ? "step" : undefined}
                   aria-label={getStepAriaLabel(step, status)}
                   onClick={() => handleStepClick(index, status)}
-                  className={`flex items-center justify-center rounded-full border-2 transition-colors ${sizeClasses.circle} ${statusClasses.circle} ${
-                    isClickable
-                      ? "cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                      : ""
-                  }`}
                 >
                   {status === "completed" ? (
                     <Check
@@ -214,7 +212,7 @@ export function StepProgress({
                   ) : (
                     <span className="sr-only">{index + 1}</span>
                   )}
-                </button>
+                </Button>
               ) : (
                 <div
                   data-testid={`step-${step.id}`}
@@ -256,7 +254,7 @@ export function StepProgress({
                 </span>
                 {showDescriptions && step.description && (
                   <span
-                    className={`block mt-0.5 text-gray-500 dark:text-gray-400 ${
+                    className={`block mt-0.5 text-neutral-500 dark:text-neutral-400 ${
                       size === "sm" ? "text-xs" : "text-xs"
                     }`}
                   >
@@ -265,7 +263,6 @@ export function StepProgress({
                 )}
               </div>
             </div>
-
             {/* Connector line */}
             {!isLast && (
               <div
@@ -278,7 +275,7 @@ export function StepProgress({
                 } rounded-full transition-colors ${
                   index < currentStep
                     ? "bg-success-600 dark:bg-success-500"
-                    : "bg-gray-200 dark:bg-gray-700"
+                    : "bg-neutral-200 dark:bg-neutral-700"
                 }`}
                 aria-hidden="true"
               />

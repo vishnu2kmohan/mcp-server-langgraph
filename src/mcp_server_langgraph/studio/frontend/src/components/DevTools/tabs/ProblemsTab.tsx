@@ -22,6 +22,8 @@ import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type { ProblemsTabProps } from "../types";
 import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -62,8 +64,8 @@ function ProblemRow({ problem, onDismiss }: ProblemRowProps) {
       data-testid={`problem-${problem.id}`}
       className={cn(
         "flex items-start gap-2 px-3 py-2",
-        "border-b border-gray-100 dark:border-gray-800",
-        "hover:bg-gray-50 dark:hover:bg-gray-800/50",
+        "border-b border-neutral-100 dark:border-neutral-800",
+        "hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -75,15 +77,14 @@ function ProblemRow({ problem, onDismiss }: ProblemRowProps) {
         className={cn("mt-0.5 flex-shrink-0", severityColor)}
         aria-hidden="true"
       />
-
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-900 dark:text-gray-100 break-words">
+        <p className="text-sm text-neutral-900 dark:text-neutral-100 break-words">
           {problem.message}
         </p>
 
-        <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
-          <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
+        <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded">
             {problem.source}
           </span>
 
@@ -98,18 +99,18 @@ function ProblemRow({ problem, onDismiss }: ProblemRowProps) {
           )}
         </div>
       </div>
-
       {/* Dismiss button */}
       {isHovered && onDismiss && (
-        <button
+        <Button
+          variant="secondary"
+          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
           data-testid="dismiss-button"
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss problem"
-          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
         >
           <X size={14} />
-        </button>
+        </Button>
       )}
     </li>
   );
@@ -200,15 +201,15 @@ export function ProblemsTab({
     <div
       data-testid="problems-tab"
       className={cn(
-        "flex flex-col h-full bg-white dark:bg-gray-900",
+        "flex flex-col h-full bg-white dark:bg-neutral-900",
         compact && "compact",
       )}
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
         {/* Filter buttons */}
         <div className="flex items-center gap-1">
-          <button
+          <Button
             data-testid="filter-all"
             type="button"
             onClick={() => setFilter("all")}
@@ -216,12 +217,12 @@ export function ProblemsTab({
               "px-2 py-1 text-xs rounded",
               filter === "all"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+                : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
             )}
           >
             All
-          </button>
-          <button
+          </Button>
+          <Button
             data-testid="filter-errors"
             type="button"
             onClick={() => setFilter("errors")}
@@ -229,13 +230,13 @@ export function ProblemsTab({
               "px-2 py-1 text-xs rounded flex items-center gap-1",
               filter === "errors"
                 ? "bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-300"
-                : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+                : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
             )}
           >
             <AlertCircle size={12} />
             Errors
-          </button>
-          <button
+          </Button>
+          <Button
             data-testid="filter-warnings"
             type="button"
             onClick={() => setFilter("warnings")}
@@ -243,12 +244,12 @@ export function ProblemsTab({
               "px-2 py-1 text-xs rounded flex items-center gap-1",
               filter === "warnings"
                 ? "bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300"
-                : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+                : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
             )}
           >
             <AlertTriangle size={12} />
             Warnings
-          </button>
+          </Button>
         </div>
 
         {/* Counts */}
@@ -278,22 +279,22 @@ export function ProblemsTab({
         <div className="flex-1" />
 
         {/* Clear all */}
-        <button
+        <Button
+          variant="secondary"
+          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400 hover:text-error-500"
           data-testid="clear-all-button"
           type="button"
           onClick={clearAll}
           aria-label="Clear all problems"
-          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 hover:text-error-500"
         >
           <Trash2 size={14} />
-        </button>
+        </Button>
       </div>
-
       {/* Problems list */}
       {filteredProblems.length === 0 ? (
         <div
           data-testid="problems-empty-state"
-          className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-400"
+          className="flex-1 flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-400"
         >
           <CheckCircle size={32} className="mb-2 opacity-50 text-success-500" />
           <p>No problems detected</p>

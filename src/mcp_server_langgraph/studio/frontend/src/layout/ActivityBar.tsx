@@ -53,6 +53,8 @@ import { cn } from "../utils/cn";
 import { storage, STORAGE_KEYS } from "../utils/storage";
 import { useNavPrediction } from "../hooks/useUXIntelligence";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -427,8 +429,8 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
         aria-label="Main navigation"
         className={cn(
           "flex flex-col items-center w-14 py-2",
-          "bg-gray-100 dark:bg-gray-800",
-          "border-r border-gray-200 dark:border-gray-700",
+          "bg-neutral-100 dark:bg-neutral-800",
+          "border-r border-neutral-200 dark:border-neutral-700",
           className,
         )}
       >
@@ -446,7 +448,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
               return (
                 <div key={group.id} className="flex flex-col gap-0.5">
                   {/* Group Header (collapsible) */}
-                  <button
+                  <Button
                     type="button"
                     data-testid={`nav-group-${group.id}`}
                     aria-label={`${group.label} group`}
@@ -462,8 +464,8 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                     }}
                     className={cn(
                       "p-1.5 rounded-lg transition-all flex items-center justify-center",
-                      "text-gray-400 dark:text-gray-400",
-                      "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+                      "text-neutral-400 dark:text-neutral-400",
+                      "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
                       "focus:outline-none focus:ring-2 focus:ring-primary-500",
                     )}
                   >
@@ -472,8 +474,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                     ) : (
                       <ChevronDown size={14} />
                     )}
-                  </button>
-
+                  </Button>
                   {/* Group Items (shown when expanded) */}
                   {!isCollapsed && (
                     <div
@@ -483,7 +484,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                       {group.visibleItems.map((item) => {
                         const isPredicted = predictedItemIds.has(item.id);
                         return (
-                          <button
+                          <Button
                             key={item.id}
                             type="button"
                             data-testid={`nav-${item.id}`}
@@ -500,7 +501,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                               activeNavItem === item.id &&
                                 "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
                               activeNavItem !== item.id &&
-                                "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+                                "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
                             )}
                           >
                             {item.icon}
@@ -516,7 +517,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                                 aria-label="AI suggested"
                               />
                             )}
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>
@@ -535,7 +536,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
             {visibleNavItems.map((item) => {
               const isPredicted = predictedItemIds.has(item.id);
               return (
-                <button
+                <Button
                   key={item.id}
                   type="button"
                   data-testid={`nav-${item.id}`}
@@ -548,7 +549,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                     activeNavItem === item.id &&
                       "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
                     activeNavItem !== item.id &&
-                      "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+                      "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
                   )}
                 >
                   {item.icon}
@@ -564,22 +565,20 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                       aria-label="AI suggested"
                     />
                   )}
-                </button>
+                </Button>
               );
             })}
           </div>
         )}
-
         {/* Spacer */}
         <div className="flex-1" aria-hidden="true" />
-
         {/* Bottom icons - RBAC filtered */}
         <div
           className="flex flex-col gap-1"
           role="group"
           aria-label="Secondary navigation"
         >
-          <button
+          <Button
             type="button"
             data-testid="command-palette-button"
             aria-label="Command Palette"
@@ -587,15 +586,15 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
             onClick={handleCommandPaletteClick}
             className={cn(
               "p-2 rounded-lg transition-all",
-              "text-gray-500 dark:text-gray-400",
-              "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+              "text-neutral-500 dark:text-neutral-400",
+              "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
               "focus:outline-none focus:ring-2 focus:ring-primary-500",
             )}
           >
             <Command size={20} />
-          </button>
+          </Button>
           {visibleBottomItems.map((item) => (
-            <button
+            <Button
               key={item.id}
               type="button"
               data-testid={`nav-${item.id}`}
@@ -608,11 +607,11 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                 activeNavItem === item.id &&
                   "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
                 activeNavItem !== item.id &&
-                  "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+                  "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
               )}
             >
               {item.icon}
-            </button>
+            </Button>
           ))}
         </div>
       </nav>

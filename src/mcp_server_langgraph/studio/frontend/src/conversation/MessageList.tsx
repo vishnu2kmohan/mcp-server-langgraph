@@ -11,6 +11,8 @@ import { MarkdownContent } from "../components/Chat/MarkdownContent";
 import { ErrorBoundary } from "../components/ErrorBoundary/ErrorBoundary";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -200,11 +202,10 @@ export function MessageList({
     >
       {/* Empty state */}
       {messages.length === 0 && !isLoading && (
-        <div className="flex items-center justify-center flex-1 text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-center flex-1 text-neutral-500 dark:text-neutral-400">
           <p>No messages yet. Start a conversation!</p>
         </div>
       )}
-
       {/* Grouped messages */}
       {groupMessages && messageGroups
         ? messageGroups.map((group, groupIndex) => (
@@ -217,7 +218,6 @@ export function MessageList({
             </div>
           ))
         : messages.map((message) => renderMessage(message))}
-
       {/* Loading indicator */}
       {isLoading && (
         <div
@@ -227,48 +227,45 @@ export function MessageList({
           <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
-
       {/* Streaming indicator */}
       {isStreaming && (
         <div
           data-testid="streaming-indicator"
-          className="flex items-center gap-2 py-2 px-4 text-gray-500 dark:text-gray-400"
+          className="flex items-center gap-2 py-2 px-4 text-neutral-500 dark:text-neutral-400"
         >
           <div className="flex gap-1">
-            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" />
+            <div className="w-2 h-2 bg-neutral-400 rounded-full animate-pulse" />
             <div
-              className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"
+              className="w-2 h-2 bg-neutral-400 rounded-full animate-pulse"
               style={{ animationDelay: "150ms" }}
             />
             <div
-              className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"
+              className="w-2 h-2 bg-neutral-400 rounded-full animate-pulse"
               style={{ animationDelay: "300ms" }}
             />
           </div>
           <span className="text-sm">AI is typing...</span>
         </div>
       )}
-
       {/* Scroll anchor */}
       <div ref={endRef} />
-
       {/* Scroll to bottom button */}
       {isScrolledUp && (
-        <button
+        <Button
           data-testid="scroll-to-bottom-button"
           type="button"
           onClick={handleScrollToBottom}
           className={cn(
             "fixed bottom-24 right-8 p-2 rounded-full",
-            "bg-white dark:bg-gray-800 shadow-lg",
-            "text-gray-600 dark:text-gray-300",
-            "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+            "bg-white dark:bg-neutral-800 shadow-lg",
+            "text-neutral-600 dark:text-neutral-300",
+            "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
             "transition-all",
           )}
           aria-label="Scroll to bottom"
         >
           <ChevronDown size={20} />
-        </button>
+        </Button>
       )}
     </div>
   );

@@ -29,6 +29,8 @@ import { Card, CardTitle, CardContent } from "../UI/Card";
 import { useUpdateThinkingBudgetMutation } from "../../api";
 import type { ThinkingBudgetDefaults } from "../../types/api";
 
+import { Button, Select, Toggle } from "@/components/UI";
+
 interface ThinkingBudgetCardProps {
   data: ThinkingBudgetDefaults | null | undefined;
 }
@@ -50,7 +52,9 @@ function getComplexityIcon(complexity: string) {
     case "chaotic":
       return <AlertTriangle size={14} className="text-error-500" />;
     default:
-      return <Gauge size={14} className="text-gray-400 dark:text-gray-400" />;
+      return (
+        <Gauge size={14} className="text-neutral-400 dark:text-neutral-400" />
+      );
   }
 }
 
@@ -68,7 +72,7 @@ function getLevelColorClass(level: string): string {
     case "ultra":
       return "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-400";
     default:
-      return "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-800 dark:text-gray-400";
+      return "bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-400";
   }
 }
 
@@ -134,48 +138,53 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
                 className={`px-2 py-1 text-xs font-medium rounded-full ${
                   data.enabled
                     ? "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
                 }`}
               >
                 {data.enabled ? "Enabled" : "Disabled"}
               </span>
-              <button
+              <Button
+                variant="secondary"
+                className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800"
                 data-testid="edit-thinking-budget-button"
                 onClick={handleEdit}
-                className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 transition-colors"
                 title="Edit thinking budget configuration"
               >
                 <Pencil
                   size={16}
-                  className="text-gray-500 dark:text-gray-400"
+                  className="text-neutral-500 dark:text-neutral-400"
                 />
-              </button>
+              </Button>
             </>
           ) : (
             <>
-              <button
+              <Button
+                variant="secondary"
+                className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800"
                 data-testid="cancel-edit-button"
                 onClick={handleCancel}
                 disabled={isSaving}
-                className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
                 title="Cancel editing"
               >
-                <X size={16} className="text-gray-500 dark:text-gray-400" />
-              </button>
-              <button
+                <X
+                  size={16}
+                  className="text-neutral-500 dark:text-neutral-400"
+                />
+              </Button>
+              <Button
+                variant="primary"
+                className="p-1.5 rounded bg-primary-500 hover:bg-primary-600"
                 data-testid="save-thinking-budget-button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="p-1.5 rounded bg-primary-500 hover:bg-primary-600 transition-colors disabled:opacity-50"
                 title="Save changes"
               >
                 <Save size={16} className="text-white" />
-              </button>
+              </Button>
             </>
           )}
         </div>
       </div>
-
       <CardContent>
         {/* Edit Controls (shown when editing) */}
         {isEditing && (
@@ -185,55 +194,35 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
               <div>
                 <label
                   htmlFor="thinking-level-select"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
                 >
                   Default Level
                 </label>
-                <select
+                <Select
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100 disabled:opacity-50"
                   id="thinking-level-select"
                   data-testid="thinking-level-selector"
                   value={editLevel}
                   onChange={(e) => setEditLevel(e.target.value)}
                   disabled={isSaving}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:opacity-50"
                 >
                   {THINKING_LEVELS.map((level) => (
                     <option key={level} value={level}>
                       {level.charAt(0).toUpperCase() + level.slice(1)}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               {/* Enabled Toggle */}
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="thinking-enabled-toggle"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Enable Thinking Budget
-                </label>
-                <button
-                  id="thinking-enabled-toggle"
-                  data-testid="thinking-enabled-toggle"
-                  type="button"
-                  role="switch"
-                  aria-checked={editEnabled}
-                  onClick={() => setEditEnabled(!editEnabled)}
-                  disabled={isSaving}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                    editEnabled
-                      ? "bg-primary-600"
-                      : "bg-gray-300 dark:bg-gray-600"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      editEnabled ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
+              <Toggle
+                id="thinking-enabled-toggle"
+                data-testid="thinking-enabled-toggle"
+                checked={editEnabled}
+                onChange={setEditEnabled}
+                label="Enable Thinking Budget"
+                disabled={isSaving}
+              />
             </div>
           </div>
         )}
@@ -241,7 +230,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
         {/* Default Level (read-only view) */}
         {!isEditing && (
           <div className="mb-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">
               Default Level
             </p>
             <span
@@ -254,7 +243,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
 
         {/* Complexity Mapping */}
         <div className="mb-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
             Complexity Mapping
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -262,11 +251,11 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
               ([complexity, level]) => (
                 <div
                   key={complexity}
-                  className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded"
+                  className="flex items-center justify-between p-2 bg-neutral-50 dark:bg-neutral-800 rounded"
                 >
                   <div className="flex items-center gap-2">
                     {getComplexityIcon(complexity)}
-                    <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                    <span className="text-sm text-neutral-700 dark:text-neutral-300 capitalize">
                       {complexity}
                     </span>
                   </div>
@@ -283,14 +272,14 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
 
         {/* Thinking Levels */}
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
             Available Levels
           </p>
           <div className="space-y-2">
             {data.levels.map((levelInfo) => (
               <div
                 key={levelInfo.level}
-                className="p-2 border border-gray-200 dark:border-gray-700 rounded"
+                className="p-2 border border-neutral-200 dark:border-neutral-700 rounded"
               >
                 <div className="flex items-center justify-between mb-1">
                   <span
@@ -298,11 +287,11 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
                   >
                     {levelInfo.level}
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
                     {levelInfo.otherModelsTokens.toLocaleString()} tokens
                   </span>
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
                   {levelInfo.description}
                 </p>
               </div>

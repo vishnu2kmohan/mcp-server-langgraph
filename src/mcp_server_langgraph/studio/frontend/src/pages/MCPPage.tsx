@@ -62,6 +62,8 @@ import { useMCPWebSocket } from "../hooks/useMCPWebSocket";
 import { useMCPTaskWebSocket } from "../hooks/useMCPTaskWebSocket";
 import { Layers } from "lucide-react";
 
+import { Button, Input } from "@/components/UI";
+
 type MCPTab = "tools" | "resources" | "prompts" | "servers" | "aggregated";
 
 export function MCPPage() {
@@ -265,64 +267,69 @@ export function MCPPage() {
   );
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
               MCP Explorer
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               Browse and test Model Context Protocol capabilities
             </p>
           </div>
           <div className="flex items-center gap-4">
             {/* Add Server Button - always visible for discoverability */}
-            <button
+            <Button
+              variant="primary"
+              className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
               onClick={handleOpenAddDialog}
               disabled={isConnecting}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
               aria-label="Add MCP Server"
             >
               <Plus size={16} />
               <span className="hidden sm:inline">Add Server</span>
-            </button>
+            </Button>
 
             {/* MCP Action Buttons */}
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                variant="secondary"
+                className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-100 dark:hover:bg-neutral-700 rounded-md"
                 onClick={() => setIsToolInvocationOpen(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                 aria-label="Invoke Tool"
               >
                 <Play size={16} />
                 <span className="hidden sm:inline">Invoke Tool</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-100 dark:hover:bg-neutral-700 rounded-md"
                 onClick={() => setIsResourceViewerOpen(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                 aria-label="View Resources"
               >
                 <Eye size={16} />
                 <span className="hidden sm:inline">View Resources</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-100 dark:hover:bg-neutral-700 rounded-md"
                 onClick={() => setIsPromptTesterOpen(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                 aria-label="Test Prompt"
               >
                 <TestTube size={16} />
                 <span className="hidden sm:inline">Test Prompt</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-100 dark:hover:bg-neutral-700 rounded-md"
                 onClick={() => setIsElicitationOpen(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                 aria-label="Request Input"
               >
                 <UserCheck size={16} />
                 <span className="hidden sm:inline">Request Input</span>
-              </button>
+              </Button>
             </div>
 
             {/* Connection Status */}
@@ -332,7 +339,7 @@ export function MCPPage() {
                   isConnected ? "bg-success-500" : "bg-error-500"
                 }`}
               />
-              <span className="text-sm text-gray-600 dark:text-gray-300">
+              <span className="text-sm text-neutral-600 dark:text-neutral-300">
                 {isConnected ? "Connected" : "Disconnected"}
               </span>
             </div>
@@ -354,7 +361,7 @@ export function MCPPage() {
                   : mcpWsStatus === "connecting" ||
                       mcpWsStatus === "reconnecting"
                     ? "bg-warning-500 animate-pulse"
-                    : "bg-gray-400"
+                    : "bg-neutral-400"
               }`}
             />
 
@@ -367,7 +374,7 @@ export function MCPPage() {
                 className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${
                   hasRunningTasks
                     ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 animate-pulse"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                    : "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
                 }`}
               >
                 {mcpTasks.length}
@@ -376,19 +383,14 @@ export function MCPPage() {
           </div>
         </div>
       </header>
-
       {/* Tabs */}
-      <div className="px-6 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="px-6 py-2 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex gap-1">
           {tabs.map((tab) => (
-            <button
+            <Button
+              className="flex px-4 py-2 rounded-lg"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                activeTab === tab.id
-                  ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-              }`}
             >
               <tab.icon size={16} />
               {tab.label}
@@ -397,36 +399,33 @@ export function MCPPage() {
                   className={`px-2 py-0.5 text-xs rounded-full ${
                     activeTab === tab.id
                       ? "bg-primary-200 dark:bg-primary-800"
-                      : "bg-gray-200 dark:bg-gray-700 dark:bg-gray-600"
+                      : "bg-neutral-200 dark:bg-neutral-700 dark:bg-neutral-600"
                   }`}
                 >
                   {tab.count}
                 </span>
               )}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
-
       {/* Search - hide for servers and aggregated tabs */}
       {activeTab !== "servers" && activeTab !== "aggregated" && (
-        <div className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
           <div className="relative">
             <Search
               size={20}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
             />
-            <input
-              type="text"
+            <Input
+              className="pl-10 pr-4 py-2 text-neutral-900 dark:text-neutral-100"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={`Search ${activeTab}...`}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             />
           </div>
         </div>
       )}
-
       {/* Error */}
       {error && (
         <div
@@ -440,17 +439,16 @@ export function MCPPage() {
                 {error}
               </p>
             </div>
-            <button
-              onClick={() => dispatch(clearMCPError())}
+            <Button
               className="p-1 text-error-500 hover:text-error-700 dark:hover:text-error-300"
+              onClick={() => dispatch(clearMCPError())}
               aria-label="Dismiss"
             >
               <X size={16} />
-            </button>
+            </Button>
           </div>
         </div>
       )}
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {isConnecting ? (
@@ -463,26 +461,26 @@ export function MCPPage() {
             {activeTab === "tools" && (
               <>
                 {filteredTools.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-neutral-500 dark:text-neutral-400">
                     No tools found
                   </p>
                 ) : (
                   filteredTools.map((tool: MCPTool) => (
                     <div
                       key={tool.name}
-                      className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                      className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
                     >
-                      <button
+                      <Button
+                        className="w-full p-4 flex justify-between text-left"
                         onClick={() => toggleExpanded(tool.name)}
-                        className="w-full p-4 flex items-center justify-between text-left"
                       >
                         <div className="flex items-center gap-3">
                           <Wrench size={20} className="text-primary-500" />
                           <div>
-                            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                            <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
                               {tool.name}
                             </h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400">
                               {tool.description}
                             </p>
                           </div>
@@ -490,21 +488,21 @@ export function MCPPage() {
                         {expandedItems.has(tool.name) ? (
                           <ChevronDown
                             size={20}
-                            className="text-gray-400 dark:text-gray-400"
+                            className="text-neutral-400 dark:text-neutral-400"
                           />
                         ) : (
                           <ChevronRight
                             size={20}
-                            className="text-gray-400 dark:text-gray-400"
+                            className="text-neutral-400 dark:text-neutral-400"
                           />
                         )}
-                      </button>
+                      </Button>
                       {expandedItems.has(tool.name) && (
-                        <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 mt-2 pt-4">
-                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <div className="px-4 pb-4 border-t border-neutral-100 dark:border-neutral-700 mt-2 pt-4">
+                          <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                             Parameters
                           </h4>
-                          <pre className="text-xs bg-gray-50 dark:bg-gray-900 p-3 rounded overflow-x-auto">
+                          <pre className="text-xs bg-neutral-50 dark:bg-neutral-900 p-3 rounded overflow-x-auto">
                             {JSON.stringify(tool.inputSchema, null, 2)}
                           </pre>
                         </div>
@@ -519,7 +517,7 @@ export function MCPPage() {
             {activeTab === "resources" && (
               <>
                 {filteredResources.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-neutral-500 dark:text-neutral-400">
                     No resources found
                   </p>
                 ) : (
@@ -527,15 +525,15 @@ export function MCPPage() {
                     (resource: MCPResource, idx: number) => (
                       <div
                         key={resource.uri || idx}
-                        className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                        className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
                       >
                         <div className="flex items-center gap-3">
                           <FileText size={20} className="text-success-500" />
                           <div>
-                            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                            <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
                               {resource.name}
                             </h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400 font-mono">
                               {resource.uri}
                             </p>
                           </div>
@@ -551,22 +549,22 @@ export function MCPPage() {
             {activeTab === "prompts" && (
               <>
                 {filteredPrompts.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-neutral-500 dark:text-neutral-400">
                     No prompts found
                   </p>
                 ) : (
                   filteredPrompts.map((prompt: MCPPrompt) => (
                     <div
                       key={prompt.name}
-                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                      className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
                     >
                       <div className="flex items-center gap-3">
                         <MessageSquare size={20} className="text-insight-500" />
                         <div>
-                          <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                          <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
                             {prompt.name}
                           </h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                          <p className="text-sm text-neutral-500 dark:text-neutral-400">
                             {prompt.description}
                           </p>
                         </div>
@@ -582,34 +580,35 @@ export function MCPPage() {
               <>
                 {/* Add Server Button */}
                 <div className="mb-4">
-                  <button
+                  <Button
+                    variant="primary"
+                    className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                     onClick={handleOpenAddDialog}
                     disabled={isConnecting}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
                   >
                     <Plus size={16} />
                     Add MCP Connection
-                  </button>
+                  </Button>
                 </div>
 
                 {serverList.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-neutral-500 dark:text-neutral-400">
                     No servers configured
                   </p>
                 ) : (
                   serverList.map((server: ServerEntry) => (
                     <div
                       key={server.id}
-                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                      className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <Server
                             size={20}
-                            className="text-gray-500 dark:text-gray-400"
+                            className="text-neutral-500 dark:text-neutral-400"
                           />
                           <div>
-                            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                            <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
                               {server.id}
                               {server.id === primaryServerId && (
                                 <span className="ml-2 text-xs text-primary-600">
@@ -617,7 +616,7 @@ export function MCPPage() {
                                 </span>
                               )}
                             </h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400 font-mono">
                               {server.url}
                             </p>
                           </div>
@@ -639,12 +638,12 @@ export function MCPPage() {
                               Connecting
                             </span>
                           )}
-                          <button
+                          <Button
+                            className="p-2 text-neutral-400 dark:text-neutral-400 hover:text-error-500"
                             onClick={() => dispatch(removeServer(server.id))}
-                            className="p-2 text-gray-400 dark:text-gray-400 hover:text-error-500"
                           >
                             <X size={16} />
-                          </button>
+                          </Button>
                         </div>
                       </div>
                       {server.error && (
@@ -664,7 +663,7 @@ export function MCPPage() {
                 fallback={
                   <div className="p-8 flex items-center justify-center">
                     <Loader2 className="w-5 h-5 animate-spin text-primary-500 mr-2" />
-                    <span className="text-gray-500 dark:text-gray-400">
+                    <span className="text-neutral-500 dark:text-neutral-400">
                       Loading capabilities...
                     </span>
                   </div>
@@ -695,14 +694,13 @@ export function MCPPage() {
           </div>
         )}
       </div>
-
       {/* Add Connection Dialog */}
       <Suspense
         fallback={
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl flex items-center gap-3">
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-xl flex items-center gap-3">
               <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
-              <span className="text-gray-700 dark:text-gray-300">
+              <span className="text-neutral-700 dark:text-neutral-300">
                 Loading...
               </span>
             </div>
@@ -716,14 +714,13 @@ export function MCPPage() {
           isLoading={isCreating}
         />
       </Suspense>
-
       {/* MCP Action Dialogs - Lazy loaded for bundle optimization */}
       <Suspense
         fallback={
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl flex items-center gap-3">
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-xl flex items-center gap-3">
               <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
-              <span className="text-gray-700 dark:text-gray-300">
+              <span className="text-neutral-700 dark:text-neutral-300">
                 Loading...
               </span>
             </div>

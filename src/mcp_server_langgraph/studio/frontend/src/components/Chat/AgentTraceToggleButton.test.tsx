@@ -75,7 +75,7 @@ describe("AgentTraceToggleButton", () => {
       render(<AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />);
 
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("text-gray-400");
+      expect(button).toHaveClass("text-neutral-400");
       expect(button).not.toHaveClass("bg-primary-100");
     });
   });

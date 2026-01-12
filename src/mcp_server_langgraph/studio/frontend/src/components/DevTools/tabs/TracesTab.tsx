@@ -21,6 +21,8 @@ import { cn } from "../../../utils/cn";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 
+import { Button, Input } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -106,7 +108,7 @@ function getStatusColor(status: "ok" | "error" | "unset"): string {
     case "error":
       return "bg-error-500";
     default:
-      return "bg-gray-400";
+      return "bg-neutral-400";
   }
 }
 
@@ -149,7 +151,7 @@ function SpanRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 py-1 px-2 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 cursor-pointer border-b border-gray-100 dark:border-gray-800",
+        "flex items-center gap-2 py-1 px-2 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 cursor-pointer border-b border-neutral-100 dark:border-neutral-800",
         isSelected && "bg-primary-50 dark:bg-primary-900/20",
       )}
       onClick={onClick}
@@ -165,17 +167,17 @@ function SpanRow({
       </div>
 
       {/* Service name */}
-      <div className="text-xs text-gray-500 dark:text-gray-400 min-w-[100px] truncate">
+      <div className="text-xs text-neutral-500 dark:text-neutral-400 min-w-[100px] truncate">
         {span.serviceName || "-"}
       </div>
 
       {/* Duration */}
-      <div className="text-xs text-gray-500 dark:text-gray-400 min-w-[60px]">
+      <div className="text-xs text-neutral-500 dark:text-neutral-400 min-w-[60px]">
         {formatDuration(span.durationMs)}
       </div>
 
       {/* Timing bar with status-based coloring */}
-      <div className="flex-1 relative h-4 bg-gray-100 dark:bg-gray-800 rounded">
+      <div className="flex-1 relative h-4 bg-neutral-100 dark:bg-neutral-800 rounded">
         <div
           data-testid="span-timing-bar"
           data-status={span.status}
@@ -205,31 +207,31 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
   return (
     <div
       data-testid="span-details"
-      className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50"
+      className="border-t border-neutral-200 dark:border-neutral-700 p-4 bg-neutral-50 dark:bg-neutral-800/50"
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-medium">{span.name}</h3>
-        <button
+        <Button
+          variant="secondary"
+          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
           type="button"
           onClick={onClose}
-          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
           aria-label="Close"
         >
           <X className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
-
       <dl className="grid grid-cols-2 gap-2 text-sm">
-        <dt className="text-gray-500 dark:text-gray-400">Span ID</dt>
+        <dt className="text-neutral-500 dark:text-neutral-400">Span ID</dt>
         <dd className="font-mono text-xs">{span.spanId}</dd>
 
-        <dt className="text-gray-500 dark:text-gray-400">Service</dt>
+        <dt className="text-neutral-500 dark:text-neutral-400">Service</dt>
         <dd>{span.serviceName || "-"}</dd>
 
-        <dt className="text-gray-500 dark:text-gray-400">Duration</dt>
+        <dt className="text-neutral-500 dark:text-neutral-400">Duration</dt>
         <dd>{formatDuration(span.durationMs)}</dd>
 
-        <dt className="text-gray-500 dark:text-gray-400">Status</dt>
+        <dt className="text-neutral-500 dark:text-neutral-400">Status</dt>
         <dd className="flex items-center gap-1">
           {getStatusIcon(span.status)}
           {span.status}
@@ -237,16 +239,15 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
 
         {span.errorMessage && (
           <>
-            <dt className="text-gray-500 dark:text-gray-400">Error</dt>
+            <dt className="text-neutral-500 dark:text-neutral-400">Error</dt>
             <dd className={STATUS_TEXT_COLORS.error}>{span.errorMessage}</dd>
           </>
         )}
       </dl>
-
       {Object.keys(span.attributes).length > 0 && (
         <div className="mt-4">
           <h4 className="text-sm font-medium mb-2">Attributes</h4>
-          <pre className="text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded overflow-auto max-h-40">
+          <pre className="text-xs bg-neutral-100 dark:bg-neutral-800 p-2 rounded overflow-auto max-h-40">
             {JSON.stringify(span.attributes, null, 2)}
           </pre>
         </div>
@@ -392,7 +393,7 @@ export function TracesTab({
         data-testid="traces-tab"
         className={cn("flex items-center justify-center h-full", className)}
       >
-        <div className="text-gray-500 dark:text-gray-400">
+        <div className="text-neutral-500 dark:text-neutral-400">
           Loading traces...
         </div>
       </div>
@@ -417,56 +418,61 @@ export function TracesTab({
       className={cn("flex flex-col h-full overflow-hidden", className)}
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 p-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-2 p-2 border-b border-neutral-200 dark:border-neutral-700">
         {/* Search */}
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-400" />
-          <input
-            type="text"
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 dark:text-neutral-400" />
+          <Input
+            className="pl-8 pr-3 py-1.5 text-sm"
             placeholder="Search traces..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-sm border rounded bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
           />
         </div>
 
         {/* Service filter */}
         <div className="relative">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex px-2 py-1.5 text-sm border rounded bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700"
             type="button"
-            className="flex items-center gap-1 px-2 py-1.5 text-sm border rounded bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
             onClick={() => setShowServiceMenu(!showServiceMenu)}
             aria-label="Service"
           >
             <Filter className="h-4 w-4" />
             Service: {serviceFilter === "all" ? "All" : serviceFilter}
-          </button>
+          </Button>
           {showServiceMenu && (
-            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border rounded shadow-lg z-10 min-w-[120px]">
-              <button
+            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-neutral-800 border rounded shadow-lg z-10 min-w-[120px]">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                 type="button"
                 role="option"
-                className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                 onClick={() => {
                   setServiceFilter("all");
                   setShowServiceMenu(false);
                 }}
               >
                 All
-              </button>
+              </Button>
               {services.map((service) => (
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                   key={service}
                   type="button"
                   role="option"
-                  className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                   onClick={() => {
                     setServiceFilter(service);
                     setShowServiceMenu(false);
                   }}
                 >
                   {service}
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -474,93 +480,103 @@ export function TracesTab({
 
         {/* Status filter */}
         <div className="relative">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex px-2 py-1.5 text-sm border rounded bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700"
             type="button"
-            className="flex items-center gap-1 px-2 py-1.5 text-sm border rounded bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
             onClick={() => setShowStatusMenu(!showStatusMenu)}
             aria-label="Status"
           >
             Status: {statusFilter}
-          </button>
+          </Button>
           {showStatusMenu && (
-            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border rounded shadow-lg z-10 min-w-[100px]">
-              <button
+            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-neutral-800 border rounded shadow-lg z-10 min-w-[100px]">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                 type="button"
                 role="option"
                 aria-label="All"
-                className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                 onClick={() => {
                   setStatusFilter("all");
                   setShowStatusMenu(false);
                 }}
               >
                 All
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                 type="button"
                 role="option"
                 aria-label="ok"
-                className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                 onClick={() => {
                   setStatusFilter("ok");
                   setShowStatusMenu(false);
                 }}
               >
                 OK
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                 type="button"
                 role="option"
                 aria-label="error"
-                className="block w-full px-3 py-1 text-left text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                 onClick={() => {
                   setStatusFilter("error");
                   setShowStatusMenu(false);
                 }}
               >
                 Error
-              </button>
+              </Button>
             </div>
           )}
         </div>
 
         {/* Grafana link */}
         {grafanaUrl && (selectedTraceId ?? localSelectedTraceId) && (
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex px-2 py-1.5 text-sm border rounded bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 ml-auto"
             type="button"
-            className="flex items-center gap-1 px-2 py-1.5 text-sm border rounded bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 ml-auto"
             onClick={handleOpenGrafana}
             aria-label="View in Grafana"
           >
             <ExternalLink className="h-4 w-4" />
             View in Grafana
-          </button>
+          </Button>
         )}
       </div>
-
       {/* Main content */}
       <div className="flex-1 overflow-auto">
         {/* Trace list or waterfall */}
         {(selectedTraceId ?? localSelectedTraceId) ? (
           <div className="flex flex-col h-full">
             {/* Selected trace header */}
-            <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-              <button
+            <div className="flex items-center gap-2 p-2 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700">
+              <Button
+                variant="secondary"
+                className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
                 type="button"
-                className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
                 onClick={handleClearTrace}
                 aria-label="Back to list"
               >
                 <ChevronRight className="h-4 w-4 rotate-180" />
-              </button>
+              </Button>
               <span className="font-medium">{selectedTrace?.name}</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">
                 {selectedTrace?.traceId.slice(0, 8)}...
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">
                 {formatDuration(selectedTrace?.durationMs ?? 0)}
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">
                 {selectedTrace?.spanCount} spans
               </span>
             </div>
@@ -568,7 +584,7 @@ export function TracesTab({
             {/* Waterfall view */}
             <div data-testid="trace-waterfall" className="flex-1 overflow-auto">
               {/* Timeline header */}
-              <div className="sticky top-0 z-10 flex items-center gap-2 py-1 px-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+              <div className="sticky top-0 z-10 flex items-center gap-2 py-1 px-2 text-xs text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
                 <div className="min-w-[200px] max-w-[300px]">Span</div>
                 <div className="min-w-[100px]">Service</div>
                 <div className="min-w-[60px]">Duration</div>
@@ -600,7 +616,7 @@ export function TracesTab({
           // Trace list
           <div>
             {filteredTraces.length === 0 ? (
-              <div className="flex flex-col items-center justify-center min-h-full text-center text-gray-500 dark:text-gray-400 p-8">
+              <div className="flex flex-col items-center justify-center min-h-full text-center text-neutral-500 dark:text-neutral-400 p-8">
                 <Clock className="h-12 w-12 mb-4 opacity-50" />
                 <p>No traces found</p>
                 {searchTerm && (
@@ -616,7 +632,7 @@ export function TracesTab({
                   data-trace
                   data-status={trace.status}
                   className={cn(
-                    "flex items-center gap-4 p-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer",
+                    "flex items-center gap-4 p-3 border-b border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer",
                     trace.status === "error" &&
                       "bg-error-50 dark:bg-error-900/10",
                   )}
@@ -626,21 +642,21 @@ export function TracesTab({
 
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{trace.name}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-neutral-500 dark:text-neutral-400">
                       {trace.traceId.slice(0, 16)}...
                       {trace.serviceName && ` • ${trace.serviceName}`}
                     </div>
                   </div>
 
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-neutral-500 dark:text-neutral-400">
                     {formatDuration(trace.durationMs)}
                   </div>
 
-                  <div className="text-xs text-gray-400 dark:text-gray-400">
+                  <div className="text-xs text-neutral-400 dark:text-neutral-400">
                     {trace.spanCount} spans
                   </div>
 
-                  <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-400" />
+                  <ChevronRight className="h-4 w-4 text-neutral-400 dark:text-neutral-400" />
                 </div>
               ))
             )}

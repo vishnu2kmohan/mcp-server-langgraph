@@ -67,6 +67,8 @@ import {
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
+import { Button } from "@/components/UI";
+
 export function WorkflowsPage() {
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [showExecutionPanel, setShowExecutionPanel] = useState(false);
@@ -363,17 +365,17 @@ export function WorkflowsPage() {
 
   return (
     <ReactFlowProvider>
-      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center gap-4">
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
               {metadata?.name || "New Workflow"}
               {isDirty && <span className="text-warning-500 ml-1">*</span>}
             </h1>
 
             {isReadOnly && (
-              <span className="flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
+              <span className="flex items-center gap-1 text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded">
                 <Lock size={12} />
                 Read-Only
               </span>
@@ -395,13 +397,13 @@ export function WorkflowsPage() {
                 <span className="text-sm text-error-700 dark:text-error-400">
                   {validationError}
                 </span>
-                <button
-                  onClick={() => setValidationError(null)}
+                <Button
                   className="ml-1 p-0.5 text-error-500 hover:text-error-700"
+                  onClick={() => setValidationError(null)}
                   aria-label="Dismiss"
                 >
                   <X size={14} />
-                </button>
+                </Button>
               </div>
             )}
 
@@ -450,44 +452,47 @@ export function WorkflowsPage() {
             {showExecutionPanel &&
               (connectionStatus === "disconnected" ||
                 connectionStatus === "error") && (
-                <button
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="flex text-xs px-2 py-1 bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 rounded hover:bg-primary-200 dark:hover:bg-primary-900/50"
                   onClick={reconnect}
-                  className="flex items-center gap-1 text-xs px-2 py-1 bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 rounded hover:bg-primary-200 dark:hover:bg-primary-900/50"
                 >
                   <RefreshCw size={12} />
                   Reconnect
-                </button>
+                </Button>
               )}
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
               onClick={() => dispatch(undo())}
               disabled={!canUndo || isReadOnly}
-              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
               title="Undo (Cmd+Z)"
             >
               <Undo size={18} />
-            </button>
-            <button
+            </Button>
+            <Button
+              className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
               onClick={() => dispatch(redo())}
               disabled={!canRedo || isReadOnly}
-              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
               title="Redo (Cmd+Shift+Z)"
             >
               <Redo size={18} />
-            </button>
+            </Button>
 
-            <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />
+            <div className="w-px h-6 bg-neutral-300 dark:bg-neutral-600 mx-2" />
 
-            <button
+            <Button
+              variant="success"
+              className="flex px-3 py-1.5 text-sm bg-success-600 text-white rounded hover:bg-success-700"
               onClick={handleRun}
               disabled={
                 executionState === "running" ||
                 !validation.isValid ||
                 (isReadOnly && !canExecute)
               }
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-success-600 text-white rounded hover:bg-success-700 disabled:opacity-50"
               title="Run Workflow (Cmd+Enter)"
             >
               {executionState === "running" ? (
@@ -496,64 +501,58 @@ export function WorkflowsPage() {
                 <Play size={16} />
               )}
               Run
-            </button>
+            </Button>
 
-            <button
+            <Button
+              className="flex px-3 py-1.5 text-sm bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400 rounded hover:bg-insight-200"
               onClick={handleGenerateCode}
               disabled={isGeneratingCode}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400 rounded hover:bg-insight-200"
             >
               <Code size={16} />
               Generate Code
-            </button>
+            </Button>
 
-            <button
+            <Button
+              className="flex px-3 py-1.5 text-sm rounded"
               onClick={() => {
                 setShowSuggestions(!showSuggestions);
                 if (!showSuggestions && suggestions.length === 0) {
                   handleRefreshSuggestions();
                 }
               }}
-              className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded ${
-                showSuggestions
-                  ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700"
-              }`}
               title="AI Suggestions"
               data-testid="ai-suggestions-toggle"
             >
               <Lightbulb size={16} />
               AI Suggest
-            </button>
+            </Button>
 
             {/* History button - only shown when workflow has ID */}
             {metadata?.id && (
-              <button
+              <Button
+                className="flex px-3 py-1.5 text-sm rounded"
                 onClick={() => setShowHistoryPanel(!showHistoryPanel)}
-                className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded ${
-                  showHistoryPanel
-                    ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700"
-                }`}
                 title="Execution History"
               >
                 <History size={16} />
                 History
-              </button>
+              </Button>
             )}
 
-            <button
+            <Button
+              variant="secondary"
+              className="flex px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded hover:bg-neutral-200 dark:bg-neutral-700"
               onClick={handleExportJSON}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:bg-gray-700"
             >
               <Download size={16} />
               Export JSON
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="primary"
+              className="flex px-3 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
               onClick={handleSave}
               disabled={isSaving || !isDirty || isReadOnly}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50"
               title="Save (Cmd+S)"
             >
               {isSaving ? (
@@ -562,7 +561,7 @@ export function WorkflowsPage() {
                 <Save size={16} />
               )}
               Save
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -620,7 +619,6 @@ export function WorkflowsPage() {
           />
         )}
       </div>
-
       {/* Global OnboardingWizard handles first-time user onboarding in App.tsx */}
     </ReactFlowProvider>
   );

@@ -40,10 +40,10 @@ export function AudioArtifact({
   const preload = config?.preload ?? "metadata";
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden">
+    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg overflow-hidden">
       {title && (
-        <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className="px-4 py-2 border-b border-neutral-200 dark:border-neutral-700">
+          <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
             {title}
           </h4>
         </div>

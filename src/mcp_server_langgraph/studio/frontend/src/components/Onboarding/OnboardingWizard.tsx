@@ -35,6 +35,8 @@ import {
 } from "lucide-react";
 import { useAIOnboarding } from "../../hooks/useAIOnboarding";
 
+import { Button } from "@/components/UI";
+
 export interface WorkflowTemplate {
   id: string;
   name: string;
@@ -260,12 +262,12 @@ export function OnboardingWizard({
       aria-labelledby="wizard-title"
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="text-sm text-neutral-500 dark:text-neutral-400">
                 Step {currentStep} of {totalSteps}
               </div>
               <div
@@ -273,7 +275,7 @@ export function OnboardingWizard({
                 aria-valuenow={currentStep}
                 aria-valuemin={1}
                 aria-valuemax={totalSteps}
-                className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+                className="w-32 h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden"
               >
                 <div
                   className="h-full bg-primary-500 transition-all duration-300"
@@ -281,13 +283,14 @@ export function OnboardingWizard({
                 />
               </div>
             </div>
-            <button
+            <Button
+              variant="secondary"
+              className="p-2 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
               onClick={onSkip}
               aria-label="Skip"
-              className="p-2 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -301,30 +304,30 @@ export function OnboardingWizard({
               </div>
               <h2
                 id="wizard-title"
-                className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3"
+                className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-3"
               >
                 Welcome to Agent Studio
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-8">
+              <p className="text-neutral-600 dark:text-neutral-400 max-w-md mx-auto mb-8">
                 Build AI agents that work for you. Create powerful workflows,
                 connect to external services, and deploy intelligent assistants.
               </p>
               <div className="grid grid-cols-3 gap-4 max-w-md mx-auto text-center">
                 <div className="p-4">
                   <Bot className="w-8 h-8 mx-auto text-primary-500 mb-2" />
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     AI Agents
                   </p>
                 </div>
                 <div className="p-4">
                   <GitBranch className="w-8 h-8 mx-auto text-success-500 mb-2" />
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     Workflows
                   </p>
                 </div>
                 <div className="p-4">
                   <Server className="w-8 h-8 mx-auto text-insight-500 mb-2" />
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     Integrations
                   </p>
                 </div>
@@ -337,11 +340,11 @@ export function OnboardingWizard({
             <div>
               <h2
                 id="wizard-title"
-                className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 text-center"
+                className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2 text-center"
               >
                 How will you use Agent Studio?
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
+              <p className="text-neutral-600 dark:text-neutral-400 text-center mb-6">
                 We&apos;ll customize your experience based on your role
               </p>
 
@@ -367,30 +370,24 @@ export function OnboardingWizard({
                     confidence >= 0.7;
 
                   return (
-                    <button
+                    <Button
+                      className="w-full flex p-4 rounded-lg border-2"
                       key={option.id}
                       onClick={() => handlePersonaSelect(option.id)}
                       aria-pressed={selectedPersona === option.id}
-                      className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-all ${
-                        selectedPersona === option.id
-                          ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-                          : isAIRecommended
-                            ? "border-insight-300 dark:border-insight-700 bg-insight-50/50 dark:bg-insight-900/10"
-                            : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-600"
-                      }`}
                     >
                       <div
                         className={`p-3 rounded-lg ${
                           selectedPersona === option.id
                             ? "bg-primary-100 text-primary-600 dark:bg-primary-900/40 dark:text-primary-400"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                            : "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
                         }`}
                       >
                         {option.icon}
                       </div>
                       <div className="text-left flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
                             {option.title}
                           </h3>
                           {isAIRecommended && (
@@ -400,11 +397,11 @@ export function OnboardingWizard({
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">
                           {option.description}
                         </p>
                       </div>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -419,12 +416,12 @@ export function OnboardingWizard({
                         AI suggests skipping this step based on your experience
                       </span>
                     </div>
-                    <button
+                    <Button
+                      className="text-sm text-success-600 dark:text-success-400 hover:underline"
                       onClick={handleNext}
-                      className="text-sm font-medium text-success-600 dark:text-success-400 hover:underline"
                     >
                       Skip →
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
@@ -436,11 +433,11 @@ export function OnboardingWizard({
             <div>
               <h2
                 id="wizard-title"
-                className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 text-center"
+                className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2 text-center"
               >
                 Choose a template to get started
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
+              <p className="text-neutral-600 dark:text-neutral-400 text-center mb-6">
                 Or start from scratch with a blank workflow
               </p>
 
@@ -458,7 +455,7 @@ export function OnboardingWizard({
               )}
 
               {templates.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
                   <FileCode className="w-12 h-12 mx-auto mb-4 opacity-50" />
                   <p>No templates available</p>
                 </div>
@@ -470,30 +467,24 @@ export function OnboardingWizard({
                       confidence >= 0.7;
 
                     return (
-                      <button
+                      <Button
+                        className="flex items-start p-4 text-left rounded-lg border-2"
                         key={template.id}
                         onClick={() => handleTemplateSelect(template)}
                         aria-pressed={selectedTemplate?.id === template.id}
-                        className={`flex items-start gap-4 p-4 text-left rounded-lg border-2 transition-all ${
-                          selectedTemplate?.id === template.id
-                            ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-                            : isAIRecommended
-                              ? "border-insight-300 dark:border-insight-700 bg-insight-50/50 dark:bg-insight-900/10"
-                              : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600"
-                        }`}
                       >
                         <div
                           className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
                             selectedTemplate?.id === template.id
                               ? "bg-primary-100 text-primary-600 dark:bg-primary-900/40"
-                              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 dark:bg-gray-700"
+                              : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 dark:bg-neutral-700"
                           }`}
                         >
                           {getCategoryIcon(template.category)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                            <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
                               {template.name}
                             </h3>
                             {isAIRecommended && (
@@ -503,31 +494,27 @@ export function OnboardingWizard({
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
                             {template.description}
                           </p>
                         </div>
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
               )}
 
-              <button
+              <Button
+                className="w-full flex p-3 rounded-lg border-2"
                 onClick={handleScratchSelect}
                 aria-label="Start from scratch"
                 aria-pressed={scratchSelected}
-                className={`w-full flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
-                  scratchSelected
-                    ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-                    : "border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:border-gray-500"
-                }`}
               >
-                <FileCode className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                <span className="text-gray-700 dark:text-gray-300">
+                <FileCode className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
+                <span className="text-neutral-700 dark:text-neutral-300">
                   Start from scratch
                 </span>
-              </button>
+              </Button>
             </div>
           )}
 
@@ -536,27 +523,27 @@ export function OnboardingWizard({
             <div>
               <h2
                 id="wizard-title"
-                className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 text-center"
+                className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2 text-center"
               >
                 Quick Tour
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
+              <p className="text-neutral-600 dark:text-neutral-400 text-center mb-6">
                 Here are some key features to help you get started
               </p>
               <div className="space-y-4">
                 {tourFeatures.map((feature, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+                    className="flex items-start gap-4 p-4 bg-neutral-50 dark:bg-neutral-700/50 rounded-lg"
                   >
                     <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg text-primary-600 dark:text-primary-400">
                       {feature.icon}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                      <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
                         {feature.title}
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
                         {feature.description}
                       </p>
                     </div>
@@ -568,72 +555,70 @@ export function OnboardingWizard({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
           <div>
             {currentStep > 1 && (
-              <button
+              <Button
+                className="flex px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
                 onClick={handleBack}
                 aria-label="Back"
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
-              </button>
+              </Button>
             )}
           </div>
           <div className="flex items-center gap-3">
             {currentStep < totalSteps ? (
               <>
                 {currentStep === 1 && (
-                  <button
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="flex px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                     onClick={handleNext}
                     aria-label="Get Started"
-                    className="flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                   >
                     Get Started
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </Button>
                 )}
                 {currentStep === 2 && (
-                  <button
+                  <Button
+                    size="lg"
+                    className="flex px-6 py-2 rounded-lg"
                     onClick={handleNext}
                     disabled={!canProceedStep2}
                     aria-label="Next"
-                    className={`flex items-center gap-2 px-6 py-2 rounded-lg ${
-                      canProceedStep2
-                        ? "bg-primary-600 text-white hover:bg-primary-700"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed"
-                    }`}
                   >
                     Next
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </Button>
                 )}
                 {currentStep === 3 && (
-                  <button
+                  <Button
+                    size="lg"
+                    className="flex px-6 py-2 rounded-lg"
                     onClick={handleNext}
                     disabled={!canProceedStep3}
                     aria-label="Next"
-                    className={`flex items-center gap-2 px-6 py-2 rounded-lg ${
-                      canProceedStep3
-                        ? "bg-primary-600 text-white hover:bg-primary-700"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed"
-                    }`}
                   >
                     Next
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </Button>
                 )}
               </>
             ) : (
-              <button
+              <Button
+                variant="success"
+                size="lg"
+                className="flex px-6 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700"
                 onClick={handleComplete}
                 aria-label="Complete"
-                className="flex items-center gap-2 px-6 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700"
               >
                 Complete
                 <Sparkles className="w-4 h-4" />
-              </button>
+              </Button>
             )}
           </div>
         </div>

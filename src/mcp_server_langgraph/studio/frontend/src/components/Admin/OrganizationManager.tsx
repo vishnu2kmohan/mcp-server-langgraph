@@ -8,6 +8,8 @@ import { useState, useMemo } from "react";
 import { Plus, Edit2, Trash2, Loader2, Search } from "lucide-react";
 import { Dialog } from "../UI/Dialog";
 
+import { Button, Input } from "@/components/UI";
+
 export interface Organization {
   id: string;
   name: string;
@@ -120,33 +122,31 @@ export function OrganizationManager({
     <div className="p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
           Organizations
         </h2>
-        <button
+        <Button
+          variant="primary"
+          className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Create Organization
-        </button>
+        </Button>
       </div>
-
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-400" />
-        <input
-          type="text"
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+        <Input
+          className="pl-10 pr-4 py-2 text-neutral-900 dark:text-white focus:ring-primary-500"
           placeholder="Search organizations..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
       </div>
-
       {/* Organization List */}
       {filteredOrganizations.length === 0 ? (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+        <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
           No organizations found
         </div>
       ) : (
@@ -159,47 +159,46 @@ export function OrganizationManager({
               className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors ${
                 selectedOrgId === org.id
                   ? "bg-primary-50 dark:bg-primary-900 border-primary-300 dark:border-primary-700"
-                  : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                  : "bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700"
               }`}
             >
               <div className="flex-1">
-                <h3 className="font-medium text-gray-900 dark:text-white">
+                <h3 className="font-medium text-neutral-900 dark:text-white">
                   {org.name}
                 </h3>
-                <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-4 mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                   <span>{org.memberCount} members</span>
-                  <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">
+                  <span className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded text-xs">
                     {getTierLabel(org.tier)}
                   </span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-primary-600"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEdit(org);
                   }}
-                  className="p-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 transition-colors"
                   aria-label="Edit"
                 >
                   <Edit2 className="w-4 h-4" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-error-600"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteClick(org.id);
                   }}
-                  className="p-2 text-gray-500 dark:text-gray-400 hover:text-error-600 transition-colors"
                   aria-label="Delete"
                 >
                   <Trash2 className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             </div>
           ))}
         </div>
       )}
-
       {/* Create Modal */}
       <Dialog
         open={isCreateModalOpen}
@@ -207,38 +206,38 @@ export function OrganizationManager({
         title="Create Organization"
         footer={
           <>
-            <button
+            <Button
+              variant="secondary"
+              className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
               onClick={() => setIsCreateModalOpen(false)}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             >
               Cancel
-            </button>
-            <button
-              onClick={handleCreate}
+            </Button>
+            <Button
+              variant="primary"
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              onClick={handleCreate}
             >
               Create
-            </button>
+            </Button>
           </>
         }
       >
         <div>
           <label
             htmlFor="org-name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
           >
             Organization Name
           </label>
-          <input
+          <Input
+            className="px-3 py-2 text-neutral-900 dark:text-white focus:ring-primary-500"
             id="org-name"
-            type="text"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
       </Dialog>
-
       {/* Edit Modal */}
       <Dialog
         open={isEditModalOpen && !!editingOrg}
@@ -246,38 +245,38 @@ export function OrganizationManager({
         title="Edit Organization"
         footer={
           <>
-            <button
+            <Button
+              variant="secondary"
+              className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
               onClick={() => setIsEditModalOpen(false)}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             >
               Cancel
-            </button>
-            <button
-              onClick={handleUpdate}
+            </Button>
+            <Button
+              variant="primary"
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              onClick={handleUpdate}
             >
               Save
-            </button>
+            </Button>
           </>
         }
       >
         <div>
           <label
             htmlFor="edit-org-name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
           >
             Organization Name
           </label>
-          <input
+          <Input
+            className="px-3 py-2 text-neutral-900 dark:text-white focus:ring-primary-500"
             id="edit-org-name"
-            type="text"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
       </Dialog>
-
       {/* Delete Confirmation */}
       <Dialog
         open={isDeleteConfirmOpen}
@@ -285,22 +284,24 @@ export function OrganizationManager({
         title="Confirm Delete"
         footer={
           <>
-            <button
+            <Button
+              variant="secondary"
+              className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
               onClick={() => setIsDeleteConfirmOpen(false)}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             >
               Cancel
-            </button>
-            <button
-              onClick={handleDeleteConfirm}
+            </Button>
+            <Button
+              variant="danger"
               className="px-4 py-2 bg-error-600 text-white rounded-lg hover:bg-error-700"
+              onClick={handleDeleteConfirm}
             >
               Confirm
-            </button>
+            </Button>
           </>
         }
       >
-        <p className="text-gray-700 dark:text-gray-300">
+        <p className="text-neutral-700 dark:text-neutral-300">
           Are you sure you want to delete this organization? This action cannot
           be undone.
         </p>

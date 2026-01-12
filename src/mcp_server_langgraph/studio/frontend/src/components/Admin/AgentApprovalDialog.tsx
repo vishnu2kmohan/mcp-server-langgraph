@@ -34,6 +34,8 @@ import {
 import type { AgentApprovalRequestCamelCase } from "../../types/hitl";
 import { useRiskAssessment, useDecisionHistory } from "../../hooks";
 
+import { Button, Textarea } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -137,7 +139,7 @@ function getRiskLevelColor(level: string): string {
     case "critical":
       return "bg-error-200 text-error-900 dark:bg-error-900/50 dark:text-error-300";
     default:
-      return "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+      return "bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:bg-neutral-900/30 dark:text-neutral-400";
   }
 }
 
@@ -251,22 +253,22 @@ export function AgentApprovalDialog({
         onClick={onClose}
         aria-hidden="true"
       />
-
       {/* Dialog */}
-      <div className="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-hidden">
+      <div className="relative bg-white dark:bg-neutral-900 rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-warning-500" />
             Agent Decision Requires Approval
           </h2>
-          <button
+          <Button
+            variant="secondary"
+            className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 rounded-lg"
             data-testid="close-dialog"
             onClick={onClose}
-            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
@@ -281,7 +283,7 @@ export function AgentApprovalDialog({
           {/* Confidence Gauge */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                 Confidence
               </span>
               <div className="flex items-center gap-2">
@@ -291,7 +293,7 @@ export function AgentApprovalDialog({
                 >
                   {confidencePercent}%
                 </span>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-sm text-neutral-500 dark:text-neutral-400">
                   / Threshold:{" "}
                   <span data-testid="confidence-threshold">
                     {thresholdPercent}%
@@ -299,7 +301,7 @@ export function AgentApprovalDialog({
                 </span>
               </div>
             </div>
-            <div className="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-2 w-full bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
               <div
                 data-testid="confidence-gauge"
                 className={`h-full transition-all ${getConfidenceColor(request.confidence)}`}
@@ -346,17 +348,17 @@ export function AgentApprovalDialog({
               </summary>
               <div className="p-3 pt-0 space-y-3 text-sm">
                 {/* Why Uncertain */}
-                <p className="text-gray-700 dark:text-gray-300">
+                <p className="text-neutral-700 dark:text-neutral-300">
                   {request.aiExplanation.whyUncertain}
                 </p>
 
                 {/* What Could Go Wrong */}
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
+                  <p className="font-medium text-neutral-900 dark:text-white flex items-center gap-1">
                     <AlertTriangle className="w-3.5 h-3.5 text-warning-500" />
                     What could go wrong:
                   </p>
-                  <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-neutral-600 dark:text-neutral-400 mt-1">
                     {request.aiExplanation.whatCouldGoWrong}
                   </p>
                 </div>
@@ -365,7 +367,7 @@ export function AgentApprovalDialog({
                 {request.aiExplanation.saferAlternatives &&
                   request.aiExplanation.saferAlternatives.length > 0 && (
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
+                      <p className="font-medium text-neutral-900 dark:text-white flex items-center gap-1">
                         <Lightbulb className="w-3.5 h-3.5 text-success-500" />
                         Safer alternatives:
                       </p>
@@ -374,15 +376,15 @@ export function AgentApprovalDialog({
                           (alt, index) => (
                             <li
                               key={index}
-                              className="text-gray-600 dark:text-gray-400 pl-4 border-l-2 border-success-300 dark:border-success-700"
+                              className="text-neutral-600 dark:text-neutral-400 pl-4 border-l-2 border-success-300 dark:border-success-700"
                             >
-                              <span className="font-medium text-gray-800 dark:text-gray-200">
+                              <span className="font-medium text-neutral-800 dark:text-neutral-200">
                                 {alt.action}
                               </span>
                               <span className="text-success-600 dark:text-success-400 ml-1">
                                 ({Math.round(alt.confidence * 100)}%)
                               </span>
-                              <span className="text-gray-500 dark:text-gray-400 block text-xs">
+                              <span className="text-neutral-500 dark:text-neutral-400 block text-xs">
                                 Trade-off: {alt.tradeOff}
                               </span>
                             </li>
@@ -396,7 +398,7 @@ export function AgentApprovalDialog({
                 {request.aiExplanation.confidenceFactors &&
                   request.aiExplanation.confidenceFactors.length > 0 && (
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
+                      <p className="font-medium text-neutral-900 dark:text-white flex items-center gap-1">
                         <TrendingDown className="w-3.5 h-3.5 text-error-500" />
                         Confidence factors:
                       </p>
@@ -405,7 +407,7 @@ export function AgentApprovalDialog({
                           (factor, index) => (
                             <li
                               key={index}
-                              className="text-gray-600 dark:text-gray-400 text-xs"
+                              className="text-neutral-600 dark:text-neutral-400 text-xs"
                             >
                               <span
                                 className={`font-mono ${
@@ -618,23 +620,23 @@ export function AgentApprovalDialog({
           )}
 
           {/* Agent Info */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-3">
+          <div className="bg-neutral-50 dark:bg-neutral-800/50 rounded-lg p-4 space-y-3">
             <div className="flex items-center gap-2">
               <span
                 data-testid="agent-name"
-                className="font-medium text-gray-900 dark:text-white"
+                className="font-medium text-neutral-900 dark:text-white"
               >
                 Agent: {request.agentName}
               </span>
             </div>
 
             <div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-neutral-500 dark:text-neutral-400">
                 Proposed Action:
               </span>
               <p
                 data-testid="proposed-action"
-                className="text-sm text-gray-900 dark:text-white mt-1 p-2 bg-gray-100 dark:bg-gray-700 rounded"
+                className="text-sm text-neutral-900 dark:text-white mt-1 p-2 bg-neutral-100 dark:bg-neutral-700 rounded"
               >
                 {request.proposedAction}
               </p>
@@ -647,7 +649,7 @@ export function AgentApprovalDialog({
             request.context.artifacts) && (
             <div className="space-y-2 text-sm">
               {request.context.tokensUsed && (
-                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
                   <FileText className="w-4 h-4" />
                   <span>
                     Tokens used: {formatNumber(request.context.tokensUsed)}
@@ -655,7 +657,7 @@ export function AgentApprovalDialog({
                 </div>
               )}
               {request.context.timeElapsedSeconds && (
-                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
                   <Clock className="w-4 h-4" />
                   <span>
                     Time elapsed: {request.context.timeElapsedSeconds}s
@@ -664,14 +666,14 @@ export function AgentApprovalDialog({
               )}
               {request.context.artifacts &&
                 request.context.artifacts.length > 0 && (
-                  <div className="flex items-start gap-2 text-gray-600 dark:text-gray-400">
+                  <div className="flex items-start gap-2 text-neutral-600 dark:text-neutral-400">
                     <FileText className="w-4 h-4 mt-0.5" />
                     <div>
                       <span>Artifacts: </span>
                       {request.context.artifacts.map((artifact) => (
                         <span
                           key={artifact}
-                          className="inline-block bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-xs mr-1"
+                          className="inline-block bg-neutral-100 dark:bg-neutral-700 px-1.5 py-0.5 rounded text-xs mr-1"
                         >
                           {artifact}
                         </span>
@@ -686,32 +688,33 @@ export function AgentApprovalDialog({
           <div>
             <label
               htmlFor="reason-input"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
               Reason{" "}
-              <span className="text-gray-500 dark:text-gray-400">
+              <span className="text-neutral-500 dark:text-neutral-400">
                 (optional)
               </span>
             </label>
-            <textarea
+            <Textarea
+              className="px-3 py-2 text-sm text-neutral-900 dark:text-white placeholder-neutral-400 focus:ring-primary-500"
               id="reason-input"
               data-testid="approval-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Enter a reason for your decision..."
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-          <button
+        <div className="flex items-center justify-end gap-3 p-4 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
+          <Button
+            variant="danger"
+            className="flex px-4 py-2 text-sm text-error-700 dark:text-error-400 bg-error-100 dark:bg-error-900/30 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50"
             data-testid="reject-button"
             onClick={handleReject}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-error-700 dark:text-error-400 bg-error-100 dark:bg-error-900/30 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isRejecting ? (
               <Loader2
@@ -722,12 +725,13 @@ export function AgentApprovalDialog({
               <XCircle className="w-4 h-4" />
             )}
             Reject
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="success"
+            className="flex px-4 py-2 text-sm text-white bg-success-600 rounded-lg hover:bg-success-700"
             data-testid="approve-button"
             onClick={handleApprove}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-success-600 rounded-lg hover:bg-success-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isApproving ? (
               <Loader2
@@ -738,7 +742,7 @@ export function AgentApprovalDialog({
               <CheckCircle className="w-4 h-4" />
             )}
             Approve
-          </button>
+          </Button>
         </div>
       </div>
     </div>

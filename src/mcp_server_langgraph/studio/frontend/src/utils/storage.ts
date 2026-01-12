@@ -92,6 +92,12 @@ export const STORAGE_KEYS = {
 
   // ActivityBar State (Sprint 4.2)
   ACTIVITY_BAR_COLLAPSED_GROUPS: "activity-bar-collapsed-groups",
+
+  // Model Selection (Sprint 1 - Chat Input Gap Fix)
+  SELECTED_MODEL: "studio-selected-model",
+  REASONING_EFFORT: "studio-reasoning-effort",
+  ENABLE_THINKING: "studio-enable-thinking",
+  RECENT_MODELS: "studio-recent-models",
 } as const;
 
 // Type for storage keys

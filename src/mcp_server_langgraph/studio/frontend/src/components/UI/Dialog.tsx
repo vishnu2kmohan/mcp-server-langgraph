@@ -5,16 +5,51 @@
  * - Accessible modal behavior (role, aria attributes)
  * - Backdrop click to close
  * - Escape key to close
- * - Customizable sizes
+ * - Customizable sizes via CVA
  * - Optional footer section
+ *
+ * Uses CVA (class-variance-authority) for type-safe variant management.
  */
 
-import { useEffect, ReactNode } from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { useEffect, type ReactNode } from "react";
 import { X } from "lucide-react";
+import { cn } from "../../utils/cn";
 
-export type DialogSize = "sm" | "md" | "lg" | "xl";
+import { Button } from "@/components/UI";
 
-export interface DialogProps {
+/**
+ * Dialog variant styles using CVA
+ * Exported for use in compound components or style composition
+ */
+export const dialogVariants = cva(
+  // Base styles
+  [
+    "relative bg-white dark:bg-neutral-800 rounded-lg shadow-xl",
+    "w-full mx-4 max-h-[90vh] overflow-y-auto",
+  ],
+  {
+    variants: {
+      size: {
+        sm: "max-w-sm",
+        md: "max-w-md",
+        lg: "max-w-lg",
+        xl: "max-w-xl",
+        "2xl": "max-w-2xl",
+        full: "max-w-full",
+      },
+    },
+    defaultVariants: {
+      size: "md",
+    },
+  },
+);
+
+export type DialogSize = NonNullable<
+  VariantProps<typeof dialogVariants>["size"]
+>;
+
+export interface DialogProps extends VariantProps<typeof dialogVariants> {
   /** Whether the dialog is open */
   open: boolean;
   /** Callback when dialog should close */
@@ -25,27 +60,21 @@ export interface DialogProps {
   children: ReactNode;
   /** Optional footer content */
   footer?: ReactNode;
-  /** Dialog size (default: md) */
-  size?: DialogSize;
   /** Additional classes for content area */
   contentClassName?: string;
 }
 
-const sizeClasses: Record<DialogSize, string> = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-lg",
-  xl: "max-w-xl",
-};
-
+/**
+ * Dialog component with consistent styling
+ */
 export function Dialog({
   open,
   onClose,
   title,
   children,
   footer,
-  size = "md",
-  contentClassName = "",
+  size,
+  contentClassName,
 }: DialogProps) {
   // Handle Escape key
   useEffect(() => {
@@ -78,30 +107,35 @@ export function Dialog({
         className="absolute inset-0 bg-black/50"
         onClick={onClose}
       />
-
       {/* Dialog Panel */}
-      <div
-        className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full ${sizeClasses[size]} mx-4 max-h-[90vh] overflow-y-auto`}
-      >
+      <div className={cn(dialogVariants({ size }))}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
           <h2
             id="dialog-title"
-            className="text-lg font-semibold text-gray-900 dark:text-gray-100"
+            className="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
           >
             {title}
           </h2>
-          <button
+          <Button
             onClick={onClose}
             aria-label="Close"
-            className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
+            className={cn(
+              "p-1 rounded-full",
+              "text-neutral-500 dark:text-neutral-400",
+              "hover:text-neutral-700 dark:hover:text-neutral-200",
+              "hover:bg-neutral-100 dark:hover:bg-neutral-700",
+            )}
           >
             <X size={20} />
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
-        <div data-testid="dialog-content" className={`p-4 ${contentClassName}`}>
+        <div
+          data-testid="dialog-content"
+          className={cn("p-4", contentClassName)}
+        >
           {children}
         </div>
 
@@ -109,7 +143,7 @@ export function Dialog({
         {footer && (
           <div
             data-testid="dialog-footer"
-            className="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700"
+            className="flex justify-end gap-2 p-4 border-t border-neutral-200 dark:border-neutral-700"
           >
             {footer}
           </div>

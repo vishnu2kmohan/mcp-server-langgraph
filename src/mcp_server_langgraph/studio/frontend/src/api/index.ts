@@ -66,6 +66,7 @@ import type {
   ProjectListParams,
   CostHistoryParams,
   CostHistoryPoint,
+  CostQueryParams,
   VectorCollection,
   VectorSearchRequest,
   VectorSearchResult,
@@ -130,6 +131,13 @@ import type {
   // Message Rating
   MessageRatingRequest,
   MessageRatingResponse,
+  // Hallucination Reporting
+  HallucinationReportRequest,
+  HallucinationReportResponse,
+  // Feedback Summary (Admin Dashboard)
+  FeedbackSummaryResponse,
+  FeedbackSummaryResponseCamelCase,
+  FeedbackSummaryParams,
   // Admin User Management
   AdminUser,
   AdminUserCamelCase,
@@ -187,6 +195,10 @@ import type {
   McpGetPromptResponse,
   McpTaskListResponse,
   McpTask,
+  // Studio Analyze
+  StudioAnalyzeRequest,
+  StudioAnalyzeResponse,
+  StudioAnalyzeResponseCamelCase,
   // Organizational Cost Attribution
   OrganizationCostResponse,
   OrganizationCostResponseCamelCase,
@@ -301,10 +313,8 @@ type BatchCompositeRequest = components["schemas"]["BatchCompositeRequest"];
 /** Response type for POST /api/v1/ai/composite/batch */
 type BatchCompositeResponse = components["schemas"]["BatchCompositeResponse"];
 
-/** Request type for POST /api/v1/studio/analyze */
-type StudioAnalyzeRequest = components["schemas"]["StudioAnalyzeRequest"];
-/** Response type for POST /api/v1/studio/analyze */
-type StudioAnalyzeResponse = components["schemas"]["StudioAnalyzeResponse"];
+// StudioAnalyzeRequest and StudioAnalyzeResponse imported from types/api.ts
+// (ADR-0091 Phase 9: Centralized type definitions)
 
 // =============================================================================
 // Auth Generated Types (ADR-0091: Use generated types at API boundary)
@@ -389,6 +399,7 @@ export type {
   ProjectListParams,
   CostHistoryParams,
   CostHistoryPoint,
+  CostQueryParams,
   VectorCollection,
   VectorSearchRequest,
   VectorSearchResult,
@@ -513,6 +524,7 @@ export const api = createApi({
     "AdminUser",
     "Execution",
     "NotificationPreferences",
+    "FeedbackSummary",
     "Survey",
     "Analytics",
     "ComplianceReport",
@@ -553,6 +565,48 @@ export const api = createApi({
       transformResponse: (response: ServerConfig) =>
         transformSnakeToCamel(response),
       // Keep cached for 30 minutes - server config rarely changes at runtime
+      keepUnusedDataFor: 1800,
+    }),
+
+    // Available Models (12-Factor App - model selection)
+    // Fetches list of available LLM models from the backend.
+    // Single source of truth for model options in the frontend.
+    // Includes capability fields: supportsThinking, supportsVision, supportsTools
+    // Includes lifecycle status: current, preview, legacy, deprecated
+    getAvailableModels: builder.query<
+      Array<{
+        id: string;
+        name: string;
+        provider: string;
+        supportsThinking: boolean;
+        supportsVision?: boolean;
+        supportsTools?: boolean;
+        status?: "current" | "preview" | "legacy" | "deprecated";
+      }>,
+      void
+    >({
+      query: () => "/config/models",
+      transformResponse: (
+        response: Array<{
+          id: string;
+          name: string;
+          provider: string;
+          supports_thinking: boolean;
+          supports_vision?: boolean;
+          supports_tools?: boolean;
+          status?: "current" | "preview" | "legacy" | "deprecated";
+        }>,
+      ) =>
+        response.map((model) => ({
+          id: model.id,
+          name: model.name,
+          provider: model.provider,
+          supportsThinking: model.supports_thinking,
+          supportsVision: model.supports_vision,
+          supportsTools: model.supports_tools,
+          status: model.status,
+        })),
+      // Keep cached for 30 minutes - model list rarely changes at runtime
       keepUnusedDataFor: 1800,
     }),
 
@@ -905,9 +959,13 @@ export const api = createApi({
     }),
 
     // Cost
-    getCostSummary: builder.query<CostSummaryCamelCase, { period?: string }>({
-      query: ({ period = "30d" }) => {
-        const { start_date, end_date } = periodToDateRange(period);
+    getCostSummary: builder.query<CostSummaryCamelCase, CostQueryParams>({
+      query: ({ period = "30d", startDate, endDate }) => {
+        // Custom date range takes precedence over period
+        const { start_date, end_date } =
+          startDate && endDate
+            ? { start_date: startDate, end_date: endDate }
+            : periodToDateRange(period);
         return {
           url: "/cost/summary",
           params: filterParams({ start_date, end_date }),
@@ -918,12 +976,13 @@ export const api = createApi({
       providesTags: ["Cost"],
     }),
 
-    getCostByModel: builder.query<
-      ModelCostDataCamelCase[],
-      { period?: string }
-    >({
-      query: ({ period = "30d" }) => {
-        const { start_date, end_date } = periodToDateRange(period);
+    getCostByModel: builder.query<ModelCostDataCamelCase[], CostQueryParams>({
+      query: ({ period = "30d", startDate, endDate }) => {
+        // Custom date range takes precedence over period
+        const { start_date, end_date } =
+          startDate && endDate
+            ? { start_date: startDate, end_date: endDate }
+            : periodToDateRange(period);
         return {
           url: "/cost/by-model",
           params: filterParams({ start_date, end_date }),
@@ -1283,9 +1342,13 @@ export const api = createApi({
     }),
 
     // Cost History - returns array of daily cost data
-    getCostHistory: builder.query<CostHistoryPoint[], { period?: string }>({
-      query: ({ period = "30d" }) => {
-        const { start_date, end_date } = periodToDateRange(period);
+    getCostHistory: builder.query<CostHistoryPoint[], CostQueryParams>({
+      query: ({ period = "30d", startDate, endDate }) => {
+        // Custom date range takes precedence over period
+        const { start_date, end_date } =
+          startDate && endDate
+            ? { start_date: startDate, end_date: endDate }
+            : periodToDateRange(period);
         return {
           url: "/cost/history",
           params: filterParams({ start_date, end_date }),
@@ -2047,6 +2110,7 @@ export const api = createApi({
     }),
 
     // Message Rating (Thumbs Up/Down) - persisted to PostgreSQL
+    // Note: Frontend uses "up"/"down" for UX, backend expects "positive"/"negative"
     submitMessageRating: builder.mutation<
       MessageRatingResponse,
       MessageRatingRequest
@@ -2055,13 +2119,64 @@ export const api = createApi({
         url: `/sessions/${body.session_id}/messages/${body.message_id}/rating`,
         method: "POST",
         body: {
-          rating: body.rating,
+          // Transform frontend "up"/"down" to backend "positive"/"negative"
+          rating: body.rating === "up" ? "positive" : "negative",
           feedback: body.feedback,
         },
+      }),
+      // Transform backend "positive"/"negative" back to frontend "up"/"down"
+      transformResponse: (response: {
+        id: string;
+        rating: string;
+        message_id: string;
+        feedback?: string;
+      }): MessageRatingResponse => ({
+        success: true,
+        rating_id: response.id,
+        message_id: response.message_id,
+        rating: response.rating === "positive" ? "up" : "down",
       }),
       invalidatesTags: (_result, _error, { session_id }) => [
         { type: "Session", id: session_id },
       ],
+    }),
+
+    // Hallucination Reporting - POST /api/v1/feedback/hallucination
+    submitHallucinationReport: builder.mutation<
+      HallucinationReportResponse,
+      HallucinationReportRequest
+    >({
+      query: (body) => ({
+        url: "/feedback/hallucination",
+        method: "POST",
+        body,
+      }),
+      // Invalidate session to reflect reported status and refresh admin dashboard metrics
+      invalidatesTags: (_result, _error, { session_id }) => [
+        { type: "Session", id: session_id },
+        "FeedbackSummary",
+      ],
+    }),
+
+    /**
+     * Get feedback summary (Admin Dashboard)
+     * Aggregates message ratings and hallucination reports.
+     */
+    getFeedbackSummary: builder.query<
+      FeedbackSummaryResponseCamelCase,
+      FeedbackSummaryParams | void
+    >({
+      query: (params) => ({
+        url: "/feedback/summary",
+        params: params
+          ? { timeframe: params.timeframe ?? "7d" }
+          : { timeframe: "7d" },
+      }),
+      transformResponse: (response: FeedbackSummaryResponse) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as FeedbackSummaryResponseCamelCase,
+      providesTags: ["FeedbackSummary"],
     }),
 
     // Notification Preferences
@@ -3411,35 +3526,21 @@ export const api = createApi({
      * Supports all 8 task categories: UX, SESSION, CONVERSATION, CANVAS,
      * DIAGRAM, TRACE, HITL, COMMAND.
      *
-     * NOTE: Inline types retained - generated types differ from frontend hook contract.
-     * See ADR-0091 Phase 9 for alignment plan.
+     * ADR-0091 Phase 9: Uses typed request/response with snake<>camel transformation.
      */
     studioAnalyze: builder.mutation<
-      {
-        user_id: string;
-        session_id: string;
-        analyses: Record<string, unknown>;
-        cross_insights: string[];
-        failed_analyses: string[];
-        total_cost: string;
-      },
-      {
-        user_id: string;
-        session_id: string;
-        persona?: string;
-        tasks: Array<{
-          category: string;
-          type: string;
-          data?: Record<string, unknown>;
-        }>;
-        context?: Record<string, unknown>;
-      }
+      StudioAnalyzeResponseCamelCase,
+      StudioAnalyzeRequest
     >({
       query: (body) => ({
         url: "/studio/analyze",
         method: "POST",
         body,
       }),
+      transformResponse: (response: StudioAnalyzeResponse) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as StudioAnalyzeResponseCamelCase,
     }),
 
     // =========================================================================
@@ -3723,6 +3824,8 @@ export const {
   useGetFeatureFlagsQuery,
   // Server Configuration (12-Factor App)
   useGetServerConfigQuery,
+  // Available Models (12-Factor App)
+  useGetAvailableModelsQuery,
   // Workflows
   useListWorkflowsQuery,
   useGetWorkflowQuery,
@@ -3858,6 +3961,10 @@ export const {
   useSubmitFeedbackMutation,
   // Message Rating
   useSubmitMessageRatingMutation,
+  // Hallucination Reporting
+  useSubmitHallucinationReportMutation,
+  // Feedback Summary (Admin Dashboard)
+  useGetFeedbackSummaryQuery,
   // Notification Preferences
   useGetNotificationPreferencesQuery,
   useUpdateNotificationPreferencesMutation,

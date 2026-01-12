@@ -21,6 +21,11 @@ import type {
   WidgetChartData,
   WidgetTableData,
   WidgetTextData,
+  VegaLiteArtifact,
+  VegaLiteSpec,
+  LaTeXArtifact,
+  TableArtifact,
+  TableColumn,
 } from "../types/artifacts";
 
 // ============================================================================
@@ -47,27 +52,24 @@ interface ChartConfig {
   config?: Record<string, unknown>;
 }
 
-// Extended artifact type to include mdx
+// Extended artifact type to include mdx (latex is now in ArtifactType)
 type ExtendedArtifactType = ArtifactType | "mdx";
 
 // ============================================================================
 // Language to Artifact Type Mapping
 // ============================================================================
 
-const CHART_LANGUAGES = new Set([
-  "chart",
-  "recharts",
-  "vega-lite",
-  "vega",
-  "echarts",
-]);
+const CHART_LANGUAGES = new Set(["chart", "recharts", "echarts"]);
+const VEGA_LITE_LANGUAGES = new Set(["vega-lite", "vega", "altair"]);
 const MERMAID_LANGUAGES = new Set(["mermaid"]);
 const TABLE_LANGUAGES = new Set(["table", "csv", "tsv"]);
 const JSON_LANGUAGES = new Set(["json", "jsonc"]);
 const SVG_LANGUAGES = new Set(["svg"]);
+const HTML_LANGUAGES = new Set(["html"]);
 const MDX_LANGUAGES = new Set(["mdx"]);
 const EXECUTABLE_LANGUAGES = new Set(["jsx", "tsx"]);
 const WIDGET_LANGUAGES = new Set(["widget"]);
+const LATEX_LANGUAGES = new Set(["latex", "tex", "math"]);
 
 const CODE_LANGUAGES = new Set([
   "javascript",
@@ -95,7 +97,6 @@ const CODE_LANGUAGES = new Set([
   "powershell",
   "yaml",
   "toml",
-  "html",
   "css",
   "scss",
   "less",
@@ -371,10 +372,10 @@ export function extractCodeBlocks(content: string): CodeBlock[] {
 
   // Match fenced code blocks: ```language meta\n...\n```
   // The regex captures:
-  // 1. Optional language (word characters)
+  // 1. Optional language (word characters and hyphens, e.g., vega-lite)
   // 2. Optional meta (rest of the first line)
   // 3. Code content (everything until closing ```)
-  const codeBlockRegex = /```(\w*)([^\n]*)\n([\s\S]*?)```/g;
+  const codeBlockRegex = /```([\w-]*)([^\n]*)\n([\s\S]*?)```/g;
 
   let match: RegExpExecArray | null;
   while ((match = codeBlockRegex.exec(content)) !== null) {
@@ -403,18 +404,164 @@ export function detectArtifactType(language: string): ExtendedArtifactType {
   const lang = language.toLowerCase();
 
   if (!lang) return "text";
+  if (VEGA_LITE_LANGUAGES.has(lang)) return "vega-lite";
   if (CHART_LANGUAGES.has(lang)) return "chart";
   if (MERMAID_LANGUAGES.has(lang)) return "mermaid";
   if (TABLE_LANGUAGES.has(lang)) return "table";
   if (JSON_LANGUAGES.has(lang)) return "json";
   if (SVG_LANGUAGES.has(lang)) return "svg";
+  if (HTML_LANGUAGES.has(lang)) return "html";
   if (MDX_LANGUAGES.has(lang)) return "mdx";
   if (EXECUTABLE_LANGUAGES.has(lang)) return "executable";
   if (WIDGET_LANGUAGES.has(lang)) return "widget";
+  if (LATEX_LANGUAGES.has(lang)) return "latex";
   if (CODE_LANGUAGES.has(lang)) return "code";
 
   // Default to code for unknown languages
   return "code";
+}
+
+// ============================================================================
+// Bokeh and DataFrame Detection (for code execution results)
+// ============================================================================
+
+/**
+ * Detect if HTML content is from Bokeh visualization library.
+ * Bokeh generates HTML with specific patterns:
+ * - References to bokeh CDN scripts
+ * - Bokeh.embed function calls
+ * - bk-root CSS class for plot containers
+ */
+export function detectBokehHTML(html: string): boolean {
+  if (!html || typeof html !== "string") {
+    return false;
+  }
+
+  // Check for Bokeh CDN script references
+  if (html.includes("cdn.bokeh.org/bokeh")) {
+    return true;
+  }
+
+  // Check for Bokeh.embed function calls
+  if (
+    html.includes("Bokeh.embed.embed_item") ||
+    html.includes("Bokeh.embed.embed_document")
+  ) {
+    return true;
+  }
+
+  // Check for bk-root class (Bokeh plot container)
+  if (/class=["'][^"']*bk-root[^"']*["']/.test(html)) {
+    return true;
+  }
+
+  // Check for Bokeh JSON data structure
+  if (html.includes('"roots"') && html.includes('"root_ids"')) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Detect if data looks like a DataFrame output (Polars/Pandas to_dicts()).
+ * DataFrame output is an array of objects with consistent keys.
+ */
+export function detectDataFrameOutput(data: unknown): boolean {
+  // Must be an array
+  if (!Array.isArray(data)) {
+    return false;
+  }
+
+  // Must not be empty
+  if (data.length === 0) {
+    return false;
+  }
+
+  // First element must be an object
+  const first = data[0];
+  if (typeof first !== "object" || first === null || Array.isArray(first)) {
+    return false;
+  }
+
+  // Get keys from first element
+  const keys = Object.keys(first);
+  if (keys.length === 0) {
+    return false;
+  }
+
+  // All elements must be objects with the same keys
+  for (let i = 1; i < data.length; i++) {
+    const item = data[i];
+    if (typeof item !== "object" || item === null || Array.isArray(item)) {
+      return false;
+    }
+    const itemKeys = Object.keys(item);
+    if (itemKeys.length !== keys.length) {
+      return false;
+    }
+    // Check if all keys match
+    for (const key of keys) {
+      if (!(key in item)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Convert DataFrame-like data to TableArtifact format.
+ * Used for rendering Polars/Pandas DataFrame output.
+ */
+export function dataFrameToTableArtifact(
+  data: Array<Record<string, unknown>>,
+  title?: string,
+): TableArtifact {
+  if (data.length === 0) {
+    return {
+      id: generateArtifactId(),
+      type: "table",
+      title: title || "DataFrame",
+      data: [],
+      config: {
+        columns: [],
+      },
+    };
+  }
+
+  // Extract columns from first row
+  const keys = Object.keys(data[0]);
+  const columns: TableColumn[] = keys.map((key) => ({
+    id: key,
+    header: key,
+    accessorKey: key,
+    sortable: true,
+  }));
+
+  // Convert values to strings for table display
+  const tableData = data.map((row) => {
+    const stringRow: Record<string, string> = {};
+    for (const key of keys) {
+      const value = row[key];
+      stringRow[key] =
+        value === null || value === undefined ? "" : String(value);
+    }
+    return stringRow;
+  });
+
+  return {
+    id: generateArtifactId(),
+    type: "table",
+    title: title || "DataFrame",
+    data: tableData,
+    config: {
+      columns,
+      enableSorting: true,
+      enableFiltering: true,
+    },
+  };
 }
 
 // ============================================================================
@@ -565,6 +712,58 @@ function createMDXArtifact(code: string, meta?: string): Artifact {
   } as ExecutableArtifact;
 }
 
+/**
+ * Extract a descriptive name from Vega-Lite spec.
+ * Looks for title or description fields.
+ */
+function extractVegaLiteName(code: string): string | null {
+  try {
+    const parsed = JSON.parse(code);
+
+    // Check for explicit title (can be string or object with text)
+    if (parsed.title) {
+      if (typeof parsed.title === "string") {
+        return parsed.title;
+      }
+      if (typeof parsed.title === "object" && parsed.title.text) {
+        return parsed.title.text;
+      }
+    }
+
+    // Fall back to description
+    if (parsed.description && typeof parsed.description === "string") {
+      return parsed.description;
+    }
+
+    return "Vega-Lite Chart";
+  } catch {
+    return null;
+  }
+}
+
+function createVegaLiteArtifact(
+  code: string,
+  meta?: string,
+): VegaLiteArtifact | null {
+  let spec: VegaLiteSpec;
+  try {
+    spec = JSON.parse(code) as VegaLiteSpec;
+  } catch {
+    // Invalid JSON - return null to fall back to code artifact
+    return null;
+  }
+
+  // Smart naming: use meta > extracted name > fallback
+  const smartName = meta || extractVegaLiteName(code) || "Vega-Lite Chart";
+
+  return {
+    id: generateArtifactId(),
+    type: "vega-lite",
+    title: smartName,
+    data: spec,
+  };
+}
+
 function createTextArtifact(code: string): TextArtifact {
   return {
     id: generateArtifactId(),
@@ -638,6 +837,123 @@ function createWidgetArtifact(code: string): WidgetArtifact | null {
     // Parsing failed - return null
     return null;
   }
+}
+
+/**
+ * Create a LaTeX artifact from code block.
+ */
+function createLaTeXArtifact(code: string, meta?: string): LaTeXArtifact {
+  return {
+    id: generateArtifactId(),
+    type: "latex",
+    title: meta || "LaTeX",
+    data: code,
+    config: {
+      displayMode: true,
+    },
+  };
+}
+
+/**
+ * Parse CSV content into rows.
+ * Handles quoted fields with embedded commas.
+ */
+function parseCSV(content: string, delimiter: string = ","): string[][] {
+  const rows: string[][] = [];
+  const lines = content.trim().split("\n");
+
+  for (const line of lines) {
+    if (!line.trim()) continue;
+
+    const row: string[] = [];
+    let current = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          // Escaped quote
+          current += '"';
+          i++;
+        } else {
+          // Toggle quotes
+          inQuotes = !inQuotes;
+        }
+      } else if (char === delimiter && !inQuotes) {
+        row.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    row.push(current.trim());
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+/**
+ * Create a Table artifact from CSV/TSV code block.
+ */
+function createTableArtifact(
+  code: string,
+  language: string,
+  meta?: string,
+): TableArtifact {
+  // Determine delimiter based on language
+  const delimiter = language === "tsv" ? "\t" : ",";
+
+  // Parse CSV/TSV content
+  const rows = parseCSV(code, delimiter);
+
+  // Handle empty content
+  if (rows.length === 0) {
+    return {
+      id: generateArtifactId(),
+      type: "table",
+      title: meta || "Table",
+      data: [],
+      config: {
+        columns: [],
+      },
+    };
+  }
+
+  // First row is headers
+  const headers = rows[0] || [];
+  const dataRows = rows.slice(1);
+
+  // Create columns from headers
+  const columns: TableColumn[] = headers.map((header) => ({
+    id: header,
+    header: header,
+    accessorKey: header,
+    sortable: true,
+  }));
+
+  // Create data rows as objects
+  const data = dataRows.map((row) => {
+    const obj: Record<string, string> = {};
+    headers.forEach((header, index) => {
+      obj[header] = row[index] || "";
+    });
+    return obj;
+  });
+
+  return {
+    id: generateArtifactId(),
+    type: "table",
+    title: meta || "Table",
+    data,
+    config: {
+      columns,
+      enableSorting: true,
+      enableFiltering: true,
+    },
+  };
 }
 
 // ============================================================================
@@ -716,8 +1032,7 @@ export function parseArtifacts(content: string): ParsedSegment[] {
         break;
 
       case "table":
-        // For now, treat table as code until we implement table parsing
-        artifact = createCodeArtifact(block.code, block.language, block.meta);
+        artifact = createTableArtifact(block.code, block.language, block.meta);
         break;
 
       case "widget":
@@ -726,6 +1041,18 @@ export function parseArtifacts(content: string): ParsedSegment[] {
         if (!artifact) {
           artifact = createJSONArtifact(block.code, block.meta);
         }
+        break;
+
+      case "vega-lite":
+        artifact = createVegaLiteArtifact(block.code, block.meta);
+        // Fall back to JSON if vega-lite parsing fails
+        if (!artifact) {
+          artifact = createJSONArtifact(block.code, block.meta);
+        }
+        break;
+
+      case "latex":
+        artifact = createLaTeXArtifact(block.code, block.meta);
         break;
 
       default:

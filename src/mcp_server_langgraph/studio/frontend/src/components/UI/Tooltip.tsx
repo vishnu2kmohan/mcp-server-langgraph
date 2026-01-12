@@ -3,8 +3,10 @@
  *
  * A lightweight hover tooltip for displaying additional information.
  * Supports different positions and rich content.
+ * Uses CVA for type-safe position variants.
  */
 
+import { cva, type VariantProps } from "class-variance-authority";
 import {
   useState,
   useCallback,
@@ -16,36 +18,69 @@ import {
   type HTMLAttributes,
 } from "react";
 import { createPortal } from "react-dom";
+import { cn } from "../../utils/cn";
 
-export type TooltipPosition = "top" | "right" | "bottom" | "left";
+/**
+ * Tooltip variant styles using CVA
+ */
+export const tooltipVariants = cva(
+  // Base styles
+  [
+    "fixed z-50 px-2 py-1 text-sm rounded shadow-lg",
+    "bg-neutral-900 text-white",
+    "dark:bg-neutral-700",
+    "animate-in fade-in-0 zoom-in-95 duration-150",
+  ],
+  {
+    variants: {
+      position: {
+        top: "tooltip-top",
+        right: "tooltip-right",
+        bottom: "tooltip-bottom",
+        left: "tooltip-left",
+      },
+    },
+    defaultVariants: {
+      position: "top",
+    },
+  },
+);
 
-export interface TooltipProps {
+/**
+ * Arrow position styles using CVA
+ */
+export const tooltipArrowVariants = cva(
+  "absolute w-2 h-2 bg-neutral-900 dark:bg-neutral-700 rotate-45",
+  {
+    variants: {
+      position: {
+        top: "bottom-[-4px] left-1/2 -translate-x-1/2",
+        right: "left-[-4px] top-1/2 -translate-y-1/2",
+        bottom: "top-[-4px] left-1/2 -translate-x-1/2",
+        left: "right-[-4px] top-1/2 -translate-y-1/2",
+      },
+    },
+    defaultVariants: {
+      position: "top",
+    },
+  },
+);
+
+export type TooltipPosition = NonNullable<
+  VariantProps<typeof tooltipVariants>["position"]
+>;
+
+export interface TooltipProps extends VariantProps<typeof tooltipVariants> {
   /** The content to display in the tooltip */
   content: ReactNode;
   /** The element that triggers the tooltip */
   children: ReactElement;
-  /** Position of the tooltip relative to the trigger */
-  position?: TooltipPosition;
   /** Delay before showing tooltip in ms */
   delay?: number;
   /** Disable the tooltip */
   disabled?: boolean;
   /** Custom class for the tooltip */
   className?: string;
-}
-
-/**
- * Utility to combine class names
- */
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
-
-/**
- * Get position-specific class
- */
-function getPositionClass(position: TooltipPosition): string {
-  return `tooltip-${position}`;
 }
 
 /**
@@ -159,6 +194,7 @@ export function Tooltip({
   };
 
   const trigger = cloneElement(children, childProps);
+  const resolvedPosition = position ?? "top";
 
   return (
     <>
@@ -169,29 +205,13 @@ export function Tooltip({
           <div
             id={tooltipId}
             role="tooltip"
-            className={cn(
-              // Base styles
-              "fixed z-50 px-2 py-1 text-sm rounded shadow-lg",
-              "bg-gray-900 text-white",
-              "dark:bg-gray-700",
-              // Animation
-              "animate-in fade-in-0 zoom-in-95 duration-150",
-              // Position class for styling hooks
-              getPositionClass(position),
-              className,
-            )}
-            style={getPositionStyles(position, triggerRect)}
+            className={cn(tooltipVariants({ position }), className)}
+            style={getPositionStyles(resolvedPosition, triggerRect)}
           >
             {content}
             {/* Arrow */}
             <div
-              className={cn(
-                "absolute w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45",
-                position === "top" && "bottom-[-4px] left-1/2 -translate-x-1/2",
-                position === "bottom" && "top-[-4px] left-1/2 -translate-x-1/2",
-                position === "left" && "right-[-4px] top-1/2 -translate-y-1/2",
-                position === "right" && "left-[-4px] top-1/2 -translate-y-1/2",
-              )}
+              className={tooltipArrowVariants({ position })}
               aria-hidden="true"
             />
           </div>,

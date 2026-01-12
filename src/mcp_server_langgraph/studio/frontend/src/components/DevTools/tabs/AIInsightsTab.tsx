@@ -32,6 +32,7 @@ import { useDevToolsAI } from "../hooks/useDevToolsAI";
 import { useObservabilityAI } from "../hooks/useObservabilityAI";
 import { useAppSelector } from "../../../store/hooks";
 import { selectUser } from "../../../store/slices/authSlice";
+import { useStudioAnalyzeMutation } from "../../../api";
 import type { AIInsightsTabProps, AIInsight, AIInsightType } from "../types";
 import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 
@@ -46,6 +47,7 @@ interface NLQueryState {
   query: string;
   isLoading: boolean;
   response: string | null;
+  error: string | null;
   history: Array<{ query: string; response: string; timestamp: number }>;
 }
 
@@ -89,7 +91,7 @@ function getSeverityColor(severity: string): string {
     case "low":
       return "bg-primary-100 dark:bg-primary-900/30 border-primary-300 dark:border-primary-700";
     default:
-      return "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600";
+      return "bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600";
   }
 }
 
@@ -104,7 +106,7 @@ function getSeverityIndicatorColor(severity: string): string {
     case "low":
       return "bg-primary-500";
     default:
-      return "bg-gray-500";
+      return "bg-neutral-500";
   }
 }
 
@@ -121,7 +123,7 @@ function getTypeBadgeColor(type: AIInsightType): string {
     case "warning":
       return "bg-warning-100 dark:bg-warning-900/50 text-warning-700 dark:text-warning-300";
     default:
-      return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300";
+      return "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300";
   }
 }
 
@@ -157,17 +159,16 @@ function InsightCard({ insight, onDismiss }: InsightCardProps) {
           getSeverityIndicatorColor(insight.severity),
         )}
       />
-
       {/* Header row */}
       <div className="flex items-start gap-2 pl-2">
         <Icon
           size={16}
-          className="mt-0.5 flex-shrink-0 text-gray-600 dark:text-gray-400"
+          className="mt-0.5 flex-shrink-0 text-neutral-600 dark:text-neutral-400"
         />
         <div className="flex-1 min-w-0">
           {/* Title and badges */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-sm text-gray-800 dark:text-gray-200">
+            <span className="font-medium text-sm text-neutral-800 dark:text-neutral-200">
               {insight.title}
             </span>
             <span
@@ -181,7 +182,7 @@ function InsightCard({ insight, onDismiss }: InsightCardProps) {
           </div>
 
           {/* Description */}
-          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
             {insight.description}
           </p>
 
@@ -197,28 +198,27 @@ function InsightCard({ insight, onDismiss }: InsightCardProps) {
         {/* Confidence score */}
         <div
           data-testid={`confidence-${insight.id}`}
-          className="text-xs text-gray-500 dark:text-gray-400 font-medium"
+          className="text-xs text-neutral-500 dark:text-neutral-400 font-medium"
         >
           {Math.round(insight.confidence * 100)}%
         </div>
       </div>
-
       {/* Dismiss button (appears on hover) */}
       {isHovered && (
-        <button
+        <Button
           type="button"
           data-testid="dismiss-insight-button"
           onClick={() => onDismiss(insight.id)}
           className={cn(
             "absolute top-1 right-1 p-1 rounded",
-            "bg-gray-200 dark:bg-gray-700/80 dark:bg-gray-700/80",
-            "hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-600",
-            "text-gray-600 dark:text-gray-400",
+            "bg-neutral-200 dark:bg-neutral-700/80 dark:bg-neutral-700/80",
+            "hover:bg-neutral-300 dark:bg-neutral-600 dark:hover:bg-neutral-600",
+            "text-neutral-600 dark:text-neutral-400",
           )}
           aria-label="Dismiss insight"
         >
           <X size={12} />
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -259,7 +259,7 @@ function LayoutSuggestionBanner({
           </p>
         </div>
       </div>
-      <button
+      <Button
         type="button"
         data-testid="apply-layout-button"
         onClick={onApply}
@@ -270,7 +270,7 @@ function LayoutSuggestionBanner({
         )}
       >
         Apply
-      </button>
+      </Button>
     </div>
   );
 }
@@ -284,6 +284,8 @@ import type {
   SuggestedAction,
   PredictiveAlert,
 } from "../hooks/useObservabilityAI";
+
+import { Button, Input } from "@/components/UI";
 
 interface ObservabilityPanelProps {
   insights: ObservabilityInsights;
@@ -309,9 +311,9 @@ function ObservabilityPanel({
         insights.traceAnomalies.slowSpans.length > 0 && (
           <div
             data-testid="slow-spans-section"
-            className="border rounded-lg p-3 dark:border-gray-700"
+            className="border rounded-lg p-3 dark:border-neutral-700"
           >
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+            <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2 flex items-center gap-2">
               <Clock size={14} />
               Slow Spans ({insights.traceAnomalies.slowSpans.length})
             </h3>
@@ -330,15 +332,14 @@ function ObservabilityPanel({
             </div>
           </div>
         )}
-
       {/* Error Patterns Section */}
       {insights.traceAnomalies &&
         insights.traceAnomalies.errorPatterns.length > 0 && (
           <div
             data-testid="error-patterns-section"
-            className="border rounded-lg p-3 dark:border-gray-700"
+            className="border rounded-lg p-3 dark:border-neutral-700"
           >
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+            <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2 flex items-center gap-2">
               <AlertTriangle size={14} />
               Error Patterns
             </h3>
@@ -357,32 +358,31 @@ function ObservabilityPanel({
             </div>
           </div>
         )}
-
       {/* Latency Percentiles */}
       {insights.traceAnomalies && (
         <div
           data-testid="latency-percentiles"
-          className="border rounded-lg p-3 dark:border-gray-700"
+          className="border rounded-lg p-3 dark:border-neutral-700"
         >
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+          <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2 flex items-center gap-2">
             <BarChart3 size={14} />
             Latency Percentiles
           </h3>
           <div className="flex gap-4 text-xs">
-            <div className="flex-1 p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
-              <div className="text-gray-500 dark:text-gray-400">p50</div>
+            <div className="flex-1 p-2 bg-neutral-50 dark:bg-neutral-800 rounded text-center">
+              <div className="text-neutral-500 dark:text-neutral-400">p50</div>
               <div className="font-medium">
                 p50: {insights.traceAnomalies.percentiles.p50}ms
               </div>
             </div>
-            <div className="flex-1 p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
-              <div className="text-gray-500 dark:text-gray-400">p95</div>
+            <div className="flex-1 p-2 bg-neutral-50 dark:bg-neutral-800 rounded text-center">
+              <div className="text-neutral-500 dark:text-neutral-400">p95</div>
               <div className="font-medium">
                 p95: {insights.traceAnomalies.percentiles.p95}ms
               </div>
             </div>
-            <div className="flex-1 p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
-              <div className="text-gray-500 dark:text-gray-400">p99</div>
+            <div className="flex-1 p-2 bg-neutral-50 dark:bg-neutral-800 rounded text-center">
+              <div className="text-neutral-500 dark:text-neutral-400">p99</div>
               <div className="font-medium">
                 p99: {insights.traceAnomalies.percentiles.p99}ms
               </div>
@@ -390,14 +390,13 @@ function ObservabilityPanel({
           </div>
         </div>
       )}
-
       {/* Alert Correlations Section */}
       {insights.alertCorrelations.length > 0 && (
         <div
           data-testid="alert-correlations-section"
-          className="border rounded-lg p-3 dark:border-gray-700"
+          className="border rounded-lg p-3 dark:border-neutral-700"
         >
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+          <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2 flex items-center gap-2">
             <Activity size={14} />
             Alert Correlations
           </h3>
@@ -410,12 +409,12 @@ function ObservabilityPanel({
                 <div className="font-medium">
                   {correlation.alerts.length} alerts correlated
                 </div>
-                <div className="text-gray-600 dark:text-gray-400 mt-1">
+                <div className="text-neutral-600 dark:text-neutral-400 mt-1">
                   Services:{" "}
                   {correlation.services.map((s) => (
                     <span
                       key={s}
-                      className="inline-block bg-gray-200 dark:bg-gray-700 px-1 rounded mr-1"
+                      className="inline-block bg-neutral-200 dark:bg-neutral-700 px-1 rounded mr-1"
                     >
                       {s}
                     </span>
@@ -426,14 +425,13 @@ function ObservabilityPanel({
           </div>
         </div>
       )}
-
       {/* Cost Prediction Section */}
       {insights.costPrediction && (
         <div
           data-testid="cost-prediction-section"
-          className="border rounded-lg p-3 dark:border-gray-700"
+          className="border rounded-lg p-3 dark:border-neutral-700"
         >
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+          <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2 flex items-center gap-2">
             <DollarSign size={14} />
             Cost Prediction
           </h3>
@@ -474,14 +472,13 @@ function ObservabilityPanel({
           </div>
         </div>
       )}
-
       {/* Root Cause Analysis Section */}
       {insights.rootCauseAnalysis && (
         <div
           data-testid="root-cause-analysis-section"
-          className="border rounded-lg p-3 dark:border-gray-700"
+          className="border rounded-lg p-3 dark:border-neutral-700"
         >
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+          <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2 flex items-center gap-2">
             <Search size={14} />
             Root Cause Analysis
           </h3>
@@ -502,17 +499,17 @@ function ObservabilityPanel({
                 <div
                   key={idx}
                   data-testid={`root-cause-${idx}`}
-                  className="p-2 bg-gray-50 dark:bg-gray-800 rounded flex justify-between"
+                  className="p-2 bg-neutral-50 dark:bg-neutral-800 rounded flex justify-between"
                 >
                   <span>{cause.description}</span>
-                  <span className="text-gray-500 dark:text-gray-400">
+                  <span className="text-neutral-500 dark:text-neutral-400">
                     {Math.round(cause.likelihood * 100)}%
                   </span>
                 </div>
               ))}
             </div>
             <div className="mt-2">
-              <div className="text-gray-500 dark:text-gray-400 mb-1">
+              <div className="text-neutral-500 dark:text-neutral-400 mb-1">
                 Suggested Actions:
               </div>
               {insights.rootCauseAnalysis.suggestedActions.map(
@@ -530,14 +527,13 @@ function ObservabilityPanel({
           </div>
         </div>
       )}
-
       {/* Predictive Alerts Section */}
       {insights.predictiveAlerts && insights.predictiveAlerts.length > 0 && (
         <div
           data-testid="predictive-alerts-section"
-          className="border rounded-lg p-3 dark:border-gray-700"
+          className="border rounded-lg p-3 dark:border-neutral-700"
         >
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+          <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2 flex items-center gap-2">
             <AlertTriangle size={14} />
             Predictive Alerts
           </h3>
@@ -561,15 +557,17 @@ function ObservabilityPanel({
                     {Math.round(alert.probability * 100)}% probability
                   </span>
                 </div>
-                <div className="text-gray-600 dark:text-gray-400 mt-1">
+                <div className="text-neutral-600 dark:text-neutral-400 mt-1">
                   in {Math.round(alert.estimatedTimeToFire / 60000)} minutes
                 </div>
-                <button
-                  data-testid={`predictive-alert-action-${alert.id}`}
+                <Button
+                  variant="primary"
+                  size="sm"
                   className="mt-2 px-2 py-1 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded"
+                  data-testid={`predictive-alert-action-${alert.id}`}
                 >
                   {alert.suggestedAction}
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -607,26 +605,25 @@ function NLQueryInput({
     <div className="space-y-2 mb-4">
       {/* Query Input */}
       <div className="relative">
-        <input
+        <Input
           data-testid="nl-query-input"
-          type="text"
           value={state.query}
           onChange={(e) => onQueryChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask about your traces, alerts, or metrics..."
           className={cn(
             "w-full px-3 py-2 pr-10 text-sm rounded-lg border",
-            "bg-white dark:bg-gray-800",
-            "border-gray-300 dark:border-gray-600",
+            "bg-white dark:bg-neutral-800",
+            "border-neutral-300 dark:border-neutral-600",
             "focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
           )}
         />
-        <button
+        <Button
           onClick={onSubmit}
           disabled={state.isLoading || !state.query.trim()}
           className={cn(
             "absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded",
-            "text-gray-400 dark:text-gray-400 hover:text-primary-500 disabled:opacity-50",
+            "text-neutral-400 dark:text-neutral-400 hover:text-primary-500 disabled:opacity-50",
           )}
         >
           {state.isLoading ? (
@@ -634,20 +631,18 @@ function NLQueryInput({
           ) : (
             <Send size={16} />
           )}
-        </button>
+        </Button>
       </div>
-
       {/* Loading State */}
       {state.isLoading && (
         <div
           data-testid="nl-query-loading"
-          className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+          className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400"
         >
           <Loader2 size={12} className="animate-spin" />
           Analyzing...
         </div>
       )}
-
       {/* Query Response */}
       {state.response && (
         <div
@@ -657,40 +652,50 @@ function NLQueryInput({
           {state.response}
         </div>
       )}
-
+      {/* Error State */}
+      {state.error && (
+        <div
+          data-testid="nl-query-error"
+          className="p-3 bg-error-50 dark:bg-error-900/20 rounded-lg text-sm text-error-700 dark:text-error-300 flex items-center gap-2"
+        >
+          <AlertCircle size={16} />
+          {state.error}
+        </div>
+      )}
       {/* Suggested Queries */}
       <div data-testid="nl-query-suggestions" className="flex flex-wrap gap-1">
         {SUGGESTED_QUERIES.map((suggestion) => (
-          <button
+          <Button
             key={suggestion}
             onClick={() => onSuggestionClick(suggestion)}
             className={cn(
               "px-2 py-1 text-xs rounded-full",
-              "bg-gray-100 dark:bg-gray-700",
-              "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600",
-              "text-gray-600 dark:text-gray-400",
+              "bg-neutral-100 dark:bg-neutral-700",
+              "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600",
+              "text-neutral-600 dark:text-neutral-400",
             )}
           >
             {suggestion}
-          </button>
+          </Button>
         ))}
       </div>
-
       {/* Query History */}
       {state.history.length > 0 && (
         <div data-testid="nl-query-history" className="space-y-1">
-          <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
             <History size={12} />
             Recent queries
           </div>
           {state.history.slice(-3).map((item, idx) => (
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
+              className="block w-full text-left text-xs p-1 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
               key={idx}
               onClick={() => onSuggestionClick(item.query)}
-              className="block w-full text-left text-xs p-1 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
             >
               {item.query}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -718,9 +723,9 @@ function SuggestedActionsPanel({ actions }: SuggestedActionsPanelProps) {
   return (
     <div
       data-testid="suggested-actions-panel"
-      className="mb-4 border rounded-lg p-3 dark:border-gray-700"
+      className="mb-4 border rounded-lg p-3 dark:border-neutral-700"
     >
-      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+      <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2 flex items-center gap-2">
         <Lightbulb size={14} />
         Suggested Actions
       </h3>
@@ -741,7 +746,7 @@ function SuggestedActionsPanel({ actions }: SuggestedActionsPanelProps) {
           >
             <div className="flex-1">
               <div className="font-medium">{action.title}</div>
-              <div className="text-gray-600 dark:text-gray-400">
+              <div className="text-neutral-600 dark:text-neutral-400">
                 {action.description}
               </div>
             </div>
@@ -781,11 +786,15 @@ export function AIInsightsTab({
     query: "",
     isLoading: false,
     response: null,
+    error: null,
     history: [],
   });
 
   // Get current user from auth state
   const user = useAppSelector(selectUser);
+
+  // Studio Analyze mutation for NL Query
+  const [studioAnalyze] = useStudioAnalyzeMutation();
 
   const {
     insights,
@@ -826,26 +835,69 @@ export function AIInsightsTab({
     setNLQueryState((prev) => ({ ...prev, query }));
   }, []);
 
-  const handleQuerySubmit = useCallback(() => {
+  const handleQuerySubmit = useCallback(async () => {
     if (!nlQueryState.query.trim()) return;
 
-    setNLQueryState((prev) => ({ ...prev, isLoading: true }));
+    setNLQueryState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-    // Simulate AI response (in production, this would call an API)
-    setTimeout(() => {
-      const response = `Based on the analysis of your traces and metrics, ${nlQueryState.query.toLowerCase().includes("error") ? "the primary error patterns appear in the api.request and auth.validate operations." : nlQueryState.query.toLowerCase().includes("cost") ? "token usage is trending upward with projected daily costs of $25.50." : "I found several slow operations in the db.query and llm.completion spans."}`;
+    try {
+      // Build context from observability insights if enabled
+      const contextData: Record<string, unknown> = {};
+      if (enableObservability && observabilityInsights) {
+        contextData.observability = observabilityInsights;
+      }
+
+      // Call the studioAnalyze API with NL query task
+      const result = await studioAnalyze({
+        user_id: user?.id ?? "anonymous",
+        session_id: contextEntityId ?? "unknown",
+        tasks: [
+          {
+            category: "TRACE",
+            type: "nl_query",
+            data: {
+              query: nlQueryState.query,
+            },
+          },
+        ],
+        context: Object.keys(contextData).length > 0 ? contextData : undefined,
+      }).unwrap();
+
+      // Extract response from analysis result
+      const traceNlQuery = result.analyses?.trace_nl_query as
+        | { response?: string; suggestions?: string[] }
+        | undefined;
+      const response =
+        traceNlQuery?.response ??
+        "Analysis complete. No specific insights found.";
 
       setNLQueryState((prev) => ({
         ...prev,
         isLoading: false,
         response,
+        error: null,
         history: [
           ...prev.history,
           { query: prev.query, response, timestamp: Date.now() },
         ],
       }));
-    }, 1000);
-  }, [nlQueryState.query]);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to process query";
+      setNLQueryState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: errorMessage,
+      }));
+    }
+  }, [
+    nlQueryState.query,
+    studioAnalyze,
+    user?.id,
+    contextEntityId,
+    enableObservability,
+    observabilityInsights,
+  ]);
 
   const handleSuggestionClick = useCallback((suggestion: string) => {
     setNLQueryState((prev) => ({ ...prev, query: suggestion }));
@@ -864,7 +916,7 @@ export function AIInsightsTab({
     return (
       <div
         data-testid="ai-insights-tab"
-        className="flex flex-col h-full bg-white dark:bg-gray-900"
+        className="flex flex-col h-full bg-white dark:bg-neutral-900"
       >
         <div
           data-testid="ai-insights-loading"
@@ -881,7 +933,7 @@ export function AIInsightsTab({
     return (
       <div
         data-testid="ai-insights-tab"
-        className="flex flex-col h-full bg-white dark:bg-gray-900"
+        className="flex flex-col h-full bg-white dark:bg-neutral-900"
       >
         <div
           data-testid="ai-insights-error"
@@ -892,7 +944,7 @@ export function AIInsightsTab({
         >
           <AlertCircle size={32} className="mb-2 opacity-70" />
           <p className="text-sm font-medium">Error loading insights</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
             {error.message}
           </p>
         </div>
@@ -905,42 +957,42 @@ export function AIInsightsTab({
     return (
       <div
         data-testid="ai-insights-tab"
-        className="flex flex-col h-full bg-white dark:bg-gray-900"
+        className="flex flex-col h-full bg-white dark:bg-neutral-900"
       >
         {/* Toolbar */}
-        <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+        <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
           <h2
             role="heading"
-            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
           >
             AI Insights
           </h2>
           {enableObservability && (
-            <button
+            <Button
               data-testid="observability-insights-toggle"
               type="button"
               onClick={() => setViewMode("observability")}
               className={cn(
                 "px-2 py-1 text-xs rounded flex items-center gap-1",
-                "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
+                "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
               )}
             >
               <Activity size={12} />
               Observability
-            </button>
+            </Button>
           )}
           <div className="flex-1" />
-          <button
+          <Button
+            variant="secondary"
+            className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400"
             type="button"
             data-testid="refresh-insights-button"
             onClick={handleRefresh}
-            className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
             aria-label="Refresh insights"
           >
             <RefreshCw size={14} />
-          </button>
+          </Button>
         </div>
-
         <div className="flex-1 overflow-y-auto p-2">
           {/* NL Query Input (if enabled) */}
           {enableNLQuery && (
@@ -954,7 +1006,7 @@ export function AIInsightsTab({
 
           <div
             data-testid="ai-insights-empty"
-            className="flex flex-col items-center justify-center text-gray-400 dark:text-gray-400 py-8"
+            className="flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-400 py-8"
           >
             <Sparkles size={32} className="mb-2 opacity-50" />
             <p className="text-sm">No AI insights</p>
@@ -968,20 +1020,20 @@ export function AIInsightsTab({
   return (
     <div
       data-testid="ai-insights-tab"
-      className="flex flex-col h-full bg-white dark:bg-gray-900"
+      className="flex flex-col h-full bg-white dark:bg-neutral-900"
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
         <h2
           role="heading"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
         >
           AI Insights
         </h2>
 
         {/* Observability Toggle */}
         {enableObservability && (
-          <button
+          <Button
             data-testid="observability-insights-toggle"
             type="button"
             onClick={() =>
@@ -993,18 +1045,18 @@ export function AIInsightsTab({
               "px-2 py-1 text-xs rounded flex items-center gap-1",
               viewMode === "observability"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
+                : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
             )}
           >
             <Activity size={12} />
             Observability
-          </button>
+          </Button>
         )}
 
         {/* Filter buttons (only show in insights view) */}
         {viewMode === "insights" && (
           <div className="flex items-center gap-1 ml-2">
-            <button
+            <Button
               data-testid="filter-all"
               type="button"
               onClick={() => setFilter("all")}
@@ -1012,12 +1064,12 @@ export function AIInsightsTab({
                 "px-2 py-1 text-xs rounded",
                 filter === "all"
                   ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                  : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
+                  : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
               )}
             >
               All
-            </button>
-            <button
+            </Button>
+            <Button
               data-testid="filter-anomaly"
               type="button"
               onClick={() => setFilter("anomaly")}
@@ -1025,12 +1077,12 @@ export function AIInsightsTab({
                 "px-2 py-1 text-xs rounded",
                 filter === "anomaly"
                   ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                  : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
+                  : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
               )}
             >
               Anomaly
-            </button>
-            <button
+            </Button>
+            <Button
               data-testid="filter-suggestion"
               type="button"
               onClick={() => setFilter("suggestion")}
@@ -1038,34 +1090,34 @@ export function AIInsightsTab({
                 "px-2 py-1 text-xs rounded",
                 filter === "suggestion"
                   ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                  : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
+                  : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
               )}
             >
               Suggestion
-            </button>
+            </Button>
           </div>
         )}
 
         <div className="flex-1" />
 
         {/* Refresh button */}
-        <button
+        <Button
+          variant="secondary"
+          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400"
           type="button"
           data-testid="refresh-insights-button"
           onClick={handleRefresh}
-          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
           aria-label="Refresh insights"
         >
           <RefreshCw size={14} />
-        </button>
+        </Button>
 
         {/* Insight count */}
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-neutral-500 dark:text-neutral-400">
           {filteredInsights.length} insight
           {filteredInsights.length !== 1 ? "s" : ""}
         </span>
       </div>
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-2">
         {/* NL Query Input (if enabled) */}

@@ -14,6 +14,8 @@ import {
   getSparklineColor,
 } from "../utils/devToolsColors";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -173,23 +175,23 @@ function MetricCard({ metric }: MetricCardProps): React.ReactElement {
   return (
     <div
       data-metric={metric.name}
-      className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+      className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4"
     >
       <div className="flex items-start justify-between">
         <div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">
             {displayName}
           </div>
           <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-2xl font-semibold text-gray-900 dark:text-white">
+            <span className="text-2xl font-semibold text-neutral-900 dark:text-white">
               {formattedValue}
             </span>
             {metric.unit !== "%" ? (
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-neutral-500 dark:text-neutral-400">
                 {metric.unit}
               </span>
             ) : (
-              <span className="text-2xl font-semibold text-gray-900 dark:text-white">
+              <span className="text-2xl font-semibold text-neutral-900 dark:text-white">
                 %
               </span>
             )}
@@ -219,11 +221,11 @@ function HeartDimensionCard({
   const displayName = name.replace(/([A-Z])/g, " $1").trim();
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-center">
-      <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+    <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 text-center">
+      <div className="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">
         {displayName}
       </div>
-      <div className="mt-1 text-xl font-bold text-gray-900 dark:text-white">
+      <div className="mt-1 text-xl font-bold text-neutral-900 dark:text-white">
         {dimension.score}
         {name === "taskSuccess" && "%"}
       </div>
@@ -298,12 +300,12 @@ export function MetricsTab({
         <div data-testid="metrics-loading" className="p-4 space-y-4">
           {/* Header skeleton */}
           <div className="flex items-center justify-between">
-            <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            <div className="h-6 w-32 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse" />
             <div className="flex gap-2">
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="h-8 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+                  className="h-8 w-12 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse"
                 />
               ))}
             </div>
@@ -313,7 +315,7 @@ export function MetricsTab({
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"
+                className="h-24 bg-neutral-200 dark:bg-neutral-700 rounded-lg animate-pulse"
               />
             ))}
           </div>
@@ -348,13 +350,14 @@ export function MetricsTab({
           </svg>
         </div>
         <p className={cn(STATUS_TEXT_COLORS.error, "mb-4")}>{error}</p>
-        <button
+        <Button
+          variant="primary"
+          className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600"
           onClick={handleRetry}
-          className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors"
           aria-label="Retry"
         >
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -368,12 +371,12 @@ export function MetricsTab({
       className={cn("flex flex-col h-full overflow-hidden", className)}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between p-3 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center gap-3">
           {/* Time range selector */}
           <div className="flex gap-1">
             {TIME_RANGES.map((range) => (
-              <button
+              <Button
                 key={range}
                 onClick={() => handleTimeRangeChange(range)}
                 data-active={timeRange === range}
@@ -381,18 +384,18 @@ export function MetricsTab({
                   "px-3 py-1 text-sm rounded-md transition-colors",
                   timeRange === range
                     ? "bg-primary-500 text-white"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
                 )}
                 aria-label={range}
               >
                 {range}
-              </button>
+              </Button>
             ))}
           </div>
 
           {/* Auto-refresh indicator */}
           {autoRefreshInterval && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">
               Auto-refresh: {Math.round(autoRefreshInterval / 1000)}s
             </span>
           )}
@@ -401,9 +404,9 @@ export function MetricsTab({
         <div className="flex items-center gap-2">
           {/* Grafana button */}
           {grafanaUrl && (
-            <button
+            <Button
+              className="px-3 py-1.5 text-sm bg-grafana-500 text-white rounded-md hover:bg-grafana-600 flex"
               onClick={handleOpenGrafana}
-              className="px-3 py-1.5 text-sm bg-grafana-500 text-white rounded-md hover:bg-grafana-600 transition-colors flex items-center gap-1"
               aria-label="View in Grafana"
             >
               <svg
@@ -420,17 +423,18 @@ export function MetricsTab({
                 />
               </svg>
               View in Grafana
-            </button>
+            </Button>
           )}
 
           {/* Refresh button */}
-          <button
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded-md hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800"
             onClick={handleRefresh}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 transition-colors"
             aria-label="Refresh"
           >
             <svg
-              className="w-4 h-4 text-gray-600 dark:text-gray-400"
+              className="w-4 h-4 text-neutral-600 dark:text-neutral-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -442,16 +446,15 @@ export function MetricsTab({
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
               />
             </svg>
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Content */}
       <div className="flex-1 overflow-auto p-4">
         {!hasMetrics && !hasHeartMetrics ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <svg
-              className="w-12 h-12 text-gray-400 dark:text-gray-400 mb-4"
+              className="w-12 h-12 text-neutral-400 dark:text-neutral-400 mb-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -463,10 +466,10 @@ export function MetricsTab({
                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
               />
             </svg>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-neutral-500 dark:text-neutral-400">
               No metrics available
             </p>
-            <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">
+            <p className="text-sm text-neutral-400 dark:text-neutral-400 mt-1">
               Metrics will appear when data is collected
             </p>
           </div>
@@ -475,7 +478,7 @@ export function MetricsTab({
             {/* System Metrics */}
             {hasMetrics && (
               <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
                   System Metrics
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -489,7 +492,7 @@ export function MetricsTab({
             {/* HEART Metrics */}
             {hasHeartMetrics && (
               <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
                   HEART Metrics
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">

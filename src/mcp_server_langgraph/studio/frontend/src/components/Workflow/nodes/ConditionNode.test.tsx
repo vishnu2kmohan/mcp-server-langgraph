@@ -77,7 +77,7 @@ describe("ConditionNode", () => {
       );
       const node = container.querySelector('[data-status="idle"]');
       expect(node).toBeInTheDocument();
-      expect(node).toHaveClass("border-gray-300");
+      expect(node).toHaveClass("border-neutral-300");
     });
 
     it("should show running state with blue border and animation", () => {

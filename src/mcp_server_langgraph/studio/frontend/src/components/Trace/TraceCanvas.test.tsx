@@ -170,7 +170,7 @@ describe("TraceCanvas", () => {
 
       const { container } = renderWithProviders(<TraceCanvas />);
 
-      const grayDot = container.querySelector(".bg-gray-400");
+      const grayDot = container.querySelector(".bg-neutral-400");
       expect(grayDot).toBeInTheDocument();
     });
   });

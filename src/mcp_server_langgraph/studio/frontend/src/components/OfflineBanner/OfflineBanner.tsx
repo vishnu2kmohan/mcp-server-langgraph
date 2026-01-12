@@ -28,6 +28,8 @@
 
 import React from "react";
 
+import { Button } from "@/components/UI";
+
 export interface OfflineBannerProps {
   /** Whether the app is currently offline */
   isOffline: boolean;
@@ -126,31 +128,30 @@ export function OfflineBanner({
           </span>
         )}
       </div>
-
       <div className="offline-banner__actions">
         {/* Sync Button */}
         {showSyncButton && (
-          <button
-            type="button"
+          <Button
             className="offline-banner__sync-btn"
+            type="button"
             onClick={onSync}
             disabled={isSyncing}
             aria-label={isSyncing ? "Syncing..." : "Sync now"}
           >
             {isSyncing ? "Syncing..." : "Sync Now"}
-          </button>
+          </Button>
         )}
 
         {/* Dismiss Button */}
         {onDismiss && (
-          <button
-            type="button"
+          <Button
             className="offline-banner__dismiss-btn"
+            type="button"
             onClick={onDismiss}
             aria-label="Dismiss offline banner"
           >
             ×
-          </button>
+          </Button>
         )}
       </div>
     </div>

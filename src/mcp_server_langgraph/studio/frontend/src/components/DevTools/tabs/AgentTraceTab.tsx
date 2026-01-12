@@ -25,6 +25,8 @@ import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 import type { AgentTraceTabProps } from "../types";
 import type { TraceStepPayload } from "../../../types/websocket-protocols";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -61,13 +63,16 @@ function NodeStatusIcon({ status, nodeId }: NodeStatusIconProps) {
         <Loader2 {...iconProps} className="text-primary-500 animate-spin" />
       )}
       {status === "pending" && (
-        <Clock {...iconProps} className="text-gray-400 dark:text-gray-400" />
+        <Clock
+          {...iconProps}
+          className="text-neutral-400 dark:text-neutral-400"
+        />
       )}
       {status === "error" && (
         <AlertCircle {...iconProps} className="text-error-500" />
       )}
       {status === "skipped" && (
-        <Clock {...iconProps} className="text-gray-300" />
+        <Clock {...iconProps} className="text-neutral-300" />
       )}
     </span>
   );
@@ -93,47 +98,48 @@ function TraceNodeRow({
       data-testid={`trace-node-${node.id}`}
       className={cn(
         "flex items-center gap-2 px-2 py-1.5 cursor-pointer",
-        "border-b border-gray-100 dark:border-gray-800",
-        "hover:bg-gray-50 dark:hover:bg-gray-800/50",
+        "border-b border-neutral-100 dark:border-neutral-800",
+        "hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
         isSelected && "bg-primary-50 dark:bg-primary-900/20",
       )}
       onClick={onSelect}
     >
       {/* Expand button */}
-      <button
+      <Button
+        variant="secondary"
+        className="p-0.5 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
         data-testid={`expand-node-${node.id}`}
         type="button"
         onClick={(e) => {
           e.stopPropagation();
           onToggleExpand();
         }}
-        className="p-0.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
         aria-expanded={isExpanded}
         aria-label={
           isExpanded ? `Collapse ${node.name}` : `Expand ${node.name}`
         }
       >
         {isExpanded ? (
-          <ChevronDown size={12} className="text-gray-500 dark:text-gray-400" />
+          <ChevronDown
+            size={12}
+            className="text-neutral-500 dark:text-neutral-400"
+          />
         ) : (
           <ChevronRight
             size={12}
-            className="text-gray-500 dark:text-gray-400"
+            className="text-neutral-500 dark:text-neutral-400"
           />
         )}
-      </button>
-
+      </Button>
       {/* Status icon */}
       <NodeStatusIcon status={node.status} nodeId={node.id} />
-
       {/* Node name */}
-      <span className="flex-1 text-sm text-gray-700 dark:text-gray-300">
+      <span className="flex-1 text-sm text-neutral-700 dark:text-neutral-300">
         {node.name}
       </span>
-
       {/* Duration */}
       {node.duration !== undefined && node.duration > 0 && (
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-neutral-500 dark:text-neutral-400">
           {node.duration}ms
         </span>
       )}
@@ -149,33 +155,37 @@ function NodeDetails({ node }: NodeDetailsProps) {
   return (
     <div
       data-testid={`node-details-${node.id}`}
-      className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 text-xs"
+      className="px-4 py-2 bg-neutral-50 dark:bg-neutral-800/50 text-xs"
     >
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <span className="text-gray-500 dark:text-gray-400">ID:</span>
-          <span className="ml-2 text-gray-700 dark:text-gray-300">
+          <span className="text-neutral-500 dark:text-neutral-400">ID:</span>
+          <span className="ml-2 text-neutral-700 dark:text-neutral-300">
             {node.id}
           </span>
         </div>
         <div>
-          <span className="text-gray-500 dark:text-gray-400">Status:</span>
-          <span className="ml-2 text-gray-700 dark:text-gray-300 capitalize">
+          <span className="text-neutral-500 dark:text-neutral-400">
+            Status:
+          </span>
+          <span className="ml-2 text-neutral-700 dark:text-neutral-300 capitalize">
             {node.status}
           </span>
         </div>
         {node.startTime && (
           <div>
-            <span className="text-gray-500 dark:text-gray-400">Start:</span>
-            <span className="ml-2 text-gray-700 dark:text-gray-300">
+            <span className="text-neutral-500 dark:text-neutral-400">
+              Start:
+            </span>
+            <span className="ml-2 text-neutral-700 dark:text-neutral-300">
               {new Date(node.startTime).toISOString()}
             </span>
           </div>
         )}
         {node.endTime && (
           <div>
-            <span className="text-gray-500 dark:text-gray-400">End:</span>
-            <span className="ml-2 text-gray-700 dark:text-gray-300">
+            <span className="text-neutral-500 dark:text-neutral-400">End:</span>
+            <span className="ml-2 text-neutral-700 dark:text-neutral-300">
               {new Date(node.endTime).toISOString()}
             </span>
           </div>
@@ -199,17 +209,17 @@ function TimelineNode({ node, totalDuration, startOffset }: TimelineNodeProps) {
   const statusColors: Record<TraceNode["status"], string> = {
     completed: "bg-success-500",
     running: "bg-primary-500",
-    pending: "bg-gray-300 dark:bg-gray-600",
+    pending: "bg-neutral-300 dark:bg-neutral-600",
     error: "bg-error-500",
-    skipped: "bg-gray-200 dark:bg-gray-700",
+    skipped: "bg-neutral-200 dark:bg-neutral-700",
   };
 
   return (
     <div className="flex items-center gap-2 py-1">
-      <span className="w-24 text-xs text-gray-600 dark:text-gray-400 truncate">
+      <span className="w-24 text-xs text-neutral-600 dark:text-neutral-400 truncate">
         {node.name}
       </span>
-      <div className="flex-1 h-4 bg-gray-100 dark:bg-gray-800 rounded relative">
+      <div className="flex-1 h-4 bg-neutral-100 dark:bg-neutral-800 rounded relative">
         <div
           className={cn("h-full rounded", statusColors[node.status])}
           style={{
@@ -219,7 +229,7 @@ function TimelineNode({ node, totalDuration, startOffset }: TimelineNodeProps) {
           title={`${node.name}: ${node.duration ?? 0}ms`}
         />
       </div>
-      <span className="w-12 text-xs text-right text-gray-500 dark:text-gray-400">
+      <span className="w-12 text-xs text-right text-neutral-500 dark:text-neutral-400">
         {node.duration ?? 0}ms
       </span>
     </div>
@@ -337,7 +347,7 @@ export function AgentTraceTab({
     return (
       <div
         data-testid="agent-trace-tab"
-        className="flex flex-col h-full bg-white dark:bg-gray-900"
+        className="flex flex-col h-full bg-white dark:bg-neutral-900"
       >
         <div
           data-testid="agent-trace-loading"
@@ -354,7 +364,7 @@ export function AgentTraceTab({
     return (
       <div
         data-testid="agent-trace-tab"
-        className="flex flex-col h-full bg-white dark:bg-gray-900"
+        className="flex flex-col h-full bg-white dark:bg-neutral-900"
       >
         <div
           data-testid="agent-trace-error"
@@ -375,11 +385,11 @@ export function AgentTraceTab({
     return (
       <div
         data-testid="agent-trace-tab"
-        className="flex flex-col h-full bg-white dark:bg-gray-900"
+        className="flex flex-col h-full bg-white dark:bg-neutral-900"
       >
         <div
           data-testid="agent-trace-empty"
-          className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-400"
+          className="flex-1 flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-400"
         >
           <Activity size={32} className="mb-2 opacity-50" />
           <p className="text-sm">No trace data available</p>
@@ -392,19 +402,21 @@ export function AgentTraceTab({
   return (
     <div
       data-testid="agent-trace-tab"
-      className="flex flex-col h-full bg-white dark:bg-gray-900"
+      className="flex flex-col h-full bg-white dark:bg-neutral-900"
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
         {/* Session indicator */}
         <div className="flex items-center gap-1.5">
           <Activity
             size={14}
-            className="text-gray-500 dark:text-gray-400"
+            className="text-neutral-500 dark:text-neutral-400"
             aria-hidden="true"
           />
-          <h3 className="text-xs text-gray-600 dark:text-gray-400">Trace</h3>
-          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
+          <h3 className="text-xs text-neutral-600 dark:text-neutral-400">
+            Trace
+          </h3>
+          <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded">
             {sessionId}
           </span>
         </div>
@@ -415,27 +427,31 @@ export function AgentTraceTab({
         {/* Token counts */}
         {trace?.tokens && (
           <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+            <span className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
               <Zap size={12} className="text-primary-500" />
               <span data-testid="token-input">{trace.tokens.input}</span>
-              <span className="text-gray-400 dark:text-gray-400">in</span>
+              <span className="text-neutral-400 dark:text-neutral-400">in</span>
             </span>
-            <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+            <span className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
               <span data-testid="token-output">{trace.tokens.output}</span>
-              <span className="text-gray-400 dark:text-gray-400">out</span>
+              <span className="text-neutral-400 dark:text-neutral-400">
+                out
+              </span>
             </span>
-            <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+            <span className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
               <span data-testid="token-total">
                 {trace.tokens.input + trace.tokens.output}
               </span>
-              <span className="text-gray-400 dark:text-gray-400">total</span>
+              <span className="text-neutral-400 dark:text-neutral-400">
+                total
+              </span>
             </span>
           </div>
         )}
 
         {/* View toggle */}
         <div data-testid="view-toggle" className="flex items-center gap-1">
-          <button
+          <Button
             data-testid="view-list"
             type="button"
             onClick={() => setViewMode("list")}
@@ -443,14 +459,14 @@ export function AgentTraceTab({
               "p-1 rounded",
               viewMode === "list"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
+                : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
             )}
             aria-label="List view"
             aria-pressed={viewMode === "list"}
           >
             <List size={14} />
-          </button>
-          <button
+          </Button>
+          <Button
             data-testid="view-timeline"
             type="button"
             onClick={() => setViewMode("timeline")}
@@ -458,27 +474,27 @@ export function AgentTraceTab({
               "p-1 rounded",
               viewMode === "timeline"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400",
+                : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
             )}
             aria-label="Timeline view"
             aria-pressed={viewMode === "timeline"}
           >
             <Activity size={14} />
-          </button>
+          </Button>
         </div>
 
         {/* Refresh button */}
-        <button
+        <Button
+          variant="secondary"
+          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400"
           data-testid="refresh-trace-button"
           type="button"
           onClick={refetch}
-          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
           aria-label="Refresh trace"
         >
           <RefreshCw size={14} />
-        </button>
+        </Button>
       </div>
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {viewMode === "list" ? (

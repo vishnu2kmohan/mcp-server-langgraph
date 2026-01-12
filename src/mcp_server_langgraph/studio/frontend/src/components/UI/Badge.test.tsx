@@ -30,7 +30,7 @@ describe("Badge", () => {
     it("renders default variant", () => {
       render(<Badge variant="default">Default</Badge>);
       const badge = screen.getByText("Default");
-      expect(badge).toHaveClass("bg-gray-100");
+      expect(badge).toHaveClass("bg-neutral-100");
     });
 
     it("renders primary variant", () => {
@@ -116,6 +116,15 @@ describe("Badge", () => {
       render(<Badge pill={false}>Not Pill</Badge>);
       const badge = screen.getByText("Not Pill");
       expect(badge).not.toHaveClass("rounded-full");
+    });
+  });
+
+  describe("CVA integration", () => {
+    it("exports badgeVariants function for external use", async () => {
+      // This test verifies that CVA variants are properly exported
+      // for composition with other components
+      const { badgeVariants } = await import("./Badge");
+      expect(typeof badgeVariants).toBe("function");
     });
   });
 });

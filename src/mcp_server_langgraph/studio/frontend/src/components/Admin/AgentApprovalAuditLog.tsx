@@ -14,6 +14,8 @@
 
 import React, { useState, useMemo } from "react";
 
+import { Button, Select } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -87,12 +89,14 @@ export function AgentApprovalAuditLog({
     return (
       <div className={`p-4 ${className}`}>
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+          <div className="h-6 bg-neutral-200 dark:bg-neutral-700 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-full mb-2"></div>
+          <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-full mb-2"></div>
+          <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4"></div>
         </div>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">Loading...</p>
+        <p className="text-neutral-500 dark:text-neutral-400 mt-2">
+          Loading...
+        </p>
       </div>
     );
   }
@@ -105,56 +109,55 @@ export function AgentApprovalAuditLog({
 
         <div className="flex items-center gap-4">
           {/* Filter */}
-          <select
+          <Select
+            className="px-3 py-1.5 text-sm"
             value={filter}
             onChange={(e) =>
               setFilter(e.target.value as "all" | "approved" | "rejected")
             }
-            className="px-3 py-1.5 border rounded-md text-sm bg-white"
             aria-label="Filter decisions"
           >
             <option value="all">All Decisions</option>
             <option value="approved">Approved Only</option>
             <option value="rejected">Rejected Only</option>
-          </select>
+          </Select>
 
           {/* Export button */}
-          <button
+          <Button
+            variant="primary"
+            className="px-3 py-1.5 bg-primary-600 text-white rounded-md text-sm hover:bg-primary-700"
             onClick={handleExport}
-            className="px-3 py-1.5 bg-primary-600 text-white rounded-md text-sm hover:bg-primary-700 transition-colors"
             aria-label="Export"
           >
             Export
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Empty state */}
       {filteredEntries.length === 0 && (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+        <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
           <p>No approval history available.</p>
         </div>
       )}
-
       {/* Table */}
       {filteredEntries.length > 0 && (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse" role="table">
             <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+              <tr className="border-b bg-neutral-50">
+                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-600 dark:text-neutral-300">
                   Agent
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-600 dark:text-neutral-300">
                   Decision
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-600 dark:text-neutral-300">
                   Confidence
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-600 dark:text-neutral-300">
                   Decided By
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-600 dark:text-neutral-300">
                   Date
                 </th>
               </tr>
@@ -164,7 +167,7 @@ export function AgentApprovalAuditLog({
                 <React.Fragment key={entry.id}>
                   {/* Main row */}
                   <tr
-                    className="border-b hover:bg-gray-50 cursor-pointer"
+                    className="border-b hover:bg-neutral-50 cursor-pointer"
                     onClick={() => handleRowClick(entry.id)}
                     role="row"
                   >
@@ -190,43 +193,43 @@ export function AgentApprovalAuditLog({
                       >
                         {Math.round(entry.confidence * 100)}%
                       </span>
-                      <span className="text-gray-400 dark:text-gray-400 text-xs ml-1">
+                      <span className="text-neutral-400 dark:text-neutral-400 text-xs ml-1">
                         / {Math.round(entry.threshold * 100)}%
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                    <td className="px-4 py-3 text-sm text-neutral-600 dark:text-neutral-300">
                       {entry.decidedBy}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-4 py-3 text-sm text-neutral-500 dark:text-neutral-400">
                       {formatDate(entry.decidedAt)}
                     </td>
                   </tr>
 
                   {/* Expanded details row */}
                   {expandedId === entry.id && (
-                    <tr className="bg-gray-50">
+                    <tr className="bg-neutral-50">
                       <td colSpan={5} className="px-4 py-3">
                         <div className="text-sm">
                           <div className="mb-2">
-                            <span className="font-medium text-gray-700 dark:text-gray-200">
+                            <span className="font-medium text-neutral-700 dark:text-neutral-200">
                               Request ID:
                             </span>{" "}
-                            <span className="font-mono text-gray-600 dark:text-gray-300">
+                            <span className="font-mono text-neutral-600 dark:text-neutral-300">
                               {entry.requestId}
                             </span>
                           </div>
                           {entry.reason && (
                             <div>
-                              <span className="font-medium text-gray-700 dark:text-gray-200">
+                              <span className="font-medium text-neutral-700 dark:text-neutral-200">
                                 Reason:
                               </span>{" "}
-                              <span className="text-gray-600 dark:text-gray-300">
+                              <span className="text-neutral-600 dark:text-neutral-300">
                                 {entry.reason}
                               </span>
                             </div>
                           )}
                           {!entry.reason && (
-                            <div className="text-gray-400 dark:text-gray-400 italic">
+                            <div className="text-neutral-400 dark:text-neutral-400 italic">
                               No reason provided
                             </div>
                           )}
@@ -240,10 +243,9 @@ export function AgentApprovalAuditLog({
           </table>
         </div>
       )}
-
       {/* Summary */}
       {entries.length > 0 && (
-        <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">
           Showing {filteredEntries.length} of {entries.length} entries
           {filter !== "all" && ` (filtered by: ${filter})`}
         </div>

@@ -14,6 +14,8 @@ import {
 } from "react-syntax-highlighter/dist/esm/styles/prism";
 import type { CodeArtifact as CodeArtifactType } from "../../types/artifacts";
 
+import { Button } from "@/components/UI";
+
 export interface CodeArtifactProps {
   artifact: CodeArtifactType;
 }
@@ -140,8 +142,8 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
 
   const themeClasses =
     theme === "dark"
-      ? "bg-gray-900 text-gray-100 border-gray-700"
-      : "bg-gray-50 text-gray-900 border-gray-200 dark:border-gray-700";
+      ? "bg-neutral-900 text-neutral-100 border-neutral-700"
+      : "bg-neutral-50 text-neutral-900 border-neutral-200 dark:border-neutral-700";
 
   return (
     <div
@@ -154,8 +156,8 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
       <div
         className={`flex items-center justify-between px-4 py-2 border-b ${
           theme === "dark"
-            ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800"
+            ? "border-neutral-700 bg-neutral-800"
+            : "border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800"
         }`}
       >
         <div className="flex items-center gap-3">
@@ -163,21 +165,18 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
           <span
             className={`text-xs font-mono px-2 py-1 rounded ${
               theme === "dark"
-                ? "bg-gray-700 text-gray-300"
-                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                ? "bg-neutral-700 text-neutral-300"
+                : "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200"
             }`}
           >
             {language}
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            size="sm"
+            className="flex px-3 py-1 text-sm rounded"
             onClick={handleCopy}
-            className={`flex items-center gap-2 px-3 py-1 text-sm rounded transition-colors ${
-              theme === "dark"
-                ? "hover:bg-gray-700 text-gray-300"
-                : "hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
-            }`}
             aria-label="Copy code"
           >
             {copied ? (
@@ -191,21 +190,16 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
                 <span>Copy</span>
               </>
             )}
-          </button>
-          <button
+          </Button>
+          <Button
+            className="p-1.5 rounded"
             onClick={handleDownload}
-            className={`p-1.5 rounded transition-colors ${
-              theme === "dark"
-                ? "hover:bg-gray-700 text-gray-300"
-                : "hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
-            }`}
             aria-label="Download code"
           >
             <Download className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Code Content with Syntax Highlighting */}
       <div className="overflow-auto" style={containerStyle}>
         <SyntaxHighlighter

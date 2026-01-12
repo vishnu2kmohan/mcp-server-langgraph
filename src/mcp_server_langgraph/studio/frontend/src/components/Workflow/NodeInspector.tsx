@@ -18,6 +18,8 @@ import {
 import { useGetNodeConfigHelpMutation } from "../../api";
 import type { NodeConfigHelpResponse } from "../../types/api";
 
+import { Button, Input, Select, Textarea } from "@/components/UI";
+
 export function NodeInspector() {
   const dispatch = useAppDispatch();
   const nodes = useAppSelector(selectWorkflowNodes);
@@ -103,90 +105,83 @@ export function NodeInspector() {
   const { data } = selectedNode;
 
   return (
-    <div className="absolute top-4 right-4 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10">
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+    <div className="absolute top-4 right-4 w-80 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 z-10">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+        <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
           Node Inspector
         </h3>
-        <button
+        <Button
+          variant="secondary"
+          className="p-1 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
           onClick={() => dispatch(clearSelection())}
-          className="p-1 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded"
           aria-label="Close node inspector"
         >
-          <X size={18} className="text-gray-500 dark:text-gray-400" />
-        </button>
+          <X size={18} className="text-neutral-500 dark:text-neutral-400" />
+        </Button>
       </div>
-
       <div className="p-4 space-y-4">
         {/* Node Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
             Type
           </label>
-          <div className="text-sm text-gray-900 dark:text-gray-100 capitalize px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded">
+          <div className="text-sm text-neutral-900 dark:text-neutral-100 capitalize px-3 py-2 bg-neutral-50 dark:bg-neutral-700 rounded">
             {data.nodeType}
           </div>
         </div>
 
         {/* Label */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
             Label
           </label>
-          <input
-            type="text"
+          <Input
+            className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
             value={data.label}
             onChange={(e) => handleLabelChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md
-              bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-              focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
 
         {/* Type-specific configuration */}
         {data.nodeType === "llm" && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
               Model
             </label>
-            <select
+            <Select
+              className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
               value={(data.config.model as string) || "gemini-2.5-flash"}
               onChange={(e) => handleConfigChange("model", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md
-                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
               <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
               <option value="gpt-4o">GPT-4o</option>
               <option value="claude-opus-4.5">Claude Opus 4.5</option>
-            </select>
+            </Select>
           </div>
         )}
 
         {data.nodeType === "tool" && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
               Tool Name
             </label>
-            <input
-              type="text"
+            <Input
+              className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
               value={(data.config.toolName as string) || ""}
               onChange={(e) => handleConfigChange("toolName", e.target.value)}
               placeholder="e.g., search_web, read_file"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md
-                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
         )}
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
             Description (optional)
           </label>
-          <textarea
+          <Textarea
+            className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
             value={data.description || ""}
             onChange={(e) =>
               dispatch(
@@ -197,54 +192,47 @@ export function NodeInspector() {
               )
             }
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md
-              bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-              focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
 
         {/* Ask AI Button */}
-        <button
+        <Button
+          className="w-full flex px-4 py-2 rounded-md text-sm"
           data-testid="ask-ai-button"
           onClick={() => setShowAiChat(!showAiChat)}
-          className={`
-            w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md
-            text-sm font-medium transition-colors
-            ${
-              showAiChat
-                ? "bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-            }
-          `}
         >
           <Sparkles size={16} />
           Ask AI
-        </button>
+        </Button>
 
         {/* AI Chat Panel */}
         {showAiChat && (
           <div
             data-testid="ai-chat-panel"
-            className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-700 dark:border-gray-600"
+            className="mt-4 p-3 bg-neutral-50 dark:bg-neutral-700/50 rounded-md border border-neutral-200 dark:border-neutral-700 dark:border-neutral-600"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                 AI Config Assistant
               </span>
-              <button
+              <Button
+                variant="secondary"
+                className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded"
                 data-testid="close-ai-panel"
                 onClick={() => setShowAiChat(false)}
-                className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded"
                 aria-label="Close AI assistant panel"
               >
-                <X size={14} className="text-gray-500 dark:text-gray-400" />
-              </button>
+                <X
+                  size={14}
+                  className="text-neutral-500 dark:text-neutral-400"
+                />
+              </Button>
             </div>
 
             {/* Question Input */}
             <div className="flex gap-2">
-              <input
-                type="text"
+              <Input
+                className="flex-1 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-insight-500"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 onKeyDown={(e) => {
@@ -253,16 +241,12 @@ export function NodeInspector() {
                   }
                 }}
                 placeholder="Ask about this node config..."
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md
-                  bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                  focus:ring-2 focus:ring-insight-500 focus:border-transparent"
               />
-              <button
+              <Button
+                className="p-2 bg-insight-600 text-white rounded-md hover:bg-insight-700"
                 data-testid="send-ai-question"
                 onClick={handleAskAi}
                 disabled={!question.trim() || isLoadingAi}
-                className="p-2 bg-insight-600 text-white rounded-md hover:bg-insight-700
-                  disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Send question to AI assistant"
               >
                 {isLoadingAi ? (
@@ -270,14 +254,14 @@ export function NodeInspector() {
                 ) : (
                   <Send size={16} />
                 )}
-              </button>
+              </Button>
             </div>
 
             {/* Loading State */}
             {isLoadingAi && (
               <div
                 data-testid="ai-loading"
-                className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+                className="mt-3 flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400"
               >
                 <Loader2 size={14} className="animate-spin" />
                 Thinking...
@@ -297,21 +281,21 @@ export function NodeInspector() {
             {/* AI Response */}
             {aiResponse && !isLoadingAi && (
               <div className="mt-3 space-y-2">
-                <p className="text-sm text-gray-700 dark:text-gray-300">
+                <p className="text-sm text-neutral-700 dark:text-neutral-300">
                   {aiResponse.answer}
                 </p>
 
                 {/* Examples */}
                 {aiResponse.examples && aiResponse.examples.length > 0 && (
                   <div className="mt-2">
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
                       Examples:
                     </span>
-                    <ul className="mt-1 text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                    <ul className="mt-1 text-xs text-neutral-600 dark:text-neutral-400 space-y-1">
                       {aiResponse.examples.map((example, i) => (
                         <li
                           key={i}
-                          className="pl-2 border-l-2 border-gray-300 dark:border-gray-600"
+                          className="pl-2 border-l-2 border-neutral-300 dark:border-neutral-600"
                         >
                           {example}
                         </li>
@@ -322,16 +306,15 @@ export function NodeInspector() {
 
                 {/* Apply Suggested Config Button */}
                 {aiResponse.suggested_config && (
-                  <button
+                  <Button
+                    variant="success"
+                    className="flex px-3 py-1.5 bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400 text-sm rounded-md hover:bg-success-200 dark:hover:bg-success-900/50"
                     data-testid="apply-suggested-config"
                     onClick={handleApplySuggestedConfig}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-success-100 text-success-700
-                      dark:bg-success-900/30 dark:text-success-400 text-sm rounded-md
-                      hover:bg-success-200 dark:hover:bg-success-900/50 transition-colors"
                   >
                     <Check size={14} />
                     Apply Suggested Config
-                  </button>
+                  </Button>
                 )}
               </div>
             )}

@@ -23,6 +23,8 @@ import {
   Download,
 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // Track whether mermaid has been initialized (for lazy loading support)
 let mermaidInitialized = false;
 
@@ -324,10 +326,10 @@ export function InteractiveMermaidDiagram({
         </div>
         <pre className="text-xs text-error-500 overflow-x-auto">{error}</pre>
         <details className="mt-2">
-          <summary className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+          <summary className="text-xs text-neutral-500 dark:text-neutral-400 cursor-pointer">
             View source
           </summary>
-          <pre className="mt-1 text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded overflow-x-auto">
+          <pre className="mt-1 text-xs bg-neutral-100 dark:bg-neutral-800 p-2 rounded overflow-x-auto">
             {code}
           </pre>
         </details>
@@ -336,8 +338,8 @@ export function InteractiveMermaidDiagram({
   }
 
   const containerClasses = isFullscreen
-    ? "fixed inset-0 z-50 bg-gray-900"
-    : `my-2 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden ${className}`;
+    ? "fixed inset-0 z-50 bg-neutral-900"
+    : `my-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg overflow-hidden ${className}`;
 
   return (
     <div
@@ -348,71 +350,76 @@ export function InteractiveMermaidDiagram({
       tabIndex={0}
     >
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-2 p-2 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700 dark:border-gray-600">
+      <div className="flex items-center justify-between gap-2 p-2 bg-neutral-100 dark:bg-neutral-700 border-b border-neutral-200 dark:border-neutral-700 dark:border-neutral-600">
         {/* Zoom controls */}
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
             type="button"
             onClick={handleZoomOut}
             aria-label="Zoom out"
-            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <ZoomOut size={16} />
-          </button>
-          <span className="text-xs text-gray-500 dark:text-gray-400 w-12 text-center">
+          </Button>
+          <span className="text-xs text-neutral-500 dark:text-neutral-400 w-12 text-center">
             {Math.round(zoom * 100)}%
           </span>
-          <button
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
             type="button"
             onClick={handleZoomIn}
             aria-label="Zoom in"
-            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <ZoomIn size={16} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
             type="button"
             onClick={handleResetZoom}
             aria-label="Reset zoom"
-            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <RotateCcw size={16} />
-          </button>
+          </Button>
         </div>
 
         {/* Action buttons */}
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
             type="button"
             onClick={handleCopy}
             aria-label="Copy source"
-            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             {copied ? (
               <Check size={16} className="text-success-500" />
             ) : (
               <Copy size={16} />
             )}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
             type="button"
             onClick={handleDownload}
             aria-label="Download as PNG"
-            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <Download size={16} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
             type="button"
             onClick={handleToggleFullscreen}
             aria-label="Toggle fullscreen"
-            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Diagram viewport */}
       <div
         data-testid="mermaid-viewport"

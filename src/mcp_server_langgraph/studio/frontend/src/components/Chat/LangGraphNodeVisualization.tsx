@@ -106,7 +106,7 @@ export function getNodeStatusIndicator(status: LangGraphNodeStatus) {
       return (
         <Circle
           size={12}
-          className="text-gray-400 dark:text-gray-400"
+          className="text-neutral-400 dark:text-neutral-400"
           data-testid="node-status-pending"
         />
       );
@@ -114,7 +114,7 @@ export function getNodeStatusIndicator(status: LangGraphNodeStatus) {
       return (
         <Circle
           size={12}
-          className="text-gray-300 opacity-50"
+          className="text-neutral-300 opacity-50"
           data-testid="node-status-skipped"
         />
       );
@@ -148,7 +148,7 @@ export function getNodeColor(
     case "agent":
       return "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700";
     default:
-      return "bg-gray-50 dark:bg-gray-900/20 border-gray-300 dark:border-gray-600 dark:border-gray-700";
+      return "bg-neutral-50 dark:bg-neutral-900/20 border-neutral-300 dark:border-neutral-600 dark:border-neutral-700";
   }
 }
 
@@ -179,23 +179,23 @@ export function LangGraphNodeVisualization({
               className={`
                 flex items-center gap-2 px-3 py-2 rounded-lg border
                 ${getNodeColor(node.type, node.status)}
-                ${isActive ? "ring-2 ring-primary-500 ring-offset-1 dark:ring-offset-gray-900" : ""}
+                ${isActive ? "ring-2 ring-primary-500 ring-offset-1 dark:ring-offset-neutral-900" : ""}
                 transition-all duration-200
               `}
             >
               {/* Type icon */}
-              <span className="text-gray-600 dark:text-gray-400">
+              <span className="text-neutral-600 dark:text-neutral-400">
                 {getNodeTypeIcon(node.type)}
               </span>
 
               {/* Name */}
-              <span className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">
+              <span className="flex-1 text-sm font-medium text-neutral-800 dark:text-neutral-200">
                 {node.name}
               </span>
 
               {/* Duration */}
               {node.duration !== undefined && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-neutral-500 dark:text-neutral-400">
                   {node.duration}ms
                 </span>
               )}
@@ -211,11 +211,11 @@ export function LangGraphNodeVisualization({
                   <div
                     key={`${edge.from}-${edge.to}`}
                     data-testid={`edge-${edge.from}-to-${edge.to}`}
-                    className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-400"
+                    className="flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-400"
                   >
                     <ArrowRight size={10} />
                     {edge.condition && (
-                      <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">
+                      <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded text-neutral-600 dark:text-neutral-300">
                         {edge.condition}
                       </span>
                     )}

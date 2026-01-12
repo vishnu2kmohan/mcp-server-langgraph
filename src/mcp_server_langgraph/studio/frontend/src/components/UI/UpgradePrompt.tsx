@@ -8,6 +8,8 @@
 
 import { Sparkles, X } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 export interface UpgradePromptProps {
   /** Whether to show the prompt */
   show: boolean;
@@ -83,7 +85,7 @@ export function UpgradePrompt({
     }
   };
 
-  const getButtonStyle = () => {
+  const _getButtonStyle = () => {
     switch (urgency) {
       case "critical":
         return "bg-error-600 hover:bg-error-700 text-white";
@@ -123,7 +125,7 @@ export function UpgradePrompt({
 
         {/* Message */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
             {isAtLimit ? (
               <>Limit reached!</>
             ) : (
@@ -133,7 +135,7 @@ export function UpgradePrompt({
             )}
           </p>
           {currentUsage !== undefined && maxUsage !== undefined && (
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5">
               {isAtLimit ? (
                 <>
                   You've used all {maxUsage} of your {feature}. Upgrade for
@@ -150,21 +152,22 @@ export function UpgradePrompt({
 
         {/* Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button
+          <Button
+            className="px-3 py-1.5 text-sm rounded-lg"
             type="button"
             onClick={onUpgrade}
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${getButtonStyle()}`}
           >
             Upgrade
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            className="p-1.5 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700"
             type="button"
             onClick={onDismiss}
             aria-label="Dismiss"
-            className="p-1.5 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 transition-colors"
           >
             <X size={16} />
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -14,6 +14,8 @@ import {
   MessageSquare,
 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 export interface ChatSuggestion {
   id: string;
   text: string;
@@ -85,7 +87,7 @@ export function ChatSuggestions({
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="h-10 w-40 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"
+            className="h-10 w-40 bg-neutral-200 dark:bg-neutral-700 rounded-lg animate-pulse"
           />
         ))}
       </div>
@@ -104,7 +106,9 @@ export function ChatSuggestions({
 
   return (
     <div className={`px-4 py-3 ${className}`}>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{title}</p>
+      <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
+        {title}
+      </p>
       <ul
         role="list"
         className={`flex flex-wrap ${compact ? "gap-2" : "gap-3"} ${className}`}
@@ -113,7 +117,9 @@ export function ChatSuggestions({
           const Icon = getIcon(suggestion.icon);
           return (
             <li key={suggestion.id}>
-              <button
+              <Button
+                variant="secondary"
+                className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 hover:border-primary-300 dark:hover:border-primary-600 focus:ring-primary-500/50"
                 type="button"
                 onClick={() => onSelect(suggestion.text)}
                 onKeyDown={(e) => {
@@ -121,25 +127,13 @@ export function ChatSuggestions({
                     onSelect(suggestion.text);
                   }
                 }}
-                className={`
-                  inline-flex items-center gap-2
-                  ${compact ? "px-3 py-1.5 text-sm" : "px-4 py-2"}
-                  bg-white dark:bg-gray-800
-                  border border-gray-200 dark:border-gray-700
-                  rounded-lg
-                  text-gray-700 dark:text-gray-300
-                  hover:bg-gray-50 dark:hover:bg-gray-700
-                  hover:border-primary-300 dark:hover:border-primary-600
-                  focus:outline-none focus:ring-2 focus:ring-primary-500/50
-                  transition-colors
-                `}
               >
                 <Icon
                   size={compact ? 14 : 16}
-                  className="text-gray-400 dark:text-gray-400"
+                  className="text-neutral-400 dark:text-neutral-400"
                 />
                 <span>{suggestion.text}</span>
-              </button>
+              </Button>
             </li>
           );
         })}

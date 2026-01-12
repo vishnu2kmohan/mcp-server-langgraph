@@ -20,6 +20,8 @@ import { PromptLibrary } from "./PromptLibrary";
 import { MCPServerCard } from "./MCPServerCard";
 import { useMCPAggregatedUpdates } from "../../hooks";
 
+import { Button } from "@/components/UI";
+
 export interface AggregatedCapabilitiesPanelProps {
   /** Whether to show admin-only actions (refresh all, etc.) */
   showAdminActions?: boolean;
@@ -57,7 +59,7 @@ function TabButton({
   onClick: (id: TabId) => void;
 }) {
   return (
-    <button
+    <Button
       type="button"
       role="tab"
       aria-selected={active}
@@ -66,12 +68,12 @@ function TabButton({
         "px-4 py-2 text-sm font-medium rounded-t-lg transition-colors",
         "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2",
         active
-          ? "bg-white dark:bg-gray-900 text-brand-primary border-b-2 border-brand-primary"
-          : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200",
+          ? "bg-white dark:bg-neutral-900 text-brand-primary border-b-2 border-brand-primary"
+          : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200",
       )}
     >
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -174,7 +176,7 @@ export function AggregatedCapabilitiesPanel({
           <p className="text-error-500 mb-4">
             Failed to load aggregated capabilities.
           </p>
-          <button
+          <Button
             type="button"
             onClick={() => refetch()}
             className={cn(
@@ -184,7 +186,7 @@ export function AggregatedCapabilitiesPanel({
             )}
           >
             Retry
-          </button>
+          </Button>
         </div>
       </Card>
     );
@@ -207,21 +209,21 @@ export function AggregatedCapabilitiesPanel({
           <div className="flex items-center gap-4">
             <CardTitle>Aggregated Capabilities</CardTitle>
             {/* Stats summary */}
-            <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center gap-3 text-sm text-neutral-600 dark:text-neutral-400">
               <span>{totalServers} servers</span>
-              <span className="text-gray-300 dark:text-gray-600 dark:text-gray-300">
+              <span className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300">
                 |
               </span>
               <span>{totalTools} tools</span>
-              <span className="text-gray-300 dark:text-gray-600 dark:text-gray-300">
+              <span className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300">
                 |
               </span>
               <span>{totalResources} resources</span>
-              <span className="text-gray-300 dark:text-gray-600 dark:text-gray-300">
+              <span className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300">
                 |
               </span>
               <span>{totalPrompts} prompts</span>
-              <span className="text-gray-300 dark:text-gray-600 dark:text-gray-300">
+              <span className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300">
                 |
               </span>
               {/* Real-time sync indicator */}
@@ -236,7 +238,7 @@ export function AggregatedCapabilitiesPanel({
                     wsStatus === "connecting" && "bg-warning-500 animate-pulse",
                     wsStatus === "reconnecting" &&
                       "bg-warning-500 animate-pulse",
-                    wsStatus === "disconnected" && "bg-gray-400",
+                    wsStatus === "disconnected" && "bg-neutral-400",
                     wsStatus === "error" && "bg-error-500",
                   )}
                 />
@@ -248,41 +250,39 @@ export function AggregatedCapabilitiesPanel({
           </div>
           {/* Admin actions */}
           {showAdminActions && (
-            <button
+            <Button
               type="button"
               onClick={handleRefreshAll}
               className={cn(
                 "px-3 py-1.5 text-sm font-medium rounded-md",
-                "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 dark:bg-gray-700 dark:text-gray-200",
-                "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600",
+                "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 dark:bg-neutral-700 dark:text-neutral-200",
+                "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600",
                 "focus:outline-none focus:ring-2 focus:ring-brand-primary",
               )}
             >
               Refresh All
-            </button>
+            </Button>
           )}
         </div>
       </CardHeader>
-
       {/* Filter indicator */}
       {serverFilter && (
         <div className="px-4 py-2 bg-primary-50 dark:bg-primary-900/20 border-b border-primary-100 dark:border-primary-800 flex items-center justify-between">
           <span className="text-sm text-primary-700 dark:text-primary-300">
             Filtered by server: <strong>{serverFilter}</strong>
           </span>
-          <button
+          <Button
+            className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
             type="button"
             onClick={handleClearFilter}
-            className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
           >
             Clear filter
-          </button>
+          </Button>
         </div>
       )}
-
       {/* Tabs */}
       <div
-        className="border-b border-gray-200 dark:border-gray-700 px-4"
+        className="border-b border-neutral-200 dark:border-neutral-700 px-4"
         role="tablist"
       >
         <div className="flex gap-2">
@@ -312,7 +312,6 @@ export function AggregatedCapabilitiesPanel({
           />
         </div>
       </div>
-
       {/* Tab content */}
       <CardContent className="p-4">
         {activeTab === "tools" && (

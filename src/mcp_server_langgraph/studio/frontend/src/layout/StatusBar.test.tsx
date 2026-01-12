@@ -403,7 +403,7 @@ describe("StatusBar", () => {
       render(<StatusBar />);
 
       const statusBar = screen.getByTestId("status-bar");
-      expect(statusBar).toHaveClass("dark:bg-gray-800");
+      expect(statusBar).toHaveClass("dark:bg-neutral-800");
     });
   });
 
@@ -808,7 +808,7 @@ describe("StatusBar", () => {
       render(<StatusBar kbStatus="unavailable" />);
 
       const indicator = screen.getByTestId("kb-status-indicator");
-      expect(indicator).toHaveClass("bg-gray-400");
+      expect(indicator).toHaveClass("bg-neutral-400");
     });
 
     it("should display KB label text with status", () => {

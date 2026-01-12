@@ -50,7 +50,7 @@ describe("GenerateWorkflowButton", () => {
 
     // Default mock for feature flags - feature enabled
     (useGetFeatureFlagsQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: { enable_workflow_from_chat: true },
+      data: { workflow_from_chat: true },
       isLoading: false,
     });
   });
@@ -71,7 +71,7 @@ describe("GenerateWorkflowButton", () => {
 
     it("should not render when feature is disabled", () => {
       (useGetFeatureFlagsQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-        data: { enable_workflow_from_chat: false },
+        data: { workflow_from_chat: false },
         isLoading: false,
       });
 

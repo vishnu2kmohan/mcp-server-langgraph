@@ -26,6 +26,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 export type NodeStatus = "idle" | "pending" | "running" | "success" | "error";
 
 export interface WorkflowNode {
@@ -57,16 +59,21 @@ const statusStyles: Record<
   { bg: string; border: string; text: string; icon: React.ReactNode }
 > = {
   idle: {
-    bg: "bg-gray-100 dark:bg-gray-800",
-    border: "border-gray-300 dark:border-gray-600",
-    text: "text-gray-500 dark:text-gray-400",
-    icon: <Circle size={12} className="text-gray-400 dark:text-gray-400" />,
+    bg: "bg-neutral-100 dark:bg-neutral-800",
+    border: "border-neutral-300 dark:border-neutral-600",
+    text: "text-neutral-500 dark:text-neutral-400",
+    icon: (
+      <Circle size={12} className="text-neutral-400 dark:text-neutral-400" />
+    ),
   },
   pending: {
-    bg: "bg-gray-100 dark:bg-gray-800",
-    border: "border-gray-400 dark:border-gray-500 dark:border-gray-500",
-    text: "text-gray-600 dark:text-gray-300",
-    icon: <Circle size={12} className="text-gray-400 dark:text-gray-400" />,
+    bg: "bg-neutral-100 dark:bg-neutral-800",
+    border:
+      "border-neutral-400 dark:border-neutral-500 dark:border-neutral-500",
+    text: "text-neutral-600 dark:text-neutral-300",
+    icon: (
+      <Circle size={12} className="text-neutral-400 dark:text-neutral-400" />
+    ),
   },
   running: {
     bg: "bg-primary-50 dark:bg-primary-900/30",
@@ -132,12 +139,12 @@ export function WorkflowMiniView({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 ${className}`}
+      className={`bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 ${className}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
             Workflow
           </span>
           {activeNode && (
@@ -148,32 +155,31 @@ export function WorkflowMiniView({
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">
             {progress}%
           </span>
           {onExpand && (
-            <button
+            <Button
+              variant="secondary"
+              className="p-1 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 rounded"
               onClick={onExpand}
-              className="p-1 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 rounded transition-colors"
               title="Expand workflow view"
             >
               <ChevronRight
                 size={14}
-                className="text-gray-400 dark:text-gray-400"
+                className="text-neutral-400 dark:text-neutral-400"
               />
-            </button>
+            </Button>
           )}
         </div>
       </div>
-
       {/* Progress bar */}
-      <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full mb-3 overflow-hidden">
+      <div className="h-1 bg-neutral-200 dark:bg-neutral-700 rounded-full mb-3 overflow-hidden">
         <div
           className="h-full bg-primary-500 transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
-
       {/* Nodes */}
       <div
         className={`flex gap-2 ${isHorizontal ? "flex-row flex-wrap" : "flex-col"}`}
@@ -184,7 +190,7 @@ export function WorkflowMiniView({
             {isHorizontal && index < nodes.length - 1 && (
               <ChevronRight
                 size={12}
-                className="text-gray-400 dark:text-gray-400 flex-shrink-0"
+                className="text-neutral-400 dark:text-neutral-400 flex-shrink-0"
               />
             )}
           </div>
@@ -198,7 +204,7 @@ export function WorkflowMiniView({
  * Hook to generate workflow nodes from session messages
  * This extracts tool calls and LLM interactions from the chat
  */
-// eslint-disable-next-line react-refresh/only-export-components
+
 export function useWorkflowFromMessages(
   messages: Array<{
     id: string;

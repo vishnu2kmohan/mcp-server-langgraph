@@ -8,6 +8,8 @@ import { useState, useCallback } from "react";
 import { Copy, Check, ChevronDown, ChevronRight, Download } from "lucide-react";
 import type { JSONArtifact as JSONArtifactType } from "../../types/artifacts";
 
+import { Button } from "@/components/UI";
+
 export interface JSONArtifactProps {
   artifact: JSONArtifactType;
 }
@@ -75,10 +77,12 @@ function JSONTreeNode({
     theme === "dark" ? "text-insight-400" : "text-insight-600";
   const nullColor =
     theme === "dark"
-      ? "text-gray-400 dark:text-gray-400"
-      : "text-gray-500 dark:text-gray-400";
+      ? "text-neutral-400 dark:text-neutral-400"
+      : "text-neutral-500 dark:text-neutral-400";
   const bracketColor =
-    theme === "dark" ? "text-gray-300" : "text-gray-700 dark:text-gray-200";
+    theme === "dark"
+      ? "text-neutral-300"
+      : "text-neutral-700 dark:text-neutral-200";
 
   // Primitive values
   if (!isObject(value) && !isArray(value)) {
@@ -127,9 +131,9 @@ function JSONTreeNode({
         style={{ paddingLeft: `${indentSize}px` }}
       >
         {!isEmpty && (
-          <button
-            onClick={toggleCollapse}
+          <Button
             className="mr-1 mt-0.5 hover:opacity-70"
+            onClick={toggleCollapse}
             aria-label="Toggle collapse"
           >
             {isCollapsed ? (
@@ -137,7 +141,7 @@ function JSONTreeNode({
             ) : (
               <ChevronDown className="w-4 h-4" />
             )}
-          </button>
+          </Button>
         )}
         {isEmpty && <span className="w-5" />}
         {keyName && (
@@ -154,7 +158,6 @@ function JSONTreeNode({
         </span>
         {!isLast && isCollapsed && <span className={bracketColor}>,</span>}
       </div>
-
       {!isCollapsed && !isEmpty && (
         <>
           {entries.map(([key, val], index) => (
@@ -227,8 +230,8 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
 
   const themeClasses =
     theme === "dark"
-      ? "bg-gray-900 text-gray-100 border-gray-700"
-      : "bg-gray-50 text-gray-900 border-gray-200 dark:border-gray-700";
+      ? "bg-neutral-900 text-neutral-100 border-neutral-700"
+      : "bg-neutral-50 text-neutral-900 border-neutral-200 dark:border-neutral-700";
 
   return (
     <div
@@ -241,8 +244,8 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
       <div
         className={`flex items-center justify-between px-4 py-2 border-b ${
           theme === "dark"
-            ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800"
+            ? "border-neutral-700 bg-neutral-800"
+            : "border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800"
         }`}
       >
         <div className="flex items-center gap-3">
@@ -250,21 +253,18 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
           <span
             className={`text-xs font-mono px-2 py-1 rounded ${
               theme === "dark"
-                ? "bg-gray-700 text-gray-300"
-                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                ? "bg-neutral-700 text-neutral-300"
+                : "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200"
             }`}
           >
             JSON
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            size="sm"
+            className="flex px-3 py-1 text-sm rounded"
             onClick={handleCopy}
-            className={`flex items-center gap-2 px-3 py-1 text-sm rounded transition-colors ${
-              theme === "dark"
-                ? "hover:bg-gray-700 text-gray-300"
-                : "hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
-            }`}
             aria-label="Copy JSON"
           >
             {copied ? (
@@ -278,21 +278,16 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
                 <span>Copy</span>
               </>
             )}
-          </button>
-          <button
+          </Button>
+          <Button
+            className="p-1.5 rounded"
             onClick={handleDownload}
-            className={`p-1.5 rounded transition-colors ${
-              theme === "dark"
-                ? "hover:bg-gray-700 text-gray-300"
-                : "hover:bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
-            }`}
             aria-label="Download JSON"
           >
             <Download className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* JSON Content */}
       <div className="p-4 overflow-auto max-h-[600px]">
         <JSONTreeNode

@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import type { AISuggestion } from "../../types/api";
 
+import { Button } from "@/components/UI";
+
 export interface SuggestionChipsProps {
   suggestions: AISuggestion[];
   isLoading: boolean;
@@ -70,7 +72,7 @@ function getConfidenceColorClass(level: "high" | "medium" | "low"): string {
     case "medium":
       return "border-warning-500 bg-warning-50 dark:bg-warning-900/20";
     case "low":
-      return "border-gray-400 dark:border-gray-500 bg-gray-50 dark:bg-gray-800/50";
+      return "border-neutral-400 dark:border-neutral-500 bg-neutral-50 dark:bg-neutral-800/50";
   }
 }
 
@@ -95,8 +97,8 @@ export function SuggestionChips({
   // Loading state
   if (isLoading && suggestions.length === 0) {
     return (
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+      <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
           <RefreshCw className="w-4 h-4 animate-spin" />
           <span>Analyzing workflow...</span>
         </div>
@@ -110,13 +112,13 @@ export function SuggestionChips({
       <div className="p-4 bg-error-50 dark:bg-error-900/20 rounded-lg border border-error-200 dark:border-error-800">
         <div className="flex items-center justify-between">
           <span className="text-error-600 dark:text-error-400">{error}</span>
-          <button
-            onClick={onRefresh}
+          <Button
             className="text-sm text-error-600 dark:text-error-400 hover:underline"
+            onClick={onRefresh}
             aria-label="Retry"
           >
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -125,18 +127,18 @@ export function SuggestionChips({
   // Empty state
   if (suggestions.length === 0) {
     return (
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
-          <span className="text-gray-500 dark:text-gray-400">
+          <span className="text-neutral-500 dark:text-neutral-400">
             No suggestions available
           </span>
-          <button
-            onClick={onRefresh}
+          <Button
             className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+            onClick={onRefresh}
             aria-label="Refresh suggestions"
           >
             <RefreshCw className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -146,13 +148,13 @@ export function SuggestionChips({
     <div
       data-testid="suggestions-container"
       data-expanded={isExpanded.toString()}
-      className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+      className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between p-3 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center gap-2">
           <Lightbulb className="w-4 h-4 text-warning-500" />
-          <span className="font-medium text-sm text-gray-700 dark:text-gray-300">
+          <span className="font-medium text-sm text-neutral-700 dark:text-neutral-300">
             AI Suggestions
           </span>
           {!isExpanded && (
@@ -162,16 +164,16 @@ export function SuggestionChips({
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            className="p-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
             onClick={onRefresh}
-            className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
             aria-label="Refresh suggestions"
           >
             <RefreshCw className="w-4 h-4" />
-          </button>
-          <button
+          </Button>
+          <Button
+            className="p-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
             aria-label={
               isExpanded ? "Collapse suggestions" : "Expand suggestions"
             }
@@ -181,10 +183,9 @@ export function SuggestionChips({
             ) : (
               <ChevronDown className="w-4 h-4" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Suggestions list */}
       {isExpanded && (
         <ul role="list" className="p-2 space-y-2">
@@ -202,28 +203,30 @@ export function SuggestionChips({
                   <SuggestionIcon type={suggestion.type} />
                 </div>
                 <div className="flex-grow min-w-0">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <p className="text-sm text-neutral-700 dark:text-neutral-300">
                     {suggestion.description}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                     {Math.round(suggestion.confidence * 100)}% confidence
                   </p>
                 </div>
                 <div className="flex-shrink-0 flex items-center gap-1">
-                  <button
-                    onClick={() => onApply(suggestion)}
+                  <Button
+                    variant="success"
                     className="p-1.5 text-success-600 hover:bg-success-100 dark:hover:bg-success-900/30 rounded"
+                    onClick={() => onApply(suggestion)}
                     aria-label="Apply suggestion"
                   >
                     <Check className="w-4 h-4" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="p-1.5 text-neutral-400 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
                     onClick={() => onDismiss(suggestion)}
-                    className="p-1.5 text-gray-400 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded"
                     aria-label="Dismiss suggestion"
                   >
                     <X className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               </li>
             );
@@ -232,12 +235,12 @@ export function SuggestionChips({
           {/* Show more button */}
           {hiddenCount > 0 && !showAll && (
             <li className="text-center">
-              <button
-                onClick={() => setShowAll(true)}
+              <Button
                 className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+                onClick={() => setShowAll(true)}
               >
                 Show {hiddenCount} more
-              </button>
+              </Button>
             </li>
           )}
         </ul>

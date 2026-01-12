@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import type { AIRecommendation, RiskLevel } from "../../types/api";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -67,7 +69,7 @@ function getRiskBgColor(risk: RiskLevel): string {
     case "high":
       return "bg-error-500";
     default:
-      return "bg-gray-500";
+      return "bg-neutral-500";
   }
 }
 
@@ -107,12 +109,12 @@ function LoadingSkeleton() {
       data-testid="recommendation-skeleton"
       className="animate-pulse space-y-4"
     >
-      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
-      <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded" />
-      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4" />
+      <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-1/3" />
+      <div className="h-16 bg-neutral-200 dark:bg-neutral-700 rounded" />
+      <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-1/4" />
       <div className="space-y-2">
-        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded" />
-        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="h-12 bg-neutral-200 dark:bg-neutral-700 rounded" />
+        <div className="h-12 bg-neutral-200 dark:bg-neutral-700 rounded" />
       </div>
     </div>
   );
@@ -126,7 +128,7 @@ function StepCard({ step }: StepCardProps) {
   return (
     <div
       data-testid={`step-${step.stepNumber}`}
-      className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
+      className="p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg"
     >
       <div className="flex items-center gap-2 mb-2">
         {/* Step Number */}
@@ -135,7 +137,7 @@ function StepCard({ step }: StepCardProps) {
         </span>
 
         {/* Action */}
-        <span className="font-medium text-gray-900 dark:text-white text-sm">
+        <span className="font-medium text-neutral-900 dark:text-white text-sm">
           {step.action.charAt(0).toUpperCase() + step.action.slice(1)}
         </span>
 
@@ -162,20 +164,20 @@ function StepCard({ step }: StepCardProps) {
       </div>
 
       {/* Description */}
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
         {step.description}
       </p>
 
       {/* Command */}
       {step.command ? (
         <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-gray-400 dark:text-gray-400" />
-          <code className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono">
+          <Terminal className="w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+          <code className="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded font-mono">
             {step.command}
           </code>
         </div>
       ) : (
-        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 italic">
+        <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400 italic">
           <Terminal className="w-4 h-4" />
           Manual step - no command
         </div>
@@ -201,7 +203,7 @@ export function AIRecommendationCard({
     return (
       <div
         data-testid="ai-recommendation-card"
-        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+        className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4"
       >
         <LoadingSkeleton />
       </div>
@@ -213,19 +215,19 @@ export function AIRecommendationCard({
     return (
       <div
         data-testid="ai-recommendation-card"
-        className="bg-white dark:bg-gray-900 border border-error-200 dark:border-error-800 rounded-lg p-4"
+        className="bg-white dark:bg-neutral-900 border border-error-200 dark:border-error-800 rounded-lg p-4"
       >
         <div className="flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-error-700 dark:text-error-400">{error}</p>
-            <button
+            <Button
+              className="mt-2 text-sm text-error-600 dark:text-error-400 underline hover:no-underline"
               data-testid="retry-button"
               onClick={onRegenerate}
-              className="mt-2 text-sm text-error-600 dark:text-error-400 underline hover:no-underline"
             >
               Retry
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -237,17 +239,17 @@ export function AIRecommendationCard({
     return (
       <div
         data-testid="ai-recommendation-card"
-        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+        className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4"
       >
-        <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col items-center justify-center py-8 text-neutral-500 dark:text-neutral-400">
           <Bot className="w-10 h-10 mb-2 opacity-50" />
           <p>No recommendation available</p>
-          <button
-            onClick={onRegenerate}
+          <Button
             className="mt-2 text-sm text-primary-600 dark:text-primary-400 underline hover:no-underline"
+            onClick={onRegenerate}
           >
             Generate recommendation
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -258,24 +260,25 @@ export function AIRecommendationCard({
   return (
     <div
       data-testid="ai-recommendation-card"
-      className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg"
+      className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center gap-2">
           <Bot className="w-5 h-5 text-insight-500" />
-          <h3 className="font-medium text-gray-900 dark:text-white">
+          <h3 className="font-medium text-neutral-900 dark:text-white">
             AI Recommendation
           </h3>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">
             via {recommendation.modelUsed}
           </span>
         </div>
-        <button
+        <Button
+          size="sm"
+          className="flex text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
           data-testid="regenerate-button"
           onClick={onRegenerate}
           disabled={isRegenerating}
-          className="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isRegenerating ? (
             <RefreshCw
@@ -286,24 +289,23 @@ export function AIRecommendationCard({
             <RefreshCw className="w-3 h-3" />
           )}
           Regenerate
-        </button>
+        </Button>
       </div>
-
       {/* Content */}
       <div className="p-4 space-y-4">
         {/* Root Cause Analysis */}
         <section>
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+          <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
             Root Cause Analysis
           </h4>
-          <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-lg">
             {recommendation.rootCauseAnalysis}
           </p>
         </section>
 
         {/* Remediation Steps */}
         <section>
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+          <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
             Remediation Steps
           </h4>
           <div className="space-y-2">
@@ -315,12 +317,12 @@ export function AIRecommendationCard({
 
         {/* Risk Assessment */}
         <section>
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+          <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
             Risk Assessment
           </h4>
-          <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg space-y-2">
+          <div className="bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-lg space-y-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">
                 Overall Risk:
               </span>
               <span
@@ -333,18 +335,18 @@ export function AIRecommendationCard({
               </span>
             </div>
             <div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">
                 Impact:{" "}
               </span>
-              <span className="text-sm text-gray-700 dark:text-gray-300">
+              <span className="text-sm text-neutral-700 dark:text-neutral-300">
                 {recommendation.riskAssessment.impactAnalysis}
               </span>
             </div>
             <div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">
                 Rollback:{" "}
               </span>
-              <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">
+              <code className="text-xs bg-neutral-100 dark:bg-neutral-700 px-1 py-0.5 rounded">
                 {recommendation.riskAssessment.rollbackPlan}
               </code>
             </div>
@@ -365,9 +367,8 @@ export function AIRecommendationCard({
           </a>
         )}
       </div>
-
       {/* Footer */}
-      <div className="flex items-center gap-2 px-4 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex items-center gap-2 px-4 py-2 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/30 text-xs text-neutral-500 dark:text-neutral-400">
         <Clock className="w-3 h-3" />
         <span data-testid="generated-at">
           Generated {formatRelativeTime(recommendation.generatedAt)}

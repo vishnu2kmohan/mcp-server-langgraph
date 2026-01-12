@@ -256,4 +256,11 @@ describe("Dialog", () => {
       expect(content).toHaveClass("custom-class");
     });
   });
+
+  describe("CVA integration", () => {
+    it("exports dialogVariants function for external use", async () => {
+      const { dialogVariants } = await import("./Dialog");
+      expect(typeof dialogVariants).toBe("function");
+    });
+  });
 });

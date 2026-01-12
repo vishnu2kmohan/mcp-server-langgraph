@@ -175,8 +175,8 @@ export function SlashCommandMenu({
       onKeyDown={handleKeyDown}
       className={`
         absolute bottom-full left-0 mb-2 w-72
-        bg-white dark:bg-gray-800
-        border border-gray-200 dark:border-gray-700
+        bg-white dark:bg-neutral-800
+        border border-neutral-200 dark:border-neutral-700
         rounded-lg shadow-lg
         max-h-64 overflow-y-auto
         z-50
@@ -184,7 +184,7 @@ export function SlashCommandMenu({
       `}
     >
       {filteredCommands.length === 0 ? (
-        <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+        <div className="px-4 py-3 text-sm text-neutral-500 dark:text-neutral-400">
           No commands found
         </div>
       ) : (
@@ -206,7 +206,7 @@ export function SlashCommandMenu({
                   ${
                     isHighlighted
                       ? "bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300"
-                      : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                      : "hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
                   }
                 `}
               >
@@ -215,19 +215,19 @@ export function SlashCommandMenu({
                   className={
                     isHighlighted
                       ? "text-primary-500"
-                      : "text-gray-400 dark:text-gray-400"
+                      : "text-neutral-400 dark:text-neutral-400"
                   }
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                     /{command.name}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
                     {command.description}
                   </div>
                 </div>
                 {command.shortcut && (
-                  <kbd className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-500 dark:text-gray-400">
+                  <kbd className="text-xs px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400">
                     {command.shortcut}
                   </kbd>
                 )}

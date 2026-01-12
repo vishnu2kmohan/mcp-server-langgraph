@@ -24,6 +24,8 @@ import {
   STATUS_TEXT_COLORS,
 } from "../utils/devToolsColors";
 
+import { Button, Input } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -94,9 +96,10 @@ function FilterDropdown({
 
   return (
     <div className="relative">
-      <button
+      <Button
+        variant="secondary"
+        className="px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-800 rounded-md hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 flex"
         onClick={() => setIsOpen(!isOpen)}
-        className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 flex items-center gap-1"
         aria-label={label}
       >
         {label}: {value || "All"}
@@ -113,30 +116,30 @@ function FilterDropdown({
             d="M19 9l-7 7-7-7"
           />
         </svg>
-      </button>
+      </Button>
       {isOpen && (
         <>
           <div
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-20 min-w-[120px]">
-            <button
+          <div className="absolute top-full left-0 mt-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-md shadow-lg z-20 min-w-[120px]">
+            <Button
               role="option"
               onClick={() => {
                 onChange("");
                 setIsOpen(false);
               }}
               className={cn(
-                "w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                "w-full text-left px-3 py-2 text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
                 !value && "bg-primary-50 dark:bg-primary-900",
               )}
               aria-label="All"
             >
               All
-            </button>
+            </Button>
             {options.map((option) => (
-              <button
+              <Button
                 key={option}
                 role="option"
                 onClick={() => {
@@ -144,13 +147,13 @@ function FilterDropdown({
                   setIsOpen(false);
                 }}
                 className={cn(
-                  "w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                  "w-full text-left px-3 py-2 text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
                   value === option && "bg-primary-50 dark:bg-primary-900",
                 )}
                 aria-label={option}
               >
                 {option}
-              </button>
+              </Button>
             ))}
           </div>
         </>
@@ -193,7 +196,7 @@ function LogRow({ log, onJumpToTrace }: LogRowProps): React.ReactElement {
     <div
       data-log={log.id}
       className={cn(
-        "border-b border-gray-100 dark:border-gray-800 py-2 px-3 hover:bg-gray-50 dark:hover:bg-gray-900",
+        "border-b border-neutral-100 dark:border-neutral-800 py-2 px-3 hover:bg-neutral-50 dark:hover:bg-neutral-900",
         rowBgClass,
       )}
     >
@@ -208,21 +211,21 @@ function LogRow({ log, onJumpToTrace }: LogRowProps): React.ReactElement {
         </div>
 
         {/* Service */}
-        <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0 pt-0.5">
+        <span className="text-xs text-neutral-500 dark:text-neutral-400 shrink-0 pt-0.5">
           {log.service}
         </span>
 
         {/* Message */}
-        <span className="flex-1 text-sm text-gray-900 dark:text-white break-words">
+        <span className="flex-1 text-sm text-neutral-900 dark:text-white break-words">
           {log.message}
         </span>
 
         {/* Actions */}
         <div className="flex items-center gap-1 shrink-0">
           {hasAttributes && (
-            <button
+            <Button
+              className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
               aria-label="Expand"
             >
               <svg
@@ -241,11 +244,11 @@ function LogRow({ log, onJumpToTrace }: LogRowProps): React.ReactElement {
                   d="M19 9l-7 7-7-7"
                 />
               </svg>
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300"
             onClick={handleCopy}
-            className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
             aria-label="Copy"
           >
             <svg
@@ -261,39 +264,37 @@ function LogRow({ log, onJumpToTrace }: LogRowProps): React.ReactElement {
                 d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
               />
             </svg>
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Trace correlation */}
       {(log.traceId || log.spanId) && (
         <div className="mt-1 ml-[72px] flex items-center gap-3 text-xs">
           {log.traceId && (
-            <span className="font-mono text-gray-500 dark:text-gray-400">
+            <span className="font-mono text-neutral-500 dark:text-neutral-400">
               traceId: {log.traceId}
             </span>
           )}
           {log.spanId && (
-            <span className="font-mono text-gray-500 dark:text-gray-400">
+            <span className="font-mono text-neutral-500 dark:text-neutral-400">
               spanId: {log.spanId}
             </span>
           )}
           {log.traceId && onJumpToTrace && (
-            <button
-              onClick={handleJumpToTrace}
+            <Button
               className="text-primary-500 hover:text-primary-600 hover:underline"
+              onClick={handleJumpToTrace}
               aria-label="Jump to Trace"
             >
               Jump to Trace
-            </button>
+            </Button>
           )}
         </div>
       )}
-
       {/* Expanded attributes */}
       {isExpanded && hasAttributes && (
-        <div className="mt-2 ml-[72px] p-2 bg-gray-100 dark:bg-gray-800 rounded font-mono text-xs overflow-x-auto">
-          <pre className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+        <div className="mt-2 ml-[72px] p-2 bg-neutral-100 dark:bg-neutral-800 rounded font-mono text-xs overflow-x-auto">
+          <pre className="text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
             {JSON.stringify(log.attributes, null, 2)}
           </pre>
         </div>
@@ -414,15 +415,15 @@ export function LogsTab({
         <div data-testid="logs-loading" className="p-4 space-y-2">
           {/* Header skeleton */}
           <div className="flex items-center gap-2">
-            <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-            <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-            <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            <div className="h-8 w-48 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse" />
+            <div className="h-8 w-24 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse" />
+            <div className="h-8 w-24 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse" />
           </div>
           {/* Log row skeletons */}
           {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
-              className="h-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+              className="h-10 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse"
             />
           ))}
         </div>
@@ -466,11 +467,11 @@ export function LogsTab({
       className={cn("flex flex-col h-full overflow-hidden", className)}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 p-3 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 bg-white dark:bg-gray-900">
+      <div className="flex items-center gap-2 p-3 border-b border-neutral-200 dark:border-neutral-700 sticky top-0 z-10 bg-white dark:bg-neutral-900">
         {/* Search */}
         <div className="relative flex-1 max-w-sm">
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-400"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -482,12 +483,11 @@ export function LogsTab({
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
           </svg>
-          <input
-            type="text"
+          <Input
+            className="pl-10 pr-4 py-1.5 text-sm text-neutral-900 dark:text-white focus:ring-primary-500"
             placeholder="Search logs..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
 
@@ -505,24 +505,26 @@ export function LogsTab({
           onChange={setServiceFilter}
         />
 
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
+          className="flex px-2 py-1 text-sm rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200"
           type="button"
           onClick={table.getColumn("timestamp")?.getToggleSortingHandler()}
-          className="flex items-center gap-1 px-2 py-1 text-sm rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
           aria-label="Toggle time sort"
         >
           Sort
           <ArrowUpDown
             size={14}
             className={cn(
-              "text-gray-500 dark:text-gray-400",
+              "text-neutral-500 dark:text-neutral-400",
               table.getColumn("timestamp")?.getIsSorted() === "desc" &&
                 "rotate-180",
             )}
           />
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
           data-testid="logs-auto-tail"
           onClick={toggleAutoTail}
@@ -534,33 +536,33 @@ export function LogsTab({
             "px-2 py-1 text-sm rounded-md",
             isAutoTailing
               ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30"
-              : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200",
+              : "bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200",
           )}
         >
           <ArrowDown size={14} />
-        </button>
+        </Button>
 
         {/* Clear filters */}
         {(searchTerm || levelFilter || serviceFilter) && (
-          <button
+          <Button
+            size="sm"
+            className="px-2 py-1 text-sm text-primary-600 dark:text-primary-400 hover:underline"
             onClick={() => {
               setSearchTerm("");
               setLevelFilter("");
               setServiceFilter("");
             }}
-            className="px-2 py-1 text-sm text-primary-600 dark:text-primary-400 hover:underline"
           >
             Clear
-          </button>
+          </Button>
         )}
       </div>
-
       {/* Content */}
       <div className="flex-1 overflow-auto" ref={listRef}>
         {sortedLogs.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <svg
-              className="w-12 h-12 text-gray-400 dark:text-gray-400 mb-4"
+              className="w-12 h-12 text-neutral-400 dark:text-neutral-400 mb-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -572,15 +574,15 @@ export function LogsTab({
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            <p className="text-gray-500 dark:text-gray-400">No logs</p>
-            <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">
+            <p className="text-neutral-500 dark:text-neutral-400">No logs</p>
+            <p className="text-sm text-neutral-400 dark:text-neutral-400 mt-1">
               {searchTerm || levelFilter || serviceFilter
                 ? "No logs match the current filters"
                 : "Logs will appear when data is collected"}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100 dark:divide-gray-800">
+          <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
             {sortedLogs.map((log) => (
               <LogRow key={log.id} log={log} onJumpToTrace={onJumpToTrace} />
             ))}

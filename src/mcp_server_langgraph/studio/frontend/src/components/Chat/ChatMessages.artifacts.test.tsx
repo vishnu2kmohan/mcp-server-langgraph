@@ -113,7 +113,7 @@ describe("ChatMessages Artifacts", () => {
       render(<ChatMessages messages={mermaidMessage} />);
       // Should render the mermaid diagram container, not just code
       const diagramContainer = document.querySelector(
-        ".bg-gray-50, .dark\\:bg-gray-800",
+        ".bg-neutral-50, .dark\\:bg-neutral-800",
       );
       expect(diagramContainer).toBeInTheDocument();
     });
@@ -169,7 +169,7 @@ describe("ChatMessages Artifacts", () => {
         <ChatMessages messages={mermaidMessage} enableInteractiveArtifacts />,
       );
       const diagramContainer = document.querySelector(
-        ".bg-gray-50, .dark\\:bg-gray-800",
+        ".bg-neutral-50, .dark\\:bg-neutral-800",
       );
       expect(diagramContainer).toBeInTheDocument();
     });

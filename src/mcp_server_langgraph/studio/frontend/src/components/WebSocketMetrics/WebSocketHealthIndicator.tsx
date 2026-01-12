@@ -61,7 +61,7 @@ function getStatusColorClass(status: HealthStatus): string {
       return "bg-error-500";
     case "unknown":
     default:
-      return "bg-gray-400";
+      return "bg-neutral-400";
   }
 }
 
@@ -129,9 +129,9 @@ export function WebSocketHealthIndicator({
       >
         <div
           data-testid="ws-health-status"
-          className="w-2.5 h-2.5 rounded-full bg-gray-400"
+          className="w-2.5 h-2.5 rounded-full bg-neutral-400"
         />
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="text-sm text-neutral-500 dark:text-neutral-400">
           No connections
         </span>
       </div>
@@ -160,7 +160,7 @@ export function WebSocketHealthIndicator({
                 ? "text-warning-600"
                 : healthStatus === "critical"
                   ? "text-error-600"
-                  : "text-gray-500 dark:text-gray-400"
+                  : "text-neutral-500 dark:text-neutral-400"
           }`}
         >
           {statusLabel}
@@ -169,7 +169,7 @@ export function WebSocketHealthIndicator({
 
       {/* Connection count */}
       {!compact && (
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="text-sm text-neutral-500 dark:text-neutral-400">
           {metrics.totalConnections} connection
           {metrics.totalConnections !== 1 ? "s" : ""}
         </span>
@@ -177,7 +177,7 @@ export function WebSocketHealthIndicator({
 
       {/* Detailed metrics */}
       {showDetails && (
-        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-3 text-xs text-neutral-500 dark:text-neutral-400">
           <span>{metrics.avgSuccessRate}% success</span>
           <span>{metrics.totalReconnectionAttempts} reconnects</span>
         </div>

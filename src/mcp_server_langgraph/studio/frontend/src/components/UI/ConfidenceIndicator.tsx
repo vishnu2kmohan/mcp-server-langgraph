@@ -2,7 +2,7 @@
  * ConfidenceIndicator Component
  *
  * Displays AI confidence scores with semantic color coding.
- * Uses CONFIDENCE_COLORS from utils/colors for centralized color management.
+ * Uses CVA for type-safe size variants and dynamic color from utils/colors.
  *
  * Color thresholds:
  * - High (>= 0.9): Success (green)
@@ -10,42 +10,45 @@
  * - Low (< 0.7): Error (red)
  */
 
+import { cva, type VariantProps } from "class-variance-authority";
 import { type HTMLAttributes } from "react";
 import { getConfidenceColor } from "../../utils/colors";
+import { cn } from "../../utils/cn";
 
-export type ConfidenceIndicatorSize = "sm" | "md" | "lg";
+/**
+ * ConfidenceIndicator variant styles using CVA
+ */
+export const confidenceIndicatorVariants = cva(
+  // Base styles
+  "inline-flex items-center font-medium",
+  {
+    variants: {
+      size: {
+        sm: "text-xs",
+        md: "text-sm",
+        lg: "text-base",
+      },
+    },
+    defaultVariants: {
+      size: "md",
+    },
+  },
+);
 
-export interface ConfidenceIndicatorProps extends Omit<
-  HTMLAttributes<HTMLSpanElement>,
-  "children"
-> {
+export type ConfidenceIndicatorSize = NonNullable<
+  VariantProps<typeof confidenceIndicatorVariants>["size"]
+>;
+
+export interface ConfidenceIndicatorProps
+  extends
+    Omit<HTMLAttributes<HTMLSpanElement>, "children">,
+    VariantProps<typeof confidenceIndicatorVariants> {
   /** Confidence score between 0 and 1 */
   score: number;
-  /** Size of the indicator */
-  size?: ConfidenceIndicatorSize;
   /** Optional label to display before the score */
   label?: string;
   /** Show as decimal instead of percentage */
   showDecimal?: boolean;
-}
-
-/**
- * Utility to combine class names
- */
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
-
-/**
- * Get size-specific classes
- */
-function getSizeClasses(size: ConfidenceIndicatorSize): string {
-  const sizes: Record<ConfidenceIndicatorSize, string> = {
-    sm: "text-xs",
-    md: "text-sm",
-    lg: "text-base",
-  };
-  return sizes[size];
 }
 
 /**
@@ -63,7 +66,7 @@ function formatScore(score: number, showDecimal: boolean): string {
  */
 export function ConfidenceIndicator({
   score,
-  size = "md",
+  size,
   label,
   showDecimal = false,
   className,
@@ -77,12 +80,9 @@ export function ConfidenceIndicator({
       data-testid="confidence-indicator"
       aria-label={ariaLabel}
       className={cn(
-        // Base styles
-        "inline-flex items-center font-medium",
-        // Confidence color from design system
+        confidenceIndicatorVariants({ size }),
+        // Dynamic confidence color from design system
         getConfidenceColor(score),
-        // Size styles
-        getSizeClasses(size),
         className,
       )}
       {...props}

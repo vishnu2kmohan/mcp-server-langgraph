@@ -15,6 +15,8 @@ import { X } from "lucide-react";
 import { cn } from "../../utils/cn";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -204,7 +206,6 @@ export function KeyboardShortcutOverlay({
         onClick={onClose}
         aria-hidden="true"
       />
-
       {/* Dialog */}
       <div
         ref={dialogRef}
@@ -215,39 +216,39 @@ export function KeyboardShortcutOverlay({
         className={cn(
           "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
           "w-full max-w-md max-h-[80vh] overflow-auto",
-          "bg-white dark:bg-gray-800 rounded-lg shadow-xl",
-          "border border-gray-200 dark:border-gray-700",
+          "bg-white dark:bg-neutral-800 rounded-lg shadow-xl",
+          "border border-neutral-200 dark:border-neutral-700",
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
           <h2
             id="shortcut-overlay-title"
-            className="text-lg font-semibold text-gray-900 dark:text-white"
+            className="text-lg font-semibold text-neutral-900 dark:text-white"
           >
             Keyboard Shortcuts
           </h2>
-          <button
+          <Button
             data-testid="close-button"
             type="button"
             onClick={onClose}
             className={cn(
               "p-1 rounded-md",
-              "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200",
-              "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+              "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200",
+              "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
               "focus:outline-none focus:ring-2 focus:ring-primary-500",
             )}
             aria-label="Close shortcuts"
           >
             <X size={20} aria-hidden="true" />
-          </button>
+          </Button>
         </div>
 
         {/* Shortcut List */}
         <div data-testid="shortcut-list" className="p-4 space-y-4">
           {Object.entries(groupedShortcuts).map(([category, shortcuts]) => (
             <div key={category}>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2">
                 {category}
               </h3>
               <div className="space-y-1">
@@ -256,15 +257,15 @@ export function KeyboardShortcutOverlay({
                     key={shortcut.key}
                     className="flex items-center justify-between py-1"
                   >
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                    <span className="text-sm text-neutral-700 dark:text-neutral-300">
                       {shortcut.description}
                     </span>
                     <kbd
                       className={cn(
                         "px-2 py-1 rounded",
-                        "bg-gray-100 dark:bg-gray-700",
-                        "text-sm font-mono text-gray-800 dark:text-gray-200",
-                        "border border-gray-300 dark:border-gray-600",
+                        "bg-neutral-100 dark:bg-neutral-700",
+                        "text-sm font-mono text-neutral-800 dark:text-neutral-200",
+                        "border border-neutral-300 dark:border-neutral-600",
                       )}
                     >
                       {shortcut.displayKey}
@@ -276,17 +277,17 @@ export function KeyboardShortcutOverlay({
           ))}
 
           {formattedShortcuts.length === 0 && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center py-4">
               No keyboard shortcuts available.
             </p>
           )}
         </div>
 
         {/* Footer hint */}
-        <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+        <div className="px-4 py-3 border-t border-neutral-200 dark:border-neutral-700">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center">
             Press{" "}
-            <kbd className="px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-700 font-mono">
+            <kbd className="px-1 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 font-mono">
               Esc
             </kbd>{" "}
             to close

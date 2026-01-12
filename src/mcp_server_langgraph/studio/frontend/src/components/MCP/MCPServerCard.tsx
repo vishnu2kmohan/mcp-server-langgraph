@@ -7,6 +7,8 @@
 
 import { Card } from "../UI/Card";
 
+import { Button } from "@/components/UI";
+
 export interface MCPServerCardProps {
   /** Name of the MCP server */
   serverName: string;
@@ -118,8 +120,8 @@ function CapabilityStat({
 }) {
   return (
     <div className="flex items-center gap-1.5 text-sm">
-      <span className="text-gray-500 dark:text-gray-400">{icon}</span>
-      <span className="font-medium text-gray-900 dark:text-gray-100">
+      <span className="text-neutral-500 dark:text-neutral-400">{icon}</span>
+      <span className="font-medium text-neutral-900 dark:text-neutral-100">
         {count}
       </span>
       <span className="sr-only">{label}</span>
@@ -149,14 +151,14 @@ export function MCPServerCard({
       interactive
       className={cn("min-w-[200px]", className)}
     >
-      <button
+      <Button
+        className="w-full text-left focus:ring-brand-primary focus:ring-offset-2 rounded-md"
         type="button"
         onClick={handleClick}
-        className="w-full text-left focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 rounded-md"
       >
         {/* Server name */}
         <div className="mb-3">
-          <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
+          <h4 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 truncate">
             {serverName}
           </h4>
         </div>
@@ -175,7 +177,7 @@ export function MCPServerCard({
             label="prompts"
           />
         </div>
-      </button>
+      </Button>
     </Card>
   );
 }

@@ -26,6 +26,8 @@ import {
   type Prediction,
 } from "../../hooks/useAIMetricsInsights";
 
+import { Button } from "@/components/UI";
+
 /**
  * Props for the panel
  */
@@ -77,7 +79,7 @@ function SentimentBadge({ sentiment }: { sentiment: string }) {
     negative:
       "bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-200",
     neutral:
-      "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
+      "bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200",
   };
 
   return (
@@ -99,20 +101,20 @@ function AnomalyCard({ anomaly }: { anomaly: AnomalyInsight }) {
   return (
     <div className="p-4 border border-warning-200 dark:border-warning-800 rounded-lg bg-warning-50 dark:bg-warning-900/20">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+        <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
           {anomaly.dimension}
         </span>
         <SeverityBadge severity={anomaly.severity} />
       </div>
-      <p className="text-sm text-gray-900 dark:text-gray-100 mb-2">
+      <p className="text-sm text-neutral-900 dark:text-neutral-100 mb-2">
         {anomaly.message}
       </p>
       {anomaly.suggestedActions && anomaly.suggestedActions.length > 0 && (
         <div className="mt-2">
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
             Suggested actions:
           </span>
-          <ul className="mt-1 text-xs text-gray-600 dark:text-gray-300 list-disc list-inside">
+          <ul className="mt-1 text-xs text-neutral-600 dark:text-neutral-300 list-disc list-inside">
             {anomaly.suggestedActions.map((action, idx) => (
               <li key={idx}>{action}</li>
             ))}
@@ -128,14 +130,14 @@ function AnomalyCard({ anomaly }: { anomaly: AnomalyInsight }) {
  */
 function TrendCard({ trend }: { trend: TrendInsight }) {
   return (
-    <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+    <div className="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+        <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
           {trend.dimension}
         </span>
         <SentimentBadge sentiment={trend.sentiment} />
       </div>
-      <p className="text-sm text-gray-900 dark:text-gray-100">
+      <p className="text-sm text-neutral-900 dark:text-neutral-100">
         {trend.message}
       </p>
     </div>
@@ -147,14 +149,14 @@ function TrendCard({ trend }: { trend: TrendInsight }) {
  */
 function PatternCard({ pattern }: { pattern: PatternInsight }) {
   return (
-    <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+    <div className="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-800/50">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+        <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
           {pattern.dimension}
         </span>
         {pattern.sentiment && <SentimentBadge sentiment={pattern.sentiment} />}
       </div>
-      <p className="text-sm text-gray-900 dark:text-gray-100">
+      <p className="text-sm text-neutral-900 dark:text-neutral-100">
         {pattern.message}
       </p>
     </div>
@@ -171,29 +173,29 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
   const isPositive = changePercent > 0;
 
   return (
-    <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+    <div className="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+        <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
           {prediction.metric}
         </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-neutral-500 dark:text-neutral-400">
           {Math.round(prediction.confidence * 100)}% confidence
         </span>
       </div>
       <div className="flex items-center gap-4 mb-2">
         <div>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">
             Current
           </span>
-          <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
             {typeof prediction.current === "number" && prediction.current < 1
               ? prediction.current.toFixed(2)
               : prediction.current}
           </p>
         </div>
-        <div className="text-gray-400 dark:text-gray-400">→</div>
+        <div className="text-neutral-400 dark:text-neutral-400">→</div>
         <div>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">
             Predicted
           </span>
           <p
@@ -216,14 +218,14 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
       </div>
       {prediction.drivers.length > 0 && (
         <div className="mt-2">
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">
             Drivers:
           </span>
           <div className="flex flex-wrap gap-1 mt-1">
             {prediction.drivers.map((driver) => (
               <span
                 key={driver}
-                className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300"
               >
                 {driver}
               </span>
@@ -264,37 +266,38 @@ export function AIInsightsPanel({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-900 rounded-lg shadow-sm ${className}`}
+      className={`bg-white dark:bg-neutral-900 rounded-lg shadow-sm ${className}`}
       data-testid="ai-insights-panel"
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
           AI Insights
         </h2>
         <div className="flex items-center gap-2">
           {lastUpdated && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">
               Last updated: {formatTimestamp(lastUpdated)}
             </span>
           )}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
+            className="px-3 py-1 text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
             onClick={refresh}
             disabled={isLoading}
-            className="px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50"
             aria-label="Refresh insights"
           >
             {isLoading ? "Loading..." : "Refresh"}
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Content */}
       <div className="p-4">
         {/* Loading State */}
         {isLoading && !hasInsights && (
           <div className="text-center py-8">
-            <div className="animate-pulse text-gray-500 dark:text-gray-400">
+            <div className="animate-pulse text-neutral-500 dark:text-neutral-400">
               Loading insights...
             </div>
           </div>
@@ -306,19 +309,20 @@ export function AIInsightsPanel({
             <div className="text-error-600 dark:text-error-400 mb-4">
               {error.message}
             </div>
-            <button
+            <Button
+              variant="danger"
+              className="px-4 py-2 text-sm text-white bg-error-600 rounded hover:bg-error-700"
               onClick={refresh}
-              className="px-4 py-2 text-sm font-medium text-white bg-error-600 rounded hover:bg-error-700"
               aria-label="Retry loading insights"
             >
               Retry
-            </button>
+            </Button>
           </div>
         )}
 
         {/* Empty State */}
         {!isLoading && !error && !hasInsights && (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
             No insights available yet. Check back later for AI-generated
             analytics.
           </div>
@@ -330,7 +334,7 @@ export function AIInsightsPanel({
             {/* Anomalies */}
             {anomalies.length > 0 && (
               <section>
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
                   Anomalies ({anomalies.length})
                 </h3>
                 <div className="space-y-3">
@@ -344,7 +348,7 @@ export function AIInsightsPanel({
             {/* Trends */}
             {trends.length > 0 && (
               <section>
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
                   Trends ({trends.length})
                 </h3>
                 <div className="space-y-3">
@@ -358,7 +362,7 @@ export function AIInsightsPanel({
             {/* Patterns */}
             {patterns.length > 0 && (
               <section>
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
                   Patterns ({patterns.length})
                 </h3>
                 <div className="space-y-3">
@@ -372,7 +376,7 @@ export function AIInsightsPanel({
             {/* Predictions */}
             {predictions.length > 0 && (
               <section>
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
                   Predictions ({predictions.length})
                 </h3>
                 <div className="space-y-3">

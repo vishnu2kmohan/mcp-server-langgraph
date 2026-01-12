@@ -51,6 +51,8 @@ import {
   GitBranch,
 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Utility
 // =============================================================================
@@ -145,8 +147,8 @@ export function WorkflowDocument({
         data-testid="workflow-document"
         className={cn(
           "flex flex-col items-center justify-center h-full",
-          "bg-gray-50 dark:bg-gray-900",
-          "text-gray-500 dark:text-gray-400",
+          "bg-neutral-50 dark:bg-neutral-900",
+          "text-neutral-500 dark:text-neutral-400",
           compact && "text-sm",
           className,
         )}
@@ -164,7 +166,7 @@ export function WorkflowDocument({
         data-testid="workflow-document"
         className={cn(
           "flex items-center justify-center h-full",
-          "bg-gray-50 dark:bg-gray-900",
+          "bg-neutral-50 dark:bg-neutral-900",
           className,
         )}
       >
@@ -179,22 +181,25 @@ export function WorkflowDocument({
         data-testid="workflow-document"
         className={cn(
           "flex flex-col h-full",
-          "bg-gray-50 dark:bg-gray-900",
+          "bg-neutral-50 dark:bg-neutral-900",
           compact && "text-sm",
           className,
         )}
       >
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center gap-3">
-            <GitBranch size={18} className="text-gray-500 dark:text-gray-400" />
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+            <GitBranch
+              size={18}
+              className="text-neutral-500 dark:text-neutral-400"
+            />
+            <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
               {metadata?.name || "Workflow"}
               {isDirty && <span className="text-warning-500 ml-1">*</span>}
             </h2>
 
             {isReadOnly && (
-              <span className="flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
+              <span className="flex items-center gap-1 text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded">
                 <Lock size={12} />
                 Read-Only
               </span>
@@ -231,29 +236,31 @@ export function WorkflowDocument({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 rounded"
               onClick={() => dispatch(undo())}
               disabled={!canUndo || isReadOnly}
-              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 rounded"
               title="Undo"
             >
               <Undo size={16} />
-            </button>
-            <button
+            </Button>
+            <Button
+              className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 rounded"
               onClick={() => dispatch(redo())}
               disabled={!canRedo || isReadOnly}
-              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 rounded"
               title="Redo"
             >
               <Redo size={16} />
-            </button>
+            </Button>
 
-            <div className="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1" />
+            <div className="w-px h-5 bg-neutral-300 dark:bg-neutral-600 mx-1" />
 
-            <button
+            <Button
+              variant="success"
+              size="sm"
+              className="flex .5 px-2.5 py-1.5 text-xs bg-success-600 text-white rounded hover:bg-success-700"
               onClick={handleRun}
               disabled={executionState === "running" || !validation.isValid}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-success-600 text-white rounded hover:bg-success-700 disabled:opacity-50"
               title="Run"
             >
               {executionState === "running" ? (
@@ -262,21 +269,25 @@ export function WorkflowDocument({
                 <Play size={14} />
               )}
               Run
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
+              className="flex .5 px-2.5 py-1.5 text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded hover:bg-neutral-200 dark:bg-neutral-700"
               onClick={handleExportJSON}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:bg-gray-700"
               title="Export"
             >
               <Download size={14} />
               Export
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="primary"
+              size="sm"
+              className="flex .5 px-2.5 py-1.5 text-xs bg-primary-600 text-white rounded hover:bg-primary-700"
               onClick={handleSave}
               disabled={isSaving || !isDirty || isReadOnly}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50"
               title="Save"
             >
               {isSaving ? (
@@ -285,7 +296,7 @@ export function WorkflowDocument({
                 <Save size={14} />
               )}
               Save
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -307,7 +318,7 @@ export function WorkflowDocument({
           </div>
 
           {/* Execution Trace Panel - collapsible right panel */}
-          <div className="w-80 border-l border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="w-80 border-l border-neutral-200 dark:border-neutral-700 overflow-hidden">
             <ExecutionTracePanel onNodeHighlight={handleNodeHighlight} />
           </div>
         </div>

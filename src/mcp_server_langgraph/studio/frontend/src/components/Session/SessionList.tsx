@@ -43,6 +43,8 @@ import {
 import type { SessionSummary } from "../../types/session";
 import { AIEmptyState } from "../EmptyState/AIEmptyState";
 
+import { Button, Input } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -311,24 +313,23 @@ export function SessionList({
       <li
         key={session.id}
         aria-current={isSelected ? "true" : undefined}
-        className={`group relative px-3 py-2 cursor-pointer border-b border-gray-100 dark:border-gray-800 ${
+        className={`group relative px-3 py-2 cursor-pointer border-b border-neutral-100 dark:border-neutral-800 ${
           isSelected
             ? "bg-primary-50 dark:bg-primary-900/30"
-            : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+            : "hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
         }`}
         onClick={() => !isEditing && onSelect?.(session.id)}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             {isEditing ? (
-              <input
-                type="text"
+              <Input
+                className="px-1 py-0.5 text-sm border-primary-500 focus:ring-primary-500"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 onKeyDown={(e) => handleRenameKeyDown(e, session.id)}
                 onBlur={() => handleRenameSubmit(session.id)}
                 autoFocus
-                className="w-full px-1 py-0.5 text-sm rounded border border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white dark:bg-gray-800"
               />
             ) : (
               <div className="flex items-center gap-1.5">
@@ -339,12 +340,12 @@ export function SessionList({
                     aria-label="Pinned"
                   />
                 )}
-                <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
                   {session.name}
                 </span>
               </div>
             )}
-            <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-2 mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
               <span>{session.messageCount} messages</span>
               <span>•</span>
               <span>{formatRelativeTime(session.updatedAt)}</span>
@@ -359,7 +360,9 @@ export function SessionList({
                 : "opacity-0 group-hover:opacity-100"
             }`}
           >
-            <button
+            <Button
+              variant="secondary"
+              className="p-1 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 focus:ring-primary-500"
               onClick={(e) => {
                 e.stopPropagation();
                 setActiveMenuId(
@@ -369,26 +372,26 @@ export function SessionList({
               aria-label="Session actions"
               aria-haspopup="menu"
               aria-expanded={activeMenuId === session.id}
-              className="p-1 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <MoreVertical size={14} />
-            </button>
+            </Button>
 
             {/* Actions menu */}
             {activeMenuId === session.id && (
               <div
                 ref={menuRef}
                 role="menu"
-                className="absolute right-2 top-10 z-10 w-36 rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black/5 dark:ring-white/10"
+                className="absolute right-2 top-10 z-10 w-36 rounded-md bg-white dark:bg-neutral-900 shadow-lg ring-1 ring-black/5 dark:ring-white/10"
               >
                 <div className="py-1">
-                  <button
+                  <Button
+                    variant="secondary"
+                    className="w-full flex px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800"
                     role="menuitem"
                     onClick={(e) => {
                       e.stopPropagation();
                       handlePin(session.id);
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
                   >
                     {isPinned ? (
                       <>
@@ -401,29 +404,31 @@ export function SessionList({
                         Pin
                       </>
                     )}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="w-full flex px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800"
                     role="menuitem"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleStartRename(session);
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
                   >
                     <Edit2 size={14} />
                     Rename
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="danger"
+                    className="w-full flex px-3 py-1.5 text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20"
                     role="menuitem"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(session.id);
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20"
                   >
                     <Trash2 size={14} />
                     Delete
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -439,16 +444,19 @@ export function SessionList({
   const renderGroupHeader = (group: SessionGroup) => (
     <li
       key={`group-${group.topic}`}
-      className="px-3 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700"
+      className="px-3 py-2 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700"
       role="presentation"
       data-testid={`group-header-${group.topic.toLowerCase().replace(/\s+/g, "-")}`}
     >
       <div className="flex items-center gap-2">
-        <FolderOpen size={14} className="text-gray-500 dark:text-gray-400" />
-        <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
+        <FolderOpen
+          size={14}
+          className="text-neutral-500 dark:text-neutral-400"
+        />
+        <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wide">
           {group.topic}
         </span>
-        <span className="text-xs text-gray-400 dark:text-gray-400">
+        <span className="text-xs text-neutral-400 dark:text-neutral-400">
           ({group.sessionIds.length})
         </span>
       </div>
@@ -519,18 +527,18 @@ export function SessionList({
         elements.push(
           <li
             key="group-ungrouped"
-            className="px-3 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700"
+            className="px-3 py-2 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700"
             role="presentation"
           >
             <div className="flex items-center gap-2">
               <MessageSquare
                 size={14}
-                className="text-gray-500 dark:text-gray-400"
+                className="text-neutral-500 dark:text-neutral-400"
               />
-              <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
+              <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wide">
                 Other
               </span>
-              <span className="text-xs text-gray-400 dark:text-gray-400">
+              <span className="text-xs text-neutral-400 dark:text-neutral-400">
                 ({ungroupedIds.length})
               </span>
             </div>
@@ -598,8 +606,8 @@ export function SessionList({
         <div className="p-3 space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="animate-pulse">
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2" />
-              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4 mb-2" />
+              <div className="h-3 bg-neutral-200 dark:bg-neutral-700 rounded w-1/2" />
             </div>
           ))}
         </div>
@@ -630,46 +638,45 @@ export function SessionList({
   return (
     <div className={`session-list flex flex-col h-full ${className}`}>
       {/* Header with search and new button */}
-      <div className="p-3 border-b border-gray-200 dark:border-gray-700 space-y-2">
+      <div className="p-3 border-b border-neutral-200 dark:border-neutral-700 space-y-2">
         {/* Search */}
         <div className="relative">
           <Search
             size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
             aria-hidden="true"
           />
-          <input
+          <Input
+            className="pl-9 pr-8 py-1.5 text-sm -500 focus:ring-primary-500"
             ref={searchInputRef}
-            type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search sessions..."
             aria-label="Search sessions"
-            className="w-full pl-9 pr-8 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
           {searchQuery && (
-            <button
+            <Button
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300"
               onClick={() => setSearchQuery("")}
               aria-label="Clear search"
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
             >
               <X size={14} />
-            </button>
+            </Button>
           )}
         </div>
 
         {/* New session button */}
         {onCreate && (
-          <button
+          <Button
+            variant="secondary"
+            className="w-full flex .5 px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded-md hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 focus:ring-primary-500"
             onClick={onCreate}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <Plus size={16} />
             New Session
-          </button>
+          </Button>
         )}
       </div>
-
       {/* Session list */}
       <ul
         ref={listRef}

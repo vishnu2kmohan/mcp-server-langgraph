@@ -13,6 +13,8 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useListMcpPromptsQuery, useGetMcpPromptMutation } from "../../api";
 
+import { Button, Select, Textarea } from "@/components/UI";
+
 export interface PromptTesterProps {
   open: boolean;
   onClose: () => void;
@@ -160,21 +162,21 @@ export function PromptTester({
         onClick={onClose}
         aria-hidden="true"
       />
-
       {/* Dialog content */}
-      <div className="relative z-10 flex h-[80vh] w-full max-w-3xl flex-col rounded-lg bg-white shadow-xl dark:bg-gray-800">
+      <div className="relative z-10 flex h-[80vh] w-full max-w-3xl flex-col rounded-lg bg-white shadow-xl dark:bg-neutral-800">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 p-4 dark:border-gray-700">
+        <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700 p-4 dark:border-neutral-700">
           <h2
             id="prompt-tester-title"
-            className="text-xl font-semibold text-gray-900 dark:text-white"
+            className="text-xl font-semibold text-neutral-900 dark:text-white"
           >
             Prompt Tester
           </h2>
-          <button
+          <Button
+            variant="secondary"
+            className="rounded-md p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-200"
             type="button"
             onClick={onClose}
-            className="rounded-md p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
             aria-label="Close"
           >
             <svg
@@ -190,13 +192,13 @@ export function PromptTester({
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
-          </button>
+          </Button>
         </div>
 
         {/* Loading state */}
         {isLoadingPrompts && (
           <div className="flex flex-1 items-center justify-center">
-            <span className="text-gray-500 dark:text-gray-400">
+            <span className="text-neutral-500 dark:text-neutral-400">
               Loading prompts...
             </span>
           </div>
@@ -215,7 +217,7 @@ export function PromptTester({
         {!isLoadingPrompts && !promptsError && (
           <div className="flex flex-1 flex-col overflow-hidden p-4">
             {promptsData?.prompts.length === 0 ? (
-              <div className="flex flex-1 items-center justify-center text-gray-500 dark:text-gray-400">
+              <div className="flex flex-1 items-center justify-center text-neutral-500 dark:text-neutral-400">
                 No prompts available
               </div>
             ) : (
@@ -224,15 +226,15 @@ export function PromptTester({
                 <div>
                   <label
                     htmlFor="prompt-select"
-                    className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
                   >
                     Select Prompt
                   </label>
-                  <select
+                  <Select
+                    className="px-3 py-2 text-neutral-900 -500 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
                     id="prompt-select"
                     value={selectedPromptName}
                     onChange={handlePromptSelect}
-                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white px-3 py-2 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="">-- Select a prompt --</option>
                     {promptsData?.prompts.map((prompt) => (
@@ -240,12 +242,12 @@ export function PromptTester({
                         {prompt.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 {/* Prompt description */}
                 {selectedPrompt && (
-                  <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-600 dark:text-gray-300 dark:bg-gray-700/50 dark:text-gray-400">
+                  <div className="rounded-md bg-neutral-50 p-3 text-sm text-neutral-600 dark:text-neutral-300 dark:bg-neutral-700/50 dark:text-neutral-400">
                     {selectedPrompt.description}
                   </div>
                 )}
@@ -253,14 +255,14 @@ export function PromptTester({
                 {/* Prompt arguments */}
                 {selectedPrompt && promptArguments.length > 0 && (
                   <div className="space-y-3">
-                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                       Arguments
                     </h3>
                     {promptArguments.map((arg) => (
                       <div key={arg.name}>
                         <label
                           htmlFor={`arg-${arg.name}`}
-                          className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                          className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
                         >
                           {arg.name}
                           {arg.required && (
@@ -268,17 +270,17 @@ export function PromptTester({
                           )}
                         </label>
                         {arg.description && (
-                          <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+                          <p className="mb-1 text-xs text-neutral-500 dark:text-neutral-400">
                             {arg.description}
                           </p>
                         )}
-                        <textarea
+                        <Textarea
+                          className="px-3 py-2 text-neutral-900 -500 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
                           id={`arg-${arg.name}`}
                           value={argumentValues[arg.name] || ""}
                           onChange={(e) =>
                             handleArgumentChange(arg.name, e.target.value)
                           }
-                          className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           rows={3}
                           placeholder={arg.description}
                         />
@@ -290,14 +292,15 @@ export function PromptTester({
                 {/* Execute button */}
                 {selectedPrompt && (
                   <div>
-                    <button
+                    <Button
+                      variant="primary"
+                      className="rounded-md bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700 focus:ring-primary-500 focus:ring-offset-2"
                       type="button"
                       onClick={handleExecute}
                       disabled={!isFormValid || isExecuting}
-                      className="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {isExecuting ? "Executing..." : "Execute"}
-                    </button>
+                    </Button>
                   </div>
                 )}
 
@@ -310,20 +313,20 @@ export function PromptTester({
 
                 {/* Result display */}
                 {result && (
-                  <div className="flex-1 overflow-auto rounded-md bg-gray-50 p-4 dark:bg-gray-900">
-                    <h3 className="mb-2 font-medium text-gray-900 dark:text-white">
+                  <div className="flex-1 overflow-auto rounded-md bg-neutral-50 p-4 dark:bg-neutral-900">
+                    <h3 className="mb-2 font-medium text-neutral-900 dark:text-white">
                       Generated Messages
                     </h3>
                     <div className="space-y-3">
                       {result.messages.map((message, index) => (
                         <div
                           key={index}
-                          className="rounded-md border border-gray-200 dark:border-gray-700 p-3 dark:border-gray-700"
+                          className="rounded-md border border-neutral-200 dark:border-neutral-700 p-3 dark:border-neutral-700"
                         >
-                          <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
+                          <div className="mb-1 text-xs font-medium uppercase text-neutral-500 dark:text-neutral-400">
                             {message.role}
                           </div>
-                          <div className="text-sm text-gray-800 dark:text-gray-200">
+                          <div className="text-sm text-neutral-800 dark:text-neutral-200">
                             {message.content.text}
                           </div>
                         </div>

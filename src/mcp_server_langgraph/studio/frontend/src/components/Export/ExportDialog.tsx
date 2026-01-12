@@ -16,6 +16,8 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { X, Download, Copy, FileText, FileJson, Check } from "lucide-react";
 import { useExport, Message, ExportFormat } from "../../hooks/useExport";
 
+import { Button, Toggle } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -51,21 +53,17 @@ function FormatButton({
   label,
 }: FormatButtonProps) {
   return (
-    <button
+    <Button
+      className="flex px-4 py-2 rounded-lg border-2 focus:ring-primary-500"
       type="button"
       data-testid={`format-${format}`}
       role="radio"
       aria-checked={selected}
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-        selected
-          ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-          : "border-gray-200 dark:border-gray-700 dark:border-gray-600 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500"
-      }`}
     >
       {icon}
       <span className="font-medium">{label}</span>
-    </button>
+    </Button>
   );
 }
 
@@ -89,28 +87,14 @@ function OptionToggle({
   label,
 }: OptionToggleProps) {
   return (
-    <label className="flex items-center gap-3 cursor-pointer">
-      <button
-        type="button"
-        id={id}
-        data-testid={testId}
-        role="switch"
-        aria-checked={checked}
-        onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-          checked
-            ? "bg-primary-600"
-            : "bg-gray-200 dark:bg-gray-700 dark:bg-gray-600"
-        }`}
-      >
-        <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-            checked ? "translate-x-4" : "translate-x-0"
-          }`}
-        />
-      </button>
-      <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
-    </label>
+    <Toggle
+      id={id}
+      data-testid={testId}
+      checked={checked}
+      onChange={onChange}
+      label={label}
+      size="sm"
+    />
   );
 }
 
@@ -206,7 +190,6 @@ export function ExportDialog({
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50" />
-
       {/* Dialog */}
       <div
         ref={dialogRef}
@@ -215,32 +198,33 @@ export function ExportDialog({
         aria-modal="true"
         aria-labelledby="export-dialog-title"
         tabIndex={-1}
-        className={`relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden ${className}`}
+        className={`relative w-full max-w-2xl bg-white dark:bg-neutral-800 rounded-xl shadow-2xl overflow-hidden ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
           <h2
             id="export-dialog-title"
-            className="text-lg font-semibold text-gray-900 dark:text-gray-100"
+            className="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
           >
             Export Conversation
           </h2>
-          <button
+          <Button
+            variant="secondary"
+            className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-200 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 focus:ring-primary-500"
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <X size={20} />
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
         <div className="px-6 py-4 space-y-6">
           {/* Format Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Format
             </label>
             <div
@@ -267,7 +251,7 @@ export function ExportDialog({
 
           {/* Options */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
               Options
             </label>
             <div className="space-y-3">
@@ -290,12 +274,12 @@ export function ExportDialog({
 
           {/* Preview */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Preview
             </label>
             <pre
               data-testid="export-preview"
-              className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm text-gray-700 dark:text-gray-300 overflow-auto max-h-48 font-mono"
+              className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-sm text-neutral-700 dark:text-neutral-300 overflow-auto max-h-48 font-mono"
             >
               {preview.slice(0, 500)}
               {preview.length > 500 && "..."}
@@ -304,20 +288,22 @@ export function ExportDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-          <button
+        <div className="flex items-center justify-between px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
+          <Button
+            variant="secondary"
+            className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg focus:ring-primary-500"
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             Cancel
-          </button>
+          </Button>
 
           <div className="flex gap-3">
-            <button
+            <Button
+              variant="secondary"
+              className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-600 focus:ring-primary-500"
               type="button"
               onClick={handleCopy}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               {actionState === "copied" ? (
                 <>
@@ -330,12 +316,13 @@ export function ExportDialog({
                   Copy
                 </>
               )}
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="primary"
+              className="px-4 py-2 text-sm text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:ring-primary-500 focus:ring-offset-2"
               type="button"
               onClick={handleDownload}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
               {actionState === "downloaded" ? (
                 <>
@@ -348,7 +335,7 @@ export function ExportDialog({
                   Download
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

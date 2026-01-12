@@ -19,6 +19,8 @@
 import React from "react";
 import type { HeartDimension } from "../../analytics/gsm";
 
+import { Select } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -176,16 +178,16 @@ export function TimeRangeSelector({
   return (
     <label className="time-range-selector">
       <span className="sr-only">Time range</span>
-      <select
+      <Select
+        className="time-range-select"
         value={value}
         onChange={(e) => onChange(e.target.value as TimeRange)}
         aria-label="Time range"
-        className="time-range-select"
       >
         <option value="7d">Last 7 days</option>
         <option value="30d">Last 30 days</option>
         <option value="90d">Last 90 days</option>
-      </select>
+      </Select>
     </label>
   );
 }

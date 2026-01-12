@@ -27,6 +27,8 @@ import { cn } from "../utils/cn";
 import { storage, STORAGE_KEYS } from "../utils/storage";
 import { transformSnakeToCamel } from "../api/transforms";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -245,8 +247,8 @@ export function UserMenuDropdown({
       data-testid="user-menu-dropdown"
       className={cn(
         "absolute right-0 top-full mt-2 w-56 z-50",
-        "bg-white dark:bg-gray-800",
-        "border border-gray-200 dark:border-gray-700",
+        "bg-white dark:bg-neutral-800",
+        "border border-neutral-200 dark:border-neutral-700",
         "rounded-lg shadow-lg",
         "py-1",
         className,
@@ -255,25 +257,24 @@ export function UserMenuDropdown({
       aria-label="User menu"
     >
       {/* User info header */}
-      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+      <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+        <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
           {username || "Unknown User"}
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">
           {currentPersona}
         </p>
       </div>
-
       {/* Persona switcher */}
-      <div className="py-1 border-b border-gray-200 dark:border-gray-700">
-        <button
+      <div className="py-1 border-b border-neutral-200 dark:border-neutral-700">
+        <Button
           type="button"
           data-testid="persona-switcher-button"
           onClick={() => setShowPersonaSwitcher(!showPersonaSwitcher)}
           className={cn(
             "w-full flex items-center justify-between px-4 py-2 text-sm",
-            "text-gray-700 dark:text-gray-300",
-            "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+            "text-neutral-700 dark:text-neutral-300",
+            "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
           )}
           role="menuitem"
         >
@@ -288,36 +289,35 @@ export function UserMenuDropdown({
               showPersonaSwitcher && "rotate-180",
             )}
           />
-        </button>
+        </Button>
 
         {showPersonaSwitcher && (
-          <div className="bg-gray-50 dark:bg-gray-900 py-1">
+          <div className="bg-neutral-50 dark:bg-neutral-900 py-1">
             {SUB_PERSONA_OPTIONS.map((option) => (
-              <button
+              <Button
                 key={option.id}
                 type="button"
                 data-testid={`persona-option-${option.id}`}
                 onClick={() => handlePersonaSwitch(option.id)}
                 className={cn(
                   "w-full text-left px-6 py-1.5 text-sm",
-                  "text-gray-600 dark:text-gray-400",
-                  "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
+                  "text-neutral-600 dark:text-neutral-400",
+                  "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
                   option.id === currentPersona &&
                     "text-primary-600 dark:text-primary-400 font-medium",
                 )}
                 role="menuitem"
               >
                 {option.label}
-              </button>
+              </Button>
             ))}
           </div>
         )}
       </div>
-
       {/* Menu items */}
       <div className="py-1">
         {menuItems.map((item) => (
-          <button
+          <Button
             key={item.id}
             type="button"
             data-testid={`menu-item-${item.id}`}
@@ -326,13 +326,13 @@ export function UserMenuDropdown({
               "w-full flex items-center gap-2 px-4 py-2 text-sm",
               item.variant === "danger"
                 ? "text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
             )}
             role="menuitem"
           >
             {item.icon}
             {item.label}
-          </button>
+          </Button>
         ))}
       </div>
     </div>

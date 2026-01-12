@@ -109,7 +109,9 @@ export function ChatMessage({
           className="flex items-center gap-2"
         >
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-gray-500 dark:text-gray-400">Thinking...</span>
+          <span className="text-neutral-500 dark:text-neutral-400">
+            Thinking...
+          </span>
         </div>
       );
     }
@@ -183,7 +185,7 @@ export function ChatMessage({
           className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
             isUser
               ? "bg-gradient-to-br from-chat-accent to-indigo-600"
-              : "bg-gradient-to-br from-gray-500 to-gray-600"
+              : "bg-gradient-to-br from-neutral-500 to-neutral-600"
           }`}
         >
           {isUser ? (
@@ -206,13 +208,15 @@ export function ChatMessage({
         className={`flex-1 p-4 rounded-2xl ${
           isUser
             ? "bg-chat-user-bubble dark:bg-chat-user-bubble-dark text-white rounded-br-md ml-8"
-            : "bg-chat-ai-bubble dark:bg-chat-ai-bubble-dark text-gray-900 dark:text-gray-100 rounded-bl-md mr-8"
+            : "bg-chat-ai-bubble dark:bg-chat-ai-bubble-dark text-neutral-900 dark:text-neutral-100 rounded-bl-md mr-8"
         }`}
       >
         <div className="flex items-center justify-between mb-1">
           <span
             className={`text-sm font-medium ${
-              isUser ? "text-white/90" : "text-gray-700 dark:text-gray-300"
+              isUser
+                ? "text-white/90"
+                : "text-neutral-700 dark:text-neutral-300"
             }`}
           >
             {roleLabel}
@@ -221,7 +225,9 @@ export function ChatMessage({
             <span
               data-testid="timestamp"
               className={`text-xs ${
-                isUser ? "text-white/70" : "text-gray-500 dark:text-gray-400"
+                isUser
+                  ? "text-white/70"
+                  : "text-neutral-500 dark:text-neutral-400"
               }`}
             >
               {formatTime(timestamp)}
@@ -229,37 +235,42 @@ export function ChatMessage({
           )}
         </div>
         <div
-          className={isUser ? "text-white" : "text-gray-900 dark:text-gray-100"}
+          className={
+            isUser ? "text-white" : "text-neutral-900 dark:text-neutral-100"
+          }
         >
           {renderContent()}
         </div>
 
         {/* Selected Tools Display - only for assistant messages (ADR-0099) */}
-        {isAssistant && !isLoading && selectedTools && selectedTools.length > 0 && (
-          <div
-            data-testid="selected-tools-display"
-            className="mt-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/30"
-          >
-            <SelectedToolsDisplay
-              selectedTools={selectedTools}
-              selectionScores={selectionScores || {}}
-              totalAvailableTools={totalAvailableTools}
-              compact
-            />
-          </div>
-        )}
+        {isAssistant &&
+          !isLoading &&
+          selectedTools &&
+          selectedTools.length > 0 && (
+            <div
+              data-testid="selected-tools-display"
+              className="mt-2 pt-2 border-t border-neutral-200/50 dark:border-neutral-700/30"
+            >
+              <SelectedToolsDisplay
+                selectedTools={selectedTools}
+                selectionScores={selectionScores || {}}
+                totalAvailableTools={totalAvailableTools}
+                compact
+              />
+            </div>
+          )}
 
         {/* AI Source Citations - only for assistant messages with sources */}
         {isAssistant && sources && sources.length > 0 && (
           <div
             data-testid="sources-section"
-            className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700/50 dark:border-gray-600/50"
+            className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700/50 dark:border-neutral-600/50"
           >
-            <div className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+            <div className="flex items-center gap-1 text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-2">
               <ExternalLink
                 data-testid="sources-icon"
                 size={12}
-                className="text-gray-400 dark:text-gray-400"
+                className="text-neutral-400 dark:text-neutral-400"
               />
               <span>Sources:</span>
             </div>
@@ -295,7 +306,7 @@ export function ChatMessage({
 
         {/* Response Rating - only for assistant messages when not loading */}
         {isAssistant && !isLoading && messageId && onRate && (
-          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700/50 dark:border-gray-600/50 flex items-center justify-between">
+          <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700/50 dark:border-neutral-600/50 flex items-center justify-between">
             <ResponseRating
               messageId={messageId}
               onRate={onRate}
@@ -311,7 +322,7 @@ export function ChatMessage({
 
         {/* AI Follow-Up Suggestions - only for assistant messages when not loading */}
         {isAssistant && !isLoading && onSuggestionSelect && (
-          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700/50 dark:border-gray-600/50">
+          <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700/50 dark:border-neutral-600/50">
             <AIFollowUpSuggestions
               suggestions={suggestions || []}
               onSelect={onSuggestionSelect}

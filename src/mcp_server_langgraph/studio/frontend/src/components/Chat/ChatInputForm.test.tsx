@@ -772,4 +772,88 @@ describe("ChatInputForm", () => {
       );
     });
   });
+
+  describe("Cursor Position Tracking", () => {
+    it("should call onCursorPositionChange when cursor moves in legacy textarea", () => {
+      const mockCursorChange = vi.fn();
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello world"
+          enableRichTextMode={false}
+          onCursorPositionChange={mockCursorChange}
+        />,
+      );
+
+      const textarea = screen.getByRole("textbox");
+
+      // Simulate select event (cursor position change)
+      fireEvent.select(textarea);
+
+      expect(mockCursorChange).toHaveBeenCalled();
+    });
+
+    it("should not throw when onCursorPositionChange is not provided", () => {
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello world"
+          enableRichTextMode={false}
+        />,
+      );
+
+      const textarea = screen.getByRole("textbox");
+
+      // Should not throw when selecting without callback
+      expect(() => {
+        fireEvent.select(textarea);
+      }).not.toThrow();
+    });
+
+    it("should pass onCursorPositionChange to RichTextInput in RichText mode", () => {
+      const mockCursorChange = vi.fn();
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello world"
+          enableRichTextMode={true}
+          onCursorPositionChange={mockCursorChange}
+        />,
+      );
+
+      // RichTextInput should be rendered (pill container testid)
+      expect(screen.getByTestId("pill-container")).toBeInTheDocument();
+
+      // The textarea inside RichTextInput should be present
+      const textarea = screen.getByRole("textbox");
+      expect(textarea).toBeInTheDocument();
+
+      // Simulate select event
+      fireEvent.select(textarea);
+
+      expect(mockCursorChange).toHaveBeenCalled();
+    });
+
+    it("should report cursor position after text input", () => {
+      const mockCursorChange = vi.fn();
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input=""
+          enableRichTextMode={false}
+          onCursorPositionChange={mockCursorChange}
+        />,
+      );
+
+      const textarea = screen.getByRole("textbox");
+
+      // Type some text
+      fireEvent.change(textarea, { target: { value: "Hello" } });
+
+      // Trigger select event to report position
+      fireEvent.select(textarea);
+
+      expect(mockCursorChange).toHaveBeenCalled();
+    });
+  });
 });

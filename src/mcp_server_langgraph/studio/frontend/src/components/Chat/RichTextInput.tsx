@@ -21,6 +21,8 @@ import {
 } from "react";
 import { Bold, Italic, Code, FileCode, Plus, Minus } from "lucide-react";
 
+import { Button, Textarea } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -71,6 +73,9 @@ export interface RichTextInputProps {
   onDismissSuggestion?: () => void;
   /** Whether suggestion is loading */
   isSuggestionLoading?: boolean;
+  // Cursor position tracking (for WebSocket suggestions)
+  /** Callback when cursor position changes in the input */
+  onCursorPositionChange?: (position: number) => void;
 }
 
 // ==============================================================================
@@ -151,6 +156,8 @@ export function RichTextInput({
   onAcceptSuggestion,
   onDismissSuggestion,
   isSuggestionLoading = false,
+  // Cursor position tracking
+  onCursorPositionChange,
 }: RichTextInputProps) {
   const [internalValue, setInternalValue] = useState("");
   const [showMentions, setShowMentions] = useState(false);
@@ -412,12 +419,13 @@ export function RichTextInput({
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Formatting toolbar toggle and toolbar (Sprint 2.4 - collapsible) */}
-      <div className="flex items-center gap-1 mb-2 p-1 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-1 mb-2 p-1 border-b border-neutral-200 dark:border-neutral-700">
         {/* Toggle button - always visible */}
-        <button
+        <Button
+          variant="secondary"
+          className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
           type="button"
           onClick={() => setToolbarExpanded((prev) => !prev)}
-          className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
           aria-label="Toggle formatting toolbar"
           aria-expanded={toolbarExpanded}
           title={
@@ -439,7 +447,7 @@ export function RichTextInput({
               data-testid="plus-icon"
             />
           )}
-        </button>
+        </Button>
 
         {/* Formatting buttons - only visible when expanded */}
         {toolbarExpanded && (
@@ -449,78 +457,76 @@ export function RichTextInput({
             role="toolbar"
             aria-label="Text formatting"
           >
-            <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
+            <div className="w-px h-4 bg-neutral-300 dark:bg-neutral-600 mx-1" />
 
-            <button
+            <Button
+              variant="secondary"
+              className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
               type="button"
               onClick={handleBold}
               disabled={disabled}
-              className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Bold"
               title="Bold (Ctrl+B)"
             >
               <Bold className="w-4 h-4" aria-hidden="true" />
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="secondary"
+              className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
               type="button"
               onClick={handleItalic}
               disabled={disabled}
-              className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Italic"
               title="Italic (Ctrl+I)"
             >
               <Italic className="w-4 h-4" aria-hidden="true" />
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="secondary"
+              className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
               type="button"
               onClick={handleCode}
               disabled={disabled}
-              className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Code"
               title="Inline code (Ctrl+`)"
             >
               <Code className="w-4 h-4" aria-hidden="true" />
-            </button>
+            </Button>
 
-            <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
+            <div className="w-px h-4 bg-neutral-300 dark:bg-neutral-600 mx-1" />
 
-            <button
+            <Button
+              variant="secondary"
+              className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
               type="button"
               onClick={applyCodeBlock}
               disabled={disabled}
-              className="p-1.5 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Code block"
               title="Code block"
             >
               <FileCode className="w-4 h-4" aria-hidden="true" />
-            </button>
+            </Button>
           </div>
         )}
       </div>
-
       {/* Text input */}
       <div className="relative">
-        <textarea
+        <Textarea
+          className="min-h-[100px] p-3 resize-y text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
           ref={textareaRef}
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          onSelect={(e) => {
+            const target = e.target as HTMLTextAreaElement;
+            onCursorPositionChange?.(target.selectionStart);
+          }}
           placeholder={placeholder}
           disabled={disabled}
           maxLength={maxLength}
           aria-label="Message input"
-          className="
-            w-full min-h-[100px] p-3
-            border border-gray-300 dark:border-gray-600
-            rounded-lg resize-y
-            bg-white dark:bg-gray-800
-            text-gray-900 dark:text-gray-100
-            placeholder-gray-500 dark:placeholder-gray-400
-            focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-            disabled:opacity-50 disabled:cursor-not-allowed
-          "
           aria-describedby={maxLength ? "character-count" : undefined}
         />
 
@@ -532,27 +538,26 @@ export function RichTextInput({
             aria-label="Mention suggestions"
             className="
               absolute z-10 w-48 mt-1
-              bg-white dark:bg-gray-800
-              border border-gray-200 dark:border-gray-700
+              bg-white dark:bg-neutral-800
+              border border-neutral-200 dark:border-neutral-700
               rounded-lg shadow-lg
               max-h-48 overflow-y-auto
             "
           >
             {filteredMentions.map((option) => (
-              <button
+              <Button
+                variant="secondary"
+                className="w-full px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-700 text-sm text-neutral-900 dark:text-neutral-100"
                 key={`${option.type}-${option.value}`}
                 type="button"
                 role="option"
                 onClick={() => handleMentionSelect(option)}
-                className="
-                  w-full px-3 py-2 text-left
-                  hover:bg-gray-100 dark:hover:bg-gray-700
-                  text-sm text-gray-900 dark:text-gray-100
-                "
               >
-                <span className="text-gray-500 dark:text-gray-400 mr-1">@</span>
+                <span className="text-neutral-500 dark:text-neutral-400 mr-1">
+                  @
+                </span>
                 {option.label || option.value}
-              </button>
+              </Button>
             ))}
           </div>
         )}
@@ -561,11 +566,11 @@ export function RichTextInput({
         {enableInlineSuggestions && value && inlineSuggestion && (
           <div
             data-testid="inline-suggestion-overlay"
-            className="absolute left-0 top-0 pointer-events-none p-3 text-gray-400 dark:text-gray-400"
+            className="absolute left-0 top-0 pointer-events-none p-3 text-neutral-400 dark:text-neutral-400"
             aria-hidden="true"
           >
             <span className="invisible">{value}</span>
-            <span className="text-gray-400 dark:text-gray-400 opacity-60">
+            <span className="text-neutral-400 dark:text-neutral-400 opacity-60">
               {inlineSuggestion}
             </span>
           </div>
@@ -577,7 +582,7 @@ export function RichTextInput({
             data-testid="suggestion-loading"
             className="absolute right-3 top-3"
           >
-            <div className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-blue-500 rounded-full animate-spin" />
           </div>
         )}
 
@@ -585,23 +590,21 @@ export function RichTextInput({
         {enableInlineSuggestions && value && inlineSuggestion && (
           <div
             data-testid="suggestion-hint"
-            className="absolute right-3 bottom-3 text-xs text-gray-400 dark:text-gray-400 bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded"
+            className="absolute right-3 bottom-3 text-xs text-neutral-400 dark:text-neutral-400 bg-white dark:bg-neutral-800 px-1.5 py-0.5 rounded"
           >
             <kbd className="font-mono text-xs">Tab</kbd> to accept
           </div>
         )}
       </div>
-
       {/* Character count */}
       {maxLength && (
         <div
           id="character-count"
-          className="mt-1 text-xs text-gray-500 dark:text-gray-400 text-right"
+          className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 text-right"
         >
           {value.length} / {maxLength}
         </div>
       )}
-
       {/* Live region for screen reader announcements (accessibility) */}
       <div
         role="status"

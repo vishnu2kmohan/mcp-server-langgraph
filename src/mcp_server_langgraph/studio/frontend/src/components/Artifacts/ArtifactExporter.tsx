@@ -21,6 +21,8 @@ import {
   Loader2,
 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -430,27 +432,21 @@ export function ArtifactExporter({
     [artifactType, data, elementRef, onExport],
   );
 
-  const buttonSize = compact ? "p-1" : "p-2";
+  const _buttonSize = compact ? "p-1" : "p-2";
   const iconSize = compact ? 14 : 16;
 
   return (
     <div className={`relative inline-block ${className}`}>
-      <button
+      <Button
+        variant="secondary"
+        className="text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         disabled={!canExport()}
         aria-label="Export artifact"
-        className={`
-          ${buttonSize}
-          text-gray-600 dark:text-gray-400
-          hover:bg-gray-100 dark:hover:bg-gray-700
-          rounded transition-colors
-          disabled:opacity-50 disabled:cursor-not-allowed
-        `}
       >
         <Download size={iconSize} />
-      </button>
-
+      </Button>
       {isOpen && (
         <div
           ref={menuRef}
@@ -458,8 +454,8 @@ export function ArtifactExporter({
           role="menu"
           className="
             absolute right-0 mt-1 w-36
-            bg-white dark:bg-gray-800
-            border border-gray-200 dark:border-gray-700
+            bg-white dark:bg-neutral-800
+            border border-neutral-200 dark:border-neutral-700
             rounded-lg shadow-lg
             z-50 overflow-hidden
           "
@@ -467,7 +463,7 @@ export function ArtifactExporter({
           {isLoading && (
             <div
               data-testid="export-loading"
-              className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-800/80"
+              className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-neutral-800/80"
             >
               <Loader2 size={20} className="animate-spin text-primary-500" />
             </div>
@@ -476,21 +472,16 @@ export function ArtifactExporter({
           <ul className="py-1">
             {options.map(({ format, label, icon: Icon }) => (
               <li key={format}>
-                <button
+                <Button
+                  variant="secondary"
+                  className="w-full px-3 py-2 flex text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
                   role="menuitem"
                   onClick={() => handleExport(format)}
                   disabled={isLoading}
-                  className="
-                    w-full px-3 py-2
-                    flex items-center gap-2
-                    text-sm text-gray-700 dark:text-gray-300
-                    hover:bg-gray-100 dark:hover:bg-gray-700
-                    disabled:opacity-50
-                  "
                 >
                   <Icon size={14} />
                   <span>{label}</span>
-                </button>
+                </Button>
               </li>
             ))}
           </ul>

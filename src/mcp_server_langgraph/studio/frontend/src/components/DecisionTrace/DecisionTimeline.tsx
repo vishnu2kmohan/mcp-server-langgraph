@@ -60,7 +60,7 @@ function getDecisionTypeClass(type: DecisionType): string {
     case "exception":
       return `${baseClass} bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-200`;
     default:
-      return `${baseClass} bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200`;
+      return `${baseClass} bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200`;
   }
 }
 
@@ -81,11 +81,11 @@ function TimelineSkeleton() {
   return (
     <div className="animate-pulse" data-testid="timeline-skeleton">
       <div className="flex items-start gap-3 p-3">
-        <div className="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 mt-1.5" />
+        <div className="w-3 h-3 rounded-full bg-neutral-300 dark:bg-neutral-600 mt-1.5" />
         <div className="flex-1 space-y-2">
-          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-24" />
-          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-48" />
-          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16" />
+          <div className="h-4 bg-neutral-300 dark:bg-neutral-600 rounded w-24" />
+          <div className="h-3 bg-neutral-200 dark:bg-neutral-700 rounded w-48" />
+          <div className="h-3 bg-neutral-200 dark:bg-neutral-700 rounded w-16" />
         </div>
       </div>
     </div>
@@ -99,10 +99,10 @@ function TimelineEmpty() {
   return (
     <div
       data-testid="timeline-empty"
-      className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400"
+      className="flex flex-col items-center justify-center py-8 text-neutral-500 dark:text-neutral-400"
     >
       <svg
-        className="w-12 h-12 mb-3 text-gray-400"
+        className="w-12 h-12 mb-3 text-neutral-400"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -195,10 +195,10 @@ function TimelineItem({ trace }: { trace: DecisionTraceSummary }) {
       role="listitem"
     >
       {/* Timeline connector line */}
-      <div className="absolute left-1.5 top-3 bottom-0 w-px bg-gray-200 dark:bg-gray-700 last:hidden" />
+      <div className="absolute left-1.5 top-3 bottom-0 w-px bg-neutral-200 dark:bg-neutral-700 last:hidden" />
 
       {/* Timeline dot */}
-      <div className="relative z-10 w-3 h-3 rounded-full bg-primary-500 mt-1.5 ring-2 ring-white dark:ring-gray-800" />
+      <div className="relative z-10 w-3 h-3 rounded-full bg-primary-500 mt-1.5 ring-2 ring-white dark:ring-neutral-800" />
 
       {/* Content */}
       <div className="flex-1 min-w-0">
@@ -206,13 +206,13 @@ function TimelineItem({ trace }: { trace: DecisionTraceSummary }) {
           <span className={getDecisionTypeClass(trace.decisionType)}>
             {trace.decisionType}
           </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">
             {formatTime(trace.timestamp)}
           </span>
           <OutcomeIndicator outcome={trace.outcome} />
         </div>
 
-        <p className="mt-1 text-sm text-gray-900 dark:text-gray-100 truncate">
+        <p className="mt-1 text-sm text-neutral-900 dark:text-neutral-100 truncate">
           {trace.chosenAction}
         </p>
 

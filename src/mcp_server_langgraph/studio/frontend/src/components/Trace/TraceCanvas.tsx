@@ -21,6 +21,8 @@ import TraceNode from "./TraceNode";
 import { useTraceWebSocket } from "../../hooks/useTraceWebSocket";
 import { useTraceToReactFlow } from "../../hooks/useTraceToReactFlow";
 
+import { Button } from "@/components/UI";
+
 interface TraceCanvasProps {
   sessionId?: string;
   autoConnect?: boolean;
@@ -97,42 +99,47 @@ export function TraceCanvas({
             <div className="flex items-center gap-2">
               <span
                 className={`h-3 w-3 rounded-full ${
-                  isConnected ? "bg-success-500" : "bg-gray-400"
+                  isConnected ? "bg-success-500" : "bg-neutral-400"
                 }`}
               />
-              <span className="text-sm text-gray-600 dark:text-gray-300">
+              <span className="text-sm text-neutral-600 dark:text-neutral-300">
                 {isConnected ? "Connected" : "Disconnected"}
               </span>
             </div>
 
             {/* Span Count */}
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="text-sm text-neutral-500 dark:text-neutral-400">
               {spans.length} spans | {events.length} events
             </div>
 
             {/* Actions */}
             <div className="flex gap-2">
               {!isConnected ? (
-                <button
+                <Button
+                  size="sm"
+                  className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
                   onClick={handleConnect}
-                  className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
                 >
                   Connect
-                </button>
+                </Button>
               ) : (
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="px-3 py-1 text-sm bg-neutral-600 text-white rounded hover:bg-neutral-700"
                   onClick={handleDisconnect}
-                  className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
                 >
                   Disconnect
-                </button>
+                </Button>
               )}
-              <button
+              <Button
+                variant="danger"
+                size="sm"
+                className="px-3 py-1 text-sm bg-error-100 text-error-700 rounded hover:bg-error-200"
                 onClick={handleClear}
-                className="px-3 py-1 text-sm bg-error-100 text-error-700 rounded hover:bg-error-200 transition-colors"
               >
                 Clear
-              </button>
+              </Button>
             </div>
           </div>
         </Panel>
@@ -142,10 +149,10 @@ export function TraceCanvas({
           <Panel position="top-center" className="mt-20">
             <div className="bg-white rounded-lg shadow-lg p-6 text-center max-w-md">
               <div className="text-4xl mb-4">{isConnected ? "..." : "..."}</div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-neutral-900 mb-2">
                 {isConnected ? "Waiting for traces..." : "Not connected"}
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                 {isConnected
                   ? "Trace spans will appear here as they are received from the MCP server."
                   : "Click Connect to start receiving real-time trace data."}

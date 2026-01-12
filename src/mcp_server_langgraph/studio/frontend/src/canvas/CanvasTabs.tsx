@@ -8,6 +8,8 @@ import { useCallback, useRef } from "react";
 import { Code, Eye, Database } from "lucide-react";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -112,7 +114,7 @@ export function CanvasTabs({
       aria-label="Artifact view tabs"
       className={cn(
         "flex items-center gap-1 p-1",
-        "bg-gray-100 dark:bg-gray-800 rounded-lg",
+        "bg-neutral-100 dark:bg-neutral-800 rounded-lg",
         className,
       )}
     >
@@ -123,7 +125,7 @@ export function CanvasTabs({
         const isDisabled = isTabDisabled(tab);
 
         return (
-          <button
+          <Button
             key={tab}
             ref={(el) => tabRefs.current.set(tab, el)}
             role="tab"
@@ -138,16 +140,16 @@ export function CanvasTabs({
               "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium",
               "transition-all focus:outline-none focus:ring-2 focus:ring-primary-500",
               isActive &&
-                "bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm",
+                "bg-white dark:bg-neutral-700 text-primary-600 dark:text-primary-400 shadow-sm",
               !isActive &&
                 !isDisabled &&
-                "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600",
+                "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600",
               isDisabled && "opacity-50 cursor-not-allowed",
             )}
           >
             <Icon size={14} data-testid={config.testId} />
             <span>{config.label}</span>
-          </button>
+          </Button>
         );
       })}
     </div>

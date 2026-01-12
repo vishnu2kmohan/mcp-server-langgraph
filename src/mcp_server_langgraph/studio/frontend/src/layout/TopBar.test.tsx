@@ -172,7 +172,7 @@ describe("TopBar", () => {
       render(<TopBar />, { wrapper: createWrapper(store) });
 
       const topBar = screen.getByTestId("top-bar");
-      expect(topBar).toHaveClass("dark:bg-gray-800");
+      expect(topBar).toHaveClass("dark:bg-neutral-800");
     });
   });
 

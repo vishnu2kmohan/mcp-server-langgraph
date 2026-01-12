@@ -13,6 +13,8 @@ import { useState, useMemo, useCallback } from "react";
 import { Copy, Check } from "lucide-react";
 import type { SVGConfig } from "../../types/artifacts";
 
+import { Button } from "@/components/UI";
+
 export interface InteractiveSVGArtifactProps {
   data: string;
   title?: string;
@@ -367,8 +369,8 @@ export function InteractiveSVGArtifact({
   }
 
   const containerClasses = isFullscreen
-    ? "fixed inset-0 z-50 bg-gray-900"
-    : `bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden ${className}`;
+    ? "fixed inset-0 z-50 bg-neutral-900"
+    : `bg-neutral-50 dark:bg-neutral-800 rounded-lg overflow-hidden ${className}`;
 
   return (
     <div
@@ -378,21 +380,22 @@ export function InteractiveSVGArtifact({
       tabIndex={0}
     >
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-2 p-2 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700 dark:border-gray-600">
+      <div className="flex items-center justify-between gap-2 p-2 bg-neutral-100 dark:bg-neutral-700 border-b border-neutral-200 dark:border-neutral-700 dark:border-neutral-600">
         {/* Title */}
         {title && (
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">
+          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex-1">
             {title}
           </span>
         )}
 
         {/* Zoom controls */}
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
             type="button"
             onClick={handleZoomOut}
             aria-label="Zoom out"
-            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -409,15 +412,16 @@ export function InteractiveSVGArtifact({
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
               <line x1="8" y1="11" x2="14" y2="11" />
             </svg>
-          </button>
-          <span className="text-xs text-gray-500 dark:text-gray-400 w-12 text-center">
+          </Button>
+          <span className="text-xs text-neutral-500 dark:text-neutral-400 w-12 text-center">
             {Math.round(zoom * 100)}%
           </span>
-          <button
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
             type="button"
             onClick={handleZoomIn}
             aria-label="Zoom in"
-            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -435,12 +439,13 @@ export function InteractiveSVGArtifact({
               <line x1="11" y1="8" x2="11" y2="14" />
               <line x1="8" y1="11" x2="14" y2="11" />
             </svg>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
             type="button"
             onClick={handleResetZoom}
             aria-label="Reset zoom"
-            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -456,28 +461,30 @@ export function InteractiveSVGArtifact({
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
               <path d="M3 3v5h5" />
             </svg>
-          </button>
+          </Button>
         </div>
 
         {/* Action buttons */}
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
             type="button"
             onClick={handleCopy}
             aria-label="Copy SVG"
-            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             {copied ? (
               <Check size={16} className="text-success-500" />
             ) : (
               <Copy size={16} />
             )}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
             type="button"
             onClick={handleDownloadSVG}
             aria-label="Download SVG"
-            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -494,12 +501,13 @@ export function InteractiveSVGArtifact({
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
             type="button"
             onClick={handleDownloadPNG}
             aria-label="Download PNG"
-            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -516,12 +524,13 @@ export function InteractiveSVGArtifact({
               <circle cx="8.5" cy="8.5" r="1.5" />
               <polyline points="21 15 16 10 5 21" />
             </svg>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
             type="button"
             onClick={handleToggleFullscreen}
             aria-label="Toggle fullscreen"
-            className="p-1.5 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
           >
             {isFullscreen ? (
               <svg
@@ -558,10 +567,9 @@ export function InteractiveSVGArtifact({
                 <line x1="3" y1="21" x2="10" y2="14" />
               </svg>
             )}
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* SVG viewport */}
       <div
         data-testid="svg-viewport"

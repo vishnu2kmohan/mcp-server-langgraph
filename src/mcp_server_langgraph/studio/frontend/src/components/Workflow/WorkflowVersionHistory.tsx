@@ -29,6 +29,8 @@ import {
 import type { WorkflowVersionCamelCase } from "../../types/api";
 import { cn } from "../../utils/cn";
 
+import { Button, Checkbox } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -127,14 +129,14 @@ export function WorkflowVersionHistory({
         data-testid="version-history-panel"
         className={cn(
           "flex items-center justify-center h-48",
-          "bg-white dark:bg-gray-900",
+          "bg-white dark:bg-neutral-900",
           className,
         )}
       >
         <Loader2
           data-testid="loading-spinner"
           size={24}
-          className="animate-spin text-gray-400 dark:text-gray-400"
+          className="animate-spin text-neutral-400 dark:text-neutral-400"
         />
       </div>
     );
@@ -147,12 +149,12 @@ export function WorkflowVersionHistory({
         data-testid="version-history-panel"
         className={cn(
           "flex flex-col items-center justify-center h-48 gap-2",
-          "bg-white dark:bg-gray-900",
+          "bg-white dark:bg-neutral-900",
           className,
         )}
       >
         <AlertCircle size={24} className="text-error-500" />
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
           Failed to load versions
         </p>
       </div>
@@ -166,12 +168,12 @@ export function WorkflowVersionHistory({
         data-testid="version-history-panel"
         className={cn(
           "flex flex-col items-center justify-center h-48 gap-2",
-          "bg-white dark:bg-gray-900",
+          "bg-white dark:bg-neutral-900",
           className,
         )}
       >
-        <History size={24} className="text-gray-400 dark:text-gray-400" />
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <History size={24} className="text-neutral-400 dark:text-neutral-400" />
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
           No versions yet
         </p>
       </div>
@@ -181,36 +183,40 @@ export function WorkflowVersionHistory({
   return (
     <div
       data-testid="version-history-panel"
-      className={cn("flex flex-col bg-white dark:bg-gray-900", className)}
+      className={cn("flex flex-col bg-white dark:bg-neutral-900", className)}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-        <button
+      <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-200 dark:border-neutral-700">
+        <Button
+          className="flex text-left"
           type="button"
           data-testid="version-history-button"
-          className="flex items-center gap-2 text-left"
         >
-          <History size={16} className="text-gray-500 dark:text-gray-400" />
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <History
+            size={16}
+            className="text-neutral-500 dark:text-neutral-400"
+          />
+          <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
             Version History
           </h3>
-        </button>
+        </Button>
 
         {/* Compare button (when 2 versions selected) */}
         {enableDiff && compareVersionIds.length === 2 && (
-          <button
+          <Button
+            variant="primary"
+            size="sm"
+            className="flex px-2 py-1 text-xs text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded"
             type="button"
-            className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded"
           >
             <GitCompare size={12} />
             Compare
-          </button>
+          </Button>
         )}
       </div>
-
       {/* Version list */}
       <div className="flex-1 overflow-y-auto">
-        <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+        <ul className="divide-y divide-neutral-100 dark:divide-neutral-800">
           {versions.map((version) => {
             const isCurrent = version.id === currentVersionId;
             const isSelected = version.id === selectedVersionId;
@@ -225,7 +231,7 @@ export function WorkflowVersionHistory({
                   "px-4 py-3 cursor-pointer transition-colors",
                   isSelected
                     ? "bg-primary-50 dark:bg-primary-900/20"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-800",
+                    : "hover:bg-neutral-50 dark:hover:bg-neutral-800",
                 )}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -233,18 +239,15 @@ export function WorkflowVersionHistory({
                     {/* Version number and status */}
                     <div className="flex items-center gap-2">
                       {enableDiff && (
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           data-testid={`version-checkbox-${version.id}`}
                           checked={compareVersionIds.includes(version.id)}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            handleCheckboxChange(version.id);
-                          }}
-                          className="h-3.5 w-3.5 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
+                          onChange={() => handleCheckboxChange(version.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          size="sm"
                         />
                       )}
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                         v{version.versionNumber}
                       </span>
                       {isCurrent && (
@@ -257,13 +260,13 @@ export function WorkflowVersionHistory({
 
                     {/* Commit message */}
                     {version.commitMessage && (
-                      <p className="mt-0.5 text-sm text-gray-700 dark:text-gray-300 truncate">
+                      <p className="mt-0.5 text-sm text-neutral-700 dark:text-neutral-300 truncate">
                         {version.commitMessage}
                       </p>
                     )}
 
                     {/* Meta info */}
-                    <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="mt-1 flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                       <span>{version.createdBy}</span>
                       <span>-</span>
                       <span>{formatDate(version.createdAt)}</span>
@@ -271,14 +274,14 @@ export function WorkflowVersionHistory({
 
                     {/* Telemetry info */}
                     {(version.promptVersion || version.promptModel) && (
-                      <div className="mt-1 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-400">
+                      <div className="mt-1 flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-400">
                         {version.promptVersion && (
-                          <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
+                          <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded">
                             {version.promptVersion}
                           </span>
                         )}
                         {version.promptModel && (
-                          <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
+                          <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded">
                             {version.promptModel}
                           </span>
                         )}
@@ -288,7 +291,7 @@ export function WorkflowVersionHistory({
 
                   {/* Restore button (for non-current versions) */}
                   {!isCurrent && (
-                    <button
+                    <Button
                       type="button"
                       data-testid={`restore-button-${version.id}`}
                       onClick={(e) => {
@@ -298,14 +301,14 @@ export function WorkflowVersionHistory({
                       disabled={isRestoring}
                       className={cn(
                         "flex items-center gap-1 px-2 py-1 text-xs font-medium rounded",
-                        "text-gray-600 dark:text-gray-400",
-                        "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                        "text-neutral-600 dark:text-neutral-400",
+                        "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
                         "disabled:opacity-50 disabled:cursor-not-allowed",
                       )}
                     >
                       <RotateCcw size={12} />
                       Restore
-                    </button>
+                    </Button>
                   )}
                 </div>
               </li>

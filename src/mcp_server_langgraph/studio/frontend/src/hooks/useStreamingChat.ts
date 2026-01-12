@@ -51,8 +51,12 @@ export type KBFocusMode = "all" | "kb_only" | "web_only" | "none";
  * Options for starting a stream
  */
 export interface StartStreamOptions {
+  /** Model ID to use for this request (overrides server default) */
+  model?: string;
   /** Reasoning effort level for thinking models (low/medium/high) */
   reasoningEffort?: ReasoningEffortLevel;
+  /** Whether to enable extended thinking for supported models */
+  enableThinking?: boolean;
   /** Knowledge Base focus mode for context retrieval */
   kbFocus?: KBFocusMode;
 }
@@ -338,9 +342,19 @@ export function useStreamingChat(): UseStreamingChatReturn {
         messages: [{ role: "user", content: message }],
       };
 
+      // Add model if provided (overrides server default)
+      if (options?.model) {
+        requestBody.model = options.model;
+      }
+
       // Add reasoning effort if provided
       if (options?.reasoningEffort) {
         requestBody.reasoning_effort = options.reasoningEffort;
+      }
+
+      // Add enable_thinking if explicitly set (default is true on server)
+      if (options?.enableThinking !== undefined) {
+        requestBody.enable_thinking = options.enableThinking;
       }
 
       // Add KB focus mode if provided

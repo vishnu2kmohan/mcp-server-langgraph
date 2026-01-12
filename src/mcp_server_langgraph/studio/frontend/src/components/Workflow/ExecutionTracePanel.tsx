@@ -32,6 +32,8 @@ import {
 } from "../../store/slices/workflowSlice";
 import type { ExecutionLog, ExecutionState } from "../../types/workflow";
 
+import { Button, Input } from "@/components/UI";
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -76,7 +78,7 @@ function getLogLevelClass(level: string): string {
     case "warning":
       return "bg-warning-50 border-warning-200 dark:bg-warning-900/20 dark:border-warning-800";
     default:
-      return "bg-gray-50 border-gray-200 dark:border-gray-700 dark:bg-gray-800/50 dark:border-gray-700";
+      return "bg-neutral-50 border-neutral-200 dark:border-neutral-700 dark:bg-neutral-800/50 dark:border-neutral-700";
   }
 }
 
@@ -119,8 +121,8 @@ const ExecutionStateIndicator = memo(
         case "idle":
         default:
           return (
-            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-              <div className="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600" />
+            <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
+              <div className="w-3 h-3 rounded-full bg-neutral-300 dark:bg-neutral-600" />
               <span>Idle</span>
             </div>
           );
@@ -171,39 +173,38 @@ const LogEntry = memo(
           {getLogLevelIcon(log.level)}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm text-gray-900 dark:text-gray-100 truncate">
+              <span className="text-sm text-neutral-900 dark:text-neutral-100 truncate">
                 {log.message}
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 shrink-0">
                 {formatRelativeTime(log.timestamp)}
               </span>
             </div>
             {log.nodeId && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">
                 Node: {log.nodeId}
               </span>
             )}
           </div>
           {hasDetails && (
-            <button className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300">
+            <Button className="text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300">
               {isExpanded ? (
                 <ChevronDown className="w-4 h-4" />
               ) : (
                 <ChevronRight className="w-4 h-4" />
               )}
-            </button>
+            </Button>
           )}
         </div>
-
         {/* Expandable details */}
         {isExpanded && log.data && (
-          <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-            <pre className="text-xs bg-white dark:bg-gray-900 p-2 rounded overflow-auto max-h-40">
+          <div className="mt-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
+            <pre className="text-xs bg-white dark:bg-neutral-900 p-2 rounded overflow-auto max-h-40">
               {typeof log.data === "object" ? (
                 <>
                   {log.data.output && <div>{log.data.output}</div>}
                   {log.data.tokens !== undefined && (
-                    <div className="text-gray-500 dark:text-gray-400">
+                    <div className="text-neutral-500 dark:text-neutral-400">
                       tokens: {log.data.tokens}
                     </div>
                   )}
@@ -292,74 +293,63 @@ export const ExecutionTracePanel = memo(
     );
 
     return (
-      <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700">
+      <div className="flex flex-col h-full bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-700">
         {/* Header */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        <div className="flex items-center justify-between p-3 border-b border-neutral-200 dark:border-neutral-700">
+          <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
             Execution Trace
           </h2>
           <ExecutionStateIndicator state={executionState} />
         </div>
-
         {/* Toolbar */}
-        <div className="flex items-center gap-2 p-2 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2 p-2 border-b border-neutral-200 dark:border-neutral-700">
           {/* Level filters */}
           <div className="flex items-center gap-1">
-            <button
+            <Button
+              size="sm"
+              className="px-2 py-1 text-xs rounded"
               onClick={() => setLevelFilter("all")}
-              className={`px-2 py-1 text-xs rounded ${
-                levelFilter === "all"
-                  ? "bg-gray-200 dark:bg-gray-700"
-                  : "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
-              }`}
             >
               All
-            </button>
-            <button
+            </Button>
+            <Button
+              size="sm"
+              className="px-2 py-1 text-xs rounded"
               onClick={() => setLevelFilter("error")}
               aria-label="Errors"
-              className={`px-2 py-1 text-xs rounded ${
-                levelFilter === "error"
-                  ? "bg-error-100 text-error-700 dark:bg-error-900/50 dark:text-error-300"
-                  : "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
-              }`}
             >
               Errors
-            </button>
+            </Button>
           </div>
 
           {/* Node filter */}
-          <input
-            type="text"
+          <Input
+            size="sm"
+            className="flex-1 px-2 py-1 text-xs bg-neutral-50 focus:ring-primary-500"
             placeholder="Filter by node..."
             value={nodeFilter}
             onChange={(e) => setNodeFilter(e.target.value)}
-            className="flex-1 px-2 py-1 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
 
           {/* Actions */}
-          <button
+          <Button
+            className="p-1.5 rounded"
             onClick={() => setAutoScroll(!autoScroll)}
             aria-label="Auto-scroll"
             aria-pressed={autoScroll}
-            className={`p-1.5 rounded ${
-              autoScroll
-                ? "bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300"
-                : "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
-            }`}
           >
             <ArrowDownToLine className="w-4 h-4" />
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
+            className="p-1.5 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 rounded text-neutral-500 dark:text-neutral-400 hover:text-error-500"
             onClick={handleClearLogs}
             aria-label="Clear"
-            className="p-1.5 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 rounded text-gray-500 dark:text-gray-400 hover:text-error-500"
           >
             <Trash2 className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
-
         {/* Logs */}
         <div
           role="log"
@@ -368,7 +358,7 @@ export const ExecutionTracePanel = memo(
           className="flex-1 overflow-y-auto p-2 space-y-2"
         >
           {filteredLogs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+            <div className="flex flex-col items-center justify-center h-full text-neutral-500 dark:text-neutral-400">
               <Info className="w-8 h-8 mb-2 opacity-50" />
               <p className="text-sm">No execution events yet</p>
               <p className="text-xs mt-1">

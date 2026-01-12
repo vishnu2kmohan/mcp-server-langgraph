@@ -16,6 +16,8 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Copy, Check } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 /**
  * Get file extension for a language
  */
@@ -95,13 +97,9 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
         role="toolbar"
         aria-label="Code block actions"
       >
-        <button
+        <Button
+          className="p-1.5 rounded focus:ring-primary-500"
           onClick={handleToggleWordWrap}
-          className={`p-1.5 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-            wordWrap
-              ? "bg-primary-600 text-white"
-              : "bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white"
-          }`}
           title="Toggle word wrap"
           aria-label={wordWrap ? "Disable word wrap" : "Enable word wrap"}
           aria-pressed={wordWrap}
@@ -123,10 +121,11 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
             <polyline points="16 16 14 18 16 20" />
             <line x1="3" y1="18" x2="10" y2="18" />
           </svg>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="secondary"
+          className="p-1.5 bg-neutral-700 hover:bg-neutral-600 rounded text-neutral-300 hover:text-white focus:ring-primary-500"
           onClick={handleDownload}
-          className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
           title="Download file"
           aria-label="Download code as file"
         >
@@ -146,10 +145,11 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="secondary"
+          className="p-1.5 bg-neutral-700 hover:bg-neutral-600 rounded text-neutral-300 hover:text-white focus:ring-primary-500"
           onClick={handleCopy}
-          className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
           title="Copy code"
           aria-label={
             copied ? "Code copied to clipboard" : "Copy code to clipboard"
@@ -160,10 +160,10 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
           ) : (
             <Copy size={14} aria-hidden="true" />
           )}
-        </button>
+        </Button>
       </div>
       {language && (
-        <div className="absolute left-3 top-2 z-10 text-xs text-gray-400 dark:text-gray-400 font-mono">
+        <div className="absolute left-3 top-2 z-10 text-xs text-neutral-400 dark:text-neutral-400 font-mono">
           {language}
         </div>
       )}

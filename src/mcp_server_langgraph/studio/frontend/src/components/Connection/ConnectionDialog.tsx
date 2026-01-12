@@ -22,6 +22,8 @@ import {
 } from "../../api";
 import { Dialog } from "../UI/Dialog";
 
+import { Button, Input, Select, Textarea } from "@/components/UI";
+
 interface ConnectionDialogProps {
   open: boolean;
   onClose: () => void;
@@ -164,20 +166,22 @@ export function ConnectionDialog({
 
   const footerContent = (
     <>
-      <button
+      <Button
+        variant="secondary"
+        className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-md"
         onClick={onClose}
-        className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-md"
         disabled={isLoading}
       >
         Cancel
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="primary"
+        className="px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-md"
         onClick={handleSubmit}
-        className="px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={isLoading}
       >
         {isLoading ? "Saving..." : "Save"}
-      </button>
+      </Button>
     </>
   );
 
@@ -193,22 +197,21 @@ export function ConnectionDialog({
       <div>
         <label
           htmlFor="name"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
         >
           Name
         </label>
-        <input
+        <Input
           id="name"
-          type="text"
           value={name}
           onChange={(e) => {
             setName(e.target.value);
             if (errors.name) setErrors({ ...errors, name: undefined });
           }}
-          className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+          className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white ${
             errors.name
               ? "border-error-500"
-              : "border-gray-300 dark:border-gray-600"
+              : "border-neutral-300 dark:border-neutral-600"
           }`}
           placeholder="My MCP Server"
         />
@@ -216,27 +219,25 @@ export function ConnectionDialog({
           <p className="mt-1 text-sm text-error-500">{errors.name}</p>
         )}
       </div>
-
       {/* URL */}
       <div>
         <label
           htmlFor="url"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
         >
           URL
         </label>
-        <input
+        <Input
           id="url"
-          type="text"
           value={url}
           onChange={(e) => {
             setUrl(e.target.value);
             if (errors.url) setErrors({ ...errors, url: undefined });
           }}
-          className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+          className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white ${
             errors.url
               ? "border-error-500"
-              : "border-gray-300 dark:border-gray-600"
+              : "border-neutral-300 dark:border-neutral-600"
           }`}
           placeholder="https://mcp.example.com"
         />
@@ -244,56 +245,53 @@ export function ConnectionDialog({
           <p className="mt-1 text-sm text-error-500">{errors.url}</p>
         )}
       </div>
-
       {/* Description */}
       <div>
         <label
           htmlFor="description"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
         >
           Description
         </label>
-        <textarea
+        <Textarea
+          className="px-3 py-2 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           placeholder="Optional description"
           rows={2}
         />
       </div>
-
       {/* Auth Type */}
       <div>
         <label
           htmlFor="auth_type"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
         >
           Authentication
         </label>
-        <select
+        <Select
+          className="px-3 py-2 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
           id="auth_type"
           value={authType}
           onChange={(e) => setAuthType(e.target.value as AuthType)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           disabled={isEditing} // Can't change auth type when editing
         >
           <option value="none">No Authentication</option>
           <option value="api_key">API Key</option>
           <option value="oauth2">OAuth2</option>
-        </select>
+        </Select>
       </div>
-
       {/* API Key (conditional) */}
       {authType === "api_key" && (
         <div>
           <label
             htmlFor="api_key"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
           >
             API Key
           </label>
-          <input
+          <Input
             id="api_key"
             type="password"
             value={apiKey}
@@ -301,10 +299,10 @@ export function ConnectionDialog({
               setApiKey(e.target.value);
               if (errors.apiKey) setErrors({ ...errors, apiKey: undefined });
             }}
-            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white ${
               errors.apiKey
                 ? "border-error-500"
-                : "border-gray-300 dark:border-gray-600"
+                : "border-neutral-300 dark:border-neutral-600"
             }`}
             placeholder="Enter your API key"
           />
@@ -313,30 +311,28 @@ export function ConnectionDialog({
           )}
         </div>
       )}
-
       {/* OAuth2 fields (conditional) */}
       {authType === "oauth2" && (
         <>
           <div>
             <label
               htmlFor="client_id"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
               Client ID
             </label>
-            <input
+            <Input
               id="client_id"
-              type="text"
               value={clientId}
               onChange={(e) => {
                 setClientId(e.target.value);
                 if (errors.clientId)
                   setErrors({ ...errors, clientId: undefined });
               }}
-              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white ${
                 errors.clientId
                   ? "border-error-500"
-                  : "border-gray-300 dark:border-gray-600"
+                  : "border-neutral-300 dark:border-neutral-600"
               }`}
               placeholder="OAuth2 client ID"
             />
@@ -348,19 +344,19 @@ export function ConnectionDialog({
           <div>
             <label
               htmlFor="client_secret"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
               Client Secret
             </label>
-            <input
+            <Input
+              className="px-3 py-2 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
               id="client_secret"
               type="password"
               value={clientSecret}
               onChange={(e) => setClientSecret(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               placeholder="Optional client secret"
             />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
               Not required for PKCE flow
             </p>
           </div>
@@ -368,16 +364,15 @@ export function ConnectionDialog({
           <div>
             <label
               htmlFor="scopes"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
               Scopes
             </label>
-            <input
+            <Input
+              className="px-3 py-2 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
               id="scopes"
-              type="text"
               value={scopes}
               onChange={(e) => setScopes(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               placeholder="read write tools (space-separated)"
             />
           </div>

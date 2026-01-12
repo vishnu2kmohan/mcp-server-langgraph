@@ -248,13 +248,13 @@ export function WorkflowCanvas({
           variant={BackgroundVariant.Dots}
           gap={15}
           size={1}
-          className="bg-gray-50 dark:bg-gray-900"
+          className="bg-neutral-50 dark:bg-neutral-900"
         />
-        <Controls className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
+        <Controls className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700" />
         <MiniMap
           nodeColor={getNodeColor}
           maskColor="rgba(0,0,0,0.1)"
-          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+          className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700"
         />
       </ReactFlow>
     </div>

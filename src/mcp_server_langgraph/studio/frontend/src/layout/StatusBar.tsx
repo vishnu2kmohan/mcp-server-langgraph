@@ -33,6 +33,8 @@ import type {
 } from "../types/session";
 import type { KBStatusValue, KBContextStats } from "../types/api";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -230,7 +232,7 @@ function getKBStatusValueColor(status: KBStatusValue): string {
     case "misconfigured":
       return "bg-warning-500";
     case "unavailable":
-      return "bg-gray-400";
+      return "bg-neutral-400";
   }
 }
 
@@ -321,9 +323,9 @@ export function StatusBar({
       aria-live="polite"
       className={cn(
         "flex items-center justify-between px-4 py-1",
-        "bg-gray-100 dark:bg-gray-800",
-        "border-t border-gray-200 dark:border-gray-700",
-        "text-xs text-gray-500 dark:text-gray-400",
+        "bg-neutral-100 dark:bg-neutral-800",
+        "border-t border-neutral-200 dark:border-neutral-700",
+        "text-xs text-neutral-500 dark:text-neutral-400",
         className,
       )}
     >
@@ -389,7 +391,7 @@ export function StatusBar({
             <span>
               {tokenCount.toLocaleString()} tokens
               {costBreakdown && (
-                <span className="ml-1 text-gray-400 dark:text-gray-400">
+                <span className="ml-1 text-neutral-400 dark:text-neutral-400">
                   ({formatCost(costBreakdown.estimatedCostUsd)})
                 </span>
               )}
@@ -417,14 +419,14 @@ export function StatusBar({
             <Database
               size={12}
               aria-hidden="true"
-              className="text-gray-500 dark:text-gray-400"
+              className="text-neutral-500 dark:text-neutral-400"
             />
             <span>KB</span>
             {kbContextStats && (
               <span
                 data-testid="kb-context-stats"
                 title={`Context usage: ${Math.round((kbContextStats.tokensUsed / kbContextStats.tokenBudget) * 100)}%`}
-                className="text-gray-400 dark:text-gray-400"
+                className="text-neutral-400 dark:text-neutral-400"
               >
                 {kbContextStats.refsCount} refs ·{" "}
                 {kbContextStats.tokensUsed.toLocaleString()}
@@ -449,7 +451,7 @@ export function StatusBar({
 
         {/* Agent queue toggle button */}
         {agentCount !== undefined && agentCount > 0 && onAgentQueueToggle && (
-          <button
+          <Button
             data-testid="agent-queue-toggle"
             type="button"
             onClick={onAgentQueueToggle}
@@ -457,21 +459,21 @@ export function StatusBar({
             aria-label={`Toggle agent task queue (${agentCount} agents)`}
             className={cn(
               "flex items-center gap-1 px-2 py-0.5 rounded",
-              "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+              "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
               "transition-colors",
               agentQueueOpen && "bg-primary-100 dark:bg-primary-900/30",
             )}
           >
             <ListTodo size={12} aria-hidden="true" />
             <span className="font-medium">{agentCount}</span>
-          </button>
+          </Button>
         )}
 
         {/* Pending approvals indicator */}
         {pendingApprovals !== undefined &&
           pendingApprovals > 0 &&
           onPendingApprovalsClick && (
-            <button
+            <Button
               data-testid="pending-approvals-indicator"
               type="button"
               onClick={onPendingApprovalsClick}
@@ -494,12 +496,12 @@ export function StatusBar({
               <span className="font-medium text-warning-700 dark:text-warning-300">
                 {pendingApprovals} pending
               </span>
-            </button>
+            </Button>
           )}
 
         {/* DevTools toggle button */}
         {onDevToolsToggle && (
-          <button
+          <Button
             data-testid="devtools-toggle"
             type="button"
             onClick={onDevToolsToggle}
@@ -508,7 +510,7 @@ export function StatusBar({
             aria-pressed={!devToolsCollapsed}
             className={cn(
               "flex items-center gap-1 px-2 py-0.5 rounded",
-              "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+              "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
               "transition-colors",
               !devToolsCollapsed && "bg-primary-100 dark:bg-primary-900/30",
             )}
@@ -522,10 +524,9 @@ export function StatusBar({
                 {problemCount > 99 ? "99+" : problemCount}
               </span>
             )}
-          </button>
+          </Button>
         )}
       </div>
-
       {/* Right section: Keyboard shortcuts */}
       <div className="flex items-center gap-4">
         <span className="hidden sm:inline">⌘K Command Palette</span>

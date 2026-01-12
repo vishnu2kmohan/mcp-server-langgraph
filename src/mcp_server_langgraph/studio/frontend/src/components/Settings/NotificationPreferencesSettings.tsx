@@ -15,6 +15,8 @@ import {
   useResetNotificationPreferencesMutation,
 } from "../../api";
 
+import { Button, Toggle } from "@/components/UI";
+
 interface NotificationTypeToggleProps {
   label: string;
   description: string;
@@ -34,23 +36,23 @@ function NotificationTypeToggle({
   disabled,
 }: NotificationTypeToggleProps) {
   return (
-    <label className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="flex items-center justify-between p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
       <div>
-        <p className="font-medium text-gray-900 dark:text-gray-100">{label}</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="font-medium text-neutral-900 dark:text-neutral-100">
+          {label}
+        </p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
           {description}
         </p>
       </div>
-      <input
-        type="checkbox"
-        role="switch"
-        aria-label={label}
+      <Toggle
         checked={enabled}
-        onChange={(e) => onChange(e.target.checked)}
+        onChange={onChange}
         disabled={disabled}
-        className="w-5 h-5 text-primary-600 rounded focus:ring-primary-500 disabled:opacity-50"
+        aria-label={label}
+        size="md"
       />
-    </label>
+    </div>
   );
 }
 
@@ -112,13 +114,14 @@ export function NotificationPreferencesSettings() {
             Failed to load notification preferences
           </p>
         </div>
-        <button
+        <Button
+          variant="danger"
+          className="mt-3 flex px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
           onClick={() => refetch()}
-          className="mt-3 flex items-center gap-2 px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
         >
           <RefreshCw size={14} />
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -128,20 +131,19 @@ export function NotificationPreferencesSettings() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
           Real-Time Notification Types
         </h3>
-        <button
+        <Button
+          className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
           onClick={handleReset}
           disabled={isDisabled}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 disabled:opacity-50"
           aria-label="Reset to defaults"
         >
           <RotateCcw size={14} className={isResetting ? "animate-spin" : ""} />
           Reset to Defaults
-        </button>
+        </Button>
       </div>
-
       <NotificationTypeToggle
         label="Info Notifications"
         description="General information and updates"
@@ -149,7 +151,6 @@ export function NotificationPreferencesSettings() {
         onChange={(enabled) => handleToggle("infoEnabled", enabled)}
         disabled={isDisabled}
       />
-
       <NotificationTypeToggle
         label="Success Notifications"
         description="Confirmations when operations complete successfully"
@@ -157,7 +158,6 @@ export function NotificationPreferencesSettings() {
         onChange={(enabled) => handleToggle("successEnabled", enabled)}
         disabled={isDisabled}
       />
-
       <NotificationTypeToggle
         label="Warning Notifications"
         description="Alerts about potential issues or important information"
@@ -165,7 +165,6 @@ export function NotificationPreferencesSettings() {
         onChange={(enabled) => handleToggle("warningEnabled", enabled)}
         disabled={isDisabled}
       />
-
       <NotificationTypeToggle
         label="Error Notifications"
         description="Critical errors that require your attention"

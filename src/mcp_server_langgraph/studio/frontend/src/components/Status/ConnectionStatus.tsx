@@ -16,6 +16,8 @@
 import { useState, useCallback, useMemo } from "react";
 import { Wifi, WifiOff, RefreshCw, Clock } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -172,49 +174,50 @@ export function ConnectionStatus({
 
         {!compact && (
           <>
-            <Icon size={14} className="text-gray-500 dark:text-gray-400" />
+            <Icon
+              size={14}
+              className="text-neutral-500 dark:text-neutral-400"
+            />
             <span
               role="status"
               aria-live="polite"
-              className="text-sm text-gray-700 dark:text-gray-300"
+              className="text-sm text-neutral-700 dark:text-neutral-300"
             >
               {config.label}
             </span>
           </>
         )}
       </div>
-
       {/* Latency display */}
       {!compact && latencyInfo && (
         <span className={`text-xs font-mono ${latencyInfo.colorClass}`}>
           {latencyInfo.value}
         </span>
       )}
-
       {/* Last sync time */}
       {!compact && syncTimeDisplay && (
-        <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+        <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
           <Clock size={12} aria-hidden="true" />
           <span>Synced {syncTimeDisplay}</span>
         </span>
       )}
-
       {/* Reconnect button */}
       {status === "disconnected" && onReconnect && (
-        <button
+        <Button
+          variant="primary"
+          size="sm"
+          className="ml-2 px-2 py-1 text-xs text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 rounded hover:bg-primary-100 dark:hover:bg-primary-900/40 focus:ring-primary-500"
           type="button"
           onClick={handleReconnect}
-          className="ml-2 px-2 py-1 text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 rounded hover:bg-primary-100 dark:hover:bg-primary-900/40 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           Reconnect
-        </button>
+        </Button>
       )}
-
       {/* Tooltip for compact mode */}
       {compact && showTooltip && (
         <div
           role="tooltip"
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-50"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-neutral-900 dark:bg-neutral-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-50"
         >
           <div className="flex items-center gap-2">
             <span>{config.label}</span>
@@ -225,10 +228,12 @@ export function ConnectionStatus({
             )}
           </div>
           {syncTimeDisplay && (
-            <div className="mt-1 text-gray-300">Synced {syncTimeDisplay}</div>
+            <div className="mt-1 text-neutral-300">
+              Synced {syncTimeDisplay}
+            </div>
           )}
           {/* Tooltip arrow */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-900 dark:border-t-neutral-700" />
         </div>
       )}
     </div>

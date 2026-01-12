@@ -8,6 +8,8 @@
 import { AlertTriangle } from "lucide-react";
 import { Dialog } from "./Dialog";
 
+import { Button } from "@/components/UI";
+
 export interface ConfirmDialogProps {
   /** Whether the dialog is open */
   open: boolean;
@@ -52,21 +54,18 @@ export function ConfirmDialog({
       size="sm"
       footer={
         <>
-          <button
+          <Button
+            variant="secondary"
+            className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:ring-offset-2 focus:ring-neutral-500"
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 transition-colors"
           >
             {cancelText}
-          </button>
-          <button
+          </Button>
+          <Button
+            className="px-4 py-2 text-sm text-white rounded-lg focus:ring-offset-2"
             onClick={handleConfirm}
             disabled={isLoading}
-            className={`px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 transition-colors ${
-              isDestructive
-                ? "bg-error-600 hover:bg-error-700 focus:ring-error-500"
-                : "bg-primary-600 hover:bg-primary-700 focus:ring-primary-500"
-            }`}
           >
             {isLoading ? (
               <span className="flex items-center gap-2">
@@ -95,7 +94,7 @@ export function ConfirmDialog({
             ) : (
               confirmText
             )}
-          </button>
+          </Button>
         </>
       }
     >
@@ -108,7 +107,9 @@ export function ConfirmDialog({
           </div>
         )}
         <div className="flex-1">
-          <p className="text-sm text-gray-600 dark:text-gray-300">{message}</p>
+          <p className="text-sm text-neutral-600 dark:text-neutral-300">
+            {message}
+          </p>
         </div>
       </div>
     </Dialog>

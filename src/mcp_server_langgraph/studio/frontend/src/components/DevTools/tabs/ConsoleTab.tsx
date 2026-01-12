@@ -57,6 +57,8 @@ import type {
   ConsoleEntrySource,
 } from "../types";
 
+import { Button, Input, Select } from "@/components/UI";
+
 // =============================================================================
 // Virtualization Constants
 // =============================================================================
@@ -152,8 +154,8 @@ function ConsoleEntryRow({
       data-testid={`console-entry-${entry.id}`}
       data-focused={isFocused}
       className={cn(
-        "group flex flex-col border-b border-gray-100 dark:border-gray-800",
-        "hover:bg-gray-50 dark:hover:bg-gray-800/50",
+        "group flex flex-col border-b border-neutral-100 dark:border-neutral-800",
+        "hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
         levelStyles[entry.level],
         isFocused && "bg-primary-50 dark:bg-primary-900/20",
       )}
@@ -164,20 +166,21 @@ function ConsoleEntryRow({
       <div className="grid grid-cols-[auto_auto_130px_120px_1fr_auto] items-start gap-2 px-2 py-1">
         {/* Expand button */}
         {hasData ? (
-          <button
+          <Button
+            variant="secondary"
+            className="mt-0.5 p-0.5 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
             data-testid="expand-button"
             type="button"
             onClick={onToggleExpand}
             aria-expanded={isExpanded}
             aria-label={isExpanded ? "Collapse entry" : "Expand entry"}
-            className="mt-0.5 p-0.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded"
           >
             {isExpanded ? (
               <ChevronDown size={14} />
             ) : (
               <ChevronRight size={14} />
             )}
-          </button>
+          </Button>
         ) : (
           <div className="w-5" />
         )}
@@ -195,7 +198,7 @@ function ConsoleEntryRow({
         {/* Source indicator */}
         <span
           data-testid={`source-${entry.source}`}
-          className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-400 flex-shrink-0"
+          className="flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-400 flex-shrink-0"
         >
           <SourceIcon size={12} aria-hidden="true" />
           <span className="hidden sm:inline">
@@ -213,7 +216,7 @@ function ConsoleEntryRow({
               {entry.detailFields.map((field) => (
                 <span
                   key={`${entry.id}-${field.key}`}
-                  className="inline-flex items-center gap-1 rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-xs text-gray-600 dark:text-gray-300"
+                  className="inline-flex items-center gap-1 rounded bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-600 dark:text-neutral-300"
                 >
                   <span className="font-semibold">{field.key}:</span>
                   <span className="truncate max-w-[180px]">{field.value}</span>
@@ -225,26 +228,26 @@ function ConsoleEntryRow({
 
         {/* Copy button (visible on hover) */}
         {isHovered && (
-          <button
+          <Button
+            variant="secondary"
+            className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded opacity-0 group-hover:opacity-100 -opacity"
             data-testid="copy-button"
             type="button"
             onClick={onCopy}
             aria-label="Copy message"
-            className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <Copy size={14} />
-          </button>
+          </Button>
         )}
       </div>
-
       {/* Expanded data */}
       {isExpanded && hasData && (
         <div
           data-testid={`expanded-data-${entry.id}`}
-          className="ml-12 mr-2 mb-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono overflow-x-auto"
+          className="ml-12 mr-2 mb-2 p-2 bg-neutral-100 dark:bg-neutral-800 rounded text-xs font-mono overflow-x-auto"
         >
           {entry.structuredData && (
-            <pre className="whitespace-pre-wrap text-gray-600 dark:text-gray-400">
+            <pre className="whitespace-pre-wrap text-neutral-600 dark:text-neutral-400">
               {JSON.stringify(entry.structuredData, null, 2)}
             </pre>
           )}
@@ -252,7 +255,7 @@ function ConsoleEntryRow({
             <pre
               data-testid={`stack-trace-${entry.id}`}
               className={cn(
-                "mt-2 whitespace-pre-wrap border-t border-gray-200 dark:border-gray-700 pt-2",
+                "mt-2 whitespace-pre-wrap border-t border-neutral-200 dark:border-neutral-700 pt-2",
                 STATUS_TEXT_COLORS.error,
               )}
             >
@@ -567,7 +570,9 @@ export function ConsoleTab({
         size={12}
         className={cn(
           "ml-1 inline-block transition-transform",
-          isSorted ? "text-primary-600" : "text-gray-400 dark:text-gray-400",
+          isSorted
+            ? "text-primary-600"
+            : "text-neutral-400 dark:text-neutral-400",
           isSorted === "desc" && "rotate-180",
         )}
         aria-hidden="true"
@@ -578,49 +583,49 @@ export function ConsoleTab({
   return (
     <div
       data-testid="console-tab"
-      className="flex flex-col h-full min-h-0 bg-white dark:bg-gray-900"
+      className="flex flex-col h-full min-h-0 bg-white dark:bg-neutral-900"
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
         {/* Filter dropdown */}
-        <select
+        <Select
+          size="sm"
+          className="text-xs px-2 py-1 text-neutral-700 dark:text-neutral-300"
           data-testid="console-filter-select"
           value={filter}
           onChange={(e) => onFilterChange(e.target.value as typeof filter)}
           aria-label="Filter console entries by level"
-          className="text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
         >
           <option value="all">All levels</option>
           <option value="info">Info</option>
           <option value="warning">Warnings</option>
           <option value="error">Errors</option>
-        </select>
+        </Select>
 
         {/* Entry count */}
         <span
           data-testid="entry-count"
-          className="text-xs text-gray-500 dark:text-gray-400"
+          className="text-xs text-neutral-500 dark:text-neutral-400"
         >
           {sortedRows.length}
         </span>
 
         {/* Search */}
-        <label className="relative text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+        <label className="relative text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
           <Search
             size={12}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
             aria-hidden="true"
           />
-          <input
+          <Input
             data-testid="console-search-input"
-            type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Filter logs"
             className={cn(
               "pl-6 pr-2 py-1 text-xs",
-              "bg-white dark:bg-gray-900",
-              "border border-gray-200 dark:border-gray-700 rounded",
+              "bg-white dark:bg-neutral-900",
+              "border border-neutral-200 dark:border-neutral-700 rounded",
               "focus:outline-none focus:ring-1 focus:ring-primary-500",
               "w-36",
             )}
@@ -633,37 +638,42 @@ export function ConsoleTab({
 
         {/* Export dropdown */}
         <div className="relative group">
-          <button
+          <Button
+            variant="secondary"
+            className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400"
             data-testid="export-console-button"
             type="button"
             aria-label="Export console logs"
             aria-haspopup="true"
-            className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
           >
             <Download size={14} />
-          </button>
-          <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-10 hidden group-hover:block">
-            <button
+          </Button>
+          <div className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded shadow-lg z-10 hidden group-hover:block">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 whitespace-nowrap"
               data-testid="export-json-button"
               type="button"
               onClick={() => exportConsoleToJSON(displayEntries)}
-              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 whitespace-nowrap"
             >
               Export as JSON
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 whitespace-nowrap"
               data-testid="export-csv-button"
               type="button"
               onClick={() => exportConsoleToCSV(displayEntries)}
-              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 whitespace-nowrap"
             >
               Export as CSV
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Auto-tail toggle */}
-        <button
+        <Button
           data-testid="scroll-to-bottom"
           type="button"
           onClick={toggleAutoTail}
@@ -675,29 +685,29 @@ export function ConsoleTab({
             "p-1 rounded",
             isAutoTailing
               ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30"
-              : "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+              : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
           )}
         >
           <ArrowDown size={14} />
-        </button>
+        </Button>
 
         {/* Clear console */}
-        <button
+        <Button
+          variant="secondary"
+          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400 hover:text-error-500"
           data-testid="clear-console-button"
           type="button"
           onClick={handleClearConsole}
           aria-label="Clear console"
-          className="p-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 hover:text-error-500"
         >
           <Trash2 size={14} />
-        </button>
+        </Button>
       </div>
-
       {/* Entries list */}
       {sortedRows.length === 0 ? (
         <div
           data-testid="console-empty-state"
-          className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-400"
+          className="flex-1 flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-400"
         >
           <Terminal size={32} className="mb-2 opacity-50" />
           <p>No console output</p>
@@ -715,32 +725,32 @@ export function ConsoleTab({
           className="flex-1 min-h-0 overflow-y-auto focus:outline-none"
         >
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-gray-100 dark:bg-gray-800/95 dark:bg-gray-800/95 backdrop-blur border-b border-gray-200 dark:border-gray-700">
-            <div className="grid grid-cols-[auto_auto_130px_120px_1fr_auto] items-center gap-2 px-2 py-2 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              <span className="text-xs text-gray-400 dark:text-gray-400">
+          <div className="sticky top-0 z-10 bg-neutral-100 dark:bg-neutral-800/95 dark:bg-neutral-800/95 backdrop-blur border-b border-neutral-200 dark:border-neutral-700">
+            <div className="grid grid-cols-[auto_auto_130px_120px_1fr_auto] items-center gap-2 px-2 py-2 text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wide">
+              <span className="text-xs text-neutral-400 dark:text-neutral-400">
                 Expand
               </span>
-              <button
+              <Button
+                className="flex text-left"
                 type="button"
-                className="flex items-center text-left"
                 onClick={() => table.getColumn("level")?.toggleSorting()}
               >
                 Level {renderSortIndicator("level")}
-              </button>
-              <button
+              </Button>
+              <Button
+                className="flex text-left"
                 type="button"
-                className="flex items-center text-left"
                 onClick={() => table.getColumn("timestamp")?.toggleSorting()}
               >
                 Time {renderSortIndicator("timestamp")}
-              </button>
-              <button
+              </Button>
+              <Button
+                className="flex text-left"
                 type="button"
-                className="flex items-center text-left"
                 onClick={() => table.getColumn("source")?.toggleSorting()}
               >
                 Source {renderSortIndicator("source")}
-              </button>
+              </Button>
               <span>Message</span>
               <span className="text-right">Actions</span>
             </div>

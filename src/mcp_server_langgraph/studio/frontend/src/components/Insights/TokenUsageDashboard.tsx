@@ -16,6 +16,8 @@
 import { RefreshCw, ArrowDown, ArrowUp, Coins, Gauge } from "lucide-react";
 import { useTokenUsage } from "../../hooks/useTokenUsage";
 
+import { Button } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -79,20 +81,20 @@ function MetricCard({
   };
 
   return (
-    <div className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+    <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
       <div className="flex items-center gap-2 mb-2">
         {icon && (
           <div className={`p-1.5 rounded ${colorClasses[color]}`}>{icon}</div>
         )}
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="text-sm text-neutral-500 dark:text-neutral-400">
           {label}
         </span>
       </div>
-      <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
         {value}
       </div>
       {subtext && (
-        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
           {subtext}
         </div>
       )}
@@ -122,8 +124,8 @@ function ProgressBar({ value, max, label, showWarning }: ProgressBarProps) {
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-sm">
-        <span className="text-gray-600 dark:text-gray-400">{label}</span>
-        <span className="text-gray-900 dark:text-gray-100">
+        <span className="text-neutral-600 dark:text-neutral-400">{label}</span>
+        <span className="text-neutral-900 dark:text-neutral-100">
           {formatPercentage(percentage)}
         </span>
       </div>
@@ -134,7 +136,7 @@ function ProgressBar({ value, max, label, showWarning }: ProgressBarProps) {
         aria-valuenow={percentage}
         aria-valuemin={0}
         aria-valuemax={100}
-        className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+        className="h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden"
       >
         <div
           className={`h-full ${barColor} transition-all duration-300`}
@@ -156,7 +158,7 @@ interface HistoryChartProps {
 function HistoryChart({ history }: HistoryChartProps) {
   if (!history || history.length === 0) {
     return (
-      <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+      <div className="text-center text-neutral-500 dark:text-neutral-400 py-8">
         No usage history available
       </div>
     );
@@ -166,7 +168,7 @@ function HistoryChart({ history }: HistoryChartProps) {
 
   return (
     <div data-testid="usage-history-chart" className="space-y-2">
-      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+      <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
         Usage Over Time
       </h4>
       <div className="flex items-end gap-1 h-24">
@@ -182,7 +184,7 @@ function HistoryChart({ history }: HistoryChartProps) {
           );
         })}
       </div>
-      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400">
         <span>
           {history[0]
             ? new Date(history[0].timestamp).toLocaleTimeString([], {
@@ -238,19 +240,19 @@ export function TokenUsageDashboard({
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
           Token Usage
         </h3>
-        <button
+        <Button
+          variant="secondary"
+          className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg focus:ring-primary-500"
           type="button"
           onClick={refresh}
           aria-label="Refresh token usage"
-          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <RefreshCw size={16} />
-        </button>
+        </Button>
       </div>
-
       {/* Metrics Grid */}
       <div
         className={`grid gap-4 ${compact ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4"}`}
@@ -285,10 +287,9 @@ export function TokenUsageDashboard({
           />
         )}
       </div>
-
       {/* Context Window Usage */}
       {contextWindowSize && (
-        <div className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+        <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
           <ProgressBar
             value={totalTokens}
             max={contextWindowSize}
@@ -303,17 +304,15 @@ export function TokenUsageDashboard({
           )}
         </div>
       )}
-
       {/* History Chart */}
       {showHistory && history && (
-        <div className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+        <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
           <HistoryChart history={history} />
         </div>
       )}
-
       {/* Loading overlay */}
       {showLoading && (
-        <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-white/50 dark:bg-neutral-900/50 flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
         </div>
       )}

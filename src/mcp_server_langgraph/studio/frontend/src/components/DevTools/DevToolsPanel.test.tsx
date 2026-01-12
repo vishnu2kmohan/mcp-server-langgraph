@@ -21,6 +21,7 @@ import { MemoryRouter } from "react-router";
 import React from "react";
 import { DevToolsPanel } from "./DevToolsPanel";
 import devToolsReducer from "../../store/slices/devToolsSlice";
+import alertsReducer from "../../store/slices/alertSlice";
 import type {
   DevToolsContext,
   DevToolsTabId,
@@ -35,6 +36,37 @@ vi.mock("./hooks/useDevToolsContext", () => ({
   }),
 }));
 
+// Mock the DevToolsTimelineProvider, useTimelineContext, and DevToolsWebSocketObserver
+vi.mock("./context/DevToolsTimelineProvider", () => ({
+  DevToolsTimelineProvider: ({ children }: { children: React.ReactNode }) =>
+    children,
+  useTimelineContext: () => ({
+    events: [],
+    filteredEvents: [],
+    selectedEvent: null,
+    setSelectedEvent: vi.fn(),
+    timeRange: { start: 0, end: Date.now() },
+    setTimeRange: vi.fn(),
+    isPlaying: false,
+    setIsPlaying: vi.fn(),
+    playbackSpeed: 1,
+    setPlaybackSpeed: vi.fn(),
+    filters: {},
+    setFilters: vi.fn(),
+    addEvent: vi.fn(),
+    clearEvents: vi.fn(),
+  }),
+}));
+
+vi.mock("./components/DevToolsWebSocketObserver", () => ({
+  DevToolsWebSocketObserver: () => null,
+}));
+
+// Mock the TimelineBar
+vi.mock("./TimelineBar", () => ({
+  TimelineBar: () => <div data-testid="timeline-bar-mock">Timeline Bar</div>,
+}));
+
 // Mock the useDevToolsWebSocket hook with configurable return values
 let mockDevToolsWsState = {
   status: "connected" as "connected" | "connecting" | "disconnected" | "error",
@@ -42,6 +74,8 @@ let mockDevToolsWsState = {
   networkEntries: [] as unknown[],
   clearConsoleEntries: vi.fn(),
   clearNetworkEntries: vi.fn(),
+  traceSteps: [] as unknown[],
+  clearTraceSteps: vi.fn(),
   reconnect: vi.fn(),
   reconnectAttempts: 0,
 };
@@ -59,6 +93,17 @@ vi.mock("../../hooks/useTraceWebSocket", () => ({
     disconnect: vi.fn(),
   }),
 }));
+
+// Mock the useAlertWebSocket hook
+vi.mock("../../hooks/useAlertWebSocket", () => ({
+  useAlertWebSocket: () => ({
+    status: "connected",
+    reconnect: vi.fn(),
+    disconnect: vi.fn(),
+  }),
+}));
+
+// Note: alertSlice is added to the test store reducer to properly mock selectors
 
 // Mock RTK Query hooks - camelCase per ADR-0091 Phase 6
 vi.mock("../../api", () => ({
@@ -102,6 +147,7 @@ describe("DevToolsPanel", () => {
     return configureStore({
       reducer: {
         devTools: devToolsReducer,
+        alerts: alertsReducer,
       },
       preloadedState: {
         devTools: {
@@ -115,6 +161,17 @@ describe("DevToolsPanel", () => {
           aiInsightsEnabled: false,
           aiSuggestedLayout: null,
           ...overrides,
+        },
+        alerts: {
+          alerts: [],
+          selectedAlertId: null,
+          pendingRemediations: [],
+          soundEnabled: true,
+          lastCriticalAlertTime: null,
+          filters: {
+            severity: ["critical", "warning"],
+            state: ["firing"],
+          },
         },
       },
     });
@@ -144,6 +201,8 @@ describe("DevToolsPanel", () => {
       networkEntries: [],
       clearConsoleEntries: vi.fn(),
       clearNetworkEntries: vi.fn(),
+      traceSteps: [],
+      clearTraceSteps: vi.fn(),
       reconnect: vi.fn(),
       reconnectAttempts: 0,
     };
@@ -403,7 +462,7 @@ describe("DevToolsPanel", () => {
     it("should apply dark mode styles", () => {
       renderWithProviders(<DevToolsPanel />);
       const panel = screen.getByTestId("devtools-panel");
-      expect(panel).toHaveClass("dark:bg-gray-900");
+      expect(panel).toHaveClass("dark:bg-neutral-900");
     });
   });
 

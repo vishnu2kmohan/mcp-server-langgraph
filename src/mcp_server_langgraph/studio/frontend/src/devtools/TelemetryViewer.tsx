@@ -14,6 +14,8 @@ import { useState, useCallback, useMemo } from "react";
 import { useSessionTelemetry } from "../contexts/TelemetryContext";
 import { isDevMode } from "../utils/devLogger";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -37,7 +39,7 @@ function CollapsibleSection({
 
   return (
     <div className="telemetry-section">
-      <button
+      <Button
         className="telemetry-section-header"
         onClick={() => setIsOpen(!isOpen)}
         style={{
@@ -55,7 +57,7 @@ function CollapsibleSection({
       >
         <span style={{ marginRight: "8px" }}>{isOpen ? "▼" : "▶"}</span>
         {title}
-      </button>
+      </Button>
       {isOpen && <div style={{ padding: "8px 8px 8px 24px" }}>{children}</div>}
     </div>
   );
@@ -158,7 +160,7 @@ export function TelemetryViewer() {
           Telemetry Viewer
         </span>
         <div style={{ display: "flex", gap: "8px" }}>
-          <button
+          <Button
             onClick={handleExport}
             style={{
               padding: "4px 8px",
@@ -170,8 +172,8 @@ export function TelemetryViewer() {
             }}
           >
             Export
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleReset}
             style={{
               padding: "4px 8px",
@@ -183,10 +185,9 @@ export function TelemetryViewer() {
             }}
           >
             Reset
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Metrics */}
       <div style={{ padding: "8px" }}>
         {/* Session Creations */}
@@ -247,7 +248,6 @@ export function TelemetryViewer() {
           />
         </CollapsibleSection>
       </div>
-
       {/* Refresh Button */}
       <div
         style={{
@@ -256,7 +256,7 @@ export function TelemetryViewer() {
           textAlign: "center",
         }}
       >
-        <button
+        <Button
           onClick={refresh}
           style={{
             padding: "6px 16px",
@@ -269,7 +269,7 @@ export function TelemetryViewer() {
           }}
         >
           Refresh Metrics
-        </button>
+        </Button>
       </div>
     </div>
   );

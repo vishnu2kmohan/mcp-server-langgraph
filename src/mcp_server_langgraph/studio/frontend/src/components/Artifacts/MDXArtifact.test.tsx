@@ -20,6 +20,7 @@ import {
   Tab,
   Steps,
   Step,
+  mdxComponents,
 } from "./MDXArtifact";
 
 describe("MDXArtifact", () => {
@@ -44,13 +45,15 @@ describe("MDXArtifact", () => {
       expect(screen.queryByRole("heading")).not.toBeInTheDocument();
     });
 
-    it("should show custom components count when provided", () => {
+    it("should accept custom components prop", () => {
       const customComponents = {
         CustomButton: () => <button>Custom</button>,
         CustomAlert: () => <div>Alert</div>,
       };
+      // Custom components are merged with built-in components for rendering
+      // The component renders successfully when custom components are provided
       render(<MDXArtifact data="content" components={customComponents} />);
-      expect(screen.getByText("2 custom components")).toBeInTheDocument();
+      expect(screen.getByTestId("mdx-artifact")).toBeInTheDocument();
     });
 
     it("should not show components badge when no custom components", () => {
@@ -291,6 +294,261 @@ describe("MDXArtifact", () => {
       expect(screen.getByText("Step 1")).toBeInTheDocument();
       expect(screen.getByText("First step content")).toBeInTheDocument();
       expect(screen.getByText("Step 2")).toBeInTheDocument();
+    });
+  });
+
+  describe("Extended Components", () => {
+    // Access extended components from mdxComponents registry
+    const Info = mdxComponents.Info;
+    const Check = mdxComponents.Check;
+    const CodeGroup = mdxComponents.CodeGroup;
+    const Frame = mdxComponents.Frame;
+    const Expandable = mdxComponents.Expandable;
+    const Icon = mdxComponents.Icon;
+    const ResponseField = mdxComponents.ResponseField;
+    const ParamField = mdxComponents.ParamField;
+
+    describe("Info Component", () => {
+      it("should render info callout", () => {
+        render(<Info>Information message</Info>);
+        expect(screen.getByText("Information message")).toBeInTheDocument();
+      });
+
+      it("should render with title", () => {
+        render(<Info title="FYI">Details here</Info>);
+        expect(screen.getByText("FYI")).toBeInTheDocument();
+        expect(screen.getByText("Details here")).toBeInTheDocument();
+      });
+    });
+
+    describe("Check Component", () => {
+      it("should render check/success callout", () => {
+        render(<Check>Task completed successfully!</Check>);
+        expect(
+          screen.getByText("Task completed successfully!"),
+        ).toBeInTheDocument();
+      });
+
+      it("should render with title", () => {
+        render(<Check title="Done">All tests passed</Check>);
+        expect(screen.getByText("Done")).toBeInTheDocument();
+        expect(screen.getByText("All tests passed")).toBeInTheDocument();
+      });
+    });
+
+    describe("CodeGroup Component", () => {
+      it("should render code group container", () => {
+        render(
+          <CodeGroup>
+            <pre>python code</pre>
+            <pre>javascript code</pre>
+          </CodeGroup>,
+        );
+        expect(screen.getByText("Code Examples")).toBeInTheDocument();
+        expect(screen.getByText("python code")).toBeInTheDocument();
+        expect(screen.getByText("javascript code")).toBeInTheDocument();
+      });
+    });
+
+    describe("Frame Component", () => {
+      it("should render frame without caption", () => {
+        render(
+          <Frame>
+            <img src="test.png" alt="Test" />
+          </Frame>,
+        );
+        expect(screen.getByRole("img")).toBeInTheDocument();
+      });
+
+      it("should render frame with caption", () => {
+        render(
+          <Frame caption="Example image">
+            <img src="test.png" alt="Test" />
+          </Frame>,
+        );
+        expect(screen.getByText("Example image")).toBeInTheDocument();
+      });
+    });
+
+    describe("Expandable Component", () => {
+      it("should render collapsed by default", () => {
+        render(
+          <Expandable title="Show more">
+            <p>Hidden details</p>
+          </Expandable>,
+        );
+        expect(screen.getByText("Show more")).toBeInTheDocument();
+        expect(screen.queryByText("Hidden details")).not.toBeInTheDocument();
+      });
+
+      it("should expand when clicked", () => {
+        render(
+          <Expandable title="Show more">
+            <p>Hidden details</p>
+          </Expandable>,
+        );
+        fireEvent.click(screen.getByRole("button"));
+        expect(screen.getByText("Hidden details")).toBeInTheDocument();
+      });
+
+      it("should collapse when clicked again", () => {
+        render(
+          <Expandable title="Show more">
+            <p>Hidden details</p>
+          </Expandable>,
+        );
+        const button = screen.getByRole("button");
+        fireEvent.click(button);
+        expect(screen.getByText("Hidden details")).toBeInTheDocument();
+        fireEvent.click(button);
+        expect(screen.queryByText("Hidden details")).not.toBeInTheDocument();
+      });
+    });
+
+    describe("Icon Component", () => {
+      it("should render check icon", () => {
+        render(<Icon icon="check" />);
+        // Icon should be rendered with aria-label
+        expect(screen.getByLabelText("check")).toBeInTheDocument();
+      });
+
+      it("should render info icon", () => {
+        render(<Icon icon="info" />);
+        expect(screen.getByLabelText("info")).toBeInTheDocument();
+      });
+
+      it("should render warning icon", () => {
+        render(<Icon icon="warning" />);
+        expect(screen.getByLabelText("warning")).toBeInTheDocument();
+      });
+
+      it("should render lightbulb icon", () => {
+        render(<Icon icon="lightbulb" />);
+        expect(screen.getByLabelText("lightbulb")).toBeInTheDocument();
+      });
+
+      it("should render fallback for unknown icons", () => {
+        render(<Icon icon="unknown" />);
+        expect(screen.getByLabelText("unknown")).toBeInTheDocument();
+      });
+
+      it("should accept size prop", () => {
+        render(<Icon icon="check" size={24} />);
+        const iconElement = screen.getByLabelText("check");
+        expect(iconElement).toHaveStyle({ width: "24px", height: "24px" });
+      });
+    });
+
+    describe("ResponseField Component", () => {
+      it("should render response field with name", () => {
+        render(<ResponseField name="id">The unique identifier</ResponseField>);
+        expect(screen.getByText("id")).toBeInTheDocument();
+        expect(screen.getByText("The unique identifier")).toBeInTheDocument();
+      });
+
+      it("should render with type", () => {
+        render(
+          <ResponseField name="count" type="number">
+            The count value
+          </ResponseField>,
+        );
+        expect(screen.getByText("count")).toBeInTheDocument();
+        expect(screen.getByText("number")).toBeInTheDocument();
+      });
+
+      it("should show required badge when required", () => {
+        render(
+          <ResponseField name="email" required>
+            User email address
+          </ResponseField>,
+        );
+        expect(screen.getByText("required")).toBeInTheDocument();
+      });
+
+      it("should render without children", () => {
+        render(<ResponseField name="data" type="object" />);
+        expect(screen.getByText("data")).toBeInTheDocument();
+        expect(screen.getByText("object")).toBeInTheDocument();
+      });
+    });
+
+    describe("ParamField Component", () => {
+      it("should render param field with path parameter", () => {
+        render(<ParamField path="user_id">The user ID to fetch</ParamField>);
+        expect(screen.getByText("user_id")).toBeInTheDocument();
+        expect(screen.getByText("path")).toBeInTheDocument();
+        expect(screen.getByText("The user ID to fetch")).toBeInTheDocument();
+      });
+
+      it("should render query parameter", () => {
+        render(
+          <ParamField query="limit" type="integer">
+            Maximum results to return
+          </ParamField>,
+        );
+        expect(screen.getByText("limit")).toBeInTheDocument();
+        expect(screen.getByText("query")).toBeInTheDocument();
+        expect(screen.getByText("integer")).toBeInTheDocument();
+      });
+
+      it("should render body parameter", () => {
+        render(
+          <ParamField body="payload" type="object">
+            Request body data
+          </ParamField>,
+        );
+        expect(screen.getByText("payload")).toBeInTheDocument();
+        expect(screen.getByText("body")).toBeInTheDocument();
+      });
+
+      it("should show required badge when required", () => {
+        render(
+          <ParamField path="id" required>
+            Required parameter
+          </ParamField>,
+        );
+        expect(screen.getByText("required")).toBeInTheDocument();
+      });
+
+      it("should render without children", () => {
+        render(<ParamField query="page" type="integer" />);
+        expect(screen.getByText("page")).toBeInTheDocument();
+        expect(screen.getByText("query")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Component Registry", () => {
+    it("should export all core components", () => {
+      expect(mdxComponents.Accordion).toBeDefined();
+      expect(mdxComponents.AccordionGroup).toBeDefined();
+      expect(mdxComponents.Callout).toBeDefined();
+      expect(mdxComponents.Note).toBeDefined();
+      expect(mdxComponents.Warning).toBeDefined();
+      expect(mdxComponents.Tip).toBeDefined();
+      expect(mdxComponents.Card).toBeDefined();
+      expect(mdxComponents.CardGroup).toBeDefined();
+      expect(mdxComponents.Tabs).toBeDefined();
+      expect(mdxComponents.Tab).toBeDefined();
+      expect(mdxComponents.Steps).toBeDefined();
+      expect(mdxComponents.Step).toBeDefined();
+    });
+
+    it("should export all extended components", () => {
+      expect(mdxComponents.Info).toBeDefined();
+      expect(mdxComponents.Check).toBeDefined();
+      expect(mdxComponents.CodeGroup).toBeDefined();
+      expect(mdxComponents.Frame).toBeDefined();
+      expect(mdxComponents.Expandable).toBeDefined();
+      expect(mdxComponents.Icon).toBeDefined();
+      expect(mdxComponents.ResponseField).toBeDefined();
+      expect(mdxComponents.ParamField).toBeDefined();
+    });
+
+    it("should have 20 total components in registry", () => {
+      // Core: Accordion, AccordionGroup, Callout, Note, Warning, Tip, Info, Check, Card, CardGroup, Tabs, Tab, Steps, Step (14)
+      // Extended: CodeGroup, Frame, Expandable, Icon, ResponseField, ParamField (6)
+      expect(Object.keys(mdxComponents)).toHaveLength(20);
     });
   });
 });

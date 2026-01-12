@@ -22,6 +22,8 @@ import {
 } from "react";
 import { Search, X, Keyboard } from "lucide-react";
 
+import { Button, Input } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -139,58 +141,58 @@ export function ShortcutsPanel({
         aria-modal="true"
         aria-labelledby={titleId}
         onClick={handlePanelClick}
-        className="w-full max-w-2xl max-h-[80vh] rounded-lg bg-white dark:bg-gray-900 shadow-xl flex flex-col"
+        className="w-full max-w-2xl max-h-[80vh] rounded-lg bg-white dark:bg-neutral-900 shadow-xl flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center gap-2">
             <Keyboard
-              className="h-5 w-5 text-gray-500 dark:text-gray-400"
+              className="h-5 w-5 text-neutral-500 dark:text-neutral-400"
               aria-hidden="true"
             />
             <h2
               id={titleId}
-              className="text-lg font-semibold text-gray-900 dark:text-gray-100"
+              className="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
             >
               Keyboard Shortcuts
             </h2>
           </div>
-          <button
+          <Button
+            variant="secondary"
+            className="p-1 rounded text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 focus:ring-primary-500"
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <X size={20} />
-          </button>
+          </Button>
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
           <div className="relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
               aria-hidden="true"
             />
-            <input
+            <Input
+              className="pl-9 pr-8 py-2 text-sm -500 focus:ring-primary-500"
               ref={searchInputRef}
-              type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search shortcuts..."
               aria-label="Search shortcuts"
-              className="w-full pl-9 pr-8 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
             {searchQuery && (
-              <button
+              <Button
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300"
                 type="button"
                 onClick={() => setSearchQuery("")}
                 aria-label="Clear search"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
               >
                 <X size={14} />
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -198,33 +200,33 @@ export function ShortcutsPanel({
         {/* Shortcuts List */}
         <div className="flex-1 overflow-y-auto p-4">
           {groupedShortcuts.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
               No shortcuts found
             </div>
           ) : (
             <div className="space-y-6">
               {groupedShortcuts.map(([category, categoryShortcuts]) => (
                 <div key={category}>
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-3">
                     {category}
                   </h3>
                   <div className="space-y-2">
                     {categoryShortcuts.map((shortcut) => (
                       <div
                         key={shortcut.action}
-                        className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
+                        className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-800"
                       >
                         <div>
-                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                             {shortcut.label}
                           </div>
                           {shortcut.description && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
                               {shortcut.description}
                             </div>
                           )}
                         </div>
-                        <kbd className="px-2 py-1 text-xs font-mono bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded border border-gray-200 dark:border-gray-700">
+                        <kbd className="px-2 py-1 text-xs font-mono bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded border border-neutral-200 dark:border-neutral-700">
                           {shortcut.keys}
                         </kbd>
                       </div>
@@ -237,9 +239,9 @@ export function ShortcutsPanel({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center text-xs text-gray-500 dark:text-gray-400">
+        <div className="p-4 border-t border-neutral-200 dark:border-neutral-700 text-center text-xs text-neutral-500 dark:text-neutral-400">
           Press{" "}
-          <kbd className="px-1.5 py-0.5 font-mono bg-gray-100 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
+          <kbd className="px-1.5 py-0.5 font-mono bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-200 dark:border-neutral-700">
             Esc
           </kbd>{" "}
           to close

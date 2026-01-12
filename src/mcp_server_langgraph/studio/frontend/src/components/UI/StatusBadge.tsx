@@ -1,56 +1,89 @@
 /**
  * StatusBadge Component
  *
- * A semantic status badge component that uses the design system colors.
+ * A semantic status badge component with CVA-based type-safe variants.
  * Provides consistent styling for status indicators across the application.
  *
- * Uses STATUS_BADGE_STYLES from utils/colors for centralized color management.
+ * Uses class-variance-authority (CVA) for type-safe variant management.
  */
 
+import { cva, type VariantProps } from "class-variance-authority";
 import { type HTMLAttributes, type ReactNode } from "react";
 import { CheckCircle, AlertCircle, XCircle, Info, Circle } from "lucide-react";
-import { STATUS_BADGE_STYLES, type StatusBadgeType } from "../../utils/colors";
+import { cn } from "../../utils/cn";
 
-export type StatusBadgeSize = "sm" | "md" | "lg";
+/**
+ * StatusBadge variant styles using CVA
+ * Exported for use in compound components or style composition
+ */
+export const statusBadgeVariants = cva(
+  // Base styles
+  "inline-flex items-center font-medium",
+  {
+    variants: {
+      status: {
+        success: [
+          "bg-success-100 text-success-700",
+          "dark:bg-success-900/50 dark:text-success-300",
+        ],
+        warning: [
+          "bg-warning-100 text-warning-700",
+          "dark:bg-warning-900/50 dark:text-warning-300",
+        ],
+        error: [
+          "bg-error-100 text-error-700",
+          "dark:bg-error-900/50 dark:text-error-300",
+        ],
+        info: [
+          "bg-primary-100 text-primary-700",
+          "dark:bg-primary-900/50 dark:text-primary-300",
+        ],
+        neutral: [
+          "bg-neutral-100 text-neutral-700",
+          "dark:bg-neutral-700 dark:text-neutral-300",
+        ],
+      },
+      size: {
+        sm: "px-2 py-0.5 text-xs gap-1",
+        md: "px-2.5 py-1 text-sm gap-1.5",
+        lg: "px-3 py-1.5 text-base gap-2",
+      },
+      pill: {
+        true: "rounded-full",
+        false: "rounded-md",
+      },
+    },
+    defaultVariants: {
+      status: "neutral",
+      size: "md",
+      pill: false,
+    },
+  },
+);
 
-export interface StatusBadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  /** Status type determines the color scheme */
-  status: StatusBadgeType;
-  /** Size of the badge */
-  size?: StatusBadgeSize;
+export type StatusBadgeStatus = NonNullable<
+  VariantProps<typeof statusBadgeVariants>["status"]
+>;
+export type StatusBadgeSize = NonNullable<
+  VariantProps<typeof statusBadgeVariants>["size"]
+>;
+
+export interface StatusBadgeProps
+  extends
+    Omit<HTMLAttributes<HTMLSpanElement>, "children">,
+    VariantProps<typeof statusBadgeVariants> {
   /** Custom icon to display */
   icon?: ReactNode;
   /** Show default icon for status type */
   showIcon?: boolean;
-  /** Render as pill (fully rounded) */
-  pill?: boolean;
   /** Children content */
   children: ReactNode;
 }
 
 /**
- * Utility to combine class names
- */
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
-
-/**
- * Get size-specific classes
- */
-function getSizeClasses(size: StatusBadgeSize): string {
-  const sizes: Record<StatusBadgeSize, string> = {
-    sm: "px-2 py-0.5 text-xs gap-1",
-    md: "px-2.5 py-1 text-sm gap-1.5",
-    lg: "px-3 py-1.5 text-base gap-2",
-  };
-  return sizes[size];
-}
-
-/**
  * Get default icon for status type
  */
-function getDefaultIcon(status: StatusBadgeType): ReactNode {
+function getDefaultIcon(status: StatusBadgeStatus): ReactNode {
   const iconClass = "w-3.5 h-3.5";
   switch (status) {
     case "success":
@@ -72,31 +105,22 @@ function getDefaultIcon(status: StatusBadgeType): ReactNode {
  */
 export function StatusBadge({
   status,
-  size = "md",
+  size,
+  pill,
   icon,
   showIcon = false,
-  pill = false,
   className,
   children,
   ...props
 }: StatusBadgeProps) {
-  const displayIcon = icon ?? (showIcon ? getDefaultIcon(status) : null);
+  const displayIcon =
+    icon ?? (showIcon ? getDefaultIcon(status ?? "neutral") : null);
 
   return (
     <span
       role="status"
       data-testid="status-badge"
-      className={cn(
-        // Base styles
-        "inline-flex items-center font-medium",
-        // Rounding
-        pill ? "rounded-full" : "rounded-md",
-        // Status colors from design system
-        STATUS_BADGE_STYLES[status],
-        // Size styles
-        getSizeClasses(size),
-        className,
-      )}
+      className={cn(statusBadgeVariants({ status, size, pill }), className)}
       {...props}
     >
       {/* Icon */}

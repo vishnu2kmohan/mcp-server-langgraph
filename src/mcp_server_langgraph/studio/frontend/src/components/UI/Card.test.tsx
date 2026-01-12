@@ -208,3 +208,10 @@ describe("Card composition", () => {
     expect(screen.getByText("Card footer")).toBeInTheDocument();
   });
 });
+
+describe("CVA integration", () => {
+  it("exports cardVariants function for external use", async () => {
+    const { cardVariants } = await import("./Card");
+    expect(typeof cardVariants).toBe("function");
+  });
+});

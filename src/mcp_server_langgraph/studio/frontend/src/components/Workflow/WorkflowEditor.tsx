@@ -35,6 +35,8 @@ import { cn } from "../../utils/cn";
 import { setNodes, setEdges } from "../../store/slices/workflowSlice";
 import type { RootState } from "../../store";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -219,13 +221,13 @@ export function WorkflowEditor({
         data-testid="loading-indicator"
         className={cn(
           "flex items-center justify-center h-full",
-          "bg-white dark:bg-gray-900",
+          "bg-white dark:bg-neutral-900",
           className,
         )}
       >
         <Loader2
           size={24}
-          className="animate-spin text-gray-400 dark:text-gray-400"
+          className="animate-spin text-neutral-400 dark:text-neutral-400"
         />
       </div>
     );
@@ -238,13 +240,13 @@ export function WorkflowEditor({
         data-testid="error-state"
         className={cn(
           "flex items-center justify-center h-full",
-          "bg-white dark:bg-gray-900",
+          "bg-white dark:bg-neutral-900",
           className,
         )}
       >
         <div className="text-center">
           <AlertCircle size={32} className="mx-auto mb-2 text-error-500" />
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-neutral-500 dark:text-neutral-400">
             Failed to load workflow
           </p>
         </div>
@@ -256,19 +258,19 @@ export function WorkflowEditor({
     <div
       data-testid="workflow-editor"
       className={cn(
-        "flex flex-col h-full bg-white dark:bg-gray-900",
+        "flex flex-col h-full bg-white dark:bg-neutral-900",
         className,
       )}
     >
       {/* Header with tabs */}
-      <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4 py-2">
-        <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+      <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700 px-4 py-2">
+        <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
           {workflow?.name || "Untitled Workflow"}
         </h2>
 
         {/* View tabs */}
-        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-md p-0.5">
-          <button
+        <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-md p-0.5">
+          <Button
             data-testid="visual-tab"
             data-active={currentView === "visual"}
             type="button"
@@ -277,14 +279,14 @@ export function WorkflowEditor({
               "flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium",
               "transition-colors",
               currentView === "visual"
-                ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300",
+                ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm"
+                : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300",
             )}
           >
             <LayoutGrid size={12} />
             Visual
-          </button>
-          <button
+          </Button>
+          <Button
             data-testid="code-tab"
             data-active={currentView === "code"}
             type="button"
@@ -293,16 +295,15 @@ export function WorkflowEditor({
               "flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium",
               "transition-colors",
               currentView === "code"
-                ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300",
+                ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm"
+                : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300",
             )}
           >
             <Code size={12} />
             Code
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Sync status bar */}
       {isSyncing && (
         <div
@@ -315,7 +316,6 @@ export function WorkflowEditor({
           </span>
         </div>
       )}
-
       {/* Parse error indicator */}
       {parseError && (
         <div
@@ -328,7 +328,6 @@ export function WorkflowEditor({
           </span>
         </div>
       )}
-
       {/* Validation status bar */}
       {isValidating && (
         <div className="flex items-center gap-2 px-4 py-1.5 bg-primary-50 dark:bg-primary-900/20 border-b border-primary-200 dark:border-primary-800">
@@ -338,7 +337,6 @@ export function WorkflowEditor({
           </span>
         </div>
       )}
-
       {/* Validation errors */}
       {validationResult &&
         !validationResult.valid &&
@@ -360,7 +358,6 @@ export function WorkflowEditor({
             </ul>
           </div>
         )}
-
       {/* Validation warnings */}
       {validationResult && validationResult.warnings.length > 0 && (
         <div
@@ -380,7 +377,6 @@ export function WorkflowEditor({
           </ul>
         </div>
       )}
-
       {/* Editor content */}
       <div className="flex-1 overflow-hidden">
         {currentView === "visual" ? (

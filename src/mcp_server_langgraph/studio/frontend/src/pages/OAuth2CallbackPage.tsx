@@ -21,6 +21,8 @@ import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 import { transformSnakeToCamel } from "../api/transforms";
 
+import { Button } from "@/components/UI";
+
 type CallbackState = "processing" | "success" | "error";
 
 interface CallbackError {
@@ -155,13 +157,13 @@ export function OAuth2CallbackPage() {
   // Render processing state
   if (state === "processing") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary-500 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
             Processing Authorization
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-neutral-500 dark:text-neutral-400">
             Please wait while we complete the OAuth2 flow...
           </p>
         </div>
@@ -172,13 +174,13 @@ export function OAuth2CallbackPage() {
   // Render success state
   if (state === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900">
         <div className="text-center">
           <CheckCircle className="w-16 h-16 text-success-500 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
             Authorization Successful
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-neutral-500 dark:text-neutral-400 mb-4">
             Your MCP connection has been authorized.
             {connectionId && (
               <span className="block text-sm mt-1">
@@ -186,7 +188,7 @@ export function OAuth2CallbackPage() {
               </span>
             )}
           </p>
-          <p className="text-sm text-gray-400 dark:text-gray-400">
+          <p className="text-sm text-neutral-400 dark:text-neutral-400">
             Redirecting to connections...
           </p>
         </div>
@@ -196,10 +198,10 @@ export function OAuth2CallbackPage() {
 
   // Render error state
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900">
       <div className="text-center max-w-md mx-4">
         <XCircle className="w-16 h-16 text-error-500 mx-auto mb-4" />
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        <h1 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
           Authorization Failed
         </h1>
         {error && (
@@ -208,23 +210,24 @@ export function OAuth2CallbackPage() {
               {error.message}
             </p>
             {error.detail && (
-              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">
                 {error.detail}
               </p>
             )}
           </>
         )}
         <div className="flex items-center justify-center gap-4 mt-6">
-          <button
+          <Button
+            variant="primary"
+            className="flex px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
             onClick={() => processCallback()}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
           >
             <RefreshCw className="w-4 h-4" />
             Try Again
-          </button>
+          </Button>
           <Link
             to="/studio/connections"
-            className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 rounded-md"
+            className="flex items-center gap-2 px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 rounded-md"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Connections

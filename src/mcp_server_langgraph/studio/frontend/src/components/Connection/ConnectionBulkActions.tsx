@@ -10,6 +10,8 @@ import { Trash2, Zap, X, AlertCircle, Loader2 } from "lucide-react";
 import { Dialog } from "../UI/Dialog";
 import { authenticatedFetch } from "../../utils/authenticatedFetch";
 
+import { Button } from "@/components/UI";
+
 interface Connection {
   id: string;
   name: string;
@@ -128,21 +130,22 @@ export function ConnectionBulkActions({
       <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
         {selectedIds.length} selected
       </span>
-
       <div className="flex items-center gap-2">
-        <button
+        <Button
+          variant="danger"
+          className="flex .5 rounded-md bg-error-600 px-3 py-1.5 text-sm text-white hover:bg-error-700"
           onClick={handleDeleteClick}
           disabled={isDeleting || isTesting}
-          className="flex items-center gap-1.5 rounded-md bg-error-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-error-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Trash2 className="h-4 w-4" />
           Delete
-        </button>
+        </Button>
 
-        <button
+        <Button
+          variant="primary"
+          className="flex .5 rounded-md bg-primary-600 px-3 py-1.5 text-sm text-white hover:bg-primary-700"
           onClick={handleTest}
           disabled={isDeleting || isTesting}
-          className="flex items-center gap-1.5 rounded-md bg-primary-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isTesting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -150,18 +153,18 @@ export function ConnectionBulkActions({
             <Zap className="h-4 w-4" />
           )}
           {isTesting ? "Testing..." : "Test"}
-        </button>
+        </Button>
 
-        <button
+        <Button
+          variant="secondary"
+          className="flex .5 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
           onClick={handleClearSelection}
           disabled={isDeleting || isTesting}
-          className="flex items-center gap-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
         >
           <X className="h-4 w-4" />
           Clear
-        </button>
+        </Button>
       </div>
-
       {error && (
         <div
           className="flex items-center gap-2 text-sm text-error-600 dark:text-error-400"
@@ -171,32 +174,33 @@ export function ConnectionBulkActions({
           Error: {error}
         </div>
       )}
-
       <Dialog
         open={showDeleteConfirm}
         onClose={handleCancelDelete}
         title="Confirm Delete"
         footer={
           <>
-            <button
+            <Button
+              variant="secondary"
+              className="rounded-md px-4 py-2 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
               onClick={handleCancelDelete}
               disabled={isDeleting}
-              className="rounded-md px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="danger"
+              className="flex rounded-md bg-error-600 px-4 py-2 text-white hover:bg-error-700"
               onClick={handleConfirmDelete}
               disabled={isDeleting}
-              className="flex items-center gap-2 rounded-md bg-error-600 px-4 py-2 text-white hover:bg-error-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
               {isDeleting ? "Deleting..." : "Confirm Delete"}
-            </button>
+            </Button>
           </>
         }
       >
-        <p className="mb-4 text-gray-600 dark:text-gray-400">
+        <p className="mb-4 text-neutral-600 dark:text-neutral-400">
           Are you sure you want to delete {selectedIds.length} connections?
         </p>
 

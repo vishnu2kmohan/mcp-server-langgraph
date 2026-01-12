@@ -7,6 +7,8 @@
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -48,9 +50,9 @@ export interface GenerativeWidgetProps {
 function WidgetSkeleton() {
   return (
     <div data-testid="widget-skeleton" className="space-y-3 animate-pulse">
-      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-      <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
-      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+      <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4" />
+      <div className="h-32 bg-neutral-200 dark:bg-neutral-700 rounded" />
+      <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-1/2" />
     </div>
   );
 }
@@ -73,7 +75,7 @@ function ChartWidget({ data }: { data: ChartData }) {
           </div>
         ))}
       </div>
-      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400">
         {data.labels.map((label, index) => (
           <span key={index}>{label}</span>
         ))}
@@ -87,11 +89,11 @@ function TableWidget({ data }: { data: TableData }) {
     <div data-testid="widget-table" className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-200 dark:border-gray-700">
+          <tr className="border-b border-neutral-200 dark:border-neutral-700">
             {data.columns.map((column, index) => (
               <th
                 key={index}
-                className="px-2 py-1 text-left font-medium text-gray-600 dark:text-gray-400"
+                className="px-2 py-1 text-left font-medium text-neutral-600 dark:text-neutral-400"
               >
                 {column}
               </th>
@@ -102,12 +104,12 @@ function TableWidget({ data }: { data: TableData }) {
           {data.rows.map((row, rowIndex) => (
             <tr
               key={rowIndex}
-              className="border-b border-gray-100 dark:border-gray-800"
+              className="border-b border-neutral-100 dark:border-neutral-800"
             >
               {row.map((cell, cellIndex) => (
                 <td
                   key={cellIndex}
-                  className="px-2 py-1 text-gray-900 dark:text-gray-100"
+                  className="px-2 py-1 text-neutral-900 dark:text-neutral-100"
                 >
                   {cell}
                 </td>
@@ -124,7 +126,7 @@ function TextWidget({ data }: { data: TextData }) {
   return (
     <div
       data-testid="widget-text"
-      className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed"
+      className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed"
     >
       {data.content}
     </div>
@@ -162,26 +164,25 @@ export function GenerativeWidget({
       role="region"
       aria-label={config.title}
       className={cn(
-        "bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4",
+        "bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4",
         className,
       )}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-medium text-gray-900 dark:text-gray-100">
+        <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
           {config.title}
         </h3>
-        <button
+        <Button
+          className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300"
           data-testid="refresh-button"
           type="button"
           onClick={() => onRefresh?.(config.id)}
-          className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 transition-colors"
           aria-label="Refresh widget"
         >
           <RefreshCw size={14} />
-        </button>
+        </Button>
       </div>
-
       {/* Content */}
       {isLoading ? (
         <WidgetSkeleton />
@@ -191,14 +192,16 @@ export function GenerativeWidget({
           <p className="text-sm text-error-600 dark:text-error-400 mb-2">
             {error}
           </p>
-          <button
+          <Button
+            variant="danger"
+            size="sm"
+            className="px-3 py-1 text-sm bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400 rounded hover:bg-error-200 dark:hover:bg-error-900/50"
             data-testid="retry-button"
             type="button"
             onClick={onRetry}
-            className="px-3 py-1 text-sm bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400 rounded hover:bg-error-200 dark:hover:bg-error-900/50 transition-colors"
           >
             Retry
-          </button>
+          </Button>
         </div>
       ) : (
         renderContent()

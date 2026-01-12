@@ -21,6 +21,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+import { Button, Input, Select } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -96,7 +98,7 @@ const DEBOUNCE_MS = 300;
 
 function TemplateCard({
   template,
-  isSelected,
+  isSelected: _isSelected,
   onClick,
 }: {
   template: PlanTemplate;
@@ -104,51 +106,44 @@ function TemplateCard({
   onClick: () => void;
 }) {
   return (
-    <button
+    <Button
+      className="w-full text-left p-4 rounded-lg border"
       type="button"
       onClick={onClick}
-      className={`w-full text-left p-4 rounded-lg border transition-all ${
-        isSelected
-          ? "ring-2 ring-primary-500 border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-          : "border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600 bg-white dark:bg-gray-800"
-      }`}
     >
       <div className="flex items-start justify-between mb-2">
-        <h4 className="font-medium text-gray-900 dark:text-white">
+        <h4 className="font-medium text-neutral-900 dark:text-white">
           {template.name}
         </h4>
-        <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+        <span className="text-xs px-2 py-1 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
           {template.orchestrator}
         </span>
       </div>
-
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3 line-clamp-2">
         {template.description}
       </p>
-
-      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
         <span>{template.useCount} uses</span>
         <span>{Math.round(template.successRate * 100)}% success</span>
       </div>
-
       {template.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
           {template.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+              className="text-xs px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300"
             >
               {tag}
             </span>
           ))}
           {template.tags.length > 3 && (
-            <span className="text-xs text-gray-400 dark:text-gray-400">
+            <span className="text-xs text-neutral-400 dark:text-neutral-400">
               +{template.tags.length - 3}
             </span>
           )}
         </div>
       )}
-    </button>
+    </Button>
   );
 }
 
@@ -164,17 +159,17 @@ function LoadingIndicator() {
 function EmptyState({ onClearFilters }: { onClearFilters: () => void }) {
   return (
     <div className="text-center p-8">
-      <Search className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 dark:text-gray-300 mb-4" />
-      <p className="text-gray-600 dark:text-gray-400 mb-4">
+      <Search className="w-12 h-12 mx-auto text-neutral-300 dark:text-neutral-600 dark:text-neutral-300 mb-4" />
+      <p className="text-neutral-600 dark:text-neutral-400 mb-4">
         No templates found
       </p>
-      <button
+      <Button
+        className="text-primary-500 hover:text-primary-600 text-sm"
         type="button"
         onClick={onClearFilters}
-        className="text-primary-500 hover:text-primary-600 text-sm font-medium"
       >
         Clear filters
-      </button>
+      </Button>
     </div>
   );
 }
@@ -191,13 +186,14 @@ function ErrorState({
       <AlertCircle className="w-12 h-12 mx-auto text-error-400 mb-4" />
       <p className="text-error-600 dark:text-error-400 mb-4">{message}</p>
       {onRetry && (
-        <button
+        <Button
+          variant="danger"
+          className="px-4 py-2 bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400 rounded-lg text-sm hover:bg-error-200 dark:hover:bg-error-900/50"
           type="button"
           onClick={onRetry}
-          className="px-4 py-2 bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400 rounded-lg text-sm font-medium hover:bg-error-200 dark:hover:bg-error-900/50"
         >
           Retry
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -325,14 +321,15 @@ export function PlanSearch({
   }, []);
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700">
       {/* Search Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center gap-4 mb-4">
           {/* Search Input */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-400" />
-            <input
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+            <Input
+              className="pl-10 pr-4 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               type="search"
               role="searchbox"
               aria-label="Search templates"
@@ -340,72 +337,67 @@ export function PlanSearch({
               value={query}
               onChange={handleQueryChange}
               disabled={isLoading}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
           {/* Orchestrator Filter */}
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-400 dark:text-gray-400" />
-            <select
+            <Filter className="w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+            <Select
+              className="px-3 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               id="orchestrator-filter"
               aria-label="Orchestrator"
               value={orchestrator}
               onChange={handleOrchestratorChange}
               disabled={isLoading}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {ORCHESTRATOR_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Sort */}
           <div className="flex items-center gap-2">
-            <SortAsc className="w-4 h-4 text-gray-400 dark:text-gray-400" />
-            <select
+            <SortAsc className="w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+            <Select
+              className="px-3 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               id="sort-by"
               aria-label="Sort by"
               value={sortBy}
               onChange={handleSortChange}
               disabled={isLoading}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </div>
 
         {/* Tag Chips */}
         {allTags.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            <Tag className="w-4 h-4 text-gray-400 dark:text-gray-400" />
+            <Tag className="w-4 h-4 text-neutral-400 dark:text-neutral-400" />
             {allTags.map((tag) => (
-              <button
+              <Button
+                size="sm"
+                className="px-2 py-1 text-xs rounded-full border"
                 key={tag}
                 type="button"
                 onClick={() => handleTagToggle(tag)}
                 disabled={isLoading}
-                className={`px-2 py-1 text-xs rounded-full border transition-colors ${
-                  selectedTags.includes(tag)
-                    ? "bg-primary-500 text-white border-primary-500"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 dark:border-gray-600 hover:border-primary-300"
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {tag}
-              </button>
+              </Button>
             ))}
           </div>
         )}
       </div>
-
       {/* Results */}
       <div className="p-4">
         {error ? (

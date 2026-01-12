@@ -13,6 +13,8 @@ import { personaSlice } from "../store/slices/personaSlice";
 import type { MCPConnectionSummary } from "../types/connection";
 import type React from "react";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Hoisted Mock Functions and Data
 // =============================================================================
@@ -220,7 +222,7 @@ export const setupComponentMocks = () => {
       selectedIds.length > 0 ? (
         <div data-testid="bulk-actions">
           {selectedIds.length} selected
-          <button onClick={onClearSelection}>Clear</button>
+          <Button onClick={onClearSelection}>Clear</Button>
         </div>
       ) : null,
     ConnectionTemplateSelector: ({
@@ -234,11 +236,11 @@ export const setupComponentMocks = () => {
     }) => (
       <div data-testid="template-selector">
         <h2>Choose a Template</h2>
-        <button onClick={() => onSelect({ id: "github", name: "GitHub" })}>
+        <Button onClick={() => onSelect({ id: "github", name: "GitHub" })}>
           GitHub
-        </button>
+        </Button>
         {showCustomOption && onCustom && (
-          <button onClick={onCustom}>Custom</button>
+          <Button onClick={onCustom}>Custom</Button>
         )}
       </div>
     ),
@@ -267,24 +269,24 @@ export const setupMCPMocks = () => {
       onPromptTest?: (name: string) => void;
     }) => (
       <div data-testid="aggregated-capabilities-panel">
-        <button
+        <Button
           data-testid="invoke-tool-btn"
           onClick={() => onToolInvoke?.("test-server::test-tool")}
         >
           Invoke Tool
-        </button>
-        <button
+        </Button>
+        <Button
           data-testid="view-resource-btn"
           onClick={() => onResourceView?.("test-server::test-resource")}
         >
           View Resource
-        </button>
-        <button
+        </Button>
+        <Button
           data-testid="test-prompt-btn"
           onClick={() => onPromptTest?.("test-server::test-prompt")}
         >
           Test Prompt
-        </button>
+        </Button>
       </div>
     ),
     LazyToolInvocationDialog: ({
@@ -299,7 +301,7 @@ export const setupMCPMocks = () => {
       open ? (
         <div data-testid="tool-invocation-dialog" role="dialog">
           <span data-testid="tool-name">{preselectedToolName}</span>
-          <button onClick={onClose}>Close</button>
+          <Button onClick={onClose}>Close</Button>
         </div>
       ) : null,
     LazyResourceViewer: ({
@@ -314,7 +316,7 @@ export const setupMCPMocks = () => {
       open ? (
         <div data-testid="resource-viewer-dialog" role="dialog">
           <span data-testid="resource-uri">{preselectedResourceUri}</span>
-          <button onClick={onClose}>Close</button>
+          <Button onClick={onClose}>Close</Button>
         </div>
       ) : null,
     LazyPromptTester: ({
@@ -329,7 +331,7 @@ export const setupMCPMocks = () => {
       open ? (
         <div data-testid="prompt-tester-dialog" role="dialog">
           <span data-testid="prompt-name">{preselectedPromptName}</span>
-          <button onClick={onClose}>Close</button>
+          <Button onClick={onClose}>Close</Button>
         </div>
       ) : null,
   }));

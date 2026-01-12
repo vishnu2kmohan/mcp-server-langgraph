@@ -68,7 +68,7 @@ export function PersonaGuard({
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent" />
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
             Loading...
           </p>
         </div>
@@ -117,7 +117,7 @@ export function ModuleGuard({
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent" />
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
             Loading...
           </p>
         </div>

@@ -26,11 +26,11 @@ export function HelpPage() {
   return (
     <div
       data-testid="help-page"
-      className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 p-6"
+      className="flex flex-col h-full bg-neutral-50 dark:bg-neutral-900 p-6"
     >
       <div className="max-w-4xl mx-auto w-full space-y-6">
         {/* Page Header */}
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
           Help Center
         </h1>
 
@@ -48,11 +48,11 @@ export function HelpPage() {
               <div
                 data-testid="help-topic-detail"
                 className={cn(
-                  "rounded-lg border border-gray-200 dark:border-gray-700",
-                  "bg-white dark:bg-gray-800 p-6",
+                  "rounded-lg border border-neutral-200 dark:border-neutral-700",
+                  "bg-white dark:bg-neutral-800 p-6",
                 )}
               >
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
                   {selectedTopic.title}
                 </h2>
                 <span
@@ -68,16 +68,16 @@ export function HelpPage() {
                 >
                   {selectedTopic.category}
                 </span>
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className="text-neutral-600 dark:text-neutral-300">
                   {selectedTopic.content}
                 </p>
               </div>
             ) : (
               <div
                 className={cn(
-                  "rounded-lg border border-gray-200 dark:border-gray-700",
-                  "bg-white dark:bg-gray-800 p-6",
-                  "text-center text-gray-500 dark:text-gray-400",
+                  "rounded-lg border border-neutral-200 dark:border-neutral-700",
+                  "bg-white dark:bg-neutral-800 p-6",
+                  "text-center text-neutral-500 dark:text-neutral-400",
                 )}
               >
                 <p>Select a topic to see details</p>

@@ -9,6 +9,8 @@ import { useState, useMemo } from "react";
 import { ExternalLink, Search, Loader2 } from "lucide-react";
 import type { Trace, Span } from "./types";
 
+import { Button, Input } from "@/components/UI";
+
 export interface TraceViewerProps {
   /** Trace data to display */
   trace: Trace | null;
@@ -66,7 +68,7 @@ export function TraceViewer({
 
   if (!trace) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+      <div className="flex items-center justify-center h-64 text-neutral-500 dark:text-neutral-400">
         No trace data available
       </div>
     );
@@ -75,12 +77,12 @@ export function TraceViewer({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
             Trace: {trace.traceId}
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             Total Duration: {trace.durationMs}ms | {trace.spans.length} spans
           </p>
         </div>
@@ -100,27 +102,24 @@ export function TraceViewer({
           )}
         </div>
       </div>
-
       {/* Search */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-400" />
-          <input
-            type="text"
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+          <Input
+            className="pl-9 pr-3 py-2 text-neutral-900 dark:text-white text-sm"
             placeholder="Search spans..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
           />
         </div>
       </div>
-
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Timeline */}
         <div className="flex-1 overflow-auto p-4">
           {filteredSpans.length === 0 ? (
-            <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+            <div className="text-center text-neutral-500 dark:text-neutral-400 py-8">
               No spans found matching your search
             </div>
           ) : (
@@ -178,7 +177,7 @@ function SpanRow({
       className={`flex items-center gap-4 p-2 rounded cursor-pointer transition-colors ${
         isSelected
           ? "bg-primary-50 dark:bg-primary-900/20"
-          : "hover:bg-gray-50 dark:hover:bg-gray-800"
+          : "hover:bg-neutral-50 dark:hover:bg-neutral-800"
       } ${span.depth > 0 ? "ml-4" : ""}`}
     >
       {/* Status indicator */}
@@ -190,12 +189,12 @@ function SpanRow({
       />
 
       {/* Span name */}
-      <div className="flex-shrink-0 w-48 truncate text-sm text-gray-900 dark:text-white">
+      <div className="flex-shrink-0 w-48 truncate text-sm text-neutral-900 dark:text-white">
         {span.name}
       </div>
 
       {/* Timeline bar */}
-      <div className="flex-1 h-6 bg-gray-100 dark:bg-gray-700 rounded relative">
+      <div className="flex-1 h-6 bg-neutral-100 dark:bg-neutral-700 rounded relative">
         <div
           data-testid={`span-bar-${span.spanId}`}
           className={`absolute h-full rounded ${
@@ -209,7 +208,7 @@ function SpanRow({
       </div>
 
       {/* Duration */}
-      <div className="flex-shrink-0 w-20 text-right text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex-shrink-0 w-20 text-right text-sm text-neutral-500 dark:text-neutral-400">
         {span.durationMs}ms
       </div>
     </li>
@@ -227,27 +226,26 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
   return (
     <div
       data-testid="span-details"
-      className="w-80 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-auto"
+      className="w-80 border-l border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-auto"
     >
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900 dark:text-white">
+          <h3 className="font-semibold text-neutral-900 dark:text-white">
             {span.name}
           </h3>
-          <button
+          <Button
+            className="text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-200"
             onClick={onClose}
-            className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-200"
             aria-label="Close details"
           >
             ×
-          </button>
+          </Button>
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
           Duration: {span.durationMs}ms
         </p>
       </div>
-
       {/* Error Message */}
       {isError && span.errorMessage && (
         <div className="p-4 bg-error-50 dark:bg-error-900/20 border-b border-error-100 dark:border-error-800">
@@ -259,37 +257,35 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
           </p>
         </div>
       )}
-
       {/* Attributes */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+        <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
           Attributes
         </h4>
         <dl className="space-y-2">
           {Object.entries(span.attributes).map(([key, value]) => (
             <div key={key} className="flex justify-between text-sm">
-              <dt className="text-gray-500 dark:text-gray-400">{key}</dt>
-              <dd className="text-gray-900 dark:text-white font-mono">
+              <dt className="text-neutral-500 dark:text-neutral-400">{key}</dt>
+              <dd className="text-neutral-900 dark:text-white font-mono">
                 {String(value)}
               </dd>
             </div>
           ))}
         </dl>
       </div>
-
       {/* Events */}
       {span.events.length > 0 && (
         <div className="p-4">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+          <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
             Events
           </h4>
           <ul className="space-y-2">
             {span.events.map((event, index) => (
               <li key={index} className="text-sm">
-                <span className="text-gray-900 dark:text-white">
+                <span className="text-neutral-900 dark:text-white">
                   {event.name}
                 </span>
-                <span className="text-gray-500 dark:text-gray-400 ml-2 text-xs">
+                <span className="text-neutral-500 dark:text-neutral-400 ml-2 text-xs">
                   {new Date(event.timestamp).toISOString()}
                 </span>
               </li>

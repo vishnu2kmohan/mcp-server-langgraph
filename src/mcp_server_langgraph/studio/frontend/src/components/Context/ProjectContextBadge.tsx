@@ -16,6 +16,8 @@
 import { useState } from "react";
 import { FileText, Loader2 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -59,7 +61,7 @@ export function ProjectContextBadge({
   isLoading = false,
   size = "md",
   onClick,
-  className = "",
+  className: _className = "",
 }: ProjectContextBadgeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -72,7 +74,9 @@ export function ProjectContextBadge({
 
   return (
     <div className="relative inline-flex">
-      <button
+      <Button
+        variant="primary"
+        className=".5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-900/50 focus:ring-primary-500"
         type="button"
         data-testid="project-context-badge"
         data-size={size}
@@ -80,7 +84,6 @@ export function ProjectContextBadge({
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         aria-label={`Project context active${contextPath ? `: ${contextPath}` : ""}`}
-        className={`inline-flex items-center gap-1.5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-900/50 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${sizeClasses.badge} ${className}`}
       >
         {isLoading ? (
           <Loader2
@@ -96,16 +99,15 @@ export function ProjectContextBadge({
             {contextPath}
           </span>
         )}
-      </button>
-
+      </Button>
       {/* Tooltip */}
       {showTooltip && (
         <div
           role="tooltip"
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-50"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-900 dark:bg-neutral-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-50"
         >
           Project context active
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-900 dark:border-t-neutral-700" />
         </div>
       )}
     </div>

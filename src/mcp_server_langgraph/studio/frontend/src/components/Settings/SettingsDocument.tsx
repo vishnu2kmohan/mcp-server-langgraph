@@ -30,6 +30,8 @@ import {
   Check,
 } from "lucide-react";
 
+import { Button, Input, Select, Checkbox } from "@/components/UI";
+
 // =============================================================================
 // Utility
 // =============================================================================
@@ -78,7 +80,7 @@ export function SettingsDocument({
     user?.displayName || user?.username || "",
   );
   const [email, setEmail] = useState(user?.email || "");
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
+  const [_theme, setTheme] = useState<"light" | "dark" | "system">("system");
   const [notifications, setNotifications] = useState({
     sessionComplete: true,
     errors: true,
@@ -110,26 +112,27 @@ export function SettingsDocument({
       data-testid="settings-document"
       className={cn(
         "flex flex-col h-full",
-        "bg-gray-50 dark:bg-gray-900",
+        "bg-neutral-50 dark:bg-neutral-900",
         compact && "text-sm",
         className,
       )}
     >
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
               Settings
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               Manage your account and preferences
             </p>
           </div>
-          <button
+          <Button
+            variant="primary"
+            className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
           >
             {saveSuccess ? (
               <>
@@ -147,27 +150,22 @@ export function SettingsDocument({
                 Save
               </>
             )}
-          </button>
+          </Button>
         </div>
       </header>
-
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-48 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-3">
+        <aside className="w-48 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 p-3">
           <nav className="space-y-1">
             {tabs.map((tab) => (
-              <button
+              <Button
+                className="w-full flex px-3 py-2 text-sm rounded-lg"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-                }`}
               >
                 <tab.icon size={18} />
                 {tab.label}
-              </button>
+              </Button>
             ))}
           </nav>
         </aside>
@@ -179,42 +177,44 @@ export function SettingsDocument({
             {activeTab === "profile" && (
               <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Display Name
                   </label>
-                  <input
-                    type="text"
+                  <Input
+                    size="lg"
+                    className="px-4 py-2 text-neutral-900 dark:text-neutral-100"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Email
                   </label>
-                  <input
+                  <Input
+                    size="lg"
+                    className="px-4 py-2 text-neutral-900 dark:text-neutral-100"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Default Persona
                   </label>
-                  <select
+                  <Select
+                    size="lg"
+                    className="px-4 py-2 text-neutral-900 dark:text-neutral-100"
                     value={persona}
                     onChange={(e) => {
                       dispatch(setPersona(e.target.value as Persona));
                     }}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
                     <option value="user">User</option>
                     <option value="developer">Developer</option>
                     <option value="admin">Admin</option>
-                  </select>
+                  </Select>
                 </div>
               </div>
             )}
@@ -228,27 +228,32 @@ export function SettingsDocument({
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Your API Key
                   </label>
                   <div className="flex gap-2">
-                    <input
+                    <Input
+                      size="lg"
+                      className="flex-1 px-4 py-2 bg-neutral-50 text-neutral-900 dark:text-neutral-100 font-mono text-sm"
                       type={showApiKey ? "text" : "password"}
                       value="sk-mcp-xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                       readOnly
-                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-mono text-sm"
                     />
-                    <button
+                    <Button
+                      variant="secondary"
+                      className="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                       onClick={() => setShowApiKey(!showApiKey)}
-                      className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                     >
                       {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
+                    </Button>
                   </div>
                 </div>
-                <button className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50">
+                <Button
+                  variant="danger"
+                  className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50"
+                >
                   Regenerate API Key
-                </button>
+                </Button>
               </div>
             )}
 
@@ -256,17 +261,17 @@ export function SettingsDocument({
             {activeTab === "notifications" && (
               <div className="space-y-4">
                 {Object.entries(notifications).map(([key, enabled]) => (
-                  <label
+                  <div
                     key={key}
-                    className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                    className="flex items-center justify-between p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
                   >
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-100">
+                      <p className="font-medium text-neutral-900 dark:text-neutral-100">
                         {key === "sessionComplete" && "Session Complete"}
                         {key === "errors" && "Error Alerts"}
                         {key === "updates" && "Product Updates"}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">
                         {key === "sessionComplete" &&
                           "Get notified when sessions finish"}
                         {key === "errors" && "Receive alerts for errors"}
@@ -274,18 +279,17 @@ export function SettingsDocument({
                           "Stay informed about new features"}
                       </p>
                     </div>
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={enabled}
-                      onChange={(e) =>
+                      onChange={(checked) =>
                         setNotifications({
                           ...notifications,
-                          [key]: e.target.checked,
+                          [key]: checked,
                         })
                       }
-                      className="w-5 h-5 text-primary-600 rounded"
+                      size="md"
                     />
-                  </label>
+                  </div>
                 ))}
               </div>
             )}
@@ -293,25 +297,21 @@ export function SettingsDocument({
             {/* Appearance Tab */}
             {activeTab === "appearance" && (
               <div className="space-y-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-4">
                   Theme
                 </label>
                 <div className="grid grid-cols-3 gap-4">
                   {(["light", "dark", "system"] as const).map((t) => (
-                    <button
+                    <Button
+                      className="p-4 rounded-lg border-2"
                       key={t}
                       onClick={() => setTheme(t)}
-                      className={`p-4 rounded-lg border-2 transition-colors ${
-                        theme === t
-                          ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600"
-                      }`}
                     >
                       <div className="text-center">
                         <Palette size={24} className="mx-auto mb-2" />
                         <span className="capitalize text-sm">{t}</span>
                       </div>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -320,27 +320,33 @@ export function SettingsDocument({
             {/* Security Tab */}
             {activeTab === "security" && (
               <div className="space-y-5">
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
                     Two-Factor Authentication
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
                     Add an extra layer of security to your account
                   </p>
-                  <button className="px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700">
+                  <Button
+                    variant="success"
+                    className="px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700"
+                  >
                     Enable 2FA
-                  </button>
+                  </Button>
                 </div>
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
                     Active Sessions
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
                     Manage devices logged in to your account
                   </p>
-                  <button className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200">
+                  <Button
+                    variant="danger"
+                    className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
+                  >
                     Sign Out All Devices
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

@@ -10,6 +10,8 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import type { Nudge } from "../../hooks/useNudges";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -145,7 +147,6 @@ export function NudgeSpotlight({
             : undefined
         }
       />
-
       {/* Spotlight card */}
       <div
         ref={cardRef}
@@ -173,14 +174,14 @@ export function NudgeSpotlight({
               Step {currentStep} of {totalSteps}
             </span>
           )}
-          <button
-            ref={closeButtonRef}
+          <Button
             className="spotlight-close"
+            ref={closeButtonRef}
             onClick={onDismiss}
             aria-label="Close"
           >
             ×
-          </button>
+          </Button>
         </div>
 
         {/* Message content */}
@@ -189,22 +190,22 @@ export function NudgeSpotlight({
         {/* Actions */}
         <div className="spotlight-actions">
           {onSecondaryAction && secondaryActionText && (
-            <button
+            <Button
               className="spotlight-action-secondary"
               onClick={onSecondaryAction}
               aria-label={secondaryActionText}
             >
               {secondaryActionText}
-            </button>
+            </Button>
           )}
           {onAccept && (
-            <button
+            <Button
               className="spotlight-action-primary"
               onClick={onAccept}
               aria-label={actionText}
             >
               {actionText}
-            </button>
+            </Button>
           )}
         </div>
       </div>

@@ -10,6 +10,8 @@ import { useListAggregatedToolsQuery } from "../../api";
 import { Badge } from "../UI/Badge";
 import { Card } from "../UI/Card";
 
+import { Button, Input } from "@/components/UI";
+
 export interface ToolExplorerProps {
   /** Optional filter by server name */
   serverFilter?: string;
@@ -74,22 +76,21 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
     <div className="flex flex-col gap-4">
       {/* Search input */}
       <div className="relative">
-        <input
-          type="text"
+        <Input
           placeholder="Search tools..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className={cn(
             "w-full px-4 py-2 rounded-lg border",
-            "border-gray-300 dark:border-gray-600",
-            "bg-white dark:bg-gray-800",
-            "text-gray-900 dark:text-gray-100",
-            "placeholder-gray-500 dark:placeholder-gray-400",
+            "border-neutral-300 dark:border-neutral-600",
+            "bg-white dark:bg-neutral-800",
+            "text-neutral-900 dark:text-neutral-100",
+            "placeholder-neutral-500 dark:placeholder-neutral-400",
             "focus:outline-none focus:ring-2 focus:ring-brand-primary",
           )}
         />
         <svg
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-400"
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 dark:text-neutral-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -103,11 +104,10 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
           />
         </svg>
       </div>
-
       {/* Tool list */}
       <div className="flex flex-col gap-2">
         {filteredTools.length === 0 ? (
-          <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+          <div className="p-4 text-center text-neutral-500 dark:text-neutral-400">
             No tools found
           </div>
         ) : (
@@ -116,26 +116,26 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
               key={tool.qualifiedName}
               variant="default"
               padding="sm"
-              className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
             >
               <div className="flex items-start justify-between gap-4">
                 {/* Tool info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <span className="font-mono text-sm font-medium text-neutral-900 dark:text-neutral-100">
                       {tool.qualifiedName}
                     </span>
                     <Badge variant="outline" size="sm">
                       {tool.serverName}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">
                     {tool.description}
                   </p>
                 </div>
 
                 {/* Invoke button */}
-                <button
+                <Button
                   type="button"
                   onClick={() => handleInvoke(tool.qualifiedName)}
                   className={cn(
@@ -147,7 +147,7 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
                   )}
                 >
                   Invoke
-                </button>
+                </Button>
               </div>
             </Card>
           ))

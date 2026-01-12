@@ -39,7 +39,13 @@ import {
   useListWorkflowsQuery,
   type TraceSpanCamelCase as ApiTraceSpan,
 } from "../api";
-import { SkeletonList, ErrorState } from "../components/UI";
+import {
+  SkeletonList,
+  ErrorState,
+  Button,
+  Input,
+  Select,
+} from "../components/UI";
 import { TraceViewer } from "../components/Observability/TraceViewer";
 import {
   WebSocketMetricsPanel,
@@ -382,7 +388,7 @@ export function ObservabilityPage() {
       case "info":
         return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
       case "debug":
-        return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 dark:bg-gray-900/30 dark:text-gray-400";
+        return "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 dark:bg-neutral-900/30 dark:text-neutral-400";
     }
   };
 
@@ -423,7 +429,7 @@ export function ObservabilityPage() {
       case "resolved":
         return "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400";
       case "silenced":
-        return "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+        return "bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:bg-neutral-900/30 dark:text-neutral-400";
     }
   };
 
@@ -467,15 +473,15 @@ export function ObservabilityPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
               Observability
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               Monitor traces, logs, and metrics for your AI agents
             </p>
           </div>
@@ -485,130 +491,114 @@ export function ObservabilityPage() {
               autoRefresh
               refreshInterval={10000}
             />
-            <button
+            <Button
+              variant="secondary"
+              className="flex px-4 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
               onClick={handleRefresh}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
             >
               <RefreshCw size={16} />
               Refresh
-            </button>
+            </Button>
           </div>
         </div>
       </header>
-
       {/* Tabs */}
-      <div className="px-6 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="px-6 py-2 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex gap-1">
           {tabs.map((tab) => (
-            <button
+            <Button
+              className="flex px-4 py-2 rounded-lg"
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                activeTab === tab.id
-                  ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-              }`}
             >
               <tab.icon size={16} />
               {tab.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
-
       {/* Traces Filters - only show on traces tab */}
       {activeTab === "traces" && (
-        <div className="px-6 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-3 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center gap-4 flex-wrap">
             {/* Status filter */}
             <div className="flex items-center gap-1">
-              <button
+              <Button
+                size="sm"
+                className="px-2 py-1 text-xs rounded"
                 onClick={() => setStatusFilter("")}
-                className={`px-2 py-1 text-xs rounded ${
-                  statusFilter === ""
-                    ? "bg-primary-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                }`}
                 aria-pressed={statusFilter === ""}
               >
                 All
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                className="px-2 py-1 text-xs rounded"
                 onClick={() => setStatusFilter("success")}
-                className={`px-2 py-1 text-xs rounded ${
-                  statusFilter === "success"
-                    ? "bg-success-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                }`}
                 aria-pressed={statusFilter === "success"}
               >
                 Success
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                className="px-2 py-1 text-xs rounded"
                 onClick={() => setStatusFilter("error")}
-                className={`px-2 py-1 text-xs rounded ${
-                  statusFilter === "error"
-                    ? "bg-error-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                }`}
                 aria-pressed={statusFilter === "error"}
               >
                 Error
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                className="px-2 py-1 text-xs rounded"
                 onClick={() => setStatusFilter("running")}
-                className={`px-2 py-1 text-xs rounded ${
-                  statusFilter === "running"
-                    ? "bg-primary-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                }`}
                 aria-pressed={statusFilter === "running"}
               >
                 Running
-              </button>
+              </Button>
             </div>
 
             {/* Entity ID filters */}
             <div className="flex items-center gap-2">
-              <input
-                type="text"
+              <Input
+                size="sm"
+                className="w-32 px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
                 value={sessionIdFilter}
                 onChange={(e) => setSessionIdFilter(e.target.value)}
                 placeholder="Session ID"
-                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 aria-label="Filter by session ID"
               />
-              <input
-                type="text"
+              <Input
+                size="sm"
+                className="w-32 px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
                 value={userIdFilter}
                 onChange={(e) => setUserIdFilter(e.target.value)}
                 placeholder="User ID"
-                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 aria-label="Filter by user ID"
               />
-              <input
-                type="text"
+              <Input
+                size="sm"
+                className="w-32 px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
                 value={workflowIdFilter}
                 onChange={(e) => setWorkflowIdFilter(e.target.value)}
                 placeholder="Workflow ID"
-                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 aria-label="Filter by workflow ID"
               />
-              <input
-                type="text"
+              <Input
+                size="sm"
+                className="w-32 px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
                 value={projectIdFilter}
                 onChange={(e) => setProjectIdFilter(e.target.value)}
                 placeholder="Project ID"
-                className="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 aria-label="Filter by project ID"
               />
             </div>
 
             {/* Time range filter */}
-            <select
+            <Select
+              size="sm"
+              className="px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
               aria-label="Time range"
             >
               <option value="15m">Last 15 minutes</option>
@@ -616,11 +606,11 @@ export function ObservabilityPage() {
               <option value="24h">Last 24 hours</option>
               <option value="7d">Last 7 days</option>
               <option value="all">All time</option>
-            </select>
+            </Select>
 
             {/* Trace count */}
             {tracesData && (
-              <span className="text-sm text-gray-500 dark:text-gray-400 ml-auto">
+              <span className="text-sm text-neutral-500 dark:text-neutral-400 ml-auto">
                 Showing {traces.length} traces
                 {tracesData.hasNext ? " (more available)" : ""}
               </span>
@@ -628,7 +618,6 @@ export function ObservabilityPage() {
           </div>
         </div>
       )}
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {isLoading ? (
@@ -645,7 +634,7 @@ export function ObservabilityPage() {
             {activeTab === "agent-sessions" && (
               <div className="space-y-4">
                 {!sessionsData?.items || sessionsData.items.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
                     <Bot size={48} className="mx-auto mb-4 opacity-50" />
                     <p>No agent sessions found</p>
                     <p className="text-sm mt-2">
@@ -657,7 +646,7 @@ export function ObservabilityPage() {
                   sessionsData.items.map((session) => (
                     <div
                       key={session.id}
-                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 transition-colors cursor-pointer"
+                      className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-primary-500 transition-colors cursor-pointer"
                       onClick={() =>
                         window.open(`/studio/chat/${session.id}`, "_blank")
                       }
@@ -666,10 +655,10 @@ export function ObservabilityPage() {
                         <div className="flex items-center gap-3">
                           <Bot size={20} className="text-insight-500" />
                           <div>
-                            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                            <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
                               {session.name || "Untitled Session"}
                             </h3>
-                            <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            <div className="flex items-center gap-3 mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                               <span className="flex items-center gap-1">
                                 <Clock size={14} />
                                 {new Date(session.createdAt).toLocaleString()}
@@ -692,14 +681,14 @@ export function ObservabilityPage() {
                               Archived
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 dark:bg-gray-900/30 dark:text-gray-400">
+                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 dark:bg-neutral-900/30 dark:text-neutral-400">
                               <XCircle size={12} />
                               {session.status}
                             </span>
                           )}
                           <ExternalLink
                             size={16}
-                            className="text-gray-400 dark:text-gray-400"
+                            className="text-neutral-400 dark:text-neutral-400"
                           />
                         </div>
                       </div>
@@ -713,7 +702,7 @@ export function ObservabilityPage() {
             {activeTab === "workflow-runs" && (
               <div className="space-y-4">
                 {!workflowsData?.items || workflowsData.items.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
                     <GitBranch size={48} className="mx-auto mb-4 opacity-50" />
                     <p>No workflow runs found</p>
                     <p className="text-sm mt-2">
@@ -725,7 +714,7 @@ export function ObservabilityPage() {
                   workflowsData.items.map((workflow) => (
                     <div
                       key={workflow.id}
-                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 transition-colors cursor-pointer"
+                      className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-primary-500 transition-colors cursor-pointer"
                       onClick={() =>
                         window.open(
                           `/studio/workflows/${workflow.id}`,
@@ -737,10 +726,10 @@ export function ObservabilityPage() {
                         <div className="flex items-center gap-3">
                           <GitBranch size={20} className="text-emerald-500" />
                           <div>
-                            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                            <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
                               {workflow.name}
                             </h3>
-                            <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            <div className="flex items-center gap-3 mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                               <span className="flex items-center gap-1">
                                 <Clock size={14} />
                                 {new Date(workflow.createdAt).toLocaleString()}
@@ -758,12 +747,12 @@ export function ObservabilityPage() {
                             <Activity size={12} />
                             {workflow.nodeCount} nodes
                           </span>
-                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 dark:bg-gray-900/30 dark:text-gray-400">
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 dark:bg-neutral-900/30 dark:text-neutral-400">
                             {workflow.edgeCount} edges
                           </span>
                           <ExternalLink
                             size={16}
-                            className="text-gray-400 dark:text-gray-400"
+                            className="text-neutral-400 dark:text-neutral-400"
                           />
                         </div>
                       </div>
@@ -777,33 +766,29 @@ export function ObservabilityPage() {
             {activeTab === "traces" && (
               <div className="space-y-4">
                 {/* Real-time Trace Canvas Toggle */}
-                <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
                   <div className="flex items-center gap-3">
                     <Activity size={20} className="text-indigo-500" />
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                      <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
                         Real-time Trace Canvas
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">
                         Live visualization of trace spans via WebSocket
                       </p>
                     </div>
                   </div>
-                  <button
+                  <Button
+                    className="px-4 py-2 rounded-lg text-sm"
                     onClick={() => setShowTraceCanvas(!showTraceCanvas)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      showTraceCanvas
-                        ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                    }`}
                   >
                     {showTraceCanvas ? "Hide Canvas" : "Show Canvas"}
-                  </button>
+                  </Button>
                 </div>
 
                 {/* TraceCanvas - Real-time ReactFlow visualization */}
                 {showTraceCanvas && (
-                  <div className="h-[400px] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <div className="h-[400px] bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
                     <TraceCanvas
                       sessionId={sessionIdFilter || undefined}
                       autoConnect={true}
@@ -813,7 +798,7 @@ export function ObservabilityPage() {
                 )}
 
                 {traces.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
                     No traces found
                   </div>
                 ) : (
@@ -822,20 +807,20 @@ export function ObservabilityPage() {
                       <div
                         key={trace.id}
                         onClick={() => setSelectedTraceId(trace.id)}
-                        className={`p-4 bg-white dark:bg-gray-800 rounded-lg border transition-colors cursor-pointer ${
+                        className={`p-4 bg-white dark:bg-neutral-800 rounded-lg border transition-colors cursor-pointer ${
                           selectedTraceId === trace.id
                             ? "border-primary-500 ring-2 ring-primary-200 dark:ring-primary-800"
-                            : "border-gray-200 dark:border-gray-700 hover:border-primary-500"
+                            : "border-neutral-200 dark:border-neutral-700 hover:border-primary-500"
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <Activity size={20} className="text-primary-500" />
                             <div>
-                              <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                              <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
                                 {trace.name}
                               </h3>
-                              <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                              <div className="flex items-center gap-3 mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                                 <span className="flex items-center gap-1">
                                   <Clock size={14} />
                                   {trace.duration}ms
@@ -860,10 +845,11 @@ export function ObservabilityPage() {
                     {/* Load More Button */}
                     {tracesData?.nextCursor && (
                       <div className="flex justify-center pt-4">
-                        <button
+                        <Button
+                          variant="secondary"
+                          className="flex px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
                           onClick={() => setCursor(tracesData.nextCursor)}
                           disabled={isTracesFetching}
-                          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50"
                         >
                           {isTracesFetching ? (
                             <>
@@ -873,23 +859,23 @@ export function ObservabilityPage() {
                           ) : (
                             "Load More"
                           )}
-                        </button>
+                        </Button>
                       </div>
                     )}
 
                     {/* TraceViewer Panel (Developer journey - trace debugging) */}
                     {selectedTraceId && (
-                      <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <div className="mt-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+                        <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
+                          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                             Trace Details
                           </span>
-                          <button
+                          <Button
+                            className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
                             onClick={() => setSelectedTraceId(null)}
-                            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200"
                           >
                             Close
-                          </button>
+                          </Button>
                         </div>
                         <TraceViewer
                           trace={selectedTrace}
@@ -905,15 +891,15 @@ export function ObservabilityPage() {
                         {aiTraceIntelligenceEnabled && (
                           <div
                             data-testid="trace-intelligence-panel"
-                            className="border-t border-gray-200 dark:border-gray-700"
+                            className="border-t border-neutral-200 dark:border-neutral-700"
                           >
-                            <div className="px-4 py-2 bg-gradient-to-r from-insight-50 to-blue-50 dark:from-insight-900/20 dark:to-blue-900/20 border-b border-gray-200 dark:border-gray-700">
+                            <div className="px-4 py-2 bg-gradient-to-r from-insight-50 to-blue-50 dark:from-insight-900/20 dark:to-blue-900/20 border-b border-neutral-200 dark:border-neutral-700">
                               <div className="flex items-center gap-2">
                                 <Sparkles
                                   size={16}
                                   className="text-insight-500"
                                 />
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                                   AI Insights
                                 </span>
                               </div>
@@ -922,11 +908,11 @@ export function ObservabilityPage() {
                             <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
                               {/* Trace Summary */}
                               <div className="space-y-2">
-                                <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                   Summary
                                 </h4>
                                 {traceSummary.isLoading ? (
-                                  <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-400">
+                                  <div className="flex items-center gap-2 text-sm text-neutral-400 dark:text-neutral-400">
                                     <Loader2
                                       size={14}
                                       className="animate-spin"
@@ -935,7 +921,7 @@ export function ObservabilityPage() {
                                   </div>
                                 ) : traceSummary.summary ? (
                                   <div className="space-y-2">
-                                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                                    <p className="text-sm text-neutral-700 dark:text-neutral-300">
                                       {traceSummary.summary}
                                     </p>
                                     {traceSummary.keyActions.length > 0 && (
@@ -952,7 +938,7 @@ export function ObservabilityPage() {
                                         )}
                                       </div>
                                     )}
-                                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                                    <div className="flex items-center gap-4 text-xs text-neutral-500 dark:text-neutral-400">
                                       {traceSummary.stepCount !== null && (
                                         <span>
                                           {traceSummary.stepCount} steps
@@ -973,7 +959,7 @@ export function ObservabilityPage() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <p className="text-sm text-gray-400 dark:text-gray-400">
+                                  <p className="text-sm text-neutral-400 dark:text-neutral-400">
                                     No summary available
                                   </p>
                                 )}
@@ -981,11 +967,11 @@ export function ObservabilityPage() {
 
                               {/* Anomaly Detection */}
                               <div className="space-y-2">
-                                <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                   Health & Anomalies
                                 </h4>
                                 {traceAnomaly.isLoading ? (
-                                  <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-400">
+                                  <div className="flex items-center gap-2 text-sm text-neutral-400 dark:text-neutral-400">
                                     <Loader2
                                       size={14}
                                       className="animate-spin"
@@ -997,7 +983,7 @@ export function ObservabilityPage() {
                                     {/* Health Score */}
                                     {traceAnomaly.healthScore !== null && (
                                       <div className="flex items-center gap-2">
-                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">
                                           Health:
                                         </span>
                                         <span
@@ -1017,7 +1003,7 @@ export function ObservabilityPage() {
                                     {/* Bottlenecks */}
                                     {traceAnomaly.bottlenecks.length > 0 && (
                                       <div className="space-y-1">
-                                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                        <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
                                           <Zap size={12} />
                                           Bottlenecks:
                                         </span>
@@ -1040,7 +1026,7 @@ export function ObservabilityPage() {
                                     {/* Anomalies */}
                                     {traceAnomaly.anomalies.length > 0 && (
                                       <div className="space-y-1">
-                                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                        <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
                                           <AlertTriangle size={12} />
                                           Issues:
                                         </span>
@@ -1077,11 +1063,11 @@ export function ObservabilityPage() {
                                     {traceAnomaly.optimizationSuggestions
                                       .length > 0 && (
                                       <div className="space-y-1">
-                                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                        <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
                                           <TrendingUp size={12} />
                                           Suggestions:
                                         </span>
-                                        <ul className="text-xs text-gray-600 dark:text-gray-400 list-disc list-inside">
+                                        <ul className="text-xs text-neutral-600 dark:text-neutral-400 list-disc list-inside">
                                           {traceAnomaly.optimizationSuggestions
                                             .slice(0, 3)
                                             .map((suggestion, idx) => (
@@ -1115,14 +1101,14 @@ export function ObservabilityPage() {
             {activeTab === "logs" && (
               <div className="space-y-2">
                 {logs.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
                     No logs found
                   </div>
                 ) : (
                   logs.map((log) => (
                     <div
                       key={log.id}
-                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                      className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -1131,11 +1117,11 @@ export function ObservabilityPage() {
                           >
                             {log.level}
                           </span>
-                          <span className="text-gray-900 dark:text-gray-100">
+                          <span className="text-neutral-900 dark:text-neutral-100">
                             {log.message}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-3 text-sm text-neutral-500 dark:text-neutral-400">
                           {log.service && (
                             <span className="flex items-center gap-1">
                               <Server size={14} />
@@ -1157,51 +1143,51 @@ export function ObservabilityPage() {
             {/* Metrics Tab */}
             {activeTab === "metrics" && metrics && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
                     Total Requests
                   </h3>
-                  <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
                     {(metrics.requestsTotal ?? 0).toLocaleString()}
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
                     Total Errors
                   </h3>
                   <div className="text-2xl font-semibold text-error-600 dark:text-error-400">
                     {(metrics.errorsTotal ?? 0).toLocaleString()}
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
                     Avg Latency
                   </h3>
-                  <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
                     {metrics.avgLatencyMs ?? 0}ms
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
                     P99 Latency
                   </h3>
-                  <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
                     {metrics.p99LatencyMs ?? 0}ms
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
                     Tokens Used
                   </h3>
-                  <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
                     {(metrics.tokensUsed ?? 0).toLocaleString()}
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
                     Active Sessions
                   </h3>
-                  <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
                     {metrics.activeSessions ?? 0}
                   </div>
                 </div>
@@ -1210,7 +1196,7 @@ export function ObservabilityPage() {
 
             {/* Empty metrics state */}
             {activeTab === "metrics" && !metrics && !isMetricsLoading && (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
                 No metrics data available
               </div>
             )}
@@ -1226,77 +1212,66 @@ export function ObservabilityPage() {
             {activeTab === "alerts" && (
               <div className="space-y-4">
                 {/* Alerts Filters */}
-                <div className="flex items-center gap-4 flex-wrap p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-4 flex-wrap p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
                   {/* State filter */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-sm text-neutral-500 dark:text-neutral-400">
                       State:
                     </span>
                     <div className="flex items-center gap-1">
-                      <button
+                      <Button
+                        size="sm"
+                        className="px-2 py-1 text-xs rounded"
                         onClick={() => setAlertStateFilter("")}
-                        className={`px-2 py-1 text-xs rounded ${
-                          alertStateFilter === ""
-                            ? "bg-primary-600 text-white"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                        }`}
                       >
                         All
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="px-2 py-1 text-xs rounded"
                         onClick={() => setAlertStateFilter("firing")}
-                        className={`px-2 py-1 text-xs rounded ${
-                          alertStateFilter === "firing"
-                            ? "bg-error-600 text-white"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                        }`}
                       >
                         Firing
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="px-2 py-1 text-xs rounded"
                         onClick={() => setAlertStateFilter("pending")}
-                        className={`px-2 py-1 text-xs rounded ${
-                          alertStateFilter === "pending"
-                            ? "bg-warning-600 text-white"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                        }`}
                       >
                         Pending
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="px-2 py-1 text-xs rounded"
                         onClick={() => setAlertStateFilter("resolved")}
-                        className={`px-2 py-1 text-xs rounded ${
-                          alertStateFilter === "resolved"
-                            ? "bg-success-600 text-white"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                        }`}
                       >
                         Resolved
-                      </button>
+                      </Button>
                     </div>
                   </div>
 
                   {/* Severity filter */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-sm text-neutral-500 dark:text-neutral-400">
                       Severity:
                     </span>
-                    <select
+                    <Select
+                      size="sm"
+                      className="px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
                       value={alertSeverityFilter}
                       onChange={(e) => setAlertSeverityFilter(e.target.value)}
-                      className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     >
                       <option value="">All Severities</option>
                       <option value="critical">Critical</option>
                       <option value="error">Error</option>
                       <option value="warning">Warning</option>
                       <option value="info">Info</option>
-                    </select>
+                    </Select>
                   </div>
 
                   {/* Alert count */}
                   {alertsData && (
-                    <span className="text-sm text-gray-500 dark:text-gray-400 ml-auto">
+                    <span className="text-sm text-neutral-500 dark:text-neutral-400 ml-auto">
                       {alerts.length} alerts
                     </span>
                   )}
@@ -1304,7 +1279,7 @@ export function ObservabilityPage() {
 
                 {/* Alerts List */}
                 {alerts.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
                     <AlertTriangle
                       size={48}
                       className="mx-auto mb-4 opacity-50"
@@ -1318,7 +1293,7 @@ export function ObservabilityPage() {
                   alerts.map((alert) => (
                     <div
                       key={alert.alertId}
-                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 transition-colors"
+                      className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-primary-500 transition-colors"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
@@ -1335,15 +1310,15 @@ export function ObservabilityPage() {
                             }
                           />
                           <div>
-                            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                            <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
                               {alert.name}
                             </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
                               {alert.message ||
                                 alert.annotations?.summary ||
                                 "No description"}
                             </p>
-                            <div className="flex items-center gap-3 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            <div className="flex items-center gap-3 mt-2 text-sm text-neutral-500 dark:text-neutral-400">
                               {alert.startedAt && (
                                 <span className="flex items-center gap-1">
                                   <Clock size={14} />
@@ -1376,7 +1351,7 @@ export function ObservabilityPage() {
                               href={alert.generatorUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1 text-gray-400 dark:text-gray-400 hover:text-primary-500 transition-colors"
+                              className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-primary-500 transition-colors"
                               title="View in Grafana"
                             >
                               <ExternalLink size={16} />
@@ -1397,7 +1372,7 @@ export function ObservabilityPage() {
                             .map(([key, value]) => (
                               <span
                                 key={key}
-                                className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded"
+                                className="px-2 py-0.5 text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 rounded"
                               >
                                 {key}={value}
                               </span>

@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useMemo, Suspense } from "react";
+import { toast } from "sonner";
 import {
   DollarSign,
   TrendingUp,
@@ -18,7 +19,23 @@ import {
   Building2,
   Calendar,
 } from "lucide-react";
-import { Skeleton, SkeletonCard, ErrorState } from "../components/UI";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
+import {
+  Skeleton,
+  SkeletonCard,
+  ErrorState,
+  Button,
+  Input,
+  Select,
+} from "../components/UI";
 import {
   LazyOrganizationCostDashboard,
   LazyBudgetStatusCard,
@@ -97,6 +114,14 @@ export function CostPage({
   // Get persona context to determine if user is admin
   const { isAdmin } = usePersonaContext();
 
+  // Build cost query params - use custom date range if enabled, otherwise use period
+  const costQueryParams = useMemo(() => {
+    if (useCustomDateRange && startDate && endDate) {
+      return { startDate, endDate };
+    }
+    return { period };
+  }, [useCustomDateRange, startDate, endDate, period]);
+
   // RTK Query hooks for cost data
   const {
     data: summary,
@@ -104,19 +129,19 @@ export function CostPage({
     isError: summaryError,
     error: summaryErrorData,
     refetch: refetchSummary,
-  } = useGetCostSummaryQuery({ period });
+  } = useGetCostSummaryQuery(costQueryParams);
 
   const {
     data: modelCosts,
     isLoading: modelLoading,
     refetch: refetchModel,
-  } = useGetCostByModelQuery({ period });
+  } = useGetCostByModelQuery(costQueryParams);
 
   const {
     data: historyData,
     isLoading: historyLoading,
     refetch: refetchHistory,
-  } = useGetCostHistoryQuery({ period });
+  } = useGetCostHistoryQuery(costQueryParams);
 
   // Budget status and forecast hooks (skip if no userId)
   const { data: budgetStatusData, isLoading: budgetStatusLoading } =
@@ -165,52 +190,98 @@ export function CostPage({
     sessionCosts,
     userBudget,
     budgetWarnings,
-    error: _wsError,
+    error: wsError,
     subscribeSession,
+    unsubscribeSession,
     subscribeUser,
+    unsubscribeUser,
     clearBudgetWarnings,
   } = useCostTrackingWebSocket(
     enableRealtime
       ? {
           onBudgetWarning: (warning) => {
-            console.log("Budget warning received:", warning);
+            const percentUsed =
+              warning.budgetLimit && warning.budgetLimit > 0
+                ? Math.round((warning.currentUsage / warning.budgetLimit) * 100)
+                : warning.threshold;
+            toast.warning(`Budget Warning: ${warning.message}`, {
+              description: `${percentUsed}% of budget used`,
+              duration: 5000,
+            });
           },
         }
       : undefined,
   );
 
+  // Show toast when WebSocket error occurs
+  useEffect(() => {
+    if (wsError) {
+      toast.error("Cost Tracking Connection Error", {
+        description: wsError,
+        duration: 5000,
+      });
+    }
+  }, [wsError]);
+
   // Dedicated Budget Alerts WebSocket for comprehensive budget monitoring
   // This provides more detailed budget threshold alerts beyond session-level cost tracking
-  const {
-    alerts: budgetAlerts,
-    subscribeToAll: _subscribeToBudgetAlerts,
-    clearAlerts: clearBudgetAlerts,
-  } = useBudgetAlertsWebSocket({
-    enabled: enableRealtime,
-    subscribeAll: isAdmin, // Admins subscribe to all org/project budget alerts
-    onAlert: (alert: BudgetAlert) => {
-      // Log budget alerts for monitoring
-      console.log("Budget alert received:", alert.status, alert.message);
-    },
-  });
+  const { alerts: budgetAlerts, clearAlerts: clearBudgetAlerts } =
+    useBudgetAlertsWebSocket({
+      enabled: enableRealtime,
+      subscribeAll: isAdmin, // Admins subscribe to all org/project budget alerts
+      onAlert: (alert: BudgetAlert) => {
+        // Show toast notification based on alert severity
+        const toastFn =
+          alert.status === "exceeded" || alert.status === "critical"
+            ? toast.error
+            : toast.warning;
+        toastFn(
+          `Budget ${alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}: ${alert.message}`,
+          {
+            description: `${alert.entityType}: ${alert.percentUsed}% used`,
+            duration: alert.status === "exceeded" ? 10000 : 5000,
+          },
+        );
 
-  // Subscribe to session and user when connected
+        // Request browser notification permission and show notification
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("Budget Alert", { body: alert.message });
+        }
+      },
+    });
+
+  // Subscribe to session and user when connected, with cleanup on prop changes
   useEffect(() => {
-    if (enableRealtime && wsStatus === "connected") {
+    if (!enableRealtime || wsStatus !== "connected") {
+      return;
+    }
+
+    // Subscribe to current session and user
+    if (sessionId) {
+      subscribeSession(sessionId);
+    }
+    if (userId) {
+      subscribeUser(userId);
+    }
+
+    // Cleanup: unsubscribe when props change or component unmounts
+    return () => {
       if (sessionId) {
-        subscribeSession(sessionId);
+        unsubscribeSession(sessionId);
       }
       if (userId) {
-        subscribeUser(userId);
+        unsubscribeUser(userId);
       }
-    }
+    };
   }, [
     enableRealtime,
     wsStatus,
     sessionId,
     userId,
     subscribeSession,
+    unsubscribeSession,
     subscribeUser,
+    unsubscribeUser,
   ]);
 
   const isLoading = summaryLoading || modelLoading || historyLoading;
@@ -263,7 +334,7 @@ export function CostPage({
       case "disconnected":
         return {
           text: "Offline",
-          color: "text-gray-500 dark:text-gray-400",
+          color: "text-neutral-500 dark:text-neutral-400",
           Icon: WifiOff,
         };
       case "error":
@@ -271,7 +342,7 @@ export function CostPage({
       default:
         return {
           text: "Unknown",
-          color: "text-gray-500 dark:text-gray-400",
+          color: "text-neutral-500 dark:text-neutral-400",
           Icon: WifiOff,
         };
     }
@@ -280,15 +351,15 @@ export function CostPage({
   const wsStatusDisplay = enableRealtime ? getWsStatusDisplay() : null;
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
               Cost Dashboard
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               Track and analyze LLM usage costs
             </p>
           </div>
@@ -318,40 +389,43 @@ export function CostPage({
             <div className="flex items-center gap-2">
               {/* Period Selector (preset ranges) */}
               {!useCustomDateRange && (
-                <select
+                <Select
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                   value={period}
                   onChange={(e) => handlePeriodChange(e.target.value as Period)}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 >
                   <option value="day">Day</option>
                   <option value="week">Week</option>
                   <option value="month">Month</option>
-                </select>
+                </Select>
               )}
 
               {/* Custom Date Range Inputs */}
               {useCustomDateRange && (
                 <div className="flex items-center gap-2">
-                  <input
+                  <Input
+                    className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     aria-label="Start date"
                   />
-                  <span className="text-gray-500 dark:text-gray-400">to</span>
-                  <input
+                  <span className="text-neutral-500 dark:text-neutral-400">
+                    to
+                  </span>
+                  <Input
+                    className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     aria-label="End date"
                   />
                 </div>
               )}
 
               {/* Toggle Custom Date Range */}
-              <button
+              <Button
+                className="flex .5 px-3 py-2 rounded-lg text-sm"
                 onClick={() => {
                   setUseCustomDateRange(!useCustomDateRange);
                   if (!useCustomDateRange) {
@@ -361,11 +435,6 @@ export function CostPage({
                     setEndDate(range.end);
                   }
                 }}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  useCustomDateRange
-                    ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-300 border border-gray-300 dark:border-gray-600"
-                }`}
                 aria-label={
                   useCustomDateRange
                     ? "Use preset periods"
@@ -374,42 +443,32 @@ export function CostPage({
               >
                 <Calendar size={16} />
                 {useCustomDateRange ? "Preset" : "Custom"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       </header>
-
       {/* Admin View Toggle */}
       {isAdmin && (
-        <div className="px-6 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-2 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              className="flex px-4 py-2 rounded-lg text-sm"
               onClick={() => setDashboardView("personal")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                dashboardView === "personal"
-                  ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-300"
-              }`}
             >
               <DollarSign size={16} />
               Personal Costs
-            </button>
-            <button
+            </Button>
+            <Button
+              className="flex px-4 py-2 rounded-lg text-sm"
               onClick={() => setDashboardView("organizational")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                dashboardView === "organizational"
-                  ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-300"
-              }`}
             >
               <Building2 size={16} />
               Organizational View
-            </button>
+            </Button>
           </div>
         </div>
       )}
-
       {/* Budget Warnings (from Cost Tracking WebSocket) */}
       {enableRealtime && budgetWarnings.length > 0 && (
         <div
@@ -429,17 +488,16 @@ export function CostPage({
                 {budgetWarnings[budgetWarnings.length - 1].message}
               </p>
             </div>
-            <button
-              onClick={clearBudgetWarnings}
+            <Button
               className="text-warning-500 hover:text-warning-700 dark:hover:text-warning-300"
+              onClick={clearBudgetWarnings}
               aria-label="Dismiss warning"
             >
               <X size={16} />
-            </button>
+            </Button>
           </div>
         </div>
       )}
-
       {/* Budget Alerts (from dedicated Budget Alerts WebSocket) */}
       {enableRealtime && budgetAlerts.length > 0 && (
         <div
@@ -503,38 +561,27 @@ export function CostPage({
                 {budgetAlerts[budgetAlerts.length - 1].percentUsed}% used
               </p>
             </div>
-            <button
-              onClick={clearBudgetAlerts}
-              className={`${
-                budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-                  ? "text-error-500 hover:text-error-700 dark:hover:text-error-300"
-                  : budgetAlerts[budgetAlerts.length - 1].status === "critical"
-                    ? "text-grafana-500 hover:text-grafana-700 dark:hover:text-grafana-300"
-                    : "text-warning-500 hover:text-warning-700 dark:hover:text-warning-300"
-              }`}
-              aria-label="Dismiss alert"
-            >
+            <Button onClick={clearBudgetAlerts} aria-label="Dismiss alert">
               <X size={16} />
-            </button>
+            </Button>
           </div>
         </div>
       )}
-
       {/* User Budget Progress Bar (from Cost Tracking WebSocket) */}
       {enableRealtime && userBudget && (
         <div
           data-testid="budget-progress-bar"
-          className="mx-6 mt-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+          className="mx-6 mt-4 p-4 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg"
         >
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
               Your Budget
             </h3>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-sm text-neutral-500 dark:text-neutral-400">
               ${userBudget.remaining.toFixed(2)} remaining
             </span>
           </div>
-          <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div className="relative h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
             <div
               className={`absolute left-0 top-0 h-full rounded-full transition-all ${
                 (userBudget.currentUsage / userBudget.budgetLimit) * 100 >= 90
@@ -549,13 +596,12 @@ export function CostPage({
               }}
             />
           </div>
-          <div className="flex items-center justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-between mt-2 text-xs text-neutral-500 dark:text-neutral-400">
             <span>${userBudget.currentUsage.toFixed(2)} used</span>
             <span>${userBudget.budgetLimit.toFixed(2)} limit</span>
           </div>
         </div>
       )}
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {/* Organizational View for Admins */}
@@ -567,7 +613,7 @@ export function CostPage({
                 fallback={
                   <div
                     data-testid="budget-status-skeleton"
-                    className="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+                    className="p-4 rounded-lg border border-neutral-200 dark:border-neutral-700"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <Skeleton className="w-5 h-5 rounded" />
@@ -611,7 +657,7 @@ export function CostPage({
               <SkeletonCard />
             </div>
             {/* Skeleton for Model Breakdown */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
               <Skeleton className="h-6 w-1/4 mb-4" />
               <div className="space-y-3">
                 <Skeleton className="h-12 w-full" />
@@ -635,62 +681,62 @@ export function CostPage({
             {summary && (
               <div className="grid gap-4 md:grid-cols-3">
                 {/* Total Cost */}
-                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="p-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign size={20} className="text-primary-500" />
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
                       Total Cost
                     </h3>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                    <span className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
                       {formatCurrency(summary.totalCost)}
                     </span>
                   </div>
-                  <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
                     Past {period}
                   </div>
                 </div>
 
                 {/* Total Tokens */}
-                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="p-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp size={20} className="text-success-500" />
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
                       Total Tokens
                     </h3>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                    <span className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
                       {formatNumber(summary.totalTokens ?? 0)}
                     </span>
                   </div>
-                  <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
                     Past {period}
                   </div>
                 </div>
 
                 {/* Average Cost per Token */}
-                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="p-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign size={20} className="text-insight-500" />
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
                       Avg Cost/Token
                     </h3>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                    <span className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
                       {summary.totalTokens && summary.totalTokens > 0
                         ? formatCurrency(
                             (summary.totalCost / summary.totalTokens) * 1000,
                           )
                         : "$0.00"}
                     </span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-sm text-neutral-500 dark:text-neutral-400">
                       /1K
                     </span>
                   </div>
-                  <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
                     Past {period}
                   </div>
                 </div>
@@ -703,7 +749,7 @@ export function CostPage({
                 fallback={
                   <div
                     data-testid="budget-status-skeleton"
-                    className="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+                    className="p-4 rounded-lg border border-neutral-200 dark:border-neutral-700"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <Skeleton className="w-5 h-5 rounded" />
@@ -730,7 +776,7 @@ export function CostPage({
                 fallback={
                   <div
                     data-testid="budget-forecast-skeleton"
-                    className="p-6 rounded-lg border border-gray-200 dark:border-gray-700"
+                    className="p-6 rounded-lg border border-neutral-200 dark:border-neutral-700"
                   >
                     <div className="space-y-4">
                       <Skeleton className="w-32 h-6" />
@@ -756,35 +802,35 @@ export function CostPage({
             {enableRealtime && liveSessionCostsList.length > 0 && (
               <div
                 data-testid="live-session-costs"
-                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
               >
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+                <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 flex items-center gap-2">
                   <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse" />
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                     Live Session Costs
                   </h2>
                 </div>
-                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
                   {liveSessionCostsList.map((session) => (
                     <div
                       key={session.sessionId}
                       className="px-6 py-4 flex items-center justify-between"
                     >
                       <div>
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                           {session.sessionId.slice(0, 8)}...
                         </span>
                         {session.model && (
-                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                          <span className="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
                             {session.model}
                           </span>
                         )}
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        <div className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                           {formatCurrency(session.totalCost)}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400">
                           {formatNumber(session.tokenCount)} tokens
                         </div>
                       </div>
@@ -795,46 +841,46 @@ export function CostPage({
             )}
 
             {/* Cost by Model */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+                <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                   Cost by Model
                 </h2>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-gray-700/50">
+                  <thead className="bg-neutral-50 dark:bg-neutral-700/50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                         Model
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                         Cost
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                         Requests
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                         Avg Cost/Req
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
                     {modelCostsArray.map((modelCost) => (
                       <tr
                         key={modelCost.model}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                        className="hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-neutral-100">
                           {modelCost.model}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-gray-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-900 dark:text-neutral-100">
                           {formatCurrency(modelCost.cost)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-500 dark:text-neutral-400">
                           {formatNumber(modelCost.requests)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-500 dark:text-neutral-400">
                           {modelCost.requests > 0
                             ? formatCurrency(
                                 modelCost.cost / modelCost.requests,
@@ -849,56 +895,73 @@ export function CostPage({
             </div>
 
             {/* Cost History Chart */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+                <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                   Cost Trend
                 </h2>
               </div>
               <div className="p-6">
                 {historyItems.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
                     No cost data for this period
                   </div>
                 ) : (
-                  <div data-testid="cost-history-chart" className="space-y-4">
-                    {/* Simple bar chart implementation */}
-                    <div className="h-48 flex items-end gap-2">
-                      {historyItems.map((point, index) => {
-                        const maxCost = Math.max(
-                          ...historyItems.map((p) => p.cost),
-                        );
-                        const heightPercent =
-                          maxCost > 0 ? (point.cost / maxCost) * 100 : 0;
-                        return (
-                          <div
-                            key={index}
-                            className="flex-1 flex flex-col items-center gap-1"
-                          >
-                            <div
-                              data-cost-bar
-                              className="w-full bg-primary-500 rounded-t transition-all hover:bg-primary-600"
-                              style={{
-                                height: `${heightPercent}%`,
-                                minHeight: "4px",
-                              }}
-                              title={`${formatDate(point.date)}: ${formatCurrency(point.cost)}`}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {/* Date labels */}
-                    <div className="flex gap-2">
-                      {historyItems.map((point, index) => (
-                        <div
-                          key={index}
-                          className="flex-1 text-center text-xs text-gray-500 dark:text-gray-400"
-                        >
-                          {formatDate(point.date)}
-                        </div>
-                      ))}
-                    </div>
+                  <div
+                    data-testid="cost-history-chart"
+                    className="h-64"
+                    role="img"
+                    aria-label={`Cost trend bar chart showing ${historyItems.length} data points. Total cost: ${summary ? formatCurrency(summary.totalCost) : "N/A"} over the selected ${period} period.`}
+                  >
+                    {/* Visually hidden description for screen readers */}
+                    <span className="sr-only">
+                      Bar chart displaying daily cost breakdown. Use the data
+                      table below for detailed values.
+                    </span>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={historyItems.map((point) => ({
+                          date: formatDate(point.date),
+                          cost: point.cost,
+                          fullDate: point.date,
+                        }))}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
+                        aria-hidden="true"
+                      >
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          className="stroke-neutral-200 dark:stroke-neutral-700"
+                        />
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fontSize: 12 }}
+                          className="text-neutral-500 dark:text-neutral-400"
+                        />
+                        <YAxis
+                          tick={{ fontSize: 12 }}
+                          tickFormatter={(value) => `$${value}`}
+                          className="text-neutral-500 dark:text-neutral-400"
+                        />
+                        <Tooltip
+                          formatter={(value) => [
+                            formatCurrency(value as number),
+                            "Cost",
+                          ]}
+                          labelFormatter={(label) => `Date: ${label}`}
+                          contentStyle={{
+                            backgroundColor: "var(--color-neutral-50)",
+                            border: "1px solid var(--color-neutral-200)",
+                            borderRadius: "8px",
+                          }}
+                        />
+                        <Bar
+                          dataKey="cost"
+                          fill="var(--color-primary-500)"
+                          radius={[4, 4, 0, 0]}
+                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 )}
               </div>

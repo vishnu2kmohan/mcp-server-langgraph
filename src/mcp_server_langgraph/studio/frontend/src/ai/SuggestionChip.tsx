@@ -18,6 +18,8 @@
 import { Sparkles, Lightbulb, Zap, MessageCircle, Loader2 } from "lucide-react";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -84,7 +86,7 @@ function getIcon(icon: ChipIcon, size: number) {
 function getConfidenceClass(confidence: number): string {
   if (confidence >= 0.9) return "text-success-600 dark:text-success-400";
   if (confidence >= 0.7) return "text-warning-600 dark:text-warning-400";
-  return "text-gray-500 dark:text-gray-400";
+  return "text-neutral-500 dark:text-neutral-400";
 }
 
 function getConfidenceTestClass(confidence: number): string {
@@ -108,16 +110,16 @@ function getVariantClasses(variant: ChipVariant): string {
     case "outline":
       return cn(
         "bg-transparent",
-        "border border-gray-300 dark:border-gray-600",
-        "text-gray-700 dark:text-gray-300",
+        "border border-neutral-300 dark:border-neutral-600",
+        "text-neutral-700 dark:text-neutral-300",
         "hover:border-primary-400 dark:hover:border-primary-500",
         "hover:bg-primary-50 dark:hover:bg-primary-900/20",
       );
     case "subtle":
       return cn(
-        "bg-gray-100 dark:bg-gray-800",
-        "text-gray-700 dark:text-gray-300",
-        "hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700",
+        "bg-neutral-100 dark:bg-neutral-800",
+        "text-neutral-700 dark:text-neutral-300",
+        "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
       );
     default:
       return "";
@@ -183,7 +185,7 @@ export function SuggestionChip({
   };
 
   return (
-    <button
+    <Button
       type="button"
       id={id}
       data-testid="suggestion-chip"
@@ -204,7 +206,7 @@ export function SuggestionChip({
         // Variant styles
         variant === "default" && "bg-primary",
         variant === "outline" && "border bg-transparent",
-        variant === "subtle" && "bg-gray-100 dark:bg-gray-800",
+        variant === "subtle" && "bg-neutral-100 dark:bg-neutral-800",
         getVariantClasses(variant),
         // Disabled styles
         isDisabled && "opacity-50 cursor-not-allowed",
@@ -220,15 +222,12 @@ export function SuggestionChip({
           className="animate-spin"
         />
       )}
-
       {/* Icon */}
       {icon && !isLoading && (
         <span data-testid="chip-icon">{getIcon(icon, sizeStyles.icon)}</span>
       )}
-
       {/* Text */}
       <span className="truncate">{displayText}</span>
-
       {/* Confidence badge */}
       {confidence !== undefined && (
         <span
@@ -242,7 +241,7 @@ export function SuggestionChip({
           {Math.round(confidence * 100)}%
         </span>
       )}
-    </button>
+    </Button>
   );
 }
 

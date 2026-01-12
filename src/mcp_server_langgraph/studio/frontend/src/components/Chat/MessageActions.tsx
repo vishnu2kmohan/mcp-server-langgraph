@@ -31,6 +31,8 @@ import {
   GitBranch,
 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -240,55 +242,58 @@ export function MessageActions({
       className={`relative inline-flex ${className}`}
     >
       {/* Trigger Button */}
-      <button
+      <Button
+        variant="secondary"
+        className="p-1 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400"
         data-testid="message-actions-trigger"
         onClick={toggleMenu}
         aria-label="Message actions"
         aria-expanded={isOpen}
         aria-haspopup="menu"
-        className="p-1 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
       >
         <MoreHorizontal size={16} />
-      </button>
-
+      </Button>
       {/* Dropdown Menu */}
       {isOpen && (
         <div
           data-testid="message-actions-menu"
           role="menu"
-          className="absolute right-0 top-full mt-1 z-50 min-w-[160px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1"
+          className="absolute right-0 top-full mt-1 z-50 min-w-[160px] bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 py-1"
         >
           {/* Delete Confirmation Dialog */}
           {showDeleteConfirm ? (
             <div data-testid="delete-confirmation" className="p-3 space-y-3">
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <p className="text-sm text-neutral-700 dark:text-neutral-300">
                 Delete this message?
               </p>
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="danger"
+                  className="flex-1 px-3 py-1.5 text-sm bg-error-600 hover:bg-error-700 text-white rounded"
                   data-testid="confirm-delete"
                   onClick={handleConfirmDelete}
-                  className="flex-1 px-3 py-1.5 text-sm bg-error-600 hover:bg-error-700 text-white rounded transition-colors"
                 >
                   Delete
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="flex-1 px-3 py-1.5 text-sm bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:bg-neutral-600 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300 rounded"
                   data-testid="cancel-delete"
                   onClick={handleCancelDelete}
-                  className="flex-1 px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded transition-colors"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
             <>
               {/* Copy Action - always available */}
-              <button
+              <Button
+                variant="secondary"
+                className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                 data-testid="action-copy"
                 onClick={handleCopy}
                 role="menuitem"
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
               >
                 {copied ? (
                   <>
@@ -301,123 +306,116 @@ export function MessageActions({
                     <span>Copy</span>
                   </>
                 )}
-              </button>
+              </Button>
 
               {/* Copy Code Action - only when message has code blocks */}
               {hasCodeBlocks && (
-                <button
+                <Button
+                  variant="secondary"
+                  className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                   data-testid="action-copy-code"
                   onClick={handleCopyCode}
                   role="menuitem"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                 >
                   <Code2 size={16} />
                   <span>Copy Code</span>
-                </button>
+                </Button>
               )}
 
               {/* Feedback Actions */}
               {onFeedback && (
-                <div className="flex items-center px-3 py-2 gap-2 border-t border-gray-100 dark:border-gray-700">
-                  <button
+                <div className="flex items-center px-3 py-2 gap-2 border-t border-neutral-100 dark:border-neutral-700">
+                  <Button
+                    className="p-1.5 rounded"
                     data-testid="action-thumbs-up"
                     onClick={handleThumbsUp}
                     data-active={feedbackState === "positive"}
                     role="menuitem"
-                    className={`p-1.5 rounded transition-colors ${
-                      feedbackState === "positive"
-                        ? "text-success-600 bg-success-100 dark:bg-success-900/30"
-                        : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
-                    }`}
                     aria-label="Thumbs up"
                   >
                     <ThumbsUp size={16} />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    className="p-1.5 rounded"
                     data-testid="action-thumbs-down"
                     onClick={handleThumbsDown}
                     data-active={feedbackState === "negative"}
                     role="menuitem"
-                    className={`p-1.5 rounded transition-colors ${
-                      feedbackState === "negative"
-                        ? "text-error-600 bg-error-100 dark:bg-error-900/30"
-                        : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
-                    }`}
                     aria-label="Thumbs down"
                   >
                     <ThumbsDown size={16} />
-                  </button>
+                  </Button>
                 </div>
               )}
 
               {/* Bookmark Action */}
               {onBookmark && (
-                <button
+                <Button
+                  className="w-full flex px-3 py-2 text-sm"
                   data-testid="action-bookmark"
                   onClick={handleBookmark}
                   data-bookmarked={isBookmarked}
                   role="menuitem"
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
-                    isBookmarked
-                      ? "text-warning-600 dark:text-warning-400"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
-                  }`}
                 >
                   <Bookmark
                     size={16}
                     fill={isBookmarked ? "currentColor" : "none"}
                   />
                   <span>{isBookmarked ? "Bookmarked" : "Bookmark"}</span>
-                </button>
+                </Button>
               )}
 
               {/* Share Action */}
               {onShare && (
-                <button
+                <Button
+                  variant="secondary"
+                  className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                   data-testid="action-share"
                   onClick={handleShare}
                   role="menuitem"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                 >
                   <Share2 size={16} />
                   <span>Share</span>
-                </button>
+                </Button>
               )}
 
               {/* Branch Action */}
               {onBranch && (
-                <button
+                <Button
+                  variant="secondary"
+                  className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                   data-testid="action-branch"
                   onClick={handleBranch}
                   role="menuitem"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                 >
                   <GitBranch size={16} />
                   <span>Branch</span>
-                </button>
+                </Button>
               )}
 
               {/* Edit Action - user messages only */}
               {isUser && onEdit && (
-                <button
+                <Button
+                  variant="secondary"
+                  className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                   data-testid="action-edit"
                   onClick={handleEdit}
                   role="menuitem"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                 >
                   <Pencil size={16} />
                   <span>Edit</span>
-                </button>
+                </Button>
               )}
 
               {/* Regenerate Action - assistant messages only */}
               {isAssistant && onRegenerate && (
-                <button
+                <Button
+                  variant="secondary"
+                  className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                   data-testid="action-regenerate"
                   onClick={handleRegenerate}
                   disabled={isRegenerating}
                   role="menuitem"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isRegenerating ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -425,20 +423,21 @@ export function MessageActions({
                     <RefreshCw size={16} />
                   )}
                   <span>Regenerate</span>
-                </button>
+                </Button>
               )}
 
               {/* Delete Action - always available */}
               {onDelete && (
-                <button
+                <Button
+                  variant="secondary"
+                  className="w-full flex px-3 py-2 text-sm text-error-600 dark:text-error-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                   data-testid="action-delete"
                   onClick={handleDeleteClick}
                   role="menuitem"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-error-600 dark:text-error-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                 >
                   <Trash2 size={16} />
                   <span>Delete</span>
-                </button>
+                </Button>
               )}
             </>
           )}

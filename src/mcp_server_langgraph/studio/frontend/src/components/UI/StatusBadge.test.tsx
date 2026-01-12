@@ -60,8 +60,8 @@ describe("StatusBadge", () => {
     it("renders neutral status with semantic colors", () => {
       render(<StatusBadge status="neutral">Neutral</StatusBadge>);
       const badge = screen.getByTestId("status-badge");
-      expect(badge).toHaveClass("bg-gray-100");
-      expect(badge).toHaveClass("text-gray-700");
+      expect(badge).toHaveClass("bg-neutral-100");
+      expect(badge).toHaveClass("text-neutral-700");
     });
   });
 

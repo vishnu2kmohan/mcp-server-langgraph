@@ -125,7 +125,7 @@ describe("WorkflowEditor", () => {
 
     // Mock feature flags
     (useGetFeatureFlagsQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: { enable_workflow_from_chat: true },
+      data: { workflow_from_chat: true },
       isLoading: false,
     });
   });

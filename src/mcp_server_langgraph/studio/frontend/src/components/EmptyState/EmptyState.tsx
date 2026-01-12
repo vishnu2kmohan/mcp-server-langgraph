@@ -179,7 +179,7 @@ export function EmptyState({
       <div
         data-testid="empty-state-icon"
         aria-hidden="true"
-        className="mb-4 text-gray-400 dark:text-gray-400"
+        className="mb-4 text-neutral-400 dark:text-neutral-400"
       >
         {icon ?? <IconComponent size={iconSize} className="opacity-50" />}
       </div>
@@ -187,7 +187,7 @@ export function EmptyState({
       {/* Title */}
       <h3
         className={cn(
-          "text-gray-900 dark:text-gray-100",
+          "text-neutral-900 dark:text-neutral-100",
           TITLE_STYLES[variant],
         )}
       >
@@ -198,7 +198,7 @@ export function EmptyState({
       {description && (
         <p
           className={cn(
-            "text-gray-600 dark:text-gray-400 max-w-md",
+            "text-neutral-600 dark:text-neutral-400 max-w-md",
             TEXT_STYLES[variant],
           )}
         >
@@ -208,7 +208,10 @@ export function EmptyState({
 
       {/* Motivation (Fogg Model) */}
       <p
-        className={cn("text-gray-500 dark:text-gray-400", TEXT_STYLES[variant])}
+        className={cn(
+          "text-neutral-500 dark:text-neutral-400",
+          TEXT_STYLES[variant],
+        )}
       >
         {motivation}
       </p>
@@ -217,7 +220,7 @@ export function EmptyState({
       {ability && (
         <p
           className={cn(
-            "text-gray-400 dark:text-gray-400 italic",
+            "text-neutral-400 dark:text-neutral-400 italic",
             TEXT_STYLES[variant],
           )}
         >
@@ -229,7 +232,7 @@ export function EmptyState({
       {isLoading ? (
         <div
           data-testid="empty-state-loading"
-          className="mt-4 flex items-center gap-2 text-gray-500 dark:text-gray-400"
+          className="mt-4 flex items-center gap-2 text-neutral-500 dark:text-neutral-400"
         >
           <Loader2 size={16} className="animate-spin" />
           <span className="text-sm">Loading...</span>

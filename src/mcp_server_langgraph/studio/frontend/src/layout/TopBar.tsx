@@ -23,6 +23,8 @@ import { AlertBadge } from "./AlertBadge";
 import { Breadcrumb } from "./Breadcrumb";
 import type { BreadcrumbItem } from "../hooks/useBreadcrumb";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -67,7 +69,7 @@ function getPersonaBadgeColor(persona: string): string {
       return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300";
     case "user":
     default:
-      return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
+      return "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300";
   }
 }
 
@@ -111,8 +113,8 @@ export function TopBar({
       role="banner"
       className={cn(
         "flex items-center gap-4 px-4 py-2",
-        "bg-white dark:bg-gray-800",
-        "border-b border-gray-200 dark:border-gray-700",
+        "bg-white dark:bg-neutral-800",
+        "border-b border-neutral-200 dark:border-neutral-700",
         className,
       )}
     >
@@ -121,7 +123,7 @@ export function TopBar({
         data-testid="app-branding"
         className="flex-1 min-w-0 flex items-center gap-3"
       >
-        <span className="font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+        <span className="font-semibold text-neutral-900 dark:text-white whitespace-nowrap">
           {title}
         </span>
 
@@ -130,7 +132,7 @@ export function TopBar({
           <>
             <span
               data-testid="section-separator"
-              className="text-gray-300 dark:text-gray-600 dark:text-gray-300"
+              className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300"
               aria-hidden="true"
             >
               /
@@ -145,14 +147,14 @@ export function TopBar({
           >
             <span
               data-testid="section-separator"
-              className="text-gray-300 dark:text-gray-600 dark:text-gray-300"
+              className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300"
               aria-hidden="true"
             >
               /
             </span>
             <span
               data-testid="section-title"
-              className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate"
+              className="text-sm font-medium text-neutral-600 dark:text-neutral-300 truncate"
             >
               {sectionTitle}
             </span>
@@ -171,12 +173,11 @@ export function TopBar({
           </span>
         )}
       </div>
-
       {/* Right: User info and menu - flex-shrink-0 to prevent compression */}
       <div className="flex-shrink-0 flex items-center gap-3">
         {/* Username */}
         {username && (
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+          <span className="text-sm text-neutral-600 dark:text-neutral-400">
             {username}
           </span>
         )}
@@ -201,7 +202,7 @@ export function TopBar({
         {pendingApprovals !== undefined &&
           pendingApprovals > 0 &&
           onPendingApprovalsClick && (
-            <button
+            <Button
               data-testid="review-approval-button"
               type="button"
               onClick={onPendingApprovalsClick}
@@ -221,12 +222,12 @@ export function TopBar({
               <span className="font-medium text-xs text-warning-700 dark:text-warning-300">
                 {pendingApprovals}
               </span>
-            </button>
+            </Button>
           )}
 
         {/* User avatar/menu trigger with dropdown */}
         <div className="relative">
-          <button
+          <Button
             ref={avatarRef}
             type="button"
             data-testid="user-avatar"
@@ -242,7 +243,7 @@ export function TopBar({
             )}
           >
             {avatarLetter}
-          </button>
+          </Button>
 
           {/* User menu dropdown */}
           <UserMenuDropdown

@@ -14,6 +14,8 @@
 import { useState, useCallback } from "react";
 import { ThumbsUp, ThumbsDown, Loader2, Send } from "lucide-react";
 
+import { Button, Input } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -103,7 +105,8 @@ export function ResponseRating({
     >
       <div className={`flex items-center ${compact ? "gap-1" : "gap-2"}`}>
         {/* Thumbs Up */}
-        <button
+        <Button
+          className="p-1.5 rounded-lg focus:ring-primary-500/50"
           data-testid="rating-thumbs-up"
           type="button"
           onClick={() => handleRate("up")}
@@ -111,22 +114,13 @@ export function ResponseRating({
           disabled={isSubmitting}
           aria-label="Rate as helpful"
           aria-pressed={currentRating === "up"}
-          className={`
-            p-1.5 rounded-lg transition-colors
-            focus:outline-none focus:ring-2 focus:ring-primary-500/50
-            ${
-              currentRating === "up"
-                ? "text-success-500 bg-success-50 dark:bg-success-900/20"
-                : "text-gray-400 dark:text-gray-400 hover:text-success-500 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
-            }
-            ${isSubmitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-          `}
         >
           <ThumbsUp size={iconSize} />
-        </button>
+        </Button>
 
         {/* Thumbs Down */}
-        <button
+        <Button
+          className="p-1.5 rounded-lg focus:ring-primary-500/50"
           data-testid="rating-thumbs-down"
           type="button"
           onClick={() => handleRate("down")}
@@ -134,67 +128,48 @@ export function ResponseRating({
           disabled={isSubmitting}
           aria-label="Rate as not helpful"
           aria-pressed={currentRating === "down"}
-          className={`
-            p-1.5 rounded-lg transition-colors
-            focus:outline-none focus:ring-2 focus:ring-primary-500/50
-            ${
-              currentRating === "down"
-                ? "text-error-500 bg-error-50 dark:bg-error-900/20"
-                : "text-gray-400 dark:text-gray-400 hover:text-error-500 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800"
-            }
-            ${isSubmitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-          `}
         >
           <ThumbsDown size={iconSize} />
-        </button>
+        </Button>
 
         {/* Loading indicator */}
         {isSubmitting && (
           <span data-testid="rating-loading" className="ml-1">
             <Loader2
               size={iconSize}
-              className="animate-spin text-gray-400 dark:text-gray-400"
+              className="animate-spin text-neutral-400 dark:text-neutral-400"
             />
           </span>
         )}
 
         {/* Thank you message */}
         {showThankYou && currentRating && !isSubmitting && (
-          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1">
             Thank you for your feedback!
           </span>
         )}
       </div>
-
       {/* Feedback input for negative ratings */}
       {showFeedbackInput && currentRating === "down" && onFeedback && (
         <div className="flex items-center gap-2">
-          <input
+          <Input
+            className="flex-1 px-3 py-1.5 text-sm focus:ring-primary-500/50 text-neutral-700 dark:text-neutral-300 text-neutral-400 dark:text-neutral-400 dark:placeholder:text-neutral-500"
             data-testid="feedback-input"
-            type="text"
             value={feedbackText}
             onChange={(e) => setFeedbackText(e.target.value)}
             onKeyDown={handleFeedbackKeyDown}
             placeholder="What went wrong?"
-            className="flex-1 px-3 py-1.5 text-sm border rounded-lg
-              bg-white dark:bg-gray-800
-              border-gray-300 dark:border-gray-600
-              focus:outline-none focus:ring-2 focus:ring-primary-500/50
-              text-gray-700 dark:text-gray-300
-              placeholder:text-gray-400 dark:text-gray-400 dark:placeholder:text-gray-500"
           />
-          <button
+          <Button
+            variant="primary"
+            className="p-1.5 rounded-lg text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20"
             data-testid="submit-feedback"
             type="button"
             onClick={handleSubmitFeedback}
             disabled={!feedbackText.trim()}
-            className="p-1.5 rounded-lg text-primary-600 dark:text-primary-400
-              hover:bg-primary-50 dark:hover:bg-primary-900/20
-              disabled:opacity-50 disabled:cursor-not-allowed
-              transition-colors"
           >
             <Send size={16} />
-          </button>
+          </Button>
         </div>
       )}
     </div>

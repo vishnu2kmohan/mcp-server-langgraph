@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { cn } from "../utils/cn";
 
+import { Button, Checkbox } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -183,15 +185,18 @@ export function AuditExporter({
     <div
       data-testid="audit-exporter"
       className={cn(
-        "bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4",
+        "bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4",
         className,
       )}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Download size={18} className="text-gray-500 dark:text-gray-400" />
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <Download
+            size={18}
+            className="text-neutral-500 dark:text-neutral-400"
+          />
+          <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
             Export Audit Logs
           </h3>
         </div>
@@ -201,7 +206,7 @@ export function AuditExporter({
               "text-xs",
               isRateLimited
                 ? "text-error-500"
-                : "text-gray-500 dark:text-gray-400",
+                : "text-neutral-500 dark:text-neutral-400",
             )}
           >
             {isRateLimited
@@ -210,26 +215,24 @@ export function AuditExporter({
           </span>
         )}
       </div>
-
       {/* Summary */}
-      <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
-        <div className="text-sm text-gray-700 dark:text-gray-300">
+      <div className="mb-4 p-3 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg">
+        <div className="text-sm text-neutral-700 dark:text-neutral-300">
           <span className="font-medium">{auditLogs.length} records</span>
           {isEmpty ? (
-            <span className="ml-2 text-gray-500 dark:text-gray-400">
+            <span className="ml-2 text-neutral-500 dark:text-neutral-400">
               No audit logs to export
             </span>
           ) : (
-            <span className="ml-2 text-gray-500 dark:text-gray-400">
+            <span className="ml-2 text-neutral-500 dark:text-neutral-400">
               from {dateRangeText.start} to {dateRangeText.end}
             </span>
           )}
         </div>
       </div>
-
       {/* Format Selection */}
       <div className="mb-4">
-        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+        <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-2">
           Export Format
         </label>
         <div
@@ -238,7 +241,7 @@ export function AuditExporter({
           className="flex gap-2"
         >
           {EXPORT_FORMATS.map(({ value, label, icon: Icon }) => (
-            <button
+            <Button
               key={value}
               type="button"
               role="radio"
@@ -249,62 +252,47 @@ export function AuditExporter({
                 "flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors",
                 selectedFormat === value
                   ? "selected border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300"
-                  : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-600",
+                  : "border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300 dark:border-neutral-600 dark:hover:border-neutral-600",
               )}
             >
               <Icon size={16} />
               <span className="text-sm font-medium">{label}</span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>
-
       {/* PDF Watermark Option */}
       {selectedFormat === "pdf" && (
         <div className="mb-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={includeWatermark}
-              onChange={(e) => setIncludeWatermark(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-500 focus:ring-primary-500"
-            />
-            <span className="text-sm text-gray-700 dark:text-gray-300">
-              Include watermark (user ID, timestamp)
-            </span>
-          </label>
+          <Checkbox
+            checked={includeWatermark}
+            onChange={setIncludeWatermark}
+            label="Include watermark (user ID, timestamp)"
+            size="sm"
+          />
         </div>
       )}
-
       {/* Field Selection */}
       {showFieldSelection && (
         <div data-testid="field-selection" className="mb-4">
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+          <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-2">
             Fields to Include
           </label>
           <div className="grid grid-cols-2 gap-2">
             {FIELD_OPTIONS.map(({ key, label }) => (
-              <label
+              <Checkbox
                 key={key}
-                className="flex items-center gap-2 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={!excludedFields.has(key)}
-                  onChange={() => handleFieldToggle(key)}
-                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-500 focus:ring-primary-500"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  {label}
-                </span>
-              </label>
+                checked={!excludedFields.has(key)}
+                onChange={() => handleFieldToggle(key)}
+                label={label}
+                size="sm"
+              />
             ))}
           </div>
         </div>
       )}
-
       {/* Export Button */}
-      <button
+      <Button
         type="button"
         data-testid="export-button"
         onClick={handleExport}
@@ -313,7 +301,7 @@ export function AuditExporter({
           "w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
           canExport
             ? "bg-primary-500 text-white hover:bg-primary-600"
-            : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed",
+            : "bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 cursor-not-allowed",
         )}
       >
         {isExporting ? (
@@ -331,8 +319,7 @@ export function AuditExporter({
             <span>Export {selectedFormat.toUpperCase()}</span>
           </>
         )}
-      </button>
-
+      </Button>
       {/* Status Messages */}
       {exportStatus === "success" && (
         <div
@@ -344,7 +331,6 @@ export function AuditExporter({
           <span className="text-sm">Export complete! Download started.</span>
         </div>
       )}
-
       {exportStatus === "error" && error && (
         <div
           role="alert"

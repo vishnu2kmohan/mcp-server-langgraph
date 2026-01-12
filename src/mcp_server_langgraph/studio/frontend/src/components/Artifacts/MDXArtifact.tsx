@@ -17,7 +17,7 @@ import { useMemo, useState } from "react";
 import {
   ChevronDown,
   ChevronRight,
-  Info,
+  Info as InfoIcon,
   AlertTriangle,
   AlertCircle,
   Lightbulb,
@@ -44,21 +44,22 @@ function Accordion({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg mb-2">
-      <button
+    <div className="border border-neutral-200 dark:border-neutral-700 rounded-lg mb-2">
+      <Button
+        variant="secondary"
+        className="w-full flex p-3 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-2 p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
       >
         {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         {icon && (
-          <span className="text-gray-500 dark:text-gray-400">{icon}</span>
+          <span className="text-neutral-500 dark:text-neutral-400">{icon}</span>
         )}
-        <span className="font-medium text-gray-900 dark:text-gray-100">
+        <span className="font-medium text-neutral-900 dark:text-neutral-100">
           {title}
         </span>
-      </button>
+      </Button>
       {isOpen && (
-        <div className="p-3 pt-0 text-gray-700 dark:text-gray-300">
+        <div className="p-3 pt-0 text-neutral-700 dark:text-neutral-300">
           {children}
         </div>
       )}
@@ -86,7 +87,9 @@ const calloutStyles: Record<
   note: {
     bg: "bg-primary-50 dark:bg-primary-900/20",
     border: "border-primary-200 dark:border-primary-800",
-    icon: <Info size={18} className="text-primary-600 dark:text-primary-400" />,
+    icon: (
+      <InfoIcon size={18} className="text-primary-600 dark:text-primary-400" />
+    ),
   },
   warning: {
     bg: "bg-warning-50 dark:bg-warning-900/20",
@@ -101,7 +104,9 @@ const calloutStyles: Record<
   info: {
     bg: "bg-primary-50 dark:bg-primary-900/20",
     border: "border-primary-200 dark:border-primary-800",
-    icon: <Info size={18} className="text-primary-600 dark:text-primary-400" />,
+    icon: (
+      <InfoIcon size={18} className="text-primary-600 dark:text-primary-400" />
+    ),
   },
   tip: {
     bg: "bg-success-50 dark:bg-success-900/20",
@@ -130,11 +135,13 @@ function Callout({ type = "note", emoji, title, children }: CalloutProps) {
         </span>
         <div className="flex-1">
           {title && (
-            <div className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+            <div className="font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
               {title}
             </div>
           )}
-          <div className="text-gray-700 dark:text-gray-300">{children}</div>
+          <div className="text-neutral-700 dark:text-neutral-300">
+            {children}
+          </div>
         </div>
       </div>
     </div>
@@ -161,17 +168,19 @@ interface CardProps {
 
 function Card({ title, icon, href, children }: CardProps) {
   const content = (
-    <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-500 dark:hover:border-primary-400 transition-colors">
+    <div className="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:border-primary-500 dark:hover:border-primary-400 transition-colors">
       <div className="flex items-center gap-2 mb-2">
         {icon && (
-          <span className="text-gray-500 dark:text-gray-400">{icon}</span>
+          <span className="text-neutral-500 dark:text-neutral-400">{icon}</span>
         )}
-        <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+        <h4 className="font-semibold text-neutral-900 dark:text-neutral-100">
           {title}
         </h4>
       </div>
       {children && (
-        <p className="text-sm text-gray-600 dark:text-gray-400">{children}</p>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          {children}
+        </p>
       )}
     </div>
   );
@@ -228,19 +237,15 @@ function Tabs({ children }: TabsProps) {
 
   return (
     <div className="my-4">
-      <div className="flex border-b border-gray-200 dark:border-gray-700">
+      <div className="flex border-b border-neutral-200 dark:border-neutral-700">
         {tabs.map((tab, index) => (
-          <button
+          <Button
+            className="px-4 py-2 text-sm border-b-2"
             key={index}
             onClick={() => setActiveTab(index)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === index
-                ? "border-primary-500 text-primary-600 dark:text-primary-400"
-                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300"
-            }`}
           >
             {tab.title}
-          </button>
+          </Button>
         ))}
       </div>
       <div className="p-4">{tabs[activeTab]?.content}</div>
@@ -281,12 +286,196 @@ function Step({
           •
         </span>
       </div>
-      <div className="flex-1 pb-4 border-l-2 border-gray-200 dark:border-gray-700 pl-4 -ml-4 relative before:absolute before:left-0 before:top-4 before:w-4 before:h-0.5 before:bg-gray-200 dark:bg-gray-700 dark:before:bg-gray-700">
-        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+      <div className="flex-1 pb-4 border-l-2 border-neutral-200 dark:border-neutral-700 pl-4 -ml-4 relative before:absolute before:left-0 before:top-4 before:w-4 before:h-0.5 before:bg-neutral-200 dark:bg-neutral-700 dark:before:bg-neutral-700">
+        <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
           {title}
         </h4>
-        <div className="text-gray-700 dark:text-gray-300">{children}</div>
+        <div className="text-neutral-700 dark:text-neutral-300">{children}</div>
       </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Extended MDX Components (Mintlify-compatible)
+// ============================================================================
+
+function Info(props: Omit<CalloutProps, "type">) {
+  return <Callout type="info" {...props} />;
+}
+
+function CheckCallout(props: Omit<CalloutProps, "type">) {
+  return <Callout type="check" {...props} />;
+}
+
+interface CodeGroupProps {
+  children: React.ReactNode;
+}
+
+function CodeGroup({ children }: CodeGroupProps) {
+  // CodeGroup renders children in a tabbed code block view
+  return (
+    <div className="my-4 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
+      <div className="bg-neutral-100 dark:bg-neutral-800 px-4 py-2 text-sm font-mono text-neutral-600 dark:text-neutral-400">
+        Code Examples
+      </div>
+      <div className="p-4 bg-neutral-50 dark:bg-neutral-900 font-mono text-sm overflow-x-auto">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+interface FrameProps {
+  caption?: string;
+  children: React.ReactNode;
+}
+
+function Frame({ caption, children }: FrameProps) {
+  return (
+    <figure className="my-4">
+      <div className="border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
+        {children}
+      </div>
+      {caption && (
+        <figcaption className="mt-2 text-sm text-center text-neutral-500 dark:text-neutral-400">
+          {caption}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
+interface ExpandableProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+function Expandable({ title, children }: ExpandableProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="my-4">
+      <Button
+        className="flex text-primary-600 dark:text-primary-400 hover:underline"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+        <span>{title}</span>
+      </Button>
+      {isOpen && (
+        <div className="mt-2 pl-6 text-neutral-700 dark:text-neutral-300">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface IconProps {
+  icon: string;
+  size?: number;
+  color?: string;
+}
+
+function Icon({ icon, size = 16, color }: IconProps) {
+  // Simple icon placeholder - in a full implementation, would map to actual icons
+  return (
+    <span
+      className={`inline-flex items-center justify-center ${color || "text-neutral-500 dark:text-neutral-400"}`}
+      style={{ width: size, height: size }}
+      aria-label={icon}
+    >
+      {icon === "check" && <Check size={size} />}
+      {icon === "info" && <AlertCircle size={size} />}
+      {icon === "warning" && <AlertTriangle size={size} />}
+      {icon === "lightbulb" && <Lightbulb size={size} />}
+      {!["check", "info", "warning", "lightbulb"].includes(icon) && (
+        <span className="text-xs">•</span>
+      )}
+    </span>
+  );
+}
+
+interface ResponseFieldProps {
+  name: string;
+  type?: string;
+  required?: boolean;
+  children?: React.ReactNode;
+}
+
+function ResponseField({ name, type, required, children }: ResponseFieldProps) {
+  return (
+    <div className="my-4 p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+      <div className="flex items-center gap-2 mb-2">
+        <code className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-primary-600 dark:text-primary-400 rounded">
+          {name}
+        </code>
+        {type && (
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+            {type}
+          </span>
+        )}
+        {required && (
+          <span className="px-2 py-0.5 text-xs bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400 rounded">
+            required
+          </span>
+        )}
+      </div>
+      {children && (
+        <div className="text-sm text-neutral-700 dark:text-neutral-300">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface ParamFieldProps {
+  path?: string;
+  query?: string;
+  body?: string;
+  type?: string;
+  required?: boolean;
+  children?: React.ReactNode;
+}
+
+function ParamField({
+  path,
+  query,
+  body,
+  type,
+  required,
+  children,
+}: ParamFieldProps) {
+  const name = path || query || body || "param";
+  const paramType = path ? "path" : query ? "query" : body ? "body" : "param";
+
+  return (
+    <div className="my-4 p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+      <div className="flex items-center gap-2 mb-2">
+        <code className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-primary-600 dark:text-primary-400 rounded">
+          {name}
+        </code>
+        <span className="px-2 py-0.5 text-xs bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded">
+          {paramType}
+        </span>
+        {type && (
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+            {type}
+          </span>
+        )}
+        {required && (
+          <span className="px-2 py-0.5 text-xs bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400 rounded">
+            required
+          </span>
+        )}
+      </div>
+      {children && (
+        <div className="text-sm text-neutral-700 dark:text-neutral-300">
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -297,20 +486,69 @@ function Step({
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const mdxComponents = {
+  // Core
   Accordion,
   AccordionGroup,
   Callout,
   Note,
   Warning,
   Tip,
+  Info,
+  Check: CheckCallout,
   Card,
   CardGroup,
   Tabs,
   Tab,
   Steps,
   Step,
-  // Re-export for customization
-  Info: () => <AlertCircle className="text-primary-500" />,
+  // Extended
+  CodeGroup,
+  Frame,
+  Expandable,
+  Icon,
+  ResponseField,
+  ParamField,
+};
+
+// ============================================================================
+// MDX Parser Integration
+// ============================================================================
+
+import {
+  parseMDXContent,
+  hasMDXComponents,
+  type MDXParsedNode,
+} from "../../utils/mdxParser";
+
+import { Button } from "@/components/UI";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyComponent = React.ComponentType<any>;
+
+// Component map for rendering parsed MDX
+const COMPONENT_MAP: Record<string, AnyComponent> = {
+  // Core
+  Callout,
+  Note,
+  Warning,
+  Tip,
+  Info,
+  Check: CheckCallout,
+  Accordion,
+  AccordionGroup,
+  Card,
+  CardGroup,
+  Tabs,
+  Tab,
+  Steps,
+  Step,
+  // Extended
+  CodeGroup,
+  Frame,
+  Expandable,
+  Icon,
+  ResponseField,
+  ParamField,
 };
 
 // ============================================================================
@@ -324,38 +562,127 @@ export interface MDXArtifactProps {
 }
 
 /**
+ * Render a single parsed MDX node
+ */
+function renderNode(
+  node: MDXParsedNode,
+  index: number,
+  customComponents: Record<string, AnyComponent>,
+): React.ReactNode {
+  if (node.type === "text") {
+    // Render text as markdown prose
+    return (
+      <div
+        key={`text-${index}`}
+        className="prose dark:prose-invert max-w-none"
+        dangerouslySetInnerHTML={{ __html: node.content || "" }}
+      />
+    );
+  }
+
+  if (node.type === "component" && node.component) {
+    const Component =
+      customComponents[node.component] || COMPONENT_MAP[node.component];
+    if (!Component) {
+      // Unknown component - render as code block
+      return (
+        <pre
+          key={`unknown-${index}`}
+          className="text-sm font-mono bg-neutral-100 dark:bg-neutral-800 p-3 rounded overflow-x-auto"
+        >
+          {`<${node.component}>...</${node.component}>`}
+        </pre>
+      );
+    }
+
+    // Check if children contain nested components
+    const hasNestedComponents =
+      node.children && hasMDXComponents(node.children);
+
+    if (hasNestedComponents) {
+      // Recursively parse and render children
+      const childNodes = parseMDXContent(node.children || "");
+      return (
+        <Component key={`component-${index}`} {...node.props}>
+          {childNodes.map((childNode, childIndex) =>
+            renderNode(childNode, childIndex, customComponents),
+          )}
+        </Component>
+      );
+    }
+
+    // Render component with text children
+    return (
+      <Component key={`component-${index}`} {...node.props}>
+        {node.children}
+      </Component>
+    );
+  }
+
+  return null;
+}
+
+/**
  * MDXArtifact renders MDX content with interactive components.
- * Currently renders as markdown - full MDX compilation requires async processing.
+ * Uses lightweight parser to extract and render known components.
  */
 export function MDXArtifact({
   data,
   title,
   components = {},
 }: MDXArtifactProps) {
-  // For now, display the MDX source with a note about interactive features
-  // Full MDX compilation would require async rendering with @mdx-js/mdx
+  // Parse MDX content into nodes
+  const nodes = useMemo(() => parseMDXContent(data), [data]);
+
+  // Check if content has any MDX components
+  const hasComponents = useMemo(() => hasMDXComponents(data), [data]);
+
+  // Merge custom components with built-in components
+  const mergedComponents = useMemo(
+    () => ({ ...COMPONENT_MAP, ...components }),
+    [components],
+  );
+
+  // If no MDX components found, render as plain markdown
+  if (!hasComponents) {
+    return (
+      <div
+        data-testid="mdx-artifact"
+        className="bg-neutral-50 dark:bg-neutral-800 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700"
+      >
+        {title && (
+          <div className="px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800">
+            <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+              {title}
+            </h4>
+          </div>
+        )}
+        <div className="p-4 prose dark:prose-invert max-w-none">
+          <div dangerouslySetInnerHTML={{ __html: data }} />
+        </div>
+      </div>
+    );
+  }
+
+  // Render MDX with interactive components
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+    <div
+      data-testid="mdx-artifact"
+      className="bg-white dark:bg-neutral-800 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700"
+    >
       {title && (
-        <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className="px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900/50 flex items-center gap-2">
+          <InfoIcon size={14} className="text-primary-500" />
+          <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
             {title}
           </h4>
+          <span className="ml-auto px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded">
+            Interactive
+          </span>
         </div>
       )}
-      <div className="p-4">
-        <div className="mb-4 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
-          <Info size={14} />
-          <span>MDX document with interactive components</span>
-          {Object.keys(components).length > 0 && (
-            <span className="ml-2 px-2 py-0.5 bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 rounded">
-              {Object.keys(components).length} custom components
-            </span>
-          )}
-        </div>
-        <pre className="text-sm font-mono bg-gray-900 text-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
-          {data}
-        </pre>
+      <div className="p-4 space-y-4">
+        {nodes.map((node, index) => renderNode(node, index, mergedComponents))}
       </div>
     </div>
   );

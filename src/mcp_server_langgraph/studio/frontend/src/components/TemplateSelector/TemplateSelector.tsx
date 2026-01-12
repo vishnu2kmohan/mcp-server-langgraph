@@ -22,6 +22,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -77,19 +79,15 @@ function TemplateChip({
   disabled: boolean;
 }) {
   return (
-    <button
+    <Button
+      className="px-3 py-1.5 text-sm rounded-full border"
       type="button"
       onClick={onClick}
       disabled={disabled}
       aria-pressed={isSelected}
-      className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
-        isSelected
-          ? "ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300"
-          : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-primary-300 dark:hover:border-primary-600"
-      } disabled:opacity-50 disabled:cursor-not-allowed`}
     >
       {template.name}
-    </button>
+    </Button>
   );
 }
 
@@ -101,42 +99,48 @@ function TemplatePreview({
   compact: boolean;
 }) {
   return (
-    <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="mt-3 p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
       {!compact && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
           {template.description}
         </p>
       )}
 
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="flex items-center gap-1.5">
-          <span className="text-gray-500 dark:text-gray-400">
+          <span className="text-neutral-500 dark:text-neutral-400">
             Orchestrator:
           </span>
-          <span className="font-medium text-gray-900 dark:text-white">
+          <span className="font-medium text-neutral-900 dark:text-white">
             {template.orchestrator}
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <Brain className="w-3 h-3 text-gray-400 dark:text-gray-400" />
-          <span className="text-gray-500 dark:text-gray-400">Thinking:</span>
-          <span className="font-medium text-gray-900 dark:text-white">
+          <Brain className="w-3 h-3 text-neutral-400 dark:text-neutral-400" />
+          <span className="text-neutral-500 dark:text-neutral-400">
+            Thinking:
+          </span>
+          <span className="font-medium text-neutral-900 dark:text-white">
             {template.thinkingBudget}
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <MessageSquare className="w-3 h-3 text-gray-400 dark:text-gray-400" />
-          <span className="text-gray-500 dark:text-gray-400">Critique:</span>
-          <span className="font-medium text-gray-900 dark:text-white">
+          <MessageSquare className="w-3 h-3 text-neutral-400 dark:text-neutral-400" />
+          <span className="text-neutral-500 dark:text-neutral-400">
+            Critique:
+          </span>
+          <span className="font-medium text-neutral-900 dark:text-white">
             {template.critiqueRounds} rounds
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <CheckCircle className="w-3 h-3 text-gray-400 dark:text-gray-400" />
-          <span className="text-gray-500 dark:text-gray-400">Success:</span>
+          <CheckCircle className="w-3 h-3 text-neutral-400 dark:text-neutral-400" />
+          <span className="text-neutral-500 dark:text-neutral-400">
+            Success:
+          </span>
           <span className="font-medium text-success-600 dark:text-success-400">
             {Math.round(template.successRate * 100)}%
           </span>
@@ -181,9 +185,9 @@ export function TemplateSelector({
     return (
       <div
         data-testid="template-selector"
-        className={`bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 ${compact ? "compact" : ""}`}
+        className={`bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 ${compact ? "compact" : ""}`}
       >
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
           No template suggestions available
         </p>
       </div>
@@ -193,30 +197,29 @@ export function TemplateSelector({
   return (
     <div
       data-testid="template-selector"
-      className={`bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 ${compact ? "compact" : ""}`}
+      className={`bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 ${compact ? "compact" : ""}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-warning-500" />
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+          <h4 className="text-sm font-medium text-neutral-900 dark:text-white">
             Suggested Templates
           </h4>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">
             {suggestions.length} suggestions
           </span>
         </div>
 
-        <button
+        <Button
+          className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded"
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss"
-          className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 rounded transition-colors"
         >
           <X className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
-
       {/* Loading State */}
       {isLoading ? (
         <div role="status" className="flex items-center justify-center py-4">
@@ -246,14 +249,15 @@ export function TemplateSelector({
           {/* Apply Button */}
           {selectedTemplate && (
             <div className="mt-3 flex justify-end">
-              <button
+              <Button
+                variant="primary"
+                className="flex px-4 py-2 bg-primary-500 text-white text-sm rounded-lg hover:bg-primary-600"
                 type="button"
                 onClick={handleApply}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors"
               >
                 <Check className="w-4 h-4" />
                 Apply Template
-              </button>
+              </Button>
             </div>
           )}
         </>

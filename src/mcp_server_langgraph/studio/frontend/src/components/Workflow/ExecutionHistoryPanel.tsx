@@ -14,6 +14,8 @@ import {
   PlayCircle,
 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 export interface WorkflowExecution {
   id: string;
   workflowId: string;
@@ -109,14 +111,14 @@ export function ExecutionHistoryPanel({
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg shadow">
+    <div className="flex flex-col h-full bg-white dark:bg-neutral-800 rounded-lg shadow">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
             Execution History
           </h2>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
             {filteredExecutions.length} executions
           </span>
         </div>
@@ -125,42 +127,38 @@ export function ExecutionHistoryPanel({
         <div className="flex gap-2">
           {(["all", "completed", "failed", "running"] as StatusFilter[]).map(
             (filter) => (
-              <button
+              <Button
+                size="sm"
+                className="px-3 py-1 text-sm rounded-full"
                 key={filter}
                 onClick={() => setStatusFilter(filter)}
-                className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                  statusFilter === filter
-                    ? "bg-primary-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                }`}
               >
                 {filter.charAt(0).toUpperCase() + filter.slice(1)}
-              </button>
+              </Button>
             ),
           )}
         </div>
       </div>
-
       {/* Execution List */}
       <div className="flex-1 overflow-y-auto">
         {filteredExecutions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-            <Clock className="w-12 h-12 text-gray-300 dark:text-gray-600 dark:text-gray-300 mb-4" />
-            <p className="text-gray-600 dark:text-gray-400 font-medium">
+            <Clock className="w-12 h-12 text-neutral-300 dark:text-neutral-600 dark:text-neutral-300 mb-4" />
+            <p className="text-neutral-600 dark:text-neutral-400 font-medium">
               No executions yet
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
               Run this workflow to see execution history
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100 dark:divide-gray-700">
+          <div className="divide-y divide-neutral-100 dark:divide-neutral-700">
             {filteredExecutions.map((execution) => (
               <div
                 key={execution.id}
                 data-testid={`execution-${execution.id}`}
                 onClick={() => onSelectExecution(execution)}
-                className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                className={`p-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors ${
                   selectedExecutionId === execution.id
                     ? "bg-primary-50 dark:bg-primary-900/20 ring-2 ring-primary-500"
                     : ""
@@ -180,11 +178,11 @@ export function ExecutionHistoryPanel({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       {getStatusIcon(execution.status)}
-                      <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
+                      <span className="text-sm font-medium text-neutral-900 dark:text-white capitalize">
                         {execution.status}
                       </span>
                       {execution.completedAt && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                        <span className="text-xs text-neutral-500 dark:text-neutral-400">
                           {formatDuration(
                             execution.startedAt,
                             execution.completedAt,
@@ -194,8 +192,8 @@ export function ExecutionHistoryPanel({
                     </div>
 
                     <div className="flex items-center gap-2 mt-1">
-                      <Clock className="w-3 h-3 text-gray-400 dark:text-gray-400" />
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <Clock className="w-3 h-3 text-neutral-400 dark:text-neutral-400" />
+                      <span className="text-xs text-neutral-500 dark:text-neutral-400">
                         {formatTime(execution.startedAt)}
                       </span>
                     </div>
@@ -212,17 +210,17 @@ export function ExecutionHistoryPanel({
           </div>
         )}
       </div>
-
       {/* Load More */}
       {hasMore && (
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <button
+        <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
+          <Button
+            variant="primary"
+            className="w-full py-2 text-sm text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded"
             onClick={onLoadMore}
             disabled={isLoading}
-            className="w-full py-2 text-sm text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors disabled:opacity-50"
           >
             {isLoading ? "Loading..." : "Load More"}
-          </button>
+          </Button>
         </div>
       )}
     </div>

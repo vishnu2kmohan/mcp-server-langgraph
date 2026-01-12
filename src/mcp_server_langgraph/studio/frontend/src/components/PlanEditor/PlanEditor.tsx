@@ -24,6 +24,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
+import { Button, Input, Select } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -92,7 +94,7 @@ function getRiskLevelColor(level: string): string {
     case "critical":
       return "bg-error-200 text-error-900 dark:bg-error-900/50 dark:text-error-300";
     default:
-      return "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+      return "bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:bg-neutral-900/30 dark:text-neutral-400";
   }
 }
 
@@ -169,10 +171,10 @@ export function PlanEditor({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+    <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-md border border-neutral-200 dark:border-neutral-700">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+        <h2 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
           <Settings className="w-5 h-5 text-primary-500" />
           Execution Plan
         </h2>
@@ -182,20 +184,23 @@ export function PlanEditor({
           {formatStatus(plan.status)}
         </span>
       </div>
-
       {/* Plan Summary */}
       <div className="p-4 space-y-4">
         {/* Plan ID and Session */}
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-gray-500 dark:text-gray-400">Plan ID:</span>
-            <span className="ml-2 font-mono text-gray-900 dark:text-white">
+            <span className="text-neutral-500 dark:text-neutral-400">
+              Plan ID:
+            </span>
+            <span className="ml-2 font-mono text-neutral-900 dark:text-white">
               {plan.planId}
             </span>
           </div>
           <div>
-            <span className="text-gray-500 dark:text-gray-400">Session:</span>
-            <span className="ml-2 font-mono text-gray-900 dark:text-white">
+            <span className="text-neutral-500 dark:text-neutral-400">
+              Session:
+            </span>
+            <span className="ml-2 font-mono text-neutral-900 dark:text-white">
               {plan.sessionId}
             </span>
           </div>
@@ -205,7 +210,7 @@ export function PlanEditor({
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-warning-500" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-neutral-600 dark:text-neutral-400">
               Complexity:
             </span>
             <span className="px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-400">
@@ -214,7 +219,7 @@ export function PlanEditor({
           </div>
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-warning-500" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-neutral-600 dark:text-neutral-400">
               Risk:
             </span>
             <span
@@ -229,19 +234,19 @@ export function PlanEditor({
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-success-500" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-neutral-600 dark:text-neutral-400">
               Estimated Cost:
             </span>
-            <span className="font-mono text-sm text-gray-900 dark:text-white">
+            <span className="font-mono text-sm text-neutral-900 dark:text-white">
               ${plan.estimatedCost}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <Brain className="w-4 h-4 text-insight-500" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-neutral-600 dark:text-neutral-400">
               Executor:
             </span>
-            <span className="font-mono text-sm text-gray-900 dark:text-white">
+            <span className="font-mono text-sm text-neutral-900 dark:text-white">
               {plan.executorModel}
             </span>
           </div>
@@ -249,7 +254,7 @@ export function PlanEditor({
 
         {/* Tools Needed */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
             <Wrench className="w-4 h-4" />
             <span>Tools Needed:</span>
           </div>
@@ -257,7 +262,7 @@ export function PlanEditor({
             {plan.toolsNeeded.map((tool) => (
               <span
                 key={tool}
-                className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded text-xs font-mono"
+                className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded text-xs font-mono"
               >
                 {tool}
               </span>
@@ -266,8 +271,8 @@ export function PlanEditor({
         </div>
 
         {/* Configuration Fields */}
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4 space-y-4">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+        <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4 mt-4 space-y-4">
+          <h3 className="text-sm font-medium text-neutral-900 dark:text-white flex items-center gap-2">
             <Settings className="w-4 h-4" />
             Configuration
           </h3>
@@ -276,56 +281,57 @@ export function PlanEditor({
           <div>
             <label
               htmlFor="orchestrator"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
               Orchestrator
             </label>
-            <select
+            <Select
+              className="px-3 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               id="orchestrator"
               value={orchestrator}
               onChange={handleOrchestratorChange}
               disabled={readOnly}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="standard">Standard</option>
               <option value="swarm">Swarm</option>
               <option value="studio">Studio</option>
               <option value="ux">UX</option>
               <option value="alert">Alert</option>
-            </select>
+            </Select>
           </div>
 
           {/* Thinking Budget Select */}
           <div>
             <label
               htmlFor="thinking_budget"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
               Thinking Budget
             </label>
-            <select
+            <Select
+              className="px-3 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               id="thinking_budget"
               value={thinkingBudget}
               onChange={handleThinkingBudgetChange}
               disabled={readOnly}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="none">None</option>
               <option value="light">Light</option>
               <option value="medium">Medium</option>
               <option value="deep">Deep</option>
-            </select>
+            </Select>
           </div>
 
           {/* Critique Rounds Input */}
           <div>
             <label
               htmlFor="critique_rounds"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
               Critique Rounds
             </label>
-            <input
+            <Input
+              className="px-3 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               type="number"
               id="critique_rounds"
               value={critiqueRounds}
@@ -333,32 +339,32 @@ export function PlanEditor({
               disabled={readOnly}
               min={0}
               max={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
         </div>
       </div>
-
       {/* Actions Footer */}
-      <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-        <button
+      <div className="flex items-center justify-end gap-3 p-4 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
+        <Button
+          variant="danger"
+          className="flex px-4 py-2 text-sm text-error-700 dark:text-error-400 bg-error-100 dark:bg-error-900/30 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50"
           type="button"
           onClick={onReject}
           disabled={readOnly}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-error-700 dark:text-error-400 bg-error-100 dark:bg-error-900/30 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <XCircle className="w-4 h-4" />
           Reject
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="success"
+          className="flex px-4 py-2 text-sm text-white bg-success-600 rounded-lg hover:bg-success-700"
           type="button"
           onClick={onApprove}
           disabled={readOnly}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-success-600 rounded-lg hover:bg-success-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <CheckCircle className="w-4 h-4" />
           Approve
-        </button>
+        </Button>
       </div>
     </div>
   );

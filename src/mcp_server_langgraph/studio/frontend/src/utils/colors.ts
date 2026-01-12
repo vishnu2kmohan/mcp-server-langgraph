@@ -19,6 +19,9 @@
 // Re-export DevTools colors for backward compatibility
 export * from "../components/DevTools/utils/devToolsColors";
 
+// Import centralized types
+import type { ModelStatus } from "@/types";
+
 // =============================================================================
 // Type Definitions
 // =============================================================================
@@ -43,6 +46,12 @@ export type RiskLevel = "low" | "medium" | "high" | "critical";
 /** Compliance status types */
 export type ComplianceStatus = "compliant" | "partial" | "non-compliant";
 
+/**
+ * Model lifecycle status types (for model selector)
+ * @deprecated Use ModelStatus from @/types instead
+ */
+export type ModelLifecycleStatus = ModelStatus;
+
 // =============================================================================
 // Global Status Badge Styles
 // =============================================================================
@@ -58,8 +67,43 @@ export const STATUS_BADGE_STYLES = {
     "bg-warning-100 text-warning-700 dark:bg-warning-900/50 dark:text-warning-300",
   error: "bg-error-100 text-error-700 dark:bg-error-900/50 dark:text-error-300",
   info: "bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300",
-  neutral: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+  neutral:
+    "bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300",
 } as const;
+
+// =============================================================================
+// Model Lifecycle Badge Styles
+// =============================================================================
+
+/**
+ * Model lifecycle status badge styles (for model selector).
+ * Use for indicating model version status (preview, legacy, deprecated).
+ * Note: 'current' models don't show a badge (no special styling needed).
+ *
+ * Sprint 1 - Enhanced Model Selector
+ */
+export const MODEL_LIFECYCLE_BADGE_STYLES = {
+  /** Preview models (new/experimental) - cyan for "fresh/new" connotation */
+  preview: "bg-info-100 dark:bg-info-900/30 text-info-600 dark:text-info-400",
+  /** Legacy models (older but supported) - amber for caution */
+  legacy:
+    "bg-warning-100 dark:bg-warning-900/30 text-warning-600 dark:text-warning-400",
+  /** Deprecated models (will be removed) - red for warning */
+  deprecated:
+    "bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400",
+} as const;
+
+/**
+ * Get model lifecycle badge style.
+ * @param status - The model lifecycle status (preview, legacy, deprecated)
+ * @returns Tailwind classes for badge styling, or undefined for 'current' models
+ */
+export function getModelLifecycleBadgeStyle(
+  status: ModelLifecycleStatus | undefined,
+): string | undefined {
+  if (!status || status === "current") return undefined;
+  return MODEL_LIFECYCLE_BADGE_STYLES[status];
+}
 
 // =============================================================================
 // Interactive State Colors
@@ -136,7 +180,7 @@ export function getRiskLevelColor(level: RiskLevel): string {
     case "critical":
       return "text-error-700 dark:text-error-300";
     default:
-      return "text-gray-600 dark:text-gray-400";
+      return "text-neutral-600 dark:text-neutral-400";
   }
 }
 
@@ -154,7 +198,7 @@ export function getComplianceStatusColor(status: ComplianceStatus): string {
     case "non-compliant":
       return "text-error-600 dark:text-error-400";
     default:
-      return "text-gray-600 dark:text-gray-400";
+      return "text-neutral-600 dark:text-neutral-400";
   }
 }
 

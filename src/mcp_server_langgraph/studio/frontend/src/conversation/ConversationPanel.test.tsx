@@ -561,4 +561,226 @@ describe("ConversationPanel", () => {
       );
     });
   });
+
+  // ===========================================================================
+  // Model Selector Props Tests (Sprint 1 - Chat Input Gap Fix)
+  // ===========================================================================
+
+  describe("Model Selector Props", () => {
+    const mockModels = [
+      { id: "claude-3-opus", name: "Claude 3 Opus", provider: "anthropic" },
+      { id: "claude-3-sonnet", name: "Claude 3 Sonnet", provider: "anthropic" },
+      { id: "gpt-4o", name: "GPT-4o", provider: "openai" },
+    ];
+
+    it("should pass showModelSelector prop to ConnectedChatInputForm", () => {
+      render(<ConversationPanel {...defaultProps} showModelSelector={true} />);
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          showModelSelector: true,
+        }),
+      );
+    });
+
+    it("should pass selectedModel prop to ConnectedChatInputForm", () => {
+      render(
+        <ConversationPanel
+          {...defaultProps}
+          showModelSelector={true}
+          selectedModel="claude-3-opus"
+        />,
+      );
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          selectedModel: "claude-3-opus",
+        }),
+      );
+    });
+
+    it("should pass availableModels prop to ConnectedChatInputForm", () => {
+      render(
+        <ConversationPanel
+          {...defaultProps}
+          showModelSelector={true}
+          availableModels={mockModels}
+        />,
+      );
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          availableModels: mockModels,
+        }),
+      );
+    });
+
+    it("should pass onModelChange callback to ConnectedChatInputForm", () => {
+      const onModelChange = vi.fn();
+      render(
+        <ConversationPanel
+          {...defaultProps}
+          showModelSelector={true}
+          onModelChange={onModelChange}
+        />,
+      );
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          onModelChange: onModelChange,
+        }),
+      );
+    });
+
+    it("should pass modelSupportsThinking prop to ConnectedChatInputForm", () => {
+      render(
+        <ConversationPanel {...defaultProps} modelSupportsThinking={true} />,
+      );
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          modelSupportsThinking: true,
+        }),
+      );
+    });
+
+    it("should pass reasoningEffort prop to ConnectedChatInputForm", () => {
+      render(
+        <ConversationPanel
+          {...defaultProps}
+          modelSupportsThinking={true}
+          reasoningEffort="high"
+        />,
+      );
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reasoningEffort: "high",
+        }),
+      );
+    });
+
+    it("should pass onReasoningEffortChange callback to ConnectedChatInputForm", () => {
+      const onReasoningEffortChange = vi.fn();
+      render(
+        <ConversationPanel
+          {...defaultProps}
+          modelSupportsThinking={true}
+          onReasoningEffortChange={onReasoningEffortChange}
+        />,
+      );
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          onReasoningEffortChange: onReasoningEffortChange,
+        }),
+      );
+    });
+  });
+
+  describe("Model Selection Props (Sprint 1 - Chat Input Gap Fix)", () => {
+    const mockModels = [
+      {
+        id: "claude-3-5-sonnet",
+        name: "Claude 3.5 Sonnet",
+        provider: "anthropic",
+      },
+      { id: "gpt-4o", name: "GPT-4o", provider: "openai" },
+    ];
+
+    it("should pass showModelSelector prop to ConnectedChatInputForm", () => {
+      render(<ConversationPanel {...defaultProps} showModelSelector={true} />);
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          showModelSelector: true,
+        }),
+      );
+    });
+
+    it("should pass selectedModel prop to ConnectedChatInputForm", () => {
+      render(
+        <ConversationPanel
+          {...defaultProps}
+          showModelSelector={true}
+          selectedModel="claude-3-5-sonnet"
+        />,
+      );
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          selectedModel: "claude-3-5-sonnet",
+        }),
+      );
+    });
+
+    it("should pass availableModels prop to ConnectedChatInputForm", () => {
+      render(
+        <ConversationPanel
+          {...defaultProps}
+          showModelSelector={true}
+          availableModels={mockModels}
+        />,
+      );
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          availableModels: mockModels,
+        }),
+      );
+    });
+
+    it("should pass onModelChange callback to ConnectedChatInputForm", () => {
+      const onModelChange = vi.fn();
+      render(
+        <ConversationPanel
+          {...defaultProps}
+          showModelSelector={true}
+          onModelChange={onModelChange}
+        />,
+      );
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          onModelChange: onModelChange,
+        }),
+      );
+    });
+
+    it("should pass isModelsLoading prop to ConnectedChatInputForm", () => {
+      render(
+        <ConversationPanel
+          {...defaultProps}
+          showModelSelector={true}
+          isModelsLoading={true}
+        />,
+      );
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          isModelsLoading: true,
+        }),
+      );
+    });
+
+    it("should default showModelSelector to false", () => {
+      render(<ConversationPanel {...defaultProps} />);
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          showModelSelector: false,
+        }),
+      );
+    });
+
+    it("should default isModelsLoading to false", () => {
+      render(<ConversationPanel {...defaultProps} showModelSelector={true} />);
+
+      expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          isModelsLoading: false,
+        }),
+      );
+    });
+  });
 });

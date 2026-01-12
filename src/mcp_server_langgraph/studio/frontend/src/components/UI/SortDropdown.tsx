@@ -12,6 +12,8 @@
 
 import { ArrowUpAZ, ArrowDownAZ } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 /**
  * Sort option definition
  */
@@ -91,17 +93,16 @@ export function SortDropdown({
       className={`flex items-center gap-2 ${className}`}
     >
       {label && (
-        <label className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+        <label className="text-sm text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
           {label}
         </label>
       )}
-
       <select
         value={sortBy}
         onChange={handleFieldChange}
         disabled={isDisabled}
         aria-label={ariaLabel ?? "Sort by"}
-        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-3 py-1.5 text-sm border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {allowClear && <option value="">None</option>}
         {options.map((option) => (
@@ -110,20 +111,20 @@ export function SortDropdown({
           </option>
         ))}
       </select>
-
-      <button
+      <Button
+        variant="secondary"
+        className="p-1.5 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:ring-primary-500"
         type="button"
         onClick={handleOrderToggle}
         disabled={isDisabled}
         aria-label="Sort order"
-        className="p-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {sortOrder === "asc" ? (
           <ArrowUpAZ size={16} data-testid="sort-asc-icon" />
         ) : (
           <ArrowDownAZ size={16} data-testid="sort-desc-icon" />
         )}
-      </button>
+      </Button>
     </div>
   );
 }

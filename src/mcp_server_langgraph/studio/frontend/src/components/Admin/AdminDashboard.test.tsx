@@ -760,4 +760,90 @@ describe("AdminDashboard", () => {
       ).toHaveAttribute("aria-selected", "true");
     });
   });
+
+  describe("AI Quality Metrics Integration", () => {
+    it("should render AIQualityMetricsCard in Overview tab", async () => {
+      renderWithStore(<AdminDashboard {...defaultProps} />);
+
+      // Overview tab is active by default
+      // The AIQualityMetricsCard should be present (via data-testid)
+      // Note: The card may be in loading state initially
+      const qualityCard = await screen.findByTestId("ai-quality-card", {
+        timeout: 3000,
+      });
+      expect(qualityCard).toBeInTheDocument();
+    });
+
+    it("should render AIQualityMetricsCard with AI Quality heading", async () => {
+      renderWithStore(<AdminDashboard {...defaultProps} />);
+
+      // Wait for the card to render with content
+      const heading = await screen.findByText("AI Quality", {
+        timeout: 3000,
+      });
+      expect(heading).toBeInTheDocument();
+    });
+
+    it("should hide AIQualityMetricsCard when switching to Users tab", async () => {
+      renderWithStore(<AdminDashboard {...defaultProps} />);
+
+      // First verify it exists in Overview
+      await screen.findByTestId("ai-quality-card", { timeout: 3000 });
+
+      // Switch to Users tab
+      const usersTab = screen.getByRole("tab", { name: /users/i });
+      await act(async () => {
+        usersTab.click();
+      });
+
+      // Card should no longer be visible
+      expect(screen.queryByTestId("ai-quality-card")).not.toBeInTheDocument();
+    });
+
+    it("should hide AIQualityMetricsCard when switching to Agent Requests tab", async () => {
+      renderWithStore(<AdminDashboard {...defaultProps} />);
+
+      // First verify it exists in Overview
+      await screen.findByTestId("ai-quality-card", { timeout: 3000 });
+
+      // Switch to Agent Requests tab
+      const agentRequestsTab = screen.getByRole("tab", {
+        name: /agent requests/i,
+      });
+      await act(async () => {
+        agentRequestsTab.click();
+      });
+
+      // Card should no longer be visible
+      expect(screen.queryByTestId("ai-quality-card")).not.toBeInTheDocument();
+    });
+
+    it("should render AIQualityMetricsCard with showToggle enabled", async () => {
+      renderWithStore(<AdminDashboard {...defaultProps} />);
+
+      // Wait for content to load
+      await screen.findByTestId("ai-quality-card", { timeout: 3000 });
+
+      // Verify the card is rendered with proper ARIA structure
+      // Toggle is only visible when there are reports (depends on MSW mock data)
+      expect(
+        screen.getByRole("region", { name: /ai quality metrics/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should position AIQualityMetricsCard after HEART Metrics section", async () => {
+      renderWithStore(<AdminDashboard {...defaultProps} />);
+
+      // Wait for AI Quality card
+      await screen.findByTestId("ai-quality-card", { timeout: 3000 });
+
+      // Find both sections
+      const heartSection = screen.getByText("HEART Metrics").closest("section");
+      const aiQualityCard = screen.getByTestId("ai-quality-card");
+
+      // Both should exist
+      expect(heartSection).toBeInTheDocument();
+      expect(aiQualityCard).toBeInTheDocument();
+    });
+  });
 });

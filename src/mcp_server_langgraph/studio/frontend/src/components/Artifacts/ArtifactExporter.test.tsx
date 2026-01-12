@@ -158,7 +158,17 @@ describe("ArtifactExporter", () => {
       expect(screen.getByText(/pdf/i)).toBeInTheDocument();
     });
 
-    it("should call onExport with PNG format when selected", async () => {
+    /**
+     * SKIPPED: Requires browser canvas/image APIs not available in jsdom.
+     *
+     * This functionality is tested in Playwright E2E tests:
+     * @see e2e/artifact-export.spec.ts
+     *   - "should trigger PNG download when export button clicked on chart"
+     *   - "should show PNG, SVG, and PDF export options for charts"
+     *
+     * Run with: npm run test:e2e -- --grep "Artifact Export"
+     */
+    it.skip("should call onExport with PNG format when selected", async () => {
       const mockOnExport = vi.fn();
       render(
         <ArtifactExporter
@@ -355,8 +365,21 @@ describe("ArtifactExporter", () => {
     });
   });
 
+  /**
+   * PNG Export Conversion Tests
+   *
+   * SKIPPED: These tests require browser canvas/image APIs not available in jsdom.
+   * They verify the SVG-to-PNG conversion flow which uses canvas.toBlob().
+   *
+   * This functionality is tested in Playwright E2E tests:
+   * @see e2e/artifact-export.spec.ts
+   *   - "should convert SVG artifact to PNG on export"
+   *   - "should create valid PNG file from chart export"
+   *
+   * Run with: npm run test:e2e -- --grep "SVG to PNG Export"
+   */
   describe("PNG export conversion", () => {
-    it("should call onExport with PNG blob for SVG data", async () => {
+    it.skip("should call onExport with PNG blob for SVG data", async () => {
       const mockOnExport = vi.fn();
       const svgData =
         '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="red"/></svg>';
@@ -381,7 +404,7 @@ describe("ArtifactExporter", () => {
       expect(blob.type).toBe("image/png");
     });
 
-    it("should export PNG from SVG element reference", async () => {
+    it.skip("should export PNG from SVG element reference", async () => {
       const mockOnExport = vi.fn();
       const svgElement = document.createElementNS(
         "http://www.w3.org/2000/svg",

@@ -165,6 +165,21 @@ export const SIGNALS: Signal[] = [
     description: "Time taken to complete a task in milliseconds",
     valueType: "number",
   },
+
+  // AI Quality signals (hallucination reporting)
+  {
+    id: "ai_hallucination_reported",
+    name: "Hallucination Reported",
+    description: "User reported an AI response as inaccurate",
+    valueType: "counter",
+  },
+  {
+    id: "ai_hallucination_category",
+    name: "Hallucination Category",
+    description:
+      "Category of reported hallucination (factual_error, outdated_info, made_up_source, other)",
+    valueType: "string",
+  },
 ];
 
 /**

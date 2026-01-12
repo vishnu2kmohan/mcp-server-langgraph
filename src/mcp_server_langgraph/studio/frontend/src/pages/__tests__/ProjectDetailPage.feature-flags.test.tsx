@@ -113,9 +113,9 @@ describe("ProjectDetailPage - Feature Flags", () => {
       renderWithRouter(
         "project-123",
         {
-          enable_workflows_feature: true,
-          enable_observability_ui: true,
-          enable_cost_dashboard: true,
+          workflows: true,
+          observability: true,
+          cost_dashboard: true,
         },
         mockUseGetFeatureFlagsQuery,
       );
@@ -149,13 +149,13 @@ describe("ProjectDetailPage - Feature Flags", () => {
   // ===========================================================================
 
   describe("Workflows Feature Disabled", () => {
-    it("should hide Workflows tab when enable_workflows_feature is false", async () => {
+    it("should hide Workflows tab when workflows is false", async () => {
       renderWithRouter(
         "project-123",
         {
-          enable_workflows_feature: false,
-          enable_observability_ui: true,
-          enable_cost_dashboard: true,
+          workflows: false,
+          observability: true,
+          cost_dashboard: true,
         },
         mockUseGetFeatureFlagsQuery,
       );
@@ -193,13 +193,13 @@ describe("ProjectDetailPage - Feature Flags", () => {
   // ===========================================================================
 
   describe("Observability Feature Disabled", () => {
-    it("should hide Observability tab when enable_observability_ui is false", async () => {
+    it("should hide Observability tab when observability is false", async () => {
       renderWithRouter(
         "project-123",
         {
-          enable_workflows_feature: true,
-          enable_observability_ui: false,
-          enable_cost_dashboard: true,
+          workflows: true,
+          observability: false,
+          cost_dashboard: true,
         },
         mockUseGetFeatureFlagsQuery,
       );
@@ -237,13 +237,13 @@ describe("ProjectDetailPage - Feature Flags", () => {
   // ===========================================================================
 
   describe("Cost Dashboard Disabled", () => {
-    it("should hide Cost tab when enable_cost_dashboard is false", async () => {
+    it("should hide Cost tab when cost_dashboard is false", async () => {
       renderWithRouter(
         "project-123",
         {
-          enable_workflows_feature: true,
-          enable_observability_ui: true,
-          enable_cost_dashboard: false,
+          workflows: true,
+          observability: true,
+          cost_dashboard: false,
         },
         mockUseGetFeatureFlagsQuery,
       );
@@ -287,9 +287,9 @@ describe("ProjectDetailPage - Feature Flags", () => {
       renderWithRouter(
         "project-123",
         {
-          enable_workflows_feature: false,
-          enable_observability_ui: false,
-          enable_cost_dashboard: false,
+          workflows: false,
+          observability: false,
+          cost_dashboard: false,
         },
         mockUseGetFeatureFlagsQuery,
       );

@@ -278,7 +278,7 @@ describe("KnowledgeBaseFocus", () => {
     );
 
     const indicator = screen.getByTestId("kb-status-indicator");
-    expect(indicator).toHaveClass("bg-gray-400");
+    expect(indicator).toHaveClass("bg-neutral-400");
   });
 
   it("shows tooltip with config guidance when misconfigured", async () => {

@@ -16,7 +16,14 @@ import {
   Search,
   Upload,
 } from "lucide-react";
-import { ErrorState, ConfirmDialog } from "../components/UI";
+import {
+  ErrorState,
+  ConfirmDialog,
+  Button,
+  Input,
+  Select,
+  Textarea,
+} from "../components/UI";
 import {
   useListVectorCollectionsQuery,
   useCreateVectorCollectionMutation,
@@ -222,105 +229,108 @@ export function VectorsPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
               Vector Collections
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               Manage Qdrant vector collections for semantic search
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              className="flex px-4 py-2 bg-insight-600 text-white rounded-lg hover:bg-insight-700"
               onClick={() => setShowSearchPanel(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-insight-600 text-white rounded-lg hover:bg-insight-700 transition-colors"
             >
               <Search size={16} />
               Search Vectors
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="success"
+              className="flex px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700"
               onClick={() => setShowUpsertPanel(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700 transition-colors"
             >
               <Upload size={16} />
               Upsert Points
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
+              className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               <Plus size={16} />
               Create Collection
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
+              className="flex px-4 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
               onClick={handleRefresh}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
             >
               <RefreshCw size={16} />
               Refresh
-            </button>
+            </Button>
           </div>
         </div>
       </header>
-
       {/* Error Banner */}
       {error && collections.length > 0 && (
         <div className="px-6 py-3 bg-error-50 dark:bg-error-900/20 border-b border-error-200 dark:border-error-800">
           <p className="text-error-700 dark:text-error-400 text-sm">{error}</p>
         </div>
       )}
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-4xl mx-auto">
           {/* Collections Count */}
-          <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
             {collections.length}{" "}
             {collections.length === 1 ? "collection" : "collections"} found
           </div>
 
           {collections.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+            <div className="flex flex-col items-center justify-center h-64 text-neutral-500 dark:text-neutral-400">
               <Database size={48} className="mb-4 opacity-50" />
               <p>No collections found</p>
-              <button
+              <Button
+                variant="primary"
+                className="mt-4 flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                 onClick={() => setShowCreateModal(true)}
-                className="mt-4 flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
               >
                 <Plus size={16} />
                 Create First Collection
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
               {collections.map((collection) => (
                 <div
                   key={collection.name}
-                  className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+                  className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Database size={24} className="text-primary-500" />
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                           {collection.name}
                         </h3>
-                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-4 mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                           <span>{collection.vectors_count ?? 0} points</span>
                         </div>
                       </div>
                     </div>
-                    <button
+                    <Button
+                      variant="danger"
+                      className="p-2 text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
                       onClick={() => handleDeleteCollection(collection.name)}
                       aria-label={`Delete ${collection.name}`}
-                      className="p-2 text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded transition-colors"
                     >
                       <Trash2 size={20} />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -328,122 +338,122 @@ export function VectorsPage() {
           )}
         </div>
       </div>
-
       {/* Create Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
               Create Collection
             </h2>
             <form onSubmit={handleCreateCollection} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                   Collection Name
                 </label>
-                <input
-                  type="text"
+                <Input
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                   value={newCollectionName}
                   onChange={(e) => setNewCollectionName(e.target.value)}
                   placeholder="Collection name"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   required
                 />
               </div>
               <div>
                 <label
                   htmlFor="vector-size"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
                 >
                   Vector Size
                 </label>
-                <input
+                <Input
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                   id="vector-size"
                   type="number"
                   value={newVectorSize}
                   onChange={(e) => setNewVectorSize(parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   required
                 />
               </div>
               <div>
                 <label
                   htmlFor="distance-metric"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
                 >
                   Distance Metric
                 </label>
-                <select
+                <Select
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                   id="distance-metric"
                   value={newDistance}
                   onChange={(e) => setNewDistance(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 >
                   <option value="cosine">Cosine</option>
                   <option value="euclidean">Euclidean</option>
                   <option value="dot">Dot Product</option>
-                </select>
+                </Select>
               </div>
               <div className="flex gap-2 justify-end">
-                <button
+                <Button
+                  variant="secondary"
+                  className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700"
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="primary"
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                   type="submit"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                 >
                   Create
-                </button>
+                </Button>
               </div>
             </form>
           </div>
         </div>
       )}
-
       {/* Search Panel */}
       {showSearchPanel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-end z-50">
           <div
             data-testid="vector-search-panel"
-            className="bg-white dark:bg-gray-800 h-full w-full max-w-lg shadow-xl overflow-y-auto"
+            className="bg-white dark:bg-neutral-800 h-full w-full max-w-lg shadow-xl overflow-y-auto"
           >
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
                 Search Vectors
               </h2>
-              <button
+              <Button
+                variant="secondary"
+                className="p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
                 onClick={() => {
                   setShowSearchPanel(false);
                   setSearchResults([]);
                   setHasSearched(false);
                 }}
                 aria-label="Close search"
-                className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
               >
                 <X size={20} />
-              </button>
+              </Button>
             </div>
 
             <form
               onSubmit={handleSearch}
-              className="p-6 space-y-4 border-b border-gray-200 dark:border-gray-700"
+              className="p-6 space-y-4 border-b border-neutral-200 dark:border-neutral-700"
             >
               <div>
                 <label
                   htmlFor="search-collection"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
                 >
                   Select Collection
                 </label>
-                <select
+                <Select
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                   id="search-collection"
                   value={searchCollection}
                   onChange={(e) => setSearchCollection(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   required
                 >
                   <option value="">Choose a collection</option>
@@ -452,77 +462,76 @@ export function VectorsPage() {
                       {c.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div>
                 <label
                   htmlFor="search-query"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
                 >
                   Search Query
                 </label>
-                <input
+                <Input
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                   id="search-query"
-                  type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Enter search query"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   required
                 />
               </div>
               <div>
                 <label
                   htmlFor="search-limit"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
                 >
                   Limit
                 </label>
-                <input
+                <Input
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                   id="search-limit"
                   type="number"
                   min={1}
                   max={100}
                   value={searchLimit}
                   onChange={(e) => setSearchLimit(parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
               </div>
-              <button
+              <Button
+                className="w-full px-4 py-2 bg-insight-600 text-white rounded-lg hover:bg-insight-700"
                 type="submit"
                 disabled={isSearching}
-                className="w-full px-4 py-2 bg-insight-600 text-white rounded-lg hover:bg-insight-700 disabled:opacity-50 transition-colors"
               >
                 {isSearching ? "Searching..." : "Search"}
-              </button>
+              </Button>
             </form>
 
             {/* Search Results */}
             <div className="p-6">
               {hasSearched && searchResults.length === 0 && !isSearching && (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
                   No results found
                 </div>
               )}
               {searchResults.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
                     {searchResults.length} results
                   </h3>
                   {searchResults.map((result) => (
                     <div
                       key={result.id}
-                      className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
+                      className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-mono text-gray-500 dark:text-gray-400">
+                        <span className="text-sm font-mono text-neutral-500 dark:text-neutral-400">
                           ID: {result.id}
                         </span>
                         <span className="px-2 py-0.5 bg-insight-100 dark:bg-insight-900/30 text-insight-700 dark:text-insight-400 text-sm rounded">
                           Score: {result.score.toFixed(2)}
                         </span>
                       </div>
-                      <div className="text-sm text-gray-700 dark:text-gray-300">
+                      <div className="text-sm text-neutral-700 dark:text-neutral-300">
                         {result.payload?.text
                           ? String(result.payload.text)
                           : JSON.stringify(result.payload ?? {})}
@@ -535,29 +544,29 @@ export function VectorsPage() {
           </div>
         </div>
       )}
-
       {/* Upsert Panel */}
       {showUpsertPanel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-end z-50">
           <div
             data-testid="vector-upsert-panel"
-            className="bg-white dark:bg-gray-800 h-full w-full max-w-lg shadow-xl overflow-y-auto"
+            className="bg-white dark:bg-neutral-800 h-full w-full max-w-lg shadow-xl overflow-y-auto"
           >
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
                 Upsert Point
               </h2>
-              <button
+              <Button
+                variant="secondary"
+                className="p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
                 onClick={() => {
                   setShowUpsertPanel(false);
                   setUpsertSuccess(false);
                   setUpsertError(null);
                 }}
                 aria-label="Close upsert"
-                className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition-colors"
               >
                 <X size={20} />
-              </button>
+              </Button>
             </div>
 
             <form onSubmit={handleUpsert} className="p-6 space-y-4">
@@ -578,15 +587,15 @@ export function VectorsPage() {
               <div>
                 <label
                   htmlFor="upsert-collection"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
                 >
                   Select Collection
                 </label>
-                <select
+                <Select
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                   id="upsert-collection"
                   value={upsertCollection}
                   onChange={(e) => setUpsertCollection(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   required
                 >
                   <option value="">Choose a collection</option>
@@ -595,23 +604,23 @@ export function VectorsPage() {
                       {c.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
                 <label
                   htmlFor="upsert-text"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
                 >
                   Text Content
                 </label>
-                <textarea
+                <Textarea
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100 resize-none"
                   id="upsert-text"
                   value={upsertText}
                   onChange={(e) => setUpsertText(e.target.value)}
                   placeholder="Enter text content to embed and store"
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none"
                   required
                 />
               </div>
@@ -619,32 +628,32 @@ export function VectorsPage() {
               <div>
                 <label
                   htmlFor="upsert-metadata"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
                 >
                   Metadata (Optional JSON)
                 </label>
-                <textarea
+                <Textarea
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100 resize-none font-mono text-sm"
                   id="upsert-metadata"
                   value={upsertMetadata}
                   onChange={(e) => setUpsertMetadata(e.target.value)}
                   placeholder='{"source": "document.pdf", "page": 1}'
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none font-mono text-sm"
                 />
               </div>
 
-              <button
+              <Button
+                variant="success"
+                className="w-full px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700"
                 type="submit"
                 disabled={isUpserting}
-                className="w-full px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700 disabled:opacity-50 transition-colors"
               >
                 {isUpserting ? "Upserting..." : "Upsert"}
-              </button>
+              </Button>
             </form>
           </div>
         </div>
       )}
-
       {/* Delete Collection Confirmation Dialog */}
       <ConfirmDialog
         open={showDeleteDialog}

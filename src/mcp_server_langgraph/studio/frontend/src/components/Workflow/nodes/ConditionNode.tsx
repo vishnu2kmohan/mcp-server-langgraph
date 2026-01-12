@@ -21,7 +21,7 @@ export const ConditionNode = memo(
       if (status === "running") return "border-primary-500 animate-pulse";
       if (status === "success") return "border-success-500";
       if (status === "error") return "border-error-500";
-      return "border-gray-300 dark:border-gray-600";
+      return "border-neutral-300 dark:border-neutral-600";
     };
 
     const StatusIcon = () => {
@@ -39,14 +39,14 @@ export const ConditionNode = memo(
         <Handle
           type="target"
           position={Position.Left}
-          className="w-3 h-3 bg-primary-500 border-2 border-white dark:border-gray-800"
+          className="w-3 h-3 bg-primary-500 border-2 border-white dark:border-neutral-800"
         />
 
         <div
           data-status={status}
           data-selected={selected}
           className={`
-          rounded-lg border-2 p-3 min-w-[180px] bg-white dark:bg-gray-800
+          rounded-lg border-2 p-3 min-w-[180px] bg-white dark:bg-neutral-800
           shadow-sm hover:shadow-md transition-shadow
           ${getBorderClass()}
         `}
@@ -54,13 +54,13 @@ export const ConditionNode = memo(
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <GitBranch className="w-5 h-5 text-warning-500" />
-              <span className="font-medium text-gray-900 dark:text-gray-100">
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">
                 {label}
               </span>
             </div>
             <StatusIcon />
           </div>
-          <div className="mt-2 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+          <div className="mt-2 flex justify-between text-xs text-neutral-500 dark:text-neutral-400">
             <span>True</span>
             <span>False</span>
           </div>
@@ -72,7 +72,7 @@ export const ConditionNode = memo(
           position={Position.Right}
           id="true"
           style={{ top: "30%" }}
-          className="w-3 h-3 bg-success-500 border-2 border-white dark:border-gray-800"
+          className="w-3 h-3 bg-success-500 border-2 border-white dark:border-neutral-800"
         />
 
         {/* False branch */}
@@ -81,7 +81,7 @@ export const ConditionNode = memo(
           position={Position.Right}
           id="false"
           style={{ top: "70%" }}
-          className="w-3 h-3 bg-error-500 border-2 border-white dark:border-gray-800"
+          className="w-3 h-3 bg-error-500 border-2 border-white dark:border-neutral-800"
         />
       </>
     );

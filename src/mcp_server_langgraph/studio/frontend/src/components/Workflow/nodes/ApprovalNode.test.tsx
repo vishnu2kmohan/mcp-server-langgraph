@@ -234,7 +234,7 @@ describe("ApprovalNode", () => {
       });
 
       const node = document.querySelector('[data-selected="false"]');
-      expect(node?.className).toContain("border-gray-300");
+      expect(node?.className).toContain("border-neutral-300");
     });
   });
 

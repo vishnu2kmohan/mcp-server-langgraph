@@ -13,6 +13,8 @@ import { useState, useCallback, useEffect } from "react";
 import { cn } from "../utils/cn";
 import { storage } from "../utils/storage";
 
+import { Button } from "@/components/UI";
+
 const STORAGE_KEY = "studio-studio-shell-override";
 
 export interface FeatureFlagToggleProps {
@@ -72,13 +74,13 @@ export function FeatureFlagToggle({
       data-testid="feature-flag-toggle"
       className={cn(
         "flex items-center gap-2 px-2 py-1 rounded-lg",
-        "bg-gray-100 dark:bg-gray-800",
-        "text-xs text-gray-600 dark:text-gray-400",
+        "bg-neutral-100 dark:bg-neutral-800",
+        "text-xs text-neutral-600 dark:text-neutral-400",
         className,
       )}
     >
       <span className="font-medium">Shell Mode:</span>
-      <button
+      <Button
         type="button"
         role="switch"
         aria-checked={isHybridEnabled}
@@ -87,7 +89,9 @@ export function FeatureFlagToggle({
         className={cn(
           "relative flex items-center w-10 h-5 rounded-full",
           "transition-colors",
-          isHybridEnabled ? "bg-primary-500" : "bg-gray-300 dark:bg-gray-600",
+          isHybridEnabled
+            ? "bg-primary-500"
+            : "bg-neutral-300 dark:bg-neutral-600",
         )}
       >
         <span
@@ -96,14 +100,14 @@ export function FeatureFlagToggle({
             isHybridEnabled ? "translate-x-5" : "translate-x-0.5",
           )}
         />
-      </button>
+      </Button>
       <span
         data-testid="current-mode"
         className={cn(
           "min-w-12",
           isHybridEnabled
             ? "text-primary-600 dark:text-primary-400"
-            : "text-gray-500 dark:text-gray-400",
+            : "text-neutral-500 dark:text-neutral-400",
         )}
       >
         {modeLabel}

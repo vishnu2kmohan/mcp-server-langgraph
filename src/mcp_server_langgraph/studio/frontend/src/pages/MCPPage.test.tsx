@@ -701,7 +701,7 @@ describe("MCPPage", () => {
       });
       renderWithStore();
       const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
-      expect(wsIndicator).toHaveClass("bg-gray-400");
+      expect(wsIndicator).toHaveClass("bg-neutral-400");
     });
     it("should show server info when WebSocket is initialized", () => {
       mockUseMCPWebSocket.mockReturnValue({
@@ -753,7 +753,7 @@ describe("MCPPage", () => {
       renderWithStore();
       expect(screen.getByText("MCP Explorer")).toBeInTheDocument();
       const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
-      expect(wsIndicator).toHaveClass("bg-gray-400");
+      expect(wsIndicator).toHaveClass("bg-neutral-400");
     });
   });
 

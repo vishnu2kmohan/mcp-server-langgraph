@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -68,18 +70,18 @@ function LayoutPreview({ layout }: { layout: WorkspaceLayout }) {
   return (
     <div
       data-testid="layout-preview"
-      className="flex h-20 rounded border border-gray-200 dark:border-gray-700 overflow-hidden text-xs"
+      className="flex h-20 rounded border border-neutral-200 dark:border-neutral-700 overflow-hidden text-xs"
     >
       {layout.sessionNav > 0 && (
         <div
-          className="bg-gray-200 dark:bg-gray-700 flex items-center justify-center border-r border-gray-300 dark:border-gray-600"
+          className="bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center border-r border-neutral-300 dark:border-neutral-600"
           style={{ width: `${layout.sessionNav}%` }}
         >
           {layout.sessionNav}%
         </div>
       )}
       <div
-        className="bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center border-r border-gray-300 dark:border-gray-600"
+        className="bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center border-r border-neutral-300 dark:border-neutral-600"
         style={{ width: `${layout.conversation}%` }}
       >
         {layout.conversation}%
@@ -202,7 +204,7 @@ export function WorkspacePresets({
               "border-2",
               isSelected
                 ? "selected border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-600",
+                : "border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:border-neutral-600 dark:hover:border-neutral-600",
               "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
             )}
           >
@@ -212,7 +214,7 @@ export function WorkspacePresets({
                 className={cn(
                   isSelected
                     ? "text-primary-500"
-                    : "text-gray-400 dark:text-gray-400",
+                    : "text-neutral-400 dark:text-neutral-400",
                 )}
               />
               <span
@@ -220,13 +222,13 @@ export function WorkspacePresets({
                   "text-sm font-medium",
                   isSelected
                     ? "text-primary-700 dark:text-primary-300"
-                    : "text-gray-900 dark:text-gray-100",
+                    : "text-neutral-900 dark:text-neutral-100",
                 )}
               >
                 {preset.name}
               </span>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
               {preset.description}
             </p>
 
@@ -237,24 +239,23 @@ export function WorkspacePresets({
           </div>
         );
       })}
-
       {/* Save Custom Preset Button */}
       {allowCustom && (
-        <button
+        <Button
           data-testid="save-custom-preset"
           type="button"
           onClick={onSaveCustom}
           className={cn(
             "flex items-center justify-center gap-2 p-3 rounded-lg",
-            "border-2 border-dashed border-gray-300 dark:border-gray-600",
-            "text-gray-500 dark:text-gray-400",
+            "border-2 border-dashed border-neutral-300 dark:border-neutral-600",
+            "text-neutral-500 dark:text-neutral-400",
             "hover:border-primary-400 hover:text-primary-500",
             "transition-colors",
           )}
         >
           <Save size={16} />
           <span className="text-sm">Save Current Layout</span>
-        </button>
+        </Button>
       )}
     </div>
   );

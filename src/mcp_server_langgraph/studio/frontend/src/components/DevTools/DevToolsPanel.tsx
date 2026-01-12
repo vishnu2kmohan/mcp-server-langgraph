@@ -12,7 +12,8 @@
  * - Dark mode support
  */
 
-import { useCallback, Suspense, lazy, useMemo } from "react";
+import { useCallback, Suspense, lazy, useMemo, useEffect } from "react";
+import { useMetricsHistory } from "../../hooks/useMetricsHistory";
 import {
   ChevronDown,
   Maximize2,
@@ -65,6 +66,8 @@ import {
 } from "../../api";
 import type { DevToolsPanelProps } from "./types";
 import type { TraceSpan, TraceListItem } from "./tabs/TracesTab";
+
+import { Button, Select } from "@/components/UI";
 
 // =============================================================================
 // Utility
@@ -164,7 +167,7 @@ const WsMetricsTabContent = lazy(() =>
 function TabContentLoader() {
   return (
     <div className="flex items-center justify-center h-full">
-      <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-400" />
+      <Loader2 className="w-6 h-6 animate-spin text-neutral-400 dark:text-neutral-400" />
     </div>
   );
 }
@@ -181,14 +184,14 @@ interface ConsoleFilterProps {
 function ConsoleFilter({ value, onChange }: ConsoleFilterProps) {
   return (
     <div data-testid="console-filter" className="relative">
-      <select
+      <Select
         value={value}
         onChange={(e) => onChange(e.target.value as ConsoleFilterLevel)}
         className={cn(
           "appearance-none pl-2 pr-6 py-1 text-xs rounded",
-          "bg-gray-100 dark:bg-gray-700",
-          "text-gray-700 dark:text-gray-200",
-          "border border-gray-200 dark:border-gray-700 dark:border-gray-600",
+          "bg-neutral-100 dark:bg-neutral-700",
+          "text-neutral-700 dark:text-neutral-200",
+          "border border-neutral-200 dark:border-neutral-700 dark:border-neutral-600",
           "focus:outline-none focus:ring-1 focus:ring-primary-500",
         )}
       >
@@ -196,10 +199,10 @@ function ConsoleFilter({ value, onChange }: ConsoleFilterProps) {
         <option value="info">Info</option>
         <option value="warning">Warning</option>
         <option value="error">Error</option>
-      </select>
+      </Select>
       <ChevronDown
         size={12}
-        className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500 dark:text-gray-400"
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500 dark:text-neutral-400"
       />
     </div>
   );
@@ -396,61 +399,34 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     }));
   }, [logsData]);
 
-  // Transform API metrics to DevTools MetricsTab format
+  // Metrics history tracking for trend computation (extracted to reusable hook)
+  const { addSnapshot, getMetricsWithTrends } = useMetricsHistory();
+
+  // Update metrics history when new data arrives
+  useEffect(() => {
+    if (!metricsData) return;
+    addSnapshot({
+      requestsTotal: metricsData.requestsTotal,
+      errorsTotal: metricsData.errorsTotal,
+      avgLatencyMs: metricsData.avgLatencyMs,
+      p99LatencyMs: metricsData.p99LatencyMs,
+      tokensUsed: metricsData.tokensUsed,
+      activeSessions: metricsData.activeSessions,
+    });
+  }, [metricsData, addSnapshot]);
+
+  // Transform API metrics to DevTools MetricsTab format with computed trends
   const metricsList = useMemo(() => {
     if (!metricsData) return [];
-    return [
-      {
-        name: "requests_total",
-        value: metricsData.requestsTotal,
-        unit: "req",
-        trend: "stable" as const,
-        change: 0,
-        sparkline: [metricsData.requestsTotal],
-      },
-      {
-        name: "errors_total",
-        value: metricsData.errorsTotal,
-        unit: "err",
-        trend:
-          metricsData.errorsTotal > 0 ? ("up" as const) : ("stable" as const),
-        change: 0,
-        sparkline: [metricsData.errorsTotal],
-      },
-      {
-        name: "avg_latency",
-        value: Math.round(metricsData.avgLatencyMs),
-        unit: "ms",
-        trend: "stable" as const,
-        change: 0,
-        sparkline: [metricsData.avgLatencyMs],
-      },
-      {
-        name: "p99_latency",
-        value: Math.round(metricsData.p99LatencyMs),
-        unit: "ms",
-        trend: "stable" as const,
-        change: 0,
-        sparkline: [metricsData.p99LatencyMs],
-      },
-      {
-        name: "tokens_used",
-        value: metricsData.tokensUsed,
-        unit: "tokens",
-        trend: "stable" as const,
-        change: 0,
-        sparkline: [metricsData.tokensUsed],
-      },
-      {
-        name: "active_sessions",
-        value: metricsData.activeSessions,
-        unit: "sessions",
-        trend: "stable" as const,
-        change: 0,
-        sparkline: [metricsData.activeSessions],
-      },
-    ];
-  }, [metricsData]);
+    return getMetricsWithTrends({
+      requestsTotal: metricsData.requestsTotal,
+      errorsTotal: metricsData.errorsTotal,
+      avgLatencyMs: metricsData.avgLatencyMs,
+      p99LatencyMs: metricsData.p99LatencyMs,
+      tokensUsed: metricsData.tokensUsed,
+      activeSessions: metricsData.activeSessions,
+    });
+  }, [metricsData, getMetricsWithTrends]);
 
   // Handlers
   const handleCollapse = useCallback(() => {
@@ -670,8 +646,8 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         data-testid="devtools-panel"
         className={cn(
           "flex flex-col h-full",
-          "bg-white dark:bg-gray-900",
-          "border-t border-gray-200 dark:border-gray-700",
+          "bg-white dark:bg-neutral-900",
+          "border-t border-neutral-200 dark:border-neutral-700",
           className,
         )}
       >
@@ -680,13 +656,13 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
           data-testid="devtools-header"
           className={cn(
             "flex items-center justify-between px-3 py-1.5",
-            "bg-gray-50 dark:bg-gray-800",
-            "border-b border-gray-200 dark:border-gray-700",
+            "bg-neutral-50 dark:bg-neutral-800",
+            "border-b border-neutral-200 dark:border-neutral-700",
           )}
         >
           {/* Context Indicator + WebSocket Status */}
           <div className="flex items-center gap-3">
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+            <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
               {contextLabel}
             </span>
 
@@ -731,46 +707,46 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             )}
 
             {/* Clear Console */}
-            <button
+            <Button
               onClick={handleClearConsole}
               className={cn(
                 "p-1.5 rounded",
-                "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200",
-                "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200",
+                "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
               )}
               title="Clear Console"
               aria-label="Clear"
             >
               <Trash2 size={14} />
-            </button>
+            </Button>
 
             {/* Maximize/Minimize */}
-            <button
+            <Button
               onClick={handleMaximize}
               className={cn(
                 "p-1.5 rounded",
-                "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200",
-                "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200",
+                "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
               )}
               title={maximized ? "Minimize" : "Maximize"}
               aria-label={maximized ? "Minimize" : "Maximize"}
             >
               {maximized ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-            </button>
+            </Button>
 
             {/* Collapse */}
-            <button
+            <Button
               onClick={handleCollapse}
               className={cn(
                 "p-1.5 rounded",
-                "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200",
-                "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200",
+                "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
               )}
               title="Collapse"
               aria-label="Collapse"
             >
               <X size={14} />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -783,8 +759,8 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
           role="tablist"
           className={cn(
             "flex items-center gap-0.5 px-2 py-1",
-            "bg-gray-100 dark:bg-gray-800",
-            "border-b border-gray-200 dark:border-gray-700",
+            "bg-neutral-100 dark:bg-neutral-800",
+            "border-b border-neutral-200 dark:border-neutral-700",
           )}
         >
           {availableTabs.map((tabId) => {
@@ -792,7 +768,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             const isActive = tabId === activeTab;
 
             return (
-              <button
+              <Button
                 key={tabId}
                 data-testid={`devtools-tab-${tabId}`}
                 role="tab"
@@ -802,13 +778,13 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
                 className={cn(
                   "flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded",
                   isActive
-                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700",
+                    ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm"
+                    : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-700",
                 )}
               >
                 <Icon size={14} />
                 {TAB_LABELS[tabId]}
-              </button>
+              </Button>
             );
           })}
         </div>

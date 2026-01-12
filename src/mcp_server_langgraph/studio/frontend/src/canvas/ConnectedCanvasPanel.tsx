@@ -42,6 +42,8 @@ import {
 // AI Components (Phase 4) - lazy-loaded for reduced bundle size
 import { LazySuggestionsPanel, type Suggestion } from "../ai/lazy";
 
+import { Button } from "@/components/UI";
+
 // Save operation status for optimistic UI feedback
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -529,8 +531,8 @@ export const ConnectedCanvasPanel = forwardRef<
       data-testid="canvas-panel"
       className={cn(
         "flex flex-col h-full relative",
-        "bg-gray-50 dark:bg-gray-800",
-        "border-l border-gray-200 dark:border-gray-700",
+        "bg-neutral-50 dark:bg-neutral-800",
+        "border-l border-neutral-200 dark:border-neutral-700",
         className,
       )}
     >
@@ -559,13 +561,12 @@ export const ConnectedCanvasPanel = forwardRef<
           {saveStatus === "error" && (saveError || "Save failed")}
         </div>
       )}
-
       {/* AI Suggestions Sparkles Trigger (Phase 4) - opt-in mode */}
       {/* Shows a sparkles button that users click to fetch and view suggestions */}
       {aiSuggestionsEnabled &&
         selectedArtifactId &&
         !suggestionsPanelVisible && (
-          <button
+          <Button
             type="button"
             onClick={handleSparklesTrigger}
             data-testid="sparkles-trigger"
@@ -573,8 +574,8 @@ export const ConnectedCanvasPanel = forwardRef<
             className={cn(
               "absolute top-12 right-2 z-10",
               "p-2 rounded-lg shadow-md",
-              "bg-white dark:bg-gray-800",
-              "border border-gray-200 dark:border-gray-700",
+              "bg-white dark:bg-neutral-800",
+              "border border-neutral-200 dark:border-neutral-700",
               "text-primary-500 hover:text-primary-600 dark:hover:text-primary-400",
               "hover:bg-primary-50 dark:hover:bg-primary-900/20",
               "transition-colors",
@@ -598,9 +599,8 @@ export const ConnectedCanvasPanel = forwardRef<
               <path d="M3 5h4" />
               <path d="M17 19h4" />
             </svg>
-          </button>
+          </Button>
         )}
-
       {/* AI Suggestions Panel (Phase 4) - table view for reviewing suggestions */}
       {/* Lazy-loaded to reduce initial bundle size */}
       {aiSuggestionsEnabled &&
@@ -620,7 +620,6 @@ export const ConnectedCanvasPanel = forwardRef<
             </Suspense>
           </div>
         )}
-
       {/* Canvas Shortcuts Menu (Sprint 6) - gated by canvas_ai_palette feature flag */}
       {canvasAIPaletteEnabled && selectedArtifactId && (
         <div className="absolute bottom-4 right-4 z-10">
@@ -634,7 +633,6 @@ export const ConnectedCanvasPanel = forwardRef<
           />
         </div>
       )}
-
       {/* Shortcut action error toast */}
       {shortcutError && (
         <div
@@ -668,10 +666,11 @@ export const ConnectedCanvasPanel = forwardRef<
                 {shortcutError}
               </p>
             </div>
-            <button
+            <Button
+              variant="danger"
+              className="ml-auto -mr-1 p-1 rounded hover:bg-error-100 dark:hover:bg-error-800"
               type="button"
               onClick={() => setShortcutError(null)}
-              className="ml-auto -mr-1 p-1 rounded hover:bg-error-100 dark:hover:bg-error-800 transition-colors"
               aria-label="Dismiss error"
             >
               <svg
@@ -687,11 +686,10 @@ export const ConnectedCanvasPanel = forwardRef<
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-            </button>
+            </Button>
           </div>
         </div>
       )}
-
       <CanvasWorkspace
         artifacts={artifacts}
         onArtifactSelect={handleArtifactSelect}

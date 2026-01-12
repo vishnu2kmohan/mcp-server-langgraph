@@ -103,9 +103,9 @@ export const mockAddConnection = vi.fn();
 // =============================================================================
 
 export interface FeatureFlagsState {
-  enable_workflows_feature?: boolean;
-  enable_observability_ui?: boolean;
-  enable_cost_dashboard?: boolean;
+  workflows?: boolean;
+  observability?: boolean;
+  cost_dashboard?: boolean;
 }
 
 // =============================================================================
@@ -148,11 +148,12 @@ export function resetAllMocks(): void {
 
 export function setupDefaultMocks(mocks: MockHooks): void {
   // Feature flags - default all enabled
+  // Note: Uses API response names (e.g., "workflows" not "enable_workflows_feature")
   mocks.useGetFeatureFlagsQuery.mockReturnValue({
     data: {
-      enable_workflows_feature: true,
-      enable_observability_ui: true,
-      enable_cost_dashboard: true,
+      workflows: true,
+      observability: true,
+      cost_dashboard: true,
     },
     isLoading: false,
     error: null,
@@ -233,11 +234,12 @@ export function setupFeatureFlags(
   mockUseGetFeatureFlagsQuery: ReturnType<typeof vi.fn>,
   flags: FeatureFlagsState = {},
 ): void {
+  // Note: Uses API response names (e.g., "workflows" not "enable_workflows_feature")
   mockUseGetFeatureFlagsQuery.mockReturnValue({
     data: {
-      enable_workflows_feature: flags.enable_workflows_feature ?? true,
-      enable_observability_ui: flags.enable_observability_ui ?? true,
-      enable_cost_dashboard: flags.enable_cost_dashboard ?? true,
+      workflows: flags.workflows ?? true,
+      observability: flags.observability ?? true,
+      cost_dashboard: flags.cost_dashboard ?? true,
     },
     isLoading: false,
     error: null,

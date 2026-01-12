@@ -12,6 +12,8 @@
 
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 /**
  * Props for CursorPagination component
  */
@@ -69,18 +71,17 @@ export function CursorPagination({
     >
       <div className="flex items-center gap-2">
         {itemCount !== undefined && (
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
             {itemCount} items
           </span>
         )}
       </div>
-
       <div className="flex items-center gap-2">
         {showLimitSelector && (
           <div className="flex items-center gap-2">
             <label
               htmlFor="limit-select"
-              className="text-sm text-gray-500 dark:text-gray-400"
+              className="text-sm text-neutral-500 dark:text-neutral-400"
             >
               Show:
             </label>
@@ -88,7 +89,7 @@ export function CursorPagination({
               id="limit-select"
               value={limit}
               onChange={handleLimitChange}
-              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
               disabled={isLoading}
             >
               {limitOptions.map((option) => (
@@ -101,25 +102,27 @@ export function CursorPagination({
         )}
 
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            variant="secondary"
+            className="flex px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:hover:bg-white dark:disabled:hover:bg-neutral-800"
             onClick={onPrev}
             disabled={!hasPrev || isLoading}
             aria-label="Previous page"
-            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-800 transition-colors"
           >
             <ChevronLeft size={16} />
             Previous
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
+            className="flex px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:hover:bg-white dark:disabled:hover:bg-neutral-800"
             onClick={onNext}
             disabled={!hasNext || isLoading}
             aria-label="Next page"
-            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-800 transition-colors"
           >
             Next
             <ChevronRight size={16} />
-          </button>
+          </Button>
         </div>
       </div>
     </nav>
@@ -237,7 +240,7 @@ export function PagePagination({
     >
       <div className="flex items-center gap-4">
         {totalItems !== undefined && (
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
             {totalItems} items
           </span>
         )}
@@ -246,7 +249,7 @@ export function PagePagination({
           <div className="flex items-center gap-2">
             <label
               htmlFor="perpage-select"
-              className="text-sm text-gray-500 dark:text-gray-400"
+              className="text-sm text-neutral-500 dark:text-neutral-400"
             >
               Show:
             </label>
@@ -254,7 +257,7 @@ export function PagePagination({
               id="perpage-select"
               value={perPage}
               onChange={handlePerPageChange}
-              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
               disabled={isLoading}
             >
               {perPageOptions.map((option) => (
@@ -266,18 +269,19 @@ export function PagePagination({
           </div>
         )}
       </div>
-
       <div className="flex items-center gap-1">
         {/* Previous button */}
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
+          className="flex px-2 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:hover:bg-white dark:disabled:hover:bg-neutral-800"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1 || isLoading}
           aria-label="Previous page"
-          className="flex items-center gap-1 px-2 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-800 transition-colors"
         >
           <ChevronLeft size={16} />
           <span className="sr-only sm:not-sr-only">Previous</span>
-        </button>
+        </Button>
 
         {/* Page numbers */}
         <div className="hidden sm:flex items-center gap-1">
@@ -285,45 +289,43 @@ export function PagePagination({
             page === "ellipsis" ? (
               <span
                 key={`ellipsis-${index}`}
-                className="px-2 py-1 text-gray-500 dark:text-gray-400"
+                className="px-2 py-1 text-neutral-500 dark:text-neutral-400"
               >
                 <MoreHorizontal size={16} aria-label="..." />
                 <span className="sr-only">...</span>
               </span>
             ) : (
-              <button
+              <Button
+                className="px-3 py-1.5 text-sm rounded-md"
                 key={page}
                 onClick={() => onPageChange(page)}
                 disabled={isLoading}
                 aria-label={`Page ${page}`}
                 aria-current={page === currentPage ? "page" : undefined}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors disabled:cursor-not-allowed ${
-                  page === currentPage
-                    ? "bg-primary-600 text-white"
-                    : "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                }`}
               >
                 {page}
-              </button>
+              </Button>
             ),
           )}
         </div>
 
         {/* Mobile: just show current page */}
-        <span className="sm:hidden px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300">
+        <span className="sm:hidden px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300">
           {currentPage} / {totalPages}
         </span>
 
         {/* Next button */}
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
+          className="flex px-2 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:hover:bg-white dark:disabled:hover:bg-neutral-800"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages || isLoading}
           aria-label="Next page"
-          className="flex items-center gap-1 px-2 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-800 transition-colors"
         >
           <span className="sr-only sm:not-sr-only">Next</span>
           <ChevronRight size={16} />
-        </button>
+        </Button>
       </div>
     </nav>
   );

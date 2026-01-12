@@ -12,6 +12,8 @@ import {
   type SnakeToCamelCaseDeep,
 } from "../../api/transforms";
 
+import { Button, Input } from "@/components/UI";
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -182,37 +184,33 @@ export function ConnectionTemplateSelector({
   return (
     <div className="template-selector">
       <h2 className="template-selector-title">Choose a Template</h2>
-
       {/* Search */}
       <div className="template-search">
-        <input
-          type="text"
+        <Input
+          className="template-search-input"
           placeholder="Search templates..."
           value={searchQuery}
           onChange={handleSearchChange}
-          className="template-search-input"
         />
       </div>
-
       {/* Category Filters */}
       <div className="template-category-filters">
-        <button
-          className={`category-filter-btn ${selectedCategory === null ? "active" : ""}`}
+        <Button
+          className="category-filter-btn"
           onClick={() => handleCategoryChange(null)}
         >
           All
-        </button>
+        </Button>
         {categories.map((category) => (
-          <button
+          <Button
+            className="category-filter-btn"
             key={category.id}
-            className={`category-filter-btn ${selectedCategory === category.id ? "active" : ""}`}
             onClick={() => handleCategoryChange(category.id)}
           >
             {category.name}
-          </button>
+          </Button>
         ))}
       </div>
-
       {/* Loading State */}
       {isLoading && (
         <div className="template-loading" data-testid="loading-templates">
@@ -220,24 +218,21 @@ export function ConnectionTemplateSelector({
           <span>Loading templates...</span>
         </div>
       )}
-
       {/* Error State */}
       {error && (
         <div className="template-error">
           <p>{error}</p>
-          <button onClick={handleRetry} className="retry-btn">
+          <Button className="retry-btn" onClick={handleRetry}>
             Retry
-          </button>
+          </Button>
         </div>
       )}
-
       {/* Empty State */}
       {!isLoading && !error && templates.length === 0 && (
         <div className="template-empty">
           <p>No templates found matching your criteria.</p>
         </div>
       )}
-
       {/* Template Grid */}
       {!isLoading && !error && templates.length > 0 && (
         <div className="template-grid">
@@ -296,7 +291,6 @@ export function ConnectionTemplateSelector({
           )}
         </div>
       )}
-
       <style>{`
         .template-selector {
           padding: 1rem;

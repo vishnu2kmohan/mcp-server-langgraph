@@ -432,12 +432,13 @@ const PERSONA_THEMES: Record<string, PersonaTheme> = {
 };
 
 const DEFAULT_THEME: PersonaTheme = {
-  bg: "bg-gray-50 dark:bg-gray-950",
-  text: "text-gray-700 dark:text-gray-300",
-  border: "border-gray-200 dark:border-gray-800",
-  badge: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
-  hover: "hover:bg-gray-100 dark:hover:bg-gray-900",
-  ring: "ring-gray-500",
+  bg: "bg-neutral-50 dark:bg-neutral-950",
+  text: "text-neutral-700 dark:text-neutral-300",
+  border: "border-neutral-200 dark:border-neutral-800",
+  badge:
+    "bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200",
+  hover: "hover:bg-neutral-100 dark:hover:bg-neutral-900",
+  ring: "ring-neutral-500",
 };
 
 /**

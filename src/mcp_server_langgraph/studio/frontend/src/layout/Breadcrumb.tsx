@@ -57,7 +57,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
             {/* Separator (except for first item) */}
             {index > 0 && (
               <span
-                className="text-gray-300 dark:text-gray-600 dark:text-gray-300"
+                className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300"
                 aria-hidden="true"
               >
                 /
@@ -68,7 +68,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
             {item.isCurrent ? (
               <span
                 aria-current="page"
-                className="text-sm font-medium text-gray-900 dark:text-white"
+                className="text-sm font-medium text-neutral-900 dark:text-white"
               >
                 {item.label}
               </span>
@@ -77,8 +77,8 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
                 to={item.path}
                 className={cn(
                   "text-sm font-medium",
-                  "text-gray-500 dark:text-gray-400",
-                  "hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-200",
+                  "text-neutral-500 dark:text-neutral-400",
+                  "hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-200",
                   "hover:underline",
                   "transition-colors",
                 )}

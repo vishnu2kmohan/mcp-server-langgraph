@@ -40,6 +40,8 @@ import { AuditEventPanel } from "../components/Settings/AuditEventPanel";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
+import { Button, Input, Select } from "@/components/UI";
+
 type SettingsTab =
   | "profile"
   | "api-keys"
@@ -211,22 +213,23 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
               Settings
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               Manage your account and preferences
             </p>
           </div>
-          <button
+          <Button
+            variant="primary"
+            className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
           >
             {saveSuccess ? (
               <>
@@ -244,27 +247,22 @@ export function SettingsPage() {
                 Save Changes
               </>
             )}
-          </button>
+          </Button>
         </div>
       </header>
-
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4">
+        <aside className="w-64 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 p-4">
           <nav className="space-y-1">
             {tabs.map((tab) => (
-              <button
+              <Button
+                className="w-full flex px-4 py-2 rounded-lg"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-                }`}
               >
                 <tab.icon size={20} />
                 {tab.label}
-              </button>
+              </Button>
             ))}
           </nav>
         </aside>
@@ -276,42 +274,44 @@ export function SettingsPage() {
             {activeTab === "profile" && (
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Display Name
                   </label>
-                  <input
-                    type="text"
+                  <Input
+                    size="lg"
+                    className="px-4 py-2 text-neutral-900 dark:text-neutral-100"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Email
                   </label>
-                  <input
+                  <Input
+                    size="lg"
+                    className="px-4 py-2 text-neutral-900 dark:text-neutral-100"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Default Persona
                   </label>
-                  <select
+                  <Select
+                    size="lg"
+                    className="px-4 py-2 text-neutral-900 dark:text-neutral-100"
                     value={persona}
                     onChange={(e) => {
                       dispatch(setPersona(e.target.value as Persona));
                     }}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
                     <option value="user">User</option>
                     <option value="developer">Developer</option>
                     <option value="admin">Admin</option>
-                  </select>
+                  </Select>
                 </div>
               </div>
             )}
@@ -326,27 +326,32 @@ export function SettingsPage() {
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Your API Key
                   </label>
                   <div className="flex gap-2">
-                    <input
+                    <Input
+                      size="lg"
+                      className="flex-1 px-4 py-2 bg-neutral-50 text-neutral-900 dark:text-neutral-100 font-mono"
                       type={showApiKey ? "text" : "password"}
                       value="sk-mcp-xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                       readOnly
-                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-mono"
                     />
-                    <button
+                    <Button
+                      variant="secondary"
+                      className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                       onClick={() => setShowApiKey(!showApiKey)}
-                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                     >
                       {showApiKey ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
+                    </Button>
                   </div>
                 </div>
-                <button className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50">
+                <Button
+                  variant="danger"
+                  className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50"
+                >
                   Regenerate API Key
-                </button>
+                </Button>
               </div>
             )}
 
@@ -356,15 +361,15 @@ export function SettingsPage() {
                 {/* Push Notifications Section */}
                 <div
                   data-testid="push-notifications-section"
-                  className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                  className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <BellRing className="h-5 w-5 text-primary-500" />
-                    <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                    <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
                       Push Notifications
                     </h3>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
                     Receive real-time notifications even when the app is closed.
                   </p>
 
@@ -384,31 +389,33 @@ export function SettingsPage() {
                       </span>
                     </div>
                   ) : isPushSubscribed ? (
-                    <button
+                    <Button
+                      variant="danger"
+                      className="flex px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50"
                       data-testid="push-notifications-toggle"
                       onClick={unsubscribePush}
                       disabled={isPushLoading}
-                      className="flex items-center gap-2 px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50 disabled:opacity-50"
                       aria-label="Disable push notifications"
                     >
                       <BellOff className="h-4 w-4" />
                       {isPushLoading
                         ? "Disabling..."
                         : "Disable Push Notifications"}
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
+                      variant="primary"
+                      className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                       data-testid="push-notifications-toggle"
                       onClick={subscribePush}
                       disabled={isPushLoading}
-                      className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
                       aria-label="Enable push notifications"
                     >
                       <Bell className="h-4 w-4" />
                       {isPushLoading
                         ? "Enabling..."
                         : "Enable Push Notifications"}
-                    </button>
+                    </Button>
                   )}
                 </div>
 
@@ -421,53 +428,55 @@ export function SettingsPage() {
             {activeTab === "appearance" && (
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-4">
                     Theme
                   </label>
                   <div className="grid grid-cols-3 gap-4">
                     {(["light", "dark", "system"] as const).map((t) => (
-                      <button
+                      <Button
+                        variant="ghost"
+                        className={`p-4 rounded-lg border-2 ${
+                          theme === t
+                            ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30"
+                            : "border-neutral-200 dark:border-neutral-700"
+                        }`}
                         key={t}
                         onClick={() => setTheme(t)}
-                        className={`p-4 rounded-lg border-2 transition-colors ${
-                          theme === t
-                            ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-                            : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600"
-                        }`}
                       >
                         <div className="text-center">
                           <Palette size={24} className="mx-auto mb-2" />
                           <span className="capitalize">{t}</span>
                         </div>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
 
                 {/* Panel Layout Section (Sprint 1.2) */}
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
                   <div className="flex items-start gap-3">
                     <LayoutGrid
                       size={24}
-                      className="text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5"
+                      className="text-neutral-500 dark:text-neutral-400 flex-shrink-0 mt-0.5"
                     />
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-1">
+                      <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-1">
                         Panel Layout
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
                         Restore your panel layout to the default configuration
                         for your current persona. This will reset session nav,
                         conversation, and canvas panel sizes.
                       </p>
-                      <button
+                      <Button
+                        variant="secondary"
+                        className="flex px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
                         type="button"
                         onClick={() => dispatch(resetToDefaults())}
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
                       >
                         <RotateCcw size={16} />
                         Reset to Persona Defaults
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -477,27 +486,33 @@ export function SettingsPage() {
             {/* Security Tab */}
             {activeTab === "security" && (
               <div className="space-y-6">
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
                     Two-Factor Authentication
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
                     Add an extra layer of security to your account
                   </p>
-                  <button className="px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700">
+                  <Button
+                    variant="success"
+                    className="px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700"
+                  >
                     Enable 2FA
-                  </button>
+                  </Button>
                 </div>
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
                     Active Sessions
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
                     Manage devices that are logged in to your account
                   </p>
-                  <button className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200">
+                  <Button
+                    variant="danger"
+                    className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
+                  >
                     Sign Out All Devices
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -526,19 +541,19 @@ export function SettingsPage() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                  <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
                     User API Keys
                   </h3>
-                  <button
+                  <Button
+                    className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
                     onClick={loadManagedUsers}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                   >
                     <RefreshCw
                       size={16}
                       className={isLoadingUsers ? "animate-spin" : ""}
                     />
                     Refresh
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Error banner for admin operations */}
@@ -553,13 +568,14 @@ export function SettingsPage() {
                         {adminError}
                       </p>
                     </div>
-                    <button
+                    <Button
+                      variant="danger"
+                      className="mt-3 flex px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
                       onClick={loadManagedUsers}
-                      className="mt-3 flex items-center gap-2 px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
                     >
                       <RefreshCw size={14} />
                       Retry
-                    </button>
+                    </Button>
                   </div>
                 )}
 
@@ -568,14 +584,13 @@ export function SettingsPage() {
                   <div className="relative">
                     <Search
                       size={16}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
                     />
-                    <input
-                      type="text"
+                    <Input
+                      className="pl-9 pr-4 py-2 text-neutral-900 dark:text-neutral-100"
                       value={userSearch}
                       onChange={(e) => setUserSearch(e.target.value)}
                       placeholder="Search users by email..."
-                      className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     />
                   </div>
                 )}
@@ -591,11 +606,11 @@ export function SettingsPage() {
                   managedUsers.length ===
                     0 ? null /* Error banner is shown above */ : managedUsers.length ===
                   0 ? (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
                     No users found
                   </div>
                 ) : filteredManagedUsers.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
                     No users match your search
                   </div>
                 ) : (
@@ -603,20 +618,20 @@ export function SettingsPage() {
                     {filteredManagedUsers.map((managedUser) => (
                       <div
                         key={managedUser.id}
-                        className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                        className="flex items-center justify-between p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                          <div className="w-10 h-10 bg-neutral-200 dark:bg-neutral-700 rounded-full flex items-center justify-center">
                             <User
                               size={20}
-                              className="text-gray-500 dark:text-gray-400"
+                              className="text-neutral-500 dark:text-neutral-400"
                             />
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">
+                            <p className="font-medium text-neutral-900 dark:text-neutral-100">
                               {managedUser.email}
                             </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400">
                               {managedUser.hasApiKey
                                 ? "Has API Key"
                                 : "No API Key"}
@@ -625,23 +640,25 @@ export function SettingsPage() {
                         </div>
                         <div>
                           {managedUser.hasApiKey ? (
-                            <button
+                            <Button
+                              variant="danger"
+                              className="flex px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
                               onClick={() => handleRevokeKey(managedUser.id)}
                               aria-label="Revoke"
-                              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
                             >
                               <Trash2 size={14} />
                               Revoke
-                            </button>
+                            </Button>
                           ) : (
-                            <button
+                            <Button
+                              variant="success"
+                              className="flex px-3 py-1.5 text-sm bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400 rounded-lg hover:bg-success-200"
                               onClick={() => handleGenerateKey(managedUser.id)}
                               aria-label="Generate"
-                              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400 rounded-lg hover:bg-success-200"
                             >
                               <Plus size={14} />
                               Generate
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </div>

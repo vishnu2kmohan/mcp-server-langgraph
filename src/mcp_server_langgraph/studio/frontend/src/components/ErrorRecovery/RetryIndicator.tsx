@@ -22,6 +22,8 @@
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -203,10 +205,8 @@ export function RetryIndicator({
         </span>
         {paused && <span className="retry-paused-badge">Paused</span>}
       </div>
-
       {/* Error message */}
       {errorMessage && <p className="retry-error-message">{errorMessage}</p>}
-
       {/* Countdown timer */}
       <div className="retry-countdown-container">
         <span className="retry-countdown-label">Retrying in</span>
@@ -215,7 +215,6 @@ export function RetryIndicator({
         </span>
         <span className="retry-countdown-unit">s</span>
       </div>
-
       {/* Progress bar (hidden in compact mode) */}
       {!compact && (
         <div
@@ -232,25 +231,24 @@ export function RetryIndicator({
           />
         </div>
       )}
-
       {/* Action buttons */}
       <div className="retry-actions">
-        <button
-          type="button"
+        <Button
           className="retry-button retry-button-cancel"
+          type="button"
           onClick={handleCancel}
           aria-label="Cancel retry"
         >
           Cancel
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           className="retry-button retry-button-force"
+          type="button"
           onClick={handleForceRetry}
           aria-label="Retry now"
         >
           Retry Now
-        </button>
+        </Button>
       </div>
     </div>
   );

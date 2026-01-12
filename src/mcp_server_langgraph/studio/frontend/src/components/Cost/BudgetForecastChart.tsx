@@ -49,7 +49,9 @@ function TrendIcon({ trend }: { trend: TrendType }) {
       return <TrendingDown className={`${className} text-success-500`} />;
     case "stable":
       return (
-        <Minus className={`${className} text-gray-500 dark:text-gray-400`} />
+        <Minus
+          className={`${className} text-neutral-500 dark:text-neutral-400`}
+        />
       );
   }
 }
@@ -72,8 +74,8 @@ function getTrendStyles(trend: TrendType): {
       };
     case "stable":
       return {
-        textColor: "text-gray-600 dark:text-gray-400",
-        bgColor: "bg-gray-100 dark:bg-gray-800",
+        textColor: "text-neutral-600 dark:text-neutral-400",
+        bgColor: "bg-neutral-100 dark:bg-neutral-800",
       };
   }
 }
@@ -88,7 +90,7 @@ export function BudgetForecastChart({
     return (
       <div
         data-testid="budget-forecast-skeleton"
-        className={`p-6 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}
+        className={`p-6 rounded-lg border border-neutral-200 dark:border-neutral-700 ${className}`}
       >
         <div className="space-y-4">
           <Skeleton className="w-32 h-6" />
@@ -119,9 +121,9 @@ export function BudgetForecastChart({
     return (
       <div
         data-testid="budget-forecast-chart"
-        className={`p-6 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}
+        className={`p-6 rounded-lg border border-neutral-200 dark:border-neutral-700 ${className}`}
       >
-        <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+        <div className="text-center text-neutral-500 dark:text-neutral-400 py-8">
           <p className="text-lg">No data available for forecasting</p>
           <p className="text-sm mt-2">
             Cost data will appear here once usage is recorded.
@@ -134,11 +136,11 @@ export function BudgetForecastChart({
   return (
     <div
       data-testid="budget-forecast-chart"
-      className={`p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 ${className}`}
+      className={`p-6 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 ${className}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
           Cost Forecast
         </h3>
         <span
@@ -150,13 +152,13 @@ export function BudgetForecastChart({
       </div>
 
       {/* Days analyzed */}
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+      <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
         Based on {forecast.daysAnalyzed} days of data
       </p>
 
       {/* Progress Bar */}
       <div className="mb-4">
-        <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-1">
+        <div className="flex justify-between text-sm text-neutral-500 dark:text-neutral-400 mb-1">
           <span>Projected</span>
           <span>Budget Limit: {formatCurrency(forecast.monthlyLimit)}</span>
         </div>
@@ -165,7 +167,7 @@ export function BudgetForecastChart({
           aria-valuenow={projectedPercent}
           aria-valuemin={0}
           aria-valuemax={100}
-          className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden relative"
+          className="w-full h-4 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden relative"
         >
           {/* Confidence range band */}
           <div
@@ -185,7 +187,7 @@ export function BudgetForecastChart({
           />
           {/* Budget limit marker */}
           <div
-            className="absolute top-0 bottom-0 w-0.5 bg-gray-800 dark:bg-gray-300 dark:bg-gray-600"
+            className="absolute top-0 bottom-0 w-0.5 bg-neutral-800 dark:bg-neutral-300 dark:bg-neutral-600"
             style={{ left: "100%" }}
           />
         </div>
@@ -194,15 +196,15 @@ export function BudgetForecastChart({
       {/* Projections */}
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div className="text-center">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 uppercase">
             Low Estimate
           </p>
-          <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+          <p className="text-lg font-semibold text-neutral-700 dark:text-neutral-300">
             {formatCurrency(forecast.confidenceLow)}
           </p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 uppercase">
             Projected
           </p>
           <p
@@ -216,10 +218,10 @@ export function BudgetForecastChart({
           </p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 uppercase">
             High Estimate
           </p>
-          <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+          <p className="text-lg font-semibold text-neutral-700 dark:text-neutral-300">
             {formatCurrency(forecast.confidenceHigh)}
           </p>
         </div>
@@ -240,7 +242,7 @@ export function BudgetForecastChart({
       )}
 
       {/* Forecast message */}
-      <p className="text-sm text-gray-500 dark:text-gray-400 mt-4 text-center">
+      <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-4 text-center">
         {forecast.message}
       </p>
     </div>

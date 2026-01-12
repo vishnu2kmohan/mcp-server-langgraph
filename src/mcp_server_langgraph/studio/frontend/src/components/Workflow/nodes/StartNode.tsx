@@ -22,7 +22,7 @@ export const StartNode = memo(
       if (status === "running") return "border-primary-500 animate-pulse";
       if (status === "success") return "border-success-500";
       if (status === "error") return "border-error-500";
-      return "border-gray-300 dark:border-gray-600";
+      return "border-neutral-300 dark:border-neutral-600";
     };
 
     // Status icon
@@ -42,7 +42,7 @@ export const StartNode = memo(
           data-status={status}
           data-selected={selected}
           className={`
-          rounded-lg border-2 p-3 min-w-[180px] bg-white dark:bg-gray-800
+          rounded-lg border-2 p-3 min-w-[180px] bg-white dark:bg-neutral-800
           shadow-sm hover:shadow-md transition-shadow
           ${getBorderClass()}
         `}
@@ -50,7 +50,7 @@ export const StartNode = memo(
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Play className="w-5 h-5 text-success-500" />
-              <span className="font-medium text-gray-900 dark:text-gray-100">
+              <span className="font-medium text-neutral-900 dark:text-neutral-100">
                 {label}
               </span>
             </div>
@@ -62,7 +62,7 @@ export const StartNode = memo(
         <Handle
           type="source"
           position={Position.Right}
-          className="w-3 h-3 bg-primary-500 border-2 border-white dark:border-gray-800"
+          className="w-3 h-3 bg-primary-500 border-2 border-white dark:border-neutral-800"
         />
       </>
     );

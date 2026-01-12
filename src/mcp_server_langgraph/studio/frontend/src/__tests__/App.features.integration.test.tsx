@@ -385,7 +385,7 @@ describe("App - Features - Integration", () => {
 
       const rootElement = container.querySelector(".min-h-screen");
       expect(rootElement).toHaveClass("bg-white");
-      expect(rootElement).toHaveClass("dark:bg-gray-900");
+      expect(rootElement).toHaveClass("dark:bg-neutral-900");
     });
   });
 

@@ -23,6 +23,8 @@ import { toast } from "sonner";
 import { useExportSessionMutation } from "../../api";
 import type { ExportFormat } from "../../types/api";
 
+import { Button, Checkbox } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -123,13 +125,13 @@ export function ExportButton({
 
   return (
     <div className="relative">
-      <button
+      <Button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isLoading}
         className={cn(
           "flex items-center gap-2 px-3 py-1.5 text-sm",
-          "text-gray-700 dark:text-gray-300",
-          "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded",
+          "text-neutral-700 dark:text-neutral-300",
+          "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           className,
         )}
@@ -143,8 +145,7 @@ export function ExportButton({
           size={14}
           className={cn("transition-transform", isOpen && "rotate-180")}
         />
-      </button>
-
+      </Button>
       {/* Dropdown Menu */}
       {isOpen && (
         <>
@@ -160,8 +161,8 @@ export function ExportButton({
             className={cn(
               "absolute right-0 top-full mt-1 z-20",
               "w-56 rounded-md shadow-lg",
-              "bg-white dark:bg-gray-800",
-              "border border-gray-200 dark:border-gray-700",
+              "bg-white dark:bg-neutral-800",
+              "border border-neutral-200 dark:border-neutral-700",
               "py-1",
             )}
             role="menu"
@@ -169,42 +170,40 @@ export function ExportButton({
           >
             {/* Format Options */}
             {formatOptions.map(({ format, icon: Icon, label }) => (
-              <button
+              <Button
                 key={format}
                 onClick={() => handleExport(format)}
                 disabled={isLoading}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-2 text-sm text-left",
-                  "text-gray-700 dark:text-gray-300",
-                  "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                  "text-neutral-700 dark:text-neutral-300",
+                  "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
                 )}
                 role="menuitem"
               >
                 <Icon size={16} />
                 <span>{label}</span>
-              </button>
+              </Button>
             ))}
 
             {/* Divider */}
-            <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
+            <div className="my-1 border-t border-neutral-200 dark:border-neutral-700" />
 
             {/* Include Metadata Toggle */}
-            <label
+            <div
               className={cn(
-                "flex items-center gap-3 px-4 py-2 text-sm cursor-pointer",
-                "text-gray-700 dark:text-gray-300",
-                "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                "px-4 py-2",
+                "hover:bg-neutral-100 dark:hover:bg-neutral-700",
               )}
             >
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={includeMetadata}
-                onChange={(e) => setIncludeMetadata(e.target.checked)}
-                className="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
+                onChange={setIncludeMetadata}
+                label="Include metadata"
+                size="sm"
               />
-              <span>Include metadata</span>
-            </label>
+            </div>
           </div>
         </>
       )}

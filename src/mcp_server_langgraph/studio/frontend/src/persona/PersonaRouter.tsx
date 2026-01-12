@@ -20,6 +20,8 @@ import {
 import { type ModuleId } from "./PersonaVariants";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -130,7 +132,7 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
         aria-label="Loading persona"
         className={cn(
           "flex flex-col items-center justify-center h-full gap-4",
-          "text-gray-500 dark:text-gray-400",
+          "text-neutral-500 dark:text-neutral-400",
           className,
         )}
       >
@@ -149,12 +151,12 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
         aria-label="Access denied"
         className={cn(
           "flex flex-col items-center justify-center h-full gap-4 p-8",
-          "text-gray-500 dark:text-gray-400",
+          "text-neutral-500 dark:text-neutral-400",
           className,
         )}
       >
         <ShieldX className="h-16 w-16 text-error-400" />
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
           Access Denied
         </h2>
         <p className="text-sm text-center max-w-md">
@@ -162,7 +164,7 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
           ({subPersona || persona}) doesn&apos;t include access to this module.
         </p>
         <div className="flex gap-4 mt-4">
-          <button
+          <Button
             onClick={() => navigate(defaultRoute)}
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-md",
@@ -172,14 +174,14 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
           >
             Go to Home
             <ArrowRight className="h-4 w-4" />
-          </button>
+          </Button>
           <a
             href="mailto:admin@example.com?subject=Access Request"
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-md",
-              "border border-gray-300 dark:border-gray-600",
-              "text-gray-700 dark:text-gray-300",
-              "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors",
+              "border border-neutral-300 dark:border-neutral-600",
+              "text-neutral-700 dark:text-neutral-300",
+              "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors",
             )}
           >
             Request Access

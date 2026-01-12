@@ -21,7 +21,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useListAuditLogsQuery } from "../api";
-import { CursorPagination } from "../components/UI";
+import { CursorPagination, Button, Input } from "../components/UI";
 
 export function AuditLogPage() {
   // Pagination state
@@ -121,67 +121,65 @@ export function AuditLogPage() {
       return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400";
     if (action.includes("login"))
       return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
-    return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 dark:bg-gray-900/30 dark:text-gray-400";
+    return "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 dark:bg-neutral-900/30 dark:text-neutral-400";
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Shield className="text-primary-500" size={28} />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
                 Audit Logs
               </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 System activity and security events
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="secondary"
+              className="flex px-4 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
               onClick={handleExport}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
             >
               <Download size={16} />
               Export
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
+              className="flex px-4 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
               onClick={() => refetch()}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
             >
               <RefreshCw size={16} />
               Refresh
-            </button>
+            </Button>
           </div>
         </div>
       </header>
-
       {/* Filters */}
-      <div className="px-6 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="px-6 py-3 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center gap-4">
-          <input
-            type="text"
+          <Input
+            className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
             placeholder="Filter by action..."
             value={actionFilter}
             onChange={(e) => setActionFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
-          <input
-            type="text"
+          <Input
+            className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
             placeholder="Filter by user..."
             value={userFilter}
             onChange={(e) => setUserFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
             {filteredLogs.length} of {total} entries
           </span>
         </div>
       </div>
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {isLoading ? (
@@ -189,19 +187,20 @@ export function AuditLogPage() {
             <RefreshCw size={32} className="animate-spin text-primary-500" />
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+          <div className="flex flex-col items-center justify-center h-64 text-neutral-500 dark:text-neutral-400">
             <FileText size={48} className="mb-4 opacity-50" />
             <p className="text-lg">Failed to load audit logs</p>
-            <button
+            <Button
+              variant="primary"
+              className="mt-4 flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
               onClick={() => refetch()}
-              className="mt-4 flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               <RefreshCw size={16} />
               Retry
-            </button>
+            </Button>
           </div>
         ) : filteredLogs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+          <div className="flex flex-col items-center justify-center h-64 text-neutral-500 dark:text-neutral-400">
             <FileText size={48} className="mb-4 opacity-50" />
             <p className="text-lg">No audit logs found</p>
           </div>
@@ -211,23 +210,23 @@ export function AuditLogPage() {
               <div
                 key={log.id}
                 data-testid="audit-log-row"
-                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+                className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden"
               >
                 <div
                   onClick={() => toggleLogDetails(log.id)}
-                  className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  className="p-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       {expandedLogId === log.id ? (
                         <ChevronDown
                           size={16}
-                          className="text-gray-400 dark:text-gray-400"
+                          className="text-neutral-400 dark:text-neutral-400"
                         />
                       ) : (
                         <ChevronRight
                           size={16}
-                          className="text-gray-400 dark:text-gray-400"
+                          className="text-neutral-400 dark:text-neutral-400"
                         />
                       )}
                       <span
@@ -235,14 +234,14 @@ export function AuditLogPage() {
                       >
                         {log.action}
                       </span>
-                      <span className="text-gray-900 dark:text-gray-100">
+                      <span className="text-neutral-900 dark:text-neutral-100">
                         {log.user_email ?? log.user_id}
                       </span>
-                      <span className="text-gray-500 dark:text-gray-400 text-sm">
+                      <span className="text-neutral-500 dark:text-neutral-400 text-sm">
                         {log.resource_type}/{log.resource_id}
                       </span>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
                       {log.ip_address && <span>{log.ip_address}</span>}
                       <span>{new Date(log.timestamp).toLocaleString()}</span>
                     </div>
@@ -251,11 +250,11 @@ export function AuditLogPage() {
 
                 {/* Expanded Details */}
                 {expandedLogId === log.id && log.details && (
-                  <div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <div className="px-4 pb-4 pt-2 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
+                    <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                       Details
                     </h4>
-                    <pre className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-auto">
+                    <pre className="text-sm text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg overflow-auto">
                       {JSON.stringify(log.details, null, 2)}
                     </pre>
                   </div>
@@ -265,7 +264,6 @@ export function AuditLogPage() {
           </div>
         )}
       </div>
-
       {/* Pagination */}
       {!isLoading && !error && (
         <CursorPagination

@@ -6,6 +6,8 @@
 
 import { X, Copy } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 export interface CodePanelProps {
   code: string;
   isOpen: boolean;
@@ -32,59 +34,50 @@ export function CodePanel({
       data-testid="code-panel"
       className={`w-96 border-l flex flex-col ${
         isDarkMode
-          ? "bg-gray-800 border-gray-700"
-          : "bg-white border-gray-200 dark:border-gray-700"
+          ? "bg-neutral-800 border-neutral-700"
+          : "bg-white border-neutral-200 dark:border-neutral-700"
       }`}
     >
       <div
         className={`p-4 border-b flex items-center justify-between ${
           isDarkMode
-            ? "border-gray-700"
-            : "border-gray-200 dark:border-gray-700"
+            ? "border-neutral-700"
+            : "border-neutral-200 dark:border-neutral-700"
         }`}
       >
         <h2
           className={`text-lg font-semibold ${
-            isDarkMode ? "text-white" : "text-gray-900"
+            isDarkMode ? "text-white" : "text-neutral-900"
           }`}
         >
           Generated Code
         </h2>
         <div className="flex gap-2">
-          <button
+          <Button
+            className="p-2 rounded-lg"
             onClick={onCopy}
-            className={`p-2 rounded-lg transition-colors ${
-              isDarkMode
-                ? "hover:bg-gray-700 text-gray-300"
-                : "hover:bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
-            }`}
             title="Copy to clipboard"
             aria-label="Copy code"
           >
             <Copy size={18} />
-          </button>
-          <button
+          </Button>
+          <Button
+            className="p-2 rounded-lg"
             onClick={onClose}
-            className={`p-2 rounded-lg transition-colors ${
-              isDarkMode
-                ? "hover:bg-gray-700 text-gray-300"
-                : "hover:bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
-            }`}
             title="Close panel"
             aria-label="Close"
           >
             <X size={18} />
-          </button>
+          </Button>
         </div>
       </div>
-
       <div className="flex-1 overflow-auto p-4">
         {isEmpty ? (
           <div
             className={`text-center py-8 ${
               isDarkMode
-                ? "text-gray-400 dark:text-gray-400"
-                : "text-gray-500 dark:text-gray-400"
+                ? "text-neutral-400 dark:text-neutral-400"
+                : "text-neutral-500 dark:text-neutral-400"
             }`}
           >
             <p>No code generated yet.</p>
@@ -96,7 +89,7 @@ export function CodePanel({
         ) : (
           <pre
             className={`text-sm font-mono whitespace-pre-wrap ${
-              isDarkMode ? "text-gray-300" : "text-gray-800"
+              isDarkMode ? "text-neutral-300" : "text-neutral-800"
             }`}
           >
             {code}

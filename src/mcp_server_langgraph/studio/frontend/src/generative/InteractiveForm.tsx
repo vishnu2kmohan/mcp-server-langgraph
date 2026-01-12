@@ -8,6 +8,8 @@ import { useState, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "../utils/cn";
 
+import { Button, Input, Select, Textarea, Checkbox } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -118,11 +120,11 @@ export function InteractiveForm({
 
     const baseInputClass = cn(
       "w-full px-3 py-2 rounded-lg",
-      "bg-gray-50 dark:bg-gray-900",
+      "bg-neutral-50 dark:bg-neutral-900",
       "border",
-      error ? "border-error-500" : "border-gray-200 dark:border-gray-700",
-      "text-gray-900 dark:text-gray-100",
-      "placeholder-gray-500 dark:placeholder-gray-400",
+      error ? "border-error-500" : "border-neutral-200 dark:border-neutral-700",
+      "text-neutral-900 dark:text-neutral-100",
+      "placeholder-neutral-500 dark:placeholder-neutral-400",
       "focus:outline-none focus:ring-2 focus:ring-primary-500",
     );
 
@@ -131,7 +133,7 @@ export function InteractiveForm({
       case "email":
       case "number":
         return (
-          <input
+          <Input
             id={inputId}
             type={field.type}
             value={value as string}
@@ -144,7 +146,7 @@ export function InteractiveForm({
 
       case "textarea":
         return (
-          <textarea
+          <Textarea
             id={inputId}
             value={value as string}
             onChange={(e) => handleChange(field.id, e.target.value)}
@@ -157,7 +159,7 @@ export function InteractiveForm({
 
       case "select":
         return (
-          <select
+          <Select
             id={inputId}
             value={value as string}
             onChange={(e) => handleChange(field.id, e.target.value)}
@@ -170,18 +172,16 @@ export function InteractiveForm({
                 {option}
               </option>
             ))}
-          </select>
+          </Select>
         );
 
       case "checkbox":
         return (
-          <input
+          <Checkbox
             id={inputId}
-            type="checkbox"
             checked={value as boolean}
-            onChange={(e) => handleChange(field.id, e.target.checked)}
-            aria-required={field.required}
-            className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-500 focus:ring-primary-500"
+            onChange={(checked) => handleChange(field.id, checked)}
+            required={field.required}
           />
         );
 
@@ -197,22 +197,20 @@ export function InteractiveForm({
       noValidate
       onSubmit={handleSubmit}
       className={cn(
-        "bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6",
+        "bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6",
         className,
       )}
     >
       {/* Title */}
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+      <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
         {config.title}
       </h2>
-
       {/* Description */}
       {config.description && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
           {config.description}
         </p>
       )}
-
       {/* Fields */}
       <div className="space-y-4">
         {config.fields.map((field) => (
@@ -228,7 +226,7 @@ export function InteractiveForm({
             <label
               htmlFor={`field-${field.id}`}
               className={cn(
-                "text-sm font-medium text-gray-700 dark:text-gray-300",
+                "text-sm font-medium text-neutral-700 dark:text-neutral-300",
                 field.type === "checkbox" && "order-2",
               )}
             >
@@ -249,9 +247,8 @@ export function InteractiveForm({
           </div>
         ))}
       </div>
-
       {/* Submit Button */}
-      <button
+      <Button
         type="submit"
         disabled={isSubmitting}
         className={cn(
@@ -271,7 +268,7 @@ export function InteractiveForm({
           />
         )}
         {config.submitLabel || "Submit"}
-      </button>
+      </Button>
     </form>
   );
 }

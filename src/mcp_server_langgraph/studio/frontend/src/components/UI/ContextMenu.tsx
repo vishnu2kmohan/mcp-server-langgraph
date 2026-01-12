@@ -19,6 +19,9 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { Button } from "@/components/UI";
+import { cn } from "../../utils/cn";
+
 export interface ContextMenuItem {
   /** Unique identifier for the item */
   id: string;
@@ -45,13 +48,6 @@ export interface ContextMenuProps {
   onOpen?: () => void;
   /** Callback when menu closes */
   onClose?: () => void;
-}
-
-/**
- * Utility to combine class names
- */
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
 }
 
 /**
@@ -199,8 +195,8 @@ export function ContextMenu({
             aria-label={ariaLabel}
             className={cn(
               "fixed z-50 min-w-[160px] py-1 rounded-lg shadow-lg",
-              "bg-white border border-gray-200 dark:border-gray-700",
-              "dark:bg-gray-800 dark:border-gray-700",
+              "bg-white border border-neutral-200 dark:border-neutral-700",
+              "dark:bg-neutral-800 dark:border-neutral-700",
               "animate-in fade-in-0 zoom-in-95 duration-100",
             )}
             style={{
@@ -215,7 +211,7 @@ export function ContextMenu({
                   <div
                     key={item.id}
                     role="separator"
-                    className="my-1 border-t border-gray-200 dark:border-gray-700"
+                    className="my-1 border-t border-neutral-200 dark:border-neutral-700"
                   />
                 );
               }
@@ -225,7 +221,7 @@ export function ContextMenu({
               const currentActionableIndex = actionableIndex;
 
               return (
-                <button
+                <Button
                   key={item.id}
                   ref={(el) => {
                     itemRefs.current[currentActionableIndex] = el;
@@ -236,11 +232,11 @@ export function ContextMenu({
                   onClick={() => handleItemClick(item)}
                   className={cn(
                     "w-full px-3 py-2 text-left text-sm flex items-center gap-2",
-                    "focus:outline-none focus:bg-gray-100 dark:bg-gray-800 dark:focus:bg-gray-700",
-                    "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                    "focus:outline-none focus:bg-neutral-100 dark:bg-neutral-800 dark:focus:bg-neutral-700",
+                    "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
                     item.disabled
-                      ? "text-gray-400 dark:text-gray-400 cursor-not-allowed"
-                      : "text-gray-700 dark:text-gray-200",
+                      ? "text-neutral-400 dark:text-neutral-400 cursor-not-allowed"
+                      : "text-neutral-700 dark:text-neutral-200",
                   )}
                 >
                   {item.icon && (
@@ -249,7 +245,7 @@ export function ContextMenu({
                     </span>
                   )}
                   {item.label}
-                </button>
+                </Button>
               );
             })}
           </div>,

@@ -25,6 +25,8 @@ import {
 } from "../store/slices/backgroundAgentSlice";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -95,8 +97,8 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
     <li
       className={cn(
         "p-3 rounded-lg border",
-        "bg-white dark:bg-gray-800",
-        "border-gray-200 dark:border-gray-700",
+        "bg-white dark:bg-neutral-800",
+        "border-neutral-200 dark:border-neutral-700",
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -113,11 +115,11 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
               {config.icon}
               {agent.status}
             </span>
-            <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+            <h4 className="text-sm font-medium text-neutral-900 dark:text-white truncate">
               {agent.name}
             </h4>
           </div>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 truncate">
             {agent.task}
           </p>
           {agent.error && (
@@ -127,42 +129,41 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
 
         <div className="flex items-center gap-1">
           {canCancel && (
-            <button
+            <Button
               type="button"
               onClick={() => onCancel?.(agent.id)}
               aria-label={`Cancel ${agent.name}`}
               className={cn(
                 "p-1 rounded",
-                "text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300",
-                "dark:hover:text-gray-300",
-                "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                "text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300",
+                "dark:hover:text-neutral-300",
+                "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
               )}
             >
               <X className="h-4 w-4" />
-            </button>
+            </Button>
           )}
           {canDismiss && (
-            <button
+            <Button
               type="button"
               onClick={() => onDismiss(agent.id)}
               aria-label={`Dismiss ${agent.name}`}
               className={cn(
                 "p-1 rounded",
-                "text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300",
-                "dark:hover:text-gray-300",
-                "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                "text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300",
+                "dark:hover:text-neutral-300",
+                "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
               )}
             >
               <Trash2 className="h-4 w-4" />
-            </button>
+            </Button>
           )}
         </div>
       </div>
-
       {/* Progress bar for running tasks */}
       {agent.status === "running" && (
         <div className="mt-2">
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+          <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-1">
             <span>Progress</span>
             <span>{agent.progress}%</span>
           </div>
@@ -171,7 +172,7 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
             aria-valuenow={agent.progress}
             aria-valuemin={0}
             aria-valuemax={100}
-            className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+            className="h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden"
           >
             <div
               className="h-full bg-primary-500 transition-all duration-300"
@@ -213,7 +214,7 @@ export function AgentTaskQueue({ onCancel, className }: AgentTaskQueueProps) {
         data-testid="agent-task-queue"
         className={cn(
           "flex flex-col items-center justify-center p-8 text-center",
-          "text-gray-500 dark:text-gray-400",
+          "text-neutral-500 dark:text-neutral-400",
           className,
         )}
       >
@@ -236,36 +237,35 @@ export function AgentTaskQueue({ onCancel, className }: AgentTaskQueueProps) {
       className={cn("flex flex-col h-full", className)}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
         <div>
           <h3
-            className="text-sm font-semibold text-gray-900 dark:text-white"
+            className="text-sm font-semibold text-neutral-900 dark:text-white"
             role="heading"
           >
             Task Queue
           </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
             {agents.length} {taskLabel}
             {runningCount > 0 && ` (${runningCount} running)`}
           </p>
         </div>
 
         {hasCompletedOrFailed && (
-          <button
+          <Button
             type="button"
             onClick={handleClearCompleted}
             className={cn(
               "text-xs px-2 py-1 rounded",
-              "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200",
-              "dark:text-gray-400 dark:hover:text-gray-200",
-              "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+              "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200",
+              "dark:text-neutral-400 dark:hover:text-neutral-200",
+              "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
             )}
           >
             Clear completed
-          </button>
+          </Button>
         )}
       </div>
-
       {/* Task list */}
       <ul role="list" className="flex-1 overflow-y-auto p-4 space-y-3">
         {agents.map((agent) => (

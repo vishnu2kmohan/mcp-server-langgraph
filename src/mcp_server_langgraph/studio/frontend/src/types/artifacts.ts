@@ -14,13 +14,16 @@ export type ArtifactType =
   | "code"
   | "mermaid"
   | "json"
+  | "html"
   | "image"
   | "text"
   | "svg"
   | "audio"
   | "video"
   | "executable"
-  | "widget";
+  | "widget"
+  | "vega-lite"
+  | "latex";
 
 /**
  * Chart types for ChartArtifact
@@ -223,6 +226,27 @@ export interface SVGArtifact extends BaseArtifact {
 }
 
 /**
+ * HTML artifact configuration
+ */
+export interface HTMLConfig {
+  /** Enable scripts (for trusted content like Bokeh) */
+  allowScripts?: boolean;
+  /** Custom sandbox permissions */
+  sandbox?: string;
+  /** Height in pixels */
+  height?: number;
+}
+
+/**
+ * HTML artifact (rendered HTML content)
+ */
+export interface HTMLArtifact extends BaseArtifact {
+  type: "html";
+  data: string; // HTML content
+  config?: HTMLConfig;
+}
+
+/**
  * Audio artifact configuration
  */
 export interface AudioConfig {
@@ -302,6 +326,91 @@ export interface ExecutableArtifact extends BaseArtifact {
 }
 
 // =============================================================================
+// Vega-Lite Artifact Types (Interactive Altair Charts)
+// =============================================================================
+
+/**
+ * Vega-Lite artifact configuration
+ */
+export interface VegaLiteConfig {
+  /** Vega-Lite theme: light or dark */
+  theme?: "light" | "dark";
+  /** Enable tooltip on hover */
+  enableTooltip?: boolean;
+  /** Width in pixels or 'container' for responsive */
+  width?: number | "container";
+  /** Height in pixels */
+  height?: number;
+  /** Enable actions menu (export, source, etc.) */
+  actions?:
+    | boolean
+    | { export?: boolean; source?: boolean; compiled?: boolean };
+  /** Renderer: svg or canvas */
+  renderer?: "svg" | "canvas";
+}
+
+/**
+ * Vega-Lite specification (minimal type for common properties)
+ * Full spec is validated by vega-lite library
+ */
+export interface VegaLiteSpec {
+  /** Schema URL identifying this as Vega-Lite */
+  $schema?: string;
+  /** Description for accessibility and title fallback */
+  description?: string;
+  /** Title of the chart */
+  title?: string | { text: string };
+  /** Data source */
+  data?: unknown;
+  /** Mark type */
+  mark?: string | { type: string };
+  /** Encoding channels */
+  encoding?: Record<string, unknown>;
+  /** Layer for multi-layer charts */
+  layer?: unknown[];
+  /** Configuration options */
+  config?: Record<string, unknown>;
+  /** Allow additional properties */
+  [key: string]: unknown;
+}
+
+/**
+ * Vega-Lite artifact for interactive Altair charts
+ * Renders Vega-Lite specifications using vega-embed
+ */
+export interface VegaLiteArtifact extends BaseArtifact {
+  type: "vega-lite";
+  /** Vega-Lite specification (object or JSON string) */
+  data: VegaLiteSpec | string;
+  config?: VegaLiteConfig;
+}
+
+// =============================================================================
+// LaTeX Artifact Types (Mathematical Expressions)
+// =============================================================================
+
+/**
+ * LaTeX artifact configuration
+ */
+export interface LaTeXConfig {
+  /** Display mode (block) vs inline mode */
+  displayMode?: boolean;
+  /** Theme: light or dark */
+  theme?: "light" | "dark";
+}
+
+/**
+ * LaTeX artifact for mathematical expressions
+ * Renders LaTeX using KaTeX
+ */
+export interface LaTeXArtifact extends BaseArtifact {
+  type: "latex";
+  /** LaTeX content string */
+  data: string;
+  config?: LaTeXConfig;
+}
+
+// =============================================================================
 // Widget Artifact Types (Sprint 4 - GenUI Integration)
 // =============================================================================
 
@@ -364,13 +473,16 @@ export type Artifact =
   | CodeArtifact
   | MermaidArtifact
   | JSONArtifact
+  | HTMLArtifact
   | ImageArtifact
   | TextArtifact
   | SVGArtifact
   | AudioArtifact
   | VideoArtifact
   | ExecutableArtifact
-  | WidgetArtifact;
+  | WidgetArtifact
+  | VegaLiteArtifact
+  | LaTeXArtifact;
 
 /**
  * Artifact detection result

@@ -7,6 +7,8 @@
 
 import { RefreshCw, X } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 export interface UpdatePromptProps {
   /** Whether a new version is available */
   needsUpdate: boolean;
@@ -55,7 +57,6 @@ export function UpdatePrompt({
         className={`h-5 w-5 flex-shrink-0 ${isUpdating ? "animate-spin" : ""}`}
         aria-hidden="true"
       />
-
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium">
           {isUpdating ? "Updating application..." : "New version available"}
@@ -66,27 +67,28 @@ export function UpdatePrompt({
           </p>
         )}
       </div>
-
       <div className="flex items-center gap-2 flex-shrink-0">
-        <button
+        <Button
+          variant="primary"
+          className="px-3 py-1.5 text-sm bg-white text-primary-600 rounded hover:bg-primary-50"
           type="button"
           onClick={onUpdate}
           disabled={isUpdating}
-          className="px-3 py-1.5 text-sm font-medium bg-white text-primary-600 rounded hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Update application now"
         >
           Update
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="primary"
+          className="p-1.5 text-primary-100 hover:text-white hover:bg-primary-700 rounded"
           type="button"
           onClick={onDismiss}
           disabled={isUpdating}
-          className="p-1.5 text-primary-100 hover:text-white hover:bg-primary-700 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Remind me later"
         >
           <X className="h-4 w-4" aria-hidden="true" />
           <span className="sr-only">Later</span>
-        </button>
+        </Button>
       </div>
     </div>
   );

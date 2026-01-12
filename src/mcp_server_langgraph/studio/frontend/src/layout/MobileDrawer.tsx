@@ -39,6 +39,8 @@ import { selectSidebarItems } from "../store/slices/personaSlice";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -237,7 +239,6 @@ export function MobileDrawer({
         )}
         aria-hidden="true"
       />
-
       {/* Drawer */}
       <div
         ref={drawerRef}
@@ -248,8 +249,8 @@ export function MobileDrawer({
         aria-label="Mobile navigation"
         className={cn(
           "fixed top-0 left-0 z-50 h-full w-72",
-          "bg-white dark:bg-gray-900",
-          "border-r border-gray-200 dark:border-gray-700",
+          "bg-white dark:bg-neutral-900",
+          "border-r border-neutral-200 dark:border-neutral-700",
           "shadow-xl",
           "transform transition-transform duration-200 ease-out",
           isOpen ? "translate-x-0" : "-translate-x-full",
@@ -257,31 +258,31 @@ export function MobileDrawer({
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <span className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+          <span className="text-lg font-semibold text-neutral-900 dark:text-white">
             Navigation
           </span>
-          <button
+          <Button
             type="button"
             data-testid="mobile-drawer-close"
             onClick={onClose}
             aria-label="Close navigation menu"
             className={cn(
               "p-2 rounded-lg",
-              "text-gray-500 dark:text-gray-400",
-              "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
+              "text-neutral-500 dark:text-neutral-400",
+              "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
               "focus:outline-none focus:ring-2 focus:ring-primary-500",
             )}
           >
             <X size={20} />
-          </button>
+          </Button>
         </div>
 
         {/* Navigation Items */}
         <nav className="flex flex-col flex-1 overflow-y-auto py-4">
           <div className="flex flex-col gap-1 px-2">
             {visibleNavItems.map((item) => (
-              <button
+              <Button
                 key={item.id}
                 type="button"
                 data-testid={`mobile-nav-${item.id}`}
@@ -292,12 +293,12 @@ export function MobileDrawer({
                   "focus:outline-none focus:ring-2 focus:ring-primary-500",
                   activeItem === item.id
                     ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
+                    : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
                 )}
               >
                 {item.icon}
                 <span className="text-sm font-medium">{item.label}</span>
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -305,9 +306,9 @@ export function MobileDrawer({
           <div className="flex-1" />
 
           {/* Bottom Items */}
-          <div className="flex flex-col gap-1 px-2 pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col gap-1 px-2 pt-4 mt-4 border-t border-neutral-200 dark:border-neutral-700">
             {visibleBottomItems.map((item) => (
-              <button
+              <Button
                 key={item.id}
                 type="button"
                 data-testid={`mobile-nav-${item.id}`}
@@ -318,12 +319,12 @@ export function MobileDrawer({
                   "focus:outline-none focus:ring-2 focus:ring-primary-500",
                   activeItem === item.id
                     ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
+                    : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
                 )}
               >
                 {item.icon}
                 <span className="text-sm font-medium">{item.label}</span>
-              </button>
+              </Button>
             ))}
           </div>
         </nav>

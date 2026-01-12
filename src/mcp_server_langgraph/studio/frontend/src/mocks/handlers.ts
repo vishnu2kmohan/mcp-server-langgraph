@@ -50,6 +50,7 @@ import { aiSuggestionsHandlers } from "./handlers/aiSuggestionsHandlers";
 import { nodeConfigHandlers } from "./handlers/nodeConfigHandlers";
 import { heartHandlers } from "./handlers/heartHandlers";
 import { agentRequestHandlers } from "./handlers/agentRequestHandlers";
+import { feedbackHandlers } from "./handlers/feedbackHandlers";
 
 // =============================================================================
 // Mock Data Factories
@@ -219,6 +220,7 @@ export const mockFeatureFlags: FeatureFlags = {
   keyboard_shortcuts: true,
   theme_customization: true,
   confirmation_dialogs: true,
+  enhanced_model_selector: true, // Sprint 1: recent models, search, capability badges
 
   // AI UX Features (Phase 6 AI-Native Integration)
   ai_disclosure: true,
@@ -230,8 +232,18 @@ export const mockFeatureFlags: FeatureFlags = {
   ai_persona_analysis: true,
   batch_composite_analysis: true,
 
+  // Admin Dashboard AI Quality (Phase 5)
+  ai_quality_metrics: true,
+
   // HITL Features (Confidence-Based Agent Approval)
   agent_hitl: true,
+
+  // Workflow Features
+  workflow_from_chat: true, // Generate workflow from chat session
+
+  // Skills Marketplace (ADR-0072)
+  skills_system: true,
+  skills_marketplace: true,
 };
 
 // =============================================================================
@@ -249,6 +261,103 @@ export const handlers = [
   http.get("/api/v1/features", async () => {
     await delay(50);
     return HttpResponse.json(mockFeatureFlags);
+  }),
+
+  // Config: Server Defaults (12-Factor App - frontend hydration)
+  http.get("/api/v1/config/defaults", async () => {
+    await delay(50);
+    return HttpResponse.json({
+      model_name: "claude-3-5-sonnet",
+      model_provider: "anthropic",
+      max_tokens: 8192,
+      temperature: 0.7,
+    });
+  }),
+
+  // Config: Available Models (12-Factor App - single source of truth)
+  // Model capabilities: supports_thinking, supports_vision, supports_tools
+  // Lifecycle status: current, preview, legacy, deprecated
+  http.get("/api/v1/config/models", async () => {
+    await delay(50);
+    return HttpResponse.json([
+      // Current models (recommended for production)
+      {
+        id: "claude-opus-4-5",
+        name: "Claude Opus 4.5",
+        provider: "anthropic",
+        supports_thinking: true,
+        supports_vision: true,
+        supports_tools: true,
+        status: "current",
+      },
+      {
+        id: "claude-sonnet-4-5",
+        name: "Claude Sonnet 4.5",
+        provider: "anthropic",
+        supports_thinking: true,
+        supports_vision: true,
+        supports_tools: true,
+        status: "current",
+      },
+      {
+        id: "claude-haiku-4-5",
+        name: "Claude Haiku 4.5",
+        provider: "anthropic",
+        supports_thinking: false,
+        supports_vision: true,
+        supports_tools: true,
+        status: "current",
+      },
+      {
+        id: "gpt-5.2",
+        name: "GPT-5.2",
+        provider: "openai",
+        supports_thinking: false,
+        supports_vision: true,
+        supports_tools: true,
+        status: "current",
+      },
+      {
+        id: "gemini-2.5-flash",
+        name: "Gemini 2.5 Flash",
+        provider: "google",
+        supports_thinking: false,
+        supports_vision: true,
+        supports_tools: true,
+        status: "current",
+      },
+      // Preview models (not yet GA)
+      {
+        id: "gemini-3-flash",
+        name: "Gemini 3 Flash",
+        provider: "google",
+        supports_thinking: false,
+        supports_vision: true,
+        supports_tools: true,
+        status: "preview",
+      },
+      // Legacy models (still supported but superseded)
+      {
+        id: "gpt-4o",
+        name: "GPT-4o",
+        provider: "openai",
+        supports_thinking: false,
+        supports_vision: true,
+        supports_tools: true,
+        status: "legacy",
+      },
+      // Deprecated models (scheduled for retirement)
+      {
+        id: "claude-3-5-sonnet",
+        name: "Claude 3.5 Sonnet",
+        provider: "anthropic",
+        supports_thinking: true,
+        supports_vision: true,
+        supports_tools: true,
+        status: "deprecated",
+        sunset_date: "2025-10-31",
+      },
+    ]);
   }),
 
   // User Info
@@ -915,6 +1024,9 @@ export const handlers = [
 
   // Agent Request Handlers (HITL)
   ...agentRequestHandlers,
+
+  // Feedback Handlers (AI Quality Metrics)
+  ...feedbackHandlers,
 
   // ==========================================================================
   // WebSocket Handlers

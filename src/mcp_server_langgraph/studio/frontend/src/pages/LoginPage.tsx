@@ -118,7 +118,7 @@ export function LoginPage() {
   }, [isAuthenticated, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-800 px-4">
       <div className="w-full max-w-md">
         {/* Logo and Title */}
         <div className="text-center mb-8">
@@ -137,16 +137,16 @@ export function LoginPage() {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
             Agent Studio
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-neutral-500 dark:text-neutral-400 mt-1">
             Sign in to continue
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl p-8 border border-neutral-200 dark:border-neutral-700">
           {/* Loading state */}
           {idpLoading && (
             <div className="flex items-center justify-center py-8">
@@ -169,7 +169,7 @@ export function LoginPage() {
                   <LogIn className="h-5 w-5" />
                   Sign in with SSO
                 </a>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center mt-2">
                   Secure OAuth2 + PKCE authentication
                 </p>
               </div>
@@ -180,10 +180,10 @@ export function LoginPage() {
                   {/* Divider */}
                   <div className="relative mb-6">
                     <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                      <div className="w-full border-t border-neutral-300 dark:border-neutral-600" />
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                      <span className="px-2 bg-white dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400">
                         or continue with
                       </span>
                     </div>
@@ -195,7 +195,7 @@ export function LoginPage() {
                       <a
                         key={provider.alias}
                         href={provider.login_url}
-                        className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                        className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 font-medium hover:bg-neutral-50 dark:hover:bg-neutral-600 transition-colors"
                       >
                         {getProviderIcon(provider.icon)}
                         <span>{provider.display_name}</span>
@@ -209,7 +209,7 @@ export function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+        <p className="text-center text-sm text-neutral-500 dark:text-neutral-400 mt-6">
           Agent Studio v0.1.0
         </p>
       </div>

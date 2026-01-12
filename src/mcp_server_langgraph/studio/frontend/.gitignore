@@ -9,3 +9,6 @@ node_modules/
 dist/
 coverage/
 *.log
+
+*storybook.log
+storybook-static

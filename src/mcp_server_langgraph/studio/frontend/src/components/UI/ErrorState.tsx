@@ -1,15 +1,47 @@
 /**
- * ErrorState
+ * ErrorState Component
  *
- * Standardized error state component for consistent error display across pages.
- * Provides customizable styling, retry functionality, and accessible design.
+ * Standardized error state component with CVA-based type-safe variants.
+ * Provides consistent error display across pages with customizable styling,
+ * retry functionality, and accessible design.
+ *
+ * Uses class-variance-authority (CVA) for type-safe variant management.
  */
 
+import { cva, type VariantProps } from "class-variance-authority";
 import { AlertCircle, RefreshCw } from "lucide-react";
+import { cn } from "../../utils/cn";
 
-export type ErrorStateVariant = "default" | "compact" | "fullscreen";
+import { Button } from "@/components/UI";
 
-export interface ErrorStateProps {
+/**
+ * ErrorState variant styles using CVA
+ * Exported for use in compound components or style composition
+ */
+export const errorStateVariants = cva(
+  // Base styles
+  "flex flex-col items-center justify-center text-center",
+  {
+    variants: {
+      variant: {
+        default: "h-64",
+        compact: "py-8",
+        fullscreen: "h-full",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
+
+export type ErrorStateVariant = NonNullable<
+  VariantProps<typeof errorStateVariants>["variant"]
+>;
+
+export interface ErrorStateProps extends VariantProps<
+  typeof errorStateVariants
+> {
   /** Error title */
   title?: string;
   /** Error message to display */
@@ -18,46 +50,41 @@ export interface ErrorStateProps {
   onRetry?: () => void;
   /** Custom retry button text */
   retryText?: string;
-  /** Variant for different size contexts */
-  variant?: ErrorStateVariant;
   /** Optional className for additional styling */
   className?: string;
 }
 
-const variantClasses: Record<ErrorStateVariant, string> = {
-  default: "h-64",
-  compact: "py-8",
-  fullscreen: "h-full",
-};
-
+/**
+ * ErrorState component with semantic error display
+ */
 export function ErrorState({
   title = "Error",
   message = "Something went wrong",
   onRetry,
   retryText = "Retry",
-  variant = "default",
+  variant,
   className = "",
 }: ErrorStateProps) {
   return (
     <div
       role="alert"
-      className={`flex flex-col items-center justify-center text-center ${variantClasses[variant]} ${className}`}
+      className={cn(errorStateVariants({ variant }), className)}
     >
       <AlertCircle size={48} className="text-error-500 mb-4" />
-      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+      <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
         {title}
       </h3>
-      <p className="text-gray-500 dark:text-gray-400 mb-4 max-w-md">
+      <p className="text-neutral-500 dark:text-neutral-400 mb-4 max-w-md">
         {message}
       </p>
       {onRetry && (
-        <button
+        <Button
+          variant="primary"
           onClick={onRetry}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          leftIcon={<RefreshCw size={16} />}
         >
-          <RefreshCw size={16} />
           {retryText}
-        </button>
+        </Button>
       )}
     </div>
   );

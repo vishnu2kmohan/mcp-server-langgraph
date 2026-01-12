@@ -451,7 +451,7 @@ export function App() {
   }, [userData]);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-neutral-900">
       <OfflineBanner />
       {/* All routes render via router - StudioShellLayout for /studio/* */}
       <Outlet />

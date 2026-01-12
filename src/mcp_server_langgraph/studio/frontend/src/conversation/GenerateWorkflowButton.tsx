@@ -5,7 +5,7 @@
  * Uses the centralized /from-chat endpoint (NO JS DUPLICATION).
  *
  * Features:
- * - Feature-flagged (enable_workflow_from_chat)
+ * - Feature-flagged (workflow_from_chat)
  * - Shows loading state during generation
  * - Navigates to workflow editor on success
  * - Displays error state on failure
@@ -22,6 +22,8 @@ import { useGetFeatureFlagsQuery } from "../api";
 import { cn } from "../utils/cn";
 
 import type { GenerateWorkflowFromChatResponse } from "../types";
+
+import { Button } from "@/components/UI";
 
 export interface GenerateWorkflowButtonProps {
   /** Session ID to generate workflow from */
@@ -76,14 +78,14 @@ export function GenerateWorkflowButton({
     return null;
   }
 
-  if (!featureFlags?.enable_workflow_from_chat) {
+  if (!featureFlags?.workflow_from_chat) {
     return null;
   }
 
   const isDisabled = !sessionId || isGenerating;
 
   return (
-    <button
+    <Button
       data-testid="generate-workflow-button"
       data-error={error ? "true" : "false"}
       type="button"
@@ -91,8 +93,8 @@ export function GenerateWorkflowButton({
       disabled={isDisabled}
       className={cn(
         "p-1.5 rounded-md",
-        "text-gray-500 dark:text-gray-400",
-        "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+        "text-neutral-500 dark:text-neutral-400",
+        "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
         "transition-colors",
         "disabled:opacity-50 disabled:cursor-not-allowed",
         error && "text-error-500 dark:text-error-400",
@@ -106,7 +108,7 @@ export function GenerateWorkflowButton({
       ) : (
         <Workflow size={14} />
       )}
-    </button>
+    </Button>
   );
 }
 

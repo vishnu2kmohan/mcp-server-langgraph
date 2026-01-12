@@ -24,6 +24,8 @@ import {
 } from "../../store/slices/workflowSlice";
 import type { NodeStatus } from "../../types/workflow";
 
+import { Button } from "@/components/UI";
+
 interface ExecutionPanelProps {
   onClose?: () => void;
   onStop?: () => void;
@@ -56,7 +58,7 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
         return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
       case "idle":
       default:
-        return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
+        return "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300";
     }
   };
 
@@ -93,17 +95,17 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
   };
 
   return (
-    <div className="h-64 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex flex-col">
+    <div className="h-64 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between p-3 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
             Execution Logs
           </h3>
           <span
             className={`
               text-xs px-2 py-0.5 rounded
-              ${executionState === "idle" ? "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" : ""}
+              ${executionState === "idle" ? "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300" : ""}
               ${executionState === "running" ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400" : ""}
               ${executionState === "completed" ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400" : ""}
               ${executionState === "error" ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400" : ""}
@@ -115,40 +117,43 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
 
         <div className="flex items-center gap-2">
           {executionState === "running" && onStop && (
-            <button
+            <Button
+              variant="danger"
+              size="sm"
+              className="flex text-xs px-2 py-1 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded hover:bg-error-200 dark:hover:bg-error-900/50"
               onClick={onStop}
-              className="flex items-center gap-1 text-xs px-2 py-1 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded hover:bg-error-200 dark:hover:bg-error-900/50"
             >
               <Square size={12} />
               Stop
-            </button>
+            </Button>
           )}
           {executionLogs.length > 0 && (
-            <button
+            <Button
+              size="sm"
+              className="text-xs px-2 py-1 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
               onClick={() => dispatch(clearExecutionLogs())}
-              className="text-xs px-2 py-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               Clear
-            </button>
+            </Button>
           )}
           {onClose && (
-            <button
+            <Button
+              variant="secondary"
+              className="p-1 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
               onClick={onClose}
-              className="p-1 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded"
             >
-              <X size={18} className="text-gray-500 dark:text-gray-400" />
-            </button>
+              <X size={18} className="text-neutral-500 dark:text-neutral-400" />
+            </Button>
           )}
         </div>
       </div>
-
       {/* Node Statuses */}
       {Object.keys(nodeStatuses).length > 0 && (
         <div
           data-testid="node-statuses"
-          className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto"
+          className="flex items-center gap-2 px-3 py-2 border-b border-neutral-200 dark:border-neutral-700 overflow-x-auto"
         >
-          <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400 shrink-0">
             Nodes:
           </span>
           {Object.entries(nodeStatuses).map(([nodeId, status]) => (
@@ -163,14 +168,13 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
           ))}
         </div>
       )}
-
       {/* Logs */}
       <div
         data-testid="logs-container"
         className="flex-1 overflow-y-auto p-3 space-y-2"
       >
         {executionLogs.length === 0 ? (
-          <div className="text-center text-sm text-gray-500 dark:text-gray-400 py-8">
+          <div className="text-center text-sm text-neutral-500 dark:text-neutral-400 py-8">
             No execution logs yet. Click "Run" to execute the workflow.
           </div>
         ) : (
@@ -182,21 +186,21 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
                 ref={isLast ? lastLogRef : undefined}
                 data-testid="log-item"
                 data-last={isLast ? "true" : undefined}
-                className="flex items-start gap-2 text-sm p-2 rounded bg-gray-50 dark:bg-gray-700/50"
+                className="flex items-start gap-2 text-sm p-2 rounded bg-neutral-50 dark:bg-neutral-700/50"
               >
                 {getLogIcon(log.level)}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
                       {formatTimestamp(log.timestamp)}
                     </span>
                     {log.nodeId && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <span className="text-xs text-neutral-500 dark:text-neutral-400">
                         [{log.nodeId}]
                       </span>
                     )}
                   </div>
-                  <div className="text-gray-900 dark:text-gray-100 break-words">
+                  <div className="text-neutral-900 dark:text-neutral-100 break-words">
                     {log.message}
                   </div>
                 </div>

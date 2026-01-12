@@ -266,7 +266,7 @@ describe("App - Core", () => {
 
       const rootDiv = container.querySelector(".bg-white");
       expect(rootDiv).toBeInTheDocument();
-      expect(rootDiv).toHaveClass("dark:bg-gray-900");
+      expect(rootDiv).toHaveClass("dark:bg-neutral-900");
     });
   });
 

@@ -13,6 +13,7 @@ export type {
 // Export everything else from api.ts except Message
 export type {
   SortOrder,
+  ModelStatus,
   CursorPaginationMetadata,
   BackendCursorPaginatedResponse,
   PaginatedResponse,
@@ -28,6 +29,7 @@ export type {
   ProjectListParams,
   CostHistoryParams,
   CostHistoryPoint,
+  CostQueryParams,
   ApiError,
   FeatureFlags,
   Workflow,

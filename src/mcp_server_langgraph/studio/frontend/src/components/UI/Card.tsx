@@ -2,96 +2,80 @@
  * Card Component
  *
  * A flexible card component with composable subcomponents.
+ * Uses CVA (class-variance-authority) for type-safe variant management.
  * Aligned with the shared design system tokens.
  */
 
+import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef, type HTMLAttributes } from "react";
-
-export type CardVariant = "default" | "elevated" | "ghost";
-export type CardPadding = "none" | "sm" | "md" | "lg";
-
-export interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  /** Visual variant of the card */
-  variant?: CardVariant;
-  /** Padding size */
-  padding?: CardPadding;
-  /** Whether the card is interactive (hoverable/clickable) */
-  interactive?: boolean;
-}
+import { cn } from "../../utils/cn";
 
 /**
- * Utility to combine class names
+ * Card variant styles using CVA
+ * Exported for use in compound components or style composition
  */
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
+export const cardVariants = cva(
+  // Base styles
+  "rounded-lg",
+  {
+    variants: {
+      variant: {
+        default: [
+          "border border-neutral-200 dark:border-neutral-700 bg-white",
+          "dark:bg-neutral-900",
+        ],
+        elevated: [
+          "border border-neutral-100 bg-white shadow-elevated",
+          "dark:border-neutral-700 dark:bg-neutral-900",
+        ],
+        ghost: [
+          "border border-transparent bg-transparent",
+          "dark:bg-transparent",
+        ],
+      },
+      padding: {
+        none: "p-0",
+        sm: "p-3",
+        md: "p-4",
+        lg: "p-6",
+      },
+      interactive: {
+        true: [
+          "cursor-pointer transition-all duration-fast",
+          "hover:shadow-soft hover:border-neutral-300",
+          "dark:hover:border-neutral-600",
+        ],
+        false: "",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      padding: "md",
+      interactive: false,
+    },
+  },
+);
 
-/**
- * Get variant-specific classes
- */
-function getVariantClasses(variant: CardVariant): string {
-  const variants: Record<CardVariant, string> = {
-    default: cn(
-      "border border-gray-200 dark:border-gray-700 bg-white",
-      "dark:border-gray-700 dark:bg-gray-900",
-    ),
-    elevated: cn(
-      "border border-gray-100 bg-white shadow-elevated",
-      "dark:border-gray-700 dark:bg-gray-900",
-    ),
-    ghost: cn(
-      "border border-transparent bg-transparent",
-      "dark:bg-transparent",
-    ),
-  };
-  return variants[variant];
-}
+export type CardVariant = NonNullable<
+  VariantProps<typeof cardVariants>["variant"]
+>;
+export type CardPadding = NonNullable<
+  VariantProps<typeof cardVariants>["padding"]
+>;
 
-/**
- * Get padding-specific classes
- */
-function getPaddingClasses(padding: CardPadding): string {
-  const paddings: Record<CardPadding, string> = {
-    none: "p-0",
-    sm: "p-3",
-    md: "p-4",
-    lg: "p-6",
-  };
-  return paddings[padding];
-}
+export interface CardProps
+  extends HTMLAttributes<HTMLDivElement>, VariantProps<typeof cardVariants> {}
 
 /**
  * Card component with consistent styling
  */
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  (
-    {
-      variant = "default",
-      padding = "md",
-      interactive = false,
-      className,
-      children,
-      ...props
-    },
-    ref,
-  ) => {
+  ({ variant, padding, interactive, className, children, ...props }, ref) => {
     return (
       <div
         ref={ref}
         className={cn(
-          // Base styles
-          "rounded-lg",
-          // Variant styles
-          getVariantClasses(variant),
-          // Padding styles
-          getPaddingClasses(padding),
-          // Interactive styles
-          interactive &&
-            cn(
-              "cursor-pointer transition-all duration-fast",
-              "hover:shadow-soft hover:border-gray-300 dark:border-gray-600",
-              "dark:hover:border-gray-600",
-            ),
+          cardVariants({ variant, padding, interactive }),
           className,
         )}
         {...props}
@@ -114,8 +98,8 @@ export function CardHeader({ className, children, ...props }: CardHeaderProps) {
     <div
       className={cn(
         "flex items-center justify-between gap-4",
-        "-m-4 mb-4 p-4 border-b border-gray-100",
-        "dark:border-gray-800",
+        "-m-4 mb-4 p-4 border-b border-neutral-100",
+        "dark:border-neutral-800",
         className,
       )}
       {...props}
@@ -134,8 +118,8 @@ export function CardTitle({ className, children, ...props }: CardTitleProps) {
   return (
     <h3
       className={cn(
-        "text-lg font-semibold text-gray-900",
-        "dark:text-gray-100",
+        "text-lg font-semibold text-neutral-900",
+        "dark:text-neutral-100",
         className,
       )}
       {...props}
@@ -157,7 +141,7 @@ export function CardContent({
 }: CardContentProps) {
   return (
     <div
-      className={cn("text-gray-600 dark:text-gray-400", className)}
+      className={cn("text-neutral-600 dark:text-neutral-400", className)}
       {...props}
     >
       {children}
@@ -175,8 +159,8 @@ export function CardFooter({ className, children, ...props }: CardFooterProps) {
     <div
       className={cn(
         "flex items-center justify-end gap-2",
-        "-m-4 mt-4 p-4 border-t border-gray-100",
-        "dark:border-gray-800",
+        "-m-4 mt-4 p-4 border-t border-neutral-100",
+        "dark:border-neutral-800",
         className,
       )}
       {...props}

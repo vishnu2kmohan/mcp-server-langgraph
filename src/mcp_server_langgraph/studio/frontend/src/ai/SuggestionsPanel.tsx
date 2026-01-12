@@ -27,6 +27,8 @@ import {
 import { cn } from "../utils/cn";
 import type { Suggestion, SuggestionType } from "./InlineSuggestions";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -72,7 +74,7 @@ function getSuggestionIcon(type: SuggestionType) {
 function getConfidenceColor(confidence: number): string {
   if (confidence >= 0.9) return "text-success-600 dark:text-success-400";
   if (confidence >= 0.7) return "text-warning-600 dark:text-warning-400";
-  return "text-gray-500 dark:text-gray-400";
+  return "text-neutral-500 dark:text-neutral-400";
 }
 
 // =============================================================================
@@ -96,21 +98,21 @@ export function SuggestionsPanel({
       data-testid="suggestions-panel"
       className={cn(
         "rounded-lg border",
-        "bg-white dark:bg-gray-900",
-        "border-gray-200 dark:border-gray-700",
+        "bg-white dark:bg-neutral-900",
+        "border-neutral-200 dark:border-neutral-700",
         "shadow-sm",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-        <button
+      <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-200 dark:border-neutral-700">
+        <Button
           type="button"
           onClick={onToggleExpand}
           className={cn(
             "flex items-center gap-2 text-sm font-medium",
-            "text-gray-700 dark:text-gray-300",
-            "hover:text-gray-900 dark:hover:text-gray-100",
+            "text-neutral-700 dark:text-neutral-300",
+            "hover:text-neutral-900 dark:hover:text-neutral-100",
             "transition-colors",
           )}
           aria-label="AI Suggestions"
@@ -127,25 +129,24 @@ export function SuggestionsPanel({
           >
             {count}
           </span>
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
           onClick={onRefresh}
           disabled={isLoading}
           aria-label="Refresh suggestions"
           className={cn(
             "p-1.5 rounded",
-            "text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-200",
-            "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800",
+            "text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-200",
+            "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
             "transition-colors",
             "disabled:opacity-50 disabled:cursor-not-allowed",
           )}
         >
           <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
-        </button>
+        </Button>
       </div>
-
       {/* Content */}
       {isExpanded && (
         <div className="p-2">
@@ -153,7 +154,7 @@ export function SuggestionsPanel({
           {isLoading && (
             <div
               data-testid="suggestions-loading"
-              className="flex items-center justify-center gap-2 py-4 text-sm text-gray-500 dark:text-gray-400"
+              className="flex items-center justify-center gap-2 py-4 text-sm text-neutral-500 dark:text-neutral-400"
             >
               <Loader2 size={16} className="animate-spin" />
               <span>Loading suggestions...</span>
@@ -162,7 +163,7 @@ export function SuggestionsPanel({
 
           {/* Empty state */}
           {!isLoading && count === 0 && (
-            <div className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+            <div className="py-4 text-center text-sm text-neutral-500 dark:text-neutral-400">
               No suggestions available. Click refresh to fetch.
             </div>
           )}
@@ -171,7 +172,7 @@ export function SuggestionsPanel({
           {!isLoading && count > 0 && (
             <table className="w-full" role="table">
               <thead>
-                <tr className="text-xs text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
+                <tr className="text-xs text-neutral-500 dark:text-neutral-400 border-b border-neutral-100 dark:border-neutral-800">
                   <th className="text-left py-2 px-2 font-medium">Type</th>
                   <th className="text-left py-2 px-2 font-medium">
                     Suggestion
@@ -189,8 +190,8 @@ export function SuggestionsPanel({
                   <tr
                     key={suggestion.id}
                     className={cn(
-                      "border-b border-gray-50 dark:border-gray-800 last:border-0",
-                      "hover:bg-gray-50 dark:hover:bg-gray-800/50",
+                      "border-b border-neutral-50 dark:border-neutral-800 last:border-0",
+                      "hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
                       "transition-colors",
                     )}
                   >
@@ -199,8 +200,8 @@ export function SuggestionsPanel({
                       <span
                         className={cn(
                           "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium",
-                          "bg-gray-100 dark:bg-gray-700",
-                          "text-gray-600 dark:text-gray-300",
+                          "bg-neutral-100 dark:bg-neutral-700",
+                          "text-neutral-600 dark:text-neutral-300",
                         )}
                       >
                         {getSuggestionIcon(suggestion.type)}
@@ -209,7 +210,7 @@ export function SuggestionsPanel({
                     </td>
 
                     {/* Content */}
-                    <td className="py-2 px-2 text-sm text-gray-700 dark:text-gray-300">
+                    <td className="py-2 px-2 text-sm text-neutral-700 dark:text-neutral-300">
                       {suggestion.content}
                     </td>
 
@@ -228,7 +229,7 @@ export function SuggestionsPanel({
                     {/* Actions */}
                     <td className="py-2 px-2">
                       <div className="flex items-center justify-end gap-1">
-                        <button
+                        <Button
                           type="button"
                           onClick={() => onAccept(suggestion)}
                           aria-label="Accept suggestion"
@@ -239,19 +240,19 @@ export function SuggestionsPanel({
                           )}
                         >
                           <Check size={14} />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
                           onClick={() => onDismiss(suggestion)}
                           aria-label="Dismiss suggestion"
                           className={cn(
                             "p-1 rounded",
-                            "text-gray-400 dark:text-gray-400 hover:text-error-500 hover:bg-error-100 dark:hover:bg-error-900/30",
+                            "text-neutral-400 dark:text-neutral-400 hover:text-error-500 hover:bg-error-100 dark:hover:bg-error-900/30",
                             "transition-colors",
                           )}
                         >
                           <X size={14} />
-                        </button>
+                        </Button>
                       </div>
                     </td>
                   </tr>

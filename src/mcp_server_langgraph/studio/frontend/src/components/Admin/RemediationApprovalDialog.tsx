@@ -30,6 +30,8 @@ import type {
   RiskLevel,
 } from "../../types/api";
 
+import { Button, Textarea, RadioGroup, Radio } from "@/components/UI";
+
 // =============================================================================
 // Constants
 // =============================================================================
@@ -121,7 +123,7 @@ function getRiskColor(risk: RiskLevel): string {
     case "high":
       return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
     default:
-      return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400";
+      return "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-400";
   }
 }
 
@@ -135,7 +137,7 @@ function getSeverityColor(severity: RemediationRequest["severity"]): string {
     case "warning":
       return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400";
     default:
-      return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400";
+      return "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-400";
   }
 }
 
@@ -241,21 +243,21 @@ export function RemediationApprovalDialog({
         onClick={onClose}
         aria-hidden="true"
       />
-
       {/* Dialog */}
-      <div className="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-hidden">
+      <div className="relative bg-white dark:bg-neutral-900 rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
             Approve Remediation
           </h2>
-          <button
+          <Button
+            variant="secondary"
+            className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 rounded-lg"
             data-testid="close-dialog"
             onClick={onClose}
-            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
@@ -269,7 +271,7 @@ export function RemediationApprovalDialog({
 
           {/* Alert Info */}
           <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-900 dark:text-white">
+            <span className="font-medium text-neutral-900 dark:text-white">
               {remediation.alertName}
             </span>
             <span
@@ -283,7 +285,7 @@ export function RemediationApprovalDialog({
           </div>
 
           {/* Step Info */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-3">
+          <div className="bg-neutral-50 dark:bg-neutral-800/50 rounded-lg p-4 space-y-3">
             <div className="flex items-center gap-2">
               <span
                 data-testid="step-number"
@@ -291,7 +293,7 @@ export function RemediationApprovalDialog({
               >
                 {remediation.stepNumber}
               </span>
-              <span className="font-medium text-gray-900 dark:text-white">
+              <span className="font-medium text-neutral-900 dark:text-white">
                 {remediation.action.charAt(0).toUpperCase() +
                   remediation.action.slice(1)}
               </span>
@@ -305,12 +307,12 @@ export function RemediationApprovalDialog({
               </span>
             </div>
 
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
               {remediation.description}
             </p>
 
             {remediation.command && (
-              <pre className="text-xs bg-gray-100 dark:bg-gray-700 p-2 rounded overflow-x-auto">
+              <pre className="text-xs bg-neutral-100 dark:bg-neutral-700 p-2 rounded overflow-x-auto">
                 <code>{remediation.command}</code>
               </pre>
             )}
@@ -338,20 +340,20 @@ export function RemediationApprovalDialog({
           {/* Impact Analysis */}
           <div className="space-y-2">
             <div className="flex items-start gap-2">
-              <Info className="w-4 h-4 text-gray-400 dark:text-gray-400 mt-0.5 flex-shrink-0" />
+              <Info className="w-4 h-4 text-neutral-400 dark:text-neutral-400 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
                   <strong>Impact:</strong>{" "}
                   {recommendation.riskAssessment.impactAnalysis}
                 </p>
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <Info className="w-4 h-4 text-gray-400 dark:text-gray-400 mt-0.5 flex-shrink-0" />
+              <Info className="w-4 h-4 text-neutral-400 dark:text-neutral-400 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
                   <strong>Rollback:</strong>{" "}
-                  <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">
+                  <code className="text-xs bg-neutral-100 dark:bg-neutral-700 px-1 py-0.5 rounded">
                     {recommendation.riskAssessment.rollbackPlan}
                   </code>
                 </p>
@@ -361,50 +363,33 @@ export function RemediationApprovalDialog({
 
           {/* Structured Rejection Reasons */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Rejection Reason{" "}
-              <span className="text-gray-500 dark:text-gray-400">
+              <span className="text-neutral-500 dark:text-neutral-400">
                 (required for rejection)
               </span>
             </label>
-            <div
-              data-testid="rejection-reason-select"
-              className="space-y-2"
-              role="radiogroup"
+            <RadioGroup
+              name="rejection-reason"
+              value={selectedRejectionReason ?? ""}
+              onChange={(value) => {
+                setSelectedRejectionReason(value as RejectionReasonValue);
+                if (validationError) setValidationError(null);
+              }}
+              variant="card"
               aria-label="Select rejection reason"
+              data-testid="rejection-reason-select"
             >
               {REJECTION_REASONS.map((reasonOption) => (
-                <label
+                <Radio
                   key={reasonOption.value}
-                  className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
-                    selectedRejectionReason === reasonOption.value
-                      ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-600"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="rejection-reason"
-                    data-testid={`rejection-reason-${reasonOption.value}`}
-                    value={reasonOption.value}
-                    checked={selectedRejectionReason === reasonOption.value}
-                    onChange={() => {
-                      setSelectedRejectionReason(reasonOption.value);
-                      if (validationError) setValidationError(null);
-                    }}
-                    className="mt-1"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {reasonOption.label}
-                    </span>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {reasonOption.description}
-                    </p>
-                  </div>
-                </label>
+                  value={reasonOption.value}
+                  label={reasonOption.label}
+                  description={reasonOption.description}
+                  data-testid={`rejection-reason-${reasonOption.value}`}
+                />
               ))}
-            </div>
+            </RadioGroup>
           </div>
 
           {/* Detail input for "other" reason */}
@@ -412,11 +397,12 @@ export function RemediationApprovalDialog({
             <div>
               <label
                 htmlFor="rejection-detail-input"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
               >
                 Please provide details
               </label>
-              <textarea
+              <Textarea
+                className="px-3 py-2 text-sm text-neutral-900 dark:text-white placeholder-neutral-400 focus:ring-primary-500"
                 id="rejection-detail-input"
                 data-testid="rejection-detail-input"
                 value={rejectionDetail}
@@ -426,7 +412,6 @@ export function RemediationApprovalDialog({
                 }}
                 placeholder="Describe your reason for rejection..."
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           )}
@@ -435,14 +420,15 @@ export function RemediationApprovalDialog({
           <div>
             <label
               htmlFor="reason-input"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
               Additional Notes{" "}
-              <span className="text-gray-500 dark:text-gray-400">
+              <span className="text-neutral-500 dark:text-neutral-400">
                 (optional)
               </span>
             </label>
-            <textarea
+            <Textarea
+              className="px-3 py-2 text-sm text-neutral-900 dark:text-white placeholder-neutral-400 focus:ring-primary-500"
               id="reason-input"
               data-testid="reason-input"
               value={reason}
@@ -452,7 +438,6 @@ export function RemediationApprovalDialog({
               }}
               placeholder="Enter additional notes for approval or rejection..."
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             {validationError && (
               <p className="mt-1 text-sm text-error-600 dark:text-error-400">
@@ -463,12 +448,13 @@ export function RemediationApprovalDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-          <button
+        <div className="flex items-center justify-end gap-3 p-4 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
+          <Button
+            variant="danger"
+            className="flex px-4 py-2 text-sm text-error-700 dark:text-error-400 bg-error-100 dark:bg-error-900/30 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50"
             data-testid="reject-button"
             onClick={handleReject}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-error-700 dark:text-error-400 bg-error-100 dark:bg-error-900/30 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isRejecting ? (
               <Loader2
@@ -479,12 +465,13 @@ export function RemediationApprovalDialog({
               <XCircle className="w-4 h-4" />
             )}
             Reject
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="success"
+            className="flex px-4 py-2 text-sm text-white bg-success-600 rounded-lg hover:bg-success-700"
             data-testid="approve-button"
             onClick={handleApprove}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-success-600 rounded-lg hover:bg-success-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isApproving ? (
               <Loader2
@@ -495,7 +482,7 @@ export function RemediationApprovalDialog({
               <CheckCircle className="w-4 h-4" />
             )}
             Approve
-          </button>
+          </Button>
         </div>
       </div>
     </div>

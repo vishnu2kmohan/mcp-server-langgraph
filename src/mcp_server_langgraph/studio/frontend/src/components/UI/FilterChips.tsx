@@ -1,3 +1,4 @@
+import { Button } from "@/components/UI";
 /**
  * FilterChips Component
  *
@@ -45,7 +46,7 @@ function getChipClasses(
   isSelected: boolean,
 ): string {
   const baseClasses =
-    "px-3 py-1.5 text-sm font-medium rounded-full transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900";
+    "px-3 py-1.5 text-sm font-medium rounded-full transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-neutral-900";
 
   if (isSelected) {
     switch (color) {
@@ -59,22 +60,22 @@ function getChipClasses(
         return `${baseClasses} bg-primary-100 text-primary-800 ring-2 ring-primary-500 dark:bg-primary-900/40 dark:text-primary-300 focus:ring-primary-500`;
       case "gray":
       default:
-        return `${baseClasses} bg-gray-200 text-gray-900 ring-2 ring-gray-500 dark:bg-gray-700 dark:text-gray-100 focus:ring-gray-500`;
+        return `${baseClasses} bg-neutral-200 text-neutral-900 ring-2 ring-neutral-500 dark:bg-neutral-700 dark:text-neutral-100 focus:ring-neutral-500`;
     }
   } else {
     // Unselected state - subtle coloring based on the color
     switch (color) {
       case "green":
-        return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-success-50 hover:text-success-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-success-900/20 dark:hover:text-success-400 focus:ring-success-500`;
+        return `${baseClasses} bg-neutral-100 text-neutral-700 hover:bg-success-50 hover:text-success-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-success-900/20 dark:hover:text-success-400 focus:ring-success-500`;
       case "red":
-        return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-error-50 hover:text-error-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-error-900/20 dark:hover:text-error-400 focus:ring-error-500`;
+        return `${baseClasses} bg-neutral-100 text-neutral-700 hover:bg-error-50 hover:text-error-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-error-900/20 dark:hover:text-error-400 focus:ring-error-500`;
       case "yellow":
-        return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-warning-50 hover:text-warning-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-warning-900/20 dark:hover:text-warning-400 focus:ring-warning-500`;
+        return `${baseClasses} bg-neutral-100 text-neutral-700 hover:bg-warning-50 hover:text-warning-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-warning-900/20 dark:hover:text-warning-400 focus:ring-warning-500`;
       case "blue":
-        return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-primary-50 hover:text-primary-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-primary-900/20 dark:hover:text-primary-400 focus:ring-primary-500`;
+        return `${baseClasses} bg-neutral-100 text-neutral-700 hover:bg-primary-50 hover:text-primary-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-primary-900/20 dark:hover:text-primary-400 focus:ring-primary-500`;
       case "gray":
       default:
-        return `${baseClasses} bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 focus:ring-gray-500`;
+        return `${baseClasses} bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 focus:ring-neutral-500`;
     }
   }
 }
@@ -107,7 +108,7 @@ export function FilterChips({
       {options.map((option) => {
         const isSelected = value === option.value;
         return (
-          <button
+          <Button
             key={option.value}
             type="button"
             onClick={() => handleClick(option.value)}
@@ -115,7 +116,7 @@ export function FilterChips({
             aria-pressed={isSelected}
           >
             {option.label}
-          </button>
+          </Button>
         );
       })}
     </div>

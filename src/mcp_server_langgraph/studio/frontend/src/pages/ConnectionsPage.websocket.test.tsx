@@ -367,7 +367,7 @@ describe("ConnectionsPage WebSocket", () => {
 
       renderWithProviders(<ConnectionsPage />);
       const wsIndicator = screen.getByTestId("ws-status-indicator");
-      expect(wsIndicator).toHaveClass("bg-gray-400");
+      expect(wsIndicator).toHaveClass("bg-neutral-400");
     });
 
     it("should update connection status when WebSocket sends update", async () => {

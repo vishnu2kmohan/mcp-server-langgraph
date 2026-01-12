@@ -214,7 +214,7 @@ describe("StudioShellLayout - KB Status", () => {
       const kbIndicator = screen.getByTestId("kb-status-indicator");
       expect(kbIndicator).toBeInTheDocument();
       // Should have gray color class for unavailable status
-      expect(kbIndicator).toHaveClass("bg-gray-400");
+      expect(kbIndicator).toHaveClass("bg-neutral-400");
     });
 
     it("should display context stats when available", () => {

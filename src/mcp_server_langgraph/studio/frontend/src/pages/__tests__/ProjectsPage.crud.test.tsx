@@ -398,7 +398,7 @@ describe("ProjectsPage - CRUD Operations", () => {
 
       // Find and click the X button (close button)
       const closeButtons = document.querySelectorAll(
-        'button[class*="hover:text-gray-600"]',
+        'button[class*="hover:text-neutral-600"]',
       );
       const xButton = Array.from(closeButtons).find((btn) =>
         btn.querySelector("svg"),

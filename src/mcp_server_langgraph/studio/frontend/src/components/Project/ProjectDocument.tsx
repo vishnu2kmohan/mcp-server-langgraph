@@ -25,6 +25,8 @@ import {
 import { useGetProjectQuery } from "../../api";
 import { Skeleton, SkeletonCard, ErrorState } from "../UI";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Utility
 // =============================================================================
@@ -73,8 +75,8 @@ export function ProjectDocument({
         data-testid="project-document"
         className={cn(
           "flex flex-col items-center justify-center h-full",
-          "bg-gray-50 dark:bg-gray-900",
-          "text-gray-500 dark:text-gray-400",
+          "bg-neutral-50 dark:bg-neutral-900",
+          "text-neutral-500 dark:text-neutral-400",
           compact && "text-sm",
           className,
         )}
@@ -93,11 +95,11 @@ export function ProjectDocument({
         data-testid="project-document"
         className={cn(
           "flex flex-col h-full",
-          "bg-gray-50 dark:bg-gray-900",
+          "bg-neutral-50 dark:bg-neutral-900",
           className,
         )}
       >
-        <header className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
           <Skeleton className="h-6 w-1/3 mb-2" />
           <Skeleton className="h-4 w-1/2" />
         </header>
@@ -116,7 +118,7 @@ export function ProjectDocument({
         data-testid="project-document"
         className={cn(
           "flex flex-col h-full",
-          "bg-gray-50 dark:bg-gray-900",
+          "bg-neutral-50 dark:bg-neutral-900",
           className,
         )}
       >
@@ -173,22 +175,22 @@ export function ProjectDocument({
       data-testid="project-document"
       className={cn(
         "flex flex-col h-full",
-        "bg-gray-50 dark:bg-gray-900",
+        "bg-neutral-50 dark:bg-neutral-900",
         compact && "text-sm",
         className,
       )}
     >
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <FolderKanban className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
                 {project?.name || "Project"}
               </h2>
               {project?.description && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
                   {project.description}
                 </p>
               )}
@@ -199,59 +201,64 @@ export function ProjectDocument({
               className={`px-2 py-1 text-xs rounded-full ${
                 project?.status === "active"
                   ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                  : "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
               }`}
             >
               {project?.status || "unknown"}
             </span>
-            <button
+            <Button
+              variant="secondary"
+              className="p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
               onClick={() => refetch()}
-              className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
               title="Refresh"
             >
               <RefreshCw size={16} />
-            </button>
+            </Button>
           </div>
         </div>
       </header>
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="space-y-6">
           {/* Project Info */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4">
+            <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
               Project Info
             </h3>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
-                <User size={16} className="text-gray-400 dark:text-gray-400" />
-                <span className="text-gray-600 dark:text-gray-400">Owner:</span>
-                <span className="text-gray-900 dark:text-gray-100">
+                <User
+                  size={16}
+                  className="text-neutral-400 dark:text-neutral-400"
+                />
+                <span className="text-neutral-600 dark:text-neutral-400">
+                  Owner:
+                </span>
+                <span className="text-neutral-900 dark:text-neutral-100">
                   {project?.ownerName || project?.ownerId || "Unknown"}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Calendar
                   size={16}
-                  className="text-gray-400 dark:text-gray-400"
+                  className="text-neutral-400 dark:text-neutral-400"
                 />
-                <span className="text-gray-600 dark:text-gray-400">
+                <span className="text-neutral-600 dark:text-neutral-400">
                   Created:
                 </span>
-                <span className="text-gray-900 dark:text-gray-100">
+                <span className="text-neutral-900 dark:text-neutral-100">
                   {formatDate(project?.createdAt)}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Calendar
                   size={16}
-                  className="text-gray-400 dark:text-gray-400"
+                  className="text-neutral-400 dark:text-neutral-400"
                 />
-                <span className="text-gray-600 dark:text-gray-400">
+                <span className="text-neutral-600 dark:text-neutral-400">
                   Updated:
                 </span>
-                <span className="text-gray-900 dark:text-gray-100">
+                <span className="text-neutral-900 dark:text-neutral-100">
                   {formatDate(project?.updatedAt)}
                 </span>
               </div>
@@ -260,17 +267,17 @@ export function ProjectDocument({
 
           {/* Resource Cards */}
           <div>
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
               Resources
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {resourceLinks.map((resource) => (
-                <button
+                <Button
                   key={resource.label}
                   onClick={() => navigate(resource.path)}
                   className={cn(
-                    "p-4 rounded-lg border border-gray-200 dark:border-gray-700",
-                    "bg-white dark:bg-gray-800 hover:shadow-md transition-shadow",
+                    "p-4 rounded-lg border border-neutral-200 dark:border-neutral-700",
+                    "bg-white dark:bg-neutral-800 hover:shadow-md transition-shadow",
                     "text-left",
                   )}
                 >
@@ -280,49 +287,51 @@ export function ProjectDocument({
                     </div>
                     <ExternalLink
                       size={14}
-                      className="text-gray-400 dark:text-gray-400"
+                      className="text-neutral-400 dark:text-neutral-400"
                     />
                   </div>
-                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
                     {resource.count}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="text-sm text-neutral-600 dark:text-neutral-400">
                     {resource.label}
                   </div>
-                </button>
+                </Button>
               ))}
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4">
+            <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
               Quick Actions
             </h3>
             <div className="flex flex-wrap gap-2">
-              <button
+              <Button
+                variant="primary"
+                className="flex px-3 py-2 text-sm bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/30"
                 onClick={() => navigate(`/studio/chat?project=${projectId}`)}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/30"
               >
                 <MessageSquare size={16} />
                 New Session
-              </button>
-              <button
+              </Button>
+              <Button
+                className="flex px-3 py-2 text-sm bg-insight-50 text-insight-700 dark:bg-insight-900/20 dark:text-insight-400 rounded-lg hover:bg-insight-100 dark:hover:bg-insight-900/30"
                 onClick={() =>
                   navigate(`/studio/workflows?project=${projectId}`)
                 }
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-insight-50 text-insight-700 dark:bg-insight-900/20 dark:text-insight-400 rounded-lg hover:bg-insight-100 dark:hover:bg-insight-900/30"
               >
                 <GitBranch size={16} />
                 Create Workflow
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                className="flex px-3 py-2 text-sm bg-neutral-50 text-neutral-700 dark:text-neutral-200 dark:bg-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-600"
                 onClick={() => navigate(`/studio/projects/${projectId}`)}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-50 text-gray-700 dark:text-gray-200 dark:bg-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-600"
               >
                 <ExternalLink size={16} />
                 Full View
-              </button>
+              </Button>
             </div>
           </div>
         </div>

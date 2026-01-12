@@ -13,6 +13,8 @@
 import { Lightbulb, X, ExternalLink } from "lucide-react";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -47,9 +49,9 @@ export function ContextualHelp({
       <div
         data-testid="contextual-help"
         className={cn(
-          "rounded-lg border border-gray-200 dark:border-gray-700",
-          "bg-gray-50 dark:bg-gray-800 p-4",
-          "text-sm text-gray-500 dark:text-gray-400",
+          "rounded-lg border border-neutral-200 dark:border-neutral-700",
+          "bg-neutral-50 dark:bg-neutral-800 p-4",
+          "text-sm text-neutral-500 dark:text-neutral-400",
           className,
         )}
       >
@@ -84,23 +86,23 @@ export function ContextualHelp({
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   {tip.title}
                 </span>
-                <button
+                <Button
+                  className="text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300"
                   type="button"
                   aria-label="Dismiss tip"
                   onClick={() => onDismiss(tip)}
-                  className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
                 >
                   <X size={14} />
-                </button>
+                </Button>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 {tip.content}
               </p>
               {tip.learnMoreUrl && (
-                <button
+                <Button
                   type="button"
                   onClick={() => onLearnMore(tip)}
                   className={cn(
@@ -111,7 +113,7 @@ export function ContextualHelp({
                 >
                   <span>Learn more</span>
                   <ExternalLink size={12} />
-                </button>
+                </Button>
               )}
             </div>
           </div>

@@ -35,6 +35,8 @@ import {
   PieChartIcon,
 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // Chart color palette
 const CHART_COLORS = [
   "#3b82f6",
@@ -113,8 +115,8 @@ export function InteractiveChart({
   );
 
   const containerClasses = isFullscreen
-    ? "fixed inset-0 z-50 bg-gray-900 p-4"
-    : `my-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`;
+    ? "fixed inset-0 z-50 bg-neutral-900 p-4"
+    : `my-4 p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 ${className}`;
 
   return (
     <div
@@ -128,94 +130,88 @@ export function InteractiveChart({
         {/* Title */}
         <div className="flex-1">
           {chartData.title && (
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
               {chartData.title}
             </h4>
           )}
         </div>
 
         {/* Chart type toggles */}
-        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5">
-          <button
+        <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-0.5">
+          <Button
+            className="p-1.5 rounded"
             type="button"
             onClick={() => setChartType("line")}
             aria-label="Line chart"
-            className={`p-1.5 rounded ${
-              chartType === "line"
-                ? "bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400"
-                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-            }`}
           >
             <TrendingUp size={14} />
-          </button>
-          <button
+          </Button>
+          <Button
+            className="p-1.5 rounded"
             type="button"
             onClick={() => setChartType("bar")}
             aria-label="Bar chart"
-            className={`p-1.5 rounded ${
-              chartType === "bar"
-                ? "bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400"
-                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-            }`}
           >
             <BarChart2 size={14} />
-          </button>
-          <button
+          </Button>
+          <Button
+            className="p-1.5 rounded"
             type="button"
             onClick={() => setChartType("pie")}
             aria-label="Pie chart"
-            className={`p-1.5 rounded ${
-              chartType === "pie"
-                ? "bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400"
-                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-            }`}
           >
             <PieChartIcon size={14} />
-          </button>
+          </Button>
         </div>
 
         {/* Action buttons */}
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            className="p-1.5 rounded"
             type="button"
             onClick={handleToggleDataTable}
             aria-label="Toggle data table"
-            className={`p-1.5 rounded ${
-              showDataTable
-                ? "bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400"
-                : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-            }`}
           >
             <Table size={14} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
             type="button"
             onClick={handleCopy}
             aria-label="Copy data"
-            className="p-1.5 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
           >
             {copied ? (
               <Check size={14} className="text-success-500" />
             ) : (
               <Copy size={14} />
             )}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            className="p-1.5 rounded text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
             type="button"
             onClick={handleToggleFullscreen}
             aria-label="Toggle fullscreen"
-            className="p-1.5 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
           >
             {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Chart */}
-      <div className={isFullscreen ? "h-[calc(100vh-200px)]" : "h-64"}>
+      <div
+        className={isFullscreen ? "h-[calc(100vh-200px)]" : "h-64"}
+        role="img"
+        aria-label={`${chartData.title || "Interactive chart"} - ${chartType} chart with ${chartData.data.length} data points`}
+      >
+        {/* Visually hidden description for screen readers */}
+        <span className="sr-only">
+          {chartType} chart displaying {chartData.title || "data"}. Use the data
+          table toggle for accessible values.
+        </span>
         <ResponsiveContainer width="100%" height="100%">
           {chartType === "line" ? (
-            <LineChart data={chartData.data}>
+            <LineChart data={chartData.data} aria-hidden="true">
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
               <XAxis dataKey={xKey} stroke="#9ca3af" fontSize={12} />
               <YAxis stroke="#9ca3af" fontSize={12} />
@@ -236,7 +232,7 @@ export function InteractiveChart({
               />
             </LineChart>
           ) : chartType === "bar" ? (
-            <BarChart data={chartData.data}>
+            <BarChart data={chartData.data} aria-hidden="true">
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
               <XAxis dataKey={xKey} stroke="#9ca3af" fontSize={12} />
               <YAxis stroke="#9ca3af" fontSize={12} />
@@ -255,7 +251,7 @@ export function InteractiveChart({
               />
             </BarChart>
           ) : (
-            <PieChart>
+            <PieChart aria-hidden="true">
               <Pie
                 data={chartData.data}
                 dataKey={yKey}
@@ -286,17 +282,16 @@ export function InteractiveChart({
           )}
         </ResponsiveContainer>
       </div>
-
       {/* Data Table */}
       {showDataTable && (
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-sm" role="table">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="px-4 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
+              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                <th className="px-4 py-2 text-left font-medium text-neutral-700 dark:text-neutral-300">
                   {xKey}
                 </th>
-                <th className="px-4 py-2 text-right font-medium text-gray-700 dark:text-gray-300">
+                <th className="px-4 py-2 text-right font-medium text-neutral-700 dark:text-neutral-300">
                   {yKey}
                 </th>
               </tr>
@@ -305,12 +300,12 @@ export function InteractiveChart({
               {chartData.data.map((row, index) => (
                 <tr
                   key={index}
-                  className="border-b border-gray-100 dark:border-gray-800"
+                  className="border-b border-neutral-100 dark:border-neutral-800"
                 >
-                  <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
+                  <td className="px-4 py-2 text-neutral-600 dark:text-neutral-400">
                     {String(row[xKey])}
                   </td>
-                  <td className="px-4 py-2 text-right text-gray-600 dark:text-gray-400">
+                  <td className="px-4 py-2 text-right text-neutral-600 dark:text-neutral-400">
                     {String(row[yKey])}
                   </td>
                 </tr>

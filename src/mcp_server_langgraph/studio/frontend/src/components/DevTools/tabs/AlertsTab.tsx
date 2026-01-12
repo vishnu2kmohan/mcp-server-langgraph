@@ -9,6 +9,8 @@ import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import { cn } from "../../../utils/cn";
 import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -82,7 +84,7 @@ function StateBadge({ state }: StateBadgeProps): React.ReactElement {
     firing: { color: "bg-error-500 text-white", icon: "\u{1F534}" }, // 🔴
     pending: { color: "bg-warning-500 text-black", icon: "\u{1F7E1}" }, // 🟡
     resolved: { color: "bg-success-500 text-white", icon: "\u{1F7E2}" }, // 🟢
-    silenced: { color: "bg-gray-500 text-white", icon: "\u{26D4}" }, // ⛔
+    silenced: { color: "bg-neutral-500 text-white", icon: "\u{26D4}" }, // ⛔
   }[state];
 
   return (
@@ -139,9 +141,10 @@ function FilterDropdown({
 
   return (
     <div className="relative">
-      <button
+      <Button
+        variant="secondary"
+        className="px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-800 rounded-md hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 flex"
         onClick={() => setIsOpen(!isOpen)}
-        className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-700 flex items-center gap-1"
         aria-label={label}
       >
         {label}: {value || "All"}
@@ -158,30 +161,30 @@ function FilterDropdown({
             d="M19 9l-7 7-7-7"
           />
         </svg>
-      </button>
+      </Button>
       {isOpen && (
         <>
           <div
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-20 min-w-[120px]">
-            <button
+          <div className="absolute top-full left-0 mt-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-md shadow-lg z-20 min-w-[120px]">
+            <Button
               role="option"
               onClick={() => {
                 onChange("");
                 setIsOpen(false);
               }}
               className={cn(
-                "w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                "w-full text-left px-3 py-2 text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
                 !value && "bg-primary-50 dark:bg-primary-900",
               )}
               aria-label="All"
             >
               All
-            </button>
+            </Button>
             {options.map((option) => (
-              <button
+              <Button
                 key={option}
                 role="option"
                 onClick={() => {
@@ -189,13 +192,13 @@ function FilterDropdown({
                   setIsOpen(false);
                 }}
                 className={cn(
-                  "w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                  "w-full text-left px-3 py-2 text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
                   value === option && "bg-primary-50 dark:bg-primary-900",
                 )}
                 aria-label={option}
               >
                 {option}
-              </button>
+              </Button>
             ))}
           </div>
         </>
@@ -232,37 +235,36 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
           ? "border-error-300 bg-error-50 dark:border-error-800 dark:bg-error-950"
           : alert.state === "pending"
             ? "border-warning-300 bg-warning-50 dark:border-warning-800 dark:bg-warning-950"
-            : "border-gray-200 dark:border-gray-700 bg-white dark:border-gray-700 dark:bg-gray-800",
+            : "border-neutral-200 dark:border-neutral-700 bg-white dark:border-neutral-700 dark:bg-neutral-800",
       )}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-2 flex-wrap">
           <StateBadge state={alert.state} />
-          <span className="font-medium text-gray-900 dark:text-white">
+          <span className="font-medium text-neutral-900 dark:text-white">
             {alert.name}
           </span>
           <SeverityBadge severity={alert.severity} />
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
             {alert.service}
           </span>
-          <span className="text-sm text-gray-400 dark:text-gray-400">
+          <span className="text-sm text-neutral-400 dark:text-neutral-400">
             {formatRelativeTime(alert.startedAt)}
           </span>
         </div>
       </div>
-
       {/* Message */}
-      <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+      <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
         {alert.message}
       </p>
-
       {/* Actions */}
       <div className="mt-3 flex items-center gap-2 flex-wrap">
         {alert.generatorUrl && (
-          <button
+          <Button
+            size="sm"
+            className="px-3 py-1 text-sm bg-grafana-500 text-white rounded hover:bg-grafana-600 flex"
             onClick={handleOpenGrafana}
-            className="px-3 py-1 text-sm bg-grafana-500 text-white rounded hover:bg-grafana-600 transition-colors flex items-center gap-1"
             aria-label="View in Grafana"
           >
             <svg
@@ -279,20 +281,24 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
               />
             </svg>
             View in Grafana
-          </button>
+          </Button>
         )}
         {alert.state === "firing" && onSilence && (
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
+            className="px-3 py-1 text-sm bg-neutral-500 text-white rounded hover:bg-neutral-600"
             onClick={handleSilence}
-            className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
             aria-label="Silence"
           >
             Silence
-          </button>
+          </Button>
         )}
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
+          className="px-3 py-1 text-sm bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 flex"
           onClick={() => setShowDetails(!showDetails)}
-          className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
           aria-label="Details"
         >
           Details
@@ -312,41 +318,48 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
               d="M19 9l-7 7-7-7"
             />
           </svg>
-        </button>
+        </Button>
       </div>
-
       {/* Details */}
       {showDetails && (
-        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+        <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700">
           <dl className="grid grid-cols-2 gap-2 text-sm">
             <div>
-              <dt className="text-gray-500 dark:text-gray-400">Alert ID</dt>
-              <dd className="font-mono text-gray-900 dark:text-white">
+              <dt className="text-neutral-500 dark:text-neutral-400">
+                Alert ID
+              </dt>
+              <dd className="font-mono text-neutral-900 dark:text-white">
                 {alert.id}
               </dd>
             </div>
             <div>
-              <dt className="text-gray-500 dark:text-gray-400">Started</dt>
-              <dd className="text-gray-900 dark:text-white">
+              <dt className="text-neutral-500 dark:text-neutral-400">
+                Started
+              </dt>
+              <dd className="text-neutral-900 dark:text-white">
                 {new Date(alert.startedAt).toLocaleString()}
               </dd>
             </div>
             {alert.resolvedAt && (
               <div>
-                <dt className="text-gray-500 dark:text-gray-400">Resolved</dt>
-                <dd className="text-gray-900 dark:text-white">
+                <dt className="text-neutral-500 dark:text-neutral-400">
+                  Resolved
+                </dt>
+                <dd className="text-neutral-900 dark:text-white">
                   {new Date(alert.resolvedAt).toLocaleString()}
                 </dd>
               </div>
             )}
             {alert.labels && Object.keys(alert.labels).length > 0 && (
               <div className="col-span-2">
-                <dt className="text-gray-500 dark:text-gray-400">Labels</dt>
+                <dt className="text-neutral-500 dark:text-neutral-400">
+                  Labels
+                </dt>
                 <dd className="flex flex-wrap gap-1 mt-1">
                   {Object.entries(alert.labels).map(([key, value]) => (
                     <span
                       key={key}
-                      className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded"
+                      className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 text-xs rounded"
                     >
                       {key}={value}
                     </span>
@@ -368,7 +381,7 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
 export function AlertsTab({
   alerts = [],
   externalAlerts,
-  onClearExternal: _onClearExternal,
+  onClearExternal,
   connectionStatus,
   isLoading = false,
   error,
@@ -467,7 +480,7 @@ export function AlertsTab({
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+                className="h-8 w-24 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse"
               />
             ))}
           </div>
@@ -475,7 +488,7 @@ export function AlertsTab({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"
+              className="h-32 bg-neutral-200 dark:bg-neutral-700 rounded-lg animate-pulse"
             />
           ))}
         </div>
@@ -519,7 +532,7 @@ export function AlertsTab({
       className={cn("flex flex-col h-full overflow-hidden", className)}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 p-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-2 p-3 border-b border-neutral-200 dark:border-neutral-700">
         {/* Connection status indicator */}
         {connectionStatus && (
           <span
@@ -531,7 +544,7 @@ export function AlertsTab({
               connectionStatus === "reconnecting" &&
                 "bg-warning-500 animate-pulse",
               connectionStatus === "disconnected" &&
-                "bg-gray-400 dark:bg-gray-500",
+                "bg-neutral-400 dark:bg-neutral-500",
               connectionStatus === "error" && "bg-error-500",
             )}
             title={`WebSocket: ${connectionStatus}`}
@@ -558,25 +571,38 @@ export function AlertsTab({
 
         {/* Active filter count */}
         {(stateFilter || severityFilter || serviceFilter) && (
-          <button
+          <Button
+            size="sm"
+            className="px-2 py-1 text-sm text-primary-600 dark:text-primary-400 hover:underline"
             onClick={() => {
               setStateFilter("");
               setSeverityFilter("");
               setServiceFilter("");
             }}
-            className="px-2 py-1 text-sm text-primary-600 dark:text-primary-400 hover:underline"
           >
             Clear filters
-          </button>
+          </Button>
+        )}
+
+        {/* Clear external alerts button */}
+        {externalAlerts && externalAlerts.length > 0 && onClearExternal && (
+          <Button
+            size="sm"
+            variant="secondary"
+            className="ml-auto px-2 py-1 text-sm"
+            onClick={onClearExternal}
+            aria-label="Clear real-time alerts"
+          >
+            Clear live ({externalAlerts.length})
+          </Button>
         )}
       </div>
-
       {/* Content */}
       <div className="flex-1 overflow-auto p-4">
         {filteredAlerts.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <svg
-              className="w-12 h-12 text-gray-400 dark:text-gray-400 mb-4"
+              className="w-12 h-12 text-neutral-400 dark:text-neutral-400 mb-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -588,8 +614,8 @@ export function AlertsTab({
                 d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
               />
             </svg>
-            <p className="text-gray-500 dark:text-gray-400">No alerts</p>
-            <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">
+            <p className="text-neutral-500 dark:text-neutral-400">No alerts</p>
+            <p className="text-sm text-neutral-400 dark:text-neutral-400 mt-1">
               {stateFilter || severityFilter || serviceFilter
                 ? "No alerts match the current filters"
                 : "All systems are operating normally"}

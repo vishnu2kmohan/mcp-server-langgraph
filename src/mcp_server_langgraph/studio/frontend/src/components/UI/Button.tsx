@@ -2,25 +2,94 @@
  * Button Component
  *
  * A consistent, accessible button component with multiple variants.
+ * Uses CVA (class-variance-authority) for type-safe variant management.
  * Aligned with the shared design system tokens.
  */
 
+import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { cn } from "../../utils/cn";
 
-export type ButtonVariant =
-  | "primary"
-  | "secondary"
-  | "ghost"
-  | "danger"
-  | "success"
-  | "outline";
-export type ButtonSize = "sm" | "md" | "lg";
+/**
+ * Button variant styles using CVA
+ * Exported for use in compound components or style composition
+ */
+export const buttonVariants = cva(
+  // Base styles
+  [
+    "inline-flex items-center justify-center font-medium rounded-md",
+    "transition-colors duration-fast",
+    "focus:outline-none focus:ring-2 focus:ring-offset-2",
+  ],
+  {
+    variants: {
+      variant: {
+        primary: [
+          "bg-brand-primary text-white",
+          "hover:bg-primary-600 active:bg-primary-700",
+          "focus:ring-brand-primary",
+          "dark:bg-primary-600 dark:hover:bg-primary-500",
+        ],
+        secondary: [
+          "bg-neutral-100 dark:bg-neutral-800 text-neutral-900",
+          "hover:bg-neutral-200 active:bg-neutral-300",
+          "focus:ring-neutral-300",
+          "dark:text-neutral-100 dark:hover:bg-neutral-700",
+        ],
+        ghost: [
+          "bg-transparent text-neutral-700 dark:text-neutral-200",
+          "hover:bg-neutral-100 active:bg-neutral-200",
+          "focus:ring-neutral-300",
+          "dark:text-neutral-300 dark:hover:bg-neutral-800",
+        ],
+        danger: [
+          "bg-error-500 text-white",
+          "hover:bg-error-600 active:bg-error-700",
+          "focus:ring-error-500",
+        ],
+        success: [
+          "bg-success-500 text-white",
+          "hover:bg-success-600 active:bg-success-700",
+          "focus:ring-success-500",
+        ],
+        warning: [
+          "bg-warning-500 text-white",
+          "hover:bg-warning-600 active:bg-warning-700",
+          "focus:ring-warning-500",
+        ],
+        outline: [
+          "bg-transparent border border-neutral-300 dark:border-neutral-600",
+          "text-neutral-700 dark:text-neutral-200",
+          "hover:bg-neutral-50 active:bg-neutral-100",
+          "focus:ring-neutral-300",
+          "dark:text-neutral-300 dark:hover:bg-neutral-800",
+        ],
+      },
+      size: {
+        sm: "px-3 py-1.5 text-xs gap-1.5",
+        md: "px-4 py-2 text-sm gap-2",
+        lg: "px-6 py-3 text-base gap-2.5",
+        icon: "p-2 h-9 w-9",
+      },
+    },
+    defaultVariants: {
+      variant: "primary",
+      size: "md",
+    },
+  },
+);
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Visual variant of the button */
-  variant?: ButtonVariant;
-  /** Size of the button */
-  size?: ButtonSize;
+export type ButtonVariant = NonNullable<
+  VariantProps<typeof buttonVariants>["variant"]
+>;
+export type ButtonSize = NonNullable<
+  VariantProps<typeof buttonVariants>["size"]
+>;
+
+export interface ButtonProps
+  extends
+    ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
   /** Whether the button is in a loading state */
   loading?: boolean;
   /** Icon to display before the text */
@@ -32,75 +101,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /**
- * Utility to combine class names
- */
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
-
-/**
- * Get variant-specific classes
- */
-function getVariantClasses(variant: ButtonVariant): string {
-  const variants: Record<ButtonVariant, string> = {
-    primary: cn(
-      "bg-brand-primary text-white",
-      "hover:bg-primary-600 active:bg-primary-700",
-      "focus:ring-brand-primary",
-      "dark:bg-primary-600 dark:hover:bg-primary-500",
-    ),
-    secondary: cn(
-      "bg-gray-100 dark:bg-gray-800 text-gray-900",
-      "hover:bg-gray-200 dark:bg-gray-700 active:bg-gray-300 dark:bg-gray-600",
-      "focus:ring-gray-300",
-      "dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700",
-    ),
-    ghost: cn(
-      "bg-transparent text-gray-700 dark:text-gray-200",
-      "hover:bg-gray-100 dark:bg-gray-800 active:bg-gray-200 dark:bg-gray-700",
-      "focus:ring-gray-300",
-      "dark:text-gray-300 dark:hover:bg-gray-800",
-    ),
-    danger: cn(
-      "bg-error-500 text-white",
-      "hover:bg-error-600 active:bg-error-700",
-      "focus:ring-error-500",
-    ),
-    success: cn(
-      "bg-success-500 text-white",
-      "hover:bg-success-600 active:bg-success-700",
-      "focus:ring-success-500",
-    ),
-    outline: cn(
-      "bg-transparent border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200",
-      "hover:bg-gray-50 active:bg-gray-100 dark:bg-gray-800",
-      "focus:ring-gray-300",
-      "dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800",
-    ),
-  };
-  return variants[variant];
-}
-
-/**
- * Get size-specific classes
- */
-function getSizeClasses(size: ButtonSize): string {
-  const sizes: Record<ButtonSize, string> = {
-    sm: "px-3 py-1.5 text-xs gap-1.5",
-    md: "px-4 py-2 text-sm gap-2",
-    lg: "px-6 py-3 text-base gap-2.5",
-  };
-  return sizes[size];
-}
-
-/**
  * Button component with consistent styling
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
-      variant = "primary",
-      size = "md",
+      variant,
+      size,
       loading = false,
       leftIcon,
       rightIcon,
@@ -119,15 +126,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={isDisabled}
         className={cn(
-          // Base styles
-          "inline-flex items-center justify-center font-medium rounded-md",
-          "transition-colors duration-fast",
-          "focus:outline-none focus:ring-2 focus:ring-offset-2",
-          // Variant styles
-          getVariantClasses(variant),
-          // Size styles
-          getSizeClasses(size),
-          // State modifiers
+          buttonVariants({ variant, size }),
           isDisabled && "opacity-50 cursor-not-allowed",
           fullWidth && "w-full",
           className,

@@ -115,7 +115,7 @@ describe("DevTools Color Utilities", () => {
     });
 
     it("should use gray for debug level", () => {
-      expect(LEVEL_BADGE_STYLES.debug).toMatch(/bg-gray-/);
+      expect(LEVEL_BADGE_STYLES.debug).toMatch(/bg-neutral-/);
     });
 
     it("should include dark mode variants", () => {

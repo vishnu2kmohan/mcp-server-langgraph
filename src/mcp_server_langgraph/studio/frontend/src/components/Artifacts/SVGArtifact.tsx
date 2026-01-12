@@ -17,6 +17,8 @@ import type { ExportFormat } from "./ArtifactExporter";
 import { CodePreviewToggle, type ViewMode } from "./CodePreviewToggle";
 import type { SVGConfig } from "../../types/artifacts";
 
+import { Button } from "@/components/UI";
+
 export interface SVGArtifactProps {
   data: string;
   title?: string;
@@ -179,11 +181,11 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700">
       {/* Header with title and actions */}
-      <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div className="px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
             {title || "SVG"}
           </h4>
           <CodePreviewToggle
@@ -193,17 +195,18 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
           />
         </div>
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            variant="secondary"
+            className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
             onClick={handleCopy}
             aria-label="Copy SVG"
-            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
           >
             {copied ? (
               <Check size={16} className="text-success-500" />
             ) : (
               <Copy size={16} />
             )}
-          </button>
+          </Button>
           <ArtifactExporter
             artifactType="svg"
             data={sanitizedSvg || ""}
@@ -212,7 +215,6 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
           />
         </div>
       </div>
-
       {/* SVG Content - Preview Mode */}
       {viewMode === "preview" && (
         <div
@@ -222,11 +224,10 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
           dangerouslySetInnerHTML={{ __html: sanitizedSvg || "" }}
         />
       )}
-
       {/* SVG Source Code - Code Mode */}
       {viewMode === "code" && (
         <div data-testid="svg-source-code" className="p-4">
-          <pre className="bg-gray-900 dark:bg-gray-950 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm font-mono">
+          <pre className="bg-neutral-900 dark:bg-neutral-950 text-neutral-100 p-4 rounded-lg overflow-x-auto text-sm font-mono">
             <code>{data}</code>
           </pre>
         </div>

@@ -53,10 +53,10 @@ const mockApplySkillUpdatesMutation = vi.fn(() => [
 
 // Mock useFeatureFlags hook
 const mockUseFeatureFlags = vi.fn(() => ({
-  flags: { enable_skills_marketplace: true },
+  flags: { skills_marketplace: true },
   isLoading: false,
   isError: false,
-  isEnabled: (flag: string) => flag === "enable_skills_marketplace",
+  isEnabled: (flag: string) => flag === "skills_marketplace",
 }));
 
 vi.mock("../contexts/FeatureFlagContext", async () => {
@@ -150,10 +150,10 @@ describe("SkillsPage", () => {
     ]);
     // Reset feature flag mock to enabled state
     mockUseFeatureFlags.mockReturnValue({
-      flags: { enable_skills_marketplace: true },
+      flags: { skills_marketplace: true },
       isLoading: false,
       isError: false,
-      isEnabled: (flag: string) => flag === "enable_skills_marketplace",
+      isEnabled: (flag: string) => flag === "skills_marketplace",
     });
   });
 
@@ -612,7 +612,7 @@ describe("SkillsPage", () => {
   describe("Feature Flag", () => {
     it("should show disabled state when marketplace feature flag is disabled", () => {
       mockUseFeatureFlags.mockReturnValue({
-        flags: { enable_skills_marketplace: false },
+        flags: { skills_marketplace: false },
         isLoading: false,
         isError: false,
         isEnabled: () => false,
@@ -628,10 +628,10 @@ describe("SkillsPage", () => {
 
     it("should show marketplace when feature flag is enabled", () => {
       mockUseFeatureFlags.mockReturnValue({
-        flags: { enable_skills_marketplace: true },
+        flags: { skills_marketplace: true },
         isLoading: false,
         isError: false,
-        isEnabled: (flag: string) => flag === "enable_skills_marketplace",
+        isEnabled: (flag: string) => flag === "skills_marketplace",
       });
       renderWithStore();
       expect(screen.getByText("Skills Marketplace")).toBeInTheDocument();

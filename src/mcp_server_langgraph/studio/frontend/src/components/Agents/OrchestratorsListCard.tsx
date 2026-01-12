@@ -55,7 +55,7 @@ export function OrchestratorsListCard({
             return (
               <div
                 key={orchestrator.name}
-                className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
+                className="p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between mb-2">
@@ -65,10 +65,10 @@ export function OrchestratorsListCard({
                     ) : (
                       <X
                         size={16}
-                        className="text-gray-400 dark:text-gray-400"
+                        className="text-neutral-400 dark:text-neutral-400"
                       />
                     )}
-                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                    <span className="font-medium text-neutral-900 dark:text-neutral-100">
                       {orchestrator.displayName}
                     </span>
                   </div>
@@ -76,7 +76,7 @@ export function OrchestratorsListCard({
                     className={`px-2 py-0.5 text-xs font-medium rounded ${
                       isEnabled
                         ? "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400"
-                        : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                        : "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
                     }`}
                   >
                     {isEnabled ? "Enabled" : "Disabled"}
@@ -84,7 +84,7 @@ export function OrchestratorsListCard({
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
                   {orchestrator.description}
                 </p>
 
@@ -94,7 +94,7 @@ export function OrchestratorsListCard({
                     {orchestrator.taskCategories.map((category) => (
                       <span
                         key={category}
-                        className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded"
+                        className="px-2 py-0.5 text-xs bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded"
                       >
                         {category}
                       </span>

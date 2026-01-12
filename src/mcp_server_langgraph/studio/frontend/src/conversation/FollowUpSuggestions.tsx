@@ -7,6 +7,8 @@
 import { useState, useRef, useCallback } from "react";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -41,7 +43,7 @@ function SuggestionsSkeleton() {
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"
+          className="h-8 w-32 bg-neutral-200 dark:bg-neutral-700 rounded-full animate-pulse"
         />
       ))}
     </div>
@@ -112,7 +114,7 @@ export function FollowUpSuggestions({
         const isHovered = hoveredId === suggestion.id;
 
         return (
-          <button
+          <Button
             key={suggestion.id}
             ref={(el) => {
               chipsRef.current[index] = el;
@@ -141,15 +143,15 @@ export function FollowUpSuggestions({
                   )
                 : cn(
                     "follow-up",
-                    "bg-gray-50 dark:bg-gray-800",
-                    "border-gray-200 dark:border-gray-700",
-                    "text-gray-700 dark:text-gray-300",
-                    "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                    "bg-neutral-50 dark:bg-neutral-800",
+                    "border-neutral-200 dark:border-neutral-700",
+                    "text-neutral-700 dark:text-neutral-300",
+                    "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
                   ),
             )}
           >
             {suggestion.text}
-          </button>
+          </Button>
         );
       })}
     </nav>

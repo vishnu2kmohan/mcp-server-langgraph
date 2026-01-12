@@ -67,6 +67,8 @@ import {
 } from "@codesandbox/sandpack-react";
 import { Play, Square, Terminal, AlertTriangle, RefreshCw } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 /**
  * Error Boundary for Sandpack component
  *
@@ -125,20 +127,22 @@ class SandpackErrorBoundary extends Component<
                 {this.state.error?.message || "An unexpected error occurred"}
               </p>
               <div className="mt-3 flex gap-2">
-                <button
+                <Button
+                  variant="danger"
+                  size="sm"
+                  className="flex .5 px-3 py-1 text-sm bg-error-100 hover:bg-error-200 dark:bg-error-800 dark:hover:bg-error-700 text-error-800 dark:text-error-200 rounded"
                   onClick={this.handleReset}
-                  className="flex items-center gap-1.5 px-3 py-1 text-sm bg-error-100 hover:bg-error-200 dark:bg-error-800 dark:hover:bg-error-700 text-error-800 dark:text-error-200 rounded transition-colors"
                 >
                   <RefreshCw size={14} />
                   Retry
-                </button>
+                </Button>
               </div>
               {/* Show original code for reference */}
               <details className="mt-3">
                 <summary className="text-xs text-error-500 dark:text-error-400 cursor-pointer">
                   View code ({this.props.language})
                 </summary>
-                <pre className="mt-2 p-2 bg-gray-900 rounded text-xs font-mono text-gray-100 overflow-x-auto max-h-32">
+                <pre className="mt-2 p-2 bg-neutral-900 rounded text-xs font-mono text-neutral-100 overflow-x-auto max-h-32">
                   {this.props.code}
                 </pre>
               </details>
@@ -327,35 +331,36 @@ root.render(
   // If not auto-run and hasn't been run yet, show placeholder
   if (!hasRun && showRunButton) {
     return (
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+      <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700">
         {/* Header */}
-        <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {title && (
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                 {title}
               </span>
             )}
-            <span className="text-xs font-mono bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-400">
+            <span className="text-xs font-mono bg-neutral-200 dark:bg-neutral-700 px-2 py-0.5 rounded text-neutral-600 dark:text-neutral-400">
               {language}
             </span>
-            <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+            <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
               <Terminal size={14} />
               Sandpack
             </span>
           </div>
-          <button
+          <Button
+            variant="success"
+            size="sm"
+            className="flex .5 px-3 py-1 text-sm bg-success-600 hover:bg-success-700 text-white rounded"
             onClick={handleRun}
-            className="flex items-center gap-1.5 px-3 py-1 text-sm bg-success-600 hover:bg-success-700 text-white rounded transition-colors"
           >
             <Play size={14} />
             Run
-          </button>
+          </Button>
         </div>
-
         {/* Code preview */}
-        <div className="p-4 bg-gray-900 overflow-x-auto max-h-64">
-          <pre className="text-sm font-mono text-gray-100 whitespace-pre-wrap">
+        <div className="p-4 bg-neutral-900 overflow-x-auto max-h-64">
+          <pre className="text-sm font-mono text-neutral-100 whitespace-pre-wrap">
             {code}
           </pre>
         </div>
@@ -365,48 +370,51 @@ root.render(
 
   return (
     <div
-      className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"
+      className="rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700"
       data-testid="sandpack-executor"
     >
       {/* Header */}
-      <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {title && (
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
               {title}
             </span>
           )}
-          <span className="text-xs font-mono bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-400">
+          <span className="text-xs font-mono bg-neutral-200 dark:bg-neutral-700 px-2 py-0.5 rounded text-neutral-600 dark:text-neutral-400">
             {language}
           </span>
-          <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+          <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
             <Terminal size={14} />
             Sandpack
           </span>
         </div>
         <div className="flex items-center gap-2">
           {isRunning ? (
-            <button
+            <Button
+              variant="danger"
+              size="sm"
+              className="flex .5 px-3 py-1 text-sm bg-error-600 hover:bg-error-700 text-white rounded"
               onClick={handleStop}
-              className="flex items-center gap-1.5 px-3 py-1 text-sm bg-error-600 hover:bg-error-700 text-white rounded transition-colors"
             >
               <Square size={14} />
               Stop
-            </button>
+            </Button>
           ) : (
             showRunButton && (
-              <button
+              <Button
+                variant="success"
+                size="sm"
+                className="flex .5 px-3 py-1 text-sm bg-success-600 hover:bg-success-700 text-white rounded"
                 onClick={handleRun}
-                className="flex items-center gap-1.5 px-3 py-1 text-sm bg-success-600 hover:bg-success-700 text-white rounded transition-colors"
               >
                 <Play size={14} />
                 Run
-              </button>
+              </Button>
             )
           )}
         </div>
       </div>
-
       {/* Sandpack with Error Boundary */}
       <SandpackErrorBoundary
         code={code}

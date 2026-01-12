@@ -16,6 +16,8 @@
 import { Component, type ReactNode, type ErrorInfo, useEffect } from "react";
 import { useAIErrorRecovery } from "../../hooks/useAIErrorRecovery";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -113,7 +115,6 @@ function DefaultFallback({
       <p style={{ margin: "0 0 12px 0", fontSize: "13px", opacity: 0.9 }}>
         {error.message}
       </p>
-
       {/* AI-powered recovery suggestions */}
       {isAnalyzing && (
         <p
@@ -157,8 +158,7 @@ function DefaultFallback({
           </ul>
         </div>
       )}
-
-      <button
+      <Button
         onClick={resetError}
         style={{
           padding: "6px 12px",
@@ -171,7 +171,7 @@ function DefaultFallback({
         }}
       >
         Retry
-      </button>
+      </Button>
     </div>
   );
 }

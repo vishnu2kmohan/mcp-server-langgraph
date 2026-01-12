@@ -74,11 +74,11 @@ export function SelectedToolsDisplay({
   return (
     <div className={cn("flex flex-col gap-1", textSize, className)}>
       {/* Header */}
-      <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
+      <div className="flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400">
         <Wrench size={iconSize} className="flex-shrink-0" />
         <span>Selected Tools</span>
         {totalAvailableTools != null && (
-          <span className="text-gray-400 dark:text-gray-500">
+          <span className="text-neutral-400 dark:text-neutral-500">
             ({selectedTools.length} of {totalAvailableTools})
           </span>
         )}
@@ -95,7 +95,7 @@ export function SelectedToolsDisplay({
               <Badge variant="outline" size={compact ? "sm" : "sm"} pill>
                 <span>{toolName}</span>
                 {hasScore && (
-                  <span className="ml-1 text-gray-400 dark:text-gray-500">
+                  <span className="ml-1 text-neutral-400 dark:text-neutral-500">
                     {formatScore(score)}
                   </span>
                 )}

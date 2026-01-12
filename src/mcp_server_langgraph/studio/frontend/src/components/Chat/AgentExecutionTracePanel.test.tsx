@@ -255,8 +255,8 @@ describe("AgentExecutionTracePanel", () => {
 
       const stepItem = screen.getByText("Pending Step").closest("li");
       expect(stepItem).toBeInTheDocument();
-      // Check for gray indicator (bg-gray-400)
-      const indicator = stepItem?.querySelector(".bg-gray-400");
+      // Check for gray indicator (bg-neutral-400)
+      const indicator = stepItem?.querySelector(".bg-neutral-400");
       expect(indicator).toBeInTheDocument();
     });
 

@@ -18,6 +18,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -266,7 +268,7 @@ export function CanvasShortcutsMenu({
       className={cn("relative", className)}
     >
       {/* Floating Action Button */}
-      <button
+      <Button
         data-testid="canvas-shortcuts-trigger"
         onClick={toggleMenu}
         disabled={isLoading}
@@ -297,27 +299,26 @@ export function CanvasShortcutsMenu({
             />
           </svg>
         )}
-      </button>
-
+      </Button>
       {/* Menu Panel */}
       {isOpen && (
         <div
           data-testid="canvas-shortcuts-panel"
           className={cn(
             "absolute bottom-14 right-0 z-50 w-64",
-            "bg-white dark:bg-gray-800 rounded-lg shadow-xl",
-            "border border-gray-200 dark:border-gray-700",
+            "bg-white dark:bg-neutral-800 rounded-lg shadow-xl",
+            "border border-neutral-200 dark:border-neutral-700",
             "py-2 animate-in fade-in slide-in-from-bottom-2 duration-200",
           )}
           role="menu"
           aria-label="Canvas shortcuts"
         >
           {/* Header */}
-          <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-700">
+            <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
               Quick Actions
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
               AI-powered code transformations
             </p>
           </div>
@@ -325,16 +326,16 @@ export function CanvasShortcutsMenu({
           {/* Actions List */}
           <div className="py-1">
             {SHORTCUTS.map((shortcut) => (
-              <button
+              <Button
                 key={shortcut.id}
                 data-testid={`shortcut-${shortcut.id}`}
                 onClick={() => handleActionClick(shortcut.id)}
                 disabled={isLoading}
                 className={cn(
                   "w-full flex items-start gap-3 px-3 py-2",
-                  "text-left hover:bg-gray-50 dark:hover:bg-gray-700/50",
+                  "text-left hover:bg-neutral-50 dark:hover:bg-neutral-700/50",
                   "transition-colors duration-150",
-                  "focus:outline-none focus:bg-gray-50 dark:focus:bg-gray-700/50",
+                  "focus:outline-none focus:bg-neutral-50 dark:focus:bg-neutral-700/50",
                   isLoading && "opacity-50 cursor-not-allowed",
                 )}
                 role="menuitem"
@@ -344,28 +345,28 @@ export function CanvasShortcutsMenu({
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                       {shortcut.label}
                     </span>
                     {shortcut.shortcut && (
-                      <span className="text-xs text-gray-400 dark:text-gray-400 font-mono">
+                      <span className="text-xs text-neutral-400 dark:text-neutral-400 font-mono">
                         {shortcut.shortcut}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
                     {shortcut.id === "port" && language
                       ? `Convert from ${language}`
                       : shortcut.description}
                   </p>
                 </div>
-              </button>
+              </Button>
             ))}
           </div>
 
           {/* Footer Tip */}
-          <div className="px-3 py-2 border-t border-gray-100 dark:border-gray-700">
-            <p className="text-xs text-gray-400 dark:text-gray-400">
+          <div className="px-3 py-2 border-t border-neutral-100 dark:border-neutral-700">
+            <p className="text-xs text-neutral-400 dark:text-neutral-400">
               Actions apply to selected artifact
             </p>
           </div>

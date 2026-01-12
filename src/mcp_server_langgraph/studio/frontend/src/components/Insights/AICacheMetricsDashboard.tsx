@@ -28,6 +28,8 @@ import type {
 } from "../../hooks/useAIMetrics";
 import type { CacheStats } from "../../hooks/useTieredCache";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -115,17 +117,17 @@ function MetricCard({
   };
 
   return (
-    <div className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+    <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
       <div className="flex items-center gap-2 mb-2">
         {icon && (
           <div className={`p-1.5 rounded ${colorClasses[color]}`}>{icon}</div>
         )}
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="text-sm text-neutral-500 dark:text-neutral-400">
           {label}
         </span>
       </div>
       <div
-        className={`text-2xl font-bold text-gray-900 dark:text-gray-100 ${valueClassName ?? ""}`}
+        className={`text-2xl font-bold text-neutral-900 dark:text-neutral-100 ${valueClassName ?? ""}`}
         data-testid={testId}
       >
         {value}
@@ -145,11 +147,11 @@ interface FeatureRowProps {
 
 function FeatureRow({ feature, metrics }: FeatureRowProps) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+    <div className="flex items-center justify-between py-2 border-b border-neutral-100 dark:border-neutral-700 last:border-0">
+      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
         {feature}
       </span>
-      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+      <div className="flex items-center gap-4 text-sm text-neutral-600 dark:text-neutral-400">
         <span data-testid={`feature-${feature}-requests`}>
           {metrics.requestCount} req
         </span>
@@ -192,37 +194,36 @@ export function AICacheMetricsDashboard({
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
           AI Cache Metrics
         </h3>
-        <button
+        <Button
+          variant="secondary"
+          className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg focus:ring-primary-500"
           type="button"
           onClick={onRefresh}
           aria-label="Refresh cache metrics"
-          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <RefreshCw size={16} />
-        </button>
+        </Button>
       </div>
-
       {/* Empty State */}
       {!hasData && !isLoading && (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+        <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
           <Database size={48} className="mx-auto mb-4 opacity-50" />
           <p>No cache data available yet</p>
         </div>
       )}
-
       {/* Metrics Grid */}
       {hasData && (
         <>
           {/* Cache Hit Ratio Progress */}
-          <div className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">
                 Cache Hit Ratio
               </span>
-              <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <span className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                 {formatPercentage(snapshot.cacheHitRatio)}
               </span>
             </div>
@@ -232,7 +233,7 @@ export function AICacheMetricsDashboard({
               aria-valuenow={Math.round(snapshot.cacheHitRatio * 100)}
               aria-valuemin={0}
               aria-valuemax={100}
-              className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+              className="h-3 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden"
             >
               <div
                 data-testid="cache-hit-progress-bar"
@@ -290,8 +291,8 @@ export function AICacheMetricsDashboard({
 
           {/* Feature Breakdown (hidden in compact mode) */}
           {!compact && featureNames.length > 0 && (
-            <div className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+              <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
                 Per-Feature Breakdown
               </h4>
               <div className="space-y-1">
@@ -308,8 +309,8 @@ export function AICacheMetricsDashboard({
 
           {/* Tiered Cache Breakdown (hidden in compact mode) */}
           {!compact && hasTieredStats && tieredCacheStats && (
-            <div className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+              <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
                 Tiered Cache Breakdown
               </h4>
 
@@ -342,7 +343,7 @@ export function AICacheMetricsDashboard({
                         title={`L2 Hits: ${l2Pct.toFixed(1)}%`}
                       />
                       <div
-                        className="bg-gray-400"
+                        className="bg-neutral-400"
                         style={{ width: `${missPct}%` }}
                         title={`Misses: ${missPct.toFixed(1)}%`}
                       />
@@ -356,13 +357,13 @@ export function AICacheMetricsDashboard({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
                     <Zap size={14} className="text-success-500" />
-                    <span className="text-gray-600 dark:text-gray-400">
+                    <span className="text-neutral-600 dark:text-neutral-400">
                       L1 (Memory)
                     </span>
                   </div>
                   <span
                     data-testid="l1-hits-value"
-                    className="font-semibold text-gray-900 dark:text-gray-100"
+                    className="font-semibold text-neutral-900 dark:text-neutral-100"
                   >
                     {formatNumber(tieredCacheStats.l1Hits)}
                   </span>
@@ -371,13 +372,13 @@ export function AICacheMetricsDashboard({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
                     <HardDrive size={14} className="text-primary-500" />
-                    <span className="text-gray-600 dark:text-gray-400">
+                    <span className="text-neutral-600 dark:text-neutral-400">
                       L2 (Session)
                     </span>
                   </div>
                   <span
                     data-testid="l2-hits-value"
-                    className="font-semibold text-gray-900 dark:text-gray-100"
+                    className="font-semibold text-neutral-900 dark:text-neutral-100"
                   >
                     {formatNumber(tieredCacheStats.l2Hits)}
                   </span>
@@ -387,15 +388,15 @@ export function AICacheMetricsDashboard({
                   <div className="flex items-center gap-1.5">
                     <Database
                       size={14}
-                      className="text-gray-400 dark:text-gray-400"
+                      className="text-neutral-400 dark:text-neutral-400"
                     />
-                    <span className="text-gray-600 dark:text-gray-400">
+                    <span className="text-neutral-600 dark:text-neutral-400">
                       Misses
                     </span>
                   </div>
                   <span
                     data-testid="tiered-misses-value"
-                    className="font-semibold text-gray-900 dark:text-gray-100"
+                    className="font-semibold text-neutral-900 dark:text-neutral-100"
                   >
                     {formatNumber(tieredCacheStats.misses)}
                   </span>
@@ -404,13 +405,13 @@ export function AICacheMetricsDashboard({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
                     <Clock size={14} className="text-insight-500" />
-                    <span className="text-gray-600 dark:text-gray-400">
+                    <span className="text-neutral-600 dark:text-neutral-400">
                       Cache Age
                     </span>
                   </div>
                   <span
                     data-testid="cache-age-value"
-                    className="font-semibold text-gray-900 dark:text-gray-100"
+                    className="font-semibold text-neutral-900 dark:text-neutral-100"
                   >
                     {formatCacheAge(tieredCacheStats.age)}
                   </span>
@@ -420,12 +421,11 @@ export function AICacheMetricsDashboard({
           )}
         </>
       )}
-
       {/* Loading Overlay */}
       {isLoading && (
         <div
           data-testid="loading-indicator"
-          className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center rounded-lg"
+          className="absolute inset-0 bg-white/50 dark:bg-neutral-900/50 flex items-center justify-center rounded-lg"
         >
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
         </div>

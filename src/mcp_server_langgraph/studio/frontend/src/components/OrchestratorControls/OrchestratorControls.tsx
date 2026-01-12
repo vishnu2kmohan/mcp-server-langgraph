@@ -11,6 +11,8 @@
 
 import { Settings, Brain, MessageSquare, CheckCircle } from "lucide-react";
 
+import { Input, Select, Checkbox } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -115,81 +117,73 @@ export function OrchestratorControls({
     }
   };
 
-  // Handler for auto-approve toggle
-  const handleAutoApproveChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({
-      ...config,
-      autoApprove: e.target.checked,
-    });
-  };
-
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+    <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700 p-4">
       {/* Header */}
-      <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+      <h3 className="text-sm font-medium text-neutral-900 dark:text-white flex items-center gap-2 mb-4">
         <Settings className="w-4 h-4 text-primary-500" />
         Orchestrator Configuration
       </h3>
-
       <div className="space-y-4">
         {/* Orchestrator Mode */}
         <div>
           <label
             htmlFor="orchestrator-mode"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
           >
             Orchestrator Mode
           </label>
-          <select
+          <Select
+            className="px-3 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             id="orchestrator-mode"
             data-testid="orchestrator-selector"
             value={config.orchestrator}
             onChange={handleOrchestratorChange}
             disabled={disabled}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {ORCHESTRATOR_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         {/* Thinking Budget */}
         <div>
           <label
             htmlFor="thinking-budget"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1"
+            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1 flex items-center gap-1"
           >
             <Brain className="w-3 h-3" />
             Thinking Budget
           </label>
-          <select
+          <Select
+            className="px-3 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             id="thinking-budget"
             value={config.thinkingBudget}
             onChange={handleThinkingBudgetChange}
             disabled={disabled}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {THINKING_BUDGET_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label} ({option.tokens} tokens)
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         {/* Critique Rounds */}
         <div>
           <label
             htmlFor="critique-rounds"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1"
+            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1 flex items-center gap-1"
           >
             <MessageSquare className="w-3 h-3" />
             Critique Rounds
           </label>
-          <input
+          <Input
+            className="px-3 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             type="number"
             id="critique-rounds"
             value={config.critiqueRounds}
@@ -197,9 +191,8 @@ export function OrchestratorControls({
             disabled={disabled}
             min={0}
             max={3}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
           />
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             Number of critique iterations (0-3)
           </p>
         </div>
@@ -208,18 +201,19 @@ export function OrchestratorControls({
         <div className="flex items-center justify-between">
           <label
             htmlFor="auto-approve"
-            className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1"
+            className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1"
           >
             <CheckCircle className="w-3 h-3" />
             Auto-Approve Low Risk
           </label>
-          <input
-            type="checkbox"
+          <Checkbox
             id="auto-approve"
             checked={config.autoApprove}
-            onChange={handleAutoApproveChange}
+            onChange={(checked) =>
+              onChange({ ...config, autoApprove: checked })
+            }
             disabled={disabled}
-            className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            size="sm"
           />
         </div>
       </div>

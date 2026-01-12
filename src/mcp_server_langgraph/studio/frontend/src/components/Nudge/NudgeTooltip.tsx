@@ -9,6 +9,8 @@
 import React from "react";
 import type { Nudge } from "../../hooks/useNudges";
 
+import { Button } from "@/components/UI";
+
 export interface NudgeTooltipProps {
   /** The nudge to display */
   nudge: Nudge;
@@ -42,27 +44,25 @@ export function NudgeTooltip({
         {nudge.priority === "high" && (
           <span className="nudge-priority-badge">High</span>
         )}
-        <button
-          data-testid="nudge-dismiss"
+        <Button
           className="nudge-dismiss"
+          data-testid="nudge-dismiss"
           onClick={onDismiss}
           aria-label="Dismiss"
         >
           ×
-        </button>
+        </Button>
       </div>
-
       <p className="nudge-message">{nudge.message}</p>
-
       <div className="nudge-actions">
         {onAccept && (
-          <button
+          <Button
             className="nudge-accept"
             onClick={onAccept}
             aria-label={actionText}
           >
             {actionText}
-          </button>
+          </Button>
         )}
       </div>
     </div>

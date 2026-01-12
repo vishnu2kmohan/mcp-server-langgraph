@@ -21,6 +21,8 @@ import {
 import { ArtifactExporter } from "./ArtifactExporter";
 import type { ExportFormat } from "./ArtifactExporter";
 
+import { Button } from "@/components/UI";
+
 export interface TableColumn {
   key: string;
   label: string;
@@ -149,17 +151,17 @@ export function TableArtifact({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden ${className}`}
+      className={`bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden ${className}`}
       data-testid="table-artifact"
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Table size={16} className="text-gray-500 dark:text-gray-400" />
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">
+          <Table size={16} className="text-neutral-500 dark:text-neutral-400" />
+          <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
             {title}
           </h3>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">
             ({sortedData.length} rows)
           </span>
         </div>
@@ -171,20 +173,20 @@ export function TableArtifact({
             filename={title.replace(/\s+/g, "_")}
           />
           {expandable && (
-            <button
+            <Button
+              variant="secondary"
+              className="p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded"
               aria-label={isExpanded ? "Collapse table" : "Expand table"}
             >
               {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-            </button>
+            </Button>
           )}
         </div>
       </div>
-
       {/* Table */}
       {data.length === 0 ? (
-        <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+        <div className="px-4 py-8 text-center text-neutral-500 dark:text-neutral-400">
           No data available
         </div>
       ) : (
@@ -192,14 +194,14 @@ export function TableArtifact({
           className={`overflow-x-auto ${isExpanded ? "max-h-none" : "max-h-96"}`}
         >
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700/50">
+            <thead className="bg-neutral-50 dark:bg-neutral-700/50">
               <tr>
                 {columns.map((column) => (
                   <th
                     key={column.key}
-                    className={`px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ${
+                    className={`px-4 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider ${
                       column.sortable
-                        ? "cursor-pointer hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
+                        ? "cursor-pointer hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                         : ""
                     }`}
                     onClick={() => handleSort(column.key)}
@@ -212,13 +214,13 @@ export function TableArtifact({
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
               {sortedData.map((row, rowIndex) => (
                 <tr
                   key={rowIndex}
                   className={`${
                     onRowClick
-                      ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                      ? "cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
                       : ""
                   }`}
                   onClick={() => onRowClick?.(row)}
@@ -226,7 +228,7 @@ export function TableArtifact({
                   {columns.map((column) => (
                     <td
                       key={column.key}
-                      className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap"
+                      className="px-4 py-3 text-sm text-neutral-900 dark:text-neutral-100 whitespace-nowrap"
                     >
                       {String(row[column.key] ?? "")}
                     </td>

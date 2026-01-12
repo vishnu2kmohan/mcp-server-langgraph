@@ -20,6 +20,8 @@ import type {
   AuthType,
 } from "../../types/connection";
 
+import { Button, Input, Select, Textarea } from "@/components/UI";
+
 export interface AddConnectionDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -202,24 +204,23 @@ export function AddConnectionDialog({
         onClick={handleClose}
         aria-hidden="true"
       />
-
       {/* Dialog */}
-      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
           <h2
             id="dialog-title"
-            className="text-lg font-semibold text-gray-900 dark:text-gray-100"
+            className="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
           >
             Add MCP Connection
           </h2>
-          <button
+          <Button
+            className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300"
             onClick={handleClose}
-            className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300"
             aria-label="Close"
           >
             <X size={20} />
-          </button>
+          </Button>
         </div>
 
         {/* Form */}
@@ -228,20 +229,19 @@ export function AddConnectionDialog({
           <div>
             <label
               htmlFor="connection-name"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
               Name
             </label>
-            <input
+            <Input
               id="connection-name"
-              type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Zapier MCP"
-              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 ${
                 errors.name
                   ? "border-error-500"
-                  : "border-gray-300 dark:border-gray-600"
+                  : "border-neutral-300 dark:border-neutral-600"
               }`}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? "name-error" : undefined}
@@ -257,17 +257,17 @@ export function AddConnectionDialog({
           <div>
             <label
               htmlFor="connection-description"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
               Description
             </label>
-            <textarea
+            <Textarea
+              className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
               id="connection-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Optional description..."
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -275,20 +275,19 @@ export function AddConnectionDialog({
           <div>
             <label
               htmlFor="connection-url"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
               URL
             </label>
-            <input
+            <Input
               id="connection-url"
-              type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://mcp.example.com"
-              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 ${
                 errors.url
                   ? "border-error-500"
-                  : "border-gray-300 dark:border-gray-600"
+                  : "border-neutral-300 dark:border-neutral-600"
               }`}
               aria-invalid={!!errors.url}
               aria-describedby={errors.url ? "url-error" : undefined}
@@ -304,21 +303,21 @@ export function AddConnectionDialog({
           <div>
             <label
               htmlFor="connection-transport"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
               Transport Protocol
             </label>
-            <select
+            <Select
+              className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
               id="connection-transport"
               value={transport}
               onChange={(e) =>
                 setTransport(e.target.value as TransportProtocol)
               }
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="streamable_http">Streamable HTTP</option>
               <option value="stdio">stdio</option>
-            </select>
+            </Select>
           </div>
 
           {/* Stdio-specific fields */}
@@ -327,20 +326,19 @@ export function AddConnectionDialog({
               <div>
                 <label
                   htmlFor="connection-command"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
                 >
                   Command
                 </label>
-                <input
+                <Input
                   id="connection-command"
-                  type="text"
                   value={command}
                   onChange={(e) => setCommand(e.target.value)}
                   placeholder="e.g., python or npx"
-                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 ${
                     errors.command
                       ? "border-error-500"
-                      : "border-gray-300 dark:border-gray-600"
+                      : "border-neutral-300 dark:border-neutral-600"
                   }`}
                   aria-invalid={!!errors.command}
                   aria-describedby={
@@ -357,19 +355,18 @@ export function AddConnectionDialog({
               <div>
                 <label
                   htmlFor="connection-args"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
                 >
                   Arguments
                 </label>
-                <input
+                <Input
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                   id="connection-args"
-                  type="text"
                   value={args}
                   onChange={(e) => setArgs(e.target.value)}
                   placeholder="e.g., -m mcp_server --port 3000"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                   Space-separated arguments
                 </p>
               </div>
@@ -380,20 +377,20 @@ export function AddConnectionDialog({
           <div>
             <label
               htmlFor="connection-auth"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
             >
               Authentication
             </label>
-            <select
+            <Select
+              className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
               id="connection-auth"
               value={authType}
               onChange={(e) => setAuthType(e.target.value as AuthType)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="none">None</option>
               <option value="api_key">API Key</option>
               <option value="oauth2">OAuth2</option>
-            </select>
+            </Select>
           </div>
 
           {/* API Key field */}
@@ -401,17 +398,17 @@ export function AddConnectionDialog({
             <div>
               <label
                 htmlFor="connection-api-key"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
               >
                 API Key
               </label>
-              <input
+              <Input
+                className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                 id="connection-api-key"
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="Enter your API key"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
             </div>
           )}
@@ -422,36 +419,34 @@ export function AddConnectionDialog({
               <div>
                 <label
                   htmlFor="connection-oauth-client-id"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
                 >
                   Client ID
                 </label>
-                <input
+                <Input
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                   id="connection-oauth-client-id"
-                  type="text"
                   value={oauth2ClientId}
                   onChange={(e) => setOauth2ClientId(e.target.value)}
                   placeholder="OAuth2 Client ID"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="connection-oauth-scopes"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
                 >
                   Scopes
                 </label>
-                <input
+                <Input
+                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
                   id="connection-oauth-scopes"
-                  type="text"
                   value={oauth2Scopes}
                   onChange={(e) => setOauth2Scopes(e.target.value)}
                   placeholder="e.g., read write"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                   Space-separated scopes
                 </p>
               </div>
@@ -459,18 +454,20 @@ export function AddConnectionDialog({
           )}
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <button
+          <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+            <Button
+              variant="secondary"
+              className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
+              className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -480,7 +477,7 @@ export function AddConnectionDialog({
               ) : (
                 "Add Connection"
               )}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

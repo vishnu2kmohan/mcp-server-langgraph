@@ -18,6 +18,8 @@ import {
 import { authenticatedFetch } from "../../utils/authenticatedFetch";
 import { transformSnakeToCamel } from "../../api/transforms";
 
+import { Button, Select } from "@/components/UI";
+
 interface AuditLogEntry {
   id: string;
   eventType: string;
@@ -115,7 +117,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
   const getActionColor = (action: string) => {
     return (
       actionColors[action] ||
-      "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+      "bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300"
     );
   };
 
@@ -126,7 +128,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
         className="flex items-center justify-center gap-3 py-12"
       >
         <Loader2 className="h-6 w-6 animate-spin text-primary-500" />
-        <span className="text-gray-600 dark:text-gray-400">
+        <span className="text-neutral-600 dark:text-neutral-400">
           Loading audit logs...
         </span>
       </div>
@@ -143,13 +145,14 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
         <p className="text-error-600 dark:text-error-400">
           Failed to load audit logs: {error}
         </p>
-        <button
+        <Button
+          variant="primary"
+          className="flex rounded-md bg-primary-600 px-4 py-2 text-white hover:bg-primary-700"
           onClick={fetchLogs}
-          className="flex items-center gap-2 rounded-md bg-primary-600 px-4 py-2 text-white hover:bg-primary-700"
         >
           <RefreshCw className="h-4 w-4" />
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -160,19 +163,19 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FileText className="h-5 w-5 text-insight-600" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
             Audit Log
           </h3>
         </div>
         <div className="flex items-center gap-3">
           {/* Event Type Filter */}
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-400 dark:text-gray-400" />
-            <select
+            <Filter className="h-4 w-4 text-neutral-400 dark:text-neutral-400" />
+            <Select
+              className="px-3 py-1.5 text-sm -500 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
               data-testid="event-type-filter"
               value={eventTypeFilter}
               onChange={handleEventTypeChange}
-              className="rounded-md border border-gray-300 dark:border-gray-600 bg-white px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="">All Events</option>
               <option value="connection.created">Created</option>
@@ -182,25 +185,25 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
               <option value="connection.oauth2_authorized">
                 OAuth2 Authorized
               </option>
-            </select>
+            </Select>
           </div>
 
           {/* Refresh Button */}
-          <button
+          <Button
+            variant="secondary"
+            className="flex .5 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600"
             onClick={fetchLogs}
-            className="flex items-center gap-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
           >
             <RefreshCw className="h-4 w-4" />
             Refresh
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Empty State */}
       {logs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <FileText className="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600 dark:text-gray-300" />
-          <p className="text-gray-500 dark:text-gray-400">
+          <FileText className="mb-4 h-12 w-12 text-neutral-300 dark:text-neutral-600 dark:text-neutral-300" />
+          <p className="text-neutral-500 dark:text-neutral-400">
             No audit logs found for this connection.
           </p>
         </div>
@@ -210,7 +213,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
           {logs.map((log) => (
             <div
               key={log.id}
-              className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white transition-shadow hover:shadow-sm dark:border-gray-700 dark:bg-gray-800"
+              className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white transition-shadow hover:shadow-sm dark:border-neutral-700 dark:bg-neutral-800"
             >
               {/* Entry Header */}
               <div
@@ -218,7 +221,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
                 onClick={() => toggleExpand(log.id)}
               >
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-sm text-gray-700 dark:text-gray-300">
+                  <span className="font-mono text-sm text-neutral-700 dark:text-neutral-300">
                     {log.eventType}
                   </span>
                   <span
@@ -229,19 +232,20 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                  <span className="text-sm text-neutral-500 dark:text-neutral-400">
                     {log.actorId}
                   </span>
-                  <span className="text-sm text-gray-400 dark:text-gray-400">
+                  <span className="text-sm text-neutral-400 dark:text-neutral-400">
                     {formatDate(log.timestamp)}
                   </span>
-                  <button
+                  <Button
+                    variant="secondary"
+                    className="rounded p-1 text-neutral-400 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 hover:text-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-300"
                     data-testid="expand-log"
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleExpand(log.id);
                     }}
-                    className="rounded p-1 text-gray-400 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 hover:text-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                     aria-label={expandedId === log.id ? "Collapse" : "Expand"}
                   >
                     {expandedId === log.id ? (
@@ -249,19 +253,19 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
                     ) : (
                       <ChevronDown className="h-4 w-4" />
                     )}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
               {/* Expanded Details */}
               {expandedId === log.id && (
-                <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/50">
+                <div className="border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900/50">
                   {/* Details JSON */}
                   <div className="mb-4">
-                    <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <h4 className="mb-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
                       Details
                     </h4>
-                    <pre className="overflow-x-auto rounded-md bg-gray-100 dark:bg-gray-800 p-3 text-xs text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                    <pre className="overflow-x-auto rounded-md bg-neutral-100 dark:bg-neutral-800 p-3 text-xs text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
                       {JSON.stringify(log.details, null, 2)}
                     </pre>
                   </div>
@@ -270,20 +274,20 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     {log.ipAddress && (
                       <div>
-                        <span className="font-medium text-gray-600 dark:text-gray-400">
+                        <span className="font-medium text-neutral-600 dark:text-neutral-400">
                           IP Address:
                         </span>
-                        <span className="ml-2 font-mono text-gray-800 dark:text-gray-200">
+                        <span className="ml-2 font-mono text-neutral-800 dark:text-neutral-200">
                           {log.ipAddress}
                         </span>
                       </div>
                     )}
                     {log.userAgent && (
                       <div className="col-span-2">
-                        <span className="font-medium text-gray-600 dark:text-gray-400">
+                        <span className="font-medium text-neutral-600 dark:text-neutral-400">
                           User Agent:
                         </span>
-                        <span className="ml-2 text-gray-800 dark:text-gray-200">
+                        <span className="ml-2 text-neutral-800 dark:text-neutral-200">
                           {log.userAgent}
                         </span>
                       </div>

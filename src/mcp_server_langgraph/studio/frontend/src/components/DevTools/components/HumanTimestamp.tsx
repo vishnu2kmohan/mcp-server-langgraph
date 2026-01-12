@@ -44,7 +44,7 @@ export function HumanTimestamp({
   return (
     <span
       className={cn(
-        "font-mono text-xs text-gray-500 dark:text-gray-400",
+        "font-mono text-xs text-neutral-500 dark:text-neutral-400",
         className,
       )}
       title={title}

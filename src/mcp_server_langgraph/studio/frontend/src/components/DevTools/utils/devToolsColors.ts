@@ -51,7 +51,7 @@ export const STATUS_TEXT_COLORS = {
   warning: "text-warning-600 dark:text-warning-400",
   error: "text-error-600 dark:text-error-400",
   info: "text-primary-600 dark:text-primary-400",
-  neutral: "text-gray-500 dark:text-gray-400",
+  neutral: "text-neutral-500 dark:text-neutral-400",
 } as const;
 
 // =============================================================================
@@ -68,7 +68,7 @@ export const STATUS_BG_COLORS = {
   warning: "bg-warning-50 dark:bg-warning-900/30",
   error: "bg-error-50 dark:bg-error-900/30",
   info: "bg-primary-50 dark:bg-primary-900/30",
-  neutral: "bg-gray-50 dark:bg-gray-800",
+  neutral: "bg-neutral-50 dark:bg-neutral-800",
 } as const;
 
 // =============================================================================
@@ -81,7 +81,8 @@ export const STATUS_BG_COLORS = {
  * Used by LogsTab LevelBadge and ConsoleTab level indicators.
  */
 export const LEVEL_BADGE_STYLES = {
-  debug: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+  debug:
+    "bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300",
   info: "bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300",
   warning:
     "bg-warning-100 text-warning-700 dark:bg-warning-900/50 dark:text-warning-300",
@@ -107,7 +108,7 @@ export const HTTP_METHOD_COLORS = {
   PUT: "text-warning-600 dark:text-warning-400",
   DELETE: "text-error-600 dark:text-error-400",
   PATCH: "text-insight-600 dark:text-insight-400",
-  DEFAULT: "text-gray-600 dark:text-gray-400",
+  DEFAULT: "text-neutral-600 dark:text-neutral-400",
 } as const;
 
 // =============================================================================

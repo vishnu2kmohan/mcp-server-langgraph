@@ -120,7 +120,7 @@ describe("WebSocketHealthIndicator", () => {
       render(<WebSocketHealthIndicator />);
 
       const indicator = screen.getByTestId("ws-health-status");
-      expect(indicator).toHaveClass("bg-gray-400");
+      expect(indicator).toHaveClass("bg-neutral-400");
     });
   });
 

@@ -8,6 +8,8 @@
 
 import { useState, useMemo } from "react";
 
+import { Button, RadioGroup, Radio } from "@/components/UI";
+
 /**
  * Standard SUS questions
  * Odd-indexed questions (1,3,5,7,9) are positive statements
@@ -109,96 +111,80 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg max-h-[90vh] flex flex-col">
+    <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-neutral-800 rounded-lg shadow-lg max-h-[90vh] flex flex-col">
       {/* Header */}
       <div className="text-center mb-4 flex-shrink-0">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
           System Usability Survey
         </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
           Help us improve by answering these 10 quick questions
         </p>
       </div>
-
       {/* Progress */}
       <div className="mb-4 flex-shrink-0">
-        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-1">
+        <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-300 mb-1">
           <span>{answeredCount} of 10 questions answered</span>
         </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
           <div
             className="bg-primary-600 h-2 rounded-full transition-all"
             style={{ width: `${(answeredCount / 10) * 100}%` }}
           />
         </div>
       </div>
-
       {/* Scale Labels */}
-      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2 px-8 flex-shrink-0">
+      <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-2 px-8 flex-shrink-0">
         <span>Strongly Disagree</span>
         <span>Strongly Agree</span>
       </div>
-
       {/* Questions - scrollable area */}
       <div className="space-y-4 overflow-y-auto flex-1 min-h-0 pr-2">
         {SUS_QUESTIONS.map((question, index) => (
           <div
             key={index}
-            className="border-b border-gray-100 dark:border-gray-700 pb-4"
+            className="border-b border-neutral-100 dark:border-neutral-700 pb-4"
           >
             <p
               id={`question-${index}`}
-              className="text-sm text-gray-700 dark:text-gray-200 mb-3"
+              className="text-sm text-neutral-700 dark:text-neutral-200 mb-3"
             >
               {index + 1}. {question}
             </p>
-            <div
-              role="radiogroup"
-              aria-labelledby={`question-${index}`}
-              className="flex justify-center gap-4"
+            <RadioGroup
+              name={`question-${index}`}
+              value={responses[index]?.toString() ?? ""}
+              onChange={(val) => handleRatingChange(index, parseInt(val, 10))}
+              variant="rating"
+              aria-label={`Question ${index + 1}`}
             >
               {[1, 2, 3, 4, 5].map((rating) => (
-                <label
+                <Radio
                   key={rating}
-                  className="flex flex-col items-center cursor-pointer"
-                >
-                  <input
-                    type="radio"
-                    name={`question-${index}`}
-                    value={rating}
-                    checked={responses[index] === rating}
-                    onChange={() => handleRatingChange(index, rating)}
-                    className="w-5 h-5 text-primary-600 focus:ring-primary-500"
-                  />
-                  <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {rating}
-                  </span>
-                </label>
+                  value={rating.toString()}
+                  label={rating.toString()}
+                />
               ))}
-            </div>
+            </RadioGroup>
           </div>
         ))}
       </div>
-
       {/* Actions */}
-      <div className="flex justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-        <button
+      <div className="flex justify-between mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700 flex-shrink-0">
+        <Button
+          className="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-100"
           onClick={onDismiss}
-          className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
         >
           Maybe Later
-        </button>
-        <button
+        </Button>
+        <Button
+          size="lg"
+          className="px-6 py-2 text-sm rounded-md"
           onClick={handleSubmit}
           disabled={!allAnswered}
-          className={`px-6 py-2 text-sm rounded-md transition-colors ${
-            allAnswered
-              ? "bg-primary-600 text-white hover:bg-primary-700"
-              : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed"
-          }`}
         >
           Submit
-        </button>
+        </Button>
       </div>
     </div>
   );

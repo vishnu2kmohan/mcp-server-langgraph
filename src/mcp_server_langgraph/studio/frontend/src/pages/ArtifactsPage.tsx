@@ -31,6 +31,8 @@ import type { ArtifactsLoaderData } from "../router/loaders";
 import type { CanvasArtifact } from "../types/artifacts";
 import { AIEmptyState } from "../components/EmptyState/AIEmptyState";
 
+import { Button, Input } from "@/components/UI";
+
 const logger = devLogger.withPrefix("[ArtifactsPage]");
 
 // =============================================================================
@@ -131,7 +133,9 @@ function getFileIcon(type: FileItem["type"]) {
     case "image":
       return <FileImage size={24} className="text-insight-500" />;
     default:
-      return <File size={24} className="text-gray-500 dark:text-gray-400" />;
+      return (
+        <File size={24} className="text-neutral-500 dark:text-neutral-400" />
+      );
   }
 }
 
@@ -176,8 +180,8 @@ function FileCard({
         data-testid={`file-card-${file.id}`}
         className={cn(
           "flex flex-col items-center p-4 rounded-lg",
-          "bg-white dark:bg-gray-800",
-          "border border-gray-200 dark:border-gray-700",
+          "bg-white dark:bg-neutral-800",
+          "border border-neutral-200 dark:border-neutral-700",
           "hover:border-primary-300 dark:hover:border-primary-600",
           "transition-colors cursor-pointer",
           "group",
@@ -185,35 +189,37 @@ function FileCard({
         onClick={() => onPreview(file)}
       >
         <div className="mb-3">{getFileIcon(file.type)}</div>
-        <p className="text-sm font-medium text-gray-900 dark:text-white truncate w-full text-center">
+        <p className="text-sm font-medium text-neutral-900 dark:text-white truncate w-full text-center">
           {file.name}
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
           {formatFileSize(file.size)}
         </p>
         <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
+          <Button
+            variant="secondary"
+            className="p-1 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onDownload(file);
             }}
-            className="p-1 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
             aria-label="Download"
           >
             <Download size={14} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="danger"
+            className="p-1 rounded hover:bg-error-100 dark:hover:bg-error-900/30 text-error-500"
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(file);
             }}
-            className="p-1 rounded hover:bg-error-100 dark:hover:bg-error-900/30 text-error-500"
             aria-label="Delete"
           >
             <Trash2 size={14} />
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -225,9 +231,9 @@ function FileCard({
       data-testid={`file-row-${file.id}`}
       className={cn(
         "flex items-center gap-4 px-4 py-3",
-        "bg-white dark:bg-gray-800",
-        "border-b border-gray-200 dark:border-gray-700",
-        "hover:bg-gray-50 dark:hover:bg-gray-700/50",
+        "bg-white dark:bg-neutral-800",
+        "border-b border-neutral-200 dark:border-neutral-700",
+        "hover:bg-neutral-50 dark:hover:bg-neutral-700/50",
         "transition-colors cursor-pointer",
         "group",
       )}
@@ -235,47 +241,50 @@ function FileCard({
     >
       {getFileIcon(file.type)}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+        <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
           {file.name}
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">
           {formatFileSize(file.size)} • {formatDate(file.updatedAt)}
         </p>
       </div>
       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
+        <Button
+          variant="secondary"
+          className="p-2 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onPreview(file);
           }}
-          className="p-2 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
           aria-label="Preview"
         >
           <Eye size={16} />
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="secondary"
+          className="p-2 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onDownload(file);
           }}
-          className="p-2 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
           aria-label="Download"
         >
           <Download size={16} />
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="danger"
+          className="p-2 rounded hover:bg-error-100 dark:hover:bg-error-900/30 text-error-500"
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onDelete(file);
           }}
-          className="p-2 rounded hover:bg-error-100 dark:hover:bg-error-900/30 text-error-500"
           aria-label="Delete"
         >
           <Trash2 size={16} />
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -509,10 +518,10 @@ export function ArtifactsPage() {
     return (
       <div
         data-testid="artifacts-page-error"
-        className="flex flex-col items-center justify-center h-full bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400"
+        className="flex flex-col items-center justify-center h-full bg-neutral-50 dark:bg-neutral-900 text-neutral-500 dark:text-neutral-400"
       >
         <AlertCircle size={48} className="mb-4 text-error-500" />
-        <p className="text-lg font-medium text-gray-900 dark:text-white">
+        <p className="text-lg font-medium text-neutral-900 dark:text-white">
           Failed to load artifacts
         </p>
         <p className="text-sm mt-1">{loaderData.error}</p>
@@ -523,7 +532,7 @@ export function ArtifactsPage() {
   return (
     <div
       data-testid="artifacts-page"
-      className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 relative"
+      className="flex flex-col h-full bg-neutral-50 dark:bg-neutral-900 relative"
     >
       {/* Delete status indicator - optimistic feedback */}
       {deleteStatus !== "idle" && (
@@ -550,15 +559,14 @@ export function ArtifactsPage() {
           {deleteStatus === "error" && (deleteError || "Delete failed")}
         </div>
       )}
-
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
         <div className="flex items-center gap-3">
           <FolderOpen size={24} className="text-primary-500" />
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h1 className="text-lg font-semibold text-neutral-900 dark:text-white">
             Artifacts
           </h1>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
             {filteredFiles.length} artifacts
           </span>
         </div>
@@ -568,58 +576,56 @@ export function ArtifactsPage() {
           <div className="relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
             />
-            <input
-              type="text"
+            <Input
               data-testid="file-search"
               placeholder="Search artifacts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
                 "pl-9 pr-4 py-2 rounded-lg text-sm w-64",
-                "bg-gray-100 dark:bg-gray-700",
-                "border border-gray-200 dark:border-gray-700 dark:border-gray-600",
+                "bg-neutral-100 dark:bg-neutral-700",
+                "border border-neutral-200 dark:border-neutral-700 dark:border-neutral-600",
                 "focus:outline-none focus:ring-2 focus:ring-primary-500",
-                "placeholder-gray-400",
+                "placeholder-neutral-400",
               )}
             />
           </div>
 
           {/* View toggle */}
-          <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
-            <button
+          <div className="flex items-center gap-1 p-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
+            <Button
               type="button"
               data-testid="view-grid"
               onClick={() => setViewMode("grid")}
               className={cn(
                 "p-1.5 rounded",
                 viewMode === "grid"
-                  ? "bg-white dark:bg-gray-600 shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300",
+                  ? "bg-white dark:bg-neutral-600 shadow-sm"
+                  : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300",
               )}
               aria-label="Grid view"
             >
               <Grid size={16} />
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               data-testid="view-list"
               onClick={() => setViewMode("list")}
               className={cn(
                 "p-1.5 rounded",
                 viewMode === "list"
-                  ? "bg-white dark:bg-gray-600 shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300",
+                  ? "bg-white dark:bg-neutral-600 shadow-sm"
+                  : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300",
               )}
               aria-label="List view"
             >
               <List size={16} />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
-
       {/* File list */}
       <div className="flex-1 overflow-auto p-6">
         {filteredFiles.length === 0 ? (
@@ -645,7 +651,7 @@ export function ArtifactsPage() {
             ))}
           </div>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
             {filteredFiles.map((file) => (
               <FileCard
                 key={file.id}
@@ -659,7 +665,6 @@ export function ArtifactsPage() {
           </div>
         )}
       </div>
-
       {/* Preview Modal */}
       {previewArtifact && selectedFile && (
         <div
@@ -668,50 +673,51 @@ export function ArtifactsPage() {
           onClick={handleClosePreview}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden m-4"
+            className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden m-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
               <div className="flex items-center gap-3">
                 {getFileIcon(selectedFile.type)}
                 <div>
-                  <h3 className="font-medium text-gray-900 dark:text-white">
+                  <h3 className="font-medium text-neutral-900 dark:text-white">
                     {selectedFile.name}
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
                     {formatFileSize(selectedFile.size)} •{" "}
                     {formatDate(selectedFile.updatedAt)}
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="secondary"
+                className="p-2 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                 type="button"
                 onClick={handleClosePreview}
-                className="p-2 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                 aria-label="Close preview"
               >
                 <X size={20} />
-              </button>
+              </Button>
             </div>
             <div className="p-4 overflow-auto max-h-[60vh]">
-              <pre className="text-sm font-mono whitespace-pre-wrap text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-900 p-4 rounded">
+              <pre className="text-sm font-mono whitespace-pre-wrap text-neutral-800 dark:text-neutral-200 bg-neutral-50 dark:bg-neutral-900 p-4 rounded">
                 {previewArtifact.content}
               </pre>
             </div>
-            <div className="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
-              <button
+            <div className="flex justify-end gap-2 p-4 border-t border-neutral-200 dark:border-neutral-700">
+              <Button
+                variant="primary"
+                className="flex px-4 py-2 text-sm rounded-lg bg-primary-500 text-white hover:bg-primary-600"
                 type="button"
                 onClick={() => handleDownload(selectedFile)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-primary-500 text-white hover:bg-primary-600"
               >
                 <Download size={16} />
                 Download
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
-
       {/* Delete Confirmation Modal */}
       {deleteConfirmFile && (
         <div
@@ -720,34 +726,36 @@ export function ArtifactsPage() {
           onClick={handleCancelDelete}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full m-4 p-6"
+            className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-md w-full m-4 p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-2">
               Delete File
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
               Are you sure you want to delete{" "}
               <span className="font-medium">{deleteConfirmFile.name}</span>?
               This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
-              <button
+              <Button
+                variant="secondary"
+                className="px-4 py-2 text-sm rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700"
                 type="button"
                 onClick={handleCancelDelete}
                 disabled={isDeleting}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                className="px-4 py-2 text-sm rounded-lg bg-error-500 text-white hover:bg-error-600"
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-error-500 text-white hover:bg-error-600 disabled:opacity-50"
               >
                 {isDeleting ? "Deleting..." : "Delete"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

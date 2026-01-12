@@ -9,6 +9,9 @@ import { User, Bot, Copy, Check } from "lucide-react";
 import type { ChatMessage } from "../types";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+import { LLMThinkingTrace } from "@/components/Chat/LLMThinkingTrace";
+
 // Re-export ChatMessage for backwards compatibility
 export type { ChatMessage };
 
@@ -94,18 +97,19 @@ function CodeBlock({
 
   return (
     <div data-testid="code-block" className="relative my-2">
-      <div className="flex items-center justify-between px-3 py-1 bg-gray-700 dark:bg-gray-900 rounded-t-lg text-xs text-gray-400 dark:text-gray-400">
+      <div className="flex items-center justify-between px-3 py-1 bg-neutral-700 dark:bg-neutral-900 rounded-t-lg text-xs text-neutral-400 dark:text-neutral-400">
         <span>{language}</span>
-        <button
+        <Button
+          variant="secondary"
+          className="p-1 hover:bg-neutral-600 rounded"
           data-testid="copy-code-button"
           type="button"
           onClick={handleCopy}
-          className="p-1 hover:bg-gray-600 rounded transition-colors"
         >
           {copied ? <Check size={12} /> : <Copy size={12} />}
-        </button>
+        </Button>
       </div>
-      <pre className="p-3 bg-gray-800 dark:bg-gray-950 rounded-b-lg overflow-x-auto text-sm text-gray-100">
+      <pre className="p-3 bg-neutral-800 dark:bg-neutral-950 rounded-b-lg overflow-x-auto text-sm text-neutral-100">
         <code>{content}</code>
       </pre>
     </div>
@@ -120,15 +124,15 @@ function TypingIndicator() {
   return (
     <div data-testid="typing-indicator" className="flex gap-1 py-2">
       <div
-        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+        className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
         style={{ animationDelay: "0ms" }}
       />
       <div
-        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+        className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
         style={{ animationDelay: "150ms" }}
       />
       <div
-        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+        className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
         style={{ animationDelay: "300ms" }}
       />
     </div>
@@ -148,8 +152,10 @@ function MessageBubbleImpl({
 }: MessageBubbleProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isThinkingExpanded, setIsThinkingExpanded] = useState(false);
 
   const isUser = message.role === "user";
+  const hasThinkingContent = !isUser && !!message.thinkingContent?.trim();
   const parsedContent = useMemo(
     () => parseCodeBlocks(message.content),
     [message.content],
@@ -188,7 +194,6 @@ function MessageBubbleImpl({
           <Bot size={16} />
         </div>
       )}
-
       {/* Message bubble */}
       <article
         data-testid="message-bubble"
@@ -200,13 +205,25 @@ function MessageBubbleImpl({
           "message-bubble relative max-w-[80%] rounded-2xl px-4 py-2",
           isUser && "user bg-primary-500 text-white",
           !isUser &&
-            "assistant bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100",
+            "assistant bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100",
         )}
       >
         {isTyping ? (
           <TypingIndicator />
         ) : (
           <>
+            {/* Thinking Trace (collapsed by default for historical messages) */}
+            {hasThinkingContent && (
+              <LLMThinkingTrace
+                thinkingContent={message.thinkingContent!}
+                isExpanded={isThinkingExpanded}
+                onToggle={() => setIsThinkingExpanded((prev) => !prev)}
+                thinkingTokens={message.thinkingTokens}
+                modelName={message.modelName}
+                className="mb-2"
+              />
+            )}
+
             {/* Content */}
             <div className="text-sm leading-relaxed">
               {parsedContent.map((part, index) =>
@@ -230,7 +247,7 @@ function MessageBubbleImpl({
                   "text-xs mt-1",
                   isUser
                     ? "text-primary-200"
-                    : "text-gray-400 dark:text-gray-400",
+                    : "text-neutral-400 dark:text-neutral-400",
                 )}
               >
                 {formatTime(message.timestamp)}
@@ -239,24 +256,23 @@ function MessageBubbleImpl({
 
             {/* Copy button on hover */}
             {isHovered && !hasCodeBlock && (
-              <button
+              <Button
                 data-testid="copy-message-button"
                 type="button"
                 onClick={handleCopy}
                 className={cn(
                   "absolute -top-2 -right-2 p-1.5 rounded-full",
-                  "bg-white dark:bg-gray-700 shadow-md",
-                  "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200",
+                  "bg-white dark:bg-neutral-700 shadow-md",
+                  "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200",
                   "transition-all",
                 )}
               >
                 {copied ? <Check size={12} /> : <Copy size={12} />}
-              </button>
+              </Button>
             )}
           </>
         )}
       </article>
-
       {/* User avatar */}
       {isUser && (
         <div

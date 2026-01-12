@@ -16,6 +16,8 @@
 
 import { Loader2, X } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // ==============================================================================
 // Types
 // ==============================================================================
@@ -118,15 +120,16 @@ export function ProgressIndicator({
         <div
           role="status"
           aria-live="polite"
-          className={`flex items-center justify-between ${sizeClasses.text} text-gray-600 dark:text-gray-400`}
+          className={`flex items-center justify-between ${sizeClasses.text} text-neutral-600 dark:text-neutral-400`}
         >
           {status && <span>{status}</span>}
           {eta && (
-            <span className="text-gray-500 dark:text-gray-400">{eta}</span>
+            <span className="text-neutral-500 dark:text-neutral-400">
+              {eta}
+            </span>
           )}
         </div>
       )}
-
       {/* Progress bar / Spinner container */}
       <div className="flex items-center gap-3">
         {indeterminate ? (
@@ -160,11 +163,10 @@ export function ProgressIndicator({
                 style={{ width: `${percentage}%` }}
               />
             </div>
-
             {/* Percentage text */}
             {showPercentage && (
               <span
-                className={`min-w-[3rem] text-right font-medium ${sizeClasses.text} text-gray-700 dark:text-gray-300`}
+                className={`min-w-[3rem] text-right font-medium ${sizeClasses.text} text-neutral-700 dark:text-neutral-300`}
               >
                 {percentage}%
               </span>
@@ -174,17 +176,16 @@ export function ProgressIndicator({
 
         {/* Cancel button */}
         {onCancel && (
-          <button
+          <Button
+            variant="secondary"
+            className="p-1 rounded-md text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:ring-primary-500"
             type="button"
             onClick={onCancel}
             disabled={cancelling}
             aria-label="Cancel"
-            className={`p-1 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${
-              cancelling ? "opacity-50 cursor-not-allowed" : ""
-            }`}
           >
             <X size={size === "sm" ? 14 : size === "lg" ? 20 : 16} />
-          </button>
+          </Button>
         )}
       </div>
     </div>

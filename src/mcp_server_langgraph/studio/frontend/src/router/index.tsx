@@ -36,22 +36,22 @@ function RouterFallback() {
   return (
     <div
       data-testid="router-loading"
-      className="flex flex-col h-screen bg-white dark:bg-gray-900 animate-pulse"
+      className="flex flex-col h-screen bg-white dark:bg-neutral-900 animate-pulse"
     >
       {/* TopBar skeleton */}
-      <div className="h-12 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700" />
+      <div className="h-12 bg-neutral-100 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700" />
       {/* Main content skeleton */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-64 bg-gray-50 dark:bg-gray-850 border-r border-gray-200 dark:border-gray-700">
+        <div className="w-64 bg-neutral-50 dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700">
           <div className="p-4 space-y-3">
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+            <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4" />
+            <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-1/2" />
           </div>
         </div>
-        <div className="flex-1 bg-white dark:bg-gray-900" />
+        <div className="flex-1 bg-white dark:bg-neutral-900" />
       </div>
       {/* StatusBar skeleton */}
-      <div className="h-6 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700" />
+      <div className="h-6 bg-neutral-100 dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700" />
     </div>
   );
 }

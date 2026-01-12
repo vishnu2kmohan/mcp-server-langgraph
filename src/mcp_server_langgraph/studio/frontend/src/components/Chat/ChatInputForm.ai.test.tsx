@@ -195,7 +195,7 @@ describe("ChatInputForm AI Features", () => {
       );
 
       const suggestion = screen.getByTestId("inline-suggestion");
-      expect(suggestion).toHaveClass("text-gray-400");
+      expect(suggestion).toHaveClass("text-neutral-400");
     });
 
     it("should show hint text about Tab to accept", () => {

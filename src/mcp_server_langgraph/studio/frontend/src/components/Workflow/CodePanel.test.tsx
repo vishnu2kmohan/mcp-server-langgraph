@@ -91,7 +91,7 @@ describe("CodePanel", () => {
       );
 
       const panel = container.querySelector('[data-testid="code-panel"]');
-      expect(panel).toHaveClass("bg-gray-800");
+      expect(panel).toHaveClass("bg-neutral-800");
     });
 
     it("should apply light mode styles", () => {

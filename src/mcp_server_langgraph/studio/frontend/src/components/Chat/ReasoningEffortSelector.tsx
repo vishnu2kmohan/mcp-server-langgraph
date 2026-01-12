@@ -18,6 +18,8 @@
 import { useCallback } from "react";
 import { Brain } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -139,11 +141,11 @@ export function ReasoningEffortSelector({
           className="text-violet-600 dark:text-violet-400"
           data-testid="brain-icon"
         />
-        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+        <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
           Thinking
         </span>
         {modelName && (
-          <span className="text-xs text-gray-400 dark:text-gray-400">
+          <span className="text-xs text-neutral-400 dark:text-neutral-400">
             ({modelName})
           </span>
         )}
@@ -153,7 +155,6 @@ export function ReasoningEffortSelector({
           </span>
         )}
       </div>
-
       {/* Button Group */}
       <div
         role="radiogroup"
@@ -163,35 +164,25 @@ export function ReasoningEffortSelector({
         {EFFORT_LEVELS.map((level) => {
           const isSelected = value === level.value;
           return (
-            <button
+            <Button
+              className="rounded"
               key={level.value}
               onClick={() => handleSelect(level.value)}
               onKeyDown={(e) => handleKeyDown(e, level.value)}
               disabled={isDisabled}
               title={level.tooltip}
               aria-pressed={isSelected}
-              className={`
-                ${compact ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-sm"}
-                rounded font-medium transition-colors
-                ${
-                  isSelected
-                    ? "bg-violet-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                }
-                ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"}
-              `}
             >
               {compact ? level.shortLabel : level.label}
-            </button>
+            </Button>
           );
         })}
       </div>
-
       {/* Description */}
       {showDescription && selectedLevel && (
         <p
           data-testid="effort-description"
-          className="text-xs text-gray-500 dark:text-gray-400"
+          className="text-xs text-neutral-500 dark:text-neutral-400"
         >
           {selectedLevel.description}
         </p>

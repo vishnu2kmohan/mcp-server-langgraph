@@ -13,6 +13,8 @@ import { ExportButton } from "./ExportButton";
 import { useFeatureFlag } from "../../contexts/FeatureFlagContext";
 import { InlineEdit } from "../UI/InlineEdit";
 
+import { Button } from "@/components/UI";
+
 export type ConnectionMode = "websocket" | "rest" | "disconnected";
 
 // =============================================================================
@@ -38,13 +40,14 @@ function ChatHeaderActions({
       {enableSessionExport && (
         <ExportButton sessionId={sessionId} sessionTitle={sessionName} />
       )}
-      <button
+      <Button
+        variant="danger"
+        className="flex px-3 py-1.5 text-sm text-error-600 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
         onClick={onClear}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm text-error-600 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
       >
         <Trash2 size={16} />
         Clear
-      </button>
+      </Button>
     </div>
   );
 }
@@ -91,7 +94,7 @@ export function ChatHeader({
 
   return (
     <>
-      <header className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Connection Status */}
@@ -139,14 +142,14 @@ export function ChatHeader({
                     }}
                     placeholder="Session name"
                     aria-label={`Rename session ${sessionName}`}
-                    className="text-lg font-semibold text-gray-900 dark:text-gray-100"
+                    className="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
                   />
                 ) : (
-                  <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                     {sessionName}
                   </h1>
                 )}
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
                   {messageLabel}
                 </p>
               </div>
@@ -163,23 +166,21 @@ export function ChatHeader({
           )}
         </div>
       </header>
-
       {/* MCP Connection Error Banner */}
       {mcpError && (
         <div className="px-6 py-3 bg-grafana-50 dark:bg-grafana-900/20 border-b border-grafana-200 dark:border-grafana-800 flex items-center justify-between">
           <p className="text-grafana-700 dark:text-grafana-400 text-sm">
             {mcpError}
           </p>
-          <button
-            onClick={onConnect}
+          <Button
             className="text-grafana-600 hover:text-grafana-800 text-sm"
+            onClick={onConnect}
             aria-label="Retry connection"
           >
             Retry
-          </button>
+          </Button>
         </div>
       )}
-
       {/* Session Error Banner */}
       {sessionError && (
         <div className="px-6 py-3 bg-error-50 dark:bg-error-900/20 border-b border-error-200 dark:border-error-800 flex items-center justify-between">
@@ -187,13 +188,13 @@ export function ChatHeader({
             {sessionError}
           </p>
           {onClearError && (
-            <button
-              onClick={onClearError}
+            <Button
               className="text-error-600 hover:text-error-800 text-sm"
+              onClick={onClearError}
               aria-label="Dismiss error"
             >
               Dismiss
-            </button>
+            </Button>
           )}
         </div>
       )}

@@ -2,7 +2,7 @@
  * RiskBadge Component
  *
  * Displays risk levels with semantic color coding and optional icons.
- * Uses getRiskLevelColor from utils/colors for centralized color management.
+ * Uses CVA for type-safe size variants and dynamic color from utils/colors.
  *
  * Risk levels:
  * - Low: Success (green)
@@ -11,20 +11,58 @@
  * - Critical: Strong error (dark red)
  */
 
+import { cva, type VariantProps } from "class-variance-authority";
 import { type HTMLAttributes, type ReactNode } from "react";
 import { Shield, ShieldAlert, ShieldX, AlertOctagon } from "lucide-react";
 import { getRiskLevelColor, type RiskLevel } from "../../utils/colors";
+import { cn } from "../../utils/cn";
 
-export type RiskBadgeSize = "sm" | "md" | "lg";
+/**
+ * RiskBadge variant styles using CVA
+ */
+export const riskBadgeVariants = cva(
+  // Base styles
+  "inline-flex items-center font-medium",
+  {
+    variants: {
+      size: {
+        sm: "text-xs gap-1",
+        md: "text-sm gap-1.5",
+        lg: "text-base gap-2",
+      },
+    },
+    defaultVariants: {
+      size: "md",
+    },
+  },
+);
 
-export interface RiskBadgeProps extends Omit<
-  HTMLAttributes<HTMLSpanElement>,
-  "children"
-> {
+/**
+ * Icon size variants using CVA
+ */
+export const riskBadgeIconVariants = cva("", {
+  variants: {
+    size: {
+      sm: "w-3 h-3",
+      md: "w-3.5 h-3.5",
+      lg: "w-4 h-4",
+    },
+  },
+  defaultVariants: {
+    size: "md",
+  },
+});
+
+export type RiskBadgeSize = NonNullable<
+  VariantProps<typeof riskBadgeVariants>["size"]
+>;
+
+export interface RiskBadgeProps
+  extends
+    Omit<HTMLAttributes<HTMLSpanElement>, "children">,
+    VariantProps<typeof riskBadgeVariants> {
   /** Risk level */
   level: RiskLevel;
-  /** Size of the badge */
-  size?: RiskBadgeSize;
   /** Show icon for risk level */
   showIcon?: boolean;
   /** Optional label prefix */
@@ -32,41 +70,10 @@ export interface RiskBadgeProps extends Omit<
 }
 
 /**
- * Utility to combine class names
- */
-function cn(...classes: (string | undefined | boolean)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
-
-/**
- * Get size-specific classes
- */
-function getSizeClasses(size: RiskBadgeSize): string {
-  const sizes: Record<RiskBadgeSize, string> = {
-    sm: "text-xs gap-1",
-    md: "text-sm gap-1.5",
-    lg: "text-base gap-2",
-  };
-  return sizes[size];
-}
-
-/**
- * Get icon size based on badge size
- */
-function getIconSize(size: RiskBadgeSize): string {
-  const sizes: Record<RiskBadgeSize, string> = {
-    sm: "w-3 h-3",
-    md: "w-3.5 h-3.5",
-    lg: "w-4 h-4",
-  };
-  return sizes[size];
-}
-
-/**
  * Get icon for risk level
  */
 function getRiskIcon(level: RiskLevel, size: RiskBadgeSize): ReactNode {
-  const iconClass = getIconSize(size);
+  const iconClass = riskBadgeIconVariants({ size });
   switch (level) {
     case "low":
       return <Shield className={iconClass} />;
@@ -93,12 +100,13 @@ function capitalize(str: string): string {
  */
 export function RiskBadge({
   level,
-  size = "md",
+  size,
   showIcon = false,
   label,
   className,
   ...props
 }: RiskBadgeProps) {
+  const resolvedSize = size ?? "md";
   const levelText = capitalize(level);
   const displayText = label ? `${label}: ${levelText}` : levelText;
   const ariaLabel = `Risk level: ${levelText}`;
@@ -109,19 +117,16 @@ export function RiskBadge({
       data-testid="risk-badge"
       aria-label={ariaLabel}
       className={cn(
-        // Base styles
-        "inline-flex items-center font-medium",
-        // Risk color from design system
+        riskBadgeVariants({ size }),
+        // Dynamic risk color from design system
         getRiskLevelColor(level),
-        // Size styles
-        getSizeClasses(size),
         className,
       )}
       {...props}
     >
       {showIcon && (
         <span className="shrink-0" aria-hidden="true">
-          {getRiskIcon(level, size)}
+          {getRiskIcon(level, resolvedSize)}
         </span>
       )}
       {displayText}

@@ -15,11 +15,17 @@ import { useState, useCallback } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { MessageList } from "./MessageList";
 import { ConnectedChatInputForm } from "./ConnectedChatInputForm";
-import { type SlashCommand } from "../components/Chat/ChatInputForm";
+import {
+  type SlashCommand,
+  type ModelOption,
+} from "../components/Chat/ChatInputForm";
+import type { ReasoningEffortLevel } from "../components/Chat/ReasoningEffortSelector";
 import { FollowUpSuggestions, type Suggestion } from "./FollowUpSuggestions";
 import { GenerateWorkflowButton } from "./GenerateWorkflowButton";
 import type { ChatMessage } from "./MessageBubble";
 import { cn } from "../utils/cn";
+
+import { Button } from "@/components/UI";
 
 // =============================================================================
 // Types
@@ -68,9 +74,11 @@ export interface ConversationPanelProps {
   // Inline AI Suggestions props (Sprint 6 - VSCode Copilot style)
   /** Enable inline ghost text suggestions */
   enableInlineSuggestions?: boolean;
-  /** Current inline suggestion text (ghost text after cursor) */
+  /** Use the useInlineSuggestions hook internally (auto-fetch suggestions) */
+  useInlineSuggestionsHook?: boolean;
+  /** Current inline suggestion text (ghost text after cursor) - used when useInlineSuggestionsHook is false */
   inlineSuggestion?: string;
-  /** Whether suggestion is being fetched */
+  /** Whether suggestion is being fetched - used when useInlineSuggestionsHook is false */
   isSuggestionLoading?: boolean;
   /** Callback when user accepts suggestion (Tab key) */
   onAcceptSuggestion?: (suggestion: string) => void;
@@ -81,6 +89,40 @@ export interface ConversationPanelProps {
   kbFocusValue?: "all" | "kb_only" | "web_only" | "none";
   /** Callback when KB focus mode changes */
   onKBFocusChange?: (mode: "all" | "kb_only" | "web_only" | "none") => void;
+
+  // ===========================================================================
+  // Model Selection Props (Sprint 1 - Chat Input Gap Fix)
+  // ===========================================================================
+
+  /** Whether to show the model selector dropdown */
+  showModelSelector?: boolean;
+  /** Currently selected model ID */
+  selectedModel?: string;
+  /** Available models for selection */
+  availableModels?: ModelOption[];
+  /** Callback when model selection changes */
+  onModelChange?: (modelId: string) => void;
+  /** Whether models are currently loading from API */
+  isModelsLoading?: boolean;
+  /** Recently used model IDs (most recent first) */
+  recentModels?: string[];
+  /** Whether to show search input in model dropdown (for large model lists) */
+  enableModelSearch?: boolean;
+
+  // ===========================================================================
+  // Reasoning Effort Props (Sprint 1 - Chat Input Gap Fix)
+  // ===========================================================================
+
+  /** Whether the current model supports extended thinking */
+  modelSupportsThinking?: boolean;
+  /** Current reasoning effort level */
+  reasoningEffort?: ReasoningEffortLevel;
+  /** Callback when reasoning effort level changes */
+  onReasoningEffortChange?: (level: ReasoningEffortLevel) => void;
+  /** Whether thinking is enabled for supported models */
+  enableThinking?: boolean;
+  /** Callback when thinking enabled state changes */
+  onEnableThinkingChange?: (enabled: boolean) => void;
 }
 
 // =============================================================================
@@ -105,39 +147,39 @@ function SessionHeader({
       data-testid="session-header"
       className={cn(
         "flex items-center justify-between px-4 py-2",
-        "border-b border-gray-200 dark:border-gray-700",
+        "border-b border-neutral-200 dark:border-neutral-700",
       )}
     >
-      <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+      <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
         {title}
       </h2>
       <div className="flex items-center gap-1">
         {/* Generate Workflow from Chat button */}
         {sessionId && <GenerateWorkflowButton sessionId={sessionId} />}
         {onRename && (
-          <button
+          <Button
             data-testid="session-rename-button"
             type="button"
             onClick={onRename}
             className={cn(
               "p-1.5 rounded-md",
-              "text-gray-500 dark:text-gray-400",
-              "hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+              "text-neutral-500 dark:text-neutral-400",
+              "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
               "transition-colors",
             )}
             aria-label="Rename session"
           >
             <Pencil size={14} />
-          </button>
+          </Button>
         )}
         {onDelete && (
-          <button
+          <Button
             data-testid="session-delete-button"
             type="button"
             onClick={onDelete}
             className={cn(
               "p-1.5 rounded-md",
-              "text-gray-500 dark:text-gray-400",
+              "text-neutral-500 dark:text-neutral-400",
               "hover:bg-error-100 dark:hover:bg-error-900/30",
               "hover:text-error-600 dark:hover:text-error-400",
               "transition-colors",
@@ -145,7 +187,7 @@ function SessionHeader({
             aria-label="Delete session"
           >
             <Trash2 size={14} />
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -177,6 +219,7 @@ export function ConversationPanel({
   className,
   // Inline AI suggestions
   enableInlineSuggestions = false,
+  useInlineSuggestionsHook = false,
   inlineSuggestion = "",
   isSuggestionLoading = false,
   onAcceptSuggestion,
@@ -184,6 +227,20 @@ export function ConversationPanel({
   // KB Focus props (controlled mode)
   kbFocusValue,
   onKBFocusChange,
+  // Model selection (Sprint 1)
+  showModelSelector = false,
+  selectedModel,
+  availableModels = [],
+  onModelChange,
+  isModelsLoading = false,
+  recentModels = [],
+  enableModelSearch = false,
+  // Reasoning effort (Sprint 1)
+  modelSupportsThinking = false,
+  reasoningEffort = "medium",
+  onReasoningEffortChange,
+  enableThinking = false,
+  onEnableThinkingChange,
 }: ConversationPanelProps) {
   const [inputValue, setInputValue] = useState("");
 
@@ -241,7 +298,7 @@ export function ConversationPanel({
     <div
       data-testid="conversation-panel"
       className={cn(
-        "flex flex-col h-full bg-white dark:bg-gray-900",
+        "flex flex-col h-full bg-white dark:bg-neutral-900",
         className,
       )}
     >
@@ -270,12 +327,12 @@ export function ConversationPanel({
         <FollowUpSuggestions
           suggestions={suggestions}
           onSelect={handleSelectSuggestion}
-          className="px-4 py-2 border-t border-gray-200 dark:border-gray-700"
+          className="px-4 py-2 border-t border-neutral-200 dark:border-neutral-700"
         />
       )}
 
       {/* Chat Input with File Upload, Voice, and Slash Command Menu */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
         <ConnectedChatInputForm
           value={inputValue}
           onChange={handleInputChange}
@@ -287,6 +344,8 @@ export function ConversationPanel({
           autoFocus={autoFocus}
           // Inline AI suggestions
           enableInlineSuggestions={enableInlineSuggestions}
+          useInlineSuggestionsHook={useInlineSuggestionsHook}
+          sessionId={sessionId}
           inlineSuggestion={inlineSuggestion}
           isSuggestionLoading={isSuggestionLoading}
           onAcceptSuggestion={onAcceptSuggestion}
@@ -294,6 +353,20 @@ export function ConversationPanel({
           // KB Focus mode (controlled by parent)
           kbFocusValue={kbFocusValue}
           onKBFocusChange={onKBFocusChange}
+          // Model selection (Sprint 1)
+          showModelSelector={showModelSelector}
+          selectedModel={selectedModel}
+          availableModels={availableModels}
+          onModelChange={onModelChange}
+          isModelsLoading={isModelsLoading}
+          recentModels={recentModels}
+          enableModelSearch={enableModelSearch}
+          // Reasoning effort (Sprint 1)
+          modelSupportsThinking={modelSupportsThinking}
+          reasoningEffort={reasoningEffort}
+          onReasoningEffortChange={onReasoningEffortChange}
+          enableThinking={enableThinking}
+          onEnableThinkingChange={onEnableThinkingChange}
         />
       </div>
     </div>

@@ -15,6 +15,8 @@ import {
 import type { ArtifactVersion } from "../types/artifacts";
 import { cn } from "../utils/cn";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -84,7 +86,7 @@ function VersionItem({
         "relative flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer",
         "transition-colors",
         isCurrent && "current bg-primary-50 dark:bg-primary-900/20",
-        !isCurrent && "hover:bg-gray-50 dark:hover:bg-gray-700",
+        !isCurrent && "hover:bg-neutral-50 dark:hover:bg-neutral-700",
       )}
       onClick={() => !isCurrent && onSelect()}
       onMouseEnter={() => onHover(true)}
@@ -94,10 +96,9 @@ function VersionItem({
       <div
         className={cn(
           "w-2 h-2 rounded-full flex-shrink-0",
-          isCurrent ? "bg-primary-500" : "bg-gray-300 dark:bg-gray-600",
+          isCurrent ? "bg-primary-500" : "bg-neutral-300 dark:bg-neutral-600",
         )}
       />
-
       {/* Version info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
@@ -106,7 +107,7 @@ function VersionItem({
               "font-medium text-sm",
               isCurrent
                 ? "text-primary-700 dark:text-primary-300"
-                : "text-gray-700 dark:text-gray-300",
+                : "text-neutral-700 dark:text-neutral-300",
             )}
           >
             v{version.version}
@@ -120,18 +121,20 @@ function VersionItem({
             </span>
           ) : (
             <span data-testid="user-indicator">
-              <User size={12} className="text-gray-400 dark:text-gray-400" />
+              <User
+                size={12}
+                className="text-neutral-400 dark:text-neutral-400"
+              />
             </span>
           )}
         </div>
-        <div className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="text-xs text-neutral-500 dark:text-neutral-400">
           {formatDate(version.createdAt)}
         </div>
       </div>
-
       {/* Restore button (shown on hover) */}
       {!isCurrent && isHovered && onRestore && (
-        <button
+        <Button
           data-testid={`restore-button-${version.version}`}
           type="button"
           onClick={(e) => {
@@ -141,14 +144,13 @@ function VersionItem({
           aria-label={`Restore version ${version.version}`}
           className={cn(
             "p-1.5 rounded transition-colors",
-            "text-gray-500 dark:text-gray-400 hover:text-primary-600",
+            "text-neutral-500 dark:text-neutral-400 hover:text-primary-600",
             "hover:bg-primary-100 dark:hover:bg-primary-900/30",
           )}
         >
           <RotateCcw size={14} />
-        </button>
+        </Button>
       )}
-
       {/* Diff preview tooltip */}
       {showDiffPreview && isHovered && !isCurrent && (
         <div
@@ -156,14 +158,14 @@ function VersionItem({
           className={cn(
             "absolute left-full ml-2 top-0 z-10",
             "w-64 p-3 rounded-lg shadow-lg",
-            "bg-white dark:bg-gray-800",
-            "border border-gray-200 dark:border-gray-700",
+            "bg-white dark:bg-neutral-800",
+            "border border-neutral-200 dark:border-neutral-700",
           )}
         >
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+          <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
             Content preview:
           </div>
-          <pre className="text-xs text-gray-700 dark:text-gray-300 overflow-hidden truncate">
+          <pre className="text-xs text-neutral-700 dark:text-neutral-300 overflow-hidden truncate">
             {version.content.slice(0, 100)}...
           </pre>
         </div>
@@ -223,7 +225,7 @@ export function VersionTimeline({
       <div
         data-testid="version-timeline"
         className={cn(
-          "flex items-center justify-center p-4 text-gray-500 dark:text-gray-400",
+          "flex items-center justify-center p-4 text-neutral-500 dark:text-neutral-400",
           className,
         )}
       >
@@ -251,16 +253,15 @@ export function VersionTimeline({
           />
         ))}
       </ul>
-
       {/* Show more/less button */}
       {shouldCollapse && (
-        <button
+        <Button
           data-testid="show-more-button"
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
           className={cn(
             "flex items-center justify-center gap-1 mt-2 py-1.5 text-sm",
-            "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200",
+            "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200",
             "transition-colors",
           )}
         >
@@ -275,7 +276,7 @@ export function VersionTimeline({
               Show {hiddenCount} more
             </>
           )}
-        </button>
+        </Button>
       )}
     </div>
   );

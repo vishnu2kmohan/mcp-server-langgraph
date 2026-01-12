@@ -45,14 +45,31 @@ import {
   type KBStatus,
 } from "./KnowledgeBaseFocus";
 
+import { Button, Input, Textarea } from "@/components/UI";
+import { MODEL_LIFECYCLE_BADGE_STYLES } from "../../utils/colors";
+import type { ModelStatus } from "@/types";
+
 // Re-export SlashCommand for external use
 export type { SlashCommand };
+
+// Re-export ModelStatus from centralized types for backwards compatibility
+export type { ModelStatus } from "@/types";
 
 /** Model option for model selector dropdown */
 export interface ModelOption {
   id: string;
   name: string;
   provider: string;
+  /** Whether this model supports extended thinking (Claude Opus 4.5, Gemini 2.5, etc.) */
+  supportsThinking?: boolean;
+  /** Whether this model supports vision/image input */
+  supportsVision?: boolean;
+  /** Whether this model supports tool/function calling */
+  supportsTools?: boolean;
+  /** Model lifecycle status (current, preview, legacy, deprecated) */
+  status?: ModelStatus;
+  /** Sunset date for deprecated models (ISO 8601 format: YYYY-MM-DD) */
+  sunsetDate?: string;
 }
 
 // Re-export for test compatibility
@@ -99,6 +116,12 @@ export interface ChatInputFormProps {
   availableModels?: ModelOption[];
   /** Callback when model selection changes */
   onModelChange?: (modelId: string) => void;
+  /** Whether models are currently loading from API */
+  isModelsLoading?: boolean;
+  /** Recently used model IDs (most recent first) - displayed in a separate section at top of dropdown */
+  recentModels?: string[];
+  /** Whether to show search input in model dropdown */
+  enableModelSearch?: boolean;
   // Slash command props
   /** Available slash commands (e.g., /help, /clear, /export) */
   slashCommands?: SlashCommand[];
@@ -156,6 +179,9 @@ export interface ChatInputFormProps {
   kbStatusMessage?: string;
   /** Whether to render KB Focus in compact mode (icon only) */
   kbFocusCompact?: boolean;
+  // Cursor position tracking (for WebSocket suggestions)
+  /** Callback when cursor position changes in the input */
+  onCursorPositionChange?: (position: number) => void;
 }
 
 export function ChatInputForm({
@@ -188,6 +214,9 @@ export function ChatInputForm({
   selectedModel,
   availableModels = [],
   onModelChange,
+  isModelsLoading = false,
+  recentModels = [],
+  enableModelSearch = false,
   // Slash command props
   slashCommands,
   onSlashCommandSelect,
@@ -216,11 +245,116 @@ export function ChatInputForm({
   kbStatus,
   kbStatusMessage,
   kbFocusCompact = false,
+  // Cursor position tracking
+  onCursorPositionChange,
 }: ChatInputFormProps) {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [focusedModelIndex, setFocusedModelIndex] = useState(-1);
   const [isVoiceBannerDismissed, setIsVoiceBannerDismissed] = useState(false);
   const [isSlashMenuForceClosed, setIsSlashMenuForceClosed] = useState(false);
+  const [modelSearchQuery, setModelSearchQuery] = useState("");
+  const [isDeprecationWarningDismissed, setIsDeprecationWarningDismissed] =
+    useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const modelButtonRef = useRef<HTMLButtonElement>(null);
+  const modelSearchInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset focused index and search query when dropdown closes
+  // When opening, start with no focus (-1) - arrow keys will focus first/last
+  useEffect(() => {
+    if (!isModelDropdownOpen) {
+      setFocusedModelIndex(-1);
+      setModelSearchQuery("");
+    } else if (enableModelSearch) {
+      // Auto-focus search input when dropdown opens
+      // Use setTimeout to ensure DOM is rendered
+      setTimeout(() => {
+        modelSearchInputRef.current?.focus();
+      }, 0);
+    }
+  }, [isModelDropdownOpen, enableModelSearch]);
+
+  // Reset deprecation warning dismissed state when selected model changes
+  useEffect(() => {
+    setIsDeprecationWarningDismissed(false);
+  }, [selectedModel]);
+
+  // Handle model dropdown keyboard navigation
+  const handleModelDropdownKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (!showModelSelector) return;
+
+      switch (e.key) {
+        case "Enter":
+        case " ":
+          e.preventDefault();
+          if (!isModelDropdownOpen) {
+            // Open dropdown
+            setIsModelDropdownOpen(true);
+          } else if (
+            focusedModelIndex >= 0 &&
+            focusedModelIndex < availableModels.length
+          ) {
+            // Select focused model
+            const selectedModelOption = availableModels[focusedModelIndex];
+            if (selectedModelOption) {
+              onModelChange?.(selectedModelOption.id);
+              setIsModelDropdownOpen(false);
+            }
+          }
+          break;
+        case "Escape":
+          e.preventDefault();
+          setIsModelDropdownOpen(false);
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          if (!isModelDropdownOpen) {
+            setIsModelDropdownOpen(true);
+          } else {
+            // Navigate down with wrap-around
+            // If no focus yet (-1), start at first option (0)
+            setFocusedModelIndex((prev) => {
+              if (prev === -1) return 0;
+              return prev >= availableModels.length - 1 ? 0 : prev + 1;
+            });
+          }
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          if (!isModelDropdownOpen) {
+            setIsModelDropdownOpen(true);
+          } else {
+            // Navigate up with wrap-around
+            // If no focus yet (-1), start at last option
+            setFocusedModelIndex((prev) => {
+              if (prev === -1) return availableModels.length - 1;
+              return prev <= 0 ? availableModels.length - 1 : prev - 1;
+            });
+          }
+          break;
+        case "Home":
+          e.preventDefault();
+          if (isModelDropdownOpen) {
+            setFocusedModelIndex(0);
+          }
+          break;
+        case "End":
+          e.preventDefault();
+          if (isModelDropdownOpen) {
+            setFocusedModelIndex(availableModels.length - 1);
+          }
+          break;
+      }
+    },
+    [
+      showModelSelector,
+      isModelDropdownOpen,
+      focusedModelIndex,
+      availableModels,
+      onModelChange,
+    ],
+  );
 
   // Auto-focus the textarea on mount if autoFocus is true
   useEffect(() => {
@@ -356,6 +490,64 @@ export function ChatInputForm({
   // Get current model info
   const currentModel = availableModels.find((m) => m.id === selectedModel);
 
+  // Get validated recent models (filter invalid IDs and limit to 3)
+  const validatedRecentModels = useMemo(() => {
+    return recentModels
+      .map((id) => availableModels.find((m) => m.id === id))
+      .filter((model): model is ModelOption => model !== undefined)
+      .slice(0, 3);
+  }, [recentModels, availableModels]);
+
+  // Status priority for sorting: current > preview > legacy > deprecated
+  // Models without status are treated as "current" (backward compatibility)
+  const statusPriority: Record<string, number> = useMemo(
+    () => ({
+      current: 0,
+      preview: 1,
+      legacy: 2,
+      deprecated: 3,
+    }),
+    [],
+  );
+
+  // Sort models by status priority, then alphabetically by name
+  const sortModelsByStatus = useCallback(
+    (models: ModelOption[]): ModelOption[] => {
+      return [...models].sort((a, b) => {
+        // Get status priority (undefined status treated as current)
+        const priorityA = statusPriority[a.status ?? "current"] ?? 0;
+        const priorityB = statusPriority[b.status ?? "current"] ?? 0;
+
+        // Sort by status priority first
+        if (priorityA !== priorityB) {
+          return priorityA - priorityB;
+        }
+
+        // Within same status, sort alphabetically by name
+        return a.name.localeCompare(b.name);
+      });
+    },
+    [statusPriority],
+  );
+
+  // Filter models based on search query and sort by status
+  const filteredModels = useMemo(() => {
+    let models = availableModels;
+
+    if (modelSearchQuery.trim()) {
+      const query = modelSearchQuery.toLowerCase().trim();
+      models = availableModels.filter(
+        (model) =>
+          model.name.toLowerCase().includes(query) ||
+          model.provider.toLowerCase().includes(query) ||
+          model.id.toLowerCase().includes(query),
+      );
+    }
+
+    // Always sort by status priority
+    return sortModelsByStatus(models);
+  }, [availableModels, modelSearchQuery, sortModelsByStatus]);
+
   // Handle model selection
   const handleModelSelect = (modelId: string) => {
     if (onModelChange) {
@@ -379,14 +571,13 @@ export function ChatInputForm({
           <p className="text-primary-600 font-medium">Drop files here</p>
         </div>
       )}
-
       {/* Attached files preview */}
       {uploadFiles.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
           {uploadFiles.map((file) => (
             <div
               key={file.id}
-              className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full text-sm border border-gray-200 dark:border-gray-700"
+              className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 px-3 py-1.5 rounded-full text-sm border border-neutral-200 dark:border-neutral-700"
             >
               <span className="truncate max-w-[150px]">{file.file.name}</span>
               {file.status === "uploading" && (
@@ -397,19 +588,18 @@ export function ChatInputForm({
               {file.status === "error" && (
                 <span className="text-error-500 text-xs">{file.error}</span>
               )}
-              <button
+              <Button
+                className="text-neutral-400 dark:text-neutral-400 hover:text-error-500"
                 type="button"
                 onClick={() => onRemoveFile(file.id)}
                 aria-label="Remove file"
-                className="text-gray-400 dark:text-gray-400 hover:text-error-500 transition-colors"
               >
                 <X className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </div>
           ))}
         </div>
       )}
-
       {/* Error messages */}
       {voiceError && (
         <p className="text-error-500 text-sm mb-2 px-1">{voiceError}</p>
@@ -417,7 +607,6 @@ export function ChatInputForm({
       {fileError && (
         <p className="text-error-500 text-sm mb-2 px-1">{fileError}</p>
       )}
-
       {/* Voice input browser compatibility banner */}
       {!isVoiceSupported && !isVoiceBannerDismissed && (
         <div
@@ -431,17 +620,16 @@ export function ChatInputForm({
               use Chrome, Edge, or Safari.
             </span>
           </div>
-          <button
+          <Button
+            className="p-1 text-warning-600 hover:text-warning-800 dark:text-warning-400 dark:hover:text-warning-200"
             type="button"
             onClick={() => setIsVoiceBannerDismissed(true)}
             aria-label="Dismiss"
-            className="p-1 text-warning-600 hover:text-warning-800 dark:text-warning-400 dark:hover:text-warning-200 transition-colors"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       )}
-
       {/* Recording indicator */}
       {isListening && (
         <div
@@ -452,7 +640,6 @@ export function ChatInputForm({
           <span className="text-sm">Listening...</span>
         </div>
       )}
-
       {/* URL Fetch Indicator - detected URLs */}
       {enableUrlFetch && detectedUrls.length > 0 && (
         <div
@@ -487,14 +674,15 @@ export function ChatInputForm({
                   <Check className="w-3 h-3" />
                   <span>{fetched.title || hostname}</span>
                   {onRemoveFetchedUrl && (
-                    <button
+                    <Button
+                      variant="success"
+                      className="ml-1 p-0.5 hover:bg-success-200 dark:hover:bg-success-800 rounded-full"
                       type="button"
                       onClick={() => onRemoveFetchedUrl(detected.url)}
                       aria-label={`Remove ${hostname}`}
-                      className="ml-1 p-0.5 hover:bg-success-200 dark:hover:bg-success-800 rounded-full transition-colors"
                     >
                       <X className="w-3 h-3" />
-                    </button>
+                    </Button>
                   )}
                 </span>
               );
@@ -504,7 +692,7 @@ export function ChatInputForm({
             return (
               <span
                 key={detected.url}
-                className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full"
+                className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-full"
               >
                 <span>{hostname}</span>
               </span>
@@ -512,34 +700,112 @@ export function ChatInputForm({
           })}
         </div>
       )}
-
+      {/* Model Deprecation Warning Banner */}
+      {showModelSelector &&
+        currentModel?.status === "deprecated" &&
+        !isDeprecationWarningDismissed && (
+          <div
+            data-testid="deprecation-warning-banner"
+            role="alert"
+            className="flex items-center justify-between gap-3 mb-3 px-3 py-2 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg text-sm text-warning-800 dark:text-warning-200"
+          >
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{currentModel.name}</span>
+              <span>is deprecated and will be retired on</span>
+              <span className="font-medium">
+                {currentModel.sunsetDate
+                  ? new Date(currentModel.sunsetDate).toLocaleDateString(
+                      "en-US",
+                      { month: "long", day: "numeric", year: "numeric" },
+                    )
+                  : "an unspecified date"}
+              </span>
+            </div>
+            <Button
+              variant="secondary"
+              className="p-1 text-warning-600 hover:text-warning-800 dark:text-warning-400 dark:hover:text-warning-200"
+              type="button"
+              onClick={() => setIsDeprecationWarningDismissed(true)}
+              aria-label="Dismiss deprecation warning"
+              data-testid="deprecation-warning-dismiss"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
       {/* Model Selector */}
       {showModelSelector && (
         <div data-testid="model-selector" className="mb-3 relative">
-          <button
+          <Button
+            variant="secondary"
+            className="flex px-3 py-1.5 text-sm rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:ring-primary-500"
+            ref={modelButtonRef}
             type="button"
             data-testid="model-selector-button"
-            disabled={isProcessing}
+            disabled={isProcessing || isModelsLoading}
             onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+            onKeyDown={handleModelDropdownKeyDown}
             aria-label="Select AI model"
             aria-haspopup="listbox"
             aria-expanded={isModelDropdownOpen}
             aria-controls="model-selector-listbox"
-            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+            aria-busy={isModelsLoading}
+            aria-activedescendant={
+              isModelDropdownOpen && focusedModelIndex >= 0
+                ? `model-option-${availableModels[focusedModelIndex]?.id}`
+                : undefined
+            }
           >
-            <span className="font-medium">
-              {selectedModel || "Select model"}
-            </span>
-            {currentModel && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-                {currentModel.provider}
-              </span>
+            {isModelsLoading ? (
+              <>
+                <span
+                  data-testid="model-selector-loading"
+                  className="w-4 h-4 border-2 border-neutral-300 border-t-primary-500 rounded-full animate-spin"
+                  aria-hidden="true"
+                />
+                <span className="font-medium text-neutral-500">
+                  Loading models...
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="font-medium">
+                  {selectedModel || "Select model"}
+                </span>
+                {currentModel && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400">
+                    {currentModel.provider}
+                  </span>
+                )}
+                {/* Capability badge for selected model (show thinking indicator) */}
+                {currentModel?.supportsThinking && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400">
+                    Thinking
+                  </span>
+                )}
+                {/* Status badge for selected model (preview, legacy, deprecated) */}
+                {currentModel?.status === "preview" && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-info-100 dark:bg-info-900/30 text-info-600 dark:text-info-400">
+                    Preview
+                  </span>
+                )}
+                {currentModel?.status === "legacy" && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-warning-100 dark:bg-warning-900/30 text-warning-600 dark:text-warning-400">
+                    Legacy
+                  </span>
+                )}
+                {currentModel?.status === "deprecated" && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400">
+                    Deprecated
+                  </span>
+                )}
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${isModelDropdownOpen ? "rotate-180" : ""}`}
+                  aria-hidden="true"
+                />
+              </>
             )}
-            <ChevronDown
-              className={`w-4 h-4 transition-transform ${isModelDropdownOpen ? "rotate-180" : ""}`}
-              aria-hidden="true"
-            />
-          </button>
+          </Button>
 
           {/* Dropdown menu */}
           {isModelDropdownOpen && (
@@ -547,37 +813,181 @@ export function ChatInputForm({
               id="model-selector-listbox"
               role="listbox"
               aria-label="Available AI models"
-              className="absolute z-20 mt-1 w-64 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
+              className="absolute z-20 mt-1 w-64 py-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg max-h-80 overflow-y-auto"
             >
-              {availableModels.map((model) => (
-                <button
+              {/* Search Input */}
+              {enableModelSearch && (
+                <div className="px-2 pb-2 pt-1">
+                  <Input
+                    className="px-3 py-1.5 text-sm bg-neutral-50 focus:ring-primary-500 placeholder-neutral-400 dark:placeholder-neutral-500"
+                    ref={modelSearchInputRef}
+                    data-testid="model-search-input"
+                    placeholder="Search models..."
+                    value={modelSearchQuery}
+                    onChange={(e) => setModelSearchQuery(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => {
+                      // Prevent dropdown from closing on Enter
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Recent Models Section (hidden when searching) */}
+              {validatedRecentModels.length > 0 && !modelSearchQuery && (
+                <div data-testid="recent-models-section">
+                  <div className="px-3 py-1.5 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                    Recent
+                  </div>
+                  {validatedRecentModels.map((model) => (
+                    <Button
+                      variant="primary"
+                      className="w-full flex justify-between px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 focus:bg-primary-50 dark:focus:bg-primary-900/30"
+                      key={`recent-${model.id}`}
+                      type="button"
+                      role="option"
+                      aria-selected={model.id === selectedModel}
+                      data-testid={`recent-model-option-${model.id}`}
+                      onClick={() => handleModelSelect(model.id)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{model.name}</span>
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400">
+                          {model.provider}
+                        </span>
+                      </div>
+                      {model.id === selectedModel && (
+                        <Check
+                          className="w-4 h-4 text-success-500"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </Button>
+                  ))}
+                  {/* Divider between recent and all models */}
+                  <div className="border-t border-neutral-200 dark:border-neutral-700 my-1" />
+                </div>
+              )}
+
+              {/* All Models Section Header (only shown when recent models exist and not searching) */}
+              {validatedRecentModels.length > 0 && !modelSearchQuery && (
+                <div className="px-3 py-1.5 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                  All Models
+                </div>
+              )}
+
+              {/* No Models Found Message */}
+              {filteredModels.length === 0 && modelSearchQuery && (
+                <div className="px-3 py-4 text-sm text-neutral-500 dark:text-neutral-400 text-center">
+                  No models found
+                </div>
+              )}
+
+              {/* All Models List (filtered when searching) */}
+              {filteredModels.map((model, index) => (
+                <Button
+                  variant="primary"
+                  className="w-full flex flex-col px-3 py-2 text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 focus:bg-primary-50 dark:focus:bg-primary-900/30"
                   key={model.id}
+                  id={`model-option-${model.id}`}
                   type="button"
                   role="option"
                   aria-selected={model.id === selectedModel}
                   data-testid={`model-option-${model.id}`}
                   onClick={() => handleModelSelect(model.id)}
-                  className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:bg-primary-50 dark:focus:bg-primary-900/30"
+                  onMouseEnter={() => setFocusedModelIndex(index)}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{model.name}</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-                      {model.provider}
-                    </span>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{model.name}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400">
+                        {model.provider}
+                      </span>
+                    </div>
+                    {model.id === selectedModel && (
+                      <Check
+                        className="w-4 h-4 text-success-500"
+                        aria-hidden="true"
+                      />
+                    )}
                   </div>
-                  {model.id === selectedModel && (
-                    <Check
-                      className="w-4 h-4 text-success-500"
-                      aria-hidden="true"
-                    />
+                  {/* Capability badges row */}
+                  {(model.supportsThinking ||
+                    model.supportsVision ||
+                    model.supportsTools) && (
+                    <div className="flex items-center gap-1.5">
+                      {model.supportsThinking && (
+                        <span
+                          data-testid={`capability-badge-thinking-${model.id}`}
+                          className="text-xs px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400"
+                        >
+                          Thinking
+                        </span>
+                      )}
+                      {model.supportsVision && (
+                        <span
+                          data-testid={`capability-badge-vision-${model.id}`}
+                          className="text-xs px-1.5 py-0.5 rounded bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+                        >
+                          Vision
+                        </span>
+                      )}
+                      {model.supportsTools && (
+                        <span
+                          data-testid={`capability-badge-tools-${model.id}`}
+                          className="text-xs px-1.5 py-0.5 rounded bg-success-100 dark:bg-success-900/30 text-success-600 dark:text-success-400"
+                        >
+                          Tools
+                        </span>
+                      )}
+                    </div>
                   )}
-                </button>
+                  {/* Status badge (preview, legacy, deprecated - not shown for current) */}
+                  {model.status === "preview" && (
+                    <span
+                      data-testid={`status-badge-preview-${model.id}`}
+                      className={`text-xs px-1.5 py-0.5 rounded ${MODEL_LIFECYCLE_BADGE_STYLES.preview}`}
+                    >
+                      Preview
+                    </span>
+                  )}
+                  {model.status === "legacy" && (
+                    <span
+                      data-testid={`status-badge-legacy-${model.id}`}
+                      className={`text-xs px-1.5 py-0.5 rounded ${MODEL_LIFECYCLE_BADGE_STYLES.legacy}`}
+                    >
+                      Legacy
+                    </span>
+                  )}
+                  {model.status === "deprecated" && (
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        data-testid={`status-badge-deprecated-${model.id}`}
+                        className={`text-xs px-1.5 py-0.5 rounded ${MODEL_LIFECYCLE_BADGE_STYLES.deprecated}`}
+                      >
+                        Deprecated
+                      </span>
+                      {model.sunsetDate && (
+                        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                          Sunset{" "}
+                          {new Date(model.sunsetDate).toLocaleDateString(
+                            "en-US",
+                            { month: "short", year: "numeric" },
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </Button>
               ))}
             </div>
           )}
         </div>
       )}
-
       {/* Main input form */}
       <form
         onSubmit={handleSubmit}
@@ -599,7 +1009,7 @@ export function ChatInputForm({
         {enableRichTextMode ? (
           <div
             data-testid="pill-container"
-            className="relative flex flex-col bg-white dark:bg-gray-800/95 rounded-2xl shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 backdrop-blur-sm transition-all duration-200 focus-within:ring-2 focus-within:ring-chat-accent/50 focus-within:shadow-xl"
+            className="relative flex flex-col bg-white dark:bg-neutral-800/95 rounded-2xl shadow-lg ring-1 ring-neutral-200/50 dark:ring-neutral-700/50 backdrop-blur-sm transition-all duration-200 focus-within:ring-2 focus-within:ring-chat-accent/50 focus-within:shadow-xl"
           >
             {/* RichTextInput area */}
             <div data-testid="rich-text-input" className="px-3 pt-3">
@@ -617,12 +1027,13 @@ export function ChatInputForm({
                 isSuggestionLoading={isSuggestionLoading}
                 mentionOptions={mentionOptions}
                 maxLength={richTextMaxLength}
+                onCursorPositionChange={onCursorPositionChange}
                 className="w-full border-0 bg-transparent focus:ring-0"
               />
             </div>
 
             {/* Controls row - OUTSIDE RichTextInput */}
-            <div className="flex items-center justify-between px-3 pb-3 border-t border-gray-100 dark:border-gray-700 pt-2 mt-2">
+            <div className="flex items-center justify-between px-3 pb-3 border-t border-neutral-100 dark:border-neutral-700 pt-2 mt-2">
               {/* Left: File upload, Voice */}
               <div className="flex items-center gap-2">
                 {/* Hidden file input */}
@@ -634,38 +1045,35 @@ export function ChatInputForm({
                   aria-hidden="true"
                   id="chat-file-input-rich"
                 />
-                <button
+                <Button
+                  variant="secondary"
+                  className="p-2 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                   type="button"
                   disabled={isProcessing || isUploading}
                   aria-label="Attach file"
-                  className="p-2 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 disabled:opacity-50 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                   onClick={() =>
                     document.getElementById("chat-file-input-rich")?.click()
                   }
                 >
                   <Plus className="w-5 h-5" />
-                </button>
+                </Button>
 
                 {isVoiceSupported && (
-                  <button
+                  <Button
+                    className="p-2 rounded-lg"
                     type="button"
                     onClick={isListening ? onStopListening : onStartListening}
                     disabled={isProcessing}
                     aria-label={
                       isListening ? "Stop voice input" : "Start voice input"
                     }
-                    className={`p-2 rounded-lg transition-colors ${
-                      isListening
-                        ? "text-error-500 bg-error-50 dark:bg-error-900/20"
-                        : "text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
-                    } disabled:opacity-50`}
                   >
                     {isListening ? (
                       <MicOff className="w-5 h-5" />
                     ) : (
                       <Mic className="w-5 h-5" />
                     )}
-                  </button>
+                  </Button>
                 )}
 
                 {/* Knowledge Base Focus selector (Perplexity-style) */}
@@ -697,22 +1105,24 @@ export function ChatInputForm({
               {/* Right: Send/Stop button */}
               <div className="flex items-center gap-2">
                 {isStreaming && onStopStreaming ? (
-                  <button
+                  <Button
+                    variant="danger"
+                    className="p-2 bg-error-500 text-white rounded-lg hover:bg-error-600"
                     type="button"
                     onClick={onStopStreaming}
                     aria-label="Stop generating"
-                    className="p-2 bg-error-500 text-white rounded-lg hover:bg-error-600 transition-colors"
                     data-testid="stop-streaming-button"
                   >
                     <Square className="w-5 h-5" />
-                  </button>
+                  </Button>
                 ) : (
-                  <button
+                  <Button
+                    variant="primary"
+                    className="p-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
                     type="submit"
                     disabled={!canSend}
                     aria-label="Send"
                     data-testid="send-button"
-                    className="p-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {isProcessing ? (
                       <Loader2
@@ -722,7 +1132,7 @@ export function ChatInputForm({
                     ) : (
                       <Send className="w-5 h-5" />
                     )}
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -731,7 +1141,7 @@ export function ChatInputForm({
           /* Legacy Mode: Plain textarea with existing styling */
           <div
             data-testid="input-wrapper"
-            className="flex items-end gap-2 p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all"
+            className="flex items-end gap-2 p-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all"
           >
             {/* Left controls - Attachment button */}
             <div className="flex items-center gap-1 pb-1">
@@ -744,19 +1154,19 @@ export function ChatInputForm({
                 aria-hidden="true"
                 id="chat-file-input"
               />
-              <button
+              <Button
+                variant="secondary"
+                className="p-2 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                 type="button"
                 disabled={isProcessing || isUploading}
                 aria-label="Attach file"
-                className="p-2 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 disabled:opacity-50 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
                 onClick={() =>
                   document.getElementById("chat-file-input")?.click()
                 }
               >
                 <Plus className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
-
             {/* Textarea with inline suggestion overlay - expandable multi-line input */}
             <div className="flex-1 relative">
               {/* Ghost text overlay for inline AI suggestions */}
@@ -771,7 +1181,7 @@ export function ChatInputForm({
                   {/* Ghost text suggestion */}
                   <span
                     data-testid="inline-suggestion"
-                    className="text-gray-400 dark:text-gray-400"
+                    className="text-neutral-400 dark:text-neutral-400"
                   >
                     {inlineSuggestion}
                   </span>
@@ -786,75 +1196,77 @@ export function ChatInputForm({
                     data-testid="suggestion-loading"
                     className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
                   >
-                    <Loader2 className="w-4 h-4 animate-spin text-gray-400 dark:text-gray-400" />
+                    <Loader2 className="w-4 h-4 animate-spin text-neutral-400 dark:text-neutral-400" />
                   </div>
                 )}
 
-              <textarea
+              <Textarea
+                size="sm"
+                className="px-2 py-2 bg-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 resize-none focus:ring-primary-500 focus:ring-inset disabled:opacity-50 min-h-[40px] max-h-[200px]"
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => onInputChange(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onSelect={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  onCursorPositionChange?.(target.selectionStart);
+                }}
                 placeholder="Type your message..."
                 disabled={isProcessing}
                 rows={1}
                 aria-label="Message input"
-                className="w-full px-2 py-2 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset rounded-lg disabled:opacity-50 min-h-[40px] max-h-[200px]"
               />
 
               {/* Hint text for accepting suggestion */}
               {showInlineSuggestion && (
                 <div
                   data-testid="suggestion-hint"
-                  className="absolute -bottom-5 left-2 text-xs text-gray-400 dark:text-gray-400"
+                  className="absolute -bottom-5 left-2 text-xs text-neutral-400 dark:text-neutral-400"
                 >
                   Press Tab to accept
                 </div>
               )}
             </div>
-
             {/* Right controls - Voice & Send */}
             <div className="flex items-center gap-1 pb-1">
               {isVoiceSupported && (
-                <button
+                <Button
+                  className="p-2 rounded-lg"
                   type="button"
                   onClick={isListening ? onStopListening : onStartListening}
                   disabled={isProcessing}
                   aria-label={
                     isListening ? "Stop voice input" : "Start voice input"
                   }
-                  className={`p-2 rounded-lg transition-colors ${
-                    isListening
-                      ? "text-error-500 bg-error-50 dark:bg-error-900/20"
-                      : "text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
-                  } disabled:opacity-50`}
                 >
                   {isListening ? (
                     <MicOff className="w-5 h-5" />
                   ) : (
                     <Mic className="w-5 h-5" />
                   )}
-                </button>
+                </Button>
               )}
 
               {/* Stop button when streaming, otherwise Send button */}
               {isStreaming && onStopStreaming ? (
-                <button
+                <Button
+                  variant="danger"
+                  className="p-2 bg-error-500 text-white rounded-lg hover:bg-error-600"
                   type="button"
                   onClick={onStopStreaming}
                   aria-label="Stop generating"
-                  className="p-2 bg-error-500 text-white rounded-lg hover:bg-error-600 transition-colors"
                   data-testid="stop-streaming-button"
                 >
                   <Square className="w-5 h-5" />
-                </button>
+                </Button>
               ) : (
-                <button
+                <Button
+                  variant="primary"
+                  className="p-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
                   type="submit"
                   disabled={!canSend}
                   aria-label="Send"
                   data-testid="send-button"
-                  className="p-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isProcessing ? (
                     <Loader2
@@ -864,20 +1276,21 @@ export function ChatInputForm({
                   ) : (
                     <Send className="w-5 h-5" />
                   )}
-                </button>
+                </Button>
               )}
             </div>
           </div>
         )}
       </form>
-
       {/* Reasoning Effort Selector and Thinking Toggle - only in Legacy mode */}
       {/* In RichText mode, ReasoningEffortSelector is in the controls row; thinking toggle is hidden (product approved) */}
       {modelSupportsThinking && !enableRichTextMode && (
         <div className="flex items-center justify-between mt-3 px-1">
           {/* Enable Thinking Toggle */}
           {onEnableThinkingChange && (
-            <button
+            <Button
+              size="sm"
+              className="flex text-xs focus:ring-violet-500 rounded-lg p-1"
               type="button"
               data-testid="enable-thinking-toggle"
               onClick={() => onEnableThinkingChange(!enableThinking)}
@@ -887,23 +1300,18 @@ export function ChatInputForm({
                   : "Enable extended thinking"
               }
               aria-pressed={enableThinking}
-              className={`flex items-center gap-2 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg p-1 ${
-                enableThinking
-                  ? "text-violet-600 dark:text-violet-400"
-                  : "text-gray-400 dark:text-gray-400"
-              }`}
             >
               <span
                 className={`w-8 h-4 rounded-full transition-colors flex items-center px-0.5 ${
                   enableThinking
                     ? "bg-violet-600 justify-end"
-                    : "bg-gray-300 dark:bg-gray-600 justify-start"
+                    : "bg-neutral-300 dark:bg-neutral-600 justify-start"
                 }`}
               >
                 <span className="w-3 h-3 bg-white rounded-full shadow" />
               </span>
               <span>Extended Thinking</span>
-            </button>
+            </Button>
           )}
 
           {/* Reasoning Effort Selector - only when thinking is enabled */}
@@ -918,9 +1326,8 @@ export function ChatInputForm({
           )}
         </div>
       )}
-
       {/* Hint text */}
-      <p className="text-xs text-gray-400 dark:text-gray-400 text-center mt-2">
+      <p className="text-xs text-neutral-400 dark:text-neutral-400 text-center mt-2">
         Press Enter to send, Shift+Enter for new line
       </p>
     </div>

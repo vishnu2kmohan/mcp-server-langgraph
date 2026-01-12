@@ -20,7 +20,7 @@ describe("Skeleton", () => {
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toBeInTheDocument();
       expect(skeleton).toHaveClass("animate-pulse");
-      expect(skeleton).toHaveClass("bg-gray-200");
+      expect(skeleton).toHaveClass("bg-neutral-200");
     });
 
     it("should apply custom className", () => {
@@ -88,6 +88,13 @@ describe("Skeleton", () => {
       render(<SkeletonList items={5} data-testid="skeleton-list" />);
       const container = screen.getByTestId("skeleton-list");
       expect(container.children.length).toBe(5);
+    });
+  });
+
+  describe("CVA integration", () => {
+    it("exports skeletonVariants function for external use", async () => {
+      const { skeletonVariants } = await import("./Skeleton");
+      expect(typeof skeletonVariants).toBe("function");
     });
   });
 });

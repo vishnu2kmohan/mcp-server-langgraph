@@ -404,7 +404,7 @@ describe("WorkflowsPage - Features", () => {
       const suggestButton = screen.getByTestId("ai-suggestions-toggle");
 
       // Initially not active styling
-      expect(suggestButton).toHaveClass("bg-gray-100");
+      expect(suggestButton).toHaveClass("bg-neutral-100");
 
       // Click to activate
       fireEvent.click(suggestButton);
@@ -826,7 +826,7 @@ describe("WorkflowsPage - Features", () => {
       const historyButton = findButtonByTitle("Execution History");
 
       // Initially not active styling
-      expect(historyButton).toHaveClass("bg-gray-100");
+      expect(historyButton).toHaveClass("bg-neutral-100");
 
       // Click to activate
       fireEvent.click(historyButton);

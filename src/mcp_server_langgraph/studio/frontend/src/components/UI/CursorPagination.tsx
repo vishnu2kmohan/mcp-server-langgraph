@@ -7,6 +7,8 @@
 
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
+import { Button } from "@/components/UI";
+
 export interface CursorPaginationProps {
   hasNextPage: boolean;
   hasPreviousPage: boolean;
@@ -32,57 +34,40 @@ export function CursorPagination({
   return (
     <div
       data-testid="cursor-pagination"
-      className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700"
+      className="flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700"
     >
       <div className="flex items-center gap-2">
         {isLoading && (
           <div data-testid="pagination-loading">
-            <Loader2 className="w-4 h-4 animate-spin text-gray-400 dark:text-gray-400" />
+            <Loader2 className="w-4 h-4 animate-spin text-neutral-400 dark:text-neutral-400" />
           </div>
         )}
         {itemCount !== undefined && totalCount !== undefined && (
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
             {itemCount} of {totalCount}
           </span>
         )}
       </div>
-
       <div className="flex items-center gap-2">
-        <button
+        <Button
+          className="flex px-3 py-1.5 text-sm rounded-lg"
           onClick={onPreviousPage}
           disabled={isPreviousDisabled}
           aria-label="Previous page"
-          className={`
-            flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg
-            transition-colors
-            ${
-              isPreviousDisabled
-                ? "text-gray-400 dark:text-gray-400 dark:text-gray-600 dark:text-gray-300 cursor-not-allowed"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
-            }
-          `}
         >
           <ChevronLeft className="w-4 h-4" />
           Previous
-        </button>
+        </Button>
 
-        <button
+        <Button
+          className="flex px-3 py-1.5 text-sm rounded-lg"
           onClick={onNextPage}
           disabled={isNextDisabled}
           aria-label="Next page"
-          className={`
-            flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg
-            transition-colors
-            ${
-              isNextDisabled
-                ? "text-gray-400 dark:text-gray-400 dark:text-gray-600 dark:text-gray-300 cursor-not-allowed"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
-            }
-          `}
         >
           Next
           <ChevronRight className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
     </div>
   );

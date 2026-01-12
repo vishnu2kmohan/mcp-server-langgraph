@@ -13,7 +13,7 @@
  * This replaces the basic conversation/ChatInput.tsx and provides
  * a consistent, feature-rich chat experience throughout the app.
  */
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import {
   ChatInputForm,
   type SlashCommand,
@@ -25,6 +25,8 @@ import { useFileUpload } from "../hooks/useFileUpload";
 import { useVoiceInput } from "../hooks/useVoiceInput";
 import { useKBStatus } from "../hooks/useKBStatus";
 import { useUrlContentFetch } from "../hooks/useUrlContentFetch";
+import { useInlineSuggestions } from "../hooks/useInlineSuggestions";
+import { useAISuggestionsWebSocket } from "../hooks/useAISuggestionsWebSocket";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
 import { useAppSelector } from "../store/hooks";
 import { selectSubmitOnEnter } from "../store/slices/uiSlice";
@@ -60,6 +62,10 @@ export interface ConnectedChatInputFormProps {
   onAcceptSuggestion?: (suggestion: string) => void;
   /** Callback when user dismisses suggestion (Escape) */
   onDismissSuggestion?: () => void;
+  /** Use the useInlineSuggestions hook internally to fetch suggestions */
+  useInlineSuggestionsHook?: boolean;
+  /** Session ID for inline suggestions context (used when useInlineSuggestionsHook is true) */
+  sessionId?: string;
   /** Auto-focus the textarea on mount */
   autoFocus?: boolean;
   /** Controlled KB focus mode value (for lifting state to parent) */
@@ -79,6 +85,12 @@ export interface ConnectedChatInputFormProps {
   availableModels?: ModelOption[];
   /** Callback when model selection changes */
   onModelChange?: (modelId: string) => void;
+  /** Whether models are currently loading from API */
+  isModelsLoading?: boolean;
+  /** Recently used model IDs (most recent first) */
+  recentModels?: string[];
+  /** Whether to show search input in model dropdown (for large model lists) */
+  enableModelSearch?: boolean;
 
   // ==========================================================================
   // Reasoning Effort Props (Sprint 1 - Chat Input Gap Fix)
@@ -132,10 +144,12 @@ export function ConnectedChatInputForm({
   slashCommands = DEFAULT_SLASH_COMMANDS,
   onSlashCommand,
   enableInlineSuggestions = false,
-  inlineSuggestion = "",
-  isSuggestionLoading = false,
-  onAcceptSuggestion,
-  onDismissSuggestion,
+  inlineSuggestion: inlineSuggestionProp = "",
+  isSuggestionLoading: isSuggestionLoadingProp = false,
+  onAcceptSuggestion: onAcceptSuggestionProp,
+  onDismissSuggestion: onDismissSuggestionProp,
+  useInlineSuggestionsHook = false,
+  sessionId,
   autoFocus = false,
   kbFocusValue,
   onKBFocusChange,
@@ -144,6 +158,8 @@ export function ConnectedChatInputForm({
   selectedModel,
   availableModels = [],
   onModelChange,
+  recentModels = [],
+  enableModelSearch = false,
   // Reasoning effort (Sprint 1)
   modelSupportsThinking = false,
   reasoningEffort = "medium",
@@ -152,13 +168,19 @@ export function ConnectedChatInputForm({
   onEnableThinkingChange,
   // URL fetch (Sprint 1)
   enableUrlFetch = false,
+  // Models loading state (Sprint 1)
+  isModelsLoading = false,
 }: ConnectedChatInputFormProps) {
   // =============================================================================
   // Feature Flags & UI State
   // =============================================================================
   const enableRichTextMode = useFeatureFlag("rich_text_chat_input");
   const enableKBFocus = useFeatureFlag("kb_focus");
+  const enableWebSocketSuggestions = useFeatureFlag("ai_suggestions_websocket");
   const submitOnEnter = useAppSelector(selectSubmitOnEnter);
+
+  // Track previous sessionId for context updates
+  const prevSessionIdRef = useRef<string | undefined>(undefined);
 
   // =============================================================================
   // Knowledge Base Status Hook
@@ -230,6 +252,161 @@ export function ConnectedChatInputForm({
       onChange(value + (value ? " " : "") + newTranscript);
     },
   });
+
+  // =============================================================================
+  // Inline Suggestions Hook (optional - enabled via useInlineSuggestionsHook prop)
+  // =============================================================================
+  const {
+    suggestion: hookSuggestion,
+    isLoading: hookSuggestionLoading,
+    updateInput: updateSuggestionInput,
+    acceptSuggestion: acceptHookSuggestion,
+    dismissSuggestion: dismissHookSuggestion,
+  } = useInlineSuggestions({
+    enabled: useInlineSuggestionsHook && enableInlineSuggestions,
+    sessionId,
+    onAccept: (suggestion) => {
+      // Append the suggestion to the current input
+      onChange(value + suggestion);
+      onAcceptSuggestionProp?.(suggestion);
+    },
+    onDismiss: () => {
+      onDismissSuggestionProp?.();
+    },
+  });
+
+  // Update suggestions when input changes (only when hook is enabled)
+  useEffect(() => {
+    if (useInlineSuggestionsHook && enableInlineSuggestions) {
+      updateSuggestionInput(value);
+    }
+  }, [
+    value,
+    useInlineSuggestionsHook,
+    enableInlineSuggestions,
+    updateSuggestionInput,
+  ]);
+
+  // =============================================================================
+  // WebSocket Inline Suggestions Hook (ai_suggestions_websocket feature flag)
+  // Uses WebSocket for lower-latency suggestions with cursor position awareness
+  // Falls back to REST-based useInlineSuggestions when WebSocket is disconnected
+  // =============================================================================
+  const useWebSocketForSuggestions =
+    enableWebSocketSuggestions && enableInlineSuggestions && !!sessionId;
+
+  const {
+    status: wsStatus,
+    currentSuggestion: wsSuggestion,
+    isPending: wsIsPending,
+    requestSuggestion: wsRequestSuggestion,
+    acceptSuggestion: wsAcceptSuggestion,
+    rejectSuggestion: wsRejectSuggestion,
+    updateContext: wsUpdateContext,
+    clearSuggestion: wsClearSuggestion,
+  } = useAISuggestionsWebSocket({
+    enabled: useWebSocketForSuggestions,
+    sessionId,
+    onSuggestion: (suggestion) => {
+      // Optionally trigger accept callback when suggestion is received
+      onAcceptSuggestionProp?.(suggestion.text);
+    },
+  });
+
+  // Track cursor position for WebSocket suggestions
+  const cursorPositionRef = useRef<number>(0);
+
+  // Request WebSocket suggestion when input changes (debounced via hook internally)
+  useEffect(() => {
+    if (
+      useWebSocketForSuggestions &&
+      wsStatus === "connected" &&
+      value.length > 3
+    ) {
+      // Only request if we have meaningful input
+      wsRequestSuggestion(value, cursorPositionRef.current);
+    }
+  }, [value, useWebSocketForSuggestions, wsStatus, wsRequestSuggestion]);
+
+  // Update context when session changes
+  useEffect(() => {
+    if (
+      useWebSocketForSuggestions &&
+      wsStatus === "connected" &&
+      sessionId &&
+      sessionId !== prevSessionIdRef.current
+    ) {
+      wsUpdateContext(`Session: ${sessionId}`);
+      prevSessionIdRef.current = sessionId;
+    }
+  }, [sessionId, useWebSocketForSuggestions, wsStatus, wsUpdateContext]);
+
+  // Determine if WebSocket is active and connected
+  const isWebSocketActive =
+    useWebSocketForSuggestions && wsStatus === "connected";
+
+  // Resolve which suggestion values to use:
+  // Priority: WebSocket (when connected) > REST hook > props
+  const inlineSuggestion = isWebSocketActive
+    ? wsSuggestion?.text || ""
+    : useInlineSuggestionsHook
+      ? hookSuggestion
+      : inlineSuggestionProp;
+
+  const isSuggestionLoading = isWebSocketActive
+    ? wsIsPending
+    : useInlineSuggestionsHook
+      ? hookSuggestionLoading
+      : isSuggestionLoadingProp;
+
+  // Accept suggestion handler - works with WebSocket or REST
+  const onAcceptSuggestion = useCallback(
+    (suggestion: string) => {
+      if (isWebSocketActive && wsSuggestion?.suggestionId) {
+        // Send accept feedback to WebSocket for learning
+        wsAcceptSuggestion(wsSuggestion.suggestionId);
+      }
+      // Call the REST hook accept if using hook mode
+      if (useInlineSuggestionsHook) {
+        acceptHookSuggestion();
+      }
+      // Always call prop callback if provided
+      onAcceptSuggestionProp?.(suggestion);
+    },
+    [
+      isWebSocketActive,
+      wsSuggestion,
+      wsAcceptSuggestion,
+      useInlineSuggestionsHook,
+      acceptHookSuggestion,
+      onAcceptSuggestionProp,
+    ],
+  );
+
+  // Dismiss suggestion handler - works with WebSocket or REST
+  const onDismissSuggestion = useCallback(() => {
+    if (isWebSocketActive && wsSuggestion?.suggestionId) {
+      // Send reject feedback to WebSocket for learning
+      wsRejectSuggestion(wsSuggestion.suggestionId);
+    } else {
+      // Clear WebSocket suggestion state
+      wsClearSuggestion();
+    }
+    // Call the REST hook dismiss if using hook mode
+    if (useInlineSuggestionsHook) {
+      dismissHookSuggestion();
+    }
+    // Always call prop callback if provided
+    onDismissSuggestionProp?.();
+  }, [
+    isWebSocketActive,
+    wsSuggestion,
+    wsRejectSuggestion,
+    wsClearSuggestion,
+    useInlineSuggestionsHook,
+    dismissHookSuggestion,
+    onDismissSuggestionProp,
+  ]);
 
   // =============================================================================
   // Handlers
@@ -339,6 +516,9 @@ export function ConnectedChatInputForm({
       selectedModel={selectedModel}
       availableModels={availableModels}
       onModelChange={onModelChange}
+      isModelsLoading={isModelsLoading}
+      recentModels={recentModels}
+      enableModelSearch={enableModelSearch}
       // Reasoning effort (Sprint 1 - Chat Input Gap Fix)
       modelSupportsThinking={modelSupportsThinking}
       reasoningEffort={reasoningEffort}
@@ -354,6 +534,10 @@ export function ConnectedChatInputForm({
         content: c.content || "",
       }))}
       onRemoveFetchedUrl={clearUrl}
+      // Cursor position tracking for WebSocket suggestions
+      onCursorPositionChange={(pos) => {
+        cursorPositionRef.current = pos;
+      }}
     />
   );
 }

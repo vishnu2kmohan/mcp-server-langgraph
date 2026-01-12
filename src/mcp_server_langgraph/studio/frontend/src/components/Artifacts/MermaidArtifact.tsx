@@ -19,6 +19,8 @@ import { Copy, ExternalLink, Maximize2, Minimize2, Check } from "lucide-react";
 import { ArtifactExporter } from "./ArtifactExporter";
 import type { ExportFormat } from "./ArtifactExporter";
 
+import { Button } from "@/components/UI";
+
 export interface MermaidArtifactProps {
   code: string;
   title?: string;
@@ -91,32 +93,34 @@ export function MermaidArtifact({
   return (
     <div
       data-testid="mermaid-container"
-      className={`border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden ${theme === "dark" ? "dark" : ""} ${className}`}
+      className={`border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden ${theme === "dark" ? "dark" : ""} ${className}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+      <div className="flex items-center justify-between px-4 py-2 bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
           {title || "Mermaid Diagram"}
         </span>
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            variant="secondary"
+            className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
             onClick={handleCopy}
             title="Copy code"
-            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
           >
             {isCopied ? (
               <Check size={16} className="text-success-500" />
             ) : (
               <Copy size={16} />
             )}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
             onClick={handleOpenInLive}
             title="Open in Mermaid Live"
-            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
           >
             <ExternalLink size={16} />
-          </button>
+          </Button>
           <ArtifactExporter
             artifactType="mermaid"
             data={code}
@@ -124,20 +128,20 @@ export function MermaidArtifact({
             filename={(title || "diagram").replace(/\s+/g, "_")}
           />
           {expandable && (
-            <button
+            <Button
+              variant="secondary"
+              className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
               onClick={handleToggleExpand}
               title={isExpanded ? "Collapse" : "Expand"}
-              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200 rounded hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
             >
               {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-            </button>
+            </Button>
           )}
         </div>
       </div>
-
       {/* Code Content */}
       <div
-        className={`bg-gray-900 text-gray-100 p-4 overflow-auto ${isExpanded ? "max-h-[600px]" : "max-h-[300px]"}`}
+        className={`bg-neutral-900 text-neutral-100 p-4 overflow-auto ${isExpanded ? "max-h-[600px]" : "max-h-[300px]"}`}
       >
         <pre className="text-sm font-mono whitespace-pre-wrap">
           <code>{code}</code>

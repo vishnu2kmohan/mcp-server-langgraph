@@ -21,6 +21,8 @@ import { CheckCircle, XCircle, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "../../utils/cn";
 import type { AgentApprovalRequestCamelCase } from "../../types/hitl";
 
+import { Button, Checkbox, Input } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -136,7 +138,7 @@ export function BatchApprovalPanel({
       <div
         className={cn(
           "flex flex-col items-center justify-center p-8 text-center",
-          "border border-dashed border-gray-300 dark:border-gray-600 rounded-lg",
+          "border border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg",
           className,
         )}
       >
@@ -144,7 +146,9 @@ export function BatchApprovalPanel({
           className="w-12 h-12 text-success-500 mb-4"
           aria-hidden="true"
         />
-        <p className="text-gray-600 dark:text-gray-400">No pending approvals</p>
+        <p className="text-neutral-600 dark:text-neutral-400">
+          No pending approvals
+        </p>
       </div>
     );
   }
@@ -153,32 +157,26 @@ export function BatchApprovalPanel({
     <div
       data-testid="batch-approval-panel"
       className={cn(
-        "flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg",
+        "flex flex-col border border-neutral-200 dark:border-neutral-700 rounded-lg",
         className,
       )}
       role="region"
       aria-label="Batch approval panel"
     >
       {/* Header with select all and actions */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
         {/* Select all */}
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              data-testid="select-all"
-              checked={allSelected}
-              onChange={handleToggleSelectAll}
-              disabled={isLoading}
-              aria-label="Select all"
-              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 disabled:opacity-50"
-            />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Select all
-            </span>
-          </label>
+          <Checkbox
+            data-testid="select-all"
+            checked={allSelected}
+            onChange={handleToggleSelectAll}
+            disabled={isLoading}
+            label="Select all"
+            size="sm"
+          />
           {selectedCount > 0 && (
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-sm text-neutral-500 dark:text-neutral-400">
               {selectedCount} selected
             </span>
           )}
@@ -186,7 +184,7 @@ export function BatchApprovalPanel({
 
         {/* Batch action buttons */}
         <div className="flex items-center gap-2">
-          <button
+          <Button
             type="button"
             data-testid="batch-approve-btn"
             onClick={handleBatchApprove}
@@ -208,8 +206,8 @@ export function BatchApprovalPanel({
               <CheckCircle className="w-4 h-4" aria-hidden="true" />
             )}
             Approve selected
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             data-testid="batch-reject-btn"
             onClick={handleBatchReject}
@@ -231,32 +229,29 @@ export function BatchApprovalPanel({
               <XCircle className="w-4 h-4" aria-hidden="true" />
             )}
             Reject selected
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Common reason input */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <input
-          type="text"
+      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+        <Input
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Common reason for all (optional)"
           disabled={isLoading}
           className={cn(
             "w-full px-3 py-2 rounded border",
-            "border-gray-300 dark:border-gray-600",
-            "bg-white dark:bg-gray-800",
-            "text-gray-900 dark:text-gray-100",
-            "placeholder-gray-400 dark:placeholder-gray-500",
+            "border-neutral-300 dark:border-neutral-600",
+            "bg-white dark:bg-neutral-800",
+            "text-neutral-900 dark:text-neutral-100",
+            "placeholder-neutral-400 dark:placeholder-neutral-500",
             "focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
             "disabled:opacity-50",
           )}
         />
       </div>
-
       {/* Approval list */}
-      <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
+      <div className="divide-y divide-neutral-200 dark:divide-neutral-700 max-h-96 overflow-y-auto">
         {approvals.map((approval) => {
           const isSelected = selectedIds.has(approval.requestId);
           const confidencePercent = Math.round(approval.confidence * 100);
@@ -266,23 +261,19 @@ export function BatchApprovalPanel({
               key={approval.requestId}
               className={cn(
                 "flex items-center gap-4 p-4",
-                "hover:bg-gray-50 dark:hover:bg-gray-800/50",
+                "hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
                 isSelected && "bg-primary-50 dark:bg-primary-900/20",
               )}
             >
               {/* Checkbox */}
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  data-testid={`select-request-${approval.requestId}`}
-                  checked={isSelected}
-                  onChange={() => handleToggleSelect(approval.requestId)}
-                  disabled={isLoading}
-                  aria-label={`Select ${approval.agentName}`}
-                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 disabled:opacity-50"
-                />
-              </label>
-
+              <Checkbox
+                data-testid={`select-request-${approval.requestId}`}
+                checked={isSelected}
+                onChange={() => handleToggleSelect(approval.requestId)}
+                disabled={isLoading}
+                aria-label={`Select ${approval.agentName}`}
+                size="sm"
+              />
               {/* Confidence indicator */}
               <div className="flex flex-col items-center w-12">
                 <span
@@ -293,7 +284,7 @@ export function BatchApprovalPanel({
                 >
                   {confidencePercent}%
                 </span>
-                <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mt-1">
+                <div className="w-full h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full mt-1">
                   <div
                     className={cn(
                       "h-full rounded-full",
@@ -303,11 +294,10 @@ export function BatchApprovalPanel({
                   />
                 </div>
               </div>
-
               {/* Agent info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-gray-900 dark:text-white">
+                  <span className="font-medium text-neutral-900 dark:text-white">
                     {approval.agentName}
                   </span>
                   {approval.confidence < approval.threshold && (
@@ -317,16 +307,15 @@ export function BatchApprovalPanel({
                     />
                   )}
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 truncate">
                   {approval.proposedAction}
                 </p>
               </div>
-
               {/* Trigger reason badge */}
               <span
                 className={cn(
                   "px-2 py-0.5 text-xs font-medium rounded",
-                  "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
+                  "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300",
                 )}
               >
                 {approval.triggerReason.replace(/_/g, " ")}

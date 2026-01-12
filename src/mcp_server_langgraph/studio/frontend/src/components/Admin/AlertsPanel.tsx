@@ -39,6 +39,8 @@ import { AlertGroupsPanel } from "./AlertGroupsPanel";
 import { storage } from "../../utils/storage";
 import { AIEmptyState } from "../EmptyState/AIEmptyState";
 
+import { Button } from "@/components/UI";
+
 // =============================================================================
 // Constants
 // =============================================================================
@@ -95,7 +97,7 @@ function getSeverityColor(severity: Alert["severity"]): string {
     case "warning":
       return "bg-warning-500";
     default:
-      return "bg-gray-500";
+      return "bg-neutral-500";
   }
 }
 
@@ -116,8 +118,8 @@ function getStateStyle(state: Alert["state"]): { bg: string; text: string } {
       };
     default:
       return {
-        bg: "bg-gray-100 dark:bg-gray-800",
-        text: "text-gray-700 dark:text-gray-200 dark:text-gray-400",
+        bg: "bg-neutral-100 dark:bg-neutral-800",
+        text: "text-neutral-700 dark:text-neutral-200 dark:text-neutral-400",
       };
   }
 }
@@ -136,7 +138,7 @@ function getConnectionColor(status?: WebSocketConnectionStatus): string {
     case "error":
       return "bg-error-500";
     default:
-      return "bg-gray-500";
+      return "bg-neutral-500";
   }
 }
 
@@ -150,19 +152,19 @@ interface AlertItemProps {
   onClick: () => void;
 }
 
-function AlertItem({ alert, isSelected, onClick }: AlertItemProps) {
+function AlertItem({
+  alert,
+  isSelected: _isSelected,
+  onClick,
+}: AlertItemProps) {
   const stateStyle = getStateStyle(alert.state);
   const serviceLabel = alert.labels.service || alert.labels.pod || null;
 
   return (
-    <button
+    <Button
+      className="w-full text-left p-3 rounded-lg border"
       data-testid={`alert-item-${alert.alertId}`}
       onClick={onClick}
-      className={`w-full text-left p-3 rounded-lg border transition-colors ${
-        isSelected
-          ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-          : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-      }`}
     >
       <div className="flex items-start gap-3">
         {/* Severity Indicator */}
@@ -176,7 +178,7 @@ function AlertItem({ alert, isSelected, onClick }: AlertItemProps) {
         <div className="flex-1 min-w-0">
           {/* Alert Name and State */}
           <div className="flex items-center gap-2 mb-1">
-            <span className="font-medium text-gray-900 dark:text-white truncate">
+            <span className="font-medium text-neutral-900 dark:text-white truncate">
               {alert.name}
             </span>
             <span
@@ -188,14 +190,14 @@ function AlertItem({ alert, isSelected, onClick }: AlertItemProps) {
           </div>
 
           {/* Message */}
-          <p className="text-sm text-gray-600 dark:text-gray-400 truncate mb-1">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 truncate mb-1">
             {alert.message}
           </p>
 
           {/* Labels and Time */}
-          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
             {serviceLabel && (
-              <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
+              <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded">
                 {serviceLabel}
               </span>
             )}
@@ -205,7 +207,7 @@ function AlertItem({ alert, isSelected, onClick }: AlertItemProps) {
           </div>
         </div>
       </div>
-    </button>
+    </Button>
   );
 }
 
@@ -292,10 +294,10 @@ export function AlertsPanel({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <AlertTriangle className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
             Infrastructure Alerts
           </h2>
           {/* Connection status indicator */}
@@ -310,46 +312,34 @@ export function AlertsPanel({
           {/* View Mode Toggle */}
           <div
             data-testid="view-mode-toggle"
-            className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5"
+            className="flex items-center bg-neutral-100 dark:bg-neutral-800 rounded-lg p-0.5"
           >
-            <button
+            <Button
+              className="p-1.5 rounded"
               data-testid="view-mode-flat"
               onClick={() => setViewMode("flat")}
               aria-pressed={viewMode === "flat"}
-              className={`p-1.5 rounded transition-colors ${
-                viewMode === "flat"
-                  ? "bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300"
-              }`}
               title="Flat view"
             >
               <List className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              className="p-1.5 rounded"
               data-testid="view-mode-grouped"
               onClick={() => setViewMode("grouped")}
               aria-pressed={viewMode === "grouped"}
-              className={`p-1.5 rounded transition-colors ${
-                viewMode === "grouped"
-                  ? "bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-300"
-              }`}
               title="Grouped view"
             >
               <Layers className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
 
           {/* Sound Toggle */}
-          <button
+          <Button
+            className="p-2 rounded-lg"
             data-testid="sound-toggle"
             onClick={onSoundToggle}
             aria-pressed={soundEnabled}
-            className={`p-2 rounded-lg transition-colors ${
-              soundEnabled
-                ? "bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-            }`}
             title={soundEnabled ? "Sound enabled" : "Sound disabled"}
           >
             {soundEnabled ? (
@@ -357,15 +347,14 @@ export function AlertsPanel({
             ) : (
               <VolumeX className="w-4 h-4" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Badge Counts */}
-      <div className="flex items-center gap-4 px-4 py-2 bg-gray-50 dark:bg-gray-800/50">
+      <div className="flex items-center gap-4 px-4 py-2 bg-neutral-50 dark:bg-neutral-800/50">
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-error-500" />
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+          <span className="text-sm text-neutral-600 dark:text-neutral-400">
             Critical:
           </span>
           <span
@@ -377,7 +366,7 @@ export function AlertsPanel({
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-warning-500" />
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+          <span className="text-sm text-neutral-600 dark:text-neutral-400">
             Warning:
           </span>
           <span
@@ -388,62 +377,47 @@ export function AlertsPanel({
           </span>
         </div>
       </div>
-
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex flex-wrap gap-2 px-4 py-2 border-b border-neutral-200 dark:border-neutral-700">
         {/* Severity Filters */}
-        <button
+        <Button
+          size="sm"
+          className="px-2 py-1 text-xs rounded-full"
           onClick={() => handleSeverityToggle("critical")}
-          className={`px-2 py-1 text-xs rounded-full transition-colors ${
-            filters.severity.includes("critical")
-              ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-          }`}
         >
           Critical
-        </button>
-        <button
+        </Button>
+        <Button
+          size="sm"
+          className="px-2 py-1 text-xs rounded-full"
           onClick={() => handleSeverityToggle("warning")}
-          className={`px-2 py-1 text-xs rounded-full transition-colors ${
-            filters.severity.includes("warning")
-              ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-          }`}
         >
           Warning
-        </button>
+        </Button>
 
-        <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 self-center" />
+        <div className="w-px h-4 bg-neutral-300 dark:bg-neutral-600 self-center" />
 
         {/* State Filters */}
-        <button
+        <Button
+          size="sm"
+          className="px-2 py-1 text-xs rounded-full"
           onClick={() => handleStateToggle("firing")}
-          className={`px-2 py-1 text-xs rounded-full transition-colors ${
-            filters.state.includes("firing")
-              ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-          }`}
         >
           Firing
-        </button>
-        <button
+        </Button>
+        <Button
+          size="sm"
+          className="px-2 py-1 text-xs rounded-full"
           onClick={() => handleStateToggle("resolved")}
-          className={`px-2 py-1 text-xs rounded-full transition-colors ${
-            filters.state.includes("resolved")
-              ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-          }`}
         >
           Resolved
-        </button>
+        </Button>
       </div>
-
       {/* Alert List */}
       <div className="flex-1 overflow-y-auto p-4">
         {viewMode === "grouped" ? (
           // Grouped View
-          filteredGroups.length === 0 ? (
-            // No matches in grouped view - AI-enhanced (Sprint 3 Migration)
+          filteredGroups.length === 0 ? ( // No matches in grouped view - AI-enhanced (Sprint 3 Migration)
             <AIEmptyState
               context="alerts"
               emptyType="no-matches"
