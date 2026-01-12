@@ -342,7 +342,110 @@ src/
 
 ---
 
-## 8. Best Practices
+## 8. WebSocket Hook Patterns
+
+The frontend uses a standardized WebSocket architecture for real-time communication.
+
+### Base Hook: `useRealtimeSync`
+
+All WebSocket connections should use `useRealtimeSync` as the foundation:
+
+```typescript
+import { useRealtimeSync } from "../hooks";
+
+const { status, send, disconnect, reconnect, metrics } = useRealtimeSync({
+  url: wsUrl,
+  reconnectInterval: 1000,
+  maxReconnectAttempts: 5,
+  exponentialBackoff: true,
+  onMessage: handleMessage,
+  onConnect: handleConnect,
+  onDisconnect: handleDisconnect,
+  onTokenExpired: handleTokenExpired,
+  onProtocolVersionMismatch: handleVersionMismatch,
+});
+```
+
+### Features Provided
+
+| Feature | Description |
+|---------|-------------|
+| Automatic reconnection | Configurable retry with exponential backoff |
+| Token handling | Handles 4010 (token expired) close code |
+| Protocol versioning | Handles 4009 (version mismatch) close code |
+| Message queuing | Queues messages while reconnecting |
+| Metrics | Reconnection metrics for observability |
+
+### Creating Domain-Specific Hooks
+
+Domain hooks should wrap `useRealtimeSync`:
+
+```typescript
+export function useCostTrackingWebSocket(options = {}) {
+  // 1. Check permissions
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
+  const hasCostPermission = wsPermissions?.cost_tracking ?? false;
+
+  // 2. Build URL only when authorized
+  const url = useMemo(
+    () => hasCostPermission ? buildWebSocketUrl(WS_ENDPOINTS.COST) : "",
+    [hasCostPermission]
+  );
+
+  // 3. Domain-specific state
+  const [sessionCosts, setSessionCosts] = useState<Record<string, SessionCost>>({});
+
+  // 4. Callback refs (avoid stale closures)
+  const callbacksRef = useRef({ onCostEvent, onBudgetWarning });
+  callbacksRef.current = { onCostEvent, onBudgetWarning };
+
+  // 5. Message handler with camelCase transform
+  const handleMessage = useCallback((data: unknown) => {
+    const message = transformSnakeToCamel(data) as ServerMessage;
+    switch (message.type) {
+      case "cost_event":
+        callbacksRef.current.onCostEvent?.(message.payload);
+        break;
+      // ...
+    }
+  }, []);
+
+  // 6. Use base hook
+  const { status, send, disconnect, reconnect } = useRealtimeSync({
+    url,
+    onMessage: handleMessage,
+  });
+
+  // 7. Return domain-specific interface
+  return { status, sessionCosts, subscribeSession, /* ... */ };
+}
+```
+
+### WebSocket Hooks Available
+
+| Hook | Endpoint | Purpose |
+|------|----------|---------|
+| `useRealtimeSync` | (base) | Foundation for all WebSocket hooks |
+| `useCostTrackingWebSocket` | `/ws/usage/cost` | Real-time cost tracking |
+| `useAlertWebSocket` | `/ws/alerts` | Prometheus alert updates |
+| `useTraceWebSocket` | `/ws/traces` | OpenTelemetry trace streaming |
+| `useNotificationWebSocket` | `/ws/notifications` | User notifications |
+| `useMCPWebSocket` | `/mcp/ws` | MCP server communication |
+| `useConnectionsRealtimeWebSocket` | `/ws/connections` | Connection health updates |
+| `useHeartMetricsWebSocket` | `/ws/heart/metrics` | HEART framework metrics |
+
+### Best Practices for WebSocket Hooks
+
+1. **Always use `useRealtimeSync`** as base (except for special cases like MCP with REST fallback)
+2. **Check permissions** before building WebSocket URL
+3. **Use callback refs** to avoid stale closures in message handlers
+4. **Transform messages** using `transformSnakeToCamel` per ADR-0091
+5. **Handle all close codes** especially 4009 (version) and 4010 (token)
+6. **Report metrics** using `reportWebSocketMetrics`
+
+---
+
+## 9. Best Practices
 
 ### DO
 

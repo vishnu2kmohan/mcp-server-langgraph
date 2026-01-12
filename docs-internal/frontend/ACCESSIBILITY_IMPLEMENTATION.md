@@ -273,6 +273,106 @@ Recommended testing matrix:
 
 ---
 
+## Charts and Data Visualization (WCAG 1.1.1, 1.4.1)
+
+Recharts components require special accessibility handling since SVG charts are not natively accessible to screen readers.
+
+### Pattern: Accessible Chart Container
+
+**Implementation Example:** `InteractiveChart.tsx`, `CostPage.tsx`, `AIQualityMetricsCard.tsx`
+
+```tsx
+{/* Accessible chart wrapper */}
+<div
+  role="img"
+  aria-label={`${chartTitle} - ${chartType} chart with ${dataPoints.length} data points`}
+>
+  {/* Screen reader description */}
+  <span className="sr-only">
+    {chartType} chart displaying {chartTitle}.
+    Use the data table toggle for accessible values.
+  </span>
+
+  {/* Chart (hidden from screen readers) */}
+  <ResponsiveContainer width="100%" height="100%">
+    <LineChart data={data} aria-hidden="true">
+      {/* ... chart components */}
+    </LineChart>
+  </ResponsiveContainer>
+</div>
+```
+
+### Key Principles
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Chart has text alternative | `role="img"` + `aria-label` on container |
+| Description for context | `sr-only` span with chart type and purpose |
+| Hide decorative elements | `aria-hidden="true"` on Recharts components |
+| Alternative data access | Provide data table toggle for accessible tabular view |
+| Keyboard navigation | `tabIndex={0}` on container for focus management |
+
+### Required Attributes
+
+1. **Container `div`:**
+   - `role="img"` - Identifies as image to assistive tech
+   - `aria-label` - Describes chart type, title, and data point count
+
+2. **Screen Reader Description:**
+   - `className="sr-only"` - Visually hidden but accessible
+   - Include chart type, data description, and instructions
+
+3. **Recharts Components:**
+   - `aria-hidden="true"` - Prevents screen reader from reading SVG elements
+
+### Data Table Alternative
+
+Always provide a toggleable data table for users who cannot perceive the visual chart:
+
+```tsx
+<Button
+  onClick={() => setShowDataTable(prev => !prev)}
+  aria-label="Toggle data table"
+>
+  <TableIcon size={14} />
+</Button>
+
+{showDataTable && (
+  <table role="table" aria-label="Chart data">
+    <thead>
+      <tr><th>Name</th><th>Value</th></tr>
+    </thead>
+    <tbody>
+      {data.map(item => (
+        <tr key={item.name}>
+          <td>{item.name}</td>
+          <td>{item.value}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+)}
+```
+
+### Testing Checklist
+
+- [ ] Chart container has `role="img"` and descriptive `aria-label`
+- [ ] Screen reader description explains chart type and purpose
+- [ ] All Recharts components have `aria-hidden="true"`
+- [ ] Data table toggle is available and keyboard accessible
+- [ ] Data table uses semantic `<table>` markup with headers
+- [ ] Color is not the only means of distinguishing data series (use patterns or labels)
+
+### Components Using This Pattern
+
+| Component | File | Verified |
+|-----------|------|----------|
+| InteractiveChart | `src/components/Chat/InteractiveChart.tsx` | Yes |
+| Cost History Chart | `src/pages/CostPage.tsx` | Yes |
+| AI Quality Metrics | `src/components/Admin/AIQualityMetricsCard.tsx` | Yes |
+
+---
+
 ## Related Documentation
 
 - [KEYBOARD_SHORTCUTS.md](./KEYBOARD_SHORTCUTS.md) - Complete keyboard shortcuts reference
