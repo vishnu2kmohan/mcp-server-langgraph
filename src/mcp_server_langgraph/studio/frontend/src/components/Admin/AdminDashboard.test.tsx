@@ -44,14 +44,17 @@
  */
 
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen, act, cleanup } from "@testing-library/react";
+import { render, screen, act, cleanup, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
+import { http, HttpResponse } from "msw";
 import { AdminDashboard } from "./AdminDashboard";
 import alertReducer from "../../store/slices/alertSlice";
 import personaReducer from "../../store/slices/personaSlice";
 import { api } from "../../api";
+import { server } from "../../mocks/server";
+import { mockFeatureFlags } from "../../mocks/handlers";
 
 // Create a wrapper with Redux store
 const createTestStore = (username = "testuser@example.com") =>
@@ -844,6 +847,34 @@ describe("AdminDashboard", () => {
       // Both should exist
       expect(heartSection).toBeInTheDocument();
       expect(aiQualityCard).toBeInTheDocument();
+    });
+
+    it("should NOT render AIQualityMetricsCard when ai_quality_metrics feature flag is false", async () => {
+      // Override feature flags to disable AI Quality Metrics
+      server.use(
+        http.get("/api/v1/features", () => {
+          return HttpResponse.json({
+            ...mockFeatureFlags,
+            ai_quality_metrics: false,
+          });
+        }),
+      );
+
+      renderWithStore(<AdminDashboard {...defaultProps} />);
+
+      // Wait for content to settle (HEART Metrics should still render)
+      await screen.findByText("HEART Metrics", { timeout: 3000 });
+
+      // Use waitFor to ensure the component has finished rendering
+      await waitFor(
+        () => {
+          // AI Quality card should NOT be rendered when flag is false
+          expect(
+            screen.queryByTestId("ai-quality-card"),
+          ).not.toBeInTheDocument();
+        },
+        { timeout: 2000 },
+      );
     });
   });
 });

@@ -546,3 +546,16 @@ export type {
 // =============================================================================
 
 export { useFocusTrap } from "./useFocusTrap";
+
+// =============================================================================
+// Metrics & Observability Hooks
+// =============================================================================
+
+export {
+  useMetricsHistory,
+  type TrendDirection,
+  type MetricsSnapshot,
+  type MetricWithTrend,
+  type UseMetricsHistoryOptions,
+  type UseMetricsHistoryResult,
+} from "./useMetricsHistory";
