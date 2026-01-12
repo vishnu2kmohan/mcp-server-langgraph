@@ -13,7 +13,7 @@
    ```bash
    # Read these FIRST in every session
    cat .claude/memory/python-environment-usage.md  # CRITICAL: Always use .venv
-   cat .claude/memory/pre-commit-hooks-catalog.md  # 69 hooks, 3-tier validation
+   cat .claude/memory/pre-commit-hooks-catalog.md  # 94 hooks, 3-tier validation
    cat .claude/memory/make-targets.md              # 133 Make targets reference
    ```
 
@@ -43,10 +43,10 @@
 ├── QUICK_REFERENCE.md                 # 📄 1-page command cheat sheet
 ├── SETTINGS.md                        # ⚙️ Configuration architecture
 │
-├── commands/                          # 39 slash commands (organized)
+├── commands/                          # 44 slash commands (organized)
 │   └── README.md                      # Command discovery guide
 │
-├── templates/                         # 6 professional templates
+├── templates/                         # 8 professional templates
 │   └── README.md                      # Template selection guide
 │
 ├── context/                           # Living context files
@@ -61,7 +61,7 @@
     ├── python-environment-usage.md    # CRITICAL: Always use .venv
     ├── lint-workflow.md               # Linting enforcement workflow
     ├── task-spawn-error-prevention-strategy.md  # Error patterns & solutions
-    ├── pre-commit-hooks-catalog.md    # 69 hooks reference
+    ├── pre-commit-hooks-catalog.md    # 94 hooks reference
     └── make-targets.md                # 133 Make targets reference
 ```
 
@@ -120,14 +120,14 @@ mcp-server-langgraph/
 
 ### Key Resources
 
-1. **Commands** (`.claude/commands/`): 39 slash commands
+1. **Commands** (`.claude/commands/`): 44 slash commands
    - `/start-sprint` - Sprint initialization
    - `/test-summary` - Detailed test analysis
    - `/quick-debug` - AI-assisted debugging
    - `/validate` - Complete validation
    - See `.claude/commands/README.md` for all commands
 
-2. **Templates** (`.claude/templates/`): 6 professional templates
+2. **Templates** (`.claude/templates/`): 8 professional templates
    - ADR template (650 lines) - 67% faster
    - API design template (1,400 lines) - 67% faster
    - Bug investigation template (1,250 lines) - 50% faster
@@ -143,7 +143,7 @@ mcp-server-langgraph/
    - Python environment usage (MANDATORY)
    - Lint workflow enforcement
    - Task spawn error prevention
-   - Pre-commit hooks catalog (69 hooks)
+   - Pre-commit hooks catalog (94 hooks)
    - Make targets guide (133 targets)
 
 ---

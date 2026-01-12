@@ -54,10 +54,10 @@ async def test_feature():
 | Tests | 14,900+ |
 | Coverage | 75% (target: 80%) |
 | ADRs | 81 |
-| Feature Flags | 164 |
+| Feature Flags | 148 |
 | Pytest markers | 67 |
-| Slash commands | 39 |
-| Pre-commit hooks | 69 |
+| Slash commands | 44 |
+| Pre-commit hooks | 94 |
 | Make targets | 133 |
 
 **Technology Stack**:
@@ -97,17 +97,30 @@ async def test_feature():
 
 **Context files** (in `.claude/context/`):
 - `recent-work.md` - Auto-updated via git hook
-- `coding-standards.md` - Quick coding reference
 - `testing-patterns.md` - 14,900+ test patterns
 - `code-patterns.md` - Design patterns library
 - `pytest-markers.md` - 67 pytest markers reference
+- `test-constants-pattern.md` - Test constants and fixtures
+- `xdist-safety-patterns.md` - pytest-xdist parallel safety
 
 **Memory files** (in `.claude/memory/` - MANDATORY):
 - `python-environment-usage.md` - Virtual environment guide
 - `lint-workflow.md` - Linting enforcement
-- `pre-commit-hooks-catalog.md` - 69 hooks reference
+- `pre-commit-hooks-catalog.md` - 94 hooks reference
 - `make-targets.md` - 133 targets reference
 - `gke-infrastructure-testing.md` - GKE/WIF testing guidance (local vs CI gaps)
+- `efficient-tool-usage.md` - Script-based bulk operations, tool chaining
+- `context-efficiency.md` - Minimize redundant reads, parallel calls
+- `anti-patterns.md` - Common mistakes to avoid
+- `decision-trees.md` - Quick decision frameworks
+- `session-workflow-patterns.md` - Context management, checkpoints, research sessions
+- `feature-flag-conventions.md` - API naming (short names vs enable_ prefix)
+- `distroless-container-healthchecks.md` - Container health check patterns
+- `helm-chart-validation.md` - Helm chart validation guidance
+- `keycloak-oidc-issuer-pattern.md` - Keycloak OIDC issuer patterns
+- `kustomize-nameprefix-gotchas.md` - Kustomize namePrefix gotchas
+- `lgtm-stack-lessons.md` - Grafana LGTM stack lessons learned
+- `task-spawn-error-prevention-strategy.md` - Task spawn error prevention
 
 ---
 
@@ -154,10 +167,10 @@ mcp-server-langgraph/
 ├── docs/                         # Mintlify documentation
 ├── docs-internal/                # Internal architecture docs
 ├── .claude/                      # Claude Code automation
-│   ├── commands/                 # 39 slash commands
+│   ├── commands/                 # 44 slash commands
 │   ├── context/                  # Living context files
 │   ├── memory/                   # Persistent guidance
-│   └── templates/                # 6 professional templates
+│   └── templates/                # 8 professional templates
 └── .github/CLAUDE.md             # Comprehensive guide
 ```
 
@@ -210,8 +223,8 @@ uv run ruff format src/
 ## Resources
 
 - **Full Guide**: `.github/CLAUDE.md` (comprehensive, 1,070 lines)
-- **Commands**: `.claude/commands/README.md` (39 commands)
-- **Templates**: `.claude/templates/README.md` (6 templates)
+- **Commands**: `.claude/commands/README.md` (44 commands)
+- **Templates**: `.claude/templates/README.md` (8 templates)
 - **Testing**: `TESTING.md` (test patterns, markers)
 
 ---
