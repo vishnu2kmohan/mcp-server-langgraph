@@ -1,7 +1,16 @@
 /**
  * InteractiveChart Component
  *
- * Enhanced chart renderer with interactive controls:
+ * @deprecated This component uses Recharts and is being phased out in favor of
+ * VegaLiteArtifact which provides richer interactivity (tooltips, zoom, pan, export).
+ *
+ * Migration path:
+ * - For AI-generated charts: Use `vega-lite` or `altair` code blocks instead of `chart`
+ * - For static dashboards: Continue using Recharts directly (CostPage, DevToolsPanel)
+ *
+ * This component remains for backward compatibility with existing `chart` code blocks.
+ *
+ * Features (legacy):
  * - Switch between chart types (line, bar, pie)
  * - Fullscreen view
  * - Copy data as JSON
@@ -139,26 +148,29 @@ export function InteractiveChart({
         {/* Chart type toggles */}
         <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-0.5">
           <Button
-            className="p-1.5 rounded"
+            className={`p-1.5 rounded ${chartType === "line" ? "bg-primary-100 dark:bg-primary-900" : ""}`}
             type="button"
             onClick={() => setChartType("line")}
             aria-label="Line chart"
+            aria-pressed={chartType === "line"}
           >
             <TrendingUp size={14} />
           </Button>
           <Button
-            className="p-1.5 rounded"
+            className={`p-1.5 rounded ${chartType === "bar" ? "bg-primary-100 dark:bg-primary-900" : ""}`}
             type="button"
             onClick={() => setChartType("bar")}
             aria-label="Bar chart"
+            aria-pressed={chartType === "bar"}
           >
             <BarChart2 size={14} />
           </Button>
           <Button
-            className="p-1.5 rounded"
+            className={`p-1.5 rounded ${chartType === "pie" ? "bg-primary-100 dark:bg-primary-900" : ""}`}
             type="button"
             onClick={() => setChartType("pie")}
             aria-label="Pie chart"
+            aria-pressed={chartType === "pie"}
           >
             <PieChartIcon size={14} />
           </Button>

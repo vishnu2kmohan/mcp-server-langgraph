@@ -34,6 +34,7 @@ import { InteractiveSVGArtifact } from "../Artifacts/InteractiveSVGArtifact";
 import { AudioArtifact } from "../Artifacts/AudioArtifact";
 import { VideoArtifact } from "../Artifacts/VideoArtifact";
 import { ExecutableArtifact } from "../Artifacts/ExecutableArtifact";
+import { VegaLiteArtifact } from "../Artifacts/VegaLiteArtifact";
 import { InteractiveChart, type ChartData } from "./InteractiveChart";
 
 // Lazy loaded components for bundle optimization
@@ -235,10 +236,16 @@ function MarkdownContentImpl({
           // - Mermaid: incomplete dates/task definitions in gantt charts
           // - Chart: incomplete JSON causing parse errors
           // - SVG: unclosed tags causing DOMParser errors
+          // - Vega-Lite/Altair: incomplete JSON specs
+          const isVegaLiteLanguage =
+            language === "vega-lite" ||
+            language === "vega" ||
+            language === "altair";
           const isParseProneArtifact =
             language === "mermaid" ||
             language === "chart" ||
-            language === "svg";
+            language === "svg" ||
+            isVegaLiteLanguage;
 
           if (isParseProneArtifact && isStreaming && !inline) {
             return <StreamingArtifactPlaceholder language={language} />;
@@ -253,7 +260,12 @@ function MarkdownContentImpl({
             );
           }
 
-          // Handle chart blocks
+          // Handle Vega-Lite/Altair blocks (preferred for interactive charts)
+          if (isVegaLiteLanguage && !inline) {
+            return <VegaLiteArtifact spec={codeContent} />;
+          }
+
+          // Handle chart blocks (deprecated: prefer vega-lite)
           if (language === "chart" && !inline) {
             return <ChartCodeBlock code={codeContent} />;
           }
