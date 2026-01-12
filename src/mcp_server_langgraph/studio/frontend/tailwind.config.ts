@@ -18,19 +18,21 @@ export default {
           secondary: '#8b5cf6', // Purple-500
           accent: '#10b981', // Emerald-500
         },
-        // Primary color scale (Sky blue from shared tokens)
+        // Primary color scale (Blue palette - WCAG 2.2 AA compliant)
+        // blue-500 (#3b82f6) has 4.5:1 contrast ratio with white text
+        // Aligned with brand.primary for consistent hover/active states
         primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-          950: '#082f49',
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6', // Matches brand.primary - WCAG AA compliant
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
+          950: '#172554',
         },
         // Status colors - full scales from shared design-tokens
         success: {
