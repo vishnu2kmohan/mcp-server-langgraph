@@ -173,3 +173,370 @@ class TestConfigRouter:
         required_fields = ["model_name", "model_provider", "max_tokens", "temperature"]
         for field in required_fields:
             assert field in data, f"Missing required field: {field}"
+
+
+@pytest.mark.xdist_group(name="test_config_router")
+@pytest.mark.unit
+@pytest.mark.api
+class TestConfigModelsEndpoint:
+    """Tests for GET /config/models endpoint - available LLM models for selection."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_get_models_returns_200(self, test_client: TestClient) -> None:
+        """Verify /api/v1/config/models returns 200 OK."""
+        response = test_client.get("/api/v1/config/models")
+
+        assert response.status_code == 200
+
+    def test_get_models_returns_list_structure(self, test_client: TestClient) -> None:
+        """Verify /api/v1/config/models returns a list of models."""
+        response = test_client.get("/api/v1/config/models")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) > 0  # Should have at least one model
+
+    def test_get_models_has_required_fields(self, test_client: TestClient) -> None:
+        """Verify each model has required fields: id, name, provider."""
+        response = test_client.get("/api/v1/config/models")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        for model in data:
+            assert "id" in model, "Model missing 'id' field"
+            assert "name" in model, "Model missing 'name' field"
+            assert "provider" in model, "Model missing 'provider' field"
+
+    def test_get_models_includes_anthropic_models(self, test_client: TestClient) -> None:
+        """Verify Anthropic Claude models are included."""
+        response = test_client.get("/api/v1/config/models")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        providers = [m["provider"] for m in data]
+        assert "anthropic" in providers
+
+    def test_get_models_includes_openai_models(self, test_client: TestClient) -> None:
+        """Verify OpenAI GPT models are included."""
+        response = test_client.get("/api/v1/config/models")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        providers = [m["provider"] for m in data]
+        assert "openai" in providers
+
+    def test_get_models_includes_google_models(self, test_client: TestClient) -> None:
+        """Verify Google Gemini models are included."""
+        response = test_client.get("/api/v1/config/models")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        providers = [m["provider"] for m in data]
+        assert "google" in providers
+
+    def test_get_models_includes_supports_thinking_flag(self, test_client: TestClient) -> None:
+        """Verify models include supports_thinking flag for extended thinking capability."""
+        response = test_client.get("/api/v1/config/models")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # At least some models should have the supports_thinking field
+        for model in data:
+            assert "supports_thinking" in model, f"Model {model['id']} missing 'supports_thinking' field"
+            assert isinstance(model["supports_thinking"], bool)
+
+    def test_get_models_thinking_models_identified_correctly(self, test_client: TestClient) -> None:
+        """Verify models that support extended thinking are marked correctly."""
+        response = test_client.get("/api/v1/config/models")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Claude 3.5 Sonnet and Claude 3 Opus should support thinking
+        thinking_capable_ids = ["claude-3-5-sonnet", "claude-3-opus", "claude-sonnet-4-5"]
+        for model in data:
+            if any(tc in model["id"] for tc in thinking_capable_ids):
+                assert model["supports_thinking"] is True, f"Model {model['id']} should support thinking"
+
+    def test_get_models_includes_supports_vision_flag(self, test_client: TestClient) -> None:
+        """Verify models include supports_vision flag for vision/image capability."""
+        response = test_client.get("/api/v1/config/models")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # All models should have the supports_vision field
+        for model in data:
+            assert "supports_vision" in model, f"Model {model['id']} missing 'supports_vision' field"
+            assert isinstance(model["supports_vision"], bool)
+
+    def test_get_models_includes_supports_tools_flag(self, test_client: TestClient) -> None:
+        """Verify models include supports_tools flag for tool/function calling capability."""
+        response = test_client.get("/api/v1/config/models")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # All models should have the supports_tools field
+        for model in data:
+            assert "supports_tools" in model, f"Model {model['id']} missing 'supports_tools' field"
+            assert isinstance(model["supports_tools"], bool)
+
+    def test_get_models_vision_capable_models_identified_correctly(self, test_client: TestClient) -> None:
+        """Verify models with vision capability are marked correctly."""
+        response = test_client.get("/api/v1/config/models")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Claude and GPT-4o models support vision, o1 models do not
+        vision_capable_ids = ["claude-3-5-sonnet", "claude-3-opus", "claude-3-haiku", "gpt-4o", "gemini"]
+        no_vision_ids = ["o1-preview", "o1-mini"]
+
+        for model in data:
+            if any(vc in model["id"] for vc in vision_capable_ids):
+                assert model["supports_vision"] is True, f"Model {model['id']} should support vision"
+            if any(nv in model["id"] for nv in no_vision_ids):
+                assert model["supports_vision"] is False, f"Model {model['id']} should NOT support vision"
+
+    def test_get_models_tools_capable_models_identified_correctly(self, test_client: TestClient) -> None:
+        """Verify models with tool calling capability are marked correctly."""
+        response = test_client.get("/api/v1/config/models")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Most models support tools, o1 models do not
+        tools_capable_ids = ["claude-3-5-sonnet", "claude-3-opus", "gpt-4o", "gemini"]
+        no_tools_ids = ["o1-preview", "o1-mini"]
+
+        for model in data:
+            if any(tc in model["id"] for tc in tools_capable_ids):
+                assert model["supports_tools"] is True, f"Model {model['id']} should support tools"
+            if any(nt in model["id"] for nt in no_tools_ids):
+                assert model["supports_tools"] is False, f"Model {model['id']} should NOT support tools"
+
+
+@pytest.mark.xdist_group(name="test_config_router")
+@pytest.mark.unit
+@pytest.mark.api
+class TestConfigModelsFromModelRegistry:
+    """Tests for GET /config/models using ModelRegistry (feature flag enabled).
+
+    When FF_USE_MODEL_REGISTRY_FOR_FRONTEND=true, the endpoint should use
+    ModelRegistry.get_frontend_models() instead of hardcoded AVAILABLE_MODELS.
+    This ensures single source of truth for model capabilities.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_get_models_uses_registry_when_flag_enabled(self, test_client: TestClient) -> None:
+        """Verify /api/v1/config/models uses ModelRegistry when flag enabled."""
+        with patch("mcp_server_langgraph.api.v1.config.feature_flags") as mock_flags:
+            mock_flags.use_model_registry_for_frontend = True
+
+            response = test_client.get("/api/v1/config/models")
+
+            assert response.status_code == 200
+            data = response.json()
+            # Should return models from registry
+            assert isinstance(data, list)
+            assert len(data) > 0
+
+    def test_get_models_uses_available_models_when_flag_disabled(self, test_client: TestClient) -> None:
+        """Verify /api/v1/config/models uses AVAILABLE_MODELS when flag disabled."""
+        with patch("mcp_server_langgraph.api.v1.config.feature_flags") as mock_flags:
+            mock_flags.use_model_registry_for_frontend = False
+
+            response = test_client.get("/api/v1/config/models")
+
+            assert response.status_code == 200
+            data = response.json()
+            # Should return models from AVAILABLE_MODELS (legacy)
+            assert isinstance(data, list)
+            # Check for legacy model IDs
+            model_ids = [m["id"] for m in data]
+            # Legacy AVAILABLE_MODELS has claude-3-5-sonnet
+            assert "claude-3-5-sonnet" in model_ids
+
+    def test_registry_models_have_required_fields(self, test_client: TestClient) -> None:
+        """Verify models from registry have all required fields."""
+        with patch("mcp_server_langgraph.api.v1.config.feature_flags") as mock_flags:
+            mock_flags.use_model_registry_for_frontend = True
+
+            response = test_client.get("/api/v1/config/models")
+
+            assert response.status_code == 200
+            data = response.json()
+
+            for model in data:
+                assert "id" in model, "Model missing 'id' field"
+                assert "name" in model, "Model missing 'name' field"
+                assert "provider" in model, "Model missing 'provider' field"
+                assert "supports_thinking" in model, "Model missing 'supports_thinking' field"
+                assert "supports_vision" in model, "Model missing 'supports_vision' field"
+                assert "supports_tools" in model, "Model missing 'supports_tools' field"
+
+    def test_registry_includes_claude_opus_4_5(self, test_client: TestClient) -> None:
+        """Verify registry includes Claude Opus 4.5 model."""
+        with patch("mcp_server_langgraph.api.v1.config.feature_flags") as mock_flags:
+            mock_flags.use_model_registry_for_frontend = True
+
+            response = test_client.get("/api/v1/config/models")
+
+            assert response.status_code == 200
+            data = response.json()
+            model_ids = [m["id"] for m in data]
+
+            # Registry has claude-opus-4-5 public_id
+            assert "claude-opus-4-5" in model_ids
+
+    def test_registry_includes_all_providers(self, test_client: TestClient) -> None:
+        """Verify registry models include all providers."""
+        with patch("mcp_server_langgraph.api.v1.config.feature_flags") as mock_flags:
+            mock_flags.use_model_registry_for_frontend = True
+
+            response = test_client.get("/api/v1/config/models")
+
+            assert response.status_code == 200
+            data = response.json()
+            providers = {m["provider"] for m in data}
+
+            assert "anthropic" in providers
+            assert "google" in providers
+            assert "openai" in providers
+
+    def test_feature_flag_use_model_registry_for_frontend_exists(self) -> None:
+        """Test that use_model_registry_for_frontend flag exists in feature flags."""
+        from mcp_server_langgraph.core.feature_flags import feature_flags
+
+        assert hasattr(feature_flags, "use_model_registry_for_frontend")
+
+    def test_feature_flag_default_is_true(self) -> None:
+        """Test that use_model_registry_for_frontend defaults to True (ModelRegistry is now the default source)."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        # Create fresh instance to check default
+        flags = FeatureFlags()
+        assert flags.use_model_registry_for_frontend is True
+
+    def test_registry_models_include_status_field(self, test_client: TestClient) -> None:
+        """Verify models from registry include status field for lifecycle management."""
+        with patch("mcp_server_langgraph.api.v1.config.feature_flags") as mock_flags:
+            mock_flags.use_model_registry_for_frontend = True
+
+            response = test_client.get("/api/v1/config/models")
+
+            assert response.status_code == 200
+            data = response.json()
+
+            for model in data:
+                assert "status" in model, f"Model {model['id']} missing 'status' field"
+                assert model["status"] in ["current", "preview", "legacy", "deprecated"]
+
+    def test_registry_deprecated_models_have_sunset_date(self, test_client: TestClient) -> None:
+        """Verify deprecated models include sunset_date field."""
+        with patch("mcp_server_langgraph.api.v1.config.feature_flags") as mock_flags:
+            mock_flags.use_model_registry_for_frontend = True
+
+            response = test_client.get("/api/v1/config/models")
+
+            assert response.status_code == 200
+            data = response.json()
+
+            deprecated_models = [m for m in data if m.get("status") == "deprecated"]
+            assert len(deprecated_models) > 0, "No deprecated models found in registry"
+
+            for model in deprecated_models:
+                assert "sunset_date" in model, f"Deprecated model {model['id']} missing 'sunset_date' field"
+                # Validate ISO 8601 date format (YYYY-MM-DD)
+                import re
+
+                assert re.match(r"^\d{4}-\d{2}-\d{2}$", model["sunset_date"]), (
+                    f"Model {model['id']} has invalid sunset_date format: {model['sunset_date']}"
+                )
+
+    def test_registry_non_deprecated_models_no_sunset_date(self, test_client: TestClient) -> None:
+        """Verify non-deprecated models do NOT include sunset_date field."""
+        with patch("mcp_server_langgraph.api.v1.config.feature_flags") as mock_flags:
+            mock_flags.use_model_registry_for_frontend = True
+
+            response = test_client.get("/api/v1/config/models")
+
+            assert response.status_code == 200
+            data = response.json()
+
+            non_deprecated_models = [m for m in data if m.get("status") != "deprecated"]
+            assert len(non_deprecated_models) > 0, "No non-deprecated models found in registry"
+
+            for model in non_deprecated_models:
+                assert "sunset_date" not in model, f"Non-deprecated model {model['id']} should NOT have 'sunset_date' field"
+
+
+@pytest.mark.xdist_group(name="test_config_router")
+@pytest.mark.unit
+@pytest.mark.api
+class TestConfigModelsDeprecationWarning:
+    """Tests for deprecation warning when using legacy AVAILABLE_MODELS."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_deprecation_warning_emitted_when_flag_disabled(self, test_client: TestClient) -> None:
+        """Verify DeprecationWarning is emitted when using legacy AVAILABLE_MODELS."""
+        import warnings
+
+        with patch("mcp_server_langgraph.api.v1.config.feature_flags") as mock_flags:
+            mock_flags.use_model_registry_for_frontend = False
+
+            with warnings.catch_warnings(record=True) as caught_warnings:
+                warnings.simplefilter("always")
+
+                response = test_client.get("/api/v1/config/models")
+
+                assert response.status_code == 200
+
+                # Find the deprecation warning
+                deprecation_warnings = [
+                    w
+                    for w in caught_warnings
+                    if issubclass(w.category, DeprecationWarning) and "AVAILABLE_MODELS" in str(w.message)
+                ]
+                assert len(deprecation_warnings) == 1, "Expected exactly one AVAILABLE_MODELS deprecation warning"
+                assert "ModelRegistry" in str(deprecation_warnings[0].message)
+
+    def test_no_deprecation_warning_when_flag_enabled(self, test_client: TestClient) -> None:
+        """Verify no deprecation warning when using ModelRegistry (flag enabled)."""
+        import warnings
+
+        with patch("mcp_server_langgraph.api.v1.config.feature_flags") as mock_flags:
+            mock_flags.use_model_registry_for_frontend = True
+
+            with warnings.catch_warnings(record=True) as caught_warnings:
+                warnings.simplefilter("always")
+
+                response = test_client.get("/api/v1/config/models")
+
+                assert response.status_code == 200
+
+                # No AVAILABLE_MODELS deprecation warning should be emitted
+                deprecation_warnings = [
+                    w
+                    for w in caught_warnings
+                    if issubclass(w.category, DeprecationWarning) and "AVAILABLE_MODELS" in str(w.message)
+                ]
+                assert len(deprecation_warnings) == 0, (
+                    "No AVAILABLE_MODELS deprecation warning expected when using ModelRegistry"
+                )

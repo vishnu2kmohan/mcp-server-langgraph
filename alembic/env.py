@@ -42,7 +42,22 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from mcp_server_langgraph.database.models import Base
+#
+# Import strategy:
+# 1. Try package import first (for local development with full package)
+# 2. Fall back to local models.py (for Docker container with minimal deps)
+#
+# This allows Dockerfile.alembic to use --no-install-project for a ~50MB image
+# instead of installing the full package with all dependencies (~500MB+).
+# The models.py file is self-contained (only SQLAlchemy imports).
+try:
+    from mcp_server_langgraph.database.models import Base
+except ImportError:
+    # In Docker: models.py is copied to /app/models.py
+    import sys
+
+    sys.path.insert(0, "/app")
+    from models import Base  # type: ignore[import-not-found]
 
 target_metadata = Base.metadata
 

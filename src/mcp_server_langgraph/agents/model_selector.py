@@ -20,12 +20,19 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from typing import Literal, cast
 
 from mcp_server_langgraph.agents.metrics import (
     record_cross_vendor_verification,
     record_model_selection,
 )
 from mcp_server_langgraph.agents.model_registry import get_default_registry
+
+# Type alias for complexity tiers
+Tier = Literal["simple", "complicated", "complex"]
+
+# Valid tier values for runtime validation
+VALID_TIERS: frozenset[str] = frozenset({"simple", "complicated", "complex"})
 
 
 @dataclass
@@ -103,32 +110,39 @@ class ModelSelector:
         # Default to google if nothing detected (for testing)
         return vendors or ["google"]
 
-    def _fallback_tier(self, requested: str) -> str:
+    def _fallback_tier(self, requested: str) -> Tier:
         """Map requested tier to available tier.
 
         Args:
             requested: Requested complexity tier
 
         Returns:
-            Best available tier
+            Best available tier (validated as Tier literal)
         """
-        if requested in self.available_tiers:
-            return requested
+        if requested in self.available_tiers and requested in VALID_TIERS:
+            return cast(Tier, requested)
 
         # Fallback: use closest available tier
-        tier_order = ["simple", "complicated", "complex"]
+        tier_order: list[Tier] = ["simple", "complicated", "complex"]
         try:
-            requested_idx = tier_order.index(requested)
+            requested_idx = tier_order.index(cast(Tier, requested))
         except ValueError:
-            return self.available_tiers[-1]
+            # Invalid tier, return highest available
+            for tier in reversed(tier_order):
+                if tier in self.available_tiers:
+                    return tier
+            return "complicated"  # Ultimate fallback
 
         # Try to find closest tier going down
         for i in range(requested_idx, -1, -1):
             if tier_order[i] in self.available_tiers:
                 return tier_order[i]
 
-        # Use highest available
-        return self.available_tiers[-1]
+        # Use highest available valid tier
+        for tier in reversed(tier_order):
+            if tier in self.available_tiers:
+                return tier
+        return "complicated"  # Ultimate fallback
 
     def select_model(self, complexity: str) -> str:
         """Select model for given complexity.
@@ -147,7 +161,7 @@ class ModelSelector:
 
         # Try primary vendor first via registry
         try:
-            model = registry.get_model_for_tier(vendor=vendor, tier=effective_tier)  # type: ignore[arg-type]
+            model = registry.get_model_for_tier(vendor=vendor, tier=effective_tier)
         except KeyError:
             pass
 
@@ -156,7 +170,7 @@ class ModelSelector:
             for v in VENDOR_PRIORITY:
                 if v in self.available_vendors:
                     try:
-                        model = registry.get_model_for_tier(vendor=v, tier=effective_tier)  # type: ignore[arg-type]
+                        model = registry.get_model_for_tier(vendor=v, tier=effective_tier)
                         vendor = v
                         break
                     except KeyError:
@@ -164,7 +178,7 @@ class ModelSelector:
 
         # Ultimate fallback to google
         if model is None:
-            model = registry.get_model_for_tier(vendor="google", tier=effective_tier)  # type: ignore[arg-type]
+            model = registry.get_model_for_tier(vendor="google", tier=effective_tier)
             vendor = "google"
 
         # Record model selection metrics
@@ -197,8 +211,8 @@ class ModelSelector:
         registry = get_default_registry()
 
         # Handle unknown complexity by falling back to "complicated"
-        valid_tiers = {"simple", "complicated", "complex"}
-        if complexity not in valid_tiers:
+        effective_tier: Tier
+        if complexity not in VALID_TIERS:
             effective_tier = "complicated"
             is_fallback = True
         else:
@@ -211,7 +225,7 @@ class ModelSelector:
 
         # Try the preferred vendor first via registry
         try:
-            model = registry.get_model_for_tier(vendor=selected_vendor, tier=effective_tier)  # type: ignore[arg-type]
+            model = registry.get_model_for_tier(vendor=selected_vendor, tier=effective_tier)
         except KeyError:
             pass
 
@@ -220,7 +234,7 @@ class ModelSelector:
             for v in VENDOR_PRIORITY:
                 if v in self.available_vendors:
                     try:
-                        model = registry.get_model_for_tier(vendor=v, tier=effective_tier)  # type: ignore[arg-type]
+                        model = registry.get_model_for_tier(vendor=v, tier=effective_tier)
                         selected_vendor = v
                         break
                     except KeyError:
@@ -228,7 +242,7 @@ class ModelSelector:
 
         # Ultimate fallback to google
         if model is None:
-            model = registry.get_model_for_tier(vendor="google", tier=effective_tier)  # type: ignore[arg-type]
+            model = registry.get_model_for_tier(vendor="google", tier=effective_tier)
             selected_vendor = "google"
 
         # Record model selection metrics

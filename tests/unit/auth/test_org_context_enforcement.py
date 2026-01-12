@@ -20,6 +20,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def get_project_root() -> Path:
     """Get the project root directory."""
@@ -88,13 +90,11 @@ class TestOrganizationUserInContextRelation:
 
         # Check if user type is in directly_related_user_types
         related_types = user_in_context_metadata.get("directly_related_user_types", [])
-        user_type_present = any(
-            t.get("type") == "user" for t in related_types
-        )
+        user_type_present = any(t.get("type") == "user" for t in related_types)
 
         assert user_type_present, (
             "user_in_context relation must accept 'user' type directly. "
-            "directly_related_user_types must include {\"type\": \"user\"}"
+            'directly_related_user_types must include {"type": "user"}'
         )
 
 
@@ -169,7 +169,7 @@ class TestAuthorizationServiceOrgContext:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Create mock OpenFGA client
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock()  # noqa: async-mock-config
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         service = AuthorizationService(openfga_client=mock_openfga)
@@ -196,7 +196,7 @@ class TestAuthorizationServiceOrgContext:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Create mock OpenFGA client
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock()  # noqa: async-mock-config
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         # Create mock settings with flag enabled
@@ -231,8 +231,7 @@ class TestAuthorizationServiceOrgContext:
             "object": "organization:acme",
         }
         assert expected_tuple in contextual_tuples, (
-            f"Expected contextual tuple not found. "
-            f"Expected: {expected_tuple}, Got: {contextual_tuples}"
+            f"Expected contextual tuple not found. Expected: {expected_tuple}, Got: {contextual_tuples}"
         )
 
     @pytest.mark.asyncio
@@ -243,7 +242,7 @@ class TestAuthorizationServiceOrgContext:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Create mock OpenFGA client
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock()  # noqa: async-mock-config
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         # Create mock settings with flag disabled
@@ -266,8 +265,7 @@ class TestAuthorizationServiceOrgContext:
         contextual_tuples = context.get("contextual_tuples", [])
 
         assert len(contextual_tuples) == 0, (
-            "When org context enforcement is disabled, no contextual tuples should be passed. "
-            f"Got: {contextual_tuples}"
+            f"When org context enforcement is disabled, no contextual tuples should be passed. Got: {contextual_tuples}"
         )
 
 
@@ -294,7 +292,7 @@ class TestMultiOrgUserContext:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Create mock OpenFGA client that checks contextual tuples
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock()  # noqa: async-mock-config
 
         async def check_permission_side_effect(
             user: str, relation: str, object: str, context: dict | None = None, **kwargs: Any
@@ -303,10 +301,7 @@ class TestMultiOrgUserContext:
             if context and "contextual_tuples" in context:
                 tuples = context["contextual_tuples"]
                 for t in tuples:
-                    if (
-                        t.get("relation") == "user_in_context"
-                        and t.get("object") == "organization:acme"
-                    ):
+                    if t.get("relation") == "user_in_context" and t.get("object") == "organization:acme":
                         return True
             return False
 
@@ -344,7 +339,7 @@ class TestMultiOrgUserContext:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Create mock OpenFGA client
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock()  # noqa: async-mock-config
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         # Create mock settings with flag enabled AND fail_closed_on_missing_context
@@ -363,8 +358,7 @@ class TestMultiOrgUserContext:
         )
 
         assert result is False, (
-            "Missing org context should fail closed when flag enabled. "
-            "This prevents accidental permission bypass."
+            "Missing org context should fail closed when flag enabled. This prevents accidental permission bypass."
         )
 
     @pytest.mark.asyncio
@@ -375,7 +369,7 @@ class TestMultiOrgUserContext:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Create mock OpenFGA client
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock()  # noqa: async-mock-config
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         # Create mock settings with flag disabled
@@ -394,6 +388,5 @@ class TestMultiOrgUserContext:
         )
 
         assert result is True, (
-            "Access should be allowed without context when flag is disabled. "
-            "Feature flag must gate all org context behavior."
+            "Access should be allowed without context when flag is disabled. Feature flag must gate all org context behavior."
         )

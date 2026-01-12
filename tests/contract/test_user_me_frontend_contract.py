@@ -24,6 +24,7 @@ FRONTEND_NAV_ITEM_IDS = {
     # AI & Data
     "agents",
     "mcp",
+    "skills",  # Skills marketplace for agent capabilities (Anthropic skills repo)
     "vectors",
     "connections",
     "files",

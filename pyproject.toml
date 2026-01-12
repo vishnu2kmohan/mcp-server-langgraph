@@ -962,6 +962,7 @@ markers = [
     "pii: Tests for PII tokenization (detection, tokenization, untokenization)",
     "programmatic_tools: Tests for programmatic tool calling from sandbox",
     "requires_sandbox: Tests requiring sandbox environment (Docker, code execution enabled)",
+    "execution: Code execution tests (sandbox packages, Pyodide parity, allowed imports)",
     "multi_agent: Tests for orchestrator-worker pattern (parallel subagents, artifact storage)",
     "hitl: Tests for Human-in-the-Loop (confidence-based approval, clarification workflows)",
     "push_notifications: Tests for Web Push notification integration (VAPID, service worker)",

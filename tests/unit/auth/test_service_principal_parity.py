@@ -19,6 +19,8 @@ from typing import Any
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def get_project_root() -> Path:
     """Get the project root directory."""
@@ -165,9 +167,7 @@ class TestServicePrincipalActsAsTuples:
 
         # Look for acts_as relation on service_principal
         has_acts_as_tuple = any(
-            t.get("relation") == "acts_as"
-            and t.get("object", "").startswith("service_principal:")
-            for t in tuples
+            t.get("relation") == "acts_as" and t.get("object", "").startswith("service_principal:") for t in tuples
         )
 
         assert has_acts_as_tuple, (

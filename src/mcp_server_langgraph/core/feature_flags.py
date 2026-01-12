@@ -475,6 +475,26 @@ class FeatureFlags(BaseSettings):
         description="Track suggestion click rates and quality metrics for improvement",
     )
 
+    enable_hallucination_reporting: bool = Field(
+        default=True,
+        description="Enable hallucination reporting feature in chat UI. "
+        "Allows users to flag AI responses as potentially inaccurate (factual error, outdated info, made up source).",
+    )
+
+    hallucination_report_rate_limit_per_minute: int = Field(
+        default=10,
+        ge=1,
+        le=100,
+        description="Maximum hallucination reports per minute per user (1-100). "
+        "Prevents abuse of the reporting endpoint while allowing legitimate feedback.",
+    )
+
+    enable_ai_quality_metrics: bool = Field(
+        default=True,
+        description="Enable AI Quality Metrics card in Admin Dashboard. "
+        "Shows hallucination report counts, category breakdown, and response approval rates.",
+    )
+
     enable_suggestion_prewarm: bool = Field(
         default=False,
         description="Pre-compute suggestions for common topics (experimental, increases startup time)",
@@ -529,6 +549,46 @@ class FeatureFlags(BaseSettings):
         "Allows users to focus searches on All, Knowledge Base only, or Web only. "
         "Requires DynamicContextLoader and Qdrant to be configured. "
         "Set FF_ENABLE_KB_FOCUS=false to disable.",
+    )
+
+    # =========================================================================
+    # Model Selector Feature Flags (Sprint 2 - Enhanced Model Selector)
+    # =========================================================================
+    # Three distinct flags control different aspects of model selection:
+    #
+    # 1. enable_enhanced_model_selector: FRONTEND UI features
+    #    - Recent models history
+    #    - Search/filter for large model lists
+    #    - Capability badges (Thinking, Vision, Tools)
+    #    - Status badges (Preview, Legacy, Deprecated)
+    #
+    # 2. use_model_registry_for_frontend: BACKEND data source
+    #    - Controls whether /api/v1/config/models uses ModelRegistry
+    #    - ModelRegistry is the single source of truth for capabilities
+    #    - Includes status field and sunset_date for deprecated models
+    #    - DEPRECATED: Will be removed in v2.10.0 (always use ModelRegistry)
+    #
+    # 3. enable_model_selector_in_shell: SHELL path visibility
+    #    - Controls whether model selector appears in StudioShell
+    #    - Independent of the ChatDocument path which always shows it
+    #
+    # See: ADR-0102 Enhanced Model Selector Architecture
+    # =========================================================================
+
+    enable_enhanced_model_selector: bool = Field(
+        default=True,
+        description="Enable enhanced model selector UI features: recent models history, search/filter "
+        "for large model lists, capability badges (Thinking, Vision, Tools), and status badges "
+        "(Preview, Legacy, Deprecated). Set FF_ENABLE_ENHANCED_MODEL_SELECTOR=false for basic selector.",
+    )
+
+    use_model_registry_for_frontend: bool = Field(
+        default=True,
+        description="Use ModelRegistry.get_frontend_models() instead of hardcoded AVAILABLE_MODELS "
+        "for /api/v1/config/models endpoint. Uses single source of truth from ModelRegistry "
+        "for model capabilities, including status field (current/preview/legacy/deprecated). "
+        "DEPRECATED: Will be removed in v2.10.0. "
+        "Set FF_USE_MODEL_REGISTRY_FOR_FRONTEND=false to fall back to legacy AVAILABLE_MODELS.",
     )
 
     enable_style_presets: bool = Field(
@@ -707,6 +767,13 @@ class FeatureFlags(BaseSettings):
     enable_litellm_otel: bool = Field(
         default=True,
         description="Enable LiteLLM native OTEL callback for enhanced LLM tracing. Provides gen_ai.client.token.cost histogram and automatic span creation for all LLM calls.",
+    )
+
+    enable_litellm_model_sync: bool = Field(
+        default=False,
+        description="Enable background sync of model pricing from LiteLLM to ModelRegistry. "
+        "When enabled, a background task runs every 24 hours to update model pricing. "
+        "Set FF_ENABLE_LITELLM_MODEL_SYNC=true to enable.",
     )
 
     # =========================================================================
@@ -1608,7 +1675,8 @@ class FeatureFlags(BaseSettings):
         Uses feature-specific override if set, otherwise falls back to default.
 
         Args:
-            feature: Optional feature name ("suggestions", "frontend_cache", "websocket", None for API)
+            feature: Optional feature name ("suggestions", "frontend_cache", "websocket",
+                     "hallucination_reports", None for API)
 
         Returns:
             Rate limit in requests per minute
@@ -1619,6 +1687,8 @@ class FeatureFlags(BaseSettings):
             return self.frontend_redis_l2_rate_limit_per_minute
         elif feature == "websocket":
             return self.websocket_rate_limit_per_minute
+        elif feature == "hallucination_reports":
+            return self.hallucination_report_rate_limit_per_minute
         elif feature is None or feature == "api":
             return self.rate_limit_requests_per_minute
         else:
@@ -1801,6 +1871,8 @@ class FeatureFlags(BaseSettings):
             "orchestrator_status_websocket": self.enable_orchestrator_status_websocket,
             "suggestion_strategy": self.suggestion_strategy,
             "llm_suggestions": self.enable_llm_suggestions,  # DEPRECATED: use suggestion_strategy
+            "hallucination_reporting": self.enable_hallucination_reporting,
+            "ai_quality_metrics": self.enable_ai_quality_metrics,
             "notification_preferences": self.enable_notification_preferences,
             "mcp_websocket": self.enable_mcp_websocket,
             "interactive_artifacts": self.enable_interactive_artifacts,
@@ -1808,6 +1880,7 @@ class FeatureFlags(BaseSettings):
             "slash_commands": self.enable_slash_commands,
             "rich_text_chat_input": self.enable_rich_text_chat_input,
             "kb_focus": self.enable_kb_focus,
+            "enhanced_model_selector": self.enable_enhanced_model_selector,
             "style_presets": self.enable_style_presets,
             "show_chat_avatars": self.show_chat_avatars,
             # UX Enhancement Features
@@ -1829,6 +1902,7 @@ class FeatureFlags(BaseSettings):
             "ai_ux_streaming": self.enable_ai_ux_streaming,  # AI UX streaming
             "ai_disclosure": self.enable_ai_disclosure,
             "ai_empty_states": self.enable_ai_empty_states,
+            "ai_empty_state": self.enable_ai_empty_states,  # Singular alias for frontend compatibility
             "ai_nudges": self.enable_ai_nudges,
             "nudges": self.enable_ai_nudges,  # Alias for frontend compatibility
             "ai_error_recovery": self.enable_ai_error_recovery,
@@ -1860,6 +1934,9 @@ class FeatureFlags(BaseSettings):
             "websocket_enhanced_metrics": self.enable_websocket_enhanced_metrics,
             # Orchestrator UI Selection (ADR-0090 Phase 8)
             "orchestrator_selector": self.enable_orchestrator_selector,
+            # Skills Marketplace Features (ADR-0072)
+            "skills_system": self.enable_skills_system,
+            "skills_marketplace": self.enable_skills_marketplace,
         }
 
 

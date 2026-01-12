@@ -339,6 +339,38 @@
       "object": "chat:bob_chat"
     },
     {
+      "_comment": "Session Metrics WebSocket (/api/v1/ws/metrics/session) - all authenticated users can view",
+      "user": "user:admin",
+      "relation": "viewer",
+      "object": "chat:session-metrics"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "chat:session-metrics"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "chat:session-metrics"
+    },
+    {
+      "_comment": "LLM Streaming WebSocket (/api/v1/ws/llm/streaming) - all authenticated users can view",
+      "user": "user:admin",
+      "relation": "viewer",
+      "object": "chat:llm-streaming"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "chat:llm-streaming"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "chat:llm-streaming"
+    },
+    {
       "_comment": "MCP Connection permissions (/api/v1/mcp)",
       "user": "user:admin",
       "relation": "owner",

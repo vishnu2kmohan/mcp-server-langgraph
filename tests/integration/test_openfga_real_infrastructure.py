@@ -360,3 +360,64 @@ class TestBootstrapSecurityRealIntegration:
             if security_state and security_state.openfga_client:
                 await security_state.cleanup()
             clear_global_openfga_client()
+
+
+@pytest.mark.integration
+@pytest.mark.xdist_group(name="openfga_real")
+class TestOpenFGAModelValidation:
+    """Test model.json validation against real OpenFGA - catches semantic errors."""
+
+    def test_production_model_json_is_valid_for_upload(self) -> None:
+        """
+        GIVEN: Production model.json from config/openfga/
+        WHEN: We validate it using compose_model schema validation
+        THEN: It should pass all validation checks
+
+        This is a contract test to ensure model.json can be uploaded to OpenFGA.
+        Catches issues like:
+        - memory_index.viewer: computed relation with directly_related_user_types
+
+        Note: This test runs the schema validator, not actual upload to OpenFGA.
+        Actual upload is done by the openfga-seed-test service in docker-compose.
+        """
+        import json
+        from pathlib import Path
+
+        # Import the validation function
+        from config.openfga.compose_model import validate_model_schema
+
+        # GIVEN: Production model.json
+        model_path = Path(__file__).parent.parent.parent / "config" / "openfga" / "model.json"
+
+        if not model_path.exists():
+            pytest.skip(f"model.json not found at {model_path}")
+
+        model = json.loads(model_path.read_text())
+
+        # WHEN: Validate schema
+        result = validate_model_schema(model)
+
+        # THEN: Model should be valid
+        assert result["valid"] is True, f"Production model.json failed validation.\nFile: {model_path}\nErrors:\n" + "\n".join(
+            f"  - {e}" for e in result.get("errors", [])
+        )
+
+    @pytest.mark.asyncio
+    async def test_openfga_seed_service_uploaded_model_successfully(self) -> None:
+        """
+        GIVEN: docker-compose.test.yml openfga-seed-test service ran
+        WHEN: We check if a store exists with our model
+        THEN: The model should be active (proven by existing fixtures working)
+
+        This is an implicit test - if the other tests in this file work
+        (alice has permissions, etc.), then the model was successfully uploaded.
+        This test documents that invariant.
+        """
+        # The fact that TestOpenFGAPermissionChecks tests pass proves that:
+        # 1. openfga-seed-test successfully created a store
+        # 2. openfga-seed-test successfully uploaded model.json
+        # 3. openfga-seed-test successfully seeded sample-tuples.json
+        #
+        # If model.json had validation errors like memory_index.viewer,
+        # the seed service would have failed and those tests would fail.
+        pass  # Implicit test - documented for clarity

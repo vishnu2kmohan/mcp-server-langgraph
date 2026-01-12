@@ -21,6 +21,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def get_project_root() -> Path:
     """Get the project root directory."""
@@ -80,8 +82,7 @@ class TestConditionDefinitions:
         conditions = model.get("conditions", {})
 
         assert "time_bound_share" in conditions, (
-            "model.json MUST define 'time_bound_share' condition. "
-            "This enables time-limited artifact/conversation sharing."
+            "model.json MUST define 'time_bound_share' condition. This enables time-limited artifact/conversation sharing."
         )
 
         condition = conditions["time_bound_share"]
@@ -97,12 +98,8 @@ class TestConditionDefinitions:
         condition = conditions.get("time_bound_share", {})
         params = condition.get("parameters", {})
 
-        assert "current_time" in params, (
-            "time_bound_share must have 'current_time' parameter (TYPE_NAME_TIMESTAMP)"
-        )
-        assert "expiry_time" in params, (
-            "time_bound_share must have 'expiry_time' parameter (TYPE_NAME_TIMESTAMP)"
-        )
+        assert "current_time" in params, "time_bound_share must have 'current_time' parameter (TYPE_NAME_TIMESTAMP)"
+        assert "expiry_time" in params, "time_bound_share must have 'expiry_time' parameter (TYPE_NAME_TIMESTAMP)"
 
     def test_subscription_tier_condition_exists(self) -> None:
         """
@@ -114,8 +111,7 @@ class TestConditionDefinitions:
         conditions = model.get("conditions", {})
 
         assert "subscription_tier" in conditions, (
-            "model.json MUST define 'subscription_tier' condition. "
-            "This enables tier-based access control for search features."
+            "model.json MUST define 'subscription_tier' condition. This enables tier-based access control for search features."
         )
 
         condition = conditions["subscription_tier"]
@@ -131,12 +127,8 @@ class TestConditionDefinitions:
         condition = conditions.get("subscription_tier", {})
         params = condition.get("parameters", {})
 
-        assert "user_tier" in params, (
-            "subscription_tier must have 'user_tier' parameter (TYPE_NAME_STRING)"
-        )
-        assert "required_tier" in params, (
-            "subscription_tier must have 'required_tier' parameter (TYPE_NAME_STRING)"
-        )
+        assert "user_tier" in params, "subscription_tier must have 'user_tier' parameter (TYPE_NAME_STRING)"
+        assert "required_tier" in params, "subscription_tier must have 'required_tier' parameter (TYPE_NAME_STRING)"
 
 
 @pytest.mark.unit
@@ -208,10 +200,9 @@ class TestAuthorizationServiceConditions:
 
         # Check method signature includes context parameter
         import inspect
+
         sig = inspect.signature(service.authorize)
-        assert "context" in sig.parameters, (
-            "AuthorizationService.authorize() must accept 'context' parameter"
-        )
+        assert "context" in sig.parameters, "AuthorizationService.authorize() must accept 'context' parameter"
 
     @pytest.mark.asyncio
     async def test_context_passed_to_openfga_when_conditions_enabled(self) -> None:
@@ -221,7 +212,7 @@ class TestAuthorizationServiceConditions:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Mock OpenFGA client
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock()  # noqa: async-mock-config
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         # Mock settings with conditions enabled
@@ -280,9 +271,7 @@ class TestConditionExpressions:
         conditions = model.get("conditions", {})
         condition = conditions.get("time_bound_share", {})
 
-        assert "expression" in condition, (
-            "time_bound_share must have 'expression' field with CEL expression"
-        )
+        assert "expression" in condition, "time_bound_share must have 'expression' field with CEL expression"
 
         expression = condition["expression"]
         # Expression should compare current_time with expiry_time
@@ -297,12 +286,8 @@ class TestConditionExpressions:
         conditions = model.get("conditions", {})
         condition = conditions.get("subscription_tier", {})
 
-        assert "expression" in condition, (
-            "subscription_tier must have 'expression' field with CEL expression"
-        )
+        assert "expression" in condition, "subscription_tier must have 'expression' field with CEL expression"
 
         expression = condition["expression"]
         # Expression should compare user_tier with required_tier
-        assert "user_tier" in expression or "tier" in expression.lower(), (
-            "Expression should reference tier comparison"
-        )
+        assert "user_tier" in expression or "tier" in expression.lower(), "Expression should reference tier comparison"

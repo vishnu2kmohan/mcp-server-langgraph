@@ -19,6 +19,8 @@ from typing import Any
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def get_project_root() -> Path:
     """Get the project root directory."""
@@ -60,7 +62,7 @@ def has_project_inheritance(relation_def: dict[str, Any]) -> bool:
         for child in relation_def["union"].get("child", []):
             if "tupleToUserset" in child:
                 tupleset = child["tupleToUserset"].get("tupleset", {})
-                computed = child["tupleToUserset"].get("computedUserset", {})
+                # computedUserset is part of the relation but not needed for this check
                 if tupleset.get("relation") == "project":
                     return True
 
@@ -120,13 +122,11 @@ class TestArtifactProjectRelation:
 
         # Check if project type is in directly_related_user_types
         related_types = project_metadata.get("directly_related_user_types", [])
-        project_type_present = any(
-            t.get("type") == "project" for t in related_types
-        )
+        project_type_present = any(t.get("type") == "project" for t in related_types)
 
         assert project_type_present, (
             "artifact.project relation must accept 'project' type directly. "
-            "directly_related_user_types must include {\"type\": \"project\"}"
+            'directly_related_user_types must include {"type": "project"}'
         )
 
     def test_artifact_editor_inherits_from_project(self) -> None:
@@ -191,9 +191,7 @@ class TestArtifactProjectTuples:
 
         # Look for artifact:default -> project relation
         has_artifact_project_tuple = any(
-            t.get("relation") == "project"
-            and t.get("object", "").startswith("artifact:")
-            for t in tuples
+            t.get("relation") == "project" and t.get("object", "").startswith("artifact:") for t in tuples
         )
 
         assert has_artifact_project_tuple, (

@@ -1,0 +1,204 @@
+# LiteLLM Model Sync Alerting Rules
+# ==================================
+# These alerts monitor LiteLLM pricing sync health, staleness, and errors.
+#
+# Reference: src/mcp_server_langgraph/agents/litellm_model_sync.py
+# Metrics: src/mcp_server_langgraph/agents/litellm_prometheus_metrics.py
+#
+# Sprint 2 - Enhanced Model Selector: LiteLLM Sync Observability
+
+groups:
+  - name: litellm-sync
+    interval: 5m
+    rules:
+      # -------------------------------------------------------------------------
+      # Sync Stale Warning (No successful sync in 36+ hours)
+      # -------------------------------------------------------------------------
+      - alert: LiteLLMSyncStale
+        expr: (time() - litellm_sync_last_success_timestamp) > 129600
+        for: 10m
+        labels:
+          severity: warning
+          component: litellm-sync
+          team: ai
+        annotations:
+          summary: "LiteLLM model sync has not succeeded in 36+ hours"
+          description: |
+            Stale Sync Warning: LiteLLM model pricing sync has not succeeded
+            for {{ $value | humanizeDuration }}.
+
+            The expected sync interval is 24 hours. Model pricing data may be outdated.
+
+            Recommended Actions:
+            1. Check scheduler status: Verify LiteLLM sync background task is running
+            2. Check feature flag: Confirm enable_litellm_model_sync is true
+            3. Review logs: Search for "LiteLLM sync" in application logs
+            4. Check LiteLLM availability: Verify litellm.model_cost is accessible
+
+            Impact: Model pricing in the UI may not reflect latest provider rates.
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/litellm-operations.md#sync-stale"
+          dashboard_url: "{{ grafana_url }}/d/litellm-sync/litellm-model-sync"
+
+      # -------------------------------------------------------------------------
+      # Sync Stale Critical (No successful sync in 48+ hours)
+      # -------------------------------------------------------------------------
+      - alert: LiteLLMSyncStaleCritical
+        expr: (time() - litellm_sync_last_success_timestamp) > 172800
+        for: 10m
+        labels:
+          severity: critical
+          component: litellm-sync
+          team: ai
+        annotations:
+          summary: "LiteLLM model sync has not succeeded in 48+ hours"
+          description: |
+            Critical Sync Failure: LiteLLM model pricing sync has not succeeded
+            for {{ $value | humanizeDuration }}.
+
+            This indicates a persistent sync issue. Model pricing is significantly outdated.
+
+            Immediate Actions:
+            1. Check application health: Verify the backend service is running
+            2. Check scheduler logs: Look for "litellm_model_sync_scheduler" errors
+            3. Manual sync: Consider triggering a manual sync operation
+            4. LiteLLM dependency: Verify litellm package version and compatibility
+
+            Root Cause Investigation:
+            - Check for Python dependency issues
+            - Review recent deployments
+            - Check memory/CPU constraints
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/litellm-operations.md#sync-stale-critical"
+          dashboard_url: "{{ grafana_url }}/d/litellm-sync/litellm-model-sync"
+
+      # -------------------------------------------------------------------------
+      # High Sync Failure Rate
+      # -------------------------------------------------------------------------
+      - alert: LiteLLMSyncHighFailureRate
+        expr: |
+          (
+            sum(increase(litellm_sync_total{result="failure"}[7d]))
+            /
+            sum(increase(litellm_sync_total[7d]))
+          ) > 0.2
+        for: 30m
+        labels:
+          severity: warning
+          component: litellm-sync
+          team: ai
+        annotations:
+          summary: "LiteLLM sync failure rate exceeds 20%"
+          description: |
+            High Failure Rate: LiteLLM sync failure rate is {{ $value | humanizePercentage }}
+            over the last 7 days.
+
+            More than 20% of sync operations are failing.
+
+            Recommended Actions:
+            1. Check error types: litellm_sync_errors_total by error_type
+            2. Review LiteLLM version: Ensure compatibility with model_cost API
+            3. Check network connectivity: Verify access to LiteLLM resources
+            4. Review application logs for specific error messages
+
+            Common Causes:
+            - LiteLLM API changes
+            - Network/connectivity issues
+            - Memory constraints during sync
+            - Dependency version conflicts
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/litellm-operations.md#high-failure-rate"
+          dashboard_url: "{{ grafana_url }}/d/litellm-sync/litellm-model-sync"
+
+      # -------------------------------------------------------------------------
+      # Consecutive Sync Failures
+      # -------------------------------------------------------------------------
+      - alert: LiteLLMSyncConsecutiveFailures
+        expr: |
+          increase(litellm_sync_total{result="failure"}[72h]) >= 3
+          and
+          increase(litellm_sync_total{result="success"}[72h]) == 0
+        for: 10m
+        labels:
+          severity: critical
+          component: litellm-sync
+          team: ai
+        annotations:
+          summary: "LiteLLM sync has failed 3+ consecutive times"
+          description: |
+            Consecutive Failures: LiteLLM sync has failed multiple times
+            without any successful syncs in the last 72 hours.
+
+            This indicates a persistent issue requiring immediate attention.
+
+            Immediate Actions:
+            1. Check sync error types: Review litellm_sync_errors_total
+            2. Verify feature flag: Ensure enable_litellm_model_sync is enabled
+            3. Check application startup: Review bootstrap logs for sync initialization
+            4. Manual intervention: May need to restart the sync scheduler
+
+            Investigation Steps:
+            - kubectl logs -l app=mcp-server-langgraph --tail=500 | grep -i litellm
+            - Check for memory/CPU pressure during sync operations
+            - Verify LiteLLM package is correctly installed
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/litellm-operations.md#consecutive-failures"
+          dashboard_url: "{{ grafana_url }}/d/litellm-sync/litellm-model-sync"
+
+      # -------------------------------------------------------------------------
+      # Sync Duration Anomaly (Slow Sync)
+      # -------------------------------------------------------------------------
+      - alert: LiteLLMSyncSlowDuration
+        expr: |
+          histogram_quantile(0.95, sum(rate(litellm_sync_duration_seconds_bucket[1h])) by (le)) > 30
+        for: 1h
+        labels:
+          severity: info
+          component: litellm-sync
+          team: ai
+        annotations:
+          summary: "LiteLLM sync duration p95 exceeds 30 seconds"
+          description: |
+            Slow Sync: LiteLLM sync p95 duration is {{ $value | humanizeDuration }},
+            which exceeds the expected 30 second threshold.
+
+            This could indicate:
+            - Large number of models to sync
+            - Memory pressure during sync
+            - Slow model registry operations
+
+            Recommended Actions:
+            1. Monitor memory usage during sync
+            2. Check model registry size
+            3. Consider optimizing sync batch size
+            4. Review for lock contention
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/litellm-operations.md#slow-sync"
+          dashboard_url: "{{ grafana_url }}/d/litellm-sync/litellm-model-sync"
+
+      # -------------------------------------------------------------------------
+      # Sync Not Running (No sync attempts)
+      # -------------------------------------------------------------------------
+      - alert: LiteLLMSyncNotRunning
+        expr: |
+          increase(litellm_sync_total[48h]) == 0
+          and
+          on() (up{job="mcp-server-langgraph"} == 1)
+        for: 30m
+        labels:
+          severity: warning
+          component: litellm-sync
+          team: ai
+        annotations:
+          summary: "LiteLLM sync scheduler is not running"
+          description: |
+            No Sync Activity: No LiteLLM sync operations have been attempted
+            in the last 48 hours, but the application is running.
+
+            This could indicate:
+            - Feature flag disabled (enable_litellm_model_sync=false)
+            - Scheduler failed to start
+            - Background task crashed
+
+            Recommended Actions:
+            1. Check feature flag: enable_litellm_model_sync setting
+            2. Review startup logs for scheduler initialization
+            3. Check for background task crashes
+            4. Verify asyncio event loop is healthy
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/litellm-operations.md#not-running"
+          dashboard_url: "{{ grafana_url }}/d/litellm-sync/litellm-model-sync"

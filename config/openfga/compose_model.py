@@ -27,7 +27,11 @@ from typing import Any
 # Module definitions: (module_name, type_list, description)
 MODULES = [
     ("01-core", ["user", "organization", "service_principal"], "Base identity types"),
-    ("02-resources", ["tool", "workflow", "session", "project", "artifact", "conversation", "vector_store"], "Main business resources"),
+    (
+        "02-resources",
+        ["tool", "workflow", "session", "project", "artifact", "conversation", "vector_store"],
+        "Main business resources",
+    ),
     ("03-observability", ["dashboard", "logs", "traces", "metrics", "observability"], "Monitoring and telemetry"),
     ("04-access-control", ["authz", "system", "api_key", "partner"], "Authentication & authorization"),
     ("05-ai-agents", ["ai", "agent"], "AI and agent configuration"),
@@ -127,10 +131,7 @@ def _relation_to_dsl(name: str, definition: dict, metadata: dict) -> str:
 
         # Convert base to string
         if "this" in base:
-            if related_types:
-                base_str = f"[{', '.join(related_types)}]"
-            else:
-                base_str = "[user]"
+            base_str = f"[{', '.join(related_types)}]" if related_types else "[user]"
         elif "computedUserset" in base:
             base_str = base["computedUserset"]["relation"]
         elif "tupleToUserset" in base:
@@ -513,7 +514,7 @@ def extract_modules(model_path: Path, modules_dir: Path) -> None:
         module_content = [
             f"# Module: {module_name}",
             f"# Description: {description}",
-            f"# Reference: ADR-0068 Phase 8 - Modularization",
+            "# Reference: ADR-0068 Phase 8 - Modularization",
             "",
             "model",
             "  schema 1.1",
@@ -580,9 +581,7 @@ def validate_coverage(model_path: Path) -> None:
 # =============================================================================
 
 
-def validate_roundtrip_diff(
-    original: dict[str, Any], composed: dict[str, Any]
-) -> dict[str, Any]:
+def validate_roundtrip_diff(original: dict[str, Any], composed: dict[str, Any]) -> dict[str, Any]:
     """
     Validate differences between original and composed models.
 
@@ -628,11 +627,7 @@ def validate_roundtrip_diff(
                 "extra": extra_rels,
             }
 
-    types_match = (
-        len(missing_types) == 0
-        and len(extra_types) == 0
-        and len(relation_diffs) == 0
-    )
+    types_match = len(missing_types) == 0 and len(extra_types) == 0 and len(relation_diffs) == 0
 
     return {
         "types_match": types_match,
@@ -796,16 +791,12 @@ def get_openfga_schema() -> dict[str, Any]:
                     "union": {
                         "type": "object",
                         "required": ["child"],
-                        "properties": {
-                            "child": {"type": "array", "items": {"$ref": "#/$defs/relation"}}
-                        },
+                        "properties": {"child": {"type": "array", "items": {"$ref": "#/$defs/relation"}}},
                     },
                     "intersection": {
                         "type": "object",
                         "required": ["child"],
-                        "properties": {
-                            "child": {"type": "array", "items": {"$ref": "#/$defs/relation"}}
-                        },
+                        "properties": {"child": {"type": "array", "items": {"$ref": "#/$defs/relation"}}},
                     },
                     "difference": {
                         "type": "object",
@@ -815,6 +806,52 @@ def get_openfga_schema() -> dict[str, Any]:
             }
         },
     }
+
+
+def _relation_is_directly_assignable(rel_def: dict[str, Any]) -> bool:
+    """
+    Check if a relation definition allows direct tuple assignment.
+
+    A relation is directly assignable if it has "this: {}" at any level,
+    either directly or within a union/intersection/difference.
+
+    This is important because OpenFGA rejects models where a computed-only
+    relation (no 'this') has 'directly_related_user_types' in metadata.
+
+    Args:
+        rel_def: The relation definition to check
+
+    Returns:
+        True if the relation can be directly assigned (has 'this: {}')
+    """
+    # Direct "this" at top level
+    if "this" in rel_def:
+        return True
+
+    # Check union children
+    union = rel_def.get("union", {})
+    if union:
+        children = union.get("child", [])
+        for child in children:
+            if isinstance(child, dict) and "this" in child:
+                return True
+
+    # Check intersection children
+    intersection = rel_def.get("intersection", {})
+    if intersection:
+        children = intersection.get("child", [])
+        for child in children:
+            if isinstance(child, dict) and "this" in child:
+                return True
+
+    # Check difference base
+    difference = rel_def.get("difference", {})
+    if difference:
+        base = difference.get("base", {})
+        if isinstance(base, dict) and "this" in base:
+            return True
+
+    return False
 
 
 def validate_model_schema(model: dict[str, Any]) -> dict[str, Any]:
@@ -861,9 +898,7 @@ def validate_model_schema(model: dict[str, Any]) -> dict[str, Any]:
             else:
                 for rel_name, rel_def in relations.items():
                     if not isinstance(rel_def, dict):
-                        errors.append(
-                            f"type_definitions[{i}].relations.{rel_name} must be an object"
-                        )
+                        errors.append(f"type_definitions[{i}].relations.{rel_name} must be an object")
                         continue
 
                     # Check for valid relation structure
@@ -882,6 +917,25 @@ def validate_model_schema(model: dict[str, Any]) -> dict[str, Any]:
                             f"Expected one of: {valid_keys}. Got: {rel_keys}"
                         )
 
+                    # Check if relation is directly assignable
+                    # A relation is directly assignable if it has "this: {}" at any level
+                    is_directly_assignable = _relation_is_directly_assignable(rel_def)
+
+                    # Validate metadata consistency with relation definition
+                    type_name = type_def.get("type", f"type_{i}")
+                    metadata = type_def.get("metadata", {})
+                    rel_metadata = metadata.get("relations", {}).get(rel_name, {})
+
+                    if rel_metadata.get("directly_related_user_types"):
+                        if not is_directly_assignable:
+                            errors.append(
+                                f"{type_name}.{rel_name}: non-assignable relation "
+                                f"(no 'this' definition) should not have "
+                                f"'directly_related_user_types' in metadata. "
+                                f"Either add 'this: {{}}' to make it assignable, "
+                                f"or remove 'directly_related_user_types' from metadata."
+                            )
+
     # Validate conditions if present
     conditions = model.get("conditions")
     if conditions is not None:
@@ -892,9 +946,7 @@ def validate_model_schema(model: dict[str, Any]) -> dict[str, Any]:
                 if not isinstance(cond_def, dict):
                     errors.append(f"conditions.{cond_name} must be an object")
                 elif "name" not in cond_def or "expression" not in cond_def:
-                    errors.append(
-                        f"conditions.{cond_name} missing required fields: name, expression"
-                    )
+                    errors.append(f"conditions.{cond_name} missing required fields: name, expression")
 
     return {
         "valid": len(errors) == 0,
@@ -967,9 +1019,7 @@ def validate_condition_params(condition: dict[str, Any]) -> dict[str, Any]:
                     if isinstance(gt, dict):
                         gt_type = gt.get("type_name")
                         if gt_type and gt_type not in VALID_CONDITION_TYPE_NAMES:
-                            errors.append(
-                                f"Parameter '{param_name}' generic_types[{i}] has invalid type: {gt_type}"
-                            )
+                            errors.append(f"Parameter '{param_name}' generic_types[{i}] has invalid type: {gt_type}")
 
     return {
         "valid": len(errors) == 0,

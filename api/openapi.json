@@ -94,6 +94,18 @@
             "title": "Generated At",
             "type": "string"
           },
+          "had_constraints": {
+            "default": false,
+            "description": "Whether rejection constraints were used in generation",
+            "title": "Had Constraints",
+            "type": "boolean"
+          },
+          "had_fewshot": {
+            "default": false,
+            "description": "Whether few-shot examples were used in generation",
+            "title": "Had Fewshot",
+            "type": "boolean"
+          },
           "model_used": {
             "description": "LLM model used for generation",
             "title": "Model Used",
@@ -3323,6 +3335,18 @@
             "title": "Enable Thinking",
             "type": "boolean"
           },
+          "kb_focus": {
+            "default": "all",
+            "description": "Knowledge Base focus mode controlling context retrieval strategy. 'all' = use both KB and web search (default), 'kb_only' = only use KB/vector store for context, 'web_only' = only use web search for context, 'none' = disable context augmentation.",
+            "enum": [
+              "all",
+              "kb_only",
+              "web_only",
+              "none"
+            ],
+            "title": "Kb Focus",
+            "type": "string"
+          },
           "max_tokens": {
             "anyOf": [
               {
@@ -5334,6 +5358,71 @@
         "title": "CreateServicePrincipalResponse",
         "type": "object"
       },
+      "CreateTemplateRequest": {
+        "description": "Request body for creating a new template.",
+        "properties": {
+          "auto_approve": {
+            "default": false,
+            "title": "Auto Approve",
+            "type": "boolean"
+          },
+          "critique_rounds": {
+            "maximum": 3.0,
+            "minimum": 0.0,
+            "title": "Critique Rounds",
+            "type": "integer"
+          },
+          "description": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "orchestrator": {
+            "enum": [
+              "standard",
+              "swarm",
+              "studio",
+              "ux",
+              "alert"
+            ],
+            "title": "Orchestrator",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "thinking_budget": {
+            "enum": [
+              "none",
+              "light",
+              "medium",
+              "deep"
+            ],
+            "title": "Thinking Budget",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "orchestrator",
+          "thinking_budget",
+          "critique_rounds"
+        ],
+        "title": "CreateTemplateRequest",
+        "type": "object"
+      },
       "CreateUserRequest": {
         "description": "Request model for creating a new user.",
         "properties": {
@@ -5547,6 +5636,201 @@
         "title": "DailyCostResponse",
         "type": "object"
       },
+      "DecisionOutcome": {
+        "description": "Possible decision outcomes.\n\nUsed for feedback loop and precedent filtering.",
+        "enum": [
+          "success",
+          "failure",
+          "partial",
+          "pending"
+        ],
+        "title": "DecisionOutcome",
+        "type": "string"
+      },
+      "DecisionTraceRead": {
+        "description": "Response model for decision trace.\n\nUsed for API responses and GDPR export.\nCompatible with ORM models via from_attributes.",
+        "properties": {
+          "approval_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Approval status",
+            "title": "Approval Status"
+          },
+          "chosen_action": {
+            "description": "Action/tool chosen",
+            "title": "Chosen Action",
+            "type": "string"
+          },
+          "confidence": {
+            "description": "Confidence score",
+            "title": "Confidence",
+            "type": "number"
+          },
+          "decision_stage": {
+            "description": "Pipeline stage",
+            "title": "Decision Stage",
+            "type": "string"
+          },
+          "decision_type": {
+            "description": "Type of decision",
+            "title": "Decision Type",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Decision outcome",
+            "title": "Outcome"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Project ID (optional)",
+            "title": "Project Id"
+          },
+          "rationale": {
+            "description": "Why this decision",
+            "title": "Rationale",
+            "type": "string"
+          },
+          "requires_approval": {
+            "default": false,
+            "description": "HITL required",
+            "title": "Requires Approval",
+            "type": "boolean"
+          },
+          "run_id": {
+            "description": "LangGraph run ID",
+            "title": "Run Id",
+            "type": "string"
+          },
+          "session_id": {
+            "description": "Session identifier",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "When decision was made",
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "trace_id": {
+            "description": "Unique trace identifier",
+            "title": "Trace Id",
+            "type": "string"
+          },
+          "workflow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Workflow ID (optional)",
+            "title": "Workflow Id"
+          }
+        },
+        "required": [
+          "trace_id",
+          "run_id",
+          "session_id",
+          "timestamp",
+          "decision_type",
+          "decision_stage",
+          "chosen_action",
+          "confidence",
+          "rationale"
+        ],
+        "title": "DecisionTraceRead",
+        "type": "object"
+      },
+      "DecisionTraceSummary": {
+        "description": "Summary for list responses.\n\nLightweight model for decision trace lists (e.g., session timeline).",
+        "properties": {
+          "chosen_action": {
+            "description": "Action/tool chosen",
+            "title": "Chosen Action",
+            "type": "string"
+          },
+          "confidence": {
+            "description": "Confidence score",
+            "title": "Confidence",
+            "type": "number"
+          },
+          "decision_type": {
+            "description": "Type of decision",
+            "title": "Decision Type",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Decision outcome",
+            "title": "Outcome"
+          },
+          "timestamp": {
+            "description": "When decision was made",
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "trace_id": {
+            "description": "Unique trace identifier",
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id",
+          "timestamp",
+          "decision_type",
+          "chosen_action",
+          "confidence"
+        ],
+        "title": "DecisionTraceSummary",
+        "type": "object"
+      },
+      "DecisionType": {
+        "description": "Types of decisions captured in context graph.\n\nThese categories help organize decisions for analysis and precedent search.",
+        "enum": [
+          "routing",
+          "tool_selection",
+          "skill_selection",
+          "model_selection",
+          "response",
+          "approval",
+          "exception"
+        ],
+        "title": "DecisionType",
+        "type": "string"
+      },
       "DeleteResponse": {
         "description": "Delete response model.",
         "properties": {
@@ -5698,49 +5982,33 @@
         "type": "object"
       },
       "DisclosureAnalyzeRequest": {
-        "description": "Request for disclosure level analysis.",
+        "description": "Request for disclosure level analysis (ADR-0091 Phase 9 aligned).\n\nAligned with frontend inline type in api/index.ts.\nUses DisclosureLevelStr Literal type for type safety.",
         "properties": {
-          "feature_usage": {
-            "additionalProperties": {
-              "type": "integer"
-            },
-            "description": "Feature usage counts",
-            "title": "Feature Usage",
-            "type": "object"
-          },
-          "session_history": {
-            "description": "Recent session history",
-            "items": {
-              "$ref": "#/components/schemas/SessionHistoryItem"
-            },
-            "title": "Session History",
-            "type": "array"
-          },
-          "user_id": {
-            "description": "User identifier",
-            "title": "User Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "user_id"
-        ],
-        "title": "DisclosureAnalyzeRequest",
-        "type": "object"
-      },
-      "DisclosureAnalyzeResponse": {
-        "description": "Response from disclosure level analysis.",
-        "properties": {
-          "confidence": {
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Confidence",
-            "type": "number"
+          "context": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Additional context",
+            "title": "Context"
           },
           "current_level": {
-            "$ref": "#/components/schemas/DisclosureLevel"
+            "description": "Current disclosure level",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced",
+              "expert"
+            ],
+            "title": "Current Level",
+            "type": "string"
           },
-          "personalized_message": {
+          "persona": {
             "anyOf": [
               {
                 "type": "string"
@@ -5749,10 +6017,75 @@
                 "type": "null"
               }
             ],
-            "title": "Personalized Message"
+            "description": "User persona",
+            "title": "Persona"
+          },
+          "user_behavior": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserBehavior"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "User behavior data"
+          }
+        },
+        "required": [
+          "current_level"
+        ],
+        "title": "DisclosureAnalyzeRequest",
+        "type": "object"
+      },
+      "DisclosureAnalyzeResponse": {
+        "description": "Response from disclosure level analysis (ADR-0091 Phase 9 aligned).\n\nAligned with frontend inline type in api/index.ts.\nUses DisclosureLevelStr Literal type for type safety without enum overhead.",
+        "properties": {
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "current_level": {
+            "description": "Current disclosure level",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced",
+              "expert"
+            ],
+            "title": "Current Level",
+            "type": "string"
+          },
+          "personalized_message": {
+            "default": "",
+            "description": "Personalized message for the user",
+            "title": "Personalized Message",
+            "type": "string"
+          },
+          "reasoning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional reasoning for the recommendation",
+            "title": "Reasoning"
           },
           "recommended_level": {
-            "$ref": "#/components/schemas/DisclosureLevel"
+            "description": "Recommended disclosure level",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced",
+              "expert"
+            ],
+            "title": "Recommended Level",
+            "type": "string"
           },
           "unlock_features": {
             "items": {
@@ -5769,17 +6102,6 @@
         ],
         "title": "DisclosureAnalyzeResponse",
         "type": "object"
-      },
-      "DisclosureLevel": {
-        "description": "User disclosure/expertise levels.",
-        "enum": [
-          "beginner",
-          "intermediate",
-          "advanced",
-          "expert"
-        ],
-        "title": "DisclosureLevel",
-        "type": "string"
       },
       "EditMetadata": {
         "description": "Metadata about artifact editing.",
@@ -5902,25 +6224,35 @@
         "title": "ElicitationUrlRequest",
         "type": "object"
       },
+      "EmptyStateActionType": {
+        "description": "Action types for empty state suggestions (ADR-0091 Phase 9 aligned).",
+        "enum": [
+          "navigate",
+          "create",
+          "learn",
+          "import"
+        ],
+        "title": "EmptyStateActionType",
+        "type": "string"
+      },
       "EmptyStateSuggestion": {
-        "description": "A single empty state suggestion.",
+        "description": "A single empty state suggestion (ADR-0091 Phase 9 aligned).\n\nAligned with frontend inline type in api/index.ts.",
         "properties": {
-          "action": {
-            "$ref": "#/components/schemas/mcp_server_langgraph__api__v1__ai_ux__SuggestionAction"
-          },
-          "category": {
-            "default": "default",
-            "title": "Category",
+          "action_target": {
+            "description": "Target path or action identifier",
+            "title": "Action Target",
             "type": "string"
           },
-          "confidence": {
-            "default": 0.8,
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Confidence",
-            "type": "number"
+          "action_type": {
+            "$ref": "#/components/schemas/EmptyStateActionType",
+            "description": "Type of action"
           },
-          "target": {
+          "description": {
+            "description": "Suggestion description",
+            "title": "Description",
+            "type": "string"
+          },
+          "icon": {
             "anyOf": [
               {
                 "type": "string"
@@ -5929,42 +6261,55 @@
                 "type": "null"
               }
             ],
-            "title": "Target"
+            "description": "Optional icon identifier",
+            "title": "Icon"
           },
-          "text": {
-            "title": "Text",
+          "priority": {
+            "default": 1,
+            "description": "Priority order (lower = higher priority)",
+            "minimum": 1.0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "title": {
+            "description": "Suggestion title",
+            "title": "Title",
             "type": "string"
           }
         },
         "required": [
-          "text",
-          "action"
+          "title",
+          "description",
+          "action_type",
+          "action_target"
         ],
         "title": "EmptyStateSuggestion",
         "type": "object"
       },
       "EmptyStateSuggestionsRequest": {
-        "description": "Request for empty state suggestions.",
+        "description": "Request for empty state suggestions (ADR-0091 Phase 9 aligned).\n\nAligned with frontend inline type in api/index.ts.",
         "properties": {
+          "available_actions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Available actions in this context",
+            "title": "Available Actions"
+          },
           "context": {
             "description": "Page context (e.g., 'workflows', 'sessions')",
             "title": "Context",
             "type": "string"
           },
-          "history": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "title": "History",
-            "type": "array"
-          },
           "persona": {
-            "description": "User persona",
-            "title": "Persona",
-            "type": "string"
-          },
-          "session_id": {
             "anyOf": [
               {
                 "type": "string"
@@ -5973,19 +6318,46 @@
                 "type": "null"
               }
             ],
-            "title": "Session Id"
+            "description": "User persona",
+            "title": "Persona"
+          },
+          "previous_actions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Previous user actions",
+            "title": "Previous Actions"
           }
         },
         "required": [
-          "context",
-          "persona"
+          "context"
         ],
         "title": "EmptyStateSuggestionsRequest",
         "type": "object"
       },
       "EmptyStateSuggestionsResponse": {
-        "description": "Response with empty state suggestions.",
+        "description": "Response with empty state suggestions (ADR-0091 Phase 9 aligned).\n\nAligned with frontend inline type in api/index.ts.",
         "properties": {
+          "context_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional hint for the context",
+            "title": "Context Hint"
+          },
           "suggestions": {
             "items": {
               "$ref": "#/components/schemas/EmptyStateSuggestion"
@@ -6084,112 +6456,29 @@
         "type": "object"
       },
       "ErrorAnalyzeRequest": {
-        "description": "Request for error analysis.",
+        "description": "Request for error analysis (ADR-0091 Phase 9 aligned).\n\nAligned with frontend inline type in api/index.ts.",
         "properties": {
-          "error": {
-            "$ref": "#/components/schemas/ErrorInfo"
-          },
-          "user_context": {
+          "context": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/UserContext"
+                "additionalProperties": true,
+                "type": "object"
               },
               {
                 "type": "null"
               }
-            ]
-          }
-        },
-        "required": [
-          "error"
-        ],
-        "title": "ErrorAnalyzeRequest",
-        "type": "object"
-      },
-      "ErrorAnalyzeResponse": {
-        "description": "Response from error analysis.",
-        "properties": {
-          "classification": {
-            "$ref": "#/components/schemas/ErrorClassification"
+            ],
+            "description": "Additional context about the error",
+            "title": "Context"
           },
-          "root_cause": {
-            "title": "Root Cause",
+          "error_code": {
+            "description": "Error code identifier",
+            "title": "Error Code",
             "type": "string"
           },
-          "similar_issues": {
-            "items": {
-              "$ref": "#/components/schemas/SimilarIssue"
-            },
-            "title": "Similar Issues",
-            "type": "array"
-          },
-          "suggestions": {
-            "items": {
-              "$ref": "#/components/schemas/RecoverySuggestion"
-            },
-            "title": "Suggestions",
-            "type": "array"
-          }
-        },
-        "required": [
-          "classification",
-          "root_cause",
-          "suggestions"
-        ],
-        "title": "ErrorAnalyzeResponse",
-        "type": "object"
-      },
-      "ErrorCategory": {
-        "description": "Error classification categories.",
-        "enum": [
-          "network",
-          "authentication",
-          "authorization",
-          "validation",
-          "server",
-          "client",
-          "timeout",
-          "quota",
-          "unknown"
-        ],
-        "title": "ErrorCategory",
-        "type": "string"
-      },
-      "ErrorClassification": {
-        "description": "Error classification result.",
-        "properties": {
-          "category": {
-            "$ref": "#/components/schemas/ErrorCategory"
-          },
-          "confidence": {
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Confidence",
-            "type": "number"
-          },
-          "subcategory": {
-            "default": "general",
-            "title": "Subcategory",
-            "type": "string"
-          }
-        },
-        "required": [
-          "category",
-          "confidence"
-        ],
-        "title": "ErrorClassification",
-        "type": "object"
-      },
-      "ErrorInfo": {
-        "description": "Information about an error.",
-        "properties": {
-          "message": {
-            "title": "Message",
-            "type": "string"
-          },
-          "name": {
-            "default": "Error",
-            "title": "Name",
+          "error_message": {
+            "description": "Human-readable error message",
+            "title": "Error Message",
             "type": "string"
           },
           "stack_trace": {
@@ -6201,14 +6490,75 @@
                 "type": "null"
               }
             ],
+            "description": "Stack trace if available",
             "title": "Stack Trace"
           }
         },
         "required": [
-          "message"
+          "error_code",
+          "error_message"
         ],
-        "title": "ErrorInfo",
+        "title": "ErrorAnalyzeRequest",
         "type": "object"
+      },
+      "ErrorAnalyzeResponse": {
+        "description": "Response from error analysis (ADR-0091 Phase 9 aligned).\n\nAligned with frontend inline type in api/index.ts.",
+        "properties": {
+          "auto_recoverable": {
+            "description": "Whether the error can be auto-recovered",
+            "title": "Auto Recoverable",
+            "type": "boolean"
+          },
+          "confidence": {
+            "description": "Confidence in the analysis",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "error_type": {
+            "description": "Classified error type",
+            "title": "Error Type",
+            "type": "string"
+          },
+          "recovery_steps": {
+            "description": "Ordered recovery steps",
+            "items": {
+              "$ref": "#/components/schemas/RecoveryStep"
+            },
+            "title": "Recovery Steps",
+            "type": "array"
+          },
+          "suggested_action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Primary suggested action",
+            "title": "Suggested Action"
+          }
+        },
+        "required": [
+          "error_type",
+          "auto_recoverable",
+          "confidence"
+        ],
+        "title": "ErrorAnalyzeResponse",
+        "type": "object"
+      },
+      "ErrorRecoveryActionType": {
+        "description": "Action types for error recovery (ADR-0091 Phase 9 aligned).",
+        "enum": [
+          "automatic",
+          "manual",
+          "contact_support"
+        ],
+        "title": "ErrorRecoveryActionType",
+        "type": "string"
       },
       "EventBatch": {
         "description": "Batch of feature events",
@@ -6720,6 +7070,91 @@
           "message"
         ],
         "title": "ForecastResponse",
+        "type": "object"
+      },
+      "FromChatRequest": {
+        "description": "Request to generate a workflow from chat session history.\n\nReferences:\n- Plan: Chat-to-Workflow Feature (validated by 4 independent reviews)\n- Review consensus: Sanitize session content before LLM exposure",
+        "properties": {
+          "refinement_mode": {
+            "default": "auto",
+            "description": "Generation mode: 'auto' generates immediately, 'plan' returns execution plan for approval",
+            "enum": [
+              "auto",
+              "plan"
+            ],
+            "title": "Refinement Mode",
+            "type": "string"
+          },
+          "session_id": {
+            "description": "Session ID to generate workflow from",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional template ID to use as starting point",
+            "title": "Template Id"
+          }
+        },
+        "required": [
+          "session_id"
+        ],
+        "title": "FromChatRequest",
+        "type": "object"
+      },
+      "FromChatResponse": {
+        "description": "Response containing generated workflow from chat.\n\nThe workflow is persisted with status='draft' and version=1.\nIncludes prompt metadata for telemetry linkage.",
+        "properties": {
+          "confidence": {
+            "description": "Generation confidence score",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Execution plan (when refinement_mode='plan')",
+            "title": "Plan"
+          },
+          "prompt_metadata": {
+            "$ref": "#/components/schemas/PromptMetadata",
+            "description": "Prompt telemetry metadata"
+          },
+          "suggestions": {
+            "description": "Improvement suggestions",
+            "items": {
+              "type": "string"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          },
+          "workflow": {
+            "$ref": "#/components/schemas/mcp_server_langgraph__api__v1__workflows__WorkflowResponse",
+            "description": "Generated workflow (status=draft)"
+          }
+        },
+        "required": [
+          "workflow",
+          "confidence",
+          "prompt_metadata"
+        ],
+        "title": "FromChatResponse",
         "type": "object"
       },
       "GenUIRequest": {
@@ -7828,6 +8263,129 @@
         "title": "IntrospectionResponse",
         "type": "object"
       },
+      "KBStatusResponse": {
+        "description": "Response model for KB status endpoint.",
+        "properties": {
+          "collection_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Active collection name",
+            "title": "Collection Name"
+          },
+          "context_token_budget": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Max tokens for context loading",
+            "title": "Context Token Budget"
+          },
+          "context_top_k": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Number of top results for context",
+            "title": "Context Top K"
+          },
+          "embedding_dimensions": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Embedding vector dimensions",
+            "title": "Embedding Dimensions"
+          },
+          "embedding_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Embedding model name",
+            "title": "Embedding Model"
+          },
+          "embedding_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Embedding provider (google_vertex, openai, etc.)",
+            "title": "Embedding Provider"
+          },
+          "last_updated": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ISO timestamp of last update",
+            "title": "Last Updated"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Status message or error details",
+            "title": "Message"
+          },
+          "qdrant_connected": {
+            "description": "Whether Qdrant is connected",
+            "title": "Qdrant Connected",
+            "type": "boolean"
+          },
+          "status": {
+            "description": "KB status: ready, misconfigured, or unavailable",
+            "title": "Status",
+            "type": "string"
+          },
+          "vectors_count": {
+            "default": 0,
+            "description": "Number of vectors in collection",
+            "title": "Vectors Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "status",
+          "qdrant_connected"
+        ],
+        "title": "KBStatusResponse",
+        "type": "object"
+      },
       "LLMStreamingMetricsResponse": {
         "description": "Response model for LLM streaming metrics.\n\nProvides aggregated metrics for LLM streaming operations including\nTime To First Chunk (TTFC), inter-chunk latency, and streaming duration.\n\nThese metrics are collected via Prometheus and can be used to:\n- Monitor streaming SLA compliance\n- Compare provider performance\n- Identify degradation patterns",
         "properties": {
@@ -8800,9 +9358,22 @@
         "type": "string"
       },
       "MetricInsight": {
-        "description": "A single metric insight.",
+        "description": "A single metric insight (ADR-0091 Phase 9 aligned).\n\nAligned with frontend inline type in api/index.ts.",
         "properties": {
-          "detected_at": {
+          "category": {
+            "$ref": "#/components/schemas/MetricsInsightCategory",
+            "description": "HEART dimension category"
+          },
+          "description": {
+            "description": "Insight description",
+            "title": "Description",
+            "type": "string"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/MetricsInsightPriority",
+            "description": "Priority level"
+          },
+          "suggested_action": {
             "anyOf": [
               {
                 "type": "string"
@@ -8811,82 +9382,27 @@
                 "type": "null"
               }
             ],
-            "title": "Detected At"
+            "description": "Suggested action to take",
+            "title": "Suggested Action"
           },
-          "dimension": {
-            "title": "Dimension",
+          "title": {
+            "description": "Insight title",
+            "title": "Title",
             "type": "string"
           },
-          "message": {
-            "title": "Message",
-            "type": "string"
-          },
-          "sentiment": {
-            "default": "neutral",
-            "title": "Sentiment",
-            "type": "string"
-          },
-          "severity": {
-            "default": "info",
-            "title": "Severity",
-            "type": "string"
-          },
-          "suggested_actions": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Suggested Actions",
-            "type": "array"
-          },
-          "type": {
-            "title": "Type",
-            "type": "string"
+          "trend": {
+            "$ref": "#/components/schemas/MetricsInsightTrend",
+            "description": "Current trend direction"
           }
         },
         "required": [
-          "type",
-          "dimension",
-          "message"
+          "category",
+          "title",
+          "description",
+          "trend",
+          "priority"
         ],
         "title": "MetricInsight",
-        "type": "object"
-      },
-      "MetricPrediction": {
-        "description": "A metric prediction.",
-        "properties": {
-          "confidence": {
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Confidence",
-            "type": "number"
-          },
-          "current": {
-            "title": "Current",
-            "type": "number"
-          },
-          "drivers": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Drivers",
-            "type": "array"
-          },
-          "metric": {
-            "title": "Metric",
-            "type": "string"
-          },
-          "predicted": {
-            "title": "Predicted",
-            "type": "number"
-          }
-        },
-        "required": [
-          "metric",
-          "current",
-          "predicted",
-          "confidence"
-        ],
-        "title": "MetricPrediction",
         "type": "object"
       },
       "MetricResponse": {
@@ -8908,27 +9424,72 @@
         "title": "MetricResponse",
         "type": "object"
       },
+      "MetricsInsightCategory": {
+        "description": "Categories for metrics insights (ADR-0091 Phase 9 aligned).",
+        "enum": [
+          "happiness",
+          "engagement",
+          "adoption",
+          "retention",
+          "task_success"
+        ],
+        "title": "MetricsInsightCategory",
+        "type": "string"
+      },
+      "MetricsInsightPriority": {
+        "description": "Priority levels for insights (ADR-0091 Phase 9 aligned).",
+        "enum": [
+          "high",
+          "medium",
+          "low"
+        ],
+        "title": "MetricsInsightPriority",
+        "type": "string"
+      },
+      "MetricsInsightTrend": {
+        "description": "Trend directions for insights (ADR-0091 Phase 9 aligned).",
+        "enum": [
+          "improving",
+          "stable",
+          "declining"
+        ],
+        "title": "MetricsInsightTrend",
+        "type": "string"
+      },
       "MetricsInsightsResponse": {
-        "description": "Response with metrics insights.",
+        "description": "Response with metrics insights (ADR-0091 Phase 9 aligned).\n\nAligned with frontend inline type in api/index.ts.",
         "properties": {
+          "happiness_score": {
+            "description": "Overall happiness score (0-10)",
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Happiness Score",
+            "type": "number"
+          },
           "insights": {
+            "description": "List of metric insights",
             "items": {
               "$ref": "#/components/schemas/MetricInsight"
             },
             "title": "Insights",
             "type": "array"
           },
-          "predictions": {
+          "overall_health": {
+            "$ref": "#/components/schemas/OverallHealth",
+            "description": "Overall system health status"
+          },
+          "recommendations": {
+            "description": "Actionable recommendations",
             "items": {
-              "$ref": "#/components/schemas/MetricPrediction"
+              "type": "string"
             },
-            "title": "Predictions",
+            "title": "Recommendations",
             "type": "array"
           }
         },
         "required": [
-          "insights",
-          "predictions"
+          "happiness_score",
+          "overall_health"
         ],
         "title": "MetricsInsightsResponse",
         "type": "object"
@@ -9410,24 +9971,33 @@
         "type": "object"
       },
       "NudgeHistoryItem": {
-        "description": "A single nudge history entry.",
+        "description": "A single nudge history entry (ADR-0091 Phase 9 aligned).",
         "properties": {
           "action": {
-            "default": "dismissed",
-            "title": "Action",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "User action: 'accepted', 'dismissed', or null",
+            "title": "Action"
           },
-          "id": {
-            "title": "Id",
+          "nudge_id": {
+            "description": "ID of the nudge that was shown",
+            "title": "Nudge Id",
             "type": "string"
           },
           "shown_at": {
+            "description": "ISO timestamp when nudge was shown",
             "title": "Shown At",
             "type": "string"
           }
         },
         "required": [
-          "id",
+          "nudge_id",
           "shown_at"
         ],
         "title": "NudgeHistoryItem",
@@ -9818,6 +10388,17 @@
         ],
         "title": "OrganizationCostResponse",
         "type": "object"
+      },
+      "OverallHealth": {
+        "description": "Overall health status (ADR-0091 Phase 9 aligned).",
+        "enum": [
+          "excellent",
+          "good",
+          "needs_attention",
+          "critical"
+        ],
+        "title": "OverallHealth",
+        "type": "string"
       },
       "PARRequest": {
         "description": "Pushed Authorization Request (RFC 9126).",
@@ -10237,6 +10818,75 @@
           }
         },
         "title": "PersonaPreferencesUpdate",
+        "type": "object"
+      },
+      "PrecedentSearchRequest": {
+        "description": "Request for semantic precedent search.\n\nUsed to find similar past decisions for learning/reference.",
+        "properties": {
+          "decision_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecisionType"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Filter by decision type"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max results to return",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecisionOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Filter by outcome"
+          },
+          "query": {
+            "description": "Search query",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "PrecedentSearchRequest",
+        "type": "object"
+      },
+      "PrecedentSearchResult": {
+        "description": "Result of semantic precedent search.\n\nCombines the decision trace with its similarity score.",
+        "properties": {
+          "similarity_score": {
+            "description": "Cosine similarity score",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Similarity Score",
+            "type": "number"
+          },
+          "trace": {
+            "$ref": "#/components/schemas/DecisionTraceRead",
+            "description": "The matching decision trace"
+          }
+        },
+        "required": [
+          "trace",
+          "similarity_score"
+        ],
+        "title": "PrecedentSearchResult",
         "type": "object"
       },
       "PreferencesResponse": {
@@ -11409,6 +12059,39 @@
         "title": "PromptMessageResponse",
         "type": "object"
       },
+      "PromptMetadata": {
+        "description": "Metadata about the prompt used for workflow generation.\n\nEnables telemetry linkage for prompt optimization analytics.\nStored in workflow_versions table for tracking which prompt\nconfigurations produce successful workflows.",
+        "properties": {
+          "hash": {
+            "description": "SHA-256 hash of prompt content",
+            "title": "Hash",
+            "type": "string"
+          },
+          "model": {
+            "description": "LLM model used (e.g., 'claude-opus-4-5')",
+            "title": "Model",
+            "type": "string"
+          },
+          "name": {
+            "description": "Prompt name (e.g., 'workflow_generator')",
+            "title": "Name",
+            "type": "string"
+          },
+          "version": {
+            "description": "Prompt version (e.g., 'v1')",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "hash",
+          "model"
+        ],
+        "title": "PromptMetadata",
+        "type": "object"
+      },
       "PromptsListResponse": {
         "description": "Response for listing aggregated prompts.",
         "properties": {
@@ -11688,20 +12371,24 @@
         "title": "RecommendationsResponse",
         "type": "object"
       },
-      "RecoverySuggestion": {
-        "description": "A recovery suggestion for an error.",
+      "RecordUsageRequest": {
+        "description": "Request body for recording template usage.",
         "properties": {
-          "action": {
-            "$ref": "#/components/schemas/mcp_server_langgraph__api__v1__ai_ux__SuggestionAction"
-          },
-          "estimated_success": {
-            "default": 0.7,
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Estimated Success",
-            "type": "number"
-          },
-          "guidance": {
+          "success": {
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success"
+        ],
+        "title": "RecordUsageRequest",
+        "type": "object"
+      },
+      "RecoveryStep": {
+        "description": "A recovery step for an error (ADR-0091 Phase 9 aligned).\n\nAligned with frontend inline type in api/index.ts.",
+        "properties": {
+          "action_target": {
             "anyOf": [
               {
                 "type": "string"
@@ -11710,29 +12397,37 @@
                 "type": "null"
               }
             ],
-            "title": "Guidance"
+            "description": "Target path or action identifier",
+            "title": "Action Target"
           },
-          "label": {
-            "title": "Label",
+          "action_type": {
+            "$ref": "#/components/schemas/ErrorRecoveryActionType",
+            "description": "Type of action required"
+          },
+          "description": {
+            "description": "Step description",
+            "title": "Description",
             "type": "string"
           },
-          "wait_time": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Wait Time"
+          "step_number": {
+            "description": "Step order number",
+            "minimum": 1.0,
+            "title": "Step Number",
+            "type": "integer"
+          },
+          "title": {
+            "description": "Step title",
+            "title": "Title",
+            "type": "string"
           }
         },
         "required": [
-          "action",
-          "label"
+          "step_number",
+          "title",
+          "description",
+          "action_type"
         ],
-        "title": "RecoverySuggestion",
+        "title": "RecoveryStep",
         "type": "object"
       },
       "RefreshTokenRequest": {
@@ -11770,38 +12465,6 @@
           "reason"
         ],
         "title": "RejectAgentRequest",
-        "type": "object"
-      },
-      "RejectRequest": {
-        "description": "Request body for rejecting a remediation.",
-        "properties": {
-          "reason": {
-            "$ref": "#/components/schemas/RejectionReason",
-            "default": "other",
-            "description": "Structured rejection reason"
-          },
-          "reason_detail": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Additional details for rejection reason",
-            "title": "Reason Detail"
-          },
-          "rejected_by": {
-            "description": "Email/ID of the rejector",
-            "title": "Rejected By",
-            "type": "string"
-          }
-        },
-        "required": [
-          "rejected_by"
-        ],
-        "title": "RejectRequest",
         "type": "object"
       },
       "RejectionReason": {
@@ -13381,6 +14044,39 @@
         "title": "SandboxRunResponse",
         "type": "object"
       },
+      "SaveAsTemplateRequest": {
+        "description": "Request body for saving a plan as a template.",
+        "properties": {
+          "description": {
+            "description": "Template description",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "name": {
+            "description": "Template name",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Tags for categorization",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ],
+        "title": "SaveAsTemplateRequest",
+        "type": "object"
+      },
       "ScoreDistribution": {
         "description": "Distribution of SUS scores by category.",
         "properties": {
@@ -13764,25 +14460,6 @@
         "title": "SessionCreateRequest",
         "type": "object"
       },
-      "SessionHistoryItem": {
-        "description": "A single session history entry.",
-        "properties": {
-          "duration_ms": {
-            "default": 0,
-            "title": "Duration Ms",
-            "type": "integer"
-          },
-          "page": {
-            "title": "Page",
-            "type": "string"
-          }
-        },
-        "required": [
-          "page"
-        ],
-        "title": "SessionHistoryItem",
-        "type": "object"
-      },
       "SessionListResponse": {
         "description": "Response model for listing sessions in a project.",
         "properties": {
@@ -14114,7 +14791,7 @@
         "type": "string"
       },
       "SignupContext": {
-        "description": "Context from signup.",
+        "description": "Context from signup (ADR-0091 Phase 9 aligned).\n\nAligned with frontend inline type in api/index.ts.",
         "properties": {
           "referrer": {
             "anyOf": [
@@ -14125,7 +14802,32 @@
                 "type": "null"
               }
             ],
+            "description": "Referrer source",
             "title": "Referrer"
+          },
+          "utm_campaign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "UTM campaign",
+            "title": "Utm Campaign"
+          },
+          "utm_medium": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "UTM medium",
+            "title": "Utm Medium"
           },
           "utm_source": {
             "anyOf": [
@@ -14136,36 +14838,44 @@
                 "type": "null"
               }
             ],
+            "description": "UTM source",
             "title": "Utm Source"
           }
         },
         "title": "SignupContext",
         "type": "object"
       },
-      "SimilarIssue": {
-        "description": "A similar resolved issue.",
+      "SkillInstallRequest": {
+        "description": "Request body for skill installation.",
         "properties": {
-          "id": {
-            "title": "Id",
+          "marketplace": {
+            "default": "anthropic",
+            "description": "Source marketplace",
+            "title": "Marketplace",
             "type": "string"
           },
-          "resolution": {
-            "title": "Resolution",
+          "skill_name": {
+            "description": "Name of skill to install",
+            "title": "Skill Name",
             "type": "string"
           },
-          "success_rate": {
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Success Rate",
-            "type": "number"
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Specific version (latest if not specified)",
+            "title": "Version"
           }
         },
         "required": [
-          "id",
-          "resolution",
-          "success_rate"
+          "skill_name"
         ],
-        "title": "SimilarIssue",
+        "title": "SkillInstallRequest",
         "type": "object"
       },
       "SourceCitation": {
@@ -14481,6 +15191,16 @@
         "title": "SubscriptionInfo",
         "type": "object"
       },
+      "SuggestionAction": {
+        "description": "Actions that can be tracked for suggestions.",
+        "enum": [
+          "click",
+          "dismiss",
+          "view"
+        ],
+        "title": "SuggestionAction",
+        "type": "string"
+      },
       "SuggestionClickRequest": {
         "description": "Request to track a suggestion click.",
         "properties": {
@@ -14632,7 +15352,7 @@
         "description": "Request to track a suggestion interaction.",
         "properties": {
           "action": {
-            "$ref": "#/components/schemas/mcp_server_langgraph__api__v1__ai__SuggestionAction",
+            "$ref": "#/components/schemas/SuggestionAction",
             "description": "Action taken (click, dismiss, view)"
           },
           "category": {
@@ -16220,40 +16940,34 @@
         "title": "UserApiKeyResponse",
         "type": "object"
       },
-      "UserContext": {
-        "description": "User context for error analysis.",
+      "UserBehavior": {
+        "description": "User behavior data for disclosure analysis (ADR-0091 Phase 9 aligned).",
         "properties": {
-          "persona": {
+          "avg_session_duration": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Persona"
+            "title": "Avg Session Duration"
           },
-          "recent_actions": {
-            "items": {
-              "type": "string"
+          "feature_usage": {
+            "additionalProperties": {
+              "type": "integer"
             },
-            "title": "Recent Actions",
-            "type": "array"
+            "title": "Feature Usage",
+            "type": "object"
           },
-          "session_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Session Id"
+          "session_count": {
+            "default": 0,
+            "title": "Session Count",
+            "type": "integer"
           }
         },
-        "title": "UserContext",
+        "title": "UserBehavior",
         "type": "object"
       },
       "UserDataExport": {
@@ -16307,6 +17021,15 @@
               "type": "object"
             },
             "title": "Conversations",
+            "type": "array"
+          },
+          "decision_traces": {
+            "description": "Decision traces (ADR-0101 Context Graphs)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Decision Traces",
             "type": "array"
           },
           "email": {
@@ -16373,7 +17096,7 @@
         "type": "object"
       },
       "UserInfoResponse": {
-        "description": "Current user information response.\n\nExtended in Sprint 4 to include persona-related fields for frontend RBAC:\n- api_version: For client compatibility detection\n- sub_persona: Specific persona variant (alice-builder, etc.)\n- visible_modules: List of modules this persona can access\n- feature_flags: Feature flags for this user/persona",
+        "description": "Current user information response.\n\nExtended in Sprint 4 to include persona-related fields for frontend RBAC:\n- api_version: For client compatibility detection\n- sub_persona: Specific persona variant (alice-builder, etc.)\n- visible_modules: List of modules this persona can access\n- feature_flags: Feature flags for this user/persona\n\nExtended to include websocket_permissions for frontend-aware WebSocket auth:\n- websocket_permissions: Boolean permissions for each WebSocket endpoint",
         "properties": {
           "api_version": {
             "default": "2",
@@ -16496,6 +17219,17 @@
             },
             "title": "Visible Modules",
             "type": "array"
+          },
+          "websocket_permissions": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WebSocketPermissions"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Permissions for each WebSocket endpoint (prevents unauthorized connection attempts)"
           }
         },
         "required": [
@@ -16964,6 +17698,37 @@
         "title": "UserThresholdSettings",
         "type": "object"
       },
+      "ValidateWorkflowResponse": {
+        "description": "Response from workflow validation.\n\nUses centralized WorkflowValidator service (NO JS DUPLICATION).\nBoth Monaco editor and React Flow call this single endpoint.\n\nReferences:\n- Plan: Chat-to-Workflow Feature (validated by 4 independent reviews)\n- Review consensus: Centralized validation endpoint",
+        "properties": {
+          "errors": {
+            "description": "List of error messages (blocking issues)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "valid": {
+            "description": "Whether the workflow passed validation",
+            "title": "Valid",
+            "type": "boolean"
+          },
+          "warnings": {
+            "description": "List of warning messages (non-blocking issues)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "valid"
+        ],
+        "title": "ValidateWorkflowResponse",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -17017,6 +17782,181 @@
           "size"
         ],
         "title": "VectorConfig",
+        "type": "object"
+      },
+      "WebSocketBatchMetricsPayload": {
+        "description": "Payload for batch WebSocket metrics from frontend.",
+        "properties": {
+          "endpoints": {
+            "description": "List of endpoint metrics",
+            "items": {
+              "$ref": "#/components/schemas/WebSocketMetricsPayload"
+            },
+            "title": "Endpoints",
+            "type": "array"
+          }
+        },
+        "title": "WebSocketBatchMetricsPayload",
+        "type": "object"
+      },
+      "WebSocketMetricsPayload": {
+        "description": "Payload for single endpoint WebSocket metrics from frontend.",
+        "properties": {
+          "endpoint_id": {
+            "description": "WebSocket endpoint identifier",
+            "minLength": 1,
+            "title": "Endpoint Id",
+            "type": "string"
+          },
+          "error_count": {
+            "default": 0,
+            "description": "Number of errors",
+            "minimum": 0.0,
+            "title": "Error Count",
+            "type": "integer"
+          },
+          "last_disconnect_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Last disconnect reason",
+            "title": "Last Disconnect Reason"
+          },
+          "messages_received": {
+            "default": 0,
+            "description": "Messages received count",
+            "minimum": 0.0,
+            "title": "Messages Received",
+            "type": "integer"
+          },
+          "messages_sent": {
+            "default": 0,
+            "description": "Messages sent count",
+            "minimum": 0.0,
+            "title": "Messages Sent",
+            "type": "integer"
+          },
+          "reconnect_count": {
+            "default": 0,
+            "description": "Number of reconnections",
+            "minimum": 0.0,
+            "title": "Reconnect Count",
+            "type": "integer"
+          },
+          "total_connect_time_ms": {
+            "default": 0,
+            "description": "Total time spent connecting in ms",
+            "minimum": 0.0,
+            "title": "Total Connect Time Ms",
+            "type": "number"
+          }
+        },
+        "required": [
+          "endpoint_id"
+        ],
+        "title": "WebSocketMetricsPayload",
+        "type": "object"
+      },
+      "WebSocketPermissions": {
+        "description": "WebSocket endpoint permissions for the current user.\n\nContains boolean permissions for each WebSocket endpoint, determined via\nOpenFGA batch check. Enables frontend to conditionally connect only to\nauthorized WebSocket endpoints, preventing unnecessary connection attempts.\n\nReference: GitHub issue - Chat doesn't load due to alert WS auth failure",
+        "properties": {
+          "agent_requests": {
+            "default": false,
+            "description": "HITL agent requests (/ws/agents/requests)",
+            "title": "Agent Requests",
+            "type": "boolean"
+          },
+          "ai_suggestions": {
+            "default": false,
+            "description": "AI suggestions (/ws/ai/suggestions)",
+            "title": "Ai Suggestions",
+            "type": "boolean"
+          },
+          "alerts": {
+            "default": false,
+            "description": "Admin-only alert stream (/ws/alerts)",
+            "title": "Alerts",
+            "type": "boolean"
+          },
+          "audit": {
+            "default": false,
+            "description": "Audit event stream (/ws/audit)",
+            "title": "Audit",
+            "type": "boolean"
+          },
+          "budget_alerts": {
+            "default": false,
+            "description": "Budget alerts (/ws/budget/alerts)",
+            "title": "Budget Alerts",
+            "type": "boolean"
+          },
+          "connections_health": {
+            "default": false,
+            "description": "Connection health (/ws/connections/health)",
+            "title": "Connections Health",
+            "type": "boolean"
+          },
+          "connections_realtime": {
+            "default": false,
+            "description": "Connection realtime (/ws/connections/realtime)",
+            "title": "Connections Realtime",
+            "type": "boolean"
+          },
+          "cost_tracking": {
+            "default": false,
+            "description": "Cost tracking (/ws/usage/cost)",
+            "title": "Cost Tracking",
+            "type": "boolean"
+          },
+          "devtools": {
+            "default": false,
+            "description": "DevTools panel (/ws/devtools)",
+            "title": "Devtools",
+            "type": "boolean"
+          },
+          "heart_metrics": {
+            "default": false,
+            "description": "HEART metrics stream (/ws/metrics/heart)",
+            "title": "Heart Metrics",
+            "type": "boolean"
+          },
+          "mcp_aggregated": {
+            "default": false,
+            "description": "MCP capability changes (/ws/mcp/aggregated)",
+            "title": "Mcp Aggregated",
+            "type": "boolean"
+          },
+          "mcp_tasks": {
+            "default": false,
+            "description": "MCP task updates (/ws/mcp/tasks)",
+            "title": "Mcp Tasks",
+            "type": "boolean"
+          },
+          "notifications": {
+            "default": false,
+            "description": "Notifications stream (/ws/notifications)",
+            "title": "Notifications",
+            "type": "boolean"
+          },
+          "orchestrator_status": {
+            "default": false,
+            "description": "Orchestrator status (/ws/orchestrator/status)",
+            "title": "Orchestrator Status",
+            "type": "boolean"
+          },
+          "traces": {
+            "default": false,
+            "description": "Trace span stream (/ws/traces)",
+            "title": "Traces",
+            "type": "boolean"
+          }
+        },
+        "title": "WebSocketPermissions",
         "type": "object"
       },
       "WorkflowCreateRequest": {
@@ -17470,6 +18410,100 @@
         "title": "WorkflowUpdateRequest",
         "type": "object"
       },
+      "WorkflowVersionResponse": {
+        "description": "Response model for workflow version history.\n\nRepresents a single version entry in the workflow's history.\nEnables draft/publish lifecycle, diffing, rollback, and audit trails.\n\nReferences:\n- Plan: Chat-to-Workflow Feature (validated by 4 independent reviews)\n- Phase 3: Data Model & Persistence (MANDATORY versioning)",
+        "properties": {
+          "commit_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Description of changes in this version",
+            "title": "Commit Message"
+          },
+          "created_at": {
+            "description": "ISO 8601 timestamp when version was created",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "description": "User who created this version",
+            "title": "Created By",
+            "type": "string"
+          },
+          "graph_json": {
+            "additionalProperties": true,
+            "description": "Snapshot of workflow state (nodes + edges)",
+            "title": "Graph Json",
+            "type": "object"
+          },
+          "id": {
+            "description": "Unique version identifier",
+            "title": "Id",
+            "type": "string"
+          },
+          "prompt_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "LLM model used for generation (telemetry)",
+            "title": "Prompt Model"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Prompt version used to generate this version (telemetry)",
+            "title": "Prompt Version"
+          },
+          "source_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Source code representation (Python/YAML) at this version",
+            "title": "Source Text"
+          },
+          "version_number": {
+            "description": "Version number (1-based, increments)",
+            "title": "Version Number",
+            "type": "integer"
+          },
+          "workflow_id": {
+            "description": "ID of the parent workflow",
+            "title": "Workflow Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workflow_id",
+          "version_number",
+          "graph_json",
+          "created_by",
+          "created_at"
+        ],
+        "title": "WorkflowVersionResponse",
+        "type": "object"
+      },
       "mcp_server_langgraph__api__studio__WorkflowEdge": {
         "description": "An edge connecting two workflow nodes.",
         "properties": {
@@ -17652,30 +18686,6 @@
         "title": "AuditLogEntry",
         "type": "object"
       },
-      "mcp_server_langgraph__api__v1__ai__SuggestionAction": {
-        "description": "Actions that can be tracked for suggestions.",
-        "enum": [
-          "click",
-          "dismiss",
-          "view"
-        ],
-        "title": "SuggestionAction",
-        "type": "string"
-      },
-      "mcp_server_langgraph__api__v1__ai_ux__SuggestionAction": {
-        "description": "Action types for suggestions.",
-        "enum": [
-          "navigate",
-          "modal",
-          "execute",
-          "retry",
-          "wait",
-          "simplify",
-          "contact"
-        ],
-        "title": "SuggestionAction",
-        "type": "string"
-      },
       "mcp_server_langgraph__api__v1__connection_audit__AuditLogEntry": {
         "description": "An audit log entry.",
         "properties": {
@@ -17779,6 +18789,23 @@
           "total"
         ],
         "title": "ConnectionListResponse",
+        "type": "object"
+      },
+      "mcp_server_langgraph__api__v1__execution_plans__RejectRequest": {
+        "description": "Request body for rejecting a plan.",
+        "properties": {
+          "reason": {
+            "description": "Reason for rejection",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "RejectRequest",
         "type": "object"
       },
       "mcp_server_langgraph__api__v1__mcp__PromptResponse": {
@@ -18070,6 +19097,38 @@
           "project_id"
         ],
         "title": "ConnectionListResponse",
+        "type": "object"
+      },
+      "mcp_server_langgraph__api__v1__remediation_approvals__RejectRequest": {
+        "description": "Request body for rejecting a remediation.",
+        "properties": {
+          "reason": {
+            "$ref": "#/components/schemas/RejectionReason",
+            "default": "other",
+            "description": "Structured rejection reason"
+          },
+          "reason_detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Additional details for rejection reason",
+            "title": "Reason Detail"
+          },
+          "rejected_by": {
+            "description": "Email/ID of the rejector",
+            "title": "Rejected By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rejected_by"
+        ],
+        "title": "RejectRequest",
         "type": "object"
       },
       "mcp_server_langgraph__api__v1__workflows__WorkflowEdge": {
@@ -18478,9 +19537,167 @@
         ]
       }
     },
+    "/api/v1/admin/skills/install": {
+      "post": {
+        "description": "Install a skill from a marketplace.\n\nRequest Body:\n    skill_name: Name of the skill to install\n    marketplace: Source marketplace (default: anthropic)\n    version: Optional specific version\n\nReturns:\n    Installation result with success/failure details",
+        "operationId": "install_skill_endpoint_api_v1_admin_skills_install_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillInstallRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Install Skill Endpoint Api V1 Admin Skills Install Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Install Skill Endpoint",
+        "tags": [
+          "v1",
+          "skills",
+          "skills"
+        ]
+      }
+    },
+    "/api/v1/admin/skills/installed": {
+      "get": {
+        "description": "List all installed skills.\n\nReturns:\n    List of installed skill names",
+        "operationId": "list_installed_skills_endpoint_api_v1_admin_skills_installed_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Installed Skills Endpoint Api V1 Admin Skills Installed Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Installed Skills Endpoint",
+        "tags": [
+          "v1",
+          "skills",
+          "skills"
+        ]
+      }
+    },
+    "/api/v1/admin/skills/list": {
+      "get": {
+        "description": "List skills from a marketplace.\n\nQuery Parameters:\n    marketplace: Marketplace name (default: anthropic)\n    search: Optional search query to filter skills\n    tags: Optional comma-separated tags to filter by\n\nReturns:\n    List of skills with metadata",
+        "operationId": "list_marketplace_skills_endpoint_api_v1_admin_skills_list_get",
+        "parameters": [
+          {
+            "description": "Marketplace name",
+            "in": "query",
+            "name": "marketplace",
+            "required": false,
+            "schema": {
+              "default": "anthropic",
+              "description": "Marketplace name",
+              "title": "Marketplace",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Search query",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search query",
+              "title": "Search"
+            }
+          },
+          {
+            "description": "Comma-separated tags",
+            "in": "query",
+            "name": "tags",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated tags",
+              "title": "Tags"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Marketplace Skills Endpoint Api V1 Admin Skills List Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Marketplace Skills Endpoint",
+        "tags": [
+          "v1",
+          "skills",
+          "skills"
+        ]
+      }
+    },
     "/api/v1/admin/skills/updates": {
       "get": {
-        "description": "Check for available skill updates.\n\nRequires admin authorization.\n\nReturns:\n    Dict with list of available updates",
+        "description": "Check for available skill updates.\n\nRequires skill:viewer authorization (all authenticated users with skill access).\n\nReturns:\n    Dict with list of available updates",
         "operationId": "check_skill_updates_api_v1_admin_skills_updates_get",
         "responses": {
           "200": {
@@ -18506,7 +19723,7 @@
     },
     "/api/v1/admin/skills/updates/apply": {
       "post": {
-        "description": "Apply all available skill updates.\n\nRequires admin authorization.\n\nReturns:\n    Dict with list of applied updates",
+        "description": "Apply all available skill updates.\n\nRequires skill:author authorization (alice and admin can apply updates).\n\nReturns:\n    Dict with list of applied updates",
         "operationId": "apply_skill_updates_api_v1_admin_skills_updates_apply_post",
         "responses": {
           "200": {
@@ -18523,6 +19740,53 @@
           }
         },
         "summary": "Apply Skill Updates",
+        "tags": [
+          "v1",
+          "skills",
+          "skills"
+        ]
+      }
+    },
+    "/api/v1/admin/skills/{skill_name}": {
+      "delete": {
+        "description": "Uninstall a skill.\n\nPath Parameters:\n    skill_name: Name of the skill to uninstall\n\nReturns:\n    Uninstall result",
+        "operationId": "uninstall_skill_endpoint_api_v1_admin_skills__skill_name__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_name",
+            "required": true,
+            "schema": {
+              "title": "Skill Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Uninstall Skill Endpoint Api V1 Admin Skills  Skill Name  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Uninstall Skill Endpoint",
         "tags": [
           "v1",
           "skills",
@@ -23556,6 +24820,34 @@
         ]
       }
     },
+    "/api/v1/config/models": {
+      "get": {
+        "description": "Get available LLM models for selection in the frontend.\n\nReturns a list of model options with their metadata, including:\n- id: Unique identifier for the model\n- name: Human-readable display name\n- provider: The LLM provider (anthropic, openai, google)\n- supports_thinking: Whether the model supports extended thinking\n- supports_vision: Whether the model supports image inputs\n- supports_tools: Whether the model supports tool/function calling\n\nThis endpoint provides the single source of truth for model options,\nensuring frontend model selectors reflect actual backend capabilities.\n\nWhen FF_USE_MODEL_REGISTRY_FOR_FRONTEND is enabled, uses ModelRegistry\nas the single source of truth instead of hardcoded AVAILABLE_MODELS.\n\nReturns:\n    List of model dictionaries with id, name, provider, supports_thinking,\n    supports_vision, supports_tools\n\nExample Response:\n    [\n        {\n            \"id\": \"claude-3-5-sonnet\",\n            \"name\": \"Claude 3.5 Sonnet\",\n            \"provider\": \"anthropic\",\n            \"supports_thinking\": true,\n            \"supports_vision\": true,\n            \"supports_tools\": true\n        },\n        ...\n    ]",
+        "operationId": "get_available_models_api_v1_config_models_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Get Available Models Api V1 Config Models Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Available Models",
+        "tags": [
+          "v1",
+          "config"
+        ]
+      }
+    },
     "/api/v1/connection-templates": {
       "get": {
         "description": "List all available connection templates.\n\nRequires user authentication.\n\nSupports filtering by category, authentication type, and search.",
@@ -25107,6 +26399,168 @@
         ]
       }
     },
+    "/api/v1/context-graph/precedents/search": {
+      "post": {
+        "description": "Search for similar past decisions.\n\nUses semantic search to find precedents that match the query.\nResults are scoped to the user's organization for security.\n\nAuthorization: Results are scoped to user's organization.\n\nArgs:\n    body: Search parameters including query text\n    request: FastAPI request for app state access\n    repo: Decision trace repository (injected)\n    current_user: Authenticated user (injected)\n\nReturns:\n    List of PrecedentSearchResult with matching traces and scores\n\nRaises:\n    HTTPException: 503 if precedent search not enabled",
+        "operationId": "search_precedents_api_v1_context_graph_precedents_search_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrecedentSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PrecedentSearchResult"
+                  },
+                  "title": "Response Search Precedents Api V1 Context Graph Precedents Search Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Precedents",
+        "tags": [
+          "v1",
+          "context-graph"
+        ]
+      }
+    },
+    "/api/v1/context-graph/sessions/{session_id}/traces": {
+      "get": {
+        "description": "Get decision traces for a session.\n\nAuthorization: Requires viewer access to the session.\n\nArgs:\n    session_id: The session ID to get traces for\n    request: FastAPI request for auth service access\n    limit: Max traces to return (default 100, max 1000)\n    offset: Pagination offset (default 0)\n    repo: Decision trace repository (injected)\n    current_user: Authenticated user (injected)\n\nReturns:\n    List of DecisionTraceSummary objects\n\nRaises:\n    HTTPException: 403 if not authorized to view session traces",
+        "operationId": "get_session_traces_api_v1_context_graph_sessions__session_id__traces_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DecisionTraceSummary"
+                  },
+                  "title": "Response Get Session Traces Api V1 Context Graph Sessions  Session Id  Traces Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Session Traces",
+        "tags": [
+          "v1",
+          "context-graph"
+        ]
+      }
+    },
+    "/api/v1/context-graph/traces/{trace_id}": {
+      "get": {
+        "description": "Get a specific decision trace.\n\nAuthorization: Requires viewer access to the trace's session.\n\nArgs:\n    trace_id: The trace ID to retrieve\n    request: FastAPI request for auth service access\n    repo: Decision trace repository (injected)\n    current_user: Authenticated user (injected)\n\nReturns:\n    DecisionTraceRead with full trace data\n\nRaises:\n    HTTPException: 403 if not authorized to view trace\n    HTTPException: 404 if trace not found\n    HTTPException: 503 if context graph not enabled",
+        "operationId": "get_trace_api_v1_context_graph_traces__trace_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trace_id",
+            "required": true,
+            "schema": {
+              "title": "Trace Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionTraceRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Trace",
+        "tags": [
+          "v1",
+          "context-graph"
+        ]
+      }
+    },
     "/api/v1/cost/budget/anomaly": {
       "get": {
         "description": "Detect cost anomalies for an entity.\n\nUses statistical methods (Z-score) to identify unusual spending patterns\ncompared to historical data.",
@@ -26282,6 +27736,53 @@
         ]
       }
     },
+    "/api/v1/devtools/services": {
+      "get": {
+        "description": "Return distinct service names based on Loki labels.\n\nBest-effort: on failure, returns an empty list rather than raising.",
+        "operationId": "list_devtools_services_api_v1_devtools_services_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "_viewer",
+            "required": false,
+            "schema": {
+              "title": " Viewer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response List Devtools Services Api V1 Devtools Services Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List known services for DevTools filters",
+        "tags": [
+          "v1",
+          "devtools"
+        ]
+      }
+    },
     "/api/v1/features": {
       "get": {
         "description": "Get UI feature availability based on user role.\n\nReturns a dictionary of feature names to boolean enabled status.\nAdmins get access to all features, while regular users may have\nrestricted access to certain features (e.g., cost dashboard).\n\nArgs:\n    role: User role for determining feature access.\n\nReturns:\n    Dictionary mapping feature names to their enabled status.\n\nExample Response:\n    {\n        \"workflows\": true,\n        \"sessions\": true,\n        \"cost_dashboard\": false,\n        \"observability\": true,\n        \"code_export\": true,\n        \"ai_suggestions\": true,\n        \"mcp_websocket\": false,\n        \"interactive_artifacts\": true\n    }",
@@ -26617,6 +28118,30 @@
         "tags": [
           "v1",
           "Identity Providers"
+        ]
+      }
+    },
+    "/api/v1/kb/status": {
+      "get": {
+        "description": "Get current Knowledge Base status including Qdrant connection and embedding configuration.",
+        "operationId": "get_status_api_v1_kb_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KBStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get KB Status",
+        "tags": [
+          "v1",
+          "kb",
+          "kb"
         ]
       }
     },
@@ -27628,7 +29153,7 @@
     },
     "/api/v1/me": {
       "get": {
-        "description": "Get current authenticated user information.\n\nReturns the current user's info including:\n- user_id: OpenFGA-compatible user ID\n- username: Display username\n- email: Email address (if available)\n- roles: Keycloak roles\n- persona: Computed persona for frontend RBAC (admin/developer/user)\n- sub_persona: Selected sub-persona variant (Sprint 4)\n- visible_modules: Modules accessible to this persona (Sprint 4)\n- feature_flags: Feature flags for this user (Sprint 4)\n- api_version: API version for client compatibility (Sprint 4)\n\nThe frontend uses this endpoint on mount to:\n1. Detect user's persona based on roles\n2. Configure sidebar navigation items\n3. Set up route access control",
+        "description": "Get current authenticated user information.\n\nReturns the current user's info including:\n- user_id: OpenFGA-compatible user ID\n- username: Display username\n- email: Email address (if available)\n- roles: Keycloak roles\n- persona: Computed persona for frontend RBAC (admin/developer/user)\n- sub_persona: Selected sub-persona variant (Sprint 4)\n- visible_modules: Modules accessible to this persona (Sprint 4)\n- feature_flags: Feature flags for this user (Sprint 4)\n- api_version: API version for client compatibility (Sprint 4)\n- websocket_permissions: WebSocket endpoint permissions (Sprint 5)\n\nThe frontend uses this endpoint on mount to:\n1. Detect user's persona based on roles\n2. Configure sidebar navigation items\n3. Enable/disable WebSocket connections based on permissions\n3. Set up route access control",
         "operationId": "get_me_api_v1_me_get",
         "responses": {
           "200": {
@@ -29542,6 +31067,614 @@
         ]
       }
     },
+    "/api/v1/plan-templates/templates": {
+      "get": {
+        "description": "List all plan templates.\n\nArgs:\n    limit: Maximum number of templates to return\n    template_repo: Template repository (injected)\n    current_user: Current authenticated user (injected)\n\nReturns:\n    List of templates",
+        "operationId": "list_templates_api_v1_plan_templates_templates_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response List Templates Api V1 Plan Templates Templates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Templates",
+        "tags": [
+          "v1",
+          "plan-templates",
+          "plan-templates"
+        ]
+      },
+      "post": {
+        "description": "Create a new plan template.\n\nArgs:\n    request: Template creation request\n    template_repo: Template repository (injected)\n    current_user: Current authenticated user (injected)\n\nReturns:\n    Created template data",
+        "operationId": "create_template_api_v1_plan_templates_templates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Template Api V1 Plan Templates Templates Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Template",
+        "tags": [
+          "v1",
+          "plan-templates",
+          "plan-templates"
+        ]
+      }
+    },
+    "/api/v1/plan-templates/templates/search": {
+      "get": {
+        "description": "Search templates by tags or orchestrator type.\n\nArgs:\n    tags: Comma-separated list of tags to search for\n    orchestrator: Orchestrator type to filter by\n    template_repo: Template repository (injected)\n    current_user: Current authenticated user (injected)\n\nReturns:\n    List of matching templates",
+        "operationId": "search_templates_api_v1_plan_templates_templates_search_get",
+        "parameters": [
+          {
+            "description": "Comma-separated tags",
+            "in": "query",
+            "name": "tags",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "in": "query",
+            "name": "orchestrator",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Orchestrator"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Search Templates Api V1 Plan Templates Templates Search Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Templates",
+        "tags": [
+          "v1",
+          "plan-templates",
+          "plan-templates"
+        ]
+      }
+    },
+    "/api/v1/plan-templates/templates/{template_id}": {
+      "delete": {
+        "description": "Delete a plan template.\n\nArgs:\n    template_id: The template ID to delete\n    template_repo: Template repository (injected)\n    current_user: Current authenticated user (injected)\n\nReturns:\n    Deletion confirmation\n\nRaises:\n    HTTPException: 404 if template not found",
+        "operationId": "delete_template_api_v1_plan_templates_templates__template_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Delete Template Api V1 Plan Templates Templates  Template Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Template",
+        "tags": [
+          "v1",
+          "plan-templates",
+          "plan-templates"
+        ]
+      },
+      "get": {
+        "description": "Get a specific template by ID.\n\nArgs:\n    template_id: The template ID\n    template_repo: Template repository (injected)\n    current_user: Current authenticated user (injected)\n\nReturns:\n    Template data\n\nRaises:\n    HTTPException: 404 if template not found",
+        "operationId": "get_template_api_v1_plan_templates_templates__template_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Template Api V1 Plan Templates Templates  Template Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Template",
+        "tags": [
+          "v1",
+          "plan-templates",
+          "plan-templates"
+        ]
+      }
+    },
+    "/api/v1/plan-templates/templates/{template_id}/usage": {
+      "post": {
+        "description": "Record template usage for metrics.\n\nArgs:\n    template_id: The template that was used\n    request: Usage record request\n    template_repo: Template repository (injected)\n    current_user: Current authenticated user (injected)\n\nReturns:\n    Recording confirmation",
+        "operationId": "record_usage_api_v1_plan_templates_templates__template_id__usage_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordUsageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Record Usage Api V1 Plan Templates Templates  Template Id  Usage Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Usage",
+        "tags": [
+          "v1",
+          "plan-templates",
+          "plan-templates"
+        ]
+      }
+    },
+    "/api/v1/plans/plans": {
+      "get": {
+        "description": "List all pending execution plans.\n\nReturns plans with status 'awaiting_approval'.\nRequires authentication.",
+        "operationId": "list_pending_plans_api_v1_plans_plans_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response List Pending Plans Api V1 Plans Plans Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Pending Plans",
+        "tags": [
+          "v1",
+          "execution-plans",
+          "execution-plans"
+        ]
+      }
+    },
+    "/api/v1/plans/plans/{plan_id}": {
+      "get": {
+        "description": "Get a specific execution plan by ID.\n\nRaises:\n    HTTPException 404: When plan not found",
+        "operationId": "get_plan_api_v1_plans_plans__plan_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Plan Api V1 Plans Plans  Plan Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Plan",
+        "tags": [
+          "v1",
+          "execution-plans",
+          "execution-plans"
+        ]
+      }
+    },
+    "/api/v1/plans/plans/{plan_id}/approve": {
+      "post": {
+        "description": "Approve an execution plan.\n\nChanges the plan status from 'awaiting_approval' to 'approved'.\nRecords the approver and timestamp.\n\nRaises:\n    HTTPException 404: When plan not found\n    HTTPException 409: When plan is not in 'awaiting_approval' status",
+        "operationId": "approve_plan_api_v1_plans_plans__plan_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Approve Plan Api V1 Plans Plans  Plan Id  Approve Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Plan",
+        "tags": [
+          "v1",
+          "execution-plans",
+          "execution-plans"
+        ]
+      }
+    },
+    "/api/v1/plans/plans/{plan_id}/reject": {
+      "post": {
+        "description": "Reject an execution plan.\n\nChanges the plan status from 'awaiting_approval' to 'rejected'.\nRecords the rejector, timestamp, and reason.\n\nRaises:\n    HTTPException 404: When plan not found\n    HTTPException 409: When plan is not in 'awaiting_approval' status",
+        "operationId": "reject_plan_api_v1_plans_plans__plan_id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/mcp_server_langgraph__api__v1__execution_plans__RejectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Reject Plan Api V1 Plans Plans  Plan Id  Reject Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject Plan",
+        "tags": [
+          "v1",
+          "execution-plans",
+          "execution-plans"
+        ]
+      }
+    },
+    "/api/v1/plans/plans/{plan_id}/save-as-template": {
+      "post": {
+        "description": "Save an approved execution plan as a reusable template.\n\nCreates a new template based on the configuration of an approved plan.\nOnly approved plans can be saved as templates.\n\nArgs:\n    plan_id: The ID of the approved plan\n    request: Template name, description, and tags\n\nReturns:\n    The created template\n\nRaises:\n    HTTPException 404: When plan not found\n    HTTPException 400: When plan is not approved",
+        "operationId": "save_as_template_api_v1_plans_plans__plan_id__save_as_template_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveAsTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Save As Template Api V1 Plans Plans  Plan Id  Save As Template Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save As Template",
+        "tags": [
+          "v1",
+          "execution-plans",
+          "execution-plans"
+        ]
+      }
+    },
+    "/api/v1/plans/sessions/{session_id}/plans": {
+      "get": {
+        "description": "List all execution plans for a session.\n\nReturns all plans (pending, approved, rejected) for the specified session.\nRequires authentication.",
+        "operationId": "list_session_plans_api_v1_plans_sessions__session_id__plans_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response List Session Plans Api V1 Plans Sessions  Session Id  Plans Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Session Plans",
+        "tags": [
+          "v1",
+          "execution-plans",
+          "execution-plans"
+        ]
+      }
+    },
     "/api/v1/preferences": {
       "delete": {
         "description": "Reset the current user's preferences to defaults.",
@@ -31301,7 +33434,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RejectRequest"
+                "$ref": "#/components/schemas/mcp_server_langgraph__api__v1__remediation_approvals__RejectRequest"
               }
             }
           },
@@ -33560,6 +35693,98 @@
         ]
       }
     },
+    "/api/v1/websocket/metrics": {
+      "post": {
+        "description": "Submit WebSocket reconnection metrics from frontend.\n\nThis endpoint receives metrics from the frontend's useWebSocketMetricsReporter\nhook and records them in Prometheus for observability.\n\nThe endpoint follows a fire-and-forget pattern - it always returns 200\neven if Prometheus is unavailable, to avoid blocking the frontend.\n\nArgs:\n    payload: WebSocket metrics for a single endpoint\n\nReturns:\n    Status response indicating metrics were accepted",
+        "operationId": "submit_websocket_metrics_api_v1_websocket_metrics_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebSocketMetricsPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Submit Websocket Metrics Api V1 Websocket Metrics Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Websocket Metrics",
+        "tags": [
+          "v1",
+          "websocket-metrics",
+          "websocket-metrics"
+        ]
+      }
+    },
+    "/api/v1/websocket/metrics/batch": {
+      "post": {
+        "description": "Submit WebSocket reconnection metrics for multiple endpoints.\n\nThis endpoint receives batch metrics from the frontend, typically\nsubmitted periodically or on page unload to minimize API calls.\n\nArgs:\n    payload: Batch of WebSocket metrics for multiple endpoints\n\nReturns:\n    Status response with count of processed endpoints",
+        "operationId": "submit_batch_websocket_metrics_api_v1_websocket_metrics_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebSocketBatchMetricsPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Submit Batch Websocket Metrics Api V1 Websocket Metrics Batch Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Batch Websocket Metrics",
+        "tags": [
+          "v1",
+          "websocket-metrics",
+          "websocket-metrics"
+        ]
+      }
+    },
     "/api/v1/workflows": {
       "get": {
         "description": "List all workflows with cursor-based pagination.\n\nRequires authentication. Users can see:\n- Their own workflows\n- Workflows shared with them\n- Public workflows\n- Admins can see all workflows\n\nSupports:\n- Pagination: cursor, limit\n- Filtering: status, owner_id\n- Search: search (uses PostgreSQL Full-Text Search when available)\n- Sorting: sort_by, sort_order\n\nReturns a paginated list of workflows with metadata for navigation.",
@@ -33751,6 +35976,49 @@
           }
         },
         "summary": "Create Workflow",
+        "tags": [
+          "v1",
+          "workflows"
+        ]
+      }
+    },
+    "/api/v1/workflows/from-chat": {
+      "post": {
+        "description": "Generate and persist a workflow from chat session history.\n\nThis endpoint:\n1. Fetches session messages by session_id\n2. Sanitizes messages to prevent prompt injection (ADR-0089)\n3. Generates workflow via WorkflowGenerator\n4. Persists with status='draft', version=1\n5. Returns prompt metadata for telemetry linkage\n\nRequires authentication and enable_workflow_from_chat feature flag.\n\nArgs:\n    request: FromChatRequest with session_id and refinement_mode\n    service: Workflow service adapter\n    current_user: Authenticated user\n\nReturns:\n    FromChatResponse with persisted workflow and metadata\n\nRaises:\n    HTTPException 404: If feature disabled or session not found\n    HTTPException 422: If validation fails",
+        "operationId": "generate_workflow_from_chat_api_v1_workflows_from_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FromChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FromChatResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate Workflow From Chat",
         "tags": [
           "v1",
           "workflows"
@@ -34443,6 +36711,151 @@
           }
         },
         "summary": "Remove Workflow Share",
+        "tags": [
+          "v1",
+          "workflows"
+        ]
+      }
+    },
+    "/api/v1/workflows/{workflow_id}/validate": {
+      "post": {
+        "description": "Validate a workflow's graph structure and content.\n\nUses centralized WorkflowValidator service - NO JS DUPLICATION.\nBoth Monaco editor and React Flow call this single endpoint.\n\nThe endpoint:\n1. Fetches workflow by ID\n2. Validates using WorkflowValidator service\n3. Returns validation result with errors and warnings\n\nRequires authentication and enable_workflow_from_chat feature flag.\n\nArgs:\n    workflow_id: ID of the workflow to validate\n    service: Workflow service adapter\n    current_user: Authenticated user\n\nReturns:\n    ValidateWorkflowResponse with valid flag, errors, and warnings\n\nRaises:\n    HTTPException 404: If feature disabled or workflow not found",
+        "operationId": "validate_workflow_api_v1_workflows__workflow_id__validate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workflow_id",
+            "required": true,
+            "schema": {
+              "title": "Workflow Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateWorkflowResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Validate Workflow",
+        "tags": [
+          "v1",
+          "workflows"
+        ]
+      }
+    },
+    "/api/v1/workflows/{workflow_id}/versions": {
+      "get": {
+        "description": "Get version history for a workflow.\n\nReturns all versions for the specified workflow, ordered by version_number\ndescending (newest first). Enables version diffing, rollback, and auditing.\n\nRequires authentication and enable_workflow_from_chat feature flag.\n\nArgs:\n    workflow_id: ID of the workflow to get versions for\n    service: Workflow service adapter\n    current_user: Authenticated user\n\nReturns:\n    List of WorkflowVersionResponse, newest first\n\nRaises:\n    HTTPException 404: If feature disabled or workflow not found",
+        "operationId": "get_workflow_versions_api_v1_workflows__workflow_id__versions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workflow_id",
+            "required": true,
+            "schema": {
+              "title": "Workflow Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorkflowVersionResponse"
+                  },
+                  "title": "Response Get Workflow Versions Api V1 Workflows  Workflow Id  Versions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Workflow Versions",
+        "tags": [
+          "v1",
+          "workflows"
+        ]
+      }
+    },
+    "/api/v1/workflows/{workflow_id}/versions/{version_id}/restore": {
+      "post": {
+        "description": "Restore a workflow to a previous version.\n\nThis creates a NEW version with the restored state (append-only versioning).\nThe new version's commit_message indicates it was restored from version_id.\n\nRequires authentication and enable_workflow_from_chat feature flag.\n\nArgs:\n    workflow_id: ID of the workflow to restore\n    version_id: ID of the version to restore to\n    service: Workflow service adapter\n    current_user: Authenticated user\n\nReturns:\n    WorkflowResponse with the updated workflow (new version)\n\nRaises:\n    HTTPException 404: If feature disabled, workflow not found, or version not found",
+        "operationId": "restore_workflow_version_api_v1_workflows__workflow_id__versions__version_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workflow_id",
+            "required": true,
+            "schema": {
+              "title": "Workflow Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/mcp_server_langgraph__api__v1__workflows__WorkflowResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Workflow Version",
         "tags": [
           "v1",
           "workflows"

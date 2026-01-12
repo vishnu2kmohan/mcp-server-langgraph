@@ -333,13 +333,88 @@ class Settings(BaseSettings):
         "itertools",
         "functools",
         "typing",
-        # Data processing libraries
-        "pandas",
+        "decimal",
+        "fractions",
+        "random",
+        "string",
+        "re",
+        "textwrap",
+        "unicodedata",
+        "io",
+        "base64",
+        "hashlib",
+        "hmac",
+        "csv",
+        "operator",
+        "copy",
+        "pprint",
+        "enum",
+        "dataclasses",
+        "abc",
+        "contextlib",
+        # Data Science Core (matching Pyodide browser environment)
         "numpy",
-        # Data visualization libraries
+        "np",
+        "pandas",
+        "pd",
+        "scipy",
+        # Machine Learning
+        "sklearn",
+        "xgboost",
+        "xgb",
+        "lightgbm",
+        "lgb",
+        # Visualization
         "matplotlib",
         "matplotlib.pyplot",
-    ]  # Allowed Python imports (whitelist)
+        "plt",
+        "seaborn",
+        "sns",
+        "bokeh",
+        "bokeh.plotting",
+        # Declarative Visualization (preferred for interactive plots)
+        "altair",
+        "alt",
+        # Math & Science
+        "sympy",
+        "networkx",
+        "nx",
+        # Statistics
+        "statsmodels",
+        # Image Processing
+        "PIL",
+        "pillow",
+        "skimage",
+        # Scientific Data
+        "xarray",
+        "xr",
+        "h5py",
+        # Utilities
+        "regex",
+        "dateutil",
+        "yaml",
+        "lxml",
+        # Network & HTTP
+        "httpx",
+        "requests",
+        "aiohttp",
+        # Database
+        "sqlalchemy",
+        # LLM Utilities
+        "tiktoken",
+        # High-Performance Data (Docker only - not in Pyodide)
+        "polars",
+        "pl",
+        # Database Dialects (Docker only - require native drivers)
+        "duckdb",
+        "duckdb_engine",
+        "redshift_connector",
+        "sqlalchemy_bigquery",
+        "snowflake",
+        "snowflake.sqlalchemy",
+        "cockroachdb",
+        # NOTE: ibm_db_sa removed - ibm-db fails to build on ARM64
+    ]  # Allowed Python imports (whitelist) - matches Pyodide browser environment
 
     # Docker-specific settings
     code_execution_docker_image: str = (

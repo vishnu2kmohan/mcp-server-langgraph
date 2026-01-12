@@ -1033,3 +1033,795 @@ class TestModelCapabilitiesSet:
         assert "tools" in capabilities
         assert "vision" not in capabilities
         assert "streaming" not in capabilities
+
+
+# =============================================================================
+# Frontend Integration Tests (Sprint 1 - Enhanced Model Selector)
+# =============================================================================
+
+
+@pytest.mark.unit
+@pytest.mark.agents
+@pytest.mark.orchestrator
+@pytest.mark.xdist_group(name="model_registry_frontend")
+class TestModelRegistryFrontendIntegration:
+    """Tests for frontend model list generation from ModelRegistry.
+
+    Sprint 1: Enhanced Model Selector - Single source of truth for model capabilities.
+    The ModelRegistry should be able to generate the frontend-compatible model list
+    that was previously hardcoded in AVAILABLE_MODELS.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_model_capabilities_has_display_name_field(self) -> None:
+        """Test ModelCapabilities has display_name field for frontend display."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="claude-opus-4-5-20251101",
+            vendor="anthropic",
+            context_limit=200_000,
+            max_output_tokens=64_000,
+            input_cost_per_1m=5.00,
+            output_cost_per_1m=25.00,
+            display_name="Claude Opus 4.5",
+        )
+
+        assert hasattr(caps, "display_name")
+        assert caps.display_name == "Claude Opus 4.5"
+
+    def test_model_capabilities_has_public_id_field(self) -> None:
+        """Test ModelCapabilities has public_id field for user-friendly ID."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="claude-opus-4-5-20251101",
+            vendor="anthropic",
+            context_limit=200_000,
+            max_output_tokens=64_000,
+            input_cost_per_1m=5.00,
+            output_cost_per_1m=25.00,
+            public_id="claude-3-opus",
+        )
+
+        assert hasattr(caps, "public_id")
+        assert caps.public_id == "claude-3-opus"
+
+    def test_model_capabilities_display_name_defaults_to_model_id(self) -> None:
+        """Test display_name defaults to model_id if not specified."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="some-internal-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+        )
+
+        # display_name should default to model_id
+        assert caps.display_name == "some-internal-model"
+
+    def test_model_capabilities_public_id_defaults_to_model_id(self) -> None:
+        """Test public_id defaults to model_id if not specified."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="some-internal-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+        )
+
+        # public_id should default to model_id
+        assert caps.public_id == "some-internal-model"
+
+    def test_model_registry_has_get_frontend_models_method(self) -> None:
+        """Test ModelRegistry has get_frontend_models method."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+
+        assert hasattr(registry, "get_frontend_models")
+        assert callable(registry.get_frontend_models)
+
+    def test_get_frontend_models_returns_list_of_dicts(self) -> None:
+        """Test get_frontend_models returns list of dictionaries."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        models = registry.get_frontend_models()
+
+        assert isinstance(models, list)
+        assert len(models) > 0
+        assert all(isinstance(m, dict) for m in models)
+
+    def test_get_frontend_models_has_required_fields(self) -> None:
+        """Test frontend models have all required fields for Enhanced Model Selector."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        models = registry.get_frontend_models()
+
+        # Required fields for frontend Enhanced Model Selector (Sprint 1)
+        required_fields = [
+            "id",
+            "name",
+            "provider",
+            "supports_thinking",
+            "supports_vision",
+            "supports_tools",
+        ]
+
+        for model in models:
+            for field in required_fields:
+                assert field in model, f"Model missing required field: {field}"
+
+    def test_get_frontend_models_uses_public_id_as_id(self) -> None:
+        """Test frontend models use public_id as the 'id' field."""
+        from mcp_server_langgraph.agents.model_registry import (
+            ModelCapabilities,
+            ModelRegistry,
+        )
+
+        registry = ModelRegistry()
+
+        # Register a model with explicit public_id
+        custom = ModelCapabilities(
+            model_id="internal-test-model-v1",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+            public_id="test-model",
+            display_name="Test Model",
+        )
+        registry.register(custom)
+
+        models = registry.get_frontend_models()
+        test_model = next((m for m in models if m["id"] == "test-model"), None)
+
+        assert test_model is not None
+        assert test_model["id"] == "test-model"  # public_id
+        assert test_model["name"] == "Test Model"  # display_name
+
+    def test_get_frontend_models_uses_display_name_as_name(self) -> None:
+        """Test frontend models use display_name as the 'name' field."""
+        from mcp_server_langgraph.agents.model_registry import (
+            ModelCapabilities,
+            ModelRegistry,
+        )
+
+        registry = ModelRegistry()
+
+        custom = ModelCapabilities(
+            model_id="some-internal-id",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+            display_name="User Friendly Name",
+        )
+        registry.register(custom)
+
+        models = registry.get_frontend_models()
+        test_model = next((m for m in models if m["name"] == "User Friendly Name"), None)
+
+        assert test_model is not None
+        assert test_model["name"] == "User Friendly Name"
+
+    def test_get_frontend_models_maps_vendor_to_provider(self) -> None:
+        """Test frontend models map vendor to provider field."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        models = registry.get_frontend_models()
+
+        # Check we have models from different providers
+        providers = {m["provider"] for m in models}
+        assert "anthropic" in providers
+        assert "google" in providers or "vertex_ai" in providers
+        assert "openai" in providers or "azure" in providers
+
+    def test_get_frontend_models_maps_supports_thinking_correctly(self) -> None:
+        """Test supports_thinking maps from supports_extended_thinking."""
+        from mcp_server_langgraph.agents.model_registry import (
+            ModelCapabilities,
+            ModelRegistry,
+        )
+
+        registry = ModelRegistry()
+
+        # Model with extended thinking
+        thinking_model = ModelCapabilities(
+            model_id="thinking-test",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+            supports_extended_thinking=True,
+            public_id="thinking-test",
+        )
+        registry.register(thinking_model)
+
+        # Model without extended thinking
+        no_thinking_model = ModelCapabilities(
+            model_id="no-thinking-test",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+            supports_extended_thinking=False,
+            public_id="no-thinking-test",
+        )
+        registry.register(no_thinking_model)
+
+        models = registry.get_frontend_models()
+
+        thinking = next((m for m in models if m["id"] == "thinking-test"), None)
+        no_thinking = next((m for m in models if m["id"] == "no-thinking-test"), None)
+
+        assert thinking is not None
+        assert thinking["supports_thinking"] is True
+
+        assert no_thinking is not None
+        assert no_thinking["supports_thinking"] is False
+
+    def test_get_frontend_models_excludes_internal_models(self) -> None:
+        """Test get_frontend_models can filter out internal-only models."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        models = registry.get_frontend_models()
+
+        # Should not expose Vertex AI internal model IDs directly
+        # Models with public_id should use that, not the internal ID
+        model_ids = [m["id"] for m in models]
+
+        # Verify we're getting user-friendly IDs
+        for model_id in model_ids:
+            # Internal Vertex AI format shouldn't leak through
+            assert not model_id.startswith("vertex_ai/claude"), f"Internal model ID leaked: {model_id}"
+
+    def test_builtin_claude_models_have_frontend_fields(self) -> None:
+        """Test built-in Claude models have proper frontend fields."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+
+        # Check Claude Opus 4.5 has display_name and public_id
+        caps = registry.get("claude-opus-4-5-20251101")
+
+        assert caps.display_name is not None
+        assert len(caps.display_name) > 0
+        assert caps.public_id is not None
+        assert len(caps.public_id) > 0
+
+    def test_get_frontend_models_includes_all_capability_badges(self) -> None:
+        """Test frontend models include all capability badge fields (Sprint 1)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        models = registry.get_frontend_models()
+
+        for model in models:
+            # All capability badge fields must be booleans
+            assert isinstance(model["supports_thinking"], bool)
+            assert isinstance(model["supports_vision"], bool)
+            assert isinstance(model["supports_tools"], bool)
+
+
+# =============================================================================
+# Model Status Tests (TDD - Lifecycle Status Field)
+# =============================================================================
+
+
+@pytest.mark.unit
+@pytest.mark.agents
+@pytest.mark.orchestrator
+@pytest.mark.xdist_group(name="model_registry_status")
+class TestModelCapabilitiesStatus:
+    """Tests for status field on ModelCapabilities (lifecycle status).
+
+    Models have a lifecycle status:
+    - current: Generally available, recommended for production
+    - preview: Preview/beta, feature-complete but not GA
+    - legacy: Older version, still supported but superseded
+    - deprecated: Scheduled for retirement, migrate away
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_model_status_type_literal_exists(self) -> None:
+        """Test ModelStatus type literal exists in module."""
+        from mcp_server_langgraph.agents.model_registry import ModelStatus
+
+        assert ModelStatus is not None
+
+    def test_model_capabilities_has_status_field(self) -> None:
+        """Test ModelCapabilities has status field."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="test-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+            status="current",
+        )
+
+        assert hasattr(caps, "status")
+        assert caps.status == "current"
+
+    def test_status_defaults_to_current(self) -> None:
+        """Test status defaults to 'current' for new models."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="test-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+        )
+
+        assert caps.status == "current"
+
+    def test_status_accepts_valid_values(self) -> None:
+        """Test status accepts all valid lifecycle values."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        for status in ["current", "preview", "legacy", "deprecated"]:
+            caps = ModelCapabilities(
+                model_id=f"test-{status}",
+                vendor="test",
+                context_limit=100_000,
+                max_output_tokens=10_000,
+                input_cost_per_1m=1.0,
+                output_cost_per_1m=2.0,
+                status=status,
+            )
+            assert caps.status == status
+
+    def test_all_registered_models_have_valid_status(self) -> None:
+        """Audit test: All registered models must have valid status."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        all_models = registry.list_models()
+        valid_statuses = {"current", "preview", "legacy", "deprecated"}
+
+        for model_id in all_models:
+            caps = registry.get(model_id)
+            assert caps.status in valid_statuses, f"Model {model_id} has invalid status: {caps.status}"
+
+
+@pytest.mark.unit
+@pytest.mark.agents
+@pytest.mark.orchestrator
+@pytest.mark.xdist_group(name="model_registry_status_builtin")
+class TestBuiltInModelStatuses:
+    """Tests for correct status assignments on built-in models.
+
+    Based on official provider documentation (Jan 2026):
+    - Current: Claude 4.5, Gemini 2.5, GPT-5.x, o3, o4-mini
+    - Preview: Gemini 3.x (-preview suffix)
+    - Legacy: GPT-4o, GPT-4-turbo
+    - Deprecated: o1-preview, o1-mini
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    # =========================================================================
+    # Anthropic Claude 4.5 Models (CURRENT)
+    # =========================================================================
+
+    def test_claude_opus_4_5_is_current(self) -> None:
+        """Test Claude Opus 4.5 has current status (GA Nov 2025)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-opus-4-5-20251101")
+
+        assert caps.status == "current"
+
+    def test_claude_sonnet_4_5_is_current(self) -> None:
+        """Test Claude Sonnet 4.5 has current status (GA Sep 2025)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-sonnet-4-5-20250929")
+
+        assert caps.status == "current"
+
+    def test_claude_haiku_4_5_is_current(self) -> None:
+        """Test Claude Haiku 4.5 has current status (GA Oct 2025)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-haiku-4-5-20251001")
+
+        assert caps.status == "current"
+
+    # =========================================================================
+    # Google Gemini 2.5 Models (CURRENT)
+    # =========================================================================
+
+    def test_gemini_2_5_flash_is_current(self) -> None:
+        """Test Gemini 2.5 Flash has current status (GA Aug 2025)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-2.5-flash")
+
+        assert caps.status == "current"
+
+    def test_gemini_2_5_pro_is_current(self) -> None:
+        """Test Gemini 2.5 Pro has current status (GA Aug 2025)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-2.5-pro")
+
+        assert caps.status == "current"
+
+    # =========================================================================
+    # Google Gemini 3 Models (PREVIEW - not yet GA)
+    # =========================================================================
+
+    def test_gemini_3_flash_is_preview(self) -> None:
+        """Test Gemini 3 Flash has preview status (not yet GA)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-3-flash")
+
+        assert caps.status == "preview"
+
+    def test_gemini_3_pro_is_preview(self) -> None:
+        """Test Gemini 3 Pro has preview status (not yet GA)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-3-pro")
+
+        assert caps.status == "preview"
+
+    def test_vertex_ai_gemini_3_flash_preview_is_preview(self) -> None:
+        """Test Vertex AI Gemini 3 Flash Preview has preview status."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("vertex_ai/gemini-3-flash-preview")
+
+        assert caps.status == "preview"
+
+    def test_vertex_ai_gemini_3_pro_preview_is_preview(self) -> None:
+        """Test Vertex AI Gemini 3 Pro Preview has preview status."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("vertex_ai/gemini-3-pro-preview")
+
+        assert caps.status == "preview"
+
+    # =========================================================================
+    # OpenAI GPT-5.x Models (CURRENT)
+    # =========================================================================
+
+    def test_gpt_5_2_is_current(self) -> None:
+        """Test GPT-5.2 has current status (latest GA)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gpt-5.2")
+
+        assert caps.status == "current"
+
+    def test_gpt_5_2_pro_is_current(self) -> None:
+        """Test GPT-5.2-pro has current status (latest reasoning)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gpt-5.2-pro")
+
+        assert caps.status == "current"
+
+    # =========================================================================
+    # OpenAI o3/o4 Models (CURRENT)
+    # =========================================================================
+
+    def test_o3_is_current(self) -> None:
+        """Test o3 has current status (latest reasoning model)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("o3")
+
+        assert caps.status == "current"
+
+    # =========================================================================
+    # OpenAI Legacy Models (LEGACY - older but still supported)
+    # =========================================================================
+
+    def test_gpt_4o_is_legacy(self) -> None:
+        """Test GPT-4o has legacy status (superseded by GPT-5.x)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gpt-4o")
+
+        assert caps.status == "legacy"
+
+    def test_gpt_4o_mini_is_legacy(self) -> None:
+        """Test GPT-4o-mini has legacy status (superseded by GPT-5.x)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gpt-4o-mini")
+
+        assert caps.status == "legacy"
+
+    def test_gpt_4_turbo_is_legacy(self) -> None:
+        """Test GPT-4-turbo has legacy status (superseded by GPT-5.x)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gpt-4-turbo")
+
+        assert caps.status == "legacy"
+
+    def test_gpt_4_1_nano_is_legacy(self) -> None:
+        """Test GPT-4.1-nano has legacy status."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gpt-4.1-nano")
+
+        assert caps.status == "legacy"
+
+    def test_gpt_4_1_mini_is_legacy(self) -> None:
+        """Test GPT-4.1-mini has legacy status."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gpt-4.1-mini")
+
+        assert caps.status == "legacy"
+
+    # =========================================================================
+    # OpenAI Deprecated Models (DEPRECATED - scheduled for retirement)
+    # =========================================================================
+
+    def test_o1_preview_is_deprecated(self) -> None:
+        """Test o1-preview has deprecated status (replaced by o3)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("o1-preview")
+
+        assert caps.status == "deprecated"
+
+    def test_o1_mini_is_deprecated(self) -> None:
+        """Test o1-mini has deprecated status (replaced by o3)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("o1-mini")
+
+        assert caps.status == "deprecated"
+
+    # =========================================================================
+    # Google Legacy Models (LEGACY)
+    # =========================================================================
+
+    def test_gemini_pro_is_legacy(self) -> None:
+        """Test Gemini Pro (1.0) has legacy status (superseded by 2.5)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-pro")
+
+        assert caps.status == "legacy"
+
+
+@pytest.mark.unit
+@pytest.mark.agents
+@pytest.mark.orchestrator
+@pytest.mark.xdist_group(name="model_registry_status_filter")
+class TestModelStatusFiltering:
+    """Tests for filtering models by status."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_list_models_supports_status_filter(self) -> None:
+        """Test list_models supports filtering by status."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+
+        current_models = registry.list_models(status="current")
+        preview_models = registry.list_models(status="preview")
+        legacy_models = registry.list_models(status="legacy")
+        deprecated_models = registry.list_models(status="deprecated")
+
+        # Should have models in each category
+        assert len(current_models) > 0, "No current models found"
+        assert len(preview_models) > 0, "No preview models found"
+        assert len(legacy_models) > 0, "No legacy models found"
+        assert len(deprecated_models) > 0, "No deprecated models found"
+
+    def test_list_models_current_excludes_deprecated(self) -> None:
+        """Test current filter excludes deprecated models."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+
+        current_models = registry.list_models(status="current")
+
+        # Deprecated models should not be in current
+        assert "o1-preview" not in current_models
+        assert "o1-mini" not in current_models
+
+    def test_list_models_status_combined_with_vendor(self) -> None:
+        """Test status filter combines with vendor filter."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+
+        current_anthropic = registry.list_models(vendor="anthropic", status="current")
+
+        # All results should be current Anthropic models
+        for model_id in current_anthropic:
+            caps = registry.get(model_id)
+            assert caps.vendor == "anthropic"
+            assert caps.status == "current"
+
+    def test_get_frontend_models_includes_status(self) -> None:
+        """Test get_frontend_models includes status field for frontend filtering."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        models = registry.get_frontend_models()
+
+        # Every frontend model should have status field
+        for model in models:
+            assert "status" in model, f"Model missing status: {model.get('id')}"
+            assert model["status"] in {"current", "preview", "legacy", "deprecated"}
+
+    def test_get_frontend_models_can_filter_by_status(self) -> None:
+        """Test get_frontend_models can optionally filter by status."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+
+        # Get all models
+        all_models = registry.get_frontend_models()
+
+        # Get only current (recommended for production)
+        current_models = registry.get_frontend_models(status="current")
+
+        # Current should be subset of all
+        assert len(current_models) < len(all_models)
+        assert all(m["status"] == "current" for m in current_models)
+
+
+@pytest.mark.unit
+@pytest.mark.agents
+@pytest.mark.orchestrator
+@pytest.mark.xdist_group(name="model_registry_sunset_date")
+class TestModelSunsetDate:
+    """Tests for sunset_date field on ModelCapabilities.
+
+    Deprecated models should have a sunset_date indicating when they will be retired.
+    This enables frontend deprecation warnings and migration planning.
+
+    Sprint 2 - Enhanced Model Selector: Model Deprecation Warnings
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_model_capabilities_has_sunset_date_field(self) -> None:
+        """Test ModelCapabilities has optional sunset_date field."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="test-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+            status="deprecated",
+            sunset_date="2026-06-01",
+        )
+
+        assert hasattr(caps, "sunset_date")
+        assert caps.sunset_date == "2026-06-01"
+
+    def test_sunset_date_defaults_to_none(self) -> None:
+        """Test sunset_date defaults to None for non-deprecated models."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="test-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+        )
+
+        assert caps.sunset_date is None
+
+    def test_deprecated_models_should_have_sunset_date(self) -> None:
+        """Test deprecated models in registry have sunset_date set."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        deprecated_models = registry.list_models(status="deprecated")
+
+        for model_id in deprecated_models:
+            caps = registry.get(model_id)
+            assert caps.sunset_date is not None, f"Deprecated model {model_id} should have sunset_date"
+
+    def test_sunset_date_format_is_iso_date(self) -> None:
+        """Test sunset_date uses ISO 8601 date format (YYYY-MM-DD)."""
+        from datetime import datetime
+
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        deprecated_models = registry.list_models(status="deprecated")
+
+        for model_id in deprecated_models:
+            caps = registry.get(model_id)
+            if caps.sunset_date:
+                # Should parse as ISO date
+                try:
+                    datetime.strptime(caps.sunset_date, "%Y-%m-%d")
+                except ValueError:
+                    pytest.fail(f"Model {model_id} has invalid sunset_date format: {caps.sunset_date} (expected YYYY-MM-DD)")
+
+    def test_get_frontend_models_includes_sunset_date(self) -> None:
+        """Test get_frontend_models includes sunset_date for deprecated models."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        models = registry.get_frontend_models()
+
+        for model in models:
+            if model.get("status") == "deprecated":
+                assert "sunset_date" in model, f"Deprecated model {model.get('id')} missing sunset_date in frontend data"
+
+    def test_current_models_sunset_date_is_none_or_absent(self) -> None:
+        """Test current models don't have sunset_date."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        current_models = registry.list_models(status="current")
+
+        for model_id in current_models:
+            caps = registry.get(model_id)
+            assert caps.sunset_date is None, f"Current model {model_id} should not have sunset_date"

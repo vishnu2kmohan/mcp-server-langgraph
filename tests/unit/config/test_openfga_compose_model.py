@@ -68,7 +68,7 @@ class TestFgaDslParser:
         """
         [PARSER] Parse type with no relations (e.g., 'type user').
         """
-        
+
         fga_content = "type user"
         result = parse_fga_type(fga_content)
 
@@ -79,7 +79,7 @@ class TestFgaDslParser:
         """
         [PARSER] Parse type with simple [user] relation.
         """
-        
+
         fga_content = """type organization
   relations
     define member: [user]"""
@@ -94,7 +94,7 @@ class TestFgaDslParser:
         """
         [PARSER] Parse relation with multiple types: [user, service_principal].
         """
-        
+
         fga_content = """type tool
   relations
     define owner: [user, service_principal]"""
@@ -114,7 +114,7 @@ class TestFgaDslParser:
         """
         [PARSER] Parse computed relation: define viewer: editor.
         """
-        
+
         fga_content = """type service_principal
   relations
     define owner: [user]
@@ -131,7 +131,7 @@ class TestFgaDslParser:
         """
         [PARSER] Parse union: [user] or owner or organization->member.
         """
-        
+
         fga_content = """type tool
   relations
     define executor: [user] or owner or organization->member
@@ -150,7 +150,7 @@ class TestFgaDslParser:
         """
         [PARSER] Parse tupleToUserset: organization->member.
         """
-        
+
         fga_content = """type workflow
   relations
     define viewer: [user] or organization->member"""
@@ -186,7 +186,7 @@ class TestFgaModuleParser:
         """
         [MODULE] Parse module file and extract all type definitions.
         """
-        
+
         fga_content = """# Module: 01-core
 # Description: Base identity types
 
@@ -212,7 +212,7 @@ type organization
         """
         [MODULE] Comments before type become description.
         """
-        
+
         fga_content = """model
   schema 1.1
 
@@ -243,7 +243,7 @@ class TestComposeModules:
         """
         [COMPOSE] Compose all .fga modules into single model.json structure.
         """
-        
+
         # Use actual modules directory
         modules_dir = Path(__file__).parent.parent.parent.parent / "config" / "openfga" / "modules"
 
@@ -260,7 +260,7 @@ class TestComposeModules:
         """
         [COMPOSE] Compose includes conditions from 00-conditions.json.
         """
-        
+
         modules_dir = Path(__file__).parent.parent.parent.parent / "config" / "openfga" / "modules"
 
         if not modules_dir.exists():
@@ -280,7 +280,7 @@ class TestComposeModules:
         """
         [COMPOSE] Composed model has same types as original model.json.
         """
-        
+
         base_dir = Path(__file__).parent.parent.parent.parent / "config" / "openfga"
         modules_dir = base_dir / "modules"
         model_path = base_dir / "model.json"
@@ -317,7 +317,7 @@ class TestRoundTrip:
         """
         [ROUNDTRIP] Extract to modules then compose back preserves all types.
         """
-        
+
         base_dir = Path(__file__).parent.parent.parent.parent / "config" / "openfga"
         model_path = base_dir / "model.json"
 
@@ -345,7 +345,7 @@ class TestRoundTrip:
         """
         [ROUNDTRIP] Extract then compose preserves relation names.
         """
-        
+
         base_dir = Path(__file__).parent.parent.parent.parent / "config" / "openfga"
         model_path = base_dir / "model.json"
 
@@ -369,9 +369,7 @@ class TestRoundTrip:
             composed_rels = set(composed_org.get("relations", {}).keys())
 
             assert original_rels == composed_rels, (
-                f"Relation mismatch for 'organization'.\n"
-                f"Original: {original_rels}\n"
-                f"Composed: {composed_rels}"
+                f"Relation mismatch for 'organization'.\nOriginal: {original_rels}\nComposed: {composed_rels}"
             )
 
 
@@ -485,9 +483,7 @@ class TestRoundTripDiffValidation:
             "types_match": False,
             "missing_types": ["workflow"],
             "extra_types": [],
-            "relation_diffs": {
-                "organization": {"missing": ["admin"], "extra": []}
-            },
+            "relation_diffs": {"organization": {"missing": ["admin"], "extra": []}},
         }
 
         report = generate_diff_report(diff)
@@ -534,10 +530,7 @@ class TestIntersectionRelations:
         can_view_rel = result["relations"].get("can_view", {})
 
         # Should have intersection structure
-        assert "intersection" in can_view_rel, (
-            f"Expected 'intersection' in can_view relation. "
-            f"Got: {can_view_rel}"
-        )
+        assert "intersection" in can_view_rel, f"Expected 'intersection' in can_view relation. Got: {can_view_rel}"
         children = can_view_rel["intersection"]["child"]
         assert len(children) == 2
 
@@ -555,10 +548,7 @@ class TestIntersectionRelations:
 
         can_edit_rel = result["relations"].get("can_edit", {})
 
-        assert "intersection" in can_edit_rel, (
-            f"Expected 'intersection' in can_edit relation. "
-            f"Got: {can_edit_rel}"
-        )
+        assert "intersection" in can_edit_rel, f"Expected 'intersection' in can_edit relation. Got: {can_edit_rel}"
 
         children = can_edit_rel["intersection"]["child"]
         assert len(children) == 2
@@ -584,10 +574,7 @@ class TestIntersectionRelations:
 
         rel = result["relations"].get("restricted_viewer", {})
 
-        assert "intersection" in rel, (
-            f"Expected 'intersection' in restricted_viewer. "
-            f"Got: {rel}"
-        )
+        assert "intersection" in rel, f"Expected 'intersection' in restricted_viewer. Got: {rel}"
 
         children = rel["intersection"]["child"]
         assert len(children) == 2
@@ -640,9 +627,7 @@ class TestIntersectionRelations:
 
         # Verify intersection is preserved
         assert "intersection" in parsed["relations"].get("can_view", {}), (
-            f"Intersection not preserved in roundtrip.\n"
-            f"DSL output:\n{dsl}\n"
-            f"Parsed: {parsed['relations'].get('can_view', {})}"
+            f"Intersection not preserved in roundtrip.\nDSL output:\n{dsl}\nParsed: {parsed['relations'].get('can_view', {})}"
         )
 
 
@@ -678,11 +663,7 @@ class TestJsonSchemaValidation:
                 {
                     "type": "organization",
                     "relations": {"member": {"this": {}}},
-                    "metadata": {
-                        "relations": {
-                            "member": {"directly_related_user_types": [{"type": "user"}]}
-                        }
-                    },
+                    "metadata": {"relations": {"member": {"directly_related_user_types": [{"type": "user"}]}}},
                 },
             ],
         }
@@ -734,6 +715,90 @@ class TestJsonSchemaValidation:
 
         assert result["valid"] is False
 
+    def test_validate_schema_rejects_non_assignable_relation_with_metadata(self) -> None:
+        """
+        [SCHEMA] Non-assignable relations should not have directly_related_user_types.
+
+        OpenFGA rejects models where a computed-only relation (no 'this: {}')
+        has 'directly_related_user_types' in metadata. This test ensures we
+        catch this error before uploading to OpenFGA.
+
+        Regression test for: memory_index.viewer issue where viewer was purely
+        computed (union of owner and admin) but metadata listed user types.
+        """
+        invalid_model = {
+            "schema_version": "1.1",
+            "type_definitions": [
+                {
+                    "type": "memory_index",
+                    "relations": {
+                        "owner": {"this": {}},
+                        "admin": {"this": {}},
+                        # viewer is purely computed (no 'this')
+                        "viewer": {
+                            "union": {
+                                "child": [
+                                    {"computedUserset": {"relation": "owner"}},
+                                    {"computedUserset": {"relation": "admin"}},
+                                ]
+                            }
+                        },
+                    },
+                    "metadata": {
+                        "relations": {
+                            "owner": {"directly_related_user_types": [{"type": "user"}]},
+                            "admin": {"directly_related_user_types": [{"type": "user"}]},
+                            # ERROR: viewer is not assignable, should not have this
+                            "viewer": {"directly_related_user_types": [{"type": "user"}]},
+                        }
+                    },
+                },
+            ],
+        }
+
+        result = validate_model_schema(invalid_model)
+
+        assert result["valid"] is False, "Should reject non-assignable relation with directly_related_user_types"
+        assert any("non-assignable" in str(e).lower() or "viewer" in str(e) for e in result.get("errors", [])), (
+            f"Expected error about non-assignable viewer relation. Got: {result.get('errors', [])}"
+        )
+
+    def test_validate_schema_accepts_assignable_relation_with_metadata(self) -> None:
+        """
+        [SCHEMA] Assignable relations (with 'this') CAN have directly_related_user_types.
+        """
+        valid_model = {
+            "schema_version": "1.1",
+            "type_definitions": [
+                {
+                    "type": "document",
+                    "relations": {
+                        "owner": {"this": {}},
+                        # viewer has 'this' in union, so it's assignable
+                        "viewer": {
+                            "union": {
+                                "child": [
+                                    {"this": {}},  # Makes it assignable
+                                    {"computedUserset": {"relation": "owner"}},
+                                ]
+                            }
+                        },
+                    },
+                    "metadata": {
+                        "relations": {
+                            "owner": {"directly_related_user_types": [{"type": "user"}]},
+                            # OK: viewer is assignable (has 'this' in union)
+                            "viewer": {"directly_related_user_types": [{"type": "user"}]},
+                        }
+                    },
+                },
+            ],
+        }
+
+        result = validate_model_schema(valid_model)
+
+        assert result["valid"] is True, f"Should accept assignable relation with metadata. Errors: {result.get('errors', [])}"
+
     def test_validate_composed_model_against_schema(self) -> None:
         """
         [SCHEMA] Composed model from modules should pass schema validation.
@@ -750,10 +815,7 @@ class TestJsonSchemaValidation:
         composed = compose_modules(modules_dir)
         result = validate_model_schema(composed)
 
-        assert result["valid"] is True, (
-            f"Composed model failed schema validation.\n"
-            f"Errors: {result.get('errors', [])}"
-        )
+        assert result["valid"] is True, f"Composed model failed schema validation.\nErrors: {result.get('errors', [])}"
 
     def test_get_schema_returns_openfga_schema(self) -> None:
         """
@@ -768,6 +830,35 @@ class TestJsonSchemaValidation:
         assert isinstance(schema, dict)
         assert "$schema" in schema or "type" in schema
         assert "properties" in schema or "definitions" in schema
+
+    def test_validate_production_model_json(self) -> None:
+        """
+        [SCHEMA] Production model.json should pass schema validation.
+
+        This test validates config/openfga/model.json - the file that actually
+        gets uploaded to OpenFGA. This catches issues like the memory_index.viewer
+        bug where a computed relation had directly_related_user_types metadata.
+
+        This is a critical regression test to prevent broken models from being
+        deployed to production.
+        """
+        import json
+
+        model_path = Path(__file__).parent.parent.parent.parent / "config" / "openfga" / "model.json"
+
+        if not model_path.exists():
+            pytest.skip("model.json not found")
+
+        with open(model_path) as f:
+            model = json.load(f)
+
+        result = validate_model_schema(model)
+
+        assert result["valid"] is True, (
+            f"Production model.json failed schema validation.\n"
+            f"File: {model_path}\n"
+            f"Errors:\n" + "\n".join(f"  - {e}" for e in result.get("errors", []))
+        )
 
 
 @pytest.mark.xdist_group(name="openfga_compose")
@@ -807,10 +898,7 @@ class TestDifferenceRelations:
         can_view_rel = result["relations"].get("can_view", {})
 
         # Should have difference structure
-        assert "difference" in can_view_rel, (
-            f"Expected 'difference' in can_view relation. "
-            f"Got: {can_view_rel}"
-        )
+        assert "difference" in can_view_rel, f"Expected 'difference' in can_view relation. Got: {can_view_rel}"
         assert "base" in can_view_rel["difference"]
         assert "subtract" in can_view_rel["difference"]
 
@@ -828,10 +916,7 @@ class TestDifferenceRelations:
 
         can_edit_rel = result["relations"].get("can_edit", {})
 
-        assert "difference" in can_edit_rel, (
-            f"Expected 'difference' in can_edit relation. "
-            f"Got: {can_edit_rel}"
-        )
+        assert "difference" in can_edit_rel, f"Expected 'difference' in can_edit relation. Got: {can_edit_rel}"
 
         # Base should be computedUserset for editor
         base = can_edit_rel["difference"]["base"]
@@ -856,10 +941,7 @@ class TestDifferenceRelations:
 
         rel = result["relations"].get("allowed", {})
 
-        assert "difference" in rel, (
-            f"Expected 'difference' in allowed. "
-            f"Got: {rel}"
-        )
+        assert "difference" in rel, f"Expected 'difference' in allowed. Got: {rel}"
 
         # Base should be 'this' for direct types
         base = rel["difference"]["base"]
@@ -901,9 +983,7 @@ class TestDifferenceRelations:
 
         # Verify difference is preserved
         assert "difference" in parsed["relations"].get("can_view", {}), (
-            f"Difference not preserved in roundtrip.\n"
-            f"DSL output:\n{dsl}\n"
-            f"Parsed: {parsed['relations'].get('can_view', {})}"
+            f"Difference not preserved in roundtrip.\nDSL output:\n{dsl}\nParsed: {parsed['relations'].get('can_view', {})}"
         )
 
 
@@ -946,20 +1026,11 @@ class TestNestedExpressions:
         # Should have union at top level with intersection as child
         # OR should have custom nested structure
         # The exact structure depends on implementation
-        assert can_access_rel != {}, (
-            f"Expected non-empty can_access relation. "
-            f"Got: {can_access_rel}"
-        )
+        assert can_access_rel != {}, f"Expected non-empty can_access relation. Got: {can_access_rel}"
 
         # Either union or intersection should be present
-        has_complex = (
-            "union" in can_access_rel or
-            "intersection" in can_access_rel or
-            "nested" in str(can_access_rel).lower()
-        )
-        assert has_complex, (
-            f"Expected complex nested structure. Got: {can_access_rel}"
-        )
+        has_complex = "union" in can_access_rel or "intersection" in can_access_rel or "nested" in str(can_access_rel).lower()
+        assert has_complex, f"Expected complex nested structure. Got: {can_access_rel}"
 
     def test_parse_intersection_of_unions(self) -> None:
         """
@@ -978,9 +1049,7 @@ class TestNestedExpressions:
 
         restricted_rel = result["relations"].get("restricted", {})
 
-        assert restricted_rel != {}, (
-            f"Expected non-empty restricted relation."
-        )
+        assert restricted_rel != {}, "Expected non-empty restricted relation."
 
     def test_parse_triple_operator_chain(self) -> None:
         """
@@ -997,17 +1066,11 @@ class TestNestedExpressions:
 
         all_three_rel = result["relations"].get("all_three", {})
 
-        assert "intersection" in all_three_rel, (
-            f"Expected 'intersection' for triple and. "
-            f"Got: {all_three_rel}"
-        )
+        assert "intersection" in all_three_rel, f"Expected 'intersection' for triple and. Got: {all_three_rel}"
 
         # Should have 3 children
         children = all_three_rel["intersection"]["child"]
-        assert len(children) == 3, (
-            f"Expected 3 children for 'a and b and c'. "
-            f"Got {len(children)}: {children}"
-        )
+        assert len(children) == 3, f"Expected 3 children for 'a and b and c'. Got {len(children)}: {children}"
 
 
 @pytest.mark.xdist_group(name="openfga_compose")
@@ -1048,7 +1111,7 @@ class TestConditionParameterValidation:
             "parameters": {
                 "current_time": {"type_name": "TYPE_NAME_TIMESTAMP"},
                 "expiry": {"type_name": "TYPE_NAME_TIMESTAMP"},
-            }
+            },
         }
 
         result = validate_condition_params(valid_condition)
@@ -1067,7 +1130,7 @@ class TestConditionParameterValidation:
         invalid_condition = {
             "name": "time_bound_share",
             # Missing expression
-            "parameters": {}
+            "parameters": {},
         }
 
         result = validate_condition_params(invalid_condition)
@@ -1088,7 +1151,7 @@ class TestConditionParameterValidation:
             "expression": "x > y",
             "parameters": {
                 "x": {"type_name": "INVALID_TYPE_NAME"},  # Invalid type
-            }
+            },
         }
 
         result = validate_condition_params(invalid_condition)
@@ -1113,7 +1176,7 @@ class TestConditionParameterValidation:
                     "parameters": {
                         "current_time": {"type_name": "TYPE_NAME_TIMESTAMP"},
                         "expiry": {"type_name": "TYPE_NAME_TIMESTAMP"},
-                    }
+                    },
                 },
                 "subscription_tier": {
                     "name": "subscription_tier",
@@ -1121,9 +1184,9 @@ class TestConditionParameterValidation:
                     "parameters": {
                         "user_tier": {"type_name": "TYPE_NAME_STRING"},
                         "allowed_tiers": {"type_name": "TYPE_NAME_LIST", "generic_types": [{"type_name": "TYPE_NAME_STRING"}]},
-                    }
-                }
-            }
+                    },
+                },
+            },
         }
 
         result = validate_model_conditions(model)
@@ -1188,7 +1251,7 @@ class TestModuleSyncValidation:
                     {"type": "user", "relations": {}},
                     {"type": "organization", "relations": {}},
                     {"type": "uncovered_type", "relations": {}},  # Not in modules
-                ]
+                ],
             }
             with open(model_path, "w") as f:
                 json.dump(model, f)
@@ -1227,7 +1290,7 @@ type organization
                 "schema_version": "1.1",
                 "type_definitions": [
                     {"type": "user", "relations": {}},
-                ]
+                ],
             }
             with open(model_path, "w") as f:
                 json.dump(model, f)
@@ -1314,12 +1377,8 @@ class TestPhase8Modularization:
         missing = model_types - all_module_types
         extra = all_module_types - model_types
 
-        assert len(missing) == 0, (
-            f"Types in model but not in MODULES: {missing}"
-        )
-        assert len(extra) == 0, (
-            f"Types in MODULES but not in model: {extra}"
-        )
+        assert len(missing) == 0, f"Types in model but not in MODULES: {missing}"
+        assert len(extra) == 0, f"Types in MODULES but not in model: {extra}"
 
     def test_module_names_follow_convention(self) -> None:
         """
@@ -1330,13 +1389,12 @@ class TestPhase8Modularization:
             pytest.skip("get_module_types not available")
 
         import re
+
         module_types = get_module_types()
 
         for module_name in module_types.keys():
             # Should match pattern like "01-core", "02-resources"
-            assert re.match(r"^\d{2}-[a-z-]+$", module_name), (
-                f"Module name '{module_name}' doesn't follow NN-name convention"
-            )
+            assert re.match(r"^\d{2}-[a-z-]+$", module_name), f"Module name '{module_name}' doesn't follow NN-name convention"
 
     def test_extract_creates_all_module_files(self) -> None:
         """
@@ -1357,8 +1415,7 @@ class TestPhase8Modularization:
             fga_files = list(tmp_modules.glob("*.fga"))
 
             assert len(fga_files) >= 9, (
-                f"Expected at least 9 module files, got {len(fga_files)}: "
-                f"{[f.name for f in fga_files]}"
+                f"Expected at least 9 module files, got {len(fga_files)}: {[f.name for f in fga_files]}"
             )
 
     def test_extract_creates_conditions_module(self) -> None:
@@ -1384,9 +1441,7 @@ class TestPhase8Modularization:
             extract_modules(model_path, tmp_modules)
 
             conditions_file = tmp_modules / "00-conditions.json"
-            assert conditions_file.exists(), (
-                "Expected 00-conditions.json for model with conditions"
-            )
+            assert conditions_file.exists(), "Expected 00-conditions.json for model with conditions"
 
     def test_full_modularization_cycle(self) -> None:
         """
@@ -1423,6 +1478,4 @@ class TestPhase8Modularization:
 
             # Validate using diff function
             diff = validate_roundtrip_diff(original, composed)
-            assert diff["types_match"] is True, (
-                f"Round-trip validation failed: {generate_diff_report(diff)}"
-            )
+            assert diff["types_match"] is True, f"Round-trip validation failed: {generate_diff_report(diff)}"

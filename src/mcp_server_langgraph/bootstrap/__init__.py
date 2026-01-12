@@ -66,6 +66,10 @@ from mcp_server_langgraph.bootstrap.semantic import (
     SemanticState,
     init_semantic,
 )
+from mcp_server_langgraph.bootstrap.model_sync import (
+    ModelSyncState,
+    init_model_sync,
+)
 from mcp_server_langgraph.core.config.streaming import StreamingSettings
 
 
@@ -86,6 +90,7 @@ class AppState:
     skills: SkillsState | None = None
     context_graph: ContextGraphState | None = None
     semantic: SemanticState | None = None
+    model_sync: ModelSyncState | None = None
 
     async def cleanup(self) -> None:
         """
@@ -94,6 +99,9 @@ class AppState:
         This should be called during app shutdown to release resources.
         """
         # Cleanup in reverse order of initialization
+        if self.model_sync:
+            await self.model_sync.cleanup()
+
         if self.semantic:
             await self.semantic.cleanup()
 
@@ -177,6 +185,9 @@ async def bootstrap_all(settings: "Settings") -> AppState:
     # Phase 8: Semantic index (async, tool/skill/memory search)
     semantic = await init_semantic(settings)
 
+    # Phase 9: Model sync (async, LiteLLM pricing sync scheduler)
+    model_sync = await init_model_sync(settings)
+
     return AppState(
         telemetry=telemetry,
         security=security,
@@ -186,6 +197,7 @@ async def bootstrap_all(settings: "Settings") -> AppState:
         skills=skills,
         context_graph=context_graph,
         semantic=semantic,
+        model_sync=model_sync,
     )
 
 
@@ -200,6 +212,7 @@ __all__ = [
     "SkillsState",
     "ContextGraphState",
     "SemanticState",
+    "ModelSyncState",
     "init_observability",
     "init_auth",
     "init_storage",
@@ -208,4 +221,5 @@ __all__ = [
     "init_skills",
     "init_context_graph",
     "init_semantic",
+    "init_model_sync",
 ]

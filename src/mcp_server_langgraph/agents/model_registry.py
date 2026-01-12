@@ -35,6 +35,13 @@ CapabilityType = Literal[
     "effort_param",
 ]
 
+# Model lifecycle status
+# - current: Generally available, recommended for production
+# - preview: Preview/beta, feature-complete but not GA
+# - legacy: Older version, still supported but superseded
+# - deprecated: Scheduled for retirement, migrate away
+ModelStatus = Literal["current", "preview", "legacy", "deprecated"]
+
 
 @dataclass
 class ModelCapabilities:
@@ -59,6 +66,8 @@ class ModelCapabilities:
         supports_json_mode: Whether model supports structured JSON output
         tier: Model tier for complexity routing (simple, complicated, complex)
         max_thinking_tokens: Maximum thinking tokens for extended thinking (None if not supported)
+        display_name: Human-readable name for frontend display (defaults to model_id)
+        public_id: User-friendly ID for frontend (defaults to model_id)
     """
 
     model_id: str
@@ -79,10 +88,26 @@ class ModelCapabilities:
     tier: Literal["simple", "complicated", "complex"] = "complicated"
     max_thinking_tokens: int | None = None
 
+    # Frontend display fields (Sprint 1 - Enhanced Model Selector)
+    display_name: str | None = None
+    public_id: str | None = None
+
+    # Model lifecycle status (current, preview, legacy, deprecated)
+    status: ModelStatus = "current"
+
+    # Sunset date for deprecated models (ISO 8601 format: YYYY-MM-DD)
+    # Only set for deprecated models to indicate when they will be retired
+    sunset_date: str | None = None
+
     def __post_init__(self) -> None:
-        """Calculate effective_limit if not provided."""
+        """Calculate effective_limit and set frontend defaults."""
         if self.effective_limit is None:
             self.effective_limit = int(self.context_limit * DEFAULT_EFFECTIVE_PERCENTAGE)
+        # Default display_name and public_id to model_id if not specified
+        if self.display_name is None:
+            self.display_name = self.model_id
+        if self.public_id is None:
+            self.public_id = self.model_id
 
     @property
     def capabilities(self) -> set[str]:
@@ -126,7 +151,7 @@ class ModelRegistry:
 
     def _register_builtin_models(self) -> None:
         """Register all built-in models."""
-        # Anthropic models
+        # Anthropic models (Claude 4.5 - CURRENT)
         self._models["claude-opus-4-5-20251101"] = ModelCapabilities(
             model_id="claude-opus-4-5-20251101",
             vendor="anthropic",
@@ -143,6 +168,9 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="complex",
             max_thinking_tokens=65536,  # ULTRA level
+            display_name="Claude Opus 4.5",
+            public_id="claude-opus-4-5",
+            status="current",
         )
 
         self._models["claude-sonnet-4-5-20250929"] = ModelCapabilities(
@@ -161,6 +189,9 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="complicated",
             max_thinking_tokens=32768,  # HIGH level
+            display_name="Claude Sonnet 4.5",
+            public_id="claude-sonnet-4-5",
+            status="current",
         )
 
         self._models["claude-haiku-4-5-20251001"] = ModelCapabilities(
@@ -179,9 +210,12 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="simple",
             max_thinking_tokens=None,  # No extended thinking
+            display_name="Claude Haiku 4.5",
+            public_id="claude-haiku-4-5",
+            status="current",
         )
 
-        # Google Gemini models
+        # Google Gemini 3 models (PREVIEW - not yet GA)
         self._models["gemini-3-flash"] = ModelCapabilities(
             model_id="gemini-3-flash",
             vendor="google",
@@ -198,6 +232,9 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="simple",
             max_thinking_tokens=None,
+            display_name="Gemini 3 Flash",
+            public_id="gemini-3-flash",
+            status="preview",
         )
 
         self._models["gemini-3-pro"] = ModelCapabilities(
@@ -216,9 +253,12 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="complex",
             max_thinking_tokens=65536,  # Deep Think budget
+            display_name="Gemini 3 Pro",
+            public_id="gemini-3-pro",
+            status="preview",
         )
 
-        # For complicated tier (gemini-2.5-flash)
+        # Google Gemini 2.5 models (CURRENT - GA Aug 2025)
         self._models["gemini-2.5-flash"] = ModelCapabilities(
             model_id="gemini-2.5-flash",
             vendor="google",
@@ -235,9 +275,12 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="complicated",
             max_thinking_tokens=None,
+            display_name="Gemini 2.5 Flash",
+            public_id="gemini-2.5-flash",
+            status="current",
         )
 
-        # OpenAI GPT-5 models
+        # OpenAI GPT-5 models (CURRENT)
         self._models["gpt-5.2"] = ModelCapabilities(
             model_id="gpt-5.2",
             vendor="openai",
@@ -254,6 +297,9 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="complicated",
             max_thinking_tokens=None,
+            display_name="GPT-5.2",
+            public_id="gpt-5.2",
+            status="current",
         )
 
         self._models["gpt-5.2-pro"] = ModelCapabilities(
@@ -272,9 +318,12 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="complex",
             max_thinking_tokens=65536,
+            display_name="GPT-5.2 Pro",
+            public_id="gpt-5.2-pro",
+            status="current",
         )
 
-        # Legacy OpenAI models for backward compatibility
+        # OpenAI GPT-4.1 models (LEGACY - superseded by GPT-5.x)
         self._models["gpt-4.1-nano"] = ModelCapabilities(
             model_id="gpt-4.1-nano",
             vendor="openai",
@@ -289,6 +338,9 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="simple",
             max_thinking_tokens=None,
+            display_name="GPT-4.1 Nano",
+            public_id="gpt-4.1-nano",
+            status="legacy",
         )
 
         self._models["gpt-4.1-mini"] = ModelCapabilities(
@@ -305,8 +357,12 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="simple",
             max_thinking_tokens=None,
+            display_name="GPT-4.1 Mini",
+            public_id="gpt-4.1-mini",
+            status="legacy",
         )
 
+        # OpenAI o3 (CURRENT - latest reasoning model)
         self._models["o3"] = ModelCapabilities(
             model_id="o3",
             vendor="openai",
@@ -322,9 +378,13 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="complex",
             max_thinking_tokens=100_000,  # o3 has high thinking capacity
+            display_name="o3",
+            public_id="o3",
+            status="current",
         )
 
-        # Vertex AI Anthropic models (use @ format)
+        # Vertex AI Anthropic models (CURRENT, use @ format)
+        # Note: These share public_id with native Anthropic models (deduped in get_frontend_models)
         self._models["claude-opus-4-5@20251101"] = ModelCapabilities(
             model_id="claude-opus-4-5@20251101",
             vendor="vertex_ai_anthropic",
@@ -341,6 +401,9 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="complex",
             max_thinking_tokens=65536,
+            display_name="Claude Opus 4.5 (Vertex AI)",
+            public_id="claude-opus-4-5",  # Same as native - deduped
+            status="current",
         )
 
         self._models["claude-sonnet-4-5@20250929"] = ModelCapabilities(
@@ -358,6 +421,9 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="complicated",
             max_thinking_tokens=32768,
+            display_name="Claude Sonnet 4.5 (Vertex AI)",
+            public_id="claude-sonnet-4-5",  # Same as native - deduped
+            status="current",
         )
 
         self._models["claude-haiku-4-5@20251001"] = ModelCapabilities(
@@ -374,9 +440,13 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="simple",
             max_thinking_tokens=None,
+            display_name="Claude Haiku 4.5 (Vertex AI)",
+            public_id="claude-haiku-4-5",  # Same as native - deduped
+            status="current",
         )
 
-        # Vertex AI Gemini models
+        # Vertex AI Gemini 3 models (PREVIEW)
+        # Note: These share public_id with native Gemini models (deduped in get_frontend_models)
         self._models["vertex_ai/gemini-3-flash"] = ModelCapabilities(
             model_id="vertex_ai/gemini-3-flash",
             vendor="vertex_ai",
@@ -391,6 +461,9 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="simple",
             max_thinking_tokens=None,
+            display_name="Gemini 3 Flash (Vertex AI)",
+            public_id="gemini-3-flash",  # Same as native - deduped
+            status="preview",
         )
 
         self._models["vertex_ai/gemini-3-pro"] = ModelCapabilities(
@@ -408,9 +481,12 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="complex",
             max_thinking_tokens=65536,
+            display_name="Gemini 3 Pro (Vertex AI)",
+            public_id="gemini-3-pro",  # Same as native - deduped
+            status="preview",
         )
 
-        # Vertex AI Gemini preview models (gemini-3 is currently in preview)
+        # Vertex AI Gemini 3 preview models (PREVIEW - gemini-3 is currently in preview)
         self._models["vertex_ai/gemini-3-flash-preview"] = ModelCapabilities(
             model_id="vertex_ai/gemini-3-flash-preview",
             vendor="vertex_ai",
@@ -425,6 +501,9 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="simple",
             max_thinking_tokens=None,
+            display_name="Gemini 3 Flash Preview",
+            public_id="gemini-3-flash-preview",
+            status="preview",
         )
 
         self._models["vertex_ai/gemini-3-pro-preview"] = ModelCapabilities(
@@ -442,9 +521,13 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="complex",
             max_thinking_tokens=65536,
+            display_name="Gemini 3 Pro Preview",
+            public_id="gemini-3-pro-preview",
+            status="preview",
         )
 
-        # Azure OpenAI models
+        # Azure OpenAI models (CURRENT)
+        # Note: These share public_id with native OpenAI models (deduped in get_frontend_models)
         self._models["azure/gpt-5.2"] = ModelCapabilities(
             model_id="azure/gpt-5.2",
             vendor="azure",
@@ -459,6 +542,9 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="complicated",
             max_thinking_tokens=None,
+            display_name="GPT-5.2 (Azure)",
+            public_id="gpt-5.2",  # Same as native - deduped
+            status="current",
         )
 
         self._models["azure/gpt-5.2-pro"] = ModelCapabilities(
@@ -476,6 +562,227 @@ class ModelRegistry:
             supports_json_mode=True,
             tier="complex",
             max_thinking_tokens=65536,
+            display_name="GPT-5.2 Pro (Azure)",
+            public_id="gpt-5.2-pro",  # Same as native - deduped
+            status="current",
+        )
+
+        # =================================================================
+        # Legacy/Deprecated Models (backward compatibility with AVAILABLE_MODELS)
+        # These match the IDs used in the hardcoded AVAILABLE_MODELS list
+        # for frontend compatibility during rollout of ModelRegistry.
+        # =================================================================
+
+        # Claude 3 series (DEPRECATED - retired per Anthropic deprecation schedule)
+        # Claude 3.5 Sonnet retired Oct 2025, Claude 3 Opus retired Jan 2026
+        self._models["claude-3-5-sonnet"] = ModelCapabilities(
+            model_id="claude-3-5-sonnet",
+            vendor="anthropic",
+            context_limit=200_000,
+            effective_limit=130_000,
+            max_output_tokens=8_192,
+            input_cost_per_1m=3.00,
+            output_cost_per_1m=15.00,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+            supports_extended_thinking=True,
+            supports_json_mode=True,
+            tier="complicated",
+            max_thinking_tokens=32768,
+            display_name="Claude 3.5 Sonnet",
+            public_id="claude-3-5-sonnet",
+            status="deprecated",
+            sunset_date="2025-10-31",
+        )
+
+        self._models["claude-3-opus"] = ModelCapabilities(
+            model_id="claude-3-opus",
+            vendor="anthropic",
+            context_limit=200_000,
+            effective_limit=130_000,
+            max_output_tokens=4_096,
+            input_cost_per_1m=15.00,
+            output_cost_per_1m=75.00,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+            supports_extended_thinking=True,
+            supports_json_mode=True,
+            tier="complex",
+            max_thinking_tokens=65536,
+            display_name="Claude 3 Opus",
+            public_id="claude-3-opus",
+            status="deprecated",
+            sunset_date="2026-01-31",
+        )
+
+        self._models["claude-3-haiku"] = ModelCapabilities(
+            model_id="claude-3-haiku",
+            vendor="anthropic",
+            context_limit=200_000,
+            effective_limit=130_000,
+            max_output_tokens=4_096,
+            input_cost_per_1m=0.25,
+            output_cost_per_1m=1.25,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+            supports_extended_thinking=False,
+            supports_json_mode=True,
+            tier="simple",
+            max_thinking_tokens=None,
+            display_name="Claude 3 Haiku",
+            public_id="claude-3-haiku",
+            status="deprecated",
+            sunset_date="2026-03-31",
+        )
+
+        # GPT-4 series (LEGACY - superseded by GPT-5.x)
+        self._models["gpt-4o"] = ModelCapabilities(
+            model_id="gpt-4o",
+            vendor="openai",
+            context_limit=128_000,
+            effective_limit=83_000,
+            max_output_tokens=16_384,
+            input_cost_per_1m=2.50,
+            output_cost_per_1m=10.00,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+            supports_extended_thinking=False,
+            supports_json_mode=True,
+            tier="complicated",
+            max_thinking_tokens=None,
+            display_name="GPT-4o",
+            public_id="gpt-4o",
+            status="legacy",
+        )
+
+        self._models["gpt-4o-mini"] = ModelCapabilities(
+            model_id="gpt-4o-mini",
+            vendor="openai",
+            context_limit=128_000,
+            effective_limit=83_000,
+            max_output_tokens=16_384,
+            input_cost_per_1m=0.15,
+            output_cost_per_1m=0.60,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+            supports_extended_thinking=False,
+            supports_json_mode=True,
+            tier="simple",
+            max_thinking_tokens=None,
+            display_name="GPT-4o Mini",
+            public_id="gpt-4o-mini",
+            status="legacy",
+        )
+
+        self._models["gpt-4-turbo"] = ModelCapabilities(
+            model_id="gpt-4-turbo",
+            vendor="openai",
+            context_limit=128_000,
+            effective_limit=83_000,
+            max_output_tokens=4_096,
+            input_cost_per_1m=10.00,
+            output_cost_per_1m=30.00,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+            supports_extended_thinking=False,
+            supports_json_mode=True,
+            tier="complicated",
+            max_thinking_tokens=None,
+            display_name="GPT-4 Turbo",
+            public_id="gpt-4-turbo",
+            status="legacy",
+        )
+
+        # o1 series (DEPRECATED - replaced by o3)
+        self._models["o1-preview"] = ModelCapabilities(
+            model_id="o1-preview",
+            vendor="openai",
+            context_limit=128_000,
+            effective_limit=83_000,
+            max_output_tokens=32_768,
+            input_cost_per_1m=15.00,
+            output_cost_per_1m=60.00,
+            supports_vision=False,  # o1 models don't support vision
+            supports_tools=False,  # o1 models have limited tool support
+            supports_streaming=True,
+            supports_extended_thinking=True,
+            supports_json_mode=True,
+            tier="complex",
+            max_thinking_tokens=65536,
+            display_name="o1 Preview",
+            public_id="o1-preview",
+            status="deprecated",
+            sunset_date="2026-02-28",
+        )
+
+        self._models["o1-mini"] = ModelCapabilities(
+            model_id="o1-mini",
+            vendor="openai",
+            context_limit=128_000,
+            effective_limit=83_000,
+            max_output_tokens=65_536,
+            input_cost_per_1m=3.00,
+            output_cost_per_1m=12.00,
+            supports_vision=False,  # o1 models don't support vision
+            supports_tools=False,  # o1 models have limited tool support
+            supports_streaming=True,
+            supports_extended_thinking=True,
+            supports_json_mode=True,
+            tier="complicated",
+            max_thinking_tokens=32768,
+            display_name="o1 Mini",
+            public_id="o1-mini",
+            status="deprecated",
+            sunset_date="2026-02-28",
+        )
+
+        # Gemini 2.5 Pro (CURRENT - GA Aug 2025)
+        # Note: gemini-2.5-flash already registered above
+        self._models["gemini-2.5-pro"] = ModelCapabilities(
+            model_id="gemini-2.5-pro",
+            vendor="google",
+            context_limit=2_000_000,
+            effective_limit=1_300_000,
+            max_output_tokens=65_000,
+            input_cost_per_1m=1.25,
+            output_cost_per_1m=5.00,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+            supports_extended_thinking=True,
+            supports_json_mode=True,
+            tier="complex",
+            max_thinking_tokens=65536,
+            display_name="Gemini 2.5 Pro",
+            public_id="gemini-2.5-pro",
+            status="current",
+        )
+
+        # Gemini Pro 1.0 (LEGACY - superseded by 2.5)
+        self._models["gemini-pro"] = ModelCapabilities(
+            model_id="gemini-pro",
+            vendor="google",
+            context_limit=32_000,
+            effective_limit=20_000,
+            max_output_tokens=8_192,
+            input_cost_per_1m=0.50,
+            output_cost_per_1m=1.50,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+            supports_extended_thinking=False,
+            supports_json_mode=True,
+            tier="simple",
+            max_thinking_tokens=None,
+            display_name="Gemini Pro",
+            public_id="gemini-pro",
+            status="legacy",
         )
 
     def _get_default_capabilities(self, model_id: str) -> ModelCapabilities:
@@ -583,6 +890,7 @@ class ModelRegistry:
         vendor: str | None = None,
         capability: str | None = None,
         tier: str | None = None,
+        status: str | None = None,
     ) -> list[str]:
         """List registered model IDs.
 
@@ -590,6 +898,7 @@ class ModelRegistry:
             vendor: Filter by vendor (optional)
             capability: Filter by capability (optional)
             tier: Filter by tier - simple, complicated, complex (optional)
+            status: Filter by status - current, preview, legacy, deprecated (optional)
 
         Returns:
             List of model IDs matching filters
@@ -604,6 +913,9 @@ class ModelRegistry:
 
         if tier:
             models = [m for m in models if self._models[m].tier == tier]
+
+        if status:
+            models = [m for m in models if self._models[m].status == status]
 
         return models
 
@@ -629,6 +941,66 @@ class ModelRegistry:
         output_cost = (output_tokens / 1_000_000) * caps.output_cost_per_1m
 
         return input_cost + output_cost
+
+    def get_frontend_models(
+        self,
+        status: str | None = None,
+    ) -> list[dict[str, str | bool]]:
+        """Get models formatted for frontend Enhanced Model Selector.
+
+        Returns a list of model dictionaries with fields required by the
+        frontend /api/v1/config/models endpoint.
+
+        Sprint 1: Enhanced Model Selector - Single source of truth for model
+        capabilities, eliminating the hardcoded AVAILABLE_MODELS in config.py.
+
+        Args:
+            status: Optional filter by status (current, preview, legacy, deprecated)
+
+        Returns:
+            List of model dicts with: id, name, provider, supports_thinking,
+            supports_vision, supports_tools, status
+        """
+        models = []
+        seen_public_ids: set[str] = set()
+
+        for caps in self._models.values():
+            # Apply status filter if specified
+            if status and caps.status != status:
+                continue
+
+            # Use public_id as the unique identifier for frontend
+            public_id = caps.public_id or caps.model_id
+
+            # Skip duplicates (e.g., Vertex AI variants of same model)
+            if public_id in seen_public_ids:
+                continue
+            seen_public_ids.add(public_id)
+
+            # Map vendor to simplified provider for frontend
+            provider = caps.vendor
+            if provider == "vertex_ai_anthropic":
+                provider = "anthropic"
+            elif provider == "vertex_ai":
+                provider = "google"
+
+            model_dict: dict[str, str | bool | None] = {
+                "id": public_id,
+                "name": caps.display_name or caps.model_id,
+                "provider": provider,
+                "supports_thinking": caps.supports_extended_thinking,
+                "supports_vision": caps.supports_vision,
+                "supports_tools": caps.supports_tools,
+                "status": caps.status,
+            }
+
+            # Include sunset_date for deprecated models
+            if caps.status == "deprecated" and caps.sunset_date:
+                model_dict["sunset_date"] = caps.sunset_date
+
+            models.append(model_dict)
+
+        return models
 
     def get_model_for_tier(
         self,

@@ -24,6 +24,8 @@ from typing import Any
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def get_project_root() -> Path:
     """Get the project root directory."""
@@ -60,20 +62,14 @@ def has_org_member_propagation(relation_def: dict[str, Any]) -> bool:
             if "tupleToUserset" in child:
                 tupleset = child["tupleToUserset"].get("tupleset", {})
                 computed = child["tupleToUserset"].get("computedUserset", {})
-                if (
-                    tupleset.get("relation") == "organization"
-                    and computed.get("relation") == "member"
-                ):
+                if tupleset.get("relation") == "organization" and computed.get("relation") == "member":
                     return True
 
     # Also check direct tupleToUserset
     if "tupleToUserset" in relation_def:
         tupleset = relation_def["tupleToUserset"].get("tupleset", {})
         computed = relation_def["tupleToUserset"].get("computedUserset", {})
-        if (
-            tupleset.get("relation") == "organization"
-            and computed.get("relation") == "member"
-        ):
+        if tupleset.get("relation") == "organization" and computed.get("relation") == "member":
             return True
 
     return False
@@ -210,9 +206,7 @@ class TestAllowedOrgPropagation:
         assert viewer_relation is not None
 
         has_propagation = has_org_member_propagation(viewer_relation)
-        assert has_propagation, (
-            "workflow.viewer SHOULD have org→member propagation per Decision 4."
-        )
+        assert has_propagation, "workflow.viewer SHOULD have org→member propagation per Decision 4."
 
     def test_project_viewer_keeps_org_propagation(self) -> None:
         """
@@ -228,9 +222,7 @@ class TestAllowedOrgPropagation:
         assert viewer_relation is not None
 
         has_propagation = has_org_member_propagation(viewer_relation)
-        assert has_propagation, (
-            "project.viewer SHOULD have org→member propagation per Decision 4."
-        )
+        assert has_propagation, "project.viewer SHOULD have org→member propagation per Decision 4."
 
     def test_project_executor_keeps_org_propagation(self) -> None:
         """
@@ -246,9 +238,7 @@ class TestAllowedOrgPropagation:
         assert executor_relation is not None
 
         has_propagation = has_org_member_propagation(executor_relation)
-        assert has_propagation, (
-            "project.executor SHOULD have org→member propagation per Decision 4."
-        )
+        assert has_propagation, "project.executor SHOULD have org→member propagation per Decision 4."
 
     def test_tool_executor_keeps_org_propagation(self) -> None:
         """
@@ -264,9 +254,7 @@ class TestAllowedOrgPropagation:
         assert executor_relation is not None
 
         has_propagation = has_org_member_propagation(executor_relation)
-        assert has_propagation, (
-            "tool.executor SHOULD have org→member propagation per Decision 4."
-        )
+        assert has_propagation, "tool.executor SHOULD have org→member propagation per Decision 4."
 
     def test_cost_viewer_keeps_org_propagation(self) -> None:
         """
@@ -282,9 +270,7 @@ class TestAllowedOrgPropagation:
         assert viewer_relation is not None
 
         has_propagation = has_org_member_propagation(viewer_relation)
-        assert has_propagation, (
-            "cost.viewer SHOULD have org→member propagation per Decision 4."
-        )
+        assert has_propagation, "cost.viewer SHOULD have org→member propagation per Decision 4."
 
     def test_dashboard_viewer_keeps_org_propagation(self) -> None:
         """
@@ -300,9 +286,7 @@ class TestAllowedOrgPropagation:
         assert viewer_relation is not None
 
         has_propagation = has_org_member_propagation(viewer_relation)
-        assert has_propagation, (
-            "dashboard.viewer SHOULD have org→member propagation per Decision 4."
-        )
+        assert has_propagation, "dashboard.viewer SHOULD have org→member propagation per Decision 4."
 
 
 @pytest.mark.unit
@@ -332,9 +316,7 @@ class TestObservabilityOpsRelation:
         assert observability is not None
 
         relations = observability.get("relations", {})
-        assert "ops" in relations, (
-            "observability type MUST have 'ops' relation for narrower access control."
-        )
+        assert "ops" in relations, "observability type MUST have 'ops' relation for narrower access control."
 
     def test_observability_viewer_computed_from_ops(self) -> None:
         """
@@ -358,9 +340,7 @@ class TestObservabilityOpsRelation:
                         has_ops_computed = True
                         break
 
-        assert has_ops_computed, (
-            "observability.viewer SHOULD be computed from ops relation."
-        )
+        assert has_ops_computed, "observability.viewer SHOULD be computed from ops relation."
 
     def test_observability_no_org_propagation(self) -> None:
         """
@@ -410,9 +390,7 @@ class TestTenantIsolationRelations:
         assert api_key is not None
 
         relations = api_key.get("relations", {})
-        assert "organization" in relations, (
-            "api_key type MUST have 'organization' relation for tenant isolation."
-        )
+        assert "organization" in relations, "api_key type MUST have 'organization' relation for tenant isolation."
 
     def test_skill_has_organization_relation(self) -> None:
         """
@@ -425,6 +403,4 @@ class TestTenantIsolationRelations:
         assert skill is not None
 
         relations = skill.get("relations", {})
-        assert "organization" in relations, (
-            "skill type MUST have 'organization' relation for tenant isolation."
-        )
+        assert "organization" in relations, "skill type MUST have 'organization' relation for tenant isolation."
