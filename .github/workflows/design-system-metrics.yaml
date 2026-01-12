@@ -1,0 +1,250 @@
+# Design System Metrics Dashboard
+#
+# Tracks and publishes design system adoption metrics to gh-pages.
+# Runs on pushes to main and weekly, building a historical record.
+#
+# Metrics tracked:
+# - Button/Input/Select/Textarea adoption rates
+# - Design system component usage
+# - Storybook coverage
+# - Color system adoption (neutral vs gray)
+
+name: Design System Metrics
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/mcp_server_langgraph/studio/frontend/src/**"
+      - "src/mcp_server_langgraph/studio/frontend/scripts/check-design-system-compliance.ts"
+  schedule:
+    # Run weekly on Mondays at 9am UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch: # Allow manual runs
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: design-system-metrics
+  cancel-in-progress: false
+
+jobs:
+  generate-metrics:
+    name: Generate Design System Metrics
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/mcp_server_langgraph/studio/frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: src/mcp_server_langgraph/studio/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate metrics
+        id: metrics
+        run: |
+          # Run compliance check and capture JSON output
+          npx tsx scripts/check-design-system-compliance.ts --json > metrics.json 2>&1 || true
+
+          # Extract the JSON portion (after "JSON Output:")
+          grep -A 1000 '"timestamp":' metrics.json > current-metrics.json || cp metrics.json current-metrics.json
+
+          # Output metrics for GitHub summary
+          echo "### Design System Adoption Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Parse and display metrics using node
+          node -e "
+            const fs = require('fs');
+            try {
+              const metrics = JSON.parse(fs.readFileSync('current-metrics.json', 'utf-8'));
+              console.log('| Metric | Value |');
+              console.log('|--------|-------|');
+              console.log('| Button Adoption | ' + metrics.adoption.buttonAdoptionPercent + '% |');
+              console.log('| Form Adoption | ' + metrics.adoption.formAdoptionPercent + '% |');
+              console.log('| Color Adoption | ' + metrics.adoption.colorAdoptionPercent + '% |');
+              console.log('| Storybook Coverage | ' + metrics.adoption.storybookCoveragePercent + '% |');
+              console.log('| **Overall Score** | **' + metrics.adoption.overallScore + '%** |');
+            } catch (e) {
+              console.log('Failed to parse metrics: ' + e.message);
+            }
+          " >> $GITHUB_STEP_SUMMARY
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+        continue-on-error: true
+
+      - name: Initialize gh-pages if needed
+        run: |
+          if [ ! -d "gh-pages" ]; then
+            mkdir -p gh-pages
+            cd gh-pages
+            git init
+            git checkout -b gh-pages
+          fi
+          mkdir -p gh-pages/design-system
+
+      - name: Append to historical data
+        run: |
+          HISTORY_FILE="gh-pages/design-system/metrics-history.json"
+          CURRENT_FILE="current-metrics.json"
+
+          # Initialize history if not exists
+          if [ ! -f "$HISTORY_FILE" ]; then
+            echo "[]" > "$HISTORY_FILE"
+          fi
+
+          # Append current metrics to history
+          node -e "
+            const fs = require('fs');
+            const history = JSON.parse(fs.readFileSync('$HISTORY_FILE', 'utf-8'));
+            const current = JSON.parse(fs.readFileSync('$CURRENT_FILE', 'utf-8'));
+
+            // Add git metadata
+            current.commit = process.env.GITHUB_SHA?.slice(0, 7) || 'local';
+            current.branch = process.env.GITHUB_REF_NAME || 'unknown';
+
+            // Append and keep last 100 entries
+            history.push(current);
+            if (history.length > 100) {
+              history.shift();
+            }
+
+            fs.writeFileSync('$HISTORY_FILE', JSON.stringify(history, null, 2));
+          "
+
+          # Copy current metrics as latest
+          cp "$CURRENT_FILE" "gh-pages/design-system/latest.json"
+
+      - name: Generate dashboard HTML
+        run: |
+          cat > gh-pages/design-system/index.html << 'HTMLEOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Design System Metrics Dashboard</title>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <style>
+              body { font-family: system-ui, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+              h1 { color: #1a1a1a; }
+              .card { background: white; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+              .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+              .metric { text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px; }
+              .metric-value { font-size: 2.5em; font-weight: bold; color: #059669; }
+              .metric-label { color: #6b7280; margin-top: 8px; }
+              .chart-container { height: 300px; }
+              .updated { color: #9ca3af; font-size: 0.875rem; }
+            </style>
+          </head>
+          <body>
+            <h1>📊 Design System Metrics</h1>
+            <p class="updated">Updated: <span id="lastUpdated">Loading...</span></p>
+
+            <div class="card">
+              <h2>Current Adoption</h2>
+              <div class="metrics-grid" id="currentMetrics"></div>
+            </div>
+
+            <div class="card">
+              <h2>Adoption Trend</h2>
+              <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2>Component Usage</h2>
+              <div class="chart-container">
+                <canvas id="componentChart"></canvas>
+              </div>
+            </div>
+
+            <script>
+              async function loadData() {
+                const [latest, history] = await Promise.all([
+                  fetch('latest.json').then(r => r.json()),
+                  fetch('metrics-history.json').then(r => r.json())
+                ]);
+
+                // Update timestamp
+                document.getElementById('lastUpdated').textContent = new Date(latest.timestamp).toLocaleString();
+
+                // Current metrics
+                const metricsHtml = [
+                  { label: 'Button Adoption', value: latest.adoption.buttonAdoptionPercent },
+                  { label: 'Form Adoption', value: latest.adoption.formAdoptionPercent },
+                  { label: 'Color Adoption', value: latest.adoption.colorAdoptionPercent },
+                  { label: 'Storybook Coverage', value: latest.adoption.storybookCoveragePercent },
+                  { label: 'Overall Score', value: latest.adoption.overallScore },
+                ].map(m => `
+                  <div class="metric">
+                    <div class="metric-value">${m.value}%</div>
+                    <div class="metric-label">${m.label}</div>
+                  </div>
+                `).join('');
+                document.getElementById('currentMetrics').innerHTML = metricsHtml;
+
+                // Trend chart
+                new Chart(document.getElementById('trendChart'), {
+                  type: 'line',
+                  data: {
+                    labels: history.map(h => new Date(h.timestamp).toLocaleDateString()),
+                    datasets: [{
+                      label: 'Overall Score',
+                      data: history.map(h => h.adoption.overallScore),
+                      borderColor: '#059669',
+                      tension: 0.1
+                    }]
+                  },
+                  options: { responsive: true, maintainAspectRatio: false }
+                });
+
+                // Component chart
+                new Chart(document.getElementById('componentChart'), {
+                  type: 'bar',
+                  data: {
+                    labels: Object.keys(latest.designSystemComponents),
+                    datasets: [{
+                      label: 'Usage Count',
+                      data: Object.values(latest.designSystemComponents),
+                      backgroundColor: '#3b82f6'
+                    }]
+                  },
+                  options: { responsive: true, maintainAspectRatio: false }
+                });
+              }
+              loadData();
+            </script>
+          </body>
+          </html>
+          HTMLEOF
+
+      - name: Commit and push to gh-pages
+        run: |
+          cd gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || git commit -m "Update design system metrics - $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push origin gh-pages --force-with-lease || git push origin gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

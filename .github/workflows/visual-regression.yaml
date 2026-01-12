@@ -1,0 +1,72 @@
+# Visual Regression Testing with Chromatic
+#
+# Runs on pull requests that modify design system components.
+# Catches unintended visual changes before they're merged.
+#
+# Prerequisites:
+# - CHROMATIC_PROJECT_TOKEN secret must be set in GitHub repository settings
+# - Get your token from: https://www.chromatic.com/docs/setup
+
+name: Visual Regression
+
+on:
+  pull_request:
+    paths:
+      - "src/mcp_server_langgraph/studio/frontend/src/components/**"
+      - "src/mcp_server_langgraph/studio/frontend/tailwind.config.ts"
+      - "src/mcp_server_langgraph/studio/frontend/src/index.css"
+      - "src/mcp_server_langgraph/studio/frontend/.storybook/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  chromatic:
+    name: Chromatic Visual Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/mcp_server_langgraph/studio/frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for Chromatic to detect changes
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: src/mcp_server_langgraph/studio/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Chromatic
+        uses: chromaui/action@latest
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          workingDir: src/mcp_server_langgraph/studio/frontend
+          exitZeroOnChanges: true # Don't fail on visual changes, just report
+          exitOnceUploaded: true # Speed up CI by not waiting for test results
+          onlyChanged: true # Only test stories that changed
+          skip: ${{ github.event.pull_request.draft }}
+
+      - name: Comment on PR with Chromatic results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Only comment if there are visual changes detected
+            const { CHROMATIC_URL } = process.env;
+            if (CHROMATIC_URL) {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## Visual Regression Test Results\n\nChromatic detected visual changes. [Review the changes](${CHROMATIC_URL})`
+              });
+            }

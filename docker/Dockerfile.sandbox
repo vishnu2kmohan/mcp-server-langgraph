@@ -1,7 +1,10 @@
 # Agent Studio Sandbox Image
 # ==========================
 # Sandbox runner image for high-risk tools (bash, web_fetch, screenshot, computer-use)
-# Includes Playwright/Chromium for headless automation plus curl/jq for diagnostics.
+# and data science code execution. Includes:
+# - Playwright/Chromium for headless automation
+# - Data science packages matching Pyodide browser environment
+# - curl/jq for diagnostics
 #
 # Build locally with:
 #   docker build -f docker/Dockerfile.sandbox \
@@ -10,12 +13,32 @@
 #
 # Then set CODE_EXECUTION_DOCKER_IMAGE=ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:latest
 # (see docker-compose.test.yml).
+#
+# Package Parity:
+# These packages match the Pyodide browser environment to ensure code runs
+# the same way in both the browser (Pyodide) and server (Docker) runtimes.
+# See: src/mcp_server_langgraph/execution/sandbox_packages.py
 FROM mcr.microsoft.com/playwright/python:v1.42.0-jammy
 
 USER root
+
+# Install system dependencies and uv
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl jq ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Add uv to PATH
+ENV PATH="/root/.local/bin:$PATH"
+
+# Copy sandbox project configuration
+COPY sandbox/pyproject.toml /tmp/sandbox/pyproject.toml
+
+# Install data science packages using uv
+# Uses --system to install into system Python (no venv in container)
+WORKDIR /tmp/sandbox
+RUN uv pip install --system --no-cache -r pyproject.toml \
+    && rm -rf /tmp/sandbox
 
 # Playwright base image includes browsers; run as pwuser by default.
 USER pwuser

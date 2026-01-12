@@ -506,6 +506,31 @@ repos:
       Run with --fix-suggestions for split recommendations.
 
       '
+  - id: frontend-design-system-metrics
+    name: Frontend Design System Adoption Metrics
+    entry: >
+      bash -c 'cd src/mcp_server_langgraph/studio/frontend &&
+      npm run check:design-system 2>&1 || exit 0'
+    language: system
+    pass_filenames: false
+    files: ^src/mcp_server_langgraph/studio/frontend/src/.*\.(ts|tsx)$
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Reports design system adoption metrics (non-blocking).
+
+      Added 2026-01-10 for design system governance.
+
+      Tracks:
+      - Raw HTML element usage vs design system components
+      - Gray vs neutral color adoption
+      - Overall adoption score
+
+      Duration: ~2-3s (ripgrep scan).
+
+      Always exits 0 (informational only). Use --strict flag for enforcement.
+
+      '
   - id: run-integration-tests
     name: Run Integration Tests (manual - requires Docker)
     entry: bash -c 'PYTHONUNBUFFERED=1 OTEL_SDK_DISABLED=true uv run --frozen pytest -n auto tests/integration/ -v --tb=short'
@@ -725,6 +750,37 @@ repos:
 
 
       Regression prevention for REC-001 from documentation audit (2025-11-12).
+
+      '
+  - id: feature-flags-frontend-contract
+    name: Validate Feature Flags Frontend Contract
+    entry: uv run --frozen pytest tests/contract/test_feature_flags_frontend_contract.py -v --tb=short
+    language: system
+    files: (feature_flags\.py|isEnabled|useFeatureFlag|FeatureFlagContext)
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Ensures feature flags used in frontend are exposed by backend API.
+
+
+      Prevents the bug where a feature flag is set in environment variables but
+      the frontend shows the feature as "disabled" because get_ui_features_for_role()
+      does not include that flag in its return dictionary.
+
+
+      Contract Test Coverage:
+
+      - All FRONTEND_REQUIRED_FLAGS are exposed by backend
+
+      - Dynamic scan of frontend isEnabled() calls vs backend exposure
+
+      - Admin and user roles return consistent flag keys
+
+
+      Regression prevention: Skills UI "disabled" bug (2025-01-10)
+
+      Fix: Add missing flags to get_ui_features_for_role() in feature_flags.py
 
       '
   - id: check-adr-sync

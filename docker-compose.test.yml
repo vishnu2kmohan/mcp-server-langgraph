@@ -1301,6 +1301,7 @@ services:
       # -----------------------------------------------------------------------
       - FF_ENABLE_MODEL_SELECTOR_IN_SHELL=true  # Model selection dropdown in shell
       - FF_ENABLE_URL_FETCH_IN_SHELL=true       # URL content fetch (#url pattern) in shell
+      - FF_ENABLE_ENHANCED_MODEL_SELECTOR=true  # Enhanced model selector (recent models, search, capability badges)
       # -----------------------------------------------------------------------
       # LLM Factory Streaming (Production-Ready Resilient Streaming)
       # -----------------------------------------------------------------------

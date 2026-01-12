@@ -116,6 +116,9 @@ docker/
 !docker/keycloak/healthcheck.sh
 # Include uvicorn log config (needed by Dockerfile.authz-proxy)
 !docker/uvicorn-log-config.yaml
+# Include sandbox pyproject.toml (needed by Dockerfile.sandbox)
+!sandbox/
+!sandbox/pyproject.toml
 
 # ==============================================================================
 # Documentation (not needed in image)
