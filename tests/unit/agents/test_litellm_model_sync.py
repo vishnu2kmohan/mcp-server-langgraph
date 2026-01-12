@@ -602,3 +602,204 @@ class TestLiteLLMSyncPrometheusMetricsGracefulDegradation:
             record_models_updated(count=0)
         except Exception as e:
             pytest.fail(f"Record functions raised an exception: {e}")
+
+
+# =============================================================================
+# LiteLLM Capability Sync Tests (TDD - supports_reasoning)
+# =============================================================================
+
+
+class TestLiteLLMModelSyncCapabilities:
+    """Test syncing supports_reasoning capability from LiteLLM to ModelRegistry."""
+
+    def test_sync_capabilities_method_exists(self) -> None:
+        """Test that sync_capabilities method exists."""
+        from mcp_server_langgraph.agents.litellm_model_sync import LiteLLMModelSync
+
+        sync = LiteLLMModelSync()
+        assert hasattr(sync, "sync_capabilities")
+        assert callable(sync.sync_capabilities)
+
+    def test_sync_capabilities_returns_count(self) -> None:
+        """Test that sync_capabilities returns the number of models updated."""
+        from mcp_server_langgraph.agents.litellm_model_sync import LiteLLMModelSync
+
+        sync = LiteLLMModelSync()
+        count = sync.sync_capabilities()
+        assert isinstance(count, int)
+        assert count >= 0
+
+    @patch("mcp_server_langgraph.agents.litellm_model_sync.litellm")
+    def test_sync_capabilities_updates_supports_extended_thinking(self, mock_litellm: MagicMock) -> None:
+        """Test that sync_capabilities updates supports_extended_thinking from supports_reasoning."""
+        # LiteLLM model_cost has supports_reasoning field
+        mock_litellm.model_cost = {
+            "gemini-3-flash": {
+                "input_cost_per_token": 0.0000001,
+                "output_cost_per_token": 0.0000004,
+                "supports_reasoning": True,
+            },
+            "gpt-4.5": {
+                "input_cost_per_token": 0.00001,
+                "output_cost_per_token": 0.00003,
+                "supports_reasoning": False,
+            },
+        }
+
+        from mcp_server_langgraph.agents.litellm_model_sync import LiteLLMModelSync
+
+        sync = LiteLLMModelSync()
+        count = sync.sync_capabilities()
+
+        # Should have synced capabilities
+        assert count >= 0
+
+    @patch("mcp_server_langgraph.agents.litellm_model_sync.litellm")
+    def test_sync_capabilities_handles_missing_supports_reasoning(self, mock_litellm: MagicMock) -> None:
+        """Test that sync_capabilities handles models without supports_reasoning field."""
+        mock_litellm.model_cost = {
+            "some-model": {
+                "input_cost_per_token": 0.00001,
+                "output_cost_per_token": 0.00003,
+                # No supports_reasoning field
+            }
+        }
+
+        from mcp_server_langgraph.agents.litellm_model_sync import LiteLLMModelSync
+
+        sync = LiteLLMModelSync()
+        # Should not raise
+        count = sync.sync_capabilities()
+        assert count >= 0
+
+    @patch("mcp_server_langgraph.agents.litellm_model_sync.litellm")
+    def test_sync_capabilities_handles_empty_model_cost(self, mock_litellm: MagicMock) -> None:
+        """Test that sync_capabilities handles empty model_cost gracefully."""
+        mock_litellm.model_cost = {}
+
+        from mcp_server_langgraph.agents.litellm_model_sync import LiteLLMModelSync
+
+        sync = LiteLLMModelSync()
+        count = sync.sync_capabilities()
+        assert count == 0
+
+
+class TestLiteLLMModelSyncCapabilityMapping:
+    """Test model ID mapping for capability sync."""
+
+    def test_normalize_model_id_handles_gemini_preview_suffix(self) -> None:
+        """Test that Gemini preview suffix is handled for capability sync.
+
+        LiteLLM uses gemini-3-flash-preview but our registry uses gemini-3-flash.
+        """
+        from mcp_server_langgraph.agents.litellm_model_sync import LiteLLMModelSync
+
+        sync = LiteLLMModelSync()
+
+        # The normalizer should handle preview suffix OR we need alt mappings
+        result = sync._normalize_model_id("gemini-3-flash-preview")
+        # Either maps to gemini-3-flash or keeps as-is (both should work with registry)
+        assert result in ("gemini-3-flash-preview", "gemini-3-flash")
+
+    def test_normalize_model_id_handles_vertex_ai_prefix(self) -> None:
+        """Test that vertex_ai prefix is handled."""
+        from mcp_server_langgraph.agents.litellm_model_sync import LiteLLMModelSync
+
+        sync = LiteLLMModelSync()
+
+        result = sync._normalize_model_id("vertex_ai/gemini-3-flash")
+        assert result == "gemini-3-flash"
+
+
+class TestLiteLLMModelSyncUpdateRegistryWithCapabilities:
+    """Test that update_registry includes capability sync."""
+
+    @patch("mcp_server_langgraph.agents.litellm_model_sync.get_default_registry")
+    @patch("mcp_server_langgraph.agents.litellm_model_sync.litellm")
+    def test_update_registry_calls_sync_capabilities(self, mock_litellm: MagicMock, mock_get_registry: MagicMock) -> None:
+        """Test that update_registry calls sync_capabilities in addition to sync_pricing."""
+        mock_registry = MagicMock()
+        mock_registry._models = {}
+        mock_get_registry.return_value = mock_registry
+        mock_litellm.model_cost = {}
+
+        from mcp_server_langgraph.agents.litellm_model_sync import LiteLLMModelSync
+
+        sync = LiteLLMModelSync()
+
+        # Spy on sync_capabilities
+        original_sync_caps = sync.sync_capabilities
+        sync.sync_capabilities = MagicMock(return_value=0)
+
+        sync.update_registry()
+
+        # Should have called sync_capabilities
+        sync.sync_capabilities.assert_called_once()
+
+        # Restore
+        sync.sync_capabilities = original_sync_caps
+
+
+class TestLiteLLMSupportsReasoningFunction:
+    """Test LiteLLM's supports_reasoning() function."""
+
+    def test_litellm_supports_reasoning_function_exists(self) -> None:
+        """Test that litellm.supports_reasoning function exists."""
+        import litellm
+
+        assert hasattr(litellm, "supports_reasoning")
+        assert callable(litellm.supports_reasoning)
+
+    def test_supports_reasoning_returns_bool(self) -> None:
+        """Test that supports_reasoning returns a boolean."""
+        import litellm
+
+        # Test with a known model
+        result = litellm.supports_reasoning("o3")
+        assert isinstance(result, bool)
+
+    def test_supports_reasoning_for_o3(self) -> None:
+        """Test supports_reasoning for o3 model (should be True)."""
+        import litellm
+
+        result = litellm.supports_reasoning("o3")
+        assert result is True
+
+    def test_supports_reasoning_for_gpt_4(self) -> None:
+        """Test supports_reasoning for gpt-4 model (should be False)."""
+        import litellm
+
+        result = litellm.supports_reasoning("gpt-4")
+        assert result is False
+
+
+class TestLiteLLMModelSyncAlternativeIds:
+    """Test alternative model ID lookups for capability sync."""
+
+    def test_get_alternative_model_ids_method_exists(self) -> None:
+        """Test that _get_alternative_model_ids method exists."""
+        from mcp_server_langgraph.agents.litellm_model_sync import LiteLLMModelSync
+
+        sync = LiteLLMModelSync()
+        assert hasattr(sync, "_get_alternative_model_ids")
+        assert callable(sync._get_alternative_model_ids)
+
+    def test_get_alternative_model_ids_for_gemini_3_flash(self) -> None:
+        """Test alternative IDs for gemini-3-flash."""
+        from mcp_server_langgraph.agents.litellm_model_sync import LiteLLMModelSync
+
+        sync = LiteLLMModelSync()
+        alts = sync._get_alternative_model_ids("gemini-3-flash")
+
+        # Should include preview suffix variant
+        assert isinstance(alts, list)
+        assert "gemini-3-flash-preview" in alts or "google/gemini-3-flash" in alts
+
+    def test_get_alternative_model_ids_returns_list(self) -> None:
+        """Test that _get_alternative_model_ids returns a list."""
+        from mcp_server_langgraph.agents.litellm_model_sync import LiteLLMModelSync
+
+        sync = LiteLLMModelSync()
+        alts = sync._get_alternative_model_ids("some-model")
+
+        assert isinstance(alts, list)

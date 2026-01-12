@@ -194,6 +194,8 @@ class ModelRegistry:
             status="current",
         )
 
+        # Claude Haiku 4.5 is the first Haiku to support extended thinking
+        # per Anthropic announcement (Oct 2025)
         self._models["claude-haiku-4-5-20251001"] = ModelCapabilities(
             model_id="claude-haiku-4-5-20251001",
             vendor="anthropic",
@@ -205,17 +207,19 @@ class ModelRegistry:
             supports_vision=True,
             supports_tools=True,
             supports_streaming=True,
-            supports_extended_thinking=False,
+            supports_extended_thinking=True,  # First Haiku with thinking
             supports_effort_param=False,
             supports_json_mode=True,
             tier="simple",
-            max_thinking_tokens=None,  # No extended thinking
+            max_thinking_tokens=8192,  # Lower budget than Sonnet/Opus
             display_name="Claude Haiku 4.5",
             public_id="claude-haiku-4-5",
             status="current",
         )
 
         # Google Gemini 3 models (PREVIEW - not yet GA)
+        # Per Google docs: Both Flash and Pro support thinking_level parameter
+        # Flash supports: minimal, low, medium, high levels
         self._models["gemini-3-flash"] = ModelCapabilities(
             model_id="gemini-3-flash",
             vendor="google",
@@ -227,11 +231,11 @@ class ModelRegistry:
             supports_vision=True,
             supports_tools=True,
             supports_streaming=True,
-            supports_extended_thinking=False,
+            supports_extended_thinking=True,  # Supports thinking_level
             supports_effort_param=False,
             supports_json_mode=True,
             tier="simple",
-            max_thinking_tokens=None,
+            max_thinking_tokens=16384,  # Reasonable budget for Flash
             display_name="Gemini 3 Flash",
             public_id="gemini-3-flash",
             status="preview",
@@ -259,6 +263,8 @@ class ModelRegistry:
         )
 
         # Google Gemini 2.5 models (CURRENT - GA Aug 2025)
+        # Per Google docs: Gemini 2.5 Flash is a "hybrid reasoning model"
+        # that supports thinking_budget (0 to 24576 tokens)
         self._models["gemini-2.5-flash"] = ModelCapabilities(
             model_id="gemini-2.5-flash",
             vendor="google",
@@ -270,11 +276,11 @@ class ModelRegistry:
             supports_vision=True,
             supports_tools=True,
             supports_streaming=True,
-            supports_extended_thinking=False,
+            supports_extended_thinking=True,  # Supports thinking_budget
             supports_effort_param=False,
             supports_json_mode=True,
             tier="complicated",
-            max_thinking_tokens=None,
+            max_thinking_tokens=24576,  # Per Google docs max budget
             display_name="Gemini 2.5 Flash",
             public_id="gemini-2.5-flash",
             status="current",
@@ -383,6 +389,50 @@ class ModelRegistry:
             status="current",
         )
 
+        # OpenAI o3-mini (CURRENT - cost-efficient reasoning)
+        # Per OpenAI docs: supports reasoning_effort (low, medium, high)
+        self._models["o3-mini"] = ModelCapabilities(
+            model_id="o3-mini",
+            vendor="openai",
+            context_limit=200_000,
+            effective_limit=130_000,
+            max_output_tokens=100_000,
+            input_cost_per_1m=1.10,
+            output_cost_per_1m=4.40,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+            supports_extended_thinking=True,  # Supports reasoning_effort
+            supports_json_mode=True,
+            tier="complicated",
+            max_thinking_tokens=32768,  # Lower than o3 but still substantial
+            display_name="o3 Mini",
+            public_id="o3-mini",
+            status="current",
+        )
+
+        # OpenAI o4-mini (CURRENT - Apr 2025, successor to o3-mini)
+        # Per OpenAI docs: 128K context, improved reasoning
+        self._models["o4-mini"] = ModelCapabilities(
+            model_id="o4-mini",
+            vendor="openai",
+            context_limit=128_000,
+            effective_limit=83_000,
+            max_output_tokens=65_536,
+            input_cost_per_1m=1.10,
+            output_cost_per_1m=4.40,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+            supports_extended_thinking=True,  # Supports reasoning_effort
+            supports_json_mode=True,
+            tier="complicated",
+            max_thinking_tokens=32768,
+            display_name="o4 Mini",
+            public_id="o4-mini",
+            status="current",
+        )
+
         # Vertex AI Anthropic models (CURRENT, use @ format)
         # Note: These share public_id with native Anthropic models (deduped in get_frontend_models)
         self._models["claude-opus-4-5@20251101"] = ModelCapabilities(
@@ -437,9 +487,10 @@ class ModelRegistry:
             supports_vision=True,
             supports_tools=True,
             supports_streaming=True,
+            supports_extended_thinking=True,  # First Haiku with thinking
             supports_json_mode=True,
             tier="simple",
-            max_thinking_tokens=None,
+            max_thinking_tokens=8192,
             display_name="Claude Haiku 4.5 (Vertex AI)",
             public_id="claude-haiku-4-5",  # Same as native - deduped
             status="current",
@@ -458,9 +509,10 @@ class ModelRegistry:
             supports_vision=True,
             supports_tools=True,
             supports_streaming=True,
+            supports_extended_thinking=True,  # Supports thinking_level
             supports_json_mode=True,
             tier="simple",
-            max_thinking_tokens=None,
+            max_thinking_tokens=16384,
             display_name="Gemini 3 Flash (Vertex AI)",
             public_id="gemini-3-flash",  # Same as native - deduped
             status="preview",
@@ -498,9 +550,10 @@ class ModelRegistry:
             supports_vision=True,
             supports_tools=True,
             supports_streaming=True,
+            supports_extended_thinking=True,  # Supports thinking_level
             supports_json_mode=True,
             tier="simple",
-            max_thinking_tokens=None,
+            max_thinking_tokens=16384,
             display_name="Gemini 3 Flash Preview",
             public_id="gemini-3-flash-preview",
             status="preview",

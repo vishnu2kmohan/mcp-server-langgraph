@@ -155,17 +155,120 @@ class LiteLLMModelSync:
             record_sync_failure(error_type=error_type, duration_seconds=duration)
             return 0
 
-    def update_registry(self) -> int:
+    def sync_capabilities(self) -> int:
         """
-        Update ModelRegistry with LiteLLM data.
+        Synchronize reasoning capabilities from LiteLLM to ModelRegistry.
 
-        Currently delegates to sync_pricing(). In the future, this could
-        also sync capabilities (vision, tools, etc.) if LiteLLM provides them.
+        Updates supports_extended_thinking for models that exist in both
+        LiteLLM's model_cost and the ModelRegistry. Uses LiteLLM's
+        supports_reasoning field as the source of truth.
 
         Returns:
             Number of models updated.
         """
-        return self.sync_pricing()
+        start_time = time.monotonic()
+        try:
+            litellm_models = self.get_litellm_models()
+            if not litellm_models:
+                logger.debug("No LiteLLM models to sync capabilities")
+                return 0
+
+            updated_count = 0
+            for model_id, model_info in litellm_models.items():
+                normalized_id = self._normalize_model_id(model_id)
+
+                # Try normalized ID first, then alternative IDs
+                registry_id = None
+                if normalized_id in self._registry._models:
+                    registry_id = normalized_id
+                else:
+                    # Try alternative IDs for this model
+                    for alt_id in self._get_alternative_model_ids(normalized_id):
+                        if alt_id in self._registry._models:
+                            registry_id = alt_id
+                            break
+
+                if registry_id:
+                    caps = self._registry._models[registry_id]
+
+                    # Check for supports_reasoning field
+                    supports_reasoning = model_info.get("supports_reasoning")
+                    if supports_reasoning is not None:
+                        # Only update if different
+                        if caps.supports_extended_thinking != supports_reasoning:
+                            caps.supports_extended_thinking = supports_reasoning
+                            updated_count += 1
+                            logger.debug(f"Updated supports_extended_thinking for {registry_id}: {supports_reasoning}")
+
+            if updated_count > 0:
+                logger.info(f"LiteLLM sync: updated capabilities for {updated_count} models")
+            else:
+                logger.debug("LiteLLM sync: no capability updates needed")
+
+            return updated_count
+
+        except Exception as e:
+            logger.error(f"LiteLLM capability sync error: {e}")
+            duration = time.monotonic() - start_time
+            error_type = type(e).__name__
+            record_sync_failure(error_type=error_type, duration_seconds=duration)
+            return 0
+
+    def _get_alternative_model_ids(self, model_id: str) -> list[str]:
+        """
+        Get alternative model IDs for registry lookup.
+
+        LiteLLM may use different naming conventions than our registry.
+        This provides alternative IDs to try.
+
+        Args:
+            model_id: Primary model identifier
+
+        Returns:
+            List of alternative model IDs to try
+        """
+        alternatives: list[str] = []
+
+        # Gemini models: LiteLLM uses -preview suffix, registry may not
+        if "gemini-3" in model_id or "gemini-2.5" in model_id:
+            if model_id.endswith("-preview"):
+                # Try without -preview suffix
+                alternatives.append(model_id[:-8])  # Remove "-preview"
+            else:
+                # Try with -preview suffix
+                alternatives.append(f"{model_id}-preview")
+
+            # Also try with google/ prefix
+            alternatives.append(f"google/{model_id}")
+            alternatives.append(f"vertex_ai/{model_id}")
+
+        # Claude models: try different date formats
+        if "claude" in model_id:
+            # Try with @ format for Vertex AI
+            if "-" in model_id and "@" not in model_id:
+                parts = model_id.rsplit("-", 1)
+                if len(parts) == 2 and parts[1].isdigit():
+                    alternatives.append(f"{parts[0]}@{parts[1]}")
+
+        # OpenAI models: try with openai/ prefix
+        if model_id.startswith(("gpt-", "o3", "o4")):
+            alternatives.append(f"openai/{model_id}")
+            alternatives.append(f"azure/{model_id}")
+
+        return alternatives
+
+    def update_registry(self) -> int:
+        """
+        Update ModelRegistry with LiteLLM data.
+
+        Syncs both pricing and capabilities from LiteLLM.
+
+        Returns:
+            Total number of model updates (pricing + capabilities).
+        """
+        pricing_updates = self.sync_pricing()
+        capability_updates = self.sync_capabilities()
+        return pricing_updates + capability_updates
 
     def _convert_to_per_1m(self, per_token_cost: float) -> float:
         """

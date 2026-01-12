@@ -933,15 +933,20 @@ class TestModelCapabilitiesThinkingTokens:
         assert caps.supports_extended_thinking is True
         assert caps.max_thinking_tokens is not None
 
-    def test_builtin_haiku_has_no_thinking_tokens(self) -> None:
-        """Test Claude Haiku has no thinking tokens (not supported)."""
+    def test_builtin_haiku_4_5_has_thinking_tokens(self) -> None:
+        """Test Claude Haiku 4.5 has thinking tokens (first Haiku with extended thinking).
+
+        Per Anthropic announcement (Oct 2025): Claude Haiku 4.5 is 'the first Haiku
+        model to support extended thinking'.
+        """
         from mcp_server_langgraph.agents.model_registry import ModelRegistry
 
         registry = ModelRegistry()
         caps = registry.get("claude-haiku-4-5-20251001")
 
-        assert caps.supports_extended_thinking is False
-        assert caps.max_thinking_tokens is None
+        assert caps.supports_extended_thinking is True
+        assert caps.max_thinking_tokens is not None
+        assert caps.max_thinking_tokens >= 1024  # Minimum per Anthropic docs
 
     def test_all_thinking_models_have_max_tokens_set(self) -> None:
         """Audit: All models with extended_thinking must have max_thinking_tokens."""
@@ -1825,3 +1830,247 @@ class TestModelSunsetDate:
         for model_id in current_models:
             caps = registry.get(model_id)
             assert caps.sunset_date is None, f"Current model {model_id} should not have sunset_date"
+
+
+@pytest.mark.unit
+@pytest.mark.agents
+@pytest.mark.orchestrator
+@pytest.mark.xdist_group(name="model_registry_thinking")
+class TestModelExtendedThinkingCapabilities:
+    """
+    Tests for extended thinking capabilities in ModelRegistry.
+
+    These tests validate that models are correctly configured with
+    supports_extended_thinking and max_thinking_tokens based on
+    actual provider capabilities.
+
+    Reference sources:
+    - Google Gemini 3 docs: Both Flash and Pro support thinking_level
+    - Anthropic Claude 4.5 docs: Haiku 4.5 supports extended thinking
+    - OpenAI docs: o3-mini supports reasoning_effort, gpt-4.5 does NOT
+    - LiteLLM model_cost data: supports_reasoning field
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
+
+    # =========================================================================
+    # Gemini 3 Flash - MUST support extended thinking
+    # Per Google docs: gemini-3-flash supports thinking_level parameter
+    # =========================================================================
+
+    def test_gemini_3_flash_supports_extended_thinking(self) -> None:
+        """Test Gemini 3 Flash supports extended thinking.
+
+        Per Google's Gemini 3 Developer Guide, BOTH Flash and Pro support
+        the thinking_level parameter. Flash even has MORE options (minimal,
+        low, medium, high) than Pro (low, high).
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-3-flash")
+
+        assert caps.supports_extended_thinking is True, "Gemini 3 Flash MUST support extended thinking per Google docs"
+
+    def test_gemini_3_flash_has_thinking_tokens(self) -> None:
+        """Test Gemini 3 Flash has max_thinking_tokens configured."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-3-flash")
+
+        assert caps.max_thinking_tokens is not None, "Gemini 3 Flash should have max_thinking_tokens set"
+        assert caps.max_thinking_tokens >= 8192, "Gemini 3 Flash should have reasonable thinking budget"
+
+    # =========================================================================
+    # Gemini 2.5 Flash - MUST support extended thinking
+    # Per Google docs: gemini-2.5-flash supports thinking_budget parameter
+    # =========================================================================
+
+    def test_gemini_2_5_flash_supports_extended_thinking(self) -> None:
+        """Test Gemini 2.5 Flash supports extended thinking.
+
+        Per Google's docs, Gemini 2.5 Flash is a 'hybrid reasoning model'
+        that supports thinking_budget (0 to 24576 tokens).
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-2.5-flash")
+
+        assert caps.supports_extended_thinking is True, "Gemini 2.5 Flash MUST support extended thinking per Google docs"
+
+    def test_gemini_2_5_flash_has_thinking_tokens(self) -> None:
+        """Test Gemini 2.5 Flash has max_thinking_tokens configured."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-2.5-flash")
+
+        assert caps.max_thinking_tokens is not None
+        # Gemini 2.5 Flash budget is 0-24576
+        assert caps.max_thinking_tokens <= 24576
+
+    # =========================================================================
+    # Claude Haiku 4.5 - MUST support extended thinking
+    # Per Anthropic docs: "first Haiku model to support extended thinking"
+    # =========================================================================
+
+    def test_claude_haiku_4_5_supports_extended_thinking(self) -> None:
+        """Test Claude Haiku 4.5 supports extended thinking.
+
+        Per Anthropic's announcement, Claude Haiku 4.5 is 'the first Haiku
+        model to support extended thinking'.
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-haiku-4-5-20251001")
+
+        assert caps.supports_extended_thinking is True, "Claude Haiku 4.5 MUST support extended thinking per Anthropic docs"
+
+    def test_claude_haiku_4_5_has_thinking_tokens(self) -> None:
+        """Test Claude Haiku 4.5 has max_thinking_tokens configured."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-haiku-4-5-20251001")
+
+        assert caps.max_thinking_tokens is not None
+        # Minimum thinking budget for Anthropic is 1024
+        assert caps.max_thinking_tokens >= 1024
+
+    # =========================================================================
+    # o3-mini - MUST support extended thinking
+    # Per OpenAI docs: o3-mini supports reasoning_effort (low, medium, high)
+    # =========================================================================
+
+    def test_o3_mini_supports_extended_thinking(self) -> None:
+        """Test o3-mini supports extended thinking.
+
+        Per OpenAI's docs, o3-mini supports the reasoning_effort parameter
+        with low, medium, high values.
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("o3-mini")
+
+        assert caps.supports_extended_thinking is True, "o3-mini MUST support extended thinking per OpenAI docs"
+
+    def test_o3_mini_has_thinking_tokens(self) -> None:
+        """Test o3-mini has max_thinking_tokens configured."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("o3-mini")
+
+        assert caps.max_thinking_tokens is not None
+        assert caps.max_thinking_tokens >= 8192
+
+    # =========================================================================
+    # o4-mini - New model, MUST exist and support extended thinking
+    # Per OpenAI docs: o4-mini is latest reasoning model with 128K context
+    # =========================================================================
+
+    def test_o4_mini_exists_in_registry(self) -> None:
+        """Test o4-mini model exists in registry.
+
+        o4-mini was released April 2025 as the successor to o3-mini,
+        with 128K context and improved reasoning.
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("o4-mini")
+
+        assert caps is not None, "o4-mini should exist in registry"
+
+    def test_o4_mini_supports_extended_thinking(self) -> None:
+        """Test o4-mini supports extended thinking."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("o4-mini")
+
+        assert caps.supports_extended_thinking is True
+
+    def test_o4_mini_has_128k_context(self) -> None:
+        """Test o4-mini has 128K context window."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("o4-mini")
+
+        assert caps.context_limit >= 128_000
+
+    # =========================================================================
+    # gpt-4.5 - MUST NOT support extended thinking
+    # Per OpenAI docs: "GPT-4.5 doesn't think before it responds"
+    # =========================================================================
+
+    def test_gpt_4_5_does_not_support_extended_thinking(self) -> None:
+        """Test gpt-4.5 does NOT support extended thinking.
+
+        Per OpenAI's announcement, 'GPT-4.5 doesn't think before it responds,
+        making its strengths different from reasoning models like o1.'
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gpt-4.5")
+
+        assert caps.supports_extended_thinking is False, "gpt-4.5 should NOT support extended thinking per OpenAI docs"
+
+    def test_gpt_4_5_has_no_thinking_tokens(self) -> None:
+        """Test gpt-4.5 has no max_thinking_tokens."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gpt-4.5")
+
+        assert caps.max_thinking_tokens is None, "gpt-4.5 should have no thinking tokens since it doesn't reason"
+
+    # =========================================================================
+    # Existing models - verify they still work
+    # =========================================================================
+
+    def test_gemini_3_pro_supports_extended_thinking(self) -> None:
+        """Test Gemini 3 Pro supports extended thinking (existing behavior)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-3-pro")
+
+        assert caps.supports_extended_thinking is True
+
+    def test_claude_opus_4_5_supports_extended_thinking(self) -> None:
+        """Test Claude Opus 4.5 supports extended thinking (existing behavior)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-opus-4-5-20251101")
+
+        assert caps.supports_extended_thinking is True
+
+    def test_claude_sonnet_4_5_supports_extended_thinking(self) -> None:
+        """Test Claude Sonnet 4.5 supports extended thinking (existing behavior)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-sonnet-4-5-20250929")
+
+        assert caps.supports_extended_thinking is True
+
+    def test_o1_preview_supports_extended_thinking(self) -> None:
+        """Test o1-preview supports extended thinking (existing behavior)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("o1-preview")
+
+        assert caps.supports_extended_thinking is True
