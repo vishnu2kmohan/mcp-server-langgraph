@@ -380,6 +380,7 @@
             "group": "LLM Providers",
             "pages": [
               "guides/multi-llm-setup",
+              "guides/model-lifecycle",
               "guides/anthropic-claude",
               "guides/google-gemini",
               "guides/vertex-ai-setup",
@@ -610,6 +611,8 @@
               "architecture/adr-0098-mimir-alerting-fallback",
               "architecture/adr-0099-semantic-tool-selection",
               "architecture/adr-0100-frontend-ai-native-integration",
+              "architecture/adr-0101-context-graphs",
+              "architecture/adr-0102-enhanced-model-selector",
               "architecture/adr-0088-frontend-hook-selection-guidance",
               "architecture/adr-0076-sandpack-jsdom-27-mock"
             ]

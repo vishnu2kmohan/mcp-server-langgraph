@@ -1,0 +1,181 @@
+---
+title: Model Lifecycle Management
+description: 'Understand model statuses, deprecation warnings, and sunset timelines'
+icon: 'clock-rotate-left'
+seoTitle: "Model Lifecycle: Status Badges, Deprecation, and Migration"
+seoDescription: "Learn about model lifecycle statuses (current, preview, legacy, deprecated), sunset dates, and how to migrate between models in MCP Server LangGraph."
+keywords: ["model lifecycle", "deprecation", "sunset date", "model status", "model migration"]
+contentType: "how-to"
+---
+
+## Overview
+
+MCP Server LangGraph tracks model lifecycle to help you make informed decisions about which models to use. Each model has a **lifecycle status** that indicates its maturity and support level.
+
+<Info>
+The Enhanced Model Selector displays status badges directly in the dropdown, making it easy to identify model lifecycle at a glance.
+</Info>
+
+## Lifecycle Statuses
+
+Models progress through four lifecycle stages:
+
+<CardGroup cols={2}>
+  <Card title="Current" icon="check-circle" color="#10b981">
+    **Production-ready** models actively maintained by their provider. These are the recommended choices for production workloads.
+
+    - No status badge shown (default)
+    - Full support and updates
+    - Best performance and reliability
+  </Card>
+
+  <Card title="Preview" icon="flask" color="#06b6d4">
+    **Experimental** models not yet generally available. May have bugs, limited features, or undergo breaking changes.
+
+    - Cyan "Preview" badge
+    - Use for testing new capabilities
+    - Not recommended for production
+  </Card>
+
+  <Card title="Legacy" icon="clock" color="#f59e0b">
+    **Older models** superseded by newer versions. Still functional but no longer receiving major updates.
+
+    - Amber "Legacy" badge
+    - Consider migrating to current models
+    - May be deprecated in the future
+  </Card>
+
+  <Card title="Deprecated" icon="triangle-exclamation" color="#ef4444">
+    **Models scheduled for removal**. A sunset date indicates when the model will be retired.
+
+    - Red "Deprecated" badge
+    - Shows sunset date (e.g., "Sunset Oct 2025")
+    - Migration required before sunset
+  </Card>
+</CardGroup>
+
+## Deprecation Warnings
+
+When you select a deprecated model, a warning banner appears with:
+
+- The model name
+- Deprecation status
+- Sunset date (when the model will be retired)
+
+<Warning>
+**Important**: After the sunset date, deprecated models will stop working. Migrate to a current model before the deadline.
+</Warning>
+
+### Example Warning
+
+```
+Claude 3.5 Sonnet is deprecated and will be retired on October 31, 2025
+```
+
+You can dismiss the warning by clicking the X button. The warning will reappear if you select a different deprecated model.
+
+## Model Sorting
+
+The model selector automatically sorts models by lifecycle priority:
+
+1. **Current** models appear first (recommended)
+2. **Preview** models (experimental)
+3. **Legacy** models (older but supported)
+4. **Deprecated** models appear last (migration required)
+
+Within each status group, models are sorted alphabetically by name.
+
+## Capability Badges
+
+In addition to lifecycle status, the model selector shows capability badges:
+
+| Badge | Description |
+|-------|-------------|
+| **Thinking** | Supports extended thinking / chain-of-thought reasoning |
+| **Vision** | Can process image inputs |
+| **Tools** | Supports tool/function calling |
+
+## Migration Guide
+
+When a model you're using is deprecated:
+
+<Steps>
+  <Step title="Check the sunset date">
+    The deprecation warning shows when the model will be retired.
+  </Step>
+
+  <Step title="Identify a replacement">
+    Look for a "Current" model from the same provider with similar capabilities.
+  </Step>
+
+  <Step title="Test with the new model">
+    Update your workflows to use the new model and verify results.
+  </Step>
+
+  <Step title="Update before sunset">
+    Complete migration before the sunset date to avoid service disruption.
+  </Step>
+</Steps>
+
+### Common Migrations
+
+| Deprecated Model | Recommended Replacement |
+|------------------|------------------------|
+| Claude 3.5 Sonnet | Claude Sonnet 4.5 |
+| Claude 3 Opus | Claude Opus 4.5 |
+| Claude 3 Haiku | Claude Haiku 4.5 |
+| o1 Preview | o3 |
+| o1 Mini | o3 Mini |
+
+## API Reference
+
+The `/api/v1/config/models` endpoint returns model lifecycle information:
+
+```json
+{
+  "id": "claude-3-5-sonnet",
+  "name": "Claude 3.5 Sonnet",
+  "provider": "anthropic",
+  "supports_thinking": true,
+  "supports_vision": true,
+  "supports_tools": true,
+  "status": "deprecated",
+  "sunset_date": "2025-10-31"
+}
+```
+
+### Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique model identifier |
+| `name` | string | Human-readable display name |
+| `provider` | string | LLM provider (anthropic, openai, google) |
+| `supports_thinking` | boolean | Extended thinking capability |
+| `supports_vision` | boolean | Image input support |
+| `supports_tools` | boolean | Function calling support |
+| `status` | string | Lifecycle status (current, preview, legacy, deprecated) |
+| `sunset_date` | string | ISO 8601 date (only for deprecated models) |
+
+## Best Practices
+
+<Tip>
+**Proactive Migration**: Don't wait until the sunset date. Start testing replacement models as soon as you receive a deprecation notice.
+</Tip>
+
+1. **Subscribe to release notes** - Stay informed about model lifecycle changes
+2. **Use current models in production** - Avoid preview and deprecated models
+3. **Test thoroughly** - Verify behavior differences when migrating
+4. **Document model choices** - Record why specific models were selected
+
+## Related Guides
+
+<CardGroup cols={2}>
+  <Card title="Multi-LLM Setup" icon="shuffle" href="/guides/multi-llm-setup">
+    Configure multiple LLM providers with fallback
+  </Card>
+
+  <Card title="Feature Flags" icon="flag" href="/guides/feature-flags">
+    Enable/disable model selector features
+  </Card>
+</CardGroup>
