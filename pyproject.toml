@@ -54,7 +54,7 @@ dependencies = [
     # https://github.com/kubernetes-client/python/issues/2458 tracks the blocker
     "fastapi>=0.122.0",  # Updated 2025-11-28: Python 3.14 support
     "starlette>=0.50.0",  # Updated from 0.48.0, fixes CVE-2025-62727 (Range header DoS)
-    "anyio>=4.4.0,<4.10.0",  # Pin for Starlette/httpx compatibility; 4.10.0+ removed _backends module
+    "anyio>=4.4.0,<4.13.0",  # Pin for Starlette/httpx compatibility; 4.10.0+ removed _backends module
     "uvicorn[standard]>=0.38.0",
     "python-keycloak>=5.8.1",
     "authlib>=1.6.5",
