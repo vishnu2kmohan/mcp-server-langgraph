@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": ["src/main.tsx", "src/App.tsx"],
+  "project": ["src/**/*.{ts,tsx}"],
+  "ignore": [
+    "**/*.test.*",
+    "**/*.stories.*",
+    "**/*.fixtures.*",
+    "src/types/generated-api.ts",
+    "src/mocks/**/*",
+    "src/components/MCP/lazy.ts",
+    "src/components/DevTools/lazy.ts"
+  ],
+  "ignoreDependencies": ["@types/*"],
+  "compilers": {
+    "css": "css"
+  }
+}

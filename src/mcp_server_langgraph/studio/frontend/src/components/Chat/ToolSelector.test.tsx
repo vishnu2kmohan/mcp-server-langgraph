@@ -1,0 +1,454 @@
+/**
+ * ToolSelector Component Tests
+ *
+ * TDD: These tests are written FIRST to define the expected behavior
+ * of the ToolSelector component for manual tool selection.
+ *
+ * Tests verify:
+ * 1. Renders pill button showing current mode/selection
+ * 2. Opens dropdown on click
+ * 3. Shows mode toggle (Auto/Manual/None)
+ * 4. Shows search input for filtering tools
+ * 5. Shows grouped tool list (built-in, MCP by server)
+ * 6. Allows multi-select of tools
+ * 7. Keyboard navigation support
+ * 8. Accessibility (ARIA listbox pattern)
+ */
+
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ToolSelector } from "./ToolSelector";
+import type { ToolSelectionMode } from "@/types/tools";
+
+describe("ToolSelector", () => {
+  const defaultProps = {
+    selectedTools: [] as string[],
+    onSelectionChange: vi.fn(),
+    mode: "auto" as ToolSelectionMode,
+    onModeChange: vi.fn(),
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  // ===========================================================================
+  // Pill Button Display Tests
+  // ===========================================================================
+
+  describe("pill button display", () => {
+    it("should render 'Auto' when mode is auto", () => {
+      render(<ToolSelector {...defaultProps} mode="auto" />);
+
+      const button = screen.getByRole("button", { name: /tools/i });
+      expect(button).toHaveTextContent(/auto/i);
+    });
+
+    it("should render tool count when mode is manual with selections", () => {
+      render(
+        <ToolSelector
+          {...defaultProps}
+          mode="manual"
+          selectedTools={["calculator", "web_search"]}
+        />
+      );
+
+      const button = screen.getByRole("button", { name: /tools/i });
+      expect(button).toHaveTextContent(/2/);
+    });
+
+    it("should render 'None' when mode is none", () => {
+      render(<ToolSelector {...defaultProps} mode="none" />);
+
+      const button = screen.getByRole("button", { name: /tools/i });
+      expect(button).toHaveTextContent(/none/i);
+    });
+
+    it("should be disabled when disabled prop is true", () => {
+      render(<ToolSelector {...defaultProps} disabled />);
+
+      const button = screen.getByRole("button", { name: /tools/i });
+      expect(button).toBeDisabled();
+    });
+  });
+
+  // ===========================================================================
+  // Dropdown Toggle Tests
+  // ===========================================================================
+
+  describe("dropdown toggle", () => {
+    it("should open dropdown on click", async () => {
+      const user = userEvent.setup();
+      render(<ToolSelector {...defaultProps} />);
+
+      const button = screen.getByRole("button", { name: /tools/i });
+      await user.click(button);
+
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+    });
+
+    it("should close dropdown on second click", async () => {
+      const user = userEvent.setup();
+      render(<ToolSelector {...defaultProps} />);
+
+      const button = screen.getByRole("button", { name: /tools/i });
+      await user.click(button);
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+
+      await user.click(button);
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    });
+
+    it("should close dropdown on escape key", async () => {
+      const user = userEvent.setup();
+      render(<ToolSelector {...defaultProps} />);
+
+      const button = screen.getByRole("button", { name: /tools/i });
+      await user.click(button);
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+
+      await user.keyboard("{Escape}");
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    });
+
+    it("should close dropdown on outside click", async () => {
+      const user = userEvent.setup();
+      render(
+        <div>
+          <ToolSelector {...defaultProps} />
+          <button data-testid="outside">Outside</button>
+        </div>
+      );
+
+      const button = screen.getByRole("button", { name: /tools/i });
+      await user.click(button);
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+
+      await user.click(screen.getByTestId("outside"));
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    });
+  });
+
+  // ===========================================================================
+  // Mode Toggle Tests
+  // ===========================================================================
+
+  describe("mode toggle", () => {
+    it("should show mode options in dropdown", async () => {
+      const user = userEvent.setup();
+      render(<ToolSelector {...defaultProps} />);
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+
+      expect(screen.getByRole("option", { name: /auto/i })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: /manual/i })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: /none/i })).toBeInTheDocument();
+    });
+
+    it("should call onModeChange when mode is changed", async () => {
+      const onModeChange = vi.fn();
+      const user = userEvent.setup();
+      render(<ToolSelector {...defaultProps} onModeChange={onModeChange} />);
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+      await user.click(screen.getByRole("option", { name: /manual/i }));
+
+      expect(onModeChange).toHaveBeenCalledWith("manual");
+    });
+
+    it("should highlight current mode", async () => {
+      const user = userEvent.setup();
+      render(<ToolSelector {...defaultProps} mode="manual" />);
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+
+      const manualOption = screen.getByRole("option", { name: /manual/i });
+      expect(manualOption).toHaveAttribute("aria-selected", "true");
+    });
+  });
+
+  // ===========================================================================
+  // Tool List Tests
+  // ===========================================================================
+
+  describe("tool list", () => {
+    const mockTools = [
+      { name: "calculator", displayName: "Calculator", source: "builtin" as const },
+      { name: "web_search", displayName: "Web Search", source: "builtin" as const },
+      { name: "github:create_issue", displayName: "Create Issue", source: "mcp" as const, serverName: "github" },
+    ];
+
+    it("should show tool list when mode is manual", async () => {
+      const user = userEvent.setup();
+      render(
+        <ToolSelector
+          {...defaultProps}
+          mode="manual"
+          availableTools={mockTools}
+        />
+      );
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+
+      expect(screen.getByText("Calculator")).toBeInTheDocument();
+      expect(screen.getByText("Web Search")).toBeInTheDocument();
+    });
+
+    it("should group tools by source", async () => {
+      const user = userEvent.setup();
+      render(
+        <ToolSelector
+          {...defaultProps}
+          mode="manual"
+          availableTools={mockTools}
+        />
+      );
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+
+      expect(screen.getByText(/built-in/i)).toBeInTheDocument();
+      expect(screen.getByText(/github/i)).toBeInTheDocument();
+    });
+
+    it("should show checkboxes for tool selection", async () => {
+      const user = userEvent.setup();
+      render(
+        <ToolSelector
+          {...defaultProps}
+          mode="manual"
+          availableTools={mockTools}
+        />
+      );
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+
+      const checkboxes = screen.getAllByRole("checkbox");
+      expect(checkboxes.length).toBeGreaterThan(0);
+    });
+
+    it("should check selected tools", async () => {
+      const user = userEvent.setup();
+      render(
+        <ToolSelector
+          {...defaultProps}
+          mode="manual"
+          selectedTools={["calculator"]}
+          availableTools={mockTools}
+        />
+      );
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+
+      const calculatorCheckbox = screen.getByRole("checkbox", { name: /calculator/i });
+      expect(calculatorCheckbox).toBeChecked();
+    });
+  });
+
+  // ===========================================================================
+  // Tool Selection Tests
+  // ===========================================================================
+
+  describe("tool selection", () => {
+    const mockTools = [
+      { name: "calculator", displayName: "Calculator", source: "builtin" as const },
+      { name: "web_search", displayName: "Web Search", source: "builtin" as const },
+    ];
+
+    it("should call onSelectionChange when tool is selected", async () => {
+      const onSelectionChange = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <ToolSelector
+          {...defaultProps}
+          mode="manual"
+          onSelectionChange={onSelectionChange}
+          availableTools={mockTools}
+        />
+      );
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+      await user.click(screen.getByRole("checkbox", { name: /calculator/i }));
+
+      expect(onSelectionChange).toHaveBeenCalledWith(["calculator"]);
+    });
+
+    it("should call onSelectionChange when tool is deselected", async () => {
+      const onSelectionChange = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <ToolSelector
+          {...defaultProps}
+          mode="manual"
+          selectedTools={["calculator"]}
+          onSelectionChange={onSelectionChange}
+          availableTools={mockTools}
+        />
+      );
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+      await user.click(screen.getByRole("checkbox", { name: /calculator/i }));
+
+      expect(onSelectionChange).toHaveBeenCalledWith([]);
+    });
+
+    it("should support multi-select", async () => {
+      const onSelectionChange = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <ToolSelector
+          {...defaultProps}
+          mode="manual"
+          selectedTools={["calculator"]}
+          onSelectionChange={onSelectionChange}
+          availableTools={mockTools}
+        />
+      );
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+      await user.click(screen.getByRole("checkbox", { name: /web search/i }));
+
+      expect(onSelectionChange).toHaveBeenCalledWith(["calculator", "web_search"]);
+    });
+  });
+
+  // ===========================================================================
+  // Search/Filter Tests
+  // ===========================================================================
+
+  describe("search filtering", () => {
+    const mockTools = [
+      { name: "calculator", displayName: "Calculator", source: "builtin" as const },
+      { name: "web_search", displayName: "Web Search", source: "builtin" as const },
+      { name: "github:create_issue", displayName: "Create Issue", source: "mcp" as const, serverName: "github" },
+    ];
+
+    it("should show search input in dropdown", async () => {
+      const user = userEvent.setup();
+      render(
+        <ToolSelector
+          {...defaultProps}
+          mode="manual"
+          availableTools={mockTools}
+        />
+      );
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+
+      expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
+    });
+
+    it("should filter tools by search term", async () => {
+      const user = userEvent.setup();
+      render(
+        <ToolSelector
+          {...defaultProps}
+          mode="manual"
+          availableTools={mockTools}
+        />
+      );
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+      await user.type(screen.getByPlaceholderText(/search/i), "calc");
+
+      expect(screen.getByText("Calculator")).toBeInTheDocument();
+      expect(screen.queryByText("Web Search")).not.toBeInTheDocument();
+    });
+
+    it("should show 'no results' when no tools match search", async () => {
+      const user = userEvent.setup();
+      render(
+        <ToolSelector
+          {...defaultProps}
+          mode="manual"
+          availableTools={mockTools}
+        />
+      );
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+      await user.type(screen.getByPlaceholderText(/search/i), "nonexistent");
+
+      expect(screen.getByText(/no tools found/i)).toBeInTheDocument();
+    });
+  });
+
+  // ===========================================================================
+  // Accessibility Tests
+  // ===========================================================================
+
+  describe("accessibility", () => {
+    it("should have proper ARIA attributes on button", () => {
+      render(<ToolSelector {...defaultProps} />);
+
+      const button = screen.getByRole("button", { name: /tools/i });
+      expect(button).toHaveAttribute("aria-haspopup", "listbox");
+      expect(button).toHaveAttribute("aria-expanded", "false");
+    });
+
+    it("should update aria-expanded when opened", async () => {
+      const user = userEvent.setup();
+      render(<ToolSelector {...defaultProps} />);
+
+      const button = screen.getByRole("button", { name: /tools/i });
+      await user.click(button);
+
+      expect(button).toHaveAttribute("aria-expanded", "true");
+    });
+
+    it("should have proper role on dropdown", async () => {
+      const user = userEvent.setup();
+      render(<ToolSelector {...defaultProps} />);
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+    });
+
+    it("should have proper role on options", async () => {
+      const user = userEvent.setup();
+      render(<ToolSelector {...defaultProps} />);
+
+      await user.click(screen.getByRole("button", { name: /tools/i }));
+
+      const options = screen.getAllByRole("option");
+      expect(options.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ===========================================================================
+  // Loading State Tests
+  // ===========================================================================
+
+  describe("loading state", () => {
+    it("should show loading indicator when isLoading is true", () => {
+      render(<ToolSelector {...defaultProps} isLoading />);
+
+      expect(screen.getByTestId("tool-selector-loading")).toBeInTheDocument();
+    });
+
+    it("should disable button when loading", () => {
+      render(<ToolSelector {...defaultProps} isLoading />);
+
+      const button = screen.getByRole("button", { name: /tools/i });
+      expect(button).toBeDisabled();
+    });
+  });
+
+  // ===========================================================================
+  // Compact Mode Tests
+  // ===========================================================================
+
+  describe("compact mode", () => {
+    it("should render smaller button in compact mode", () => {
+      render(<ToolSelector {...defaultProps} compact />);
+
+      const button = screen.getByRole("button", { name: /tools/i });
+      expect(button).toHaveClass("text-xs");
+    });
+  });
+});

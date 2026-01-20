@@ -1,0 +1,2619 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Animations Stories > should match Durations snapshot 1`] = `
+<div
+  class="space-y-6 p-6"
+>
+  <div>
+    <h2
+      class="text-xl font-bold text-neutral-12 mb-2"
+    >
+      Duration Tokens
+    </h2>
+    <p
+      class="text-neutral-11"
+    >
+      Standardized animation durations for consistent timing across the UI.
+    </p>
+  </div>
+  <div
+    class="space-y-3"
+  >
+    <div
+      class="flex items-center gap-4 p-3 border border-neutral-6 rounded-lg"
+    >
+      <div
+        class="w-24 shrink-0"
+      >
+        <code
+          class="text-sm text-neutral-11"
+        >
+          instant
+        </code>
+      </div>
+      <div
+        class="w-16 shrink-0 text-sm text-neutral-10"
+      >
+        100ms
+      </div>
+      <div
+        class="flex-1 text-sm text-neutral-10"
+      >
+        Hover states, micro-feedback
+      </div>
+      <div
+        class="w-40 shrink-0"
+      >
+        <button
+          class="px-3 py-1.5 bg-primary-9 text-white text-sm rounded hover:bg-primary-10 transition-colors"
+        >
+          Play
+        </button>
+      </div>
+      <div
+        class="w-32 h-8 bg-neutral-4 rounded overflow-hidden"
+      >
+        <div
+          class="h-full bg-primary-9"
+          style="width: 0px;"
+        />
+      </div>
+    </div>
+    <div
+      class="flex items-center gap-4 p-3 border border-neutral-6 rounded-lg"
+    >
+      <div
+        class="w-24 shrink-0"
+      >
+        <code
+          class="text-sm text-neutral-11"
+        >
+          fast
+        </code>
+      </div>
+      <div
+        class="w-16 shrink-0 text-sm text-neutral-10"
+      >
+        150ms
+      </div>
+      <div
+        class="flex-1 text-sm text-neutral-10"
+      >
+        Button states, quick feedback
+      </div>
+      <div
+        class="w-40 shrink-0"
+      >
+        <button
+          class="px-3 py-1.5 bg-primary-9 text-white text-sm rounded hover:bg-primary-10 transition-colors"
+        >
+          Play
+        </button>
+      </div>
+      <div
+        class="w-32 h-8 bg-neutral-4 rounded overflow-hidden"
+      >
+        <div
+          class="h-full bg-primary-9"
+          style="width: 0px;"
+        />
+      </div>
+    </div>
+    <div
+      class="flex items-center gap-4 p-3 border border-neutral-6 rounded-lg"
+    >
+      <div
+        class="w-24 shrink-0"
+      >
+        <code
+          class="text-sm text-neutral-11"
+        >
+          normal
+        </code>
+      </div>
+      <div
+        class="w-16 shrink-0 text-sm text-neutral-10"
+      >
+        200ms
+      </div>
+      <div
+        class="flex-1 text-sm text-neutral-10"
+      >
+        Standard transitions
+      </div>
+      <div
+        class="w-40 shrink-0"
+      >
+        <button
+          class="px-3 py-1.5 bg-primary-9 text-white text-sm rounded hover:bg-primary-10 transition-colors"
+        >
+          Play
+        </button>
+      </div>
+      <div
+        class="w-32 h-8 bg-neutral-4 rounded overflow-hidden"
+      >
+        <div
+          class="h-full bg-primary-9"
+          style="width: 0px;"
+        />
+      </div>
+    </div>
+    <div
+      class="flex items-center gap-4 p-3 border border-neutral-6 rounded-lg"
+    >
+      <div
+        class="w-24 shrink-0"
+      >
+        <code
+          class="text-sm text-neutral-11"
+        >
+          slow
+        </code>
+      </div>
+      <div
+        class="w-16 shrink-0 text-sm text-neutral-10"
+      >
+        300ms
+      </div>
+      <div
+        class="flex-1 text-sm text-neutral-10"
+      >
+        Complex animations, modals
+      </div>
+      <div
+        class="w-40 shrink-0"
+      >
+        <button
+          class="px-3 py-1.5 bg-primary-9 text-white text-sm rounded hover:bg-primary-10 transition-colors"
+        >
+          Play
+        </button>
+      </div>
+      <div
+        class="w-32 h-8 bg-neutral-4 rounded overflow-hidden"
+      >
+        <div
+          class="h-full bg-primary-9"
+          style="width: 0px;"
+        />
+      </div>
+    </div>
+    <div
+      class="flex items-center gap-4 p-3 border border-neutral-6 rounded-lg"
+    >
+      <div
+        class="w-24 shrink-0"
+      >
+        <code
+          class="text-sm text-neutral-11"
+        >
+          slower
+        </code>
+      </div>
+      <div
+        class="w-16 shrink-0 text-sm text-neutral-10"
+      >
+        500ms
+      </div>
+      <div
+        class="flex-1 text-sm text-neutral-10"
+      >
+        Page transitions
+      </div>
+      <div
+        class="w-40 shrink-0"
+      >
+        <button
+          class="px-3 py-1.5 bg-primary-9 text-white text-sm rounded hover:bg-primary-10 transition-colors"
+        >
+          Play
+        </button>
+      </div>
+      <div
+        class="w-32 h-8 bg-neutral-4 rounded overflow-hidden"
+      >
+        <div
+          class="h-full bg-primary-9"
+          style="width: 0px;"
+        />
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
+<div
+  class="space-y-8 p-6"
+>
+  <div>
+    <h1
+      class="text-2xl font-bold text-neutral-12 mb-2"
+    >
+      Semantic Color Palette
+    </h1>
+    <p
+      class="text-neutral-11"
+    >
+      Our design system uses semantic color names instead of raw Tailwind colors. This ensures consistent meaning across the application and makes theming easier.
+    </p>
+  </div>
+  <div
+    class="space-y-2"
+  >
+    <div>
+      <h3
+        class="text-lg font-semibold text-neutral-12 capitalize"
+      >
+        Primary
+      </h3>
+      <p
+        class="text-sm text-neutral-10"
+      >
+        Used for primary actions, links, and interactive elements. Maps from blue/indigo/sky.
+      </p>
+    </div>
+    <div
+      class="flex flex-wrap gap-1"
+    >
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-1"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          50
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-3"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          100
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-4"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          200
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-5"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          300
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-7"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          400
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-9"
+          title="#3b82f6"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          500
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-10"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          600
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-11"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          700
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-11"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          800
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-12"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          900
+        </span>
+      </div>
+    </div>
+  </div>
+  <div
+    class="space-y-2"
+  >
+    <div>
+      <h3
+        class="text-lg font-semibold text-neutral-12 capitalize"
+      >
+        Success
+      </h3>
+      <p
+        class="text-sm text-neutral-10"
+      >
+        Used for success states, positive actions, and confirmations. Maps from green/emerald/lime.
+      </p>
+    </div>
+    <div
+      class="flex flex-wrap gap-1"
+    >
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-1"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          50
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-3"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          100
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-4"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          200
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-5"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          300
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-7"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          400
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-9"
+          title="#22c55e"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          500
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-10"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          600
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-11"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          700
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-11"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          800
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-12"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          900
+        </span>
+      </div>
+    </div>
+  </div>
+  <div
+    class="space-y-2"
+  >
+    <div>
+      <h3
+        class="text-lg font-semibold text-neutral-12 capitalize"
+      >
+        Warning
+      </h3>
+      <p
+        class="text-sm text-neutral-10"
+      >
+        Used for warnings, cautions, and attention-grabbing elements. Maps from yellow/amber.
+      </p>
+    </div>
+    <div
+      class="flex flex-wrap gap-1"
+    >
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-3"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          50
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-3"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          100
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-6"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          200
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-6"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          300
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-9"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          400
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-9"
+          title="#f59e0b"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          500
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-9"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          600
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-10"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          700
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-11"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          800
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-12"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          900
+        </span>
+      </div>
+    </div>
+  </div>
+  <div
+    class="space-y-2"
+  >
+    <div>
+      <h3
+        class="text-lg font-semibold text-neutral-12 capitalize"
+      >
+        Error
+      </h3>
+      <p
+        class="text-sm text-neutral-10"
+      >
+        Used for errors, destructive actions, and critical alerts. Maps from red/rose/pink.
+      </p>
+    </div>
+    <div
+      class="flex flex-wrap gap-1"
+    >
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-1"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          50
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-3"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          100
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-4"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          200
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-9"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          300
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-7"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          400
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-9"
+          title="#ef4444"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          500
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-10"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          600
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-11"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          700
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-11"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          800
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-12"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          900
+        </span>
+      </div>
+    </div>
+  </div>
+  <div
+    class="space-y-2"
+  >
+    <div>
+      <h3
+        class="text-lg font-semibold text-neutral-12 capitalize"
+      >
+        Info
+      </h3>
+      <p
+        class="text-sm text-neutral-10"
+      >
+        Used for informational content and neutral highlights. Maps from cyan/teal.
+      </p>
+    </div>
+    <div
+      class="flex flex-wrap gap-1"
+    >
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-1"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          50
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-3"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          100
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-4"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          200
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-5"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          300
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-11"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          400
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-9"
+          title="#06b6d4"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          500
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-9"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          600
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-10"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          700
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-11"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          800
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-12"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          900
+        </span>
+      </div>
+    </div>
+  </div>
+  <div
+    class="space-y-2"
+  >
+    <div>
+      <h3
+        class="text-lg font-semibold text-neutral-12 capitalize"
+      >
+        Insight
+      </h3>
+      <p
+        class="text-sm text-neutral-10"
+      >
+        Used for AI features, thinking traces, and intelligent suggestions. Maps from violet/purple.
+      </p>
+    </div>
+    <div
+      class="flex flex-wrap gap-1"
+    >
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-1"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          50
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-2"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          100
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-4"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          200
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-5"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          300
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-9"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          400
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-9"
+          title="#8b5cf6"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          500
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-10"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          600
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-11"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          700
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-11"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          800
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-12"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          900
+        </span>
+      </div>
+    </div>
+  </div>
+  <div
+    class="space-y-2"
+  >
+    <div>
+      <h3
+        class="text-lg font-semibold text-neutral-12 capitalize"
+      >
+        Neutral
+      </h3>
+      <p
+        class="text-sm text-neutral-10"
+      >
+        Used for general UI elements, borders, backgrounds, and text. Maps from gray/slate/zinc/stone.
+      </p>
+    </div>
+    <div
+      class="flex flex-wrap gap-1"
+    >
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-neutral-1"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          50
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-neutral-2"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          100
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-neutral-3"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          200
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-neutral-3"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          300
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-neutral-4"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          400
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-neutral-5"
+          title="#6b7280"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          500
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-neutral-5"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          600
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-neutral-4"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          700
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-neutral-3"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          800
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-neutral-2"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          900
+        </span>
+      </div>
+    </div>
+  </div>
+  <div
+    class="space-y-2"
+  >
+    <div>
+      <h3
+        class="text-lg font-semibold text-neutral-12 capitalize"
+      >
+        Grafana
+      </h3>
+      <p
+        class="text-sm text-neutral-10"
+      >
+        Used for observability integration and Grafana-related features. Maps from orange.
+      </p>
+    </div>
+    <div
+      class="flex flex-wrap gap-1"
+    >
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-grafana-400"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          400
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-grafana-500"
+          title="#f46800"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          500
+        </span>
+      </div>
+      <div
+        class="text-center"
+      >
+        <div
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-grafana-600"
+        />
+        <span
+          class="text-xs text-neutral-11 mt-1 block"
+        >
+          600
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`DesignTokenValidation Stories > should match Dashboard snapshot 1`] = `
+<div
+  class="space-y-8 p-6"
+>
+  <div>
+    <h1
+      class="text-2xl font-bold text-neutral-12 mb-2"
+    >
+      Design Token Validation Dashboard
+    </h1>
+    <p
+      class="text-neutral-11"
+    >
+      Overview of all design system tokens and their validation status.
+    </p>
+  </div>
+  <div
+    class="grid grid-cols-2 md:grid-cols-4 gap-4"
+  >
+    <div
+      class="p-3 rounded-lg border bg-success-3 border-success-6 text-success-11"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="font-bold"
+        >
+          ✓
+        </span>
+        <code
+          class="font-mono text-sm"
+        >
+          Colors
+        </code>
+      </div>
+      <div
+        class="text-xs mt-1 opacity-80"
+      >
+        8 palettes
+      </div>
+    </div>
+    <div
+      class="p-3 rounded-lg border bg-success-3 border-success-6 text-success-11"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="font-bold"
+        >
+          ✓
+        </span>
+        <code
+          class="font-mono text-sm"
+        >
+          Spacing
+        </code>
+      </div>
+      <div
+        class="text-xs mt-1 opacity-80"
+      >
+        20 tokens
+      </div>
+    </div>
+    <div
+      class="p-3 rounded-lg border bg-success-3 border-success-6 text-success-11"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="font-bold"
+        >
+          ✓
+        </span>
+        <code
+          class="font-mono text-sm"
+        >
+          Z-Index
+        </code>
+      </div>
+      <div
+        class="text-xs mt-1 opacity-80"
+      >
+        8 tokens
+      </div>
+    </div>
+    <div
+      class="p-3 rounded-lg border bg-success-3 border-success-6 text-success-11"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="font-bold"
+        >
+          ✓
+        </span>
+        <code
+          class="font-mono text-sm"
+        >
+          Animation
+        </code>
+      </div>
+      <div
+        class="text-xs mt-1 opacity-80"
+      >
+        8 durations
+      </div>
+    </div>
+    <div
+      class="p-3 rounded-lg border bg-success-3 border-success-6 text-success-11"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="font-bold"
+        >
+          ✓
+        </span>
+        <code
+          class="font-mono text-sm"
+        >
+          Typography
+        </code>
+      </div>
+      <div
+        class="text-xs mt-1 opacity-80"
+      >
+        7 sizes
+      </div>
+    </div>
+    <div
+      class="p-3 rounded-lg border bg-success-3 border-success-6 text-success-11"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="font-bold"
+        >
+          ✓
+        </span>
+        <code
+          class="font-mono text-sm"
+        >
+          Border Radius
+        </code>
+      </div>
+      <div
+        class="text-xs mt-1 opacity-80"
+      >
+        7 tokens
+      </div>
+    </div>
+    <div
+      class="p-3 rounded-lg border bg-success-3 border-success-6 text-success-11"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="font-bold"
+        >
+          ✓
+        </span>
+        <code
+          class="font-mono text-sm"
+        >
+          Shadows
+        </code>
+      </div>
+      <div
+        class="text-xs mt-1 opacity-80"
+      >
+        6 tokens
+      </div>
+    </div>
+    <div
+      class="p-3 rounded-lg border bg-success-3 border-success-6 text-success-11"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="font-bold"
+        >
+          ✓
+        </span>
+        <code
+          class="font-mono text-sm"
+        >
+          Sizing Patterns
+        </code>
+      </div>
+      <div
+        class="text-xs mt-1 opacity-80"
+      >
+        12 categories
+      </div>
+    </div>
+  </div>
+  <div
+    class="bg-neutral-2 border border-neutral-6 rounded-lg p-4"
+  >
+    <h3
+      class="font-medium text-neutral-12 mb-3"
+    >
+      Documentation Links
+    </h3>
+    <div
+      class="space-y-2 text-sm"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="text-neutral-10"
+        >
+          Style Guide:
+        </span>
+        <code
+          class="text-primary-11 bg-primary-3 px-1 rounded"
+        >
+          docs-internal/frontend/STYLE.md
+        </code>
+      </div>
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="text-neutral-10"
+        >
+          Audit Script:
+        </span>
+        <code
+          class="text-primary-11 bg-primary-3 px-1 rounded"
+        >
+          scripts/audit-design-system.ts
+        </code>
+      </div>
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="text-neutral-10"
+        >
+          Audit Patterns:
+        </span>
+        <code
+          class="text-primary-11 bg-primary-3 px-1 rounded"
+        >
+          scripts/lib/audit-patterns.ts
+        </code>
+      </div>
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="text-neutral-10"
+        >
+          Tailwind Config:
+        </span>
+        <code
+          class="text-primary-11 bg-primary-3 px-1 rounded"
+        >
+          tailwind.config.ts
+        </code>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Spacing Stories > should match Scale snapshot 1`] = `
+<div
+  class="space-y-6 p-6"
+>
+  <div>
+    <h2
+      class="text-xl font-bold text-neutral-12 mb-2"
+    >
+      Spacing Scale (4px Grid)
+    </h2>
+    <p
+      class="text-neutral-11"
+    >
+      All spacing values are multiples of 4px for consistent visual rhythm.
+    </p>
+  </div>
+  <div
+    class="overflow-x-auto"
+  >
+    <div
+      class="min-w-[700px]"
+    >
+      <div
+        class="flex items-center gap-4 py-2 border-b-2 border-neutral-6 font-medium text-sm text-neutral-11"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          Token
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          Value
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          Pixels
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          Visual
+        </div>
+        <div
+          class="flex-1"
+        >
+          Use Case
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-4 py-3 border-b border-neutral-6"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            space-0
+          </code>
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            0
+          </span>
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          <span
+            class="text-xs font-mono text-neutral-9"
+          >
+            0px
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <div
+            class="h-4 bg-primary-9 rounded-sm"
+            style="width: 0px;"
+            title="0px wide"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-10"
+          >
+            Reset
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-4 py-3 border-b border-neutral-6"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            space-0.5
+          </code>
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            0.125rem
+          </span>
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          <span
+            class="text-xs font-mono text-neutral-9"
+          >
+            2px
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <div
+            class="h-4 bg-primary-9 rounded-sm"
+            style="width: 2px;"
+            title="2px wide"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-10"
+          >
+            Micro adjustments only
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-4 py-3 border-b border-neutral-6"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            space-1
+          </code>
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            0.25rem
+          </span>
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          <span
+            class="text-xs font-mono text-neutral-9"
+          >
+            4px
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <div
+            class="h-4 bg-primary-9 rounded-sm"
+            style="width: 4px;"
+            title="4px wide"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-10"
+          >
+            Tight spacing, inline elements
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-4 py-3 border-b border-neutral-6"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            space-2
+          </code>
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            0.5rem
+          </span>
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          <span
+            class="text-xs font-mono text-neutral-9"
+          >
+            8px
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <div
+            class="h-4 bg-primary-9 rounded-sm"
+            style="width: 8px;"
+            title="8px wide"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-10"
+          >
+            Component internal padding
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-4 py-3 border-b border-neutral-6"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            space-3
+          </code>
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            0.75rem
+          </span>
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          <span
+            class="text-xs font-mono text-neutral-9"
+          >
+            12px
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <div
+            class="h-4 bg-primary-9 rounded-sm"
+            style="width: 12px;"
+            title="12px wide"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-10"
+          >
+            Small gaps
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-4 py-3 border-b border-neutral-6"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            space-4
+          </code>
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            1rem
+          </span>
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          <span
+            class="text-xs font-mono text-neutral-9"
+          >
+            16px
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <div
+            class="h-4 bg-primary-9 rounded-sm"
+            style="width: 16px;"
+            title="16px wide"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-10"
+          >
+            Standard padding
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-4 py-3 border-b border-neutral-6"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            space-5
+          </code>
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            1.25rem
+          </span>
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          <span
+            class="text-xs font-mono text-neutral-9"
+          >
+            20px
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <div
+            class="h-4 bg-primary-9 rounded-sm"
+            style="width: 20px;"
+            title="20px wide"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-10"
+          >
+            Medium gaps
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-4 py-3 border-b border-neutral-6"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            space-6
+          </code>
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            1.5rem
+          </span>
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          <span
+            class="text-xs font-mono text-neutral-9"
+          >
+            24px
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <div
+            class="h-4 bg-primary-9 rounded-sm"
+            style="width: 24px;"
+            title="24px wide"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-10"
+          >
+            Section spacing
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-4 py-3 border-b border-neutral-6"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            space-8
+          </code>
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            2rem
+          </span>
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          <span
+            class="text-xs font-mono text-neutral-9"
+          >
+            32px
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <div
+            class="h-4 bg-primary-9 rounded-sm"
+            style="width: 32px;"
+            title="32px wide"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-10"
+          >
+            Large gaps
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-4 py-3 border-b border-neutral-6"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            space-10
+          </code>
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            2.5rem
+          </span>
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          <span
+            class="text-xs font-mono text-neutral-9"
+          >
+            40px
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <div
+            class="h-4 bg-primary-9 rounded-sm"
+            style="width: 40px;"
+            title="40px wide"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-10"
+          >
+            Section breaks
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-4 py-3 border-b border-neutral-6"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            space-12
+          </code>
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            3rem
+          </span>
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          <span
+            class="text-xs font-mono text-neutral-9"
+          >
+            48px
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <div
+            class="h-4 bg-primary-9 rounded-sm"
+            style="width: 48px;"
+            title="48px wide"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-10"
+          >
+            Major sections
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-4 py-3 border-b border-neutral-6"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            space-16
+          </code>
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            4rem
+          </span>
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          <span
+            class="text-xs font-mono text-neutral-9"
+          >
+            64px
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <div
+            class="h-4 bg-primary-9 rounded-sm"
+            style="width: 64px;"
+            title="64px wide"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-10"
+          >
+            Page-level spacing
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-4 py-3 border-b border-neutral-6"
+      >
+        <div
+          class="w-20 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            space-20
+          </code>
+        </div>
+        <div
+          class="w-16 shrink-0 text-right"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            5rem
+          </span>
+        </div>
+        <div
+          class="w-12 shrink-0 text-right"
+        >
+          <span
+            class="text-xs font-mono text-neutral-9"
+          >
+            80px
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <div
+            class="h-4 bg-primary-9 rounded-sm"
+            style="width: 80px;"
+            title="80px wide"
+          />
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-10"
+          >
+            Hero sections
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Typography Stories > should match Scale snapshot 1`] = `
+<div
+  class="space-y-6 p-6"
+>
+  <div>
+    <h2
+      class="text-xl font-bold text-neutral-12 mb-2"
+    >
+      Typography Scale
+    </h2>
+    <p
+      class="text-neutral-11"
+    >
+      Agent Studio uses a 4px-grid-aligned typography scale for consistent rhythm. All sizes are based on rem units (1rem = 16px).
+    </p>
+  </div>
+  <div
+    class="overflow-x-auto"
+  >
+    <div
+      class="min-w-[700px]"
+    >
+      <div
+        class="flex items-baseline gap-6 py-4 border-b border-neutral-6"
+      >
+        <div
+          class="w-24 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            text-xs
+          </code>
+        </div>
+        <div
+          class="w-24 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            12px
+             / 
+            16px
+          </span>
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-xs text-neutral-12"
+          >
+            The quick brown fox jumps over the lazy dog
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            Badges, captions
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-baseline gap-6 py-4 border-b border-neutral-6"
+      >
+        <div
+          class="w-24 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            text-sm
+          </code>
+        </div>
+        <div
+          class="w-24 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            14px
+             / 
+            20px
+          </span>
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-sm text-neutral-12"
+          >
+            The quick brown fox jumps over the lazy dog
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            Secondary text, labels
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-baseline gap-6 py-4 border-b border-neutral-6"
+      >
+        <div
+          class="w-24 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            text-base
+          </code>
+        </div>
+        <div
+          class="w-24 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            16px
+             / 
+            24px
+          </span>
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-base text-neutral-12"
+          >
+            The quick brown fox jumps over the lazy dog
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            Body text (default)
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-baseline gap-6 py-4 border-b border-neutral-6"
+      >
+        <div
+          class="w-24 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            text-lg
+          </code>
+        </div>
+        <div
+          class="w-24 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            18px
+             / 
+            28px
+          </span>
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-lg text-neutral-12"
+          >
+            The quick brown fox jumps over the lazy dog
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            Emphasis, lead text
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-baseline gap-6 py-4 border-b border-neutral-6"
+      >
+        <div
+          class="w-24 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            text-xl
+          </code>
+        </div>
+        <div
+          class="w-24 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            20px
+             / 
+            28px
+          </span>
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-xl text-neutral-12"
+          >
+            The quick brown fox jumps over the lazy dog
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            Subheadings
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-baseline gap-6 py-4 border-b border-neutral-6"
+      >
+        <div
+          class="w-24 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            text-2xl
+          </code>
+        </div>
+        <div
+          class="w-24 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            24px
+             / 
+            32px
+          </span>
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-2xl text-neutral-12"
+          >
+            The quick brown fox jumps over the lazy dog
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            Section headings
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-baseline gap-6 py-4 border-b border-neutral-6"
+      >
+        <div
+          class="w-24 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            text-3xl
+          </code>
+        </div>
+        <div
+          class="w-24 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            30px
+             / 
+            36px
+          </span>
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-3xl text-neutral-12"
+          >
+            The quick brown fox jumps over the lazy dog
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            Page titles
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex items-baseline gap-6 py-4 border-b border-neutral-6"
+      >
+        <div
+          class="w-24 shrink-0"
+        >
+          <code
+            class="text-xs text-neutral-11"
+          >
+            text-4xl
+          </code>
+        </div>
+        <div
+          class="w-24 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            36px
+             / 
+            40px
+          </span>
+        </div>
+        <div
+          class="flex-1"
+        >
+          <span
+            class="text-4xl text-neutral-12"
+          >
+            The quick brown fox jumps over the lazy dog
+          </span>
+        </div>
+        <div
+          class="w-40 shrink-0"
+        >
+          <span
+            class="text-xs text-neutral-10"
+          >
+            Hero text
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

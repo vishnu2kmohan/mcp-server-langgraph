@@ -1,0 +1,323 @@
+{
+  "summary": {
+    "mswHandlers": 23,
+    "testFixtures": 15,
+    "hooks": 10,
+    "total": 48
+  },
+  "mswHandlerFiles": [
+    "src/mocks/handlers/mcpHandlers.ts",
+    "src/mocks/handlers/canvasHandlers.ts",
+    "src/mocks/handlers/canvasHandlers.test.ts",
+    "src/mocks/handlers/aiSuggestionsHandlers.test.ts",
+    "src/mocks/handlers/aiHandlers.test.ts"
+  ],
+  "testFixtureFiles": [
+    "src/store/slices/workflowSlice.test.ts",
+    "src/store/slices/__tests__/sessionSlice.crud.test.ts",
+    "src/components/DevTools/hooks/useWorkflowExecution.test.ts",
+    "src/components/Chat/SaveAsWorkflowButton.test.tsx"
+  ],
+  "hookFiles": [
+    "src/hooks/useUrlContentFetch.ts",
+    "src/hooks/useTokenUsage.ts",
+    "src/hooks/useTieredCache.ts",
+    "src/hooks/usePersonaCacheInvalidation.ts",
+    "src/hooks/useOfflineQueue.ts",
+    "src/hooks/useNewChat.ts",
+    "src/hooks/useInlineSuggestions.ts",
+    "src/hooks/useHeartDashboard.ts",
+    "src/hooks/useAISuggestionsFetch.ts",
+    "src/components/DevTools/hooks/useAgentTrace.ts"
+  ],
+  "details": [
+    {
+      "file": "src/mocks/handlers/mcpHandlers.ts",
+      "line": 36,
+      "issue": "MSW handler returns camelCase 'inputSchema' - should be snake_case",
+      "snippet": "inputSchema: Record<string, unknown>;"
+    },
+    {
+      "file": "src/mocks/handlers/mcpHandlers.ts",
+      "line": 52,
+      "issue": "MSW handler returns camelCase 'createdAt' - should be snake_case",
+      "snippet": "createdAt: string;"
+    },
+    {
+      "file": "src/mocks/handlers/mcpHandlers.ts",
+      "line": 75,
+      "issue": "MSW handler returns camelCase 'inputSchema' - should be snake_case",
+      "snippet": "inputSchema: {"
+    },
+    {
+      "file": "src/mocks/handlers/mcpHandlers.ts",
+      "line": 104,
+      "issue": "MSW handler returns camelCase 'createdAt' - should be snake_case",
+      "snippet": "createdAt: new Date().toISOString(),"
+    },
+    {
+      "file": "src/mocks/handlers/mcpHandlers.ts",
+      "line": 134,
+      "issue": "MSW handler returns camelCase 'inputSchema' - should be snake_case",
+      "snippet": "inputSchema: {"
+    },
+    {
+      "file": "src/mocks/handlers/mcpHandlers.ts",
+      "line": 143,
+      "issue": "MSW handler returns camelCase 'inputSchema' - should be snake_case",
+      "snippet": "inputSchema: {"
+    },
+    {
+      "file": "src/mocks/handlers/mcpHandlers.ts",
+      "line": 155,
+      "issue": "MSW handler returns camelCase 'inputSchema' - should be snake_case",
+      "snippet": "inputSchema: {"
+    },
+    {
+      "file": "src/mocks/handlers/mcpHandlers.ts",
+      "line": 486,
+      "issue": "MSW handler returns camelCase 'updatedAt' - should be snake_case",
+      "snippet": "updatedAt: new Date().toISOString(),"
+    },
+    {
+      "file": "src/mocks/handlers/canvasHandlers.ts",
+      "line": 41,
+      "issue": "MSW handler returns camelCase 'sessionId' - should be snake_case",
+      "snippet": "sessionId: `session-${crypto.randomUUID().slice(0, 8)}`,"
+    },
+    {
+      "file": "src/mocks/handlers/canvasHandlers.ts",
+      "line": 45,
+      "issue": "MSW handler returns camelCase 'createdAt' - should be snake_case",
+      "snippet": "createdAt: new Date().toISOString(),"
+    },
+    {
+      "file": "src/mocks/handlers/canvasHandlers.ts",
+      "line": 46,
+      "issue": "MSW handler returns camelCase 'updatedAt' - should be snake_case",
+      "snippet": "updatedAt: new Date().toISOString(),"
+    },
+    {
+      "file": "src/mocks/handlers/canvasHandlers.ts",
+      "line": 69,
+      "issue": "MSW handler returns camelCase 'createdAt' - should be snake_case",
+      "snippet": "createdAt: new Date().toISOString(),"
+    },
+    {
+      "file": "src/mocks/handlers/canvasHandlers.ts",
+      "line": 86,
+      "issue": "MSW handler returns camelCase 'sessionId' - should be snake_case",
+      "snippet": "sessionId: \"session-1\","
+    },
+    {
+      "file": "src/mocks/handlers/canvasHandlers.ts",
+      "line": 107,
+      "issue": "MSW handler returns camelCase 'sessionId' - should be snake_case",
+      "snippet": "sessionId: \"session-1\","
+    },
+    {
+      "file": "src/mocks/handlers/canvasHandlers.ts",
+      "line": 129,
+      "issue": "MSW handler returns camelCase 'sessionId' - should be snake_case",
+      "snippet": "sessionId: \"session-1\","
+    },
+    {
+      "file": "src/mocks/handlers/canvasHandlers.ts",
+      "line": 147,
+      "issue": "MSW handler returns camelCase 'sessionId' - should be snake_case",
+      "snippet": "sessionId: \"session-2\","
+    },
+    {
+      "file": "src/mocks/handlers/canvasHandlers.ts",
+      "line": 170,
+      "issue": "MSW handler returns camelCase 'createdAt' - should be snake_case",
+      "snippet": "createdAt: new Date(Date.now() - 3600000).toISOString(),"
+    },
+    {
+      "file": "src/mocks/handlers/canvasHandlers.ts",
+      "line": 177,
+      "issue": "MSW handler returns camelCase 'createdAt' - should be snake_case",
+      "snippet": "createdAt: new Date(Date.now() - 1800000).toISOString(),"
+    },
+    {
+      "file": "src/mocks/handlers/canvasHandlers.ts",
+      "line": 304,
+      "issue": "MSW handler returns camelCase 'createdAt' - should be snake_case",
+      "snippet": "createdAt: new Date().toISOString(),"
+    },
+    {
+      "file": "src/mocks/handlers/canvasHandlers.ts",
+      "line": 330,
+      "issue": "MSW handler returns camelCase 'updatedAt' - should be snake_case",
+      "snippet": "updatedAt: new Date().toISOString(),"
+    },
+    {
+      "file": "src/mocks/handlers/canvasHandlers.test.ts",
+      "line": 145,
+      "issue": "MSW handler returns camelCase 'sessionId' - should be snake_case",
+      "snippet": "sessionId: \"session-1\","
+    },
+    {
+      "file": "src/mocks/handlers/aiSuggestionsHandlers.test.ts",
+      "line": 121,
+      "issue": "MSW handler returns camelCase 'sessionId' - should be snake_case",
+      "snippet": "sessionId: \"test-session\","
+    },
+    {
+      "file": "src/mocks/handlers/aiHandlers.test.ts",
+      "line": 406,
+      "issue": "MSW handler returns camelCase 'sessionId' - should be snake_case",
+      "snippet": "sessionId: \"sess-123\","
+    },
+    {
+      "file": "src/store/slices/workflowSlice.test.ts",
+      "line": 588,
+      "issue": "Test fixture uses camelCase 'createdAt' in mock API response - should be snake_case",
+      "snippet": "createdAt: 0,"
+    },
+    {
+      "file": "src/store/slices/workflowSlice.test.ts",
+      "line": 589,
+      "issue": "Test fixture uses camelCase 'updatedAt' in mock API response - should be snake_case",
+      "snippet": "updatedAt: 0,"
+    },
+    {
+      "file": "src/store/slices/workflowSlice.test.ts",
+      "line": 657,
+      "issue": "Test fixture uses camelCase 'createdAt' in mock API response - should be snake_case",
+      "snippet": "createdAt: 0,"
+    },
+    {
+      "file": "src/store/slices/workflowSlice.test.ts",
+      "line": 658,
+      "issue": "Test fixture uses camelCase 'updatedAt' in mock API response - should be snake_case",
+      "snippet": "updatedAt: 0,"
+    },
+    {
+      "file": "src/store/slices/__tests__/sessionSlice.crud.test.ts",
+      "line": 311,
+      "issue": "Test fixture uses camelCase 'createdAt' in mock API response - should be snake_case",
+      "snippet": "createdAt: Date.now(),"
+    },
+    {
+      "file": "src/store/slices/__tests__/sessionSlice.crud.test.ts",
+      "line": 312,
+      "issue": "Test fixture uses camelCase 'updatedAt' in mock API response - should be snake_case",
+      "snippet": "updatedAt: Date.now(),"
+    },
+    {
+      "file": "src/store/slices/__tests__/sessionSlice.crud.test.ts",
+      "line": 341,
+      "issue": "Test fixture uses camelCase 'createdAt' in mock API response - should be snake_case",
+      "snippet": "createdAt: Date.now(),"
+    },
+    {
+      "file": "src/store/slices/__tests__/sessionSlice.crud.test.ts",
+      "line": 342,
+      "issue": "Test fixture uses camelCase 'updatedAt' in mock API response - should be snake_case",
+      "snippet": "updatedAt: Date.now(),"
+    },
+    {
+      "file": "src/store/slices/__tests__/sessionSlice.crud.test.ts",
+      "line": 383,
+      "issue": "Test fixture uses camelCase 'createdAt' in mock API response - should be snake_case",
+      "snippet": "createdAt: Date.now(),"
+    },
+    {
+      "file": "src/store/slices/__tests__/sessionSlice.crud.test.ts",
+      "line": 384,
+      "issue": "Test fixture uses camelCase 'updatedAt' in mock API response - should be snake_case",
+      "snippet": "updatedAt: Date.now(),"
+    },
+    {
+      "file": "src/store/slices/__tests__/sessionSlice.crud.test.ts",
+      "line": 414,
+      "issue": "Test fixture uses camelCase 'createdAt' in mock API response - should be snake_case",
+      "snippet": "createdAt: Date.now(),"
+    },
+    {
+      "file": "src/store/slices/__tests__/sessionSlice.crud.test.ts",
+      "line": 415,
+      "issue": "Test fixture uses camelCase 'updatedAt' in mock API response - should be snake_case",
+      "snippet": "updatedAt: Date.now(),"
+    },
+    {
+      "file": "src/components/DevTools/hooks/useWorkflowExecution.test.ts",
+      "line": 546,
+      "issue": "Test fixture uses camelCase 'endTime' in mock API response - should be snake_case",
+      "snippet": "endTime: undefined,"
+    },
+    {
+      "file": "src/components/Chat/SaveAsWorkflowButton.test.tsx",
+      "line": 74,
+      "issue": "Test fixture uses camelCase 'workflowId' in mock API response - should be snake_case",
+      "snippet": "workflowId: \"workflow-123\","
+    },
+    {
+      "file": "src/components/Chat/SaveAsWorkflowButton.test.tsx",
+      "line": 296,
+      "issue": "Test fixture uses camelCase 'workflowId' in mock API response - should be snake_case",
+      "snippet": "workflowId: \"workflow-123\","
+    },
+    {
+      "file": "src/hooks/useUrlContentFetch.ts",
+      "line": 1,
+      "issue": "Hook uses authenticatedFetch but missing transformSnakeToCamel",
+      "snippet": "Uses response.json() without transformation"
+    },
+    {
+      "file": "src/hooks/useTokenUsage.ts",
+      "line": 1,
+      "issue": "Hook uses authenticatedFetch but missing transformSnakeToCamel",
+      "snippet": "Uses response.json() without transformation"
+    },
+    {
+      "file": "src/hooks/useTieredCache.ts",
+      "line": 1,
+      "issue": "Hook uses authenticatedFetch but missing transformSnakeToCamel",
+      "snippet": "Uses response.json() without transformation"
+    },
+    {
+      "file": "src/hooks/usePersonaCacheInvalidation.ts",
+      "line": 1,
+      "issue": "Hook uses authenticatedFetch but missing transformSnakeToCamel",
+      "snippet": "Uses response.json() without transformation"
+    },
+    {
+      "file": "src/hooks/useOfflineQueue.ts",
+      "line": 1,
+      "issue": "Hook uses authenticatedFetch but missing transformSnakeToCamel",
+      "snippet": "Uses response.json() without transformation"
+    },
+    {
+      "file": "src/hooks/useNewChat.ts",
+      "line": 1,
+      "issue": "Hook uses authenticatedFetch but missing transformSnakeToCamel",
+      "snippet": "Uses response.json() without transformation"
+    },
+    {
+      "file": "src/hooks/useInlineSuggestions.ts",
+      "line": 1,
+      "issue": "Hook uses authenticatedFetch but missing transformSnakeToCamel",
+      "snippet": "Uses response.json() without transformation"
+    },
+    {
+      "file": "src/hooks/useHeartDashboard.ts",
+      "line": 1,
+      "issue": "Hook uses authenticatedFetch but missing transformSnakeToCamel",
+      "snippet": "Uses response.json() without transformation"
+    },
+    {
+      "file": "src/hooks/useAISuggestionsFetch.ts",
+      "line": 1,
+      "issue": "Hook uses authenticatedFetch but missing transformSnakeToCamel",
+      "snippet": "Uses response.json() without transformation"
+    },
+    {
+      "file": "src/components/DevTools/hooks/useAgentTrace.ts",
+      "line": 1,
+      "issue": "Hook uses authenticatedFetch but missing transformSnakeToCamel",
+      "snippet": "Uses response.json() without transformation"
+    }
+  ]
+}
