@@ -17,13 +17,13 @@ config = context.config
 # Falls back to docker-compose.test.yml defaults for local development
 #
 # Database Selection Strategy:
-# - Test environment (TESTING=true): uses mcp_test database
-# - Production/Dev: uses POSTGRES_DB environment variable (default: mcp_server)
-# - Docker Compose test: uses mcp_test database (via init script)
+# - Test environment (TESTING=true): uses agent_studio_test database
+# - Production/Dev: uses POSTGRES_DB environment variable (default: agent_studio)
+# - Docker Compose test: uses agent_studio_test database (via init script)
 #
 # Note: Tests use direct SQL (migrations/001_gdpr_schema.sql) to avoid
 # asyncio.run() conflicts with pytest-asyncio. Alembic is for production.
-default_db = "mcp_test" if os.getenv("TESTING") == "true" else os.getenv("POSTGRES_DB", "mcp_server")
+default_db = "agent_studio_test" if os.getenv("TESTING") == "true" else os.getenv("POSTGRES_DB", "agent_studio")
 
 postgres_url = os.getenv(
     "DATABASE_URL",
