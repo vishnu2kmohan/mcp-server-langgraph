@@ -2810,12 +2810,13 @@ wheels = [
 
 [[package]]
 name = "litellm"
-version = "1.80.5"
+version = "1.80.15"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "click" },
     { name = "fastuuid" },
+    { name = "grpcio" },
     { name = "httpx" },
     { name = "importlib-metadata" },
     { name = "jinja2" },
@@ -2826,9 +2827,9 @@ dependencies = [
     { name = "tiktoken" },
     { name = "tokenizers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/85/b8/357544534bef87dd2858432f3cbd3a0e5cc267caebca5ea86b03618786c5/litellm-1.80.5.tar.gz", hash = "sha256:922791c264845d9ed59e540c8fa74a74d237c1b209568a05ffeacd8b51770deb", size = 11885764, upload-time = "2025-11-22T23:41:42.25Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/12/41/9b28df3e4739df83ddb32dfb2bccb12ad271d986494c9fd60e4927a0a6c3/litellm-1.80.15.tar.gz", hash = "sha256:759d09f33c9c6028c58dcdf71781b17b833ee926525714e09a408602be27f54e", size = 13376508, upload-time = "2026-01-11T18:31:44.95Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/af/1d4693746ff9fbbe27a6e7d6394b801acf234e00c83f45ad1cb5bf2eaa6c/litellm-1.80.5-py3-none-any.whl", hash = "sha256:2ac5f4e88cd57ae056e00da8f872e1c2956653750929fba2fd9b007b400fdb77", size = 10671970, upload-time = "2025-11-22T23:41:39.923Z" },
+    { url = "https://files.pythonhosted.org/packages/df/3b/b1bd693721ccb3c9a37c8233d019a643ac57bef5a93f279e5a63839ee4db/litellm-1.80.15-py3-none-any.whl", hash = "sha256:f354e49456985a235b9ed99df1c19d686d30501f96e68882dcc5b29b1e7c59d9", size = 11670707, upload-time = "2026-01-11T18:31:41.67Z" },
 ]
 
 [[package]]
@@ -3291,7 +3292,7 @@ requires-dist = [
     { name = "langgraph-checkpoint-redis", specifier = ">=0.2.1,<1.0.0" },
     { name = "langgraph-cli", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "langsmith", specifier = ">=0.4.49,<1.0.0" },
-    { name = "litellm", specifier = ">=1.80.5,<2.0.0" },
+    { name = "litellm", specifier = ">=1.80.15,<2.0.0" },
     { name = "mcp", specifier = ">=1.23.3" },
     { name = "mutmut", marker = "extra == 'dev'", specifier = ">=3.3.1" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.19.0" },

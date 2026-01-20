@@ -36,7 +36,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `deployments/helm/mcp-server-langgraph/dashboards/builder.json` - Removed from Helm chart
   - `deployments/helm/mcp-server-langgraph/dashboards/playground.json` - Removed from Helm chart
 
+### Deprecated
+
+- **DevTools Lazy Tab Exports** - Individual lazy tab exports are deprecated in favor of DevToolsPanel's internal lazy loading:
+  - **Deprecated exports** (use DevToolsPanel instead):
+    - `LazyConsoleTab`, `LazyProblemsTab`, `LazyStateTab`, `LazyAgentTraceTab`
+    - `LazyExecutionTraceTab`, `LazyNetworkTab`, `LazyAIInsightsTab`
+    - `LazyTracesTab`, `LazyMetricsTab`, `LazyAlertsTab`, `LazyLogsTab`
+  - **Deprecated preload functions** (no longer used):
+    - `preloadCommonTabs`, `preloadAllTabs`, `preloadContextTabs`, `preloadOTELTabs`
+  - **Migration**: Use `LazyDevToolsPanel` which handles all internal lazy loading
+  - **Removal**: Will be removed in next major version
+  - Files: `src/mcp_server_langgraph/studio/frontend/src/components/DevTools/index.ts`, `lazy.ts`
+
+- **MCP Playground Frontend** - The standalone MCP Playground frontend has been decommissioned:
+  - All MCP functionality is now integrated into Agent Studio at `/studio`
+  - The `/api/playground/*` endpoints are no longer available
+  - Files removed: `src/mcp_server_langgraph/playground/frontend/` (91 files)
+
+- **OpenFGA authz-proxy** - The OpenFGA Playground authorization proxy has been removed:
+  - OpenFGA Playground UI is no longer exposed via authz-proxy
+  - Files removed: `src/mcp_server_langgraph/authz_proxy/`, `docker/Dockerfile.authz-proxy`
+  - CI workflow removed: `.github/workflows/build-authz-proxy-image.yaml`
+
 ### Added
+
+- **MCP Inbound JSON-RPC Flows** - Server-initiated elicitation and sampling request handling:
+  - **InboundElicitationModal** (`src/mcp_server_langgraph/studio/frontend/src/components/MCP/InboundElicitationModal.tsx`):
+    - Dynamic form generation from JSON schema
+    - Required field validation
+    - Accessible dialog with focus management
+  - **InboundSamplingModal** (`src/mcp_server_langgraph/studio/frontend/src/components/MCP/InboundSamplingModal.tsx`):
+    - Manual text input for sampling responses
+    - SamplingResponse generation with role, content, model, stopReason
+  - **MCPConnectionContext** (`src/mcp_server_langgraph/studio/frontend/src/contexts/MCPConnectionContext.tsx`):
+    - Single MCP WebSocket connection provider to avoid duplicates
+    - Shared across all components via context
+  - **useMCPWebSocket enhancements**:
+    - `sendResponse()` helper for JSON-RPC responses
+    - Inbound request handlers for `elicitation/create` and `sampling/createMessage`
+    - Advertises `sampling` and `elicitation` capabilities in initialize
+  - Files: `types/mcp.ts` (JSONRPCId type widened to `number | string`)
+
+- **Offline Conflict Resolution** - Enhanced offline resilience with conflict handling:
+  - **ConflictResolutionDialog** (`src/mcp_server_langgraph/studio/frontend/src/components/OfflineBanner/ConflictResolutionDialog.tsx`):
+    - Visual diff of local vs server data
+    - Three resolution strategies: keep-local, keep-server, merge
+    - Batch "Resolve All" functionality
+  - **useOfflineQueue enhancements**:
+    - `resolveAllConflicts()` function for batch conflict resolution
+    - Conflict state management with suggested resolutions
+  - Wired into `App.tsx` with `OfflineBanner` and `ConflictResolutionDialog`
+
+- **Schema Form Utilities** - Shared JSON Schema to form field parsing:
+  - **schemaForm.ts** (`src/mcp_server_langgraph/studio/frontend/src/utils/schemaForm.ts`):
+    - `parseSchemaToFields()` - Extract form fields from JSON Schema
+    - `getInputType()` - Map schema types to HTML input types
+    - Used by: `ToolInvocationDialog`, `InboundElicitationModal`
+  - Full test coverage in `schemaForm.test.ts`
+
+- **Workflow Features in WorkflowsPage** - Version history and sharing integrated:
+  - **WorkflowVersionHistory** - Lazy-loaded, wrapped in Dialog
+  - **ShareWorkflowDialog** - Lazy-loaded with correct props
+
+- **knip CI Integration** - Unused export detection in CI:
+  - Advisory mode with warning on failure
+  - `check:unused` npm script
+  - `knip.json` configuration with tuned ignores
 
 - **Multi-Agent Orchestrator Pattern (ADR-0078)** - Parallel execution orchestrators for AI analysis:
   - **BaseOrchestrator** (`src/mcp_server_langgraph/agents/base_orchestrator.py`):
@@ -320,6 +386,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Role mapping verification (admin -> Admin, user -> Viewer)
 
 ### Fixed
+
+- **Frontend TypeScript Errors** - Fixed 6 TypeScript compilation errors in Studio frontend:
+  - `PreferencesMenu.tsx:109` - Added missing `return undefined` in useEffect for consistent return paths
+  - `BulkReferenceInserter.tsx:353` - Changed Button `variant="default"` to `variant="primary"` (valid variant)
+  - `ToolDisambiguationDialog.tsx:253` - Changed Button `variant="default"` to `variant="primary"` (valid variant)
+  - `InlinePlanCard.tsx:224` - Added `"rejected"` to `BypassApprovalEvent.approvalType` union type
+  - `sessionTelemetry.ts:490,514` - Added `ExecutionModeChangeEvent` and `BypassApprovalEvent` to `addToHistory` type union
+
+- **Test Assertion Bugs** - Fixed pre-existing test failures:
+  - `useOfflineQueue.test.tsx` - Updated 3 tests to use `expect.objectContaining()` for SyncResult with timestamp field
+  - `App.core.test.tsx:269` - Fixed `toHaveClass()` call without arguments
+
 - **Python 3.11/3.13 CI Failures (PR #121)** - Fixed version-specific dependency issues:
   - **Click 8.3.x** (`pyproject.toml:144`) - Pinned to `<8.3.0` due to internal `_textwrap` module missing on Python 3.11/3.13
   - **Hypothesis 6.148.x** (`pyproject.toml:104,738`) - Pinned to `<6.148.0` due to `internal.conjecture.optimiser` module removal

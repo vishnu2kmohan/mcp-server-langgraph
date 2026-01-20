@@ -31,7 +31,7 @@ dependencies = [
     "langgraph-checkpoint-redis>=0.2.1,<1.0.0",  # Redis checkpointer for distributed conversation state
     "langchain-core>=1.1.0,<2.0.0",  # Updated from 1.0.4 for security fixes
     "langsmith>=0.4.49,<1.0.0",  # Updated 2025-11-28: Many improvements
-    "litellm>=1.80.5,<2.0.0",  # Updated 2025-11-28: Minor updates, Gemini 3 Pro support
+    "litellm>=1.80.15,<2.0.0",  # Updated 2026-01-12: MCP Global Mode, cost estimator, SSO role mapping
     "mcp>=1.23.3",  # Updated 2025-12-10: MCP spec 2025-11-25 support (Tasks, Sampling with Tools, Icons, XAA)
     "PyJWT>=2.10.1",
     "cryptography>=46.0.3",
@@ -623,6 +623,8 @@ exclude = [
     "tests/",
     "test_.*\\.py$",
     "conftest\\.py$",
+    # Frontend helper scripts - migration/utility scripts not part of production code
+    "src/mcp_server_langgraph/studio/frontend/scripts/",
 ]
 
 # Per-module overrides for third-party libraries without type stubs
@@ -1112,9 +1114,9 @@ cost-tracking = [
     "tabulate>=0.9.0",   # Table formatting for reports
 ]
 
-# Authz-proxy minimal runtime dependencies
-# Used by Dockerfile.authz-proxy with: uv sync --frozen --no-install-project --only-group authz-proxy
-# Reduces Docker image from 1.4GB to ~300MB by excluding LangGraph, LLM providers, etc.
+# DEPRECATED: Authz-proxy service removed in Phase 4 decommission
+# Keeping dependency group temporarily for backwards compatibility
+# TODO: Remove in next major version
 authz-proxy = [
     # Web framework
     "fastapi>=0.115.0",
