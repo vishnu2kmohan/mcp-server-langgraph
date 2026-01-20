@@ -51,14 +51,14 @@ async def test_feature():
 
 | Metric | Value |
 |--------|-------|
-| Tests | 14,900+ |
+| Tests | 20,000+ |
 | Coverage | 75% (target: 80%) |
-| ADRs | 81 |
-| Feature Flags | 148 |
-| Pytest markers | 67 |
+| ADRs | 101 |
+| Feature Flags | 175 |
+| Pytest markers | 150 |
 | Slash commands | 44 |
-| Pre-commit hooks | 94 |
-| Make targets | 133 |
+| Pre-commit hooks | 95 |
+| Make targets | 161 |
 
 **Technology Stack**:
 - **Framework**: LangGraph >=1.0.4 + LangChain + LiteLLM
@@ -106,8 +106,8 @@ async def test_feature():
 **Memory files** (in `.claude/memory/` - MANDATORY):
 - `python-environment-usage.md` - Virtual environment guide
 - `lint-workflow.md` - Linting enforcement
-- `pre-commit-hooks-catalog.md` - 94 hooks reference
-- `make-targets.md` - 133 targets reference
+- `pre-commit-hooks-catalog.md` - 95 hooks reference
+- `make-targets.md` - 161 targets reference
 - `gke-infrastructure-testing.md` - GKE/WIF testing guidance (local vs CI gaps)
 - `efficient-tool-usage.md` - Script-based bulk operations, tool chaining
 - `context-efficiency.md` - Minimize redundant reads, parallel calls
@@ -121,6 +121,7 @@ async def test_feature():
 - `kustomize-nameprefix-gotchas.md` - Kustomize namePrefix gotchas
 - `lgtm-stack-lessons.md` - Grafana LGTM stack lessons learned
 - `task-spawn-error-prevention-strategy.md` - Task spawn error prevention
+- `rollup-circular-dependency-pattern.md` - Direct imports in pages for Rollup
 
 ---
 

@@ -1,8 +1,8 @@
 # Pre-commit Hooks Catalog
 
-**Last Updated**: 2026-01-02
+**Last Updated**: 2026-01-13
 **Purpose**: Complete catalog of all pre-commit hooks and validation strategy
-**Total Hooks**: 84 hooks across 3 stages (including 5 frontend hooks)
+**Total Hooks**: 95 hooks across 3 stages (including 5 frontend hooks)
 **Config File**: `.pre-commit-config.yaml` (1,597 lines)
 
 ---
@@ -642,6 +642,6 @@ if __name__ == "__main__":
 
 ---
 
-**Last Audit**: 2025-11-23 (78 hooks cataloged)
+**Last Audit**: 2026-01-13 (95 hooks cataloged)
 **Reorganization**: 2025-11-13 (Two-stage strategy implemented)
 **Status**: Production-ready, matches CI validation exactly

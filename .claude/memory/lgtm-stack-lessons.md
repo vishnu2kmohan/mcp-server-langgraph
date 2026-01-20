@@ -153,6 +153,8 @@ grep -r "/health/ready" docs/  # health checks without /authn
 1. **Alloy config syntax**: Different from OTEL Collector YAML format
 2. **Data source IDs**: Grafana dashboard imports may need data source updates
 3. **Storage backends**: Mimir/Loki need object storage for production (MinIO, S3)
+4. **Loki ruler tenant directory**: With `auth_enabled: false`, rules must be under `/tmp/loki/rules/fake/` (the "fake" tenant). Mount rules like: `./docker/loki/rules:/tmp/loki/rules/fake:ro`
+5. **Log alerts vs metric alerts**: Loki ruler uses LogQL for log-based alerts; Mimir ruler uses PromQL for metrics-based alerts. Don't confuse them.
 
 ---
 
@@ -178,6 +180,9 @@ curl http://localhost:12345/ready
 
 # Check Loki ready
 curl http://localhost:3100/ready
+
+# Check Loki ruler rules (requires ruler enabled)
+curl http://localhost:3100/loki/api/v1/rules
 
 # Check Mimir ready
 curl http://localhost:8080/ready

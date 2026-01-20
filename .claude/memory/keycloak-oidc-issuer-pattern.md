@@ -88,7 +88,6 @@ extra_hosts:
 | Service | URL | Notes |
 |---------|-----|-------|
 | openfga-seed-test | `http://keycloak-test:8080/authn` | Client credentials grant, no browser |
-| authz-proxy-test | `http://keycloak-test:8080/authn` | Server-to-server |
 | mcp-server-test | `http://keycloak-test:8080/authn` | Token introspection |
 | Grafana token/userinfo | `http://keycloak-test:8080/authn` | Server-to-server after auth |
 

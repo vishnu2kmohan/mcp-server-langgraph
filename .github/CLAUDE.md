@@ -13,8 +13,8 @@
    ```bash
    # Read these FIRST in every session
    cat .claude/memory/python-environment-usage.md  # CRITICAL: Always use .venv
-   cat .claude/memory/pre-commit-hooks-catalog.md  # 94 hooks, 3-tier validation
-   cat .claude/memory/make-targets.md              # 133 Make targets reference
+   cat .claude/memory/pre-commit-hooks-catalog.md  # 95 hooks, 3-tier validation
+   cat .claude/memory/make-targets.md              # 161 Make targets reference
    ```
 
 2. **Load project context** (understand recent work):
@@ -61,8 +61,8 @@
     ├── python-environment-usage.md    # CRITICAL: Always use .venv
     ├── lint-workflow.md               # Linting enforcement workflow
     ├── task-spawn-error-prevention-strategy.md  # Error patterns & solutions
-    ├── pre-commit-hooks-catalog.md    # 94 hooks reference
-    └── make-targets.md                # 133 Make targets reference
+    ├── pre-commit-hooks-catalog.md    # 95 hooks reference
+    └── make-targets.md                # 161 Make targets reference
 ```
 
 **Total**: 62+ files, ~20,000 lines of documentation & automation
@@ -143,8 +143,8 @@ mcp-server-langgraph/
    - Python environment usage (MANDATORY)
    - Lint workflow enforcement
    - Task spawn error prevention
-   - Pre-commit hooks catalog (94 hooks)
-   - Make targets guide (133 targets)
+   - Pre-commit hooks catalog (95 hooks)
+   - Make targets guide (161 targets)
 
 ---
 
@@ -288,7 +288,7 @@ http://localhost:8000/studio
 - `/studio/agents` - Agent management
 - `/studio/chat` - Interactive chat interface
 - `/studio/traces` - Observability traces
-- `/studio/playground` - Code execution sandbox
+- `/studio/workflows` - Workflow editor and management
 
 **Development**:
 ```bash
@@ -327,7 +327,7 @@ npm test
 
 **Required Actions**:
 1. **Read existing code**: Use `Read` and `Grep` tools to understand current implementation
-2. **Review ADRs**: Check `/adr/` directory for architectural decisions (54 ADRs documented)
+2. **Review ADRs**: Check `/adr/` directory for architectural decisions (101 ADRs documented)
 3. **Check tests**: Look at test files in `/tests/` to understand expected behavior
 4. **Search for patterns**: Use `grep -r "pattern" src/` to find similar implementations
 5. **Ask questions**: Clarify requirements before proposing solutions

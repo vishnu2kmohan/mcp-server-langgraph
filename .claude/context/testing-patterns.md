@@ -1165,6 +1165,245 @@ describe("Component", () => {
 
 ---
 
+## 🎬 Motion.dev AnimatePresence Test Pattern
+
+**Problem**: `AnimatePresence` exit animations don't complete in JSDOM/Vitest environment, causing tests to timeout or fail when checking for element removal.
+
+**Solution**: Mock `AnimatePresence` to render children immediately without animation delays.
+
+```typescript
+// At top of test file, BEFORE imports
+vi.mock("motion/react", async () => {
+  const actual = await vi.importActual("motion/react");
+  const React = await import("react");
+  return {
+    ...actual,
+    // Disable reduced motion detection for predictable tests
+    useReducedMotion: vi.fn(() => false),
+    // Render children immediately without exit animation delays
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
+
+// Then import your component
+import { MyAnimatedComponent } from "./MyAnimatedComponent";
+```
+
+**Why This Works**:
+- `AnimatePresence` normally waits for exit animations before removing children from DOM
+- In JSDOM, animations don't actually run, but the timeout still applies
+- Mocking `AnimatePresence` to be a passthrough component removes the delay
+- Tests can immediately verify element presence/absence
+
+**Example Test** (from `TimelineBar.test.tsx`):
+
+```typescript
+import { describe, it, expect, vi, beforeEach, afterEach, cleanup } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import React from "react";
+
+// Mock motion/react BEFORE component import
+vi.mock("motion/react", async () => {
+  const actual = await vi.importActual("motion/react");
+  const React = await import("react");
+  return {
+    ...actual,
+    useReducedMotion: vi.fn(() => false),
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
+
+import { TimelineBar } from "./TimelineBar";
+
+describe("TimelineBar", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("should close dropdown when clicking outside", async () => {
+    render(<TimelineBar />);
+
+    // Open dropdown
+    fireEvent.click(screen.getByText("1x"));
+    expect(screen.getByTestId("speed-dropdown")).toBeInTheDocument();
+
+    // Close dropdown
+    fireEvent.click(document.body);
+
+    // Without AnimatePresence mock, this would timeout waiting for exit animation
+    expect(screen.queryByTestId("speed-dropdown")).not.toBeInTheDocument();
+  });
+});
+```
+
+**When to Use This Pattern**:
+- Components using `<AnimatePresence>` with enter/exit animations
+- Tests that verify elements are removed from DOM after state changes
+- Tests for dropdowns, modals, toasts, accordions with motion animations
+
+**Files Using This Pattern**:
+- `src/components/DevTools/TimelineBar.test.tsx`
+- `src/components/DevTools/tabs/TracesTab.test.tsx`
+- `src/components/Motion/MotionComponents.test.tsx`
+
+---
+
+## ♿ Reduced Motion Accessibility Testing Pattern (WCAG 2.2 AA)
+
+**Problem**: Need to verify that components properly respect the user's `prefers-reduced-motion` preference for WCAG 2.2 AA compliance.
+
+**Solution**: Use a `motionPropsTracker` object to capture motion props passed to mocked motion components, then assert on those props based on the mocked `useReducedMotion` return value.
+
+```typescript
+// At top of test file, BEFORE imports
+const mockUseReducedMotion = vi.fn();
+
+// Track motion props for assertions
+const motionPropsTracker = {
+  ulProps: [] as Array<Record<string, unknown>>,
+  liProps: [] as Array<Record<string, unknown>>,
+  clear: () => {
+    motionPropsTracker.ulProps = [];
+    motionPropsTracker.liProps = [];
+  },
+};
+
+vi.mock("motion/react", async () => {
+  const actual = await vi.importActual<typeof import("motion/react")>("motion/react");
+  return {
+    ...actual,
+    useReducedMotion: () => mockUseReducedMotion(),
+    motion: {
+      ul: ({
+        variants,
+        initial,
+        animate,
+        children,
+        ...rest
+      }: Record<string, unknown>) => {
+        motionPropsTracker.ulProps.push({ variants, initial, animate });
+        return <ul {...rest}>{children as React.ReactNode}</ul>;
+      },
+      li: ({
+        variants,
+        layout,
+        children,
+        ...rest
+      }: Record<string, unknown>) => {
+        motionPropsTracker.liProps.push({ variants, layout });
+        return <li {...rest}>{children as React.ReactNode}</li>;
+      },
+      // Add other motion.* components as needed
+      button: ({ children, ...rest }: Record<string, unknown>) => (
+        <button {...rest}>{children as React.ReactNode}</button>
+      ),
+      div: ({ children, ...rest }: Record<string, unknown>) => (
+        <div {...rest}>{children as React.ReactNode}</div>
+      ),
+    },
+  };
+});
+
+// Then import your component
+import { SessionNav } from "./SessionNav";
+```
+
+**Example Test** (from `SessionNav.ReducedMotion.test.tsx`):
+
+```typescript
+describe("SessionNav Reduced Motion Accessibility", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    motionPropsTracker.clear();
+  });
+
+  describe("when reduced motion is preferred", () => {
+    beforeEach(() => {
+      mockUseReducedMotion.mockReturnValue(true);
+    });
+
+    it("disables list container variants", () => {
+      render(<MemoryRouter><SessionNav /></MemoryRouter>);
+
+      // Check that motion.ul was called with undefined variants
+      expect(motionPropsTracker.ulProps.length).toBeGreaterThan(0);
+      const ulProps = motionPropsTracker.ulProps[0];
+      expect(ulProps.variants).toBeUndefined();
+      expect(ulProps.initial).toBeUndefined();
+      expect(ulProps.animate).toBeUndefined();
+    });
+
+    it("disables layout animation on list items", () => {
+      render(<MemoryRouter><SessionNav /></MemoryRouter>);
+
+      expect(motionPropsTracker.liProps.length).toBeGreaterThan(0);
+      const liProps = motionPropsTracker.liProps[0];
+      expect(liProps.variants).toBeUndefined();
+      expect(liProps.layout).toBe(false);
+    });
+  });
+
+  describe("when reduced motion is not preferred", () => {
+    beforeEach(() => {
+      mockUseReducedMotion.mockReturnValue(false);
+    });
+
+    it("enables list container variants", () => {
+      render(<MemoryRouter><SessionNav /></MemoryRouter>);
+
+      const ulProps = motionPropsTracker.ulProps[0];
+      expect(ulProps.variants).toBeDefined();
+      expect(ulProps.initial).toBe("hidden");
+      expect(ulProps.animate).toBe("visible");
+    });
+  });
+});
+```
+
+**Component Implementation Pattern**:
+
+```typescript
+import { motion, useReducedMotion } from "motion/react";
+import { listContainerVariants, sessionItemVariants } from "../design-system/micro-interactions";
+
+export function SessionNav() {
+  const prefersReducedMotion = useReducedMotion();
+
+  return (
+    <motion.ul
+      variants={prefersReducedMotion ? undefined : listContainerVariants}
+      initial={prefersReducedMotion ? undefined : "hidden"}
+      animate={prefersReducedMotion ? undefined : "visible"}
+    >
+      {items.map((item) => (
+        <motion.li
+          key={item.id}
+          variants={prefersReducedMotion ? undefined : sessionItemVariants}
+          layout={prefersReducedMotion ? false : true}
+        >
+          {item.name}
+        </motion.li>
+      ))}
+    </motion.ul>
+  );
+}
+```
+
+**Key Assertions**:
+- When `useReducedMotion()` returns `true`: variants should be `undefined`, layout should be `false`
+- When `useReducedMotion()` returns `false`: variants should be defined, layout should be `true`
+
+**Files Using This Pattern**:
+- `src/layout/SessionNav.ReducedMotion.test.tsx`
+- `src/components/UI/ReducedMotion.test.tsx`
+- `src/components/DevTools/tabs/DevToolsTabs.animation.test.tsx`
+
+---
+
 ## 🔄 ADR-0091 API Response Transformation Pattern
 
 **Purpose**: Consistent testing of snake_case → camelCase transformations per ADR-0091.
@@ -1498,13 +1737,128 @@ async def test_orchestrator_requires_multi_agent_flag(self):
 
 ---
 
+## 🗂️ Frontend Test File Splitting Pattern
+
+### Problem: Memory-Exhausted Test Files
+
+Large test files (500+ lines, 30+ tests) can cause:
+- **OOM (Exit Code 137)**: jsdom/React Testing Library memory accumulation
+- **CI Timeouts**: Single files blocking sharded test execution
+- **Developer Friction**: Slow feedback loops during local development
+
+### Solution: Split by Test Category
+
+Split large test files into smaller, focused files by logical category:
+
+**Naming Convention**: `<Component>.<category>.test.tsx`
+
+**Categories**:
+| Category | Tests Included |
+|----------|----------------|
+| `rendering` | Basic rendering, display, structure |
+| `interaction` | User events, callbacks, animations |
+| `features` | Specific feature areas (model selection, inline suggestions) |
+| `integration` | External hooks, APIs, context integration |
+| `advanced` | Complex scenarios, edge cases, accessibility |
+| `submit` | Form submission, keyboard shortcuts |
+
+### Example: RichTextInput Split
+
+**Before**: `RichTextInput.test.tsx` (1171 lines, 79 tests)
+
+**After**:
+```
+RichTextInput.rendering.test.tsx    # 18 tests - Basic rendering
+RichTextInput.submit.test.tsx       # 13 tests - Submit handling
+RichTextInput.richFeatures.test.tsx # 19 tests - Mentions, code blocks, lists
+RichTextInput.advanced.test.tsx     # 29 tests - Accessibility, edge cases
+```
+
+### Split Guidelines
+
+1. **Target Size**: 200-400 lines, 10-25 tests per file
+2. **Each file must**:
+   - Include complete mock setup (vi.mock declarations)
+   - Have independent beforeEach/afterEach cleanup
+   - Include file header documenting test categories
+3. **Shared test helpers**: Keep in original location or create shared utility
+
+### File Header Template
+
+```typescript
+/**
+ * <Component> <Category> Tests
+ *
+ * Split from <Component>.test.tsx for memory-safe test execution.
+ * Tests cover:
+ * - <Category 1>
+ * - <Category 2>
+ * - <Category 3>
+ */
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
+// ... component imports
+```
+
+### Vitest Configuration for Memory Safety
+
+```typescript
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    // Vitest 4: forks options at top level
+    forks: {
+      singleFork: process.env.VITEST_SINGLE_FORK !== "false",
+    },
+    // Force worker recycling to prevent memory buildup
+    maxWorkers: 1,
+    minWorkers: 1,
+  },
+});
+```
+
+### CI Sharding Configuration
+
+The CI workflow uses 50 shards for frontend tests to prevent OOM:
+
+```yaml
+# .github/workflows/ci.yaml - frontend-build job
+- name: Run tests with sharding (OOM prevention)
+  run: |
+    for i in $(seq 1 50); do
+      VITEST_MAX_FORKS=1 npm run test -- --run --shard=$i/50
+    done
+  env:
+    NODE_OPTIONS: '--max-old-space-size=4096 --expose-gc'
+```
+
+### Split Candidates
+
+Monitor these indicators to identify files needing splits:
+- **Lines > 500**: Likely candidate for split
+- **Tests > 30**: Consider splitting by category
+- **OOM in CI**: Immediate split required
+- **Slow local runs (> 30s)**: Consider split for DX
+
+### Real-World Splits Completed
+
+| Original File | Split Into | Tests | Reason |
+|---------------|------------|-------|--------|
+| `RichTextInput.test.tsx` | 4 files | 79 | OOM prevention |
+| `ConnectedChatInputForm.test.tsx` | 3 files | 59 | Feature isolation |
+| `TimelineBar.test.tsx` | 2 files | 26 | Category separation |
+| `DevToolsPanel.test.tsx` | 3 files | 34 | Component complexity |
+
+---
+
 **Related Files**:
 - Test Configuration: `pyproject.toml` (pytest settings)
 - Test Requirements: `requirements-dev.txt`
 - Testing Guide: `TESTING.md`
 - CI Test Workflow: `.github/workflows/ci.yaml`
+- Vitest Configuration: `src/mcp_server_langgraph/studio/frontend/vitest.config.ts`
 
 ---
 
 **Auto-Generated**: This file should be updated when new test patterns emerge
-**Last Review**: 2025-12-21
+**Last Review**: 2026-01-13

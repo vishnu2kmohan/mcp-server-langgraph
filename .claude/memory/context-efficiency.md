@@ -84,7 +84,7 @@ Grep "async def test_" --type py
 ### Mental Indexing
 
 After reading files, mentally note:
-- "Feature flags defined in core/feature_flags.py, ~164 flags"
+- "Feature flags defined in core/feature_flags.py, ~175 flags"
 - "API routes in api/v1/*.py, routers registered in main.py"
 - "Test fixtures in conftest.py at tests/ and tests/unit/ levels"
 

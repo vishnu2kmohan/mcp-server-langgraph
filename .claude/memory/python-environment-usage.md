@@ -198,13 +198,16 @@ uv run --frozen flake8 src/
 ### Package Management
 
 ```bash
-# Install dependencies
-uv pip install -e .
+# Sync all dependencies (recommended)
+uv sync
 
-# Install dev dependencies
-uv pip install -e ".[dev]"
+# Sync with dev dependencies (REQUIRED for type stubs like types-psutil)
+uv sync --extra dev
 
-# Install specific package
+# Lock dependencies (updates uv.lock)
+uv lock
+
+# Install specific package (adds to venv, not pyproject.toml)
 uv pip install package-name
 
 # Show installed packages
@@ -213,6 +216,21 @@ uv pip list
 # Show package info
 uv pip show package-name
 ```
+
+### Type Stubs Installation (CRITICAL for mypy)
+
+**Why this matters**: The project uses mypy strict mode. Type stubs (e.g., `types-psutil`, `types-redis`) are declared in `pyproject.toml` under `[project.optional-dependencies] dev`. If you skip `--extra dev`, mypy will fail with errors like:
+
+```
+error: Library stubs not installed for "psutil"
+```
+
+**Always run after cloning or when mypy reports missing stubs**:
+```bash
+uv sync --extra dev
+```
+
+**CI already handles this**: The `setup-python-deps` action uses `extras: 'dev'` automatically.
 
 ### Running Scripts
 
@@ -531,7 +549,7 @@ Before running any Python command, verify:
 
 ---
 
-**Last Updated**: 2025-11-28
+**Last Updated**: 2026-01-19
 **Virtual Environment Python Version**: 3.12.12
 **Package Manager**: uv (latest)
 **pyproject.toml Python Requirement**: >=3.11, <3.14
