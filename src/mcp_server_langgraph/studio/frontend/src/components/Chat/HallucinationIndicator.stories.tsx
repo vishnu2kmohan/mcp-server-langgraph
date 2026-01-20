@@ -107,7 +107,7 @@ export const AllStates: Story = {
   render: () => (
     <div className="flex flex-col gap-6 p-4">
       <div className="flex items-center gap-4">
-        <span className="text-sm text-neutral-600 dark:text-neutral-400 w-32">
+        <span className="text-sm text-neutral-11 w-32">
           Default:
         </span>
         <HallucinationIndicator
@@ -116,7 +116,7 @@ export const AllStates: Story = {
         />
       </div>
       <div className="flex items-center gap-4">
-        <span className="text-sm text-neutral-600 dark:text-neutral-400 w-32">
+        <span className="text-sm text-neutral-11 w-32">
           Reported:
         </span>
         <HallucinationIndicator
@@ -138,15 +138,15 @@ export const AllStates: Story = {
 
 export const InMessageContext: Story = {
   render: () => (
-    <div className="max-w-lg p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+    <div className="max-w-lg p-4 bg-neutral-1 rounded-lg">
       <div className="prose dark:prose-invert text-sm mb-3">
         <p>
           The Eiffel Tower was built in 1889 and is located in Rome, Italy. It
           stands at 324 meters tall and was designed by Leonardo da Vinci.
         </p>
       </div>
-      <div className="flex items-center gap-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
-        <span className="text-xs text-neutral-500">
+      <div className="flex items-center gap-2 pt-2 border-t border-neutral-5">
+        <span className="text-xs text-neutral-10">
           AI response may contain errors
         </span>
         <HallucinationIndicator
@@ -168,17 +168,17 @@ export const InMessageContext: Story = {
 
 export const DarkMode: Story = {
   render: () => (
-    <div className="dark bg-neutral-900 p-6 rounded-lg">
+    <div className="dark bg-neutral-2 p-6 rounded-lg">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-4">
-          <span className="text-sm text-neutral-400 w-32">Default:</span>
+          <span className="text-sm text-neutral-9 w-32">Default:</span>
           <HallucinationIndicator
             messageId="dark-1"
             onReport={(report) => console.log("Report:", report)}
           />
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-neutral-400 w-32">Reported:</span>
+          <span className="text-sm text-neutral-9 w-32">Reported:</span>
           <HallucinationIndicator
             messageId="dark-2"
             onReport={(report) => console.log("Report:", report)}
@@ -205,10 +205,10 @@ export const AccessibilityShowcase: Story = {
   render: () => (
     <div className="p-4 space-y-6">
       <div className="space-y-2">
-        <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+        <h3 className="text-sm font-semibold text-neutral-11">
           Accessibility Features
         </h3>
-        <ul className="text-xs text-neutral-600 dark:text-neutral-400 list-disc list-inside space-y-1">
+        <ul className="text-xs text-neutral-11 list-disc list-inside space-y-1">
           <li>Keyboard navigable (Tab, Enter, Escape)</li>
           <li>Screen reader friendly with ARIA labels</li>
           <li>Focus trap in dialog</li>
@@ -216,12 +216,12 @@ export const AccessibilityShowcase: Story = {
           <li>Form labels properly associated</li>
         </ul>
       </div>
-      <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
+      <div className="pt-4 border-t border-neutral-5">
         <HallucinationIndicator
           messageId="a11y-demo"
           onReport={(report) => console.log("Report:", report)}
         />
-        <p className="mt-2 text-xs text-neutral-500">
+        <p className="mt-2 text-xs text-neutral-10">
           Try navigating with Tab key and pressing Enter to open dialog, Escape
           to close.
         </p>

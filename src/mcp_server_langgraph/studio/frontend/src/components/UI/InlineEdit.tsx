@@ -170,10 +170,9 @@ export const InlineEdit = forwardRef<HTMLDivElement, InlineEditProps>(
             className={cn(
               "w-full px-2 py-1 text-sm rounded border",
               "focus:outline-none focus:ring-2 focus:ring-brand-primary",
-              "dark:bg-neutral-800 dark:text-neutral-100",
               hasError
-                ? "border-error-500 focus:ring-error-500"
-                : "border-neutral-300 dark:border-neutral-600",
+                ? "border-error-9 focus:ring-error-7"
+                : "border-neutral-5",
               isLoading && "opacity-50",
               inputClassName,
             )}
@@ -184,7 +183,7 @@ export const InlineEdit = forwardRef<HTMLDivElement, InlineEditProps>(
               className="absolute right-2 flex items-center"
             >
               <svg
-                className="animate-spin h-4 w-4 text-neutral-500 dark:text-neutral-400"
+                className="animate-spin h-4 w-4 text-neutral-10"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -227,14 +226,14 @@ export const InlineEdit = forwardRef<HTMLDivElement, InlineEditProps>(
           aria-label={ariaLabel}
           className={cn(
             "text-left px-1 py-0.5 rounded",
-            "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
+            "hover:bg-neutral-2",
             "focus:outline-none focus:ring-2 focus:ring-brand-primary",
             "transition-colors duration-fast",
             disabled && "pointer-events-none",
           )}
         >
           {value || (
-            <span className="text-neutral-400 dark:text-neutral-400 italic">
+            <span className="text-neutral-9 italic">
               {placeholder}
             </span>
           )}

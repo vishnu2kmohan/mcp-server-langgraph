@@ -43,10 +43,10 @@ function KeyBadge({ keyName }: { keyName: string }) {
     <kbd
       className={cn(
         "px-1.5 py-0.5 rounded",
-        "bg-neutral-100 dark:bg-neutral-700",
+        "bg-neutral-2",
         "text-xs font-mono font-medium",
-        "text-neutral-700 dark:text-neutral-300",
-        "border border-neutral-200 dark:border-neutral-700 dark:border-neutral-600",
+        "text-neutral-11",
+        "border border-neutral-5",
         "shadow-sm",
       )}
     >
@@ -69,9 +69,9 @@ export function KeyboardShortcuts({
       <div
         data-testid="keyboard-shortcuts"
         className={cn(
-          "rounded-lg border border-neutral-200 dark:border-neutral-700",
-          "bg-white dark:bg-neutral-900 p-4",
-          "text-sm text-neutral-500 dark:text-neutral-400",
+          "rounded-lg border border-neutral-5",
+          "bg-neutral-1 p-4",
+          "text-sm text-neutral-11",
           className,
         )}
       >
@@ -87,15 +87,15 @@ export function KeyboardShortcuts({
     <div
       data-testid="keyboard-shortcuts"
       className={cn(
-        "rounded-lg border border-neutral-200 dark:border-neutral-700",
-        "bg-white dark:bg-neutral-900",
+        "rounded-lg border border-neutral-5",
+        "bg-neutral-1",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 p-4 border-b border-neutral-200 dark:border-neutral-700">
-        <Keyboard size={18} className="text-primary-500" />
-        <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+      <div className="flex items-center gap-2 p-4 border-b border-neutral-5">
+        <Keyboard size={18} className="text-primary-9" />
+        <h3 className="font-semibold text-neutral-12">
           Keyboard Shortcuts
         </h3>
       </div>
@@ -104,7 +104,7 @@ export function KeyboardShortcuts({
       <div className="p-4 space-y-6">
         {categories.map((category) => (
           <div key={category.id}>
-            <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-3">
+            <h4 className="text-sm font-medium text-neutral-12 mb-3">
               {category.name}
             </h4>
             <div className="space-y-2">
@@ -113,7 +113,7 @@ export function KeyboardShortcuts({
                   key={shortcut.id}
                   className="flex items-center justify-between py-1.5"
                 >
-                  <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                  <span className="text-sm text-neutral-11">
                     {shortcut.description}
                   </span>
                   <div className="flex items-center gap-1">
@@ -121,7 +121,7 @@ export function KeyboardShortcuts({
                       <span key={`${shortcut.id}-${key}-${index}`}>
                         <KeyBadge keyName={key} />
                         {index < shortcut.keys.length - 1 && (
-                          <span className="mx-0.5 text-neutral-400 dark:text-neutral-400">
+                          <span className="mx-0.5 text-neutral-9">
                             +
                           </span>
                         )}

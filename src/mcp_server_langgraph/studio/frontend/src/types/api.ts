@@ -317,6 +317,24 @@ export interface FeatureFlags {
   confirmation_dialogs?: boolean;
   /** Enable enhanced model selector (Sprint 1: recent models, search, capability badges) */
   enhanced_model_selector?: boolean;
+  /** Enable manual tool selection dropdown in chat input (auto/manual/none modes) */
+  manual_tool_selection?: boolean;
+
+  // ==========================================================================
+  // Execution Mode Features (Ctrl/Cmd+Shift+M Toggle)
+  // ==========================================================================
+  /** Enable execution mode toggle in chat input (default, plan, auto_accept, bypass) */
+  execution_mode_toggle?: boolean;
+  /** Enable plan generation for audit trail */
+  plan_generation?: boolean;
+  /** Enable HITL approval flow for medium/high risk plans */
+  plan_approval_flow?: boolean;
+  /** Restrict bypass mode to admin role only */
+  bypass_mode_admin_only?: boolean;
+  /** Enable risk-aware bypass mode with auto-approval for low-risk plans */
+  bypass_risk_aware?: boolean;
+  /** Enable consolidated preferences menu in chat input */
+  preferences_menu?: boolean;
 
   // ==========================================================================
   // Studio Canvas Shell Feature Flags (Phase 0+)

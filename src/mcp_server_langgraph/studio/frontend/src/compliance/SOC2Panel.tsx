@@ -10,6 +10,7 @@
  * - Remediation tracking
  */
 
+import { useReducedMotion } from "motion/react";
 import {
   Shield,
   CheckCircle,
@@ -50,16 +51,16 @@ export interface SOC2PanelProps {
 function getStatusIcon(status: ControlStatus) {
   switch (status) {
     case "compliant":
-      return <CheckCircle size={14} className="text-success-500" />;
+      return <CheckCircle size={14} className="text-success-9" />;
     case "partial":
-      return <AlertCircle size={14} className="text-warning-500" />;
+      return <AlertCircle size={14} className="text-warning-9" />;
     case "non-compliant":
-      return <XCircle size={14} className="text-error-500" />;
+      return <XCircle size={14} className="text-error-9" />;
     default:
       return (
         <AlertCircle
           size={14}
-          className="text-neutral-400 dark:text-neutral-400"
+          className="text-neutral-9"
         />
       );
   }
@@ -68,13 +69,13 @@ function getStatusIcon(status: ControlStatus) {
 function getStatusColor(status: ControlStatus): string {
   switch (status) {
     case "compliant":
-      return "text-success-600 dark:text-success-400";
+      return "text-success-10 dark:text-success-7";
     case "partial":
-      return "text-warning-600 dark:text-warning-400";
+      return "text-warning-9 dark:text-warning-9";
     case "non-compliant":
-      return "text-error-600 dark:text-error-400";
+      return "text-error-10 dark:text-error-7";
     default:
-      return "text-neutral-500 dark:text-neutral-400";
+      return "text-neutral-10";
   }
 }
 
@@ -96,6 +97,9 @@ export function SOC2Panel({
   isLoading = false,
   className,
 }: SOC2PanelProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   // Calculate compliance stats
   const compliantCount = controls.filter(
     (c) => c.status === "compliant",
@@ -111,13 +115,13 @@ export function SOC2Panel({
       <div
         data-testid="soc2-panel"
         className={cn(
-          "rounded-lg border border-neutral-200 dark:border-neutral-700",
-          "bg-white dark:bg-neutral-900 p-4",
+          "rounded-lg border border-neutral-5",
+          "bg-neutral-1 p-4",
           className,
         )}
       >
-        <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
-          <Loader2 size={16} className="animate-spin" />
+        <div className="flex items-center gap-2 text-neutral-10">
+          <Loader2 size={16} className={cn(!prefersReducedMotion && "animate-spin")} />
           <span>Loading SOC-2 controls...</span>
         </div>
       </div>
@@ -128,24 +132,24 @@ export function SOC2Panel({
     <div
       data-testid="soc2-panel"
       className={cn(
-        "rounded-lg border border-neutral-200 dark:border-neutral-700",
-        "bg-white dark:bg-neutral-900",
+        "rounded-lg border border-neutral-5",
+        "bg-neutral-1",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-5">
         <div className="flex items-center gap-2">
-          <Shield size={18} className="text-primary-500" />
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+          <Shield size={18} className="text-primary-9" />
+          <h3 className="font-semibold text-neutral-12">
             SOC-2
           </h3>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+          <span className="text-2xl font-bold text-neutral-12">
             {percentage}%
           </span>
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+          <span className="text-sm text-neutral-10">
             {compliantCount}/{controls.length} controls
           </span>
         </div>
@@ -154,7 +158,7 @@ export function SOC2Panel({
       {/* Content */}
       <div className="p-4">
         {controls.length === 0 ? (
-          <div className="flex items-center justify-center py-8 text-sm text-neutral-500 dark:text-neutral-400">
+          <div className="flex items-center justify-center py-8 text-sm text-neutral-10">
             <Shield size={20} className="mr-2 opacity-50" />
             No controls configured
           </div>
@@ -165,8 +169,8 @@ export function SOC2Panel({
                 key={control.id}
                 className={cn(
                   "flex items-start gap-3 p-3 rounded-lg",
-                  "bg-neutral-50 dark:bg-neutral-800",
-                  "border border-neutral-100 dark:border-neutral-700",
+                  "bg-neutral-1",
+                  "border border-neutral-5",
                 )}
               >
                 {/* Status icon */}
@@ -177,7 +181,7 @@ export function SOC2Panel({
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    <span className="text-sm font-medium text-neutral-11">
                       {control.id}
                     </span>
                     <span
@@ -189,13 +193,13 @@ export function SOC2Panel({
                       {control.status}
                     </span>
                   </div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  <p className="text-sm text-neutral-11">
                     {control.name}
                   </p>
-                  <div className="flex items-center gap-4 mt-1 text-xs text-neutral-400 dark:text-neutral-400">
+                  <div className="flex items-center gap-4 mt-1 text-xs text-neutral-9">
                     <span>Assessed: {formatDate(control.lastAssessed)}</span>
                     {control.remediationDue && (
-                      <span className="text-error-500">
+                      <span className="text-error-9">
                         Due: {formatDate(control.remediationDue)}
                       </span>
                     )}

@@ -100,39 +100,39 @@ export function TokenUsageDisplay({
   return (
     <div
       data-testid="token-usage-container"
-      className={`inline-flex items-center gap-2 ${textSize} text-neutral-400 dark:text-neutral-500 ${className}`}
+      className={`inline-flex items-center gap-2 ${textSize} text-neutral-9 ${className}`}
     >
       <Zap size={iconSize} className="flex-shrink-0" />
 
       {/* Token counts */}
       <span className="inline-flex items-center gap-1">
         {showLabels && (
-          <span className="text-neutral-500 dark:text-neutral-400">Input:</span>
+          <span className="text-neutral-10">Input:</span>
         )}
         <span>{formatNumber(promptTokens)}</span>
-        <span className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300">
+        <span className="text-neutral-9">
           /
         </span>
         {showLabels && (
-          <span className="text-neutral-500 dark:text-neutral-400">
+          <span className="text-neutral-10">
             Output:
           </span>
         )}
         <span>{formatNumber(completionTokens)}</span>
-        <span className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300">
+        <span className="text-neutral-9">
           =
         </span>
-        <span className="font-medium text-neutral-500 dark:text-neutral-400">
+        <span className="font-medium text-neutral-10">
           {formatNumber(totalTokens)}
         </span>
-        <span className="text-neutral-400 dark:text-neutral-400">tokens</span>
+        <span className="text-neutral-9">tokens</span>
       </span>
 
       {/* Cost estimation */}
       {showCost && (
         <span
           data-testid="estimated-cost"
-          className="inline-flex items-center gap-0.5 text-neutral-500 dark:text-neutral-400"
+          className="inline-flex items-center gap-0.5 text-neutral-10"
         >
           <DollarSign size={iconSize - 2} />
           <span>{formatCost(estimatedCost)}</span>

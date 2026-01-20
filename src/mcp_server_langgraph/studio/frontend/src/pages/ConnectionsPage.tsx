@@ -69,19 +69,24 @@ import {
 import { useConnectionsRealtimeWebSocket } from "../hooks/useConnectionsRealtimeWebSocket";
 import { AIEmptyState } from "../components/EmptyState/AIEmptyState";
 
-import { Button, Checkbox, Input, Select } from "@/components/UI";
+// Direct imports to avoid Rollup circular dependency warnings
+// (page chunks end up separate from UI barrel)
+import { Button } from "@/components/UI/Button";
+import { Checkbox } from "@/components/UI/Checkbox";
+import { Input } from "@/components/UI/Input";
+import { Select } from "@/components/UI/Select";
 
 // Status badge colors
 const statusColors: Record<ConnectionStatus, string> = {
   connected:
-    "bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-300",
+    "bg-success-3 text-success-11 dark:bg-success-12 dark:text-success-5",
   disconnected:
-    "bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300",
+    "bg-neutral-2 dark:bg-neutral-11 text-neutral-11 dark:bg-neutral-10 dark:text-neutral-5",
   connecting:
-    "bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-300",
-  error: "bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-300",
+    "bg-primary-3 text-primary-11 dark:bg-primary-12 dark:text-primary-5",
+  error: "bg-error-3 text-error-11 dark:bg-error-12 dark:text-error-9",
   auth_required:
-    "bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-300",
+    "bg-warning-3 text-warning-11 dark:bg-warning-12 dark:text-warning-6",
 };
 
 // Auth type icons
@@ -93,13 +98,13 @@ const authIcons: Record<AuthType, React.ReactNode> = {
 
 // Status icons
 const statusIcons: Record<ConnectionStatus, React.ReactNode> = {
-  connected: <CheckCircle className="w-4 h-4 text-success-500" />,
+  connected: <CheckCircle className="w-4 h-4 text-success-9" />,
   disconnected: (
-    <XCircle className="w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+    <XCircle className="w-4 h-4 text-neutral-6 dark:text-neutral-6" />
   ),
-  connecting: <Loader2 className="w-4 h-4 text-primary-500 animate-spin" />,
-  error: <AlertCircle className="w-4 h-4 text-error-500" />,
-  auth_required: <AlertCircle className="w-4 h-4 text-warning-500" />,
+  connecting: <Loader2 className="w-4 h-4 text-primary-9 animate-spin" />,
+  error: <AlertCircle className="w-4 h-4 text-error-9" />,
+  auth_required: <AlertCircle className="w-4 h-4 text-warning-9" />,
 };
 
 // Polling interval options (in milliseconds)
@@ -373,8 +378,8 @@ export function ConnectionsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-        <span className="ml-2 text-neutral-600 dark:text-neutral-400">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-9" />
+        <span className="ml-2 text-neutral-9 dark:text-neutral-6">
           Loading connections...
         </span>
       </div>
@@ -385,13 +390,13 @@ export function ConnectionsPage() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
-        <AlertCircle className="w-12 h-12 text-error-500 mb-4" />
-        <p className="text-error-600 dark:text-error-400">
+        <AlertCircle className="w-12 h-12 text-error-9 mb-4" />
+        <p className="text-error-10 dark:text-error-7">
           Failed to fetch connections
         </p>
         <Button
           variant="primary"
-          className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+          className="mt-4 px-4 py-2 bg-primary-10 text-white rounded-md hover:bg-primary-11"
           onClick={() => refetch()}
         >
           Retry
@@ -405,8 +410,8 @@ export function ConnectionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Server className="w-8 h-8 text-primary-600" />
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
+          <Server className="w-8 h-8 text-primary-10" />
+          <h1 className="text-2xl font-bold text-neutral-12 dark:text-white">
             MCP Connections
           </h1>
           {/* WebSocket status indicator */}
@@ -416,17 +421,17 @@ export function ConnectionsPage() {
             title={wsError ? `WebSocket: ${wsError}` : `WebSocket: ${wsStatus}`}
             className={`w-2.5 h-2.5 rounded-full ${
               wsStatus === "connected"
-                ? "bg-success-500"
+                ? "bg-success-9"
                 : wsStatus === "connecting" || wsStatus === "reconnecting"
-                  ? "bg-warning-500 animate-pulse"
-                  : "bg-neutral-400"
+                  ? "bg-warning-9 animate-pulse"
+                  : "bg-neutral-6"
             }`}
           />
         </div>
         <div className="flex items-center gap-2">
           <Button
             variant="primary"
-            className="flex px-4 py-2 border border-primary-600 text-primary-600 rounded-md hover:bg-primary-50 dark:hover:bg-primary-900/20"
+            className="flex px-4 py-2 border border-primary-10 text-primary-10 rounded-md hover:bg-primary-1 dark:hover:bg-primary-12/20"
             onClick={() => setTemplateSelectorOpen(true)}
             aria-label="From Template"
           >
@@ -435,14 +440,14 @@ export function ConnectionsPage() {
           </Button>
           <Button
             variant="primary"
-            className="flex px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+            className="flex px-4 py-2 bg-primary-10 text-white rounded-md hover:bg-primary-11"
             onClick={handleAddClick}
             aria-label="Add Connection"
             title={`Add Connection (${formatShortcut(COMMON_SHORTCUTS.NEW)})`}
           >
             <Plus className="w-4 h-4" />
             Add Connection
-            <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-primary-700 rounded">
+            <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-primary-11 rounded">
               {formatShortcut(COMMON_SHORTCUTS.NEW)}
             </kbd>
           </Button>
@@ -452,9 +457,9 @@ export function ConnectionsPage() {
       <div className="flex flex-wrap gap-4 mb-6">
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-6 dark:text-neutral-6" />
           <Input
-            className="pl-10 pr-4 py-2 focus:ring-primary-500 dark: dark:text-white"
+            className="pl-10 pr-4 py-2 focus:ring-primary-7 dark: dark:text-white"
             ref={searchInputRef}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -468,7 +473,7 @@ export function ConnectionsPage() {
             Status
           </label>
           <Select
-            className="px-3 py-2 focus:ring-primary-500 dark: dark:text-white"
+            className="px-3 py-2 focus:ring-primary-7 dark: dark:text-white"
             id="status-filter"
             aria-label="Status"
             value={statusFilter}
@@ -491,7 +496,7 @@ export function ConnectionsPage() {
             Auth Type
           </label>
           <Select
-            className="px-3 py-2 focus:ring-primary-500 dark: dark:text-white"
+            className="px-3 py-2 focus:ring-primary-7 dark: dark:text-white"
             id="auth-type-filter"
             aria-label="Auth Type"
             value={authTypeFilter}
@@ -510,7 +515,7 @@ export function ConnectionsPage() {
             Sort By
           </label>
           <Select
-            className="px-3 py-2 focus:ring-primary-500 dark: dark:text-white"
+            className="px-3 py-2 focus:ring-primary-7 dark: dark:text-white"
             id="sort-by"
             aria-label="Sort By"
             value={sortBy}
@@ -526,7 +531,7 @@ export function ConnectionsPage() {
         {/* Sort Order Toggle */}
         <Button
           variant="secondary"
-          className="flex px-3 py-2 border rounded-md hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:border-neutral-600"
+          className="flex px-3 py-2 border rounded-md hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10 dark:border-neutral-9"
           onClick={toggleSortOrder}
           aria-label="Sort Order"
         >
@@ -535,11 +540,11 @@ export function ConnectionsPage() {
           ) : (
             <ArrowDown className="w-4 h-4" />
           )}
-          <ArrowUpDown className="w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+          <ArrowUpDown className="w-4 h-4 text-neutral-6 dark:text-neutral-6" />
         </Button>
 
         {/* Polling Control */}
-        <div className="flex items-center gap-1 border rounded-md dark:border-neutral-600">
+        <div className="flex items-center gap-1 border rounded-md dark:border-neutral-9">
           <Button
             className="p-2 rounded-l-md"
             onClick={() =>
@@ -579,7 +584,7 @@ export function ConnectionsPage() {
         {/* Refresh Button */}
         <Button
           variant="secondary"
-          className="p-2 border rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700 dark:border-neutral-600"
+          className="p-2 border rounded-md hover:bg-neutral-2 dark:hover:bg-neutral-10 dark:border-neutral-9"
           onClick={() => refetch()}
           aria-label="Refresh"
           title={`Refresh (${formatShortcut(COMMON_SHORTCUTS.REFRESH)})`}
@@ -611,7 +616,7 @@ export function ConnectionsPage() {
       {connections.length > 0 && (
         <div className="grid gap-4">
           {/* Select All Header */}
-          <div className="flex items-center gap-3 px-4 py-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg border dark:border-neutral-700">
+          <div className="flex items-center gap-3 px-4 py-2 bg-neutral-1 dark:bg-neutral-11 rounded-lg border dark:border-neutral-10">
             <Checkbox
               checked={
                 selectedIds.size > 0 && selectedIds.size === connections.length
@@ -620,7 +625,7 @@ export function ConnectionsPage() {
               aria-label="Select all connections"
               size="sm"
             />
-            <span className="text-sm text-neutral-600 dark:text-neutral-400">
+            <span className="text-sm text-neutral-9 dark:text-neutral-6">
               {selectedIds.size > 0
                 ? `${selectedIds.size} selected`
                 : `${connections.length} connections`}
@@ -630,8 +635,8 @@ export function ConnectionsPage() {
           {connections.map((connection) => (
             <div
               key={connection.id}
-              className={`bg-white dark:bg-neutral-800 rounded-lg border dark:border-neutral-700 p-4 hover:shadow-md transition-shadow ${
-                selectedIds.has(connection.id) ? "ring-2 ring-primary-500" : ""
+              className={`bg-white dark:bg-neutral-11 rounded-lg border dark:border-neutral-10 p-4 hover:shadow-md transition-shadow ${
+                selectedIds.has(connection.id) ? "ring-2 ring-primary-7" : ""
               }`}
             >
               <div className="flex items-start justify-between">
@@ -652,7 +657,7 @@ export function ConnectionsPage() {
                     {statusIcons[connection.status]}
 
                     {/* Name */}
-                    <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
+                    <h3 className="text-lg font-semibold text-neutral-12 dark:text-white">
                       {connection.name}
                     </h3>
 
@@ -664,20 +669,20 @@ export function ConnectionsPage() {
                     </span>
 
                     {/* Auth Type Badge */}
-                    <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300">
+                    <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-neutral-2 dark:bg-neutral-10 text-neutral-10 dark:text-neutral-5">
                       {authIcons[connection.authType]}
                       {connection.authType}
                     </span>
                   </div>
 
                   {/* URL */}
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
+                  <p className="text-sm text-neutral-8 dark:text-neutral-6 mb-2">
                     {connection.url}
                   </p>
 
                   {/* Stats (for connected servers) */}
                   {connection.status === "connected" && (
-                    <div className="flex gap-4 text-sm text-neutral-600 dark:text-neutral-400">
+                    <div className="flex gap-4 text-sm text-neutral-9 dark:text-neutral-6">
                       <span>{connection.toolCount} tools</span>
                       <span>{connection.resourceCount} resources</span>
                       <span>{connection.promptCount} prompts</span>
@@ -686,7 +691,7 @@ export function ConnectionsPage() {
 
                   {/* Server info */}
                   {connection.serverName && (
-                    <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">
+                    <p className="text-xs text-neutral-6 dark:text-neutral-6 mt-1">
                       Server: {connection.serverName}
                     </p>
                   )}
@@ -696,7 +701,7 @@ export function ConnectionsPage() {
                 <div className="flex items-center gap-2">
                   <Button
                     variant="primary"
-                    className="p-2 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/50 rounded-md"
+                    className="p-2 text-primary-10 hover:bg-primary-1 dark:hover:bg-primary-12/50 rounded-md"
                     onClick={() => handleTestClick(connection.id)}
                     aria-label="Test"
                     disabled={isTesting}
@@ -704,7 +709,7 @@ export function ConnectionsPage() {
                     <Zap className="w-4 h-4" />
                   </Button>
                   <Button
-                    className="p-2 text-insight-600 hover:bg-insight-50 dark:hover:bg-insight-900/50 rounded-md"
+                    className="p-2 text-insight-10 hover:bg-insight-1 dark:hover:bg-insight-12/50 rounded-md"
                     onClick={() => handleViewAuditLog(connection.id)}
                     aria-label="Audit Log"
                   >
@@ -712,7 +717,7 @@ export function ConnectionsPage() {
                   </Button>
                   <Button
                     variant="secondary"
-                    className="p-2 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 rounded-md"
+                    className="p-2 text-neutral-9 dark:text-neutral-5 hover:bg-neutral-2 dark:bg-neutral-11 dark:text-neutral-6 dark:hover:bg-neutral-10 rounded-md"
                     onClick={() => handleEditClick(connection)}
                     aria-label="Edit"
                   >
@@ -720,7 +725,7 @@ export function ConnectionsPage() {
                   </Button>
                   <Button
                     variant="danger"
-                    className="p-2 text-error-600 hover:bg-error-50 dark:hover:bg-error-900/50 rounded-md"
+                    className="p-2 text-error-10 hover:bg-error-1 dark:hover:bg-error-12/50 rounded-md"
                     onClick={() => handleDeleteClick(connection.id)}
                     aria-label="Delete"
                   >
@@ -737,8 +742,8 @@ export function ConnectionsPage() {
         <div className="mt-8">
           <Suspense
             fallback={
-              <div className="p-8 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                <div className="flex items-center justify-center gap-3 text-neutral-500 dark:text-neutral-400">
+              <div className="p-8 bg-white dark:bg-neutral-11 rounded-lg border border-neutral-3 dark:border-neutral-10">
+                <div className="flex items-center justify-center gap-3 text-neutral-8 dark:text-neutral-6">
                   <Loader2 className="w-5 h-5 animate-spin" />
                   <span>Loading capabilities...</span>
                 </div>
@@ -777,25 +782,25 @@ export function ConnectionsPage() {
             className="absolute inset-0 bg-black/50"
             onClick={() => setDeleteConfirmId(null)}
           />
-          <div className="relative bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
+          <div className="relative bg-white dark:bg-neutral-11 rounded-lg shadow-xl p-6 max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-neutral-12 dark:text-white mb-2">
               Delete Connection
             </h3>
-            <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+            <p className="text-neutral-9 dark:text-neutral-6 mb-6">
               Are you sure you want to delete this connection? This action
               cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <Button
                 variant="secondary"
-                className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-md"
+                className="px-4 py-2 text-neutral-10 dark:text-neutral-5 hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10 rounded-md"
                 onClick={() => setDeleteConfirmId(null)}
               >
                 Cancel
               </Button>
               <Button
                 variant="danger"
-                className="px-4 py-2 bg-error-600 text-white hover:bg-error-700 rounded-md"
+                className="px-4 py-2 bg-error-10 text-white hover:bg-error-11 rounded-md"
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
               >
@@ -812,7 +817,7 @@ export function ConnectionsPage() {
             className="absolute inset-0 bg-black/50"
             onClick={() => setTemplateSelectorOpen(false)}
           />
-          <div className="relative bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 max-w-4xl mx-4 max-h-[80vh] overflow-y-auto">
+          <div className="relative bg-white dark:bg-neutral-11 rounded-lg shadow-xl p-6 max-w-4xl mx-4 max-h-[80vh] overflow-y-auto">
             <ConnectionTemplateSelector
               onSelect={handleTemplateSelect}
               onCustom={() => {
@@ -822,7 +827,7 @@ export function ConnectionsPage() {
               showCustomOption
             />
             <Button
-              className="absolute top-4 right-4 p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300"
+              className="absolute top-4 right-4 p-2 text-neutral-8 dark:text-neutral-6 hover:text-neutral-10 dark:text-neutral-3 dark:hover:text-neutral-5"
               onClick={() => setTemplateSelectorOpen(false)}
               aria-label="Close"
             >
@@ -838,10 +843,10 @@ export function ConnectionsPage() {
             className="absolute inset-0 bg-black/50"
             onClick={() => setAuditLogConnectionId(null)}
           />
-          <div className="relative bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 max-w-3xl mx-4 max-h-[80vh] overflow-y-auto">
+          <div className="relative bg-white dark:bg-neutral-11 rounded-lg shadow-xl p-6 max-w-3xl mx-4 max-h-[80vh] overflow-y-auto">
             <ConnectionAuditLog connectionId={auditLogConnectionId} />
             <Button
-              className="absolute top-4 right-4 p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300"
+              className="absolute top-4 right-4 p-2 text-neutral-8 dark:text-neutral-6 hover:text-neutral-10 dark:text-neutral-3 dark:hover:text-neutral-5"
               onClick={() => setAuditLogConnectionId(null)}
               aria-label="Close"
             >

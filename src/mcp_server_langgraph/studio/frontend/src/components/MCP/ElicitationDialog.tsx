@@ -114,15 +114,15 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-neutral-a6"
         onClick={onClose}
         aria-hidden="true"
       />
       {/* Dialog content */}
-      <div className="relative z-10 w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-neutral-800">
+      <div className="relative z-10 w-full max-w-2xl rounded-lg bg-neutral-1 p-6 shadow-xl">
         <h2
           id="elicitation-dialog-title"
-          className="mb-4 text-xl font-semibold text-neutral-900 dark:text-white"
+          className="mb-4 text-xl font-semibold text-neutral-12"
         >
           Request User Input
         </h2>
@@ -132,12 +132,12 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
           <div>
             <label
               htmlFor="elicitation-message"
-              className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+              className="mb-1 block text-sm font-medium text-neutral-11"
             >
               Message
             </label>
             <Textarea
-              className="px-3 py-2 text-neutral-900 -500 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
+              className="px-3 py-2 text-neutral-12 -500 focus:ring-primary-7"
               id="elicitation-message"
               value={message}
               onChange={handleMessageChange}
@@ -150,7 +150,7 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
           <div>
             <label
               htmlFor="elicitation-schema"
-              className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+              className="mb-1 block text-sm font-medium text-neutral-11"
             >
               Schema (Optional JSON)
             </label>
@@ -158,16 +158,16 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
               id="elicitation-schema"
               value={schemaText}
               onChange={handleSchemaChange}
-              className={`w-full rounded-md border px-3 py-2 text-neutral-900 focus:outline-none focus:ring-1 dark:bg-neutral-700 dark:text-white ${
+              className={`w-full rounded-md border px-3 py-2 text-neutral-12 focus:outline-none focus:ring-1 ${
                 schemaError
-                  ? "border-error-500 focus:border-error-500 focus:ring-error-500"
-                  : "border-neutral-300 dark:border-neutral-600 focus:border-primary-500 focus:ring-primary-500 dark:border-neutral-600"
+                  ? "border-error-9 focus:border-error-9 focus:ring-error-7"
+                  : "border-neutral-5 focus:border-primary-9 focus:ring-primary-7"
               }`}
               rows={4}
               placeholder='{"type": "object", "properties": {"name": {"type": "string"}}}'
             />
             {schemaError && (
-              <p className="mt-1 text-sm text-error-600 dark:text-error-400">
+              <p className="mt-1 text-sm text-error-10 dark:text-error-7">
                 {schemaError}
               </p>
             )}
@@ -175,7 +175,7 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
 
           {/* Request error */}
           {requestError && (
-            <div className="rounded-md bg-error-50 p-4 text-error-700 dark:bg-error-900/20 dark:text-error-400">
+            <div className="rounded-md bg-error-1 p-4 text-error-11 dark:bg-error-a3 dark:text-error-7">
               {requestError}
             </div>
           )}
@@ -185,8 +185,8 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
             <div
               className={`rounded-md p-4 ${
                 response.action === "accept"
-                  ? "bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-400"
-                  : "bg-warning-50 text-warning-700 dark:bg-warning-900/20 dark:text-warning-400"
+                  ? "bg-success-1 text-success-11 dark:bg-success-a3 dark:text-success-7"
+                  : "bg-warning-3 text-warning-10 bg-warning-3 dark:text-warning-9"
               }`}
             >
               <h3 className="mb-2 font-medium">
@@ -207,7 +207,7 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
         <div className="mt-6 flex justify-end gap-3">
           <Button
             variant="secondary"
-            className="rounded-md border border-neutral-300 dark:border-neutral-600 bg-white px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 focus:ring-primary-500 focus:ring-offset-2 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600"
+            className="rounded-md border border-neutral-5 bg-neutral-1 px-4 py-2 text-sm text-neutral-11 hover:bg-neutral-1 focus:ring-primary-7 focus:ring-offset-2"
             type="button"
             onClick={onClose}
           >
@@ -215,7 +215,7 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
           </Button>
           <Button
             variant="primary"
-            className="rounded-md bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700 focus:ring-primary-500 focus:ring-offset-2"
+            className="rounded-md bg-primary-10 px-4 py-2 text-sm text-neutral-12 hover:bg-primary-11 focus:ring-primary-7 focus:ring-offset-2"
             type="button"
             onClick={handleSend}
             disabled={!isFormValid || isLoading}

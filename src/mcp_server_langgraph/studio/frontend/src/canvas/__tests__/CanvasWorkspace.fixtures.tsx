@@ -27,7 +27,9 @@ export const mockArtifacts: CanvasArtifact[] = [
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
     editMetadata: {
-      editedBy: "user",
+      origin: "user",
+      modified: false,
+      lastEditedBy: "user",
       language: "javascript",
     },
   },
@@ -42,7 +44,9 @@ export const mockArtifacts: CanvasArtifact[] = [
     createdAt: "2024-01-01T01:00:00Z",
     updatedAt: "2024-01-01T01:00:00Z",
     editMetadata: {
-      editedBy: "ai-generation",
+      origin: "ai",
+      modified: false,
+      lastEditedBy: "ai",
       aiConfidence: 0.95,
     },
   },
@@ -101,7 +105,9 @@ export const aiSuggestionArtifact: CanvasArtifact[] = [
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
     editMetadata: {
-      editedBy: "ai-suggestion",
+      origin: "ai",
+      modified: false,
+      lastEditedBy: "ai",
       aiConfidence: 0.8,
     },
   },
@@ -119,7 +125,9 @@ export const userEditedArtifact: CanvasArtifact[] = [
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
     editMetadata: {
-      editedBy: "user",
+      origin: "user",
+      modified: false,
+      lastEditedBy: "user",
     },
   },
 ];
@@ -136,7 +144,9 @@ export const multiLineArtifacts: CanvasArtifact[] = [
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
     editMetadata: {
-      editedBy: "user",
+      origin: "user",
+      modified: false,
+      lastEditedBy: "user",
       language: "text",
     },
   },
@@ -185,6 +195,7 @@ export const defaultCanvasState = {
   canvasCollapsed: false,
   activeNavItem: "chat",
   selectedArtifactId: null,
+  tabOrder: [] as string[],
   preferences: {
     showTimestamps: true,
     compactMode: false,

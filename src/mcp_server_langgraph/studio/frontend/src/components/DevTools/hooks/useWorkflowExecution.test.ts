@@ -15,6 +15,10 @@ import {
 // Test Data
 // =============================================================================
 
+/**
+ * Create a mock step in FRONTEND format (camelCase).
+ * Used for expected values after transformation.
+ */
 const createMockStep = (
   overrides: Partial<ExecutionStep> = {},
 ): ExecutionStep => ({
@@ -28,6 +32,35 @@ const createMockStep = (
   ...overrides,
 });
 
+/**
+ * Create a mock step in API format (snake_case).
+ * This matches what the backend actually returns.
+ */
+const createMockApiStep = (overrides: Record<string, unknown> = {}) => ({
+  id: `step-${Date.now()}-${Math.random()}`,
+  node_id: "node-1",
+  node_name: "Process Data",
+  status: "completed",
+  duration: 1000,
+  start_time: Date.now() - 1000,
+  end_time: Date.now(),
+  ...overrides,
+});
+
+/**
+ * Mock API response in snake_case format (matches backend WorkflowExecutionResponse).
+ * This ensures tests verify the transformation from API to frontend format.
+ */
+const mockApiResponse = {
+  steps: [
+    createMockApiStep({ id: "step-1", node_id: "node-1", node_name: "Start" }),
+    createMockApiStep({ id: "step-2", node_id: "node-2", node_name: "Process" }),
+    createMockApiStep({ id: "step-3", node_id: "node-3", node_name: "End" }),
+  ],
+  current_step_id: "step-2",
+};
+
+// Legacy mock for backward compatibility with some tests
 const mockExecutionResponse = {
   steps: [
     createMockStep({ id: "step-1", nodeId: "node-1", nodeName: "Start" }),
@@ -151,6 +184,7 @@ describe("useWorkflowExecution", () => {
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
           "/api/v1/workflows/workflow-123/execution",
+          expect.anything(),
         );
       });
     });
@@ -354,6 +388,7 @@ describe("useWorkflowExecution", () => {
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
           "/api/v1/workflows/workflow-456/execution",
+          expect.anything(),
         );
       });
     });
@@ -624,6 +659,160 @@ describe("useWorkflowExecution", () => {
         expect(result.current.steps[0].startTime).toBe(startTime);
         expect(result.current.steps[0].endTime).toBe(endTime);
         expect(result.current.steps[0].duration).toBe(1000);
+      });
+    });
+  });
+
+  describe("API response transformation", () => {
+    it("should transform snake_case API response to camelCase", async () => {
+      // API returns snake_case fields (WorkflowExecutionResponse format)
+      const apiResponse = {
+        steps: [
+          {
+            id: "step-1",
+            node_id: "node-1",
+            node_name: "Start",
+            status: "completed",
+            duration: 100,
+            start_time: 1700000000000,
+            end_time: 1700000000100,
+          },
+        ],
+        current_step_id: "step-1",
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(apiResponse),
+      });
+
+      const { result } = renderHook(() =>
+        useWorkflowExecution({ workflowId: "workflow-123" }),
+      );
+
+      await waitFor(() => {
+        expect(result.current.steps).toHaveLength(1);
+      });
+
+      // Should have camelCase fields
+      const step = result.current.steps[0];
+      expect(step.nodeId).toBe("node-1");
+      expect(step.nodeName).toBe("Start");
+      expect(step.startTime).toBe(1700000000000);
+      expect(step.endTime).toBe(1700000000100);
+      expect(result.current.currentStepId).toBe("step-1");
+    });
+
+    it("should transform nested step input/output from snake_case", async () => {
+      const apiResponse = {
+        steps: [
+          {
+            id: "step-1",
+            node_id: "node-1",
+            node_name: "Process",
+            status: "completed",
+            duration: 100,
+            start_time: 1700000000000,
+            input: { user_id: "123", request_data: { foo_bar: "baz" } },
+            output: { response_body: { nested_key: "value" } },
+          },
+        ],
+        current_step_id: null,
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(apiResponse),
+      });
+
+      const { result } = renderHook(() =>
+        useWorkflowExecution({ workflowId: "workflow-123" }),
+      );
+
+      await waitFor(() => {
+        expect(result.current.steps).toHaveLength(1);
+      });
+
+      // Nested objects should be transformed to camelCase
+      const step = result.current.steps[0];
+      expect(step.input).toEqual({
+        userId: "123",
+        requestData: { fooBar: "baz" },
+      });
+      expect(step.output).toEqual({
+        responseBody: { nestedKey: "value" },
+      });
+    });
+
+    it("should handle null current_step_id from API", async () => {
+      const apiResponse = {
+        steps: [],
+        current_step_id: null,
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(apiResponse),
+      });
+
+      const { result } = renderHook(() =>
+        useWorkflowExecution({ workflowId: "workflow-123" }),
+      );
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.currentStepId).toBeNull();
+    });
+
+    it("should handle step error field from snake_case API", async () => {
+      const apiResponse = {
+        steps: [
+          {
+            id: "step-1",
+            node_id: "node-1",
+            node_name: "Failed Step",
+            status: "error",
+            duration: 50,
+            start_time: 1700000000000,
+            end_time: 1700000000050,
+            error: "Connection timeout",
+          },
+        ],
+        current_step_id: null,
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(apiResponse),
+      });
+
+      const { result } = renderHook(() =>
+        useWorkflowExecution({ workflowId: "workflow-123" }),
+      );
+
+      await waitFor(() => {
+        expect(result.current.steps).toHaveLength(1);
+      });
+
+      expect(result.current.steps[0].error).toBe("Connection timeout");
+      expect(result.current.steps[0].status).toBe("error");
+    });
+
+    it("should correctly fetch with authenticatedFetch", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockApiResponse),
+      });
+
+      renderHook(() => useWorkflowExecution({ workflowId: "workflow-123" }));
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledWith(
+          "/api/v1/workflows/workflow-123/execution",
+          expect.anything(),
+        );
       });
     });
   });

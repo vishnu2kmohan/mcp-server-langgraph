@@ -68,8 +68,8 @@ function TabButton({
         "px-4 py-2 text-sm font-medium rounded-t-lg transition-colors",
         "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2",
         active
-          ? "bg-white dark:bg-neutral-900 text-brand-primary border-b-2 border-brand-primary"
-          : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200",
+          ? "bg-neutral-1 text-brand-primary border-b-2 border-brand-primary"
+          : "text-neutral-11 hover:text-neutral-12",
       )}
     >
       {label}
@@ -173,7 +173,7 @@ export function AggregatedCapabilitiesPanel({
     return (
       <Card variant="elevated" padding="lg">
         <div className="p-4 text-center">
-          <p className="text-error-500 mb-4">
+          <p className="text-error-9 mb-4">
             Failed to load aggregated capabilities.
           </p>
           <Button
@@ -181,7 +181,7 @@ export function AggregatedCapabilitiesPanel({
             onClick={() => refetch()}
             className={cn(
               "px-4 py-2 text-sm font-medium rounded-md",
-              "bg-brand-primary text-white",
+              "bg-brand-primary text-neutral-12",
               "hover:bg-brand-primary/90",
             )}
           >
@@ -209,21 +209,21 @@ export function AggregatedCapabilitiesPanel({
           <div className="flex items-center gap-4">
             <CardTitle>Aggregated Capabilities</CardTitle>
             {/* Stats summary */}
-            <div className="flex items-center gap-3 text-sm text-neutral-600 dark:text-neutral-400">
+            <div className="flex items-center gap-3 text-sm text-neutral-11">
               <span>{totalServers} servers</span>
-              <span className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300">
+              <span className="text-neutral-9">
                 |
               </span>
               <span>{totalTools} tools</span>
-              <span className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300">
+              <span className="text-neutral-9">
                 |
               </span>
               <span>{totalResources} resources</span>
-              <span className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300">
+              <span className="text-neutral-9">
                 |
               </span>
               <span>{totalPrompts} prompts</span>
-              <span className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300">
+              <span className="text-neutral-9">
                 |
               </span>
               {/* Real-time sync indicator */}
@@ -234,12 +234,12 @@ export function AggregatedCapabilitiesPanel({
                 <span
                   className={cn(
                     "w-2 h-2 rounded-full",
-                    wsStatus === "connected" && "bg-success-500",
-                    wsStatus === "connecting" && "bg-warning-500 animate-pulse",
+                    wsStatus === "connected" && "bg-success-9",
+                    wsStatus === "connecting" && "bg-warning-9 animate-pulse",
                     wsStatus === "reconnecting" &&
-                      "bg-warning-500 animate-pulse",
-                    wsStatus === "disconnected" && "bg-neutral-400",
-                    wsStatus === "error" && "bg-error-500",
+                      "bg-warning-9 animate-pulse",
+                    wsStatus === "disconnected" && "bg-neutral-4",
+                    wsStatus === "error" && "bg-error-9",
                   )}
                 />
                 <span className="text-xs">
@@ -250,39 +250,35 @@ export function AggregatedCapabilitiesPanel({
           </div>
           {/* Admin actions */}
           {showAdminActions && (
-            <Button
+            <Button variant="primary"
               type="button"
               onClick={handleRefreshAll}
               className={cn(
                 "px-3 py-1.5 text-sm font-medium rounded-md",
-                "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 dark:bg-neutral-700 dark:text-neutral-200",
-                "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600",
+                "bg-neutral-2 text-neutral-11",
+                "hover:bg-neutral-3",
                 "focus:outline-none focus:ring-2 focus:ring-brand-primary",
               )}
-            >
-              Refresh All
-            </Button>
+            >Refresh All</Button>
           )}
         </div>
       </CardHeader>
       {/* Filter indicator */}
       {serverFilter && (
-        <div className="px-4 py-2 bg-primary-50 dark:bg-primary-900/20 border-b border-primary-100 dark:border-primary-800 flex items-center justify-between">
-          <span className="text-sm text-primary-700 dark:text-primary-300">
+        <div className="px-4 py-2 bg-primary-1 dark:bg-primary-a3 border-b border-primary-3 dark:border-primary-11 flex items-center justify-between">
+          <span className="text-sm text-primary-11 dark:text-primary-5">
             Filtered by server: <strong>{serverFilter}</strong>
           </span>
-          <Button
-            className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+          <Button variant="secondary"
+            className="text-sm text-primary-10 dark:text-primary-7 hover:underline"
             type="button"
             onClick={handleClearFilter}
-          >
-            Clear filter
-          </Button>
+          >Clear filter</Button>
         </div>
       )}
       {/* Tabs */}
       <div
-        className="border-b border-neutral-200 dark:border-neutral-700 px-4"
+        className="border-b border-neutral-5 px-4"
         role="tablist"
       >
         <div className="flex gap-2">

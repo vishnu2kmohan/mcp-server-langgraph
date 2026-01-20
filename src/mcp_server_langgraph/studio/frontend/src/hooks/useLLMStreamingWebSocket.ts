@@ -10,7 +10,11 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import {
+  logout,
+  selectIsAuthenticated,
+  selectWebSocketPermissions,
+} from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { getAuthToken } from "../utils/storage";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
@@ -208,16 +212,19 @@ export function useLLMStreamingWebSocket(
 
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
   const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
 
-  // Compute WebSocket URL
+  // Compute WebSocket URL - requires both authentication AND authorization
+  // Security: Fail-closed when permissions are null (OpenFGA unavailable)
+  const hasPermission = wsPermissions?.llm_streaming ?? false;
   const url = useMemo(
     () =>
-      isAuthenticated
+      isAuthenticated && hasPermission
         ? (customUrl ?? buildWebSocketUrl(WS_ENDPOINTS.LLM_STREAMING, {}, true))
         : "",
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [customUrl, authToken, isAuthenticated],
+    [customUrl, authToken, isAuthenticated, hasPermission],
   );
 
   // State

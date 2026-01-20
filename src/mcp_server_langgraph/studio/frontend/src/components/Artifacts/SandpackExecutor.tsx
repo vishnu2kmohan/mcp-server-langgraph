@@ -114,23 +114,23 @@ class SandpackErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <div
-          className="bg-error-50 dark:bg-error-900/20 rounded-lg border border-error-200 dark:border-error-800 p-4"
+          className="bg-error-1 dark:bg-error-12/20 rounded-lg border border-error-4 dark:border-error-11 p-4"
           data-testid="sandpack-error-fallback"
         >
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-error-9 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-error-800 dark:text-error-200">
+              <h3 className="text-sm font-medium text-error-11 dark:text-error-4">
                 Code execution failed
               </h3>
-              <p className="mt-1 text-sm text-error-600 dark:text-error-300">
+              <p className="mt-1 text-sm text-error-10 dark:text-error-9">
                 {this.state.error?.message || "An unexpected error occurred"}
               </p>
               <div className="mt-3 flex gap-2">
                 <Button
                   variant="danger"
                   size="sm"
-                  className="flex .5 px-3 py-1 text-sm bg-error-100 hover:bg-error-200 dark:bg-error-800 dark:hover:bg-error-700 text-error-800 dark:text-error-200 rounded"
+                  className="flex .5 px-3 py-1 text-sm bg-error-3 hover:bg-error-4 dark:bg-error-11 dark:hover:bg-error-11 text-error-11 dark:text-error-4 rounded"
                   onClick={this.handleReset}
                 >
                   <RefreshCw size={14} />
@@ -139,10 +139,10 @@ class SandpackErrorBoundary extends Component<
               </div>
               {/* Show original code for reference */}
               <details className="mt-3">
-                <summary className="text-xs text-error-500 dark:text-error-400 cursor-pointer">
+                <summary className="text-xs text-error-9 dark:text-error-7 cursor-pointer">
                   View code ({this.props.language})
                 </summary>
-                <pre className="mt-2 p-2 bg-neutral-900 rounded text-xs font-mono text-neutral-100 overflow-x-auto max-h-32">
+                <pre className="mt-2 p-2 bg-neutral-2 rounded text-xs font-mono text-neutral-9 overflow-x-auto max-h-32">
                   {this.props.code}
                 </pre>
               </details>
@@ -331,19 +331,19 @@ root.render(
   // If not auto-run and hasn't been run yet, show placeholder
   if (!hasRun && showRunButton) {
     return (
-      <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700">
+      <div className="bg-neutral-1 rounded-lg overflow-hidden border border-neutral-5">
         {/* Header */}
-        <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+        <div className="px-4 py-2 bg-neutral-2 border-b border-neutral-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {title && (
-              <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+              <span className="text-sm font-medium text-neutral-11">
                 {title}
               </span>
             )}
-            <span className="text-xs font-mono bg-neutral-200 dark:bg-neutral-700 px-2 py-0.5 rounded text-neutral-600 dark:text-neutral-400">
+            <span className="text-xs font-mono bg-neutral-3 px-2 py-0.5 rounded text-neutral-11">
               {language}
             </span>
-            <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+            <span className="flex items-center gap-1 text-xs text-neutral-10">
               <Terminal size={14} />
               Sandpack
             </span>
@@ -351,7 +351,7 @@ root.render(
           <Button
             variant="success"
             size="sm"
-            className="flex .5 px-3 py-1 text-sm bg-success-600 hover:bg-success-700 text-white rounded"
+            className="flex .5 px-3 py-1 text-sm bg-success-10 hover:bg-success-11 text-neutral-12 rounded"
             onClick={handleRun}
           >
             <Play size={14} />
@@ -359,8 +359,8 @@ root.render(
           </Button>
         </div>
         {/* Code preview */}
-        <div className="p-4 bg-neutral-900 overflow-x-auto max-h-64">
-          <pre className="text-sm font-mono text-neutral-100 whitespace-pre-wrap">
+        <div className="p-4 bg-neutral-2 overflow-x-auto max-h-64">
+          <pre className="text-sm font-mono text-neutral-9 whitespace-pre-wrap">
             {code}
           </pre>
         </div>
@@ -370,21 +370,21 @@ root.render(
 
   return (
     <div
-      className="rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700"
+      className="rounded-lg overflow-hidden border border-neutral-5"
       data-testid="sandpack-executor"
     >
       {/* Header */}
-      <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+      <div className="px-4 py-2 bg-neutral-2 border-b border-neutral-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {title && (
-            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            <span className="text-sm font-medium text-neutral-11">
               {title}
             </span>
           )}
-          <span className="text-xs font-mono bg-neutral-200 dark:bg-neutral-700 px-2 py-0.5 rounded text-neutral-600 dark:text-neutral-400">
+          <span className="text-xs font-mono bg-neutral-3 px-2 py-0.5 rounded text-neutral-11">
             {language}
           </span>
-          <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+          <span className="flex items-center gap-1 text-xs text-neutral-10">
             <Terminal size={14} />
             Sandpack
           </span>
@@ -394,7 +394,7 @@ root.render(
             <Button
               variant="danger"
               size="sm"
-              className="flex .5 px-3 py-1 text-sm bg-error-600 hover:bg-error-700 text-white rounded"
+              className="flex .5 px-3 py-1 text-sm bg-error-10 hover:bg-error-11 text-neutral-12 rounded"
               onClick={handleStop}
             >
               <Square size={14} />
@@ -405,7 +405,7 @@ root.render(
               <Button
                 variant="success"
                 size="sm"
-                className="flex .5 px-3 py-1 text-sm bg-success-600 hover:bg-success-700 text-white rounded"
+                className="flex .5 px-3 py-1 text-sm bg-success-10 hover:bg-success-11 text-neutral-12 rounded"
                 onClick={handleRun}
               >
                 <Play size={14} />
@@ -442,10 +442,10 @@ root.render(
                 showLineNumbers
                 showTabs
                 readOnly={readOnly}
-                style={{ height: "300px" }}
+                className="h-[300px]"
               />
             )}
-            {isRunning && <SandpackPreview style={{ height: "300px" }} />}
+            {isRunning && <SandpackPreview className="h-[300px]" />}
           </SandpackLayout>
         </SandpackProvider>
       </SandpackErrorBoundary>

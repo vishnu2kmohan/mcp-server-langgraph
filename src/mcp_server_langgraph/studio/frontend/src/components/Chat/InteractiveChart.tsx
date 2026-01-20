@@ -124,8 +124,8 @@ export function InteractiveChart({
   );
 
   const containerClasses = isFullscreen
-    ? "fixed inset-0 z-50 bg-neutral-900 p-4"
-    : `my-4 p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 ${className}`;
+    ? "fixed inset-0 z-modal bg-neutral-2 p-4"
+    : `my-4 p-4 bg-neutral-1 rounded-lg border border-neutral-5 ${className}`;
 
   return (
     <div
@@ -139,16 +139,18 @@ export function InteractiveChart({
         {/* Title */}
         <div className="flex-1">
           {chartData.title && (
-            <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            <h4 className="text-sm font-medium text-neutral-11">
               {chartData.title}
             </h4>
           )}
         </div>
 
         {/* Chart type toggles */}
-        <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-0.5">
+        <div className="flex items-center gap-1 bg-neutral-2 rounded-lg p-0.5">
           <Button
-            className={`p-1.5 rounded ${chartType === "line" ? "bg-primary-100 dark:bg-primary-900" : ""}`}
+            variant="ghost"
+            size="icon"
+            className={chartType === "line" ? "bg-primary-3 dark:bg-primary-12" : ""}
             type="button"
             onClick={() => setChartType("line")}
             aria-label="Line chart"
@@ -157,7 +159,9 @@ export function InteractiveChart({
             <TrendingUp size={14} />
           </Button>
           <Button
-            className={`p-1.5 rounded ${chartType === "bar" ? "bg-primary-100 dark:bg-primary-900" : ""}`}
+            variant="ghost"
+            size="icon"
+            className={chartType === "bar" ? "bg-primary-3 dark:bg-primary-12" : ""}
             type="button"
             onClick={() => setChartType("bar")}
             aria-label="Bar chart"
@@ -166,7 +170,9 @@ export function InteractiveChart({
             <BarChart2 size={14} />
           </Button>
           <Button
-            className={`p-1.5 rounded ${chartType === "pie" ? "bg-primary-100 dark:bg-primary-900" : ""}`}
+            variant="ghost"
+            size="icon"
+            className={chartType === "pie" ? "bg-primary-3 dark:bg-primary-12" : ""}
             type="button"
             onClick={() => setChartType("pie")}
             aria-label="Pie chart"
@@ -179,7 +185,8 @@ export function InteractiveChart({
         {/* Action buttons */}
         <div className="flex items-center gap-1">
           <Button
-            className="p-1.5 rounded"
+            variant="ghost"
+            size="icon"
             type="button"
             onClick={handleToggleDataTable}
             aria-label="Toggle data table"
@@ -187,21 +194,21 @@ export function InteractiveChart({
             <Table size={14} />
           </Button>
           <Button
-            variant="secondary"
-            className="p-1.5 rounded text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+            variant="ghost"
+            size="icon"
             type="button"
             onClick={handleCopy}
             aria-label="Copy data"
           >
             {copied ? (
-              <Check size={14} className="text-success-500" />
+              <Check size={14} className="text-success-9" />
             ) : (
               <Copy size={14} />
             )}
           </Button>
           <Button
-            variant="secondary"
-            className="p-1.5 rounded text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+            variant="ghost"
+            size="icon"
             type="button"
             onClick={handleToggleFullscreen}
             aria-label="Toggle fullscreen"
@@ -224,9 +231,9 @@ export function InteractiveChart({
         <ResponsiveContainer width="100%" height="100%">
           {chartType === "line" ? (
             <LineChart data={chartData.data} aria-hidden="true">
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey={xKey} stroke="#9ca3af" fontSize={12} />
-              <YAxis stroke="#9ca3af" fontSize={12} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--neutral-7)" />
+              <XAxis dataKey={xKey} stroke="var(--neutral-8)" fontSize={12} />
+              <YAxis stroke="var(--neutral-8)" fontSize={12} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "#1f2937",
@@ -245,9 +252,9 @@ export function InteractiveChart({
             </LineChart>
           ) : chartType === "bar" ? (
             <BarChart data={chartData.data} aria-hidden="true">
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey={xKey} stroke="#9ca3af" fontSize={12} />
-              <YAxis stroke="#9ca3af" fontSize={12} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--neutral-7)" />
+              <XAxis dataKey={xKey} stroke="var(--neutral-8)" fontSize={12} />
+              <YAxis stroke="var(--neutral-8)" fontSize={12} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "#1f2937",
@@ -299,11 +306,11 @@ export function InteractiveChart({
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-sm" role="table">
             <thead>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                <th className="px-4 py-2 text-left font-medium text-neutral-700 dark:text-neutral-300">
+              <tr className="border-b border-neutral-5">
+                <th className="px-4 py-2 text-left font-medium text-neutral-11">
                   {xKey}
                 </th>
-                <th className="px-4 py-2 text-right font-medium text-neutral-700 dark:text-neutral-300">
+                <th className="px-4 py-2 text-right font-medium text-neutral-11">
                   {yKey}
                 </th>
               </tr>
@@ -312,12 +319,12 @@ export function InteractiveChart({
               {chartData.data.map((row, index) => (
                 <tr
                   key={index}
-                  className="border-b border-neutral-100 dark:border-neutral-800"
+                  className="border-b border-neutral-5"
                 >
-                  <td className="px-4 py-2 text-neutral-600 dark:text-neutral-400">
+                  <td className="px-4 py-2 text-neutral-11">
                     {String(row[xKey])}
                   </td>
-                  <td className="px-4 py-2 text-right text-neutral-600 dark:text-neutral-400">
+                  <td className="px-4 py-2 text-right text-neutral-11">
                     {String(row[yKey])}
                   </td>
                 </tr>

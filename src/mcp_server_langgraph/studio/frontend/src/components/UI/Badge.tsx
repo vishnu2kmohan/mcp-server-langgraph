@@ -21,25 +21,24 @@ export const badgeVariants = cva(
     variants: {
       variant: {
         default: [
-          "bg-neutral-100 dark:bg-neutral-800 text-neutral-800",
-          "dark:text-neutral-200",
+          "bg-neutral-2 text-neutral-12",
         ],
         primary: [
-          "bg-brand-primary text-white",
-          "dark:bg-primary-600 dark:text-white",
+          "bg-brand-primary text-neutral-12",
+          "dark:bg-primary-10",
         ],
         success: [
-          "bg-success-500 text-white",
-          "dark:bg-success-600 dark:text-white",
+          "bg-success-9 text-neutral-12",
+          "dark:bg-success-10",
         ],
         warning: [
-          "bg-warning-500 text-white",
-          "dark:bg-warning-600 dark:text-white",
+          "bg-warning-9 text-neutral-12",
+          "dark:bg-warning-9",
         ],
-        error: ["bg-error-500 text-white", "dark:bg-error-600 dark:text-white"],
+        error: ["bg-error-9 text-neutral-12", "dark:bg-error-10"],
         outline: [
-          "bg-transparent border border-neutral-300 dark:border-neutral-600",
-          "text-neutral-700 dark:text-neutral-300",
+          "bg-transparent border border-neutral-5",
+          "text-neutral-11",
         ],
       },
       size: {

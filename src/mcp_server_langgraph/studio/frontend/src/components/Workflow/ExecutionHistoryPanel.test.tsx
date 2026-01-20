@@ -96,7 +96,7 @@ describe("ExecutionHistoryPanel", () => {
 
       const completedExec = screen.getByTestId("execution-exec-1");
       expect(
-        completedExec.querySelector(".bg-success-500"),
+        completedExec.querySelector(".bg-success-9"),
       ).toBeInTheDocument();
     });
 
@@ -104,14 +104,14 @@ describe("ExecutionHistoryPanel", () => {
       render(<ExecutionHistoryPanel {...defaultProps} />);
 
       const runningExec = screen.getByTestId("execution-exec-2");
-      expect(runningExec.querySelector(".bg-primary-500")).toBeInTheDocument();
+      expect(runningExec.querySelector(".bg-primary-9")).toBeInTheDocument();
     });
 
     it("should show red indicator for failed status", () => {
       render(<ExecutionHistoryPanel {...defaultProps} />);
 
       const failedExec = screen.getByTestId("execution-exec-3");
-      expect(failedExec.querySelector(".bg-error-500")).toBeInTheDocument();
+      expect(failedExec.querySelector(".bg-error-9")).toBeInTheDocument();
     });
 
     it("should show spinning indicator for running executions", () => {

@@ -89,6 +89,7 @@ export const createMockConnection = (
   transport: "streamable_http" as TransportProtocol,
   auth_type: "api_key" as AuthType,
   status: "connected" as ConnectionStatus,
+  scope: "user" as const, // ADR-0102 Phase 6
   server_name: "Example MCP Server",
   tool_count: 10,
   resource_count: 5,
@@ -244,6 +245,9 @@ export const mockFeatureFlags: FeatureFlags = {
   // Skills Marketplace (ADR-0072)
   skills_system: true,
   skills_marketplace: true,
+
+  // Markdown References ([[type:qualifier:id]] syntax)
+  markdown_references: true,
 };
 
 // =============================================================================
@@ -264,13 +268,18 @@ export const handlers = [
   }),
 
   // Config: Server Defaults (12-Factor App - frontend hydration)
+  // NOTE: These values MUST match .env.test for test environment consistency:
+  // - MODEL_NAME=vertex_ai/gemini-3-flash-preview -> model_name: gemini-3-flash-preview
+  // - LLM_PROVIDER=vertex_ai -> model_provider: google (Vertex AI is Google's platform)
+  // - FF_MAX_THINKING_BUDGET=medium -> default_reasoning_effort: medium
   http.get("/api/v1/config/defaults", async () => {
     await delay(50);
     return HttpResponse.json({
-      model_name: "claude-3-5-sonnet",
-      model_provider: "anthropic",
+      model_name: "gemini-3-flash-preview",
+      model_provider: "google",
       max_tokens: 8192,
       temperature: 0.7,
+      default_reasoning_effort: "medium",
     });
   }),
 
@@ -327,14 +336,16 @@ export const handlers = [
         status: "current",
       },
       // Preview models (not yet GA)
+      // NOTE: gemini-3-flash-preview is the default model per .env.test MODEL_NAME
       {
-        id: "gemini-3-flash",
-        name: "Gemini 3 Flash",
+        id: "gemini-3-flash-preview",
+        name: "Gemini 3 Flash Preview",
         provider: "google",
-        supports_thinking: false,
+        supports_thinking: true,
         supports_vision: true,
         supports_tools: true,
         status: "preview",
+        is_default: true,
       },
       // Legacy models (still supported but superseded)
       {
@@ -367,6 +378,39 @@ export const handlers = [
       username: "test-user",
       email: "test@example.com",
       roles: ["user", "developer"],
+    });
+  }),
+
+  // Current user info (used by authSlice.initializeAuth)
+  // This endpoint returns the full user object including websocket_permissions
+  http.get("/api/v1/me", async () => {
+    await delay(50);
+    return HttpResponse.json({
+      user_id: "user-test-123",
+      username: "testuser",
+      email: "test@example.com",
+      first_name: "Test",
+      last_name: "User",
+      display_name: "Test User",
+      roles: ["user"],
+      persona: "user",
+      websocket_permissions: {
+        alerts: true,
+        devtools: true,
+        notifications: true,
+        audit: true,
+        mcp_tasks: true,
+        mcp_aggregated: true,
+        connections_health: true,
+        connections_realtime: true,
+        heart_metrics: true,
+        traces: true,
+        cost_tracking: true,
+        budget_alerts: true,
+        agent_requests: true,
+        ai_suggestions: true,
+        orchestrator_status: true,
+      },
     });
   }),
 
@@ -1027,6 +1071,24 @@ export const handlers = [
 
   // Feedback Handlers (AI Quality Metrics)
   ...feedbackHandlers,
+
+  // ==========================================================================
+  // Knowledge Base Status (ADR-0094: KB Focus Mode)
+  // Values aligned with .env.test configuration
+  // ==========================================================================
+  http.get("/api/v1/kb/status", async () => {
+    await delay(50);
+    return HttpResponse.json({
+      status: "ready",
+      qdrant_connected: true,
+      collection_name: "mcp_context",
+      vectors_count: 1500,
+      embedding_provider: "google_vertex",
+      embedding_model: "text-embedding-005",
+      embedding_dimensions: 768,
+      last_sync_at: new Date().toISOString(),
+    });
+  }),
 
   // ==========================================================================
   // WebSocket Handlers

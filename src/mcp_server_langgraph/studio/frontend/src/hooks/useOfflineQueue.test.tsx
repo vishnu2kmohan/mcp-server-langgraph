@@ -168,12 +168,15 @@ describe("useOfflineQueue", () => {
         syncResult = await result.current.sync();
       });
 
-      expect(syncResult).toEqual({
-        success: true,
-        synced: 0,
-        failed: 0,
-        conflicts: [],
-      });
+      expect(syncResult).toEqual(
+        expect.objectContaining({
+          success: true,
+          synced: 0,
+          failed: 0,
+          conflicts: [],
+        }),
+      );
+      expect(syncResult?.timestamp).toBeInstanceOf(Date);
     });
 
     it("should set isSyncing during sync", async () => {
@@ -281,12 +284,15 @@ describe("useOfflineQueue", () => {
         syncResult = await result.current.sync();
       });
 
-      expect(syncResult).toEqual({
-        success: true,
-        synced: 1,
-        failed: 0,
-        conflicts: [],
-      });
+      expect(syncResult).toEqual(
+        expect.objectContaining({
+          success: true,
+          synced: 1,
+          failed: 0,
+          conflicts: [],
+        }),
+      );
+      expect(syncResult?.timestamp).toBeInstanceOf(Date);
       expect(result.current.pendingCount).toBe(0);
     });
 
@@ -344,12 +350,15 @@ describe("useOfflineQueue", () => {
         syncResult = await result.current.sync();
       });
 
-      expect(syncResult).toEqual({
-        success: false,
-        synced: 0,
-        failed: 1,
-        conflicts: [],
-      });
+      expect(syncResult).toEqual(
+        expect.objectContaining({
+          success: false,
+          synced: 0,
+          failed: 1,
+          conflicts: [],
+        }),
+      );
+      expect(syncResult?.timestamp).toBeInstanceOf(Date);
     });
 
     it("should handle fetch throwing exception", async () => {
@@ -520,6 +529,100 @@ describe("useOfflineQueue", () => {
         sharedField: "local", // Local wins
         _merged: true,
       });
+    });
+  });
+
+  describe("resolveAllConflicts", () => {
+    it("should resolve all conflicts using their suggested resolutions", async () => {
+      // Create multiple conflicts with different suggested resolutions
+      let callCount = 0;
+      mockAuthenticatedFetch.mockImplementation(() => {
+        callCount++;
+        return Promise.resolve({
+          ok: false,
+          status: 409,
+          json: () =>
+            Promise.resolve({ serverData: `conflict-${callCount}` }),
+        });
+      });
+
+      const { result } = renderHook(() => useOfflineQueue());
+
+      act(() => {
+        result.current.enqueue({
+          type: "update",
+          endpoint: "/api/v1/test/1",
+          payload: { localData: "value1" },
+          priority: 1,
+        });
+        result.current.enqueue({
+          type: "update",
+          endpoint: "/api/v1/test/2",
+          payload: { localData: "value2" },
+          priority: 2,
+        });
+      });
+
+      await act(async () => {
+        await result.current.sync();
+      });
+
+      expect(result.current.conflicts).toHaveLength(2);
+
+      act(() => {
+        result.current.resolveAllConflicts();
+      });
+
+      // All conflicts should be resolved
+      expect(result.current.conflicts).toHaveLength(0);
+    });
+
+    it("should do nothing when no conflicts exist", () => {
+      const { result } = renderHook(() => useOfflineQueue());
+
+      expect(result.current.conflicts).toHaveLength(0);
+
+      // Should not throw
+      act(() => {
+        result.current.resolveAllConflicts();
+      });
+
+      expect(result.current.conflicts).toHaveLength(0);
+    });
+
+    it("should apply keep-server resolution for all conflicts by default", async () => {
+      mockAuthenticatedFetch.mockResolvedValue({
+        ok: false,
+        status: 409,
+        json: () => Promise.resolve({ serverData: "conflict" }),
+      });
+
+      const { result } = renderHook(() => useOfflineQueue());
+
+      act(() => {
+        result.current.enqueue({
+          type: "update",
+          endpoint: "/api/v1/test",
+          payload: { localData: "value" },
+          priority: 1,
+        });
+      });
+
+      await act(async () => {
+        await result.current.sync();
+      });
+
+      expect(result.current.conflicts).toHaveLength(1);
+      // Default suggestedResolution is keep-server
+      expect(result.current.conflicts[0].suggestedResolution).toBe("keep-server");
+
+      act(() => {
+        result.current.resolveAllConflicts();
+      });
+
+      // Action should be removed (keep-server discards local)
+      expect(result.current.pendingCount).toBe(0);
+      expect(result.current.conflicts).toHaveLength(0);
     });
   });
 });

@@ -8,8 +8,13 @@ import {
 } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { Toaster } from "sonner";
-import { OfflineBanner } from "./components/UI";
+import {
+  OfflineBanner,
+  ConflictResolutionDialog,
+} from "./components/OfflineBanner";
 import { UpdatePrompt } from "./components/PWA";
+import { useOffline } from "./hooks/useOffline";
+import { useOfflineQueue } from "./hooks/useOfflineQueue";
 import type {
   WorkflowTemplate,
   OnboardingResult,
@@ -182,6 +187,18 @@ export function App() {
     captureUnhandledRejections: true,
     enabled: true,
   });
+
+  // Offline resilience hooks (Sprint 3 - Phase 2.3)
+  const isOffline = useOffline();
+  const {
+    pendingCount,
+    isSyncing,
+    sync,
+    lastSyncResult,
+    conflicts,
+    resolveConflict,
+    resolveAllConflicts,
+  } = useOfflineQueue();
 
   // UX Enhancement Feature Flags
   const enableOnboardingWizard = isEnabled("onboarding_wizard");
@@ -451,8 +468,20 @@ export function App() {
   }, [userData]);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-900">
-      <OfflineBanner />
+    <div className="min-h-screen bg-neutral-1">
+      <OfflineBanner
+        isOffline={isOffline}
+        pendingCount={pendingCount}
+        onSync={sync}
+        isSyncing={isSyncing}
+        lastSyncTime={lastSyncResult?.timestamp}
+      />
+      {/* Conflict resolution dialog for offline sync conflicts */}
+      <ConflictResolutionDialog
+        conflicts={conflicts}
+        onResolve={resolveConflict}
+        onResolveAll={resolveAllConflicts}
+      />
       {/* All routes render via router - StudioShellLayout for /studio/* */}
       <Outlet />
       <Toaster
@@ -495,7 +524,7 @@ export function App() {
       )}
       {/* SUS Survey modal (Priority 1.4, lazy-loaded, feature-flagged) */}
       {enableSusSurvey && showSUSSurvey && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-neutral-a6">
           <Suspense fallback={null}>
             <SUSSurvey
               onSubmit={handleSUSSubmit}

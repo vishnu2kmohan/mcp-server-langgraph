@@ -88,7 +88,7 @@ describe("LLMThinkingTrace", () => {
       render(<LLMThinkingTrace {...defaultProps} isExpanded={true} />);
       const container = screen.getByTestId("llm-thinking-trace");
       // Should have a distinct background color (purple/violet theme for thinking)
-      expect(container).toHaveClass("bg-violet-50");
+      expect(container).toHaveClass("bg-insight-2");
     });
   });
 

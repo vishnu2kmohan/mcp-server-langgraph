@@ -154,7 +154,7 @@ describe("TraceCanvas", () => {
 
       const { container } = renderWithProviders(<TraceCanvas />);
 
-      const greenDot = container.querySelector(".bg-success-500");
+      const greenDot = container.querySelector(".bg-success-9");
       expect(greenDot).toBeInTheDocument();
     });
 
@@ -170,7 +170,7 @@ describe("TraceCanvas", () => {
 
       const { container } = renderWithProviders(<TraceCanvas />);
 
-      const grayDot = container.querySelector(".bg-neutral-400");
+      const grayDot = container.querySelector(".bg-neutral-4");
       expect(grayDot).toBeInTheDocument();
     });
   });

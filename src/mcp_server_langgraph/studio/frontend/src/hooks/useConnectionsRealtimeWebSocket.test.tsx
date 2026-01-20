@@ -17,6 +17,28 @@ interface TestWsHandlers {
 // Module-scoped handler storage for tests
 let testWsHandlers: TestWsHandlers | null = null;
 
+// Mock Redux hooks to avoid needing Provider wrapper
+const mockDispatch = vi.fn();
+vi.mock("../store/hooks", () => ({
+  useAppDispatch: () => mockDispatch,
+  // Return values for selectors: isAuthenticated=true, wsPermissions={connections_realtime: true}
+  useAppSelector: vi.fn((selector) => {
+    if (selector.name?.includes("Authenticated")) return true;
+    if (selector.name?.includes("WebSocketPermissions"))
+      return { connections_realtime: true };
+    return true;
+  }),
+}));
+
+// Mock getAuthToken to return test token
+vi.mock("../utils/storage", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../utils/storage")>();
+  return {
+    ...actual,
+    getAuthToken: vi.fn(() => "mock-test-token"),
+  };
+});
+
 // Mock useRealtimeSync
 const mockSend = vi.fn();
 const mockDisconnect = vi.fn();
@@ -31,6 +53,7 @@ vi.mock("./useRealtimeSync", () => ({
       send: mockSend,
       disconnect: mockDisconnect,
       reconnect: mockReconnect,
+      metrics: { totalAttempts: 0 },
     };
   }),
 }));

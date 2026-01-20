@@ -102,7 +102,7 @@ describe("StylePresets", () => {
       render(<StylePresets {...defaultProps} activePreset="balanced" />);
 
       const balancedButton = screen.getByTestId("preset-balanced");
-      expect(balancedButton).toHaveClass("bg-primary-600");
+      expect(balancedButton).toHaveClass("bg-brand-primary");
     });
 
     it("should not highlight inactive presets", () => {
@@ -111,8 +111,8 @@ describe("StylePresets", () => {
       const creativeButton = screen.getByTestId("preset-creative");
       const preciseButton = screen.getByTestId("preset-precise");
 
-      expect(creativeButton).not.toHaveClass("bg-primary-600");
-      expect(preciseButton).not.toHaveClass("bg-primary-600");
+      expect(creativeButton).not.toHaveClass("bg-brand-primary");
+      expect(preciseButton).not.toHaveClass("bg-brand-primary");
     });
 
     it("should have no active preset by default", () => {
@@ -120,7 +120,7 @@ describe("StylePresets", () => {
 
       const buttons = screen.getAllByRole("button");
       buttons.forEach((button) => {
-        expect(button).not.toHaveClass("bg-primary-600");
+        expect(button).not.toHaveClass("bg-brand-primary");
       });
     });
   });

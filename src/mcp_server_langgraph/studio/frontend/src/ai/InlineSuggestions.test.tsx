@@ -195,7 +195,7 @@ describe("InlineSuggestions", () => {
       );
 
       const confidenceBadge = screen.getByText(/95%/).closest("span");
-      expect(confidenceBadge).toHaveClass("text-success-600");
+      expect(confidenceBadge).toHaveClass("text-success-10");
     });
 
     it("applies medium confidence styling for >= 0.7 and < 0.9", () => {
@@ -208,7 +208,43 @@ describe("InlineSuggestions", () => {
       );
 
       const confidenceBadge = screen.getByText(/72%/).closest("span");
-      expect(confidenceBadge).toHaveClass("text-warning-600");
+      expect(confidenceBadge).toHaveClass("text-warning-9");
+    });
+  });
+
+  describe("Accessibility - Touch Targets (WCAG 2.5.8)", () => {
+    it("accept button meets minimum 24x24px touch target", () => {
+      render(
+        <InlineSuggestions
+          suggestions={mockSuggestions}
+          onAccept={mockOnAccept}
+          onDismiss={mockOnDismiss}
+        />,
+      );
+
+      const acceptButtons = screen.getAllByLabelText(/accept/i);
+      // All accept buttons should meet 24px minimum
+      acceptButtons.forEach((button) => {
+        expect(button.className).toMatch(/min-h-6|h-6/);
+        expect(button.className).toMatch(/min-w-6|w-6/);
+      });
+    });
+
+    it("dismiss button meets minimum 24x24px touch target", () => {
+      render(
+        <InlineSuggestions
+          suggestions={mockSuggestions}
+          onAccept={mockOnAccept}
+          onDismiss={mockOnDismiss}
+        />,
+      );
+
+      const dismissButtons = screen.getAllByLabelText(/dismiss/i);
+      // All dismiss buttons should meet 24px minimum
+      dismissButtons.forEach((button) => {
+        expect(button.className).toMatch(/min-h-6|h-6/);
+        expect(button.className).toMatch(/min-w-6|w-6/);
+      });
     });
   });
 });

@@ -131,15 +131,15 @@ export const Sizes: Story = {
       <div className="space-y-4">
         <div className="flex items-center gap-4">
           <Checkbox checked={sm} onChange={setSm} size="sm" />
-          <span className="text-sm text-neutral-600">Small</span>
+          <span className="text-sm text-neutral-11">Small</span>
         </div>
         <div className="flex items-center gap-4">
           <Checkbox checked={md} onChange={setMd} size="md" />
-          <span className="text-sm text-neutral-600">Medium (default)</span>
+          <span className="text-sm text-neutral-11">Medium (default)</span>
         </div>
         <div className="flex items-center gap-4">
           <Checkbox checked={lg} onChange={setLg} size="lg" />
-          <span className="text-sm text-neutral-600">Large</span>
+          <span className="text-sm text-neutral-11">Large</span>
         </div>
       </div>
     );
@@ -156,8 +156,8 @@ export const SettingsExample: Story = {
     const [analytics, setAnalytics] = useState(true);
 
     return (
-      <div className="max-w-md space-y-4 p-4 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700">
-        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+      <div className="max-w-md space-y-4 p-4 bg-neutral-1 rounded-lg border border-neutral-5">
+        <h3 className="text-lg font-semibold text-neutral-12">
           Email Preferences
         </h3>
         <div className="space-y-3">

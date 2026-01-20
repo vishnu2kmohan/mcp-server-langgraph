@@ -101,13 +101,13 @@ export function LLMThinkingTrace({
   return (
     <div
       data-testid="llm-thinking-trace"
-      className={`rounded-lg border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 overflow-hidden ${className}`}
+      className={`rounded-lg border border-insight-4 dark:border-insight-12 bg-insight-2 dark:bg-insight-3 overflow-hidden ${className}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 bg-violet-100 dark:bg-violet-900/40">
+      <div className="flex items-center justify-between px-3 py-2 bg-insight-3 dark:bg-insight-4">
         <div className="flex items-center gap-2">
-          <Brain size={16} className="text-violet-600 dark:text-violet-400" />
-          <span className="text-sm font-medium text-violet-700 dark:text-violet-300">
+          <Brain size={16} className="text-insight-10 dark:text-insight-11" />
+          <span className="text-sm font-medium text-insight-11 dark:text-insight-11">
             Thinking
           </span>
 
@@ -115,7 +115,7 @@ export function LLMThinkingTrace({
           {isThinkingModel && (
             <span
               data-testid="thinking-model-badge"
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-violet-200 dark:bg-violet-800 text-violet-700 dark:text-violet-300 rounded"
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-insight-4 dark:bg-insight-12 text-insight-11 dark:text-insight-11 rounded"
             >
               <Sparkles size={10} />
               Extended
@@ -124,14 +124,14 @@ export function LLMThinkingTrace({
 
           {/* Model Name */}
           {modelName && (
-            <span className="text-xs text-violet-500 dark:text-violet-400">
+            <span className="text-xs text-insight-9 dark:text-insight-11">
               {modelName}
             </span>
           )}
 
           {/* Token Count */}
           {thinkingTokens !== undefined && (
-            <span className="text-xs text-violet-500 dark:text-violet-400">
+            <span className="text-xs text-insight-9 dark:text-insight-11">
               {formatTokenCount(thinkingTokens)} tokens
             </span>
           )}
@@ -140,9 +140,9 @@ export function LLMThinkingTrace({
           {isStreaming && (
             <span
               data-testid="streaming-indicator"
-              className="inline-flex items-center gap-1 text-xs text-violet-600 dark:text-violet-400 animate-pulse"
+              className="inline-flex items-center gap-1 text-xs text-insight-10 dark:text-insight-11 animate-pulse"
             >
-              <span className="w-1.5 h-1.5 bg-violet-500 rounded-full" />
+              <span className="w-1.5 h-1.5 bg-insight-9 rounded-full" />
               Thinking...
             </span>
           )}
@@ -152,12 +152,14 @@ export function LLMThinkingTrace({
           {/* Copy Button (only when expanded) */}
           {isExpanded && (
             <Button
-              className="p-1 rounded hover:bg-violet-200 dark:hover:bg-violet-800 text-violet-600 dark:text-violet-400"
+              variant="ghost"
+              size="icon"
+              className="hover:bg-insight-4 dark:hover:bg-insight-12 text-insight-10 dark:text-insight-11"
               onClick={handleCopy}
               aria-label="Copy thinking content"
             >
               {copied ? (
-                <span className="flex items-center gap-1 text-xs text-success-600">
+                <span className="flex items-center gap-1 text-xs text-success-10">
                   <Check size={14} />
                   Copied!
                 </span>
@@ -169,7 +171,9 @@ export function LLMThinkingTrace({
 
           {/* Toggle Button */}
           <Button
-            className="p-1 rounded hover:bg-violet-200 dark:hover:bg-violet-800 text-violet-600 dark:text-violet-400"
+            variant="ghost"
+            size="icon"
+            className="hover:bg-insight-4 dark:hover:bg-insight-12 text-insight-10 dark:text-insight-11"
             onClick={onToggle}
             aria-label="Toggle thinking trace"
             aria-expanded={isExpanded}
@@ -187,7 +191,7 @@ export function LLMThinkingTrace({
         <div className="p-3">
           <div
             data-testid="thinking-content"
-            className="text-sm text-violet-800 dark:text-violet-200 whitespace-pre-wrap font-mono leading-relaxed"
+            className="text-sm text-insight-12 dark:text-insight-4 whitespace-pre-wrap font-mono leading-relaxed"
           >
             {displayContent}
           </div>
@@ -195,8 +199,9 @@ export function LLMThinkingTrace({
           {/* Show More/Less for long content */}
           {isLongContent && (
             <Button
+              variant="ghost"
               size="sm"
-              className="mt-2 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-200 underline"
+              className="mt-2 text-xs text-insight-10 dark:text-insight-11 hover:text-insight-12 dark:hover:text-insight-4 underline"
               onClick={() => setShowFullContent(!showFullContent)}
             >
               {showFullContent ? "Show less" : "Show more"}

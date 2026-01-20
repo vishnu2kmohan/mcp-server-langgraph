@@ -112,17 +112,17 @@ function TemplateCard({
       onClick={onClick}
     >
       <div className="flex items-start justify-between mb-2">
-        <h4 className="font-medium text-neutral-900 dark:text-white">
+        <h4 className="font-medium text-neutral-12">
           {template.name}
         </h4>
-        <span className="text-xs px-2 py-1 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
+        <span className="text-xs px-2 py-1 rounded-full bg-neutral-2 text-neutral-11">
           {template.orchestrator}
         </span>
       </div>
-      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3 line-clamp-2">
+      <p className="text-sm text-neutral-11 mb-3 line-clamp-2">
         {template.description}
       </p>
-      <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
+      <div className="flex items-center justify-between text-xs text-neutral-10">
         <span>{template.useCount} uses</span>
         <span>{Math.round(template.successRate * 100)}% success</span>
       </div>
@@ -131,13 +131,13 @@ function TemplateCard({
           {template.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="text-xs px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300"
+              className="text-xs px-1.5 py-0.5 rounded bg-neutral-2 text-neutral-11"
             >
               {tag}
             </span>
           ))}
           {template.tags.length > 3 && (
-            <span className="text-xs text-neutral-400 dark:text-neutral-400">
+            <span className="text-xs text-neutral-9">
               +{template.tags.length - 3}
             </span>
           )}
@@ -150,7 +150,7 @@ function TemplateCard({
 function LoadingIndicator() {
   return (
     <div role="status" className="flex items-center justify-center p-8">
-      <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+      <Loader2 className="w-6 h-6 animate-spin text-primary-9" />
       <span className="sr-only">Loading templates...</span>
     </div>
   );
@@ -159,17 +159,15 @@ function LoadingIndicator() {
 function EmptyState({ onClearFilters }: { onClearFilters: () => void }) {
   return (
     <div className="text-center p-8">
-      <Search className="w-12 h-12 mx-auto text-neutral-300 dark:text-neutral-600 dark:text-neutral-300 mb-4" />
-      <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+      <Search className="w-12 h-12 mx-auto text-neutral-9 mb-4" />
+      <p className="text-neutral-11 mb-4">
         No templates found
       </p>
-      <Button
-        className="text-primary-500 hover:text-primary-600 text-sm"
+      <Button variant="secondary"
+        className="text-primary-9 hover:text-primary-10 text-sm"
         type="button"
         onClick={onClearFilters}
-      >
-        Clear filters
-      </Button>
+      >Clear filters</Button>
     </div>
   );
 }
@@ -183,12 +181,12 @@ function ErrorState({
 }) {
   return (
     <div className="text-center p-8">
-      <AlertCircle className="w-12 h-12 mx-auto text-error-400 mb-4" />
-      <p className="text-error-600 dark:text-error-400 mb-4">{message}</p>
+      <AlertCircle className="w-12 h-12 mx-auto text-error-7 mb-4" />
+      <p className="text-error-10 dark:text-error-7 mb-4">{message}</p>
       {onRetry && (
         <Button
           variant="danger"
-          className="px-4 py-2 bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400 rounded-lg text-sm hover:bg-error-200 dark:hover:bg-error-900/50"
+          className="px-4 py-2 bg-error-3 bg-error-4 text-error-10 dark:text-error-7 rounded-lg text-sm hover:bg-error-4 dark:hover:bg-error-a6"
           type="button"
           onClick={onRetry}
         >
@@ -321,15 +319,15 @@ export function PlanSearch({
   }, []);
 
   return (
-    <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700">
+    <div className="bg-neutral-1 rounded-lg shadow-sm border border-neutral-5">
       {/* Search Header */}
-      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="p-4 border-b border-neutral-5">
         <div className="flex items-center gap-4 mb-4">
           {/* Search Input */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-9" />
             <Input
-              className="pl-10 pr-4 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="pl-10 pr-4 py-2 text-sm text-neutral-12 focus:ring-primary-7 disabled:opacity-50 disabled:cursor-not-allowed"
               type="search"
               role="searchbox"
               aria-label="Search templates"
@@ -342,9 +340,9 @@ export function PlanSearch({
 
           {/* Orchestrator Filter */}
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+            <Filter className="w-4 h-4 text-neutral-9" />
             <Select
-              className="px-3 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 text-sm text-neutral-12 focus:ring-primary-7 disabled:opacity-50 disabled:cursor-not-allowed"
               id="orchestrator-filter"
               aria-label="Orchestrator"
               value={orchestrator}
@@ -361,9 +359,9 @@ export function PlanSearch({
 
           {/* Sort */}
           <div className="flex items-center gap-2">
-            <SortAsc className="w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+            <SortAsc className="w-4 h-4 text-neutral-9" />
             <Select
-              className="px-3 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 text-sm text-neutral-12 focus:ring-primary-7 disabled:opacity-50 disabled:cursor-not-allowed"
               id="sort-by"
               aria-label="Sort by"
               value={sortBy}
@@ -382,7 +380,7 @@ export function PlanSearch({
         {/* Tag Chips */}
         {allTags.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            <Tag className="w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+            <Tag className="w-4 h-4 text-neutral-9" />
             {allTags.map((tag) => (
               <Button
                 size="sm"

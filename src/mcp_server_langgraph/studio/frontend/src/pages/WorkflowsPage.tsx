@@ -5,9 +5,16 @@
  * Integrates Redux workflow slice for state management.
  */
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, lazy, Suspense } from "react";
+import { useReducedMotion } from "motion/react";
+import { PAGE_CLASSES } from "../constants/layout";
 import { useSearchParams, useNavigate } from "react-router";
 import { ReactFlowProvider } from "reactflow";
+import { cn } from "../utils/cn";
+// Direct imports to avoid Rollup circular dependency warnings
+import { Skeleton } from "../components/UI/Skeleton";
+import { Dialog } from "../components/UI/Dialog";
+import { Button } from "../components/UI/Button";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   createWorkflow,
@@ -32,15 +39,50 @@ import {
   selectCanExecute,
 } from "../store/slices/workflowSlice";
 import type { WorkflowNodeType } from "../types/workflow";
-import { WorkflowCanvas } from "../components/Workflow/WorkflowCanvas";
-import { NodePalette, type NodeType } from "../components/Workflow/NodePalette";
-import { NodeInspector } from "../components/Workflow/NodeInspector";
-import { ExecutionPanel } from "../components/Workflow/ExecutionPanel";
-import {
-  ExecutionHistoryPanel,
-  type WorkflowExecution,
-} from "../components/Workflow/ExecutionHistoryPanel";
-import { SuggestionChips } from "../components/Workflow/SuggestionChips";
+import type { NodeType } from "../components/Workflow/NodePalette";
+import type { WorkflowExecution } from "../components/Workflow/ExecutionHistoryPanel";
+
+// Lazy load heavy ReactFlow components for better initial page load
+const WorkflowCanvas = lazy(() =>
+  import("../components/Workflow/WorkflowCanvas").then((m) => ({
+    default: m.WorkflowCanvas,
+  }))
+);
+const NodePalette = lazy(() =>
+  import("../components/Workflow/NodePalette").then((m) => ({
+    default: m.NodePalette,
+  }))
+);
+const NodeInspector = lazy(() =>
+  import("../components/Workflow/NodeInspector").then((m) => ({
+    default: m.NodeInspector,
+  }))
+);
+const ExecutionPanel = lazy(() =>
+  import("../components/Workflow/ExecutionPanel").then((m) => ({
+    default: m.ExecutionPanel,
+  }))
+);
+const ExecutionHistoryPanel = lazy(() =>
+  import("../components/Workflow/ExecutionHistoryPanel").then((m) => ({
+    default: m.ExecutionHistoryPanel,
+  }))
+);
+const SuggestionChips = lazy(() =>
+  import("../components/Workflow/SuggestionChips").then((m) => ({
+    default: m.SuggestionChips,
+  }))
+);
+const WorkflowVersionHistory = lazy(() =>
+  import("../components/Workflow/WorkflowVersionHistory").then((m) => ({
+    default: m.WorkflowVersionHistory,
+  }))
+);
+const ShareWorkflowDialog = lazy(() =>
+  import("../components/Workflow/ShareWorkflowDialog").then((m) => ({
+    default: m.ShareWorkflowDialog,
+  }))
+);
 import { useWorkflowExecution } from "../hooks/useWorkflowExecution";
 import {
   useGetWorkflowSuggestionsMutation,
@@ -63,13 +105,16 @@ import {
   RefreshCw,
   Lightbulb,
   History,
+  GitBranch,
+  Share2,
 } from "lucide-react";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
-import { Button } from "@/components/UI";
-
 export function WorkflowsPage() {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [showExecutionPanel, setShowExecutionPanel] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -78,6 +123,9 @@ export function WorkflowsPage() {
   const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+  // Version history and sharing dialogs (Phase 3 workflow features)
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   // Execution history pagination state
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(
     null,
@@ -357,32 +405,32 @@ export function WorkflowsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      <div className={PAGE_CLASSES.shellLoading}>
+        <Loader2 className={cn("w-8 h-8 text-primary-9", !prefersReducedMotion && "animate-spin")} />
       </div>
     );
   }
 
   return (
     <ReactFlowProvider>
-      <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
+      <div className={PAGE_CLASSES.shell}>
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center justify-between px-4 py-2 bg-neutral-1 border-b border-neutral-5">
           <div className="flex items-center gap-4">
-            <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            <h1 className="text-lg font-semibold text-neutral-12">
               {metadata?.name || "New Workflow"}
-              {isDirty && <span className="text-warning-500 ml-1">*</span>}
+              {isDirty && <span className="text-warning-9 ml-1">*</span>}
             </h1>
 
             {isReadOnly && (
-              <span className="flex items-center gap-1 text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded">
+              <span className="flex items-center gap-1 text-xs px-2 py-1 bg-neutral-2 text-neutral-11 rounded">
                 <Lock size={12} />
                 Read-Only
               </span>
             )}
 
             {!validation.isValid && (
-              <span className="text-xs px-2 py-1 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded">
+              <span className="text-xs px-2 py-1 bg-error-3 text-error-11 dark:text-error-11 rounded">
                 {validation.errors.length} errors
               </span>
             )}
@@ -391,14 +439,15 @@ export function WorkflowsPage() {
             {validationError && (
               <div
                 role="alert"
-                className="flex items-center gap-2 px-3 py-1.5 bg-error-100 dark:bg-error-900/30 border border-error-200 dark:border-error-800 rounded-lg"
+                className="flex items-center gap-2 px-3 py-1.5 bg-error-3 border border-error-4 dark:border-error-11 rounded-lg"
               >
-                <AlertCircle size={14} className="text-error-500" />
-                <span className="text-sm text-error-700 dark:text-error-400">
+                <AlertCircle size={14} className="text-error-9" />
+                <span className="text-sm text-error-11 dark:text-error-11">
                   {validationError}
                 </span>
                 <Button
-                  className="ml-1 p-0.5 text-error-500 hover:text-error-700"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setValidationError(null)}
                   aria-label="Dismiss"
                 >
@@ -411,9 +460,9 @@ export function WorkflowsPage() {
               <span
                 className={`
                   text-xs px-2 py-1 rounded
-                  ${executionState === "running" ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400" : ""}
-                  ${executionState === "completed" ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400" : ""}
-                  ${executionState === "error" ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400" : ""}
+                  ${executionState === "running" ? "bg-primary-3 text-primary-11 dark:text-primary-11" : ""}
+                  ${executionState === "completed" ? "bg-success-3 text-success-11 dark:text-success-11" : ""}
+                  ${executionState === "error" ? "bg-error-3 text-error-11 dark:text-error-11" : ""}
                 `}
               >
                 {executionState}
@@ -427,19 +476,19 @@ export function WorkflowsPage() {
                 title={`Connection: ${connectionStatus}${reconnectAttempts > 0 ? ` (attempt ${reconnectAttempts})` : ""}`}
                 className={`
                   flex items-center gap-1 text-xs px-2 py-1 rounded
-                  ${connectionStatus === "connected" ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400" : ""}
-                  ${connectionStatus === "connecting" ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400" : ""}
-                  ${connectionStatus === "reconnecting" ? "bg-grafana-100 text-grafana-700 dark:bg-grafana-900/30 dark:text-grafana-400" : ""}
-                  ${connectionStatus === "disconnected" || connectionStatus === "error" ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400" : ""}
+                  ${connectionStatus === "connected" ? "bg-success-3 text-success-11 dark:text-success-11" : ""}
+                  ${connectionStatus === "connecting" ? "bg-warning-3 text-warning-11 dark:bg-warning-a4 dark:text-warning-11" : ""}
+                  ${connectionStatus === "reconnecting" ? "bg-grafana-2 text-grafana-11 dark:bg-grafana-12/30 dark:text-grafana-11" : ""}
+                  ${connectionStatus === "disconnected" || connectionStatus === "error" ? "bg-error-3 text-error-11 dark:text-error-11" : ""}
                 `}
               >
                 {connectionStatus === "connected" && <Wifi size={12} />}
                 {connectionStatus === "connecting" && (
-                  <Loader2 size={12} className="animate-spin" />
+                  <Loader2 size={12} className={cn(!prefersReducedMotion && "animate-spin")} />
                 )}
                 {connectionStatus === "reconnecting" && (
                   <>
-                    <RefreshCw size={12} className="animate-spin" />
+                    <RefreshCw size={12} className={cn(!prefersReducedMotion && "animate-spin")} />
                     <span>{reconnectAttempts}</span>
                   </>
                 )}
@@ -455,7 +504,6 @@ export function WorkflowsPage() {
                 <Button
                   variant="primary"
                   size="sm"
-                  className="flex text-xs px-2 py-1 bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 rounded hover:bg-primary-200 dark:hover:bg-primary-900/50"
                   onClick={reconnect}
                 >
                   <RefreshCw size={12} />
@@ -466,7 +514,8 @@ export function WorkflowsPage() {
 
           <div className="flex items-center gap-2">
             <Button
-              className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
+              variant="ghost"
+              size="icon"
               onClick={() => dispatch(undo())}
               disabled={!canUndo || isReadOnly}
               title="Undo (Cmd+Z)"
@@ -474,7 +523,8 @@ export function WorkflowsPage() {
               <Undo size={18} />
             </Button>
             <Button
-              className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
+              variant="ghost"
+              size="icon"
               onClick={() => dispatch(redo())}
               disabled={!canRedo || isReadOnly}
               title="Redo (Cmd+Shift+Z)"
@@ -482,11 +532,10 @@ export function WorkflowsPage() {
               <Redo size={18} />
             </Button>
 
-            <div className="w-px h-6 bg-neutral-300 dark:bg-neutral-600 mx-2" />
+            <div className="w-px h-6 bg-neutral-3 mx-2" />
 
             <Button
               variant="success"
-              className="flex px-3 py-1.5 text-sm bg-success-600 text-white rounded hover:bg-success-700"
               onClick={handleRun}
               disabled={
                 executionState === "running" ||
@@ -496,7 +545,7 @@ export function WorkflowsPage() {
               title="Run Workflow (Cmd+Enter)"
             >
               {executionState === "running" ? (
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={16} className={cn(!prefersReducedMotion && "animate-spin")} />
               ) : (
                 <Play size={16} />
               )}
@@ -504,7 +553,7 @@ export function WorkflowsPage() {
             </Button>
 
             <Button
-              className="flex px-3 py-1.5 text-sm bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400 rounded hover:bg-insight-200"
+              variant="secondary"
               onClick={handleGenerateCode}
               disabled={isGeneratingCode}
             >
@@ -513,7 +562,7 @@ export function WorkflowsPage() {
             </Button>
 
             <Button
-              className="flex px-3 py-1.5 text-sm rounded"
+              variant="ghost"
               onClick={() => {
                 setShowSuggestions(!showSuggestions);
                 if (!showSuggestions && suggestions.length === 0) {
@@ -530,7 +579,7 @@ export function WorkflowsPage() {
             {/* History button - only shown when workflow has ID */}
             {metadata?.id && (
               <Button
-                className="flex px-3 py-1.5 text-sm rounded"
+                variant="ghost"
                 onClick={() => setShowHistoryPanel(!showHistoryPanel)}
                 title="Execution History"
               >
@@ -539,9 +588,34 @@ export function WorkflowsPage() {
               </Button>
             )}
 
+            {/* Version History button - only shown when workflow has ID */}
+            {metadata?.id && (
+              <Button
+                variant="ghost"
+                onClick={() => setShowVersionHistory(true)}
+                title="Version History"
+                data-testid="version-history-button"
+              >
+                <GitBranch size={16} />
+                Versions
+              </Button>
+            )}
+
+            {/* Share button - only shown when workflow has ID */}
+            {metadata?.id && (
+              <Button
+                variant="ghost"
+                onClick={() => setShowShareDialog(true)}
+                title="Share Workflow"
+                data-testid="share-workflow-button"
+              >
+                <Share2 size={16} />
+                Share
+              </Button>
+            )}
+
             <Button
               variant="secondary"
-              className="flex px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded hover:bg-neutral-200 dark:bg-neutral-700"
               onClick={handleExportJSON}
             >
               <Download size={16} />
@@ -550,13 +624,12 @@ export function WorkflowsPage() {
 
             <Button
               variant="primary"
-              className="flex px-3 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
               onClick={handleSave}
               disabled={isSaving || !isDirty || isReadOnly}
               title="Save (Cmd+S)"
             >
               {isSaving ? (
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={16} className={cn(!prefersReducedMotion && "animate-spin")} />
               ) : (
                 <Save size={16} />
               )}
@@ -565,60 +638,114 @@ export function WorkflowsPage() {
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="flex flex-1 overflow-hidden relative">
-          {/* Node Palette - Left Sidebar */}
-          {!isReadOnly && (
-            <NodePalette
-              onAddNode={(type: NodeType) => {
-                // Add node at center of canvas when clicked
-                dispatch(addNode(type as WorkflowNodeType, { x: 250, y: 250 }));
-              }}
-            />
-          )}
-
-          {/* Canvas Area */}
-          <div className="flex-1 relative">
-            <WorkflowCanvas />
-            {/* Node Inspector - Floating Panel */}
-            <NodeInspector />
-            {/* AI Suggestions - Floating Panel */}
-            {showSuggestions && (
-              <div className="absolute bottom-4 right-4 w-80 z-10">
-                <SuggestionChips
-                  suggestions={suggestions}
-                  isLoading={isLoadingSuggestions}
-                  error={suggestionsError}
-                  onApply={handleApplySuggestion}
-                  onDismiss={handleDismissSuggestion}
-                  onRefresh={handleRefreshSuggestions}
-                  maxVisible={5}
-                />
+        {/* Main Content Area - Lazy loaded for better initial page load */}
+        <Suspense
+          fallback={
+            <div className="flex flex-1 overflow-hidden relative">
+              {/* Node Palette skeleton */}
+              {!isReadOnly && (
+                <div className="w-56 border-r border-neutral-5 bg-neutral-1 p-4">
+                  <Skeleton className="h-6 w-32 mb-4" />
+                  <div className="space-y-2">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <Skeleton key={i} className="h-10 w-full" />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Canvas skeleton */}
+              <div className="flex-1 relative bg-neutral-2">
+                <Skeleton className="absolute inset-4" />
               </div>
+            </div>
+          }
+        >
+          <div className="flex flex-1 overflow-hidden relative">
+            {/* Node Palette - Left Sidebar */}
+            {!isReadOnly && (
+              <NodePalette
+                onAddNode={(type: NodeType) => {
+                  // Add node at center of canvas when clicked
+                  dispatch(addNode(type as WorkflowNodeType, { x: 250, y: 250 }));
+                }}
+              />
             )}
-          </div>
-        </div>
 
-        {/* Execution Panel - Bottom */}
+            {/* Canvas Area */}
+            <div className="flex-1 relative">
+              <WorkflowCanvas />
+              {/* Node Inspector - Floating Panel */}
+              <NodeInspector />
+              {/* AI Suggestions - Floating Panel */}
+              {showSuggestions && (
+                <div className="absolute bottom-4 right-4 w-80 z-10">
+                  <SuggestionChips
+                    suggestions={suggestions}
+                    isLoading={isLoadingSuggestions}
+                    error={suggestionsError}
+                    onApply={handleApplySuggestion}
+                    onDismiss={handleDismissSuggestion}
+                    onRefresh={handleRefreshSuggestions}
+                    maxVisible={5}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </Suspense>
+
+        {/* Execution Panel - Bottom (lazy loaded) */}
         {showExecutionPanel && (
-          <ExecutionPanel
-            onClose={() => setShowExecutionPanel(false)}
-            onStop={stopExecution}
-          />
+          <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+            <ExecutionPanel
+              onClose={() => setShowExecutionPanel(false)}
+              onStop={stopExecution}
+            />
+          </Suspense>
         )}
 
-        {/* Execution History Panel - Right Side */}
+        {/* Execution History Panel - Right Side (lazy loaded) */}
         {showHistoryPanel && metadata?.id && (
-          <ExecutionHistoryPanel
-            executions={accumulatedExecutions}
-            isLoading={isLoadingExecutions || isFetching}
-            onSelectExecution={handleSelectExecution}
-            onLoadMore={handleLoadMoreExecutions}
-            hasMore={!!executionsData?.nextCursor}
-            selectedExecutionId={selectedExecutionId ?? undefined}
-          />
+          <Suspense fallback={<Skeleton className="w-80 h-full" />}>
+            <ExecutionHistoryPanel
+              executions={accumulatedExecutions}
+              isLoading={isLoadingExecutions || isFetching}
+              onSelectExecution={handleSelectExecution}
+              onLoadMore={handleLoadMoreExecutions}
+              hasMore={!!executionsData?.nextCursor}
+              selectedExecutionId={selectedExecutionId ?? undefined}
+            />
+          </Suspense>
         )}
       </div>
+
+      {/* Version History Dialog (Phase 3 workflow features) */}
+      {metadata?.id && showVersionHistory && (
+        <Dialog
+          open={showVersionHistory}
+          onClose={() => setShowVersionHistory(false)}
+          title="Version History"
+        >
+          <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+            <WorkflowVersionHistory workflowId={metadata.id} />
+          </Suspense>
+        </Dialog>
+      )}
+
+      {/* Share Workflow Dialog (Phase 3 workflow features) */}
+      {metadata?.id && showShareDialog && (
+        <Suspense fallback={null}>
+          <ShareWorkflowDialog
+            open={showShareDialog}
+            onClose={() => setShowShareDialog(false)}
+            workflow={{
+              id: metadata.id,
+              name: metadata.name || "Untitled Workflow",
+            }}
+          />
+        </Suspense>
+      )}
+
       {/* Global OnboardingWizard handles first-time user onboarding in App.tsx */}
     </ReactFlowProvider>
   );

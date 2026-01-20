@@ -109,7 +109,7 @@ describe("usePWAUpdate", () => {
       });
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "Failed to update service worker:",
+        "[PWAUpdate] Failed to update service worker:",
         error,
       );
 

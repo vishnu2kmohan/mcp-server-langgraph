@@ -15,6 +15,7 @@ import type {
   MCPConnectionCamelCase,
   MCPConnectionCreate,
   AuthType,
+  ConnectionScope,
 } from "../../types/connection";
 import {
   useCreateConnectionMutation,
@@ -23,6 +24,7 @@ import {
 import { Dialog } from "../UI/Dialog";
 
 import { Button, Input, Select, Textarea } from "@/components/UI";
+import { ScopeSelector } from "./ScopeSelector";
 
 interface ConnectionDialogProps {
   open: boolean;
@@ -59,6 +61,7 @@ export function ConnectionDialog({
   const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
   const [authType, setAuthType] = useState<AuthType>("none");
+  const [scope, setScope] = useState<ConnectionScope>("user");
   const [apiKey, setApiKey] = useState("");
   const [clientId, setClientId] = useState("");
   const [clientSecret, setClientSecret] = useState("");
@@ -73,6 +76,7 @@ export function ConnectionDialog({
         setUrl(connection.url);
         setDescription(connection.description || "");
         setAuthType(connection.authType);
+        setScope(connection.scope || "user");
         if (connection.oauth2Config) {
           setClientId(connection.oauth2Config.clientId || "");
           setScopes(connection.oauth2Config.scopes.join(" "));
@@ -82,6 +86,7 @@ export function ConnectionDialog({
         setUrl("");
         setDescription("");
         setAuthType("none");
+        setScope("user");
         setApiKey("");
         setClientId("");
         setClientSecret("");
@@ -140,6 +145,7 @@ export function ConnectionDialog({
           url,
           description: description || null,
           authType: authType,
+          scope: scope,
           projectId: projectId || null,
         };
 
@@ -168,7 +174,7 @@ export function ConnectionDialog({
     <>
       <Button
         variant="secondary"
-        className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-md"
+        className="px-4 py-2 text-neutral-11 hover:bg-neutral-2 rounded-md"
         onClick={onClose}
         disabled={isLoading}
       >
@@ -176,7 +182,7 @@ export function ConnectionDialog({
       </Button>
       <Button
         variant="primary"
-        className="px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-md"
+        className="px-4 py-2 bg-primary-10 text-neutral-12 hover:bg-primary-11 rounded-md"
         onClick={handleSubmit}
         disabled={isLoading}
       >
@@ -197,7 +203,7 @@ export function ConnectionDialog({
       <div>
         <label
           htmlFor="name"
-          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+          className="block text-sm font-medium text-neutral-11 mb-1"
         >
           Name
         </label>
@@ -208,22 +214,22 @@ export function ConnectionDialog({
             setName(e.target.value);
             if (errors.name) setErrors({ ...errors, name: undefined });
           }}
-          className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white ${
+          className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-7 ${
             errors.name
-              ? "border-error-500"
-              : "border-neutral-300 dark:border-neutral-600"
+              ? "border-error-9"
+              : "border-neutral-5"
           }`}
           placeholder="My MCP Server"
         />
         {errors.name && (
-          <p className="mt-1 text-sm text-error-500">{errors.name}</p>
+          <p className="mt-1 text-sm text-error-9">{errors.name}</p>
         )}
       </div>
       {/* URL */}
       <div>
         <label
           htmlFor="url"
-          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+          className="block text-sm font-medium text-neutral-11 mb-1"
         >
           URL
         </label>
@@ -234,27 +240,27 @@ export function ConnectionDialog({
             setUrl(e.target.value);
             if (errors.url) setErrors({ ...errors, url: undefined });
           }}
-          className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white ${
+          className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-7 ${
             errors.url
-              ? "border-error-500"
-              : "border-neutral-300 dark:border-neutral-600"
+              ? "border-error-9"
+              : "border-neutral-5"
           }`}
           placeholder="https://mcp.example.com"
         />
         {errors.url && (
-          <p className="mt-1 text-sm text-error-500">{errors.url}</p>
+          <p className="mt-1 text-sm text-error-9">{errors.url}</p>
         )}
       </div>
       {/* Description */}
       <div>
         <label
           htmlFor="description"
-          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+          className="block text-sm font-medium text-neutral-11 mb-1"
         >
           Description
         </label>
         <Textarea
-          className="px-3 py-2 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
+          className="px-3 py-2 focus:ring-primary-7"
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -266,12 +272,12 @@ export function ConnectionDialog({
       <div>
         <label
           htmlFor="auth_type"
-          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+          className="block text-sm font-medium text-neutral-11 mb-1"
         >
           Authentication
         </label>
         <Select
-          className="px-3 py-2 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
+          className="px-3 py-2 focus:ring-primary-7"
           id="auth_type"
           value={authType}
           onChange={(e) => setAuthType(e.target.value as AuthType)}
@@ -282,12 +288,29 @@ export function ConnectionDialog({
           <option value="oauth2">OAuth2</option>
         </Select>
       </div>
+      {/* Scope Selector (ADR-0102 Phase 6) */}
+      <div>
+        <label className="block text-sm font-medium text-neutral-11 mb-2">
+          Access Scope
+        </label>
+        <ScopeSelector
+          value={scope}
+          onChange={setScope}
+          disabled={isEditing}
+        />
+        {isEditing && (
+          <p className="mt-1 text-xs text-neutral-10">
+            Scope cannot be changed after creation
+          </p>
+        )}
+      </div>
+
       {/* API Key (conditional) */}
       {authType === "api_key" && (
         <div>
           <label
             htmlFor="api_key"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+            className="block text-sm font-medium text-neutral-11 mb-1"
           >
             API Key
           </label>
@@ -299,15 +322,15 @@ export function ConnectionDialog({
               setApiKey(e.target.value);
               if (errors.apiKey) setErrors({ ...errors, apiKey: undefined });
             }}
-            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white ${
+            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-7 ${
               errors.apiKey
-                ? "border-error-500"
-                : "border-neutral-300 dark:border-neutral-600"
+                ? "border-error-9"
+                : "border-neutral-5"
             }`}
             placeholder="Enter your API key"
           />
           {errors.apiKey && (
-            <p className="mt-1 text-sm text-error-500">{errors.apiKey}</p>
+            <p className="mt-1 text-sm text-error-9">{errors.apiKey}</p>
           )}
         </div>
       )}
@@ -317,7 +340,7 @@ export function ConnectionDialog({
           <div>
             <label
               htmlFor="client_id"
-              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+              className="block text-sm font-medium text-neutral-11 mb-1"
             >
               Client ID
             </label>
@@ -329,34 +352,34 @@ export function ConnectionDialog({
                 if (errors.clientId)
                   setErrors({ ...errors, clientId: undefined });
               }}
-              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-500 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white ${
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-7 ${
                 errors.clientId
-                  ? "border-error-500"
-                  : "border-neutral-300 dark:border-neutral-600"
+                  ? "border-error-9"
+                  : "border-neutral-5"
               }`}
               placeholder="OAuth2 client ID"
             />
             {errors.clientId && (
-              <p className="mt-1 text-sm text-error-500">{errors.clientId}</p>
+              <p className="mt-1 text-sm text-error-9">{errors.clientId}</p>
             )}
           </div>
 
           <div>
             <label
               htmlFor="client_secret"
-              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+              className="block text-sm font-medium text-neutral-11 mb-1"
             >
               Client Secret
             </label>
             <Input
-              className="px-3 py-2 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
+              className="px-3 py-2 focus:ring-primary-7"
               id="client_secret"
               type="password"
               value={clientSecret}
               onChange={(e) => setClientSecret(e.target.value)}
               placeholder="Optional client secret"
             />
-            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            <p className="mt-1 text-xs text-neutral-10">
               Not required for PKCE flow
             </p>
           </div>
@@ -364,12 +387,12 @@ export function ConnectionDialog({
           <div>
             <label
               htmlFor="scopes"
-              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+              className="block text-sm font-medium text-neutral-11 mb-1"
             >
               Scopes
             </label>
             <Input
-              className="px-3 py-2 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
+              className="px-3 py-2 focus:ring-primary-7"
               id="scopes"
               value={scopes}
               onChange={(e) => setScopes(e.target.value)}

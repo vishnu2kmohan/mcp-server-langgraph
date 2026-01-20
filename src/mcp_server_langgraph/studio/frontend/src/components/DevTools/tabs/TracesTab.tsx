@@ -3,6 +3,18 @@
  *
  * OTEL distributed traces waterfall view.
  * Displays trace list with filtering and detailed span visualization.
+ *
+ * Uses shared OTEL components:
+ * - OTELStatusBadge for span status indicators
+ * - OTELDetailsPanel for expanded attributes
+ * - HumanTimestamp for relative time display
+ * - useLGTMIntegration for Grafana/Tempo links
+ *
+ * Design System Compliance:
+ * - Uses CVA for toolbar button variants
+ * - Uses Motion.dev for button press feedback and dropdown animations
+ * - Implements useReducedMotion() for accessibility
+ * - Uses semantic colors per STYLE.md
  */
 import { useState, useMemo, useCallback } from "react";
 import {
@@ -11,17 +23,64 @@ import {
   ExternalLink,
   ChevronRight,
   Clock,
-  AlertCircle,
-  CheckCircle,
-  Circle,
   X,
 } from "lucide-react";
 
+import { motion, useReducedMotion, AnimatePresence } from "motion/react";
+import { cva } from "class-variance-authority";
+import { buttonVariants as motionButtonVariants, dropdownVariants } from "@/design-system/micro-interactions";
 import { cn } from "../../../utils/cn";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
+import { getIndentClass } from '@/utils/indent';
 import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 
+// Shared OTEL components
+import { HumanTimestamp, OTELStatusBadge, OTELDetailsPanel } from "../components";
+import { useLGTMIntegration } from "../hooks/useLGTMIntegration";
+
 import { Button, Input } from "@/components/UI";
+
+// =============================================================================
+// CVA Variants
+// =============================================================================
+
+/**
+ * Filter dropdown trigger button variants
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const traceFilterButtonVariants = cva(
+  "flex px-2 py-1.5 text-sm border rounded transition-colors",
+  {
+    variants: {
+      open: {
+        true: "bg-primary-2 border-primary-7 text-primary-11",
+        false: "bg-neutral-1 border-neutral-5 hover:bg-neutral-2 text-neutral-11",
+      },
+    },
+    defaultVariants: {
+      open: false,
+    },
+  },
+);
+
+/**
+ * Filter dropdown option button variants
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const traceFilterOptionVariants = cva(
+  "block w-full px-3 py-1.5 text-left text-sm transition-colors",
+  {
+    variants: {
+      selected: {
+        true: "bg-primary-3 text-primary-11",
+        false: "hover:bg-neutral-2 text-neutral-11",
+      },
+    },
+    defaultVariants: {
+      selected: false,
+    },
+  },
+);
 
 // =============================================================================
 // Types
@@ -58,8 +117,6 @@ export interface TracesTabProps {
   spans?: TraceSpan[];
   /** Currently selected trace ID */
   selectedTraceId?: string;
-  /** Grafana URL for deep linking */
-  grafanaUrl?: string;
   /** Loading state */
   isLoading?: boolean;
   /** Error message */
@@ -82,21 +139,6 @@ function formatDuration(ms: number): string {
   return `${(ms / 1000).toFixed(2)}s`;
 }
 
-function getStatusIcon(status: "ok" | "error" | "unset") {
-  switch (status) {
-    case "ok":
-      return (
-        <CheckCircle className={cn("h-4 w-4", STATUS_TEXT_COLORS.success)} />
-      );
-    case "error":
-      return (
-        <AlertCircle className={cn("h-4 w-4", STATUS_TEXT_COLORS.error)} />
-      );
-    default:
-      return <Circle className={cn("h-4 w-4", STATUS_TEXT_COLORS.neutral)} />;
-  }
-}
-
 /**
  * Get background color for span bar based on status.
  * Uses semantic colors from design system.
@@ -104,11 +146,11 @@ function getStatusIcon(status: "ok" | "error" | "unset") {
 function getStatusColor(status: "ok" | "error" | "unset"): string {
   switch (status) {
     case "ok":
-      return "bg-success-500";
+      return "bg-success-9";
     case "error":
-      return "bg-error-500";
+      return "bg-error-9";
     default:
-      return "bg-neutral-400";
+      return "bg-neutral-4";
   }
 }
 
@@ -118,9 +160,9 @@ function getStatusColor(status: "ok" | "error" | "unset"): string {
  */
 function getDurationColor(durationMs: number, totalMs: number): string {
   const ratio = durationMs / totalMs;
-  if (ratio > 0.5) return "bg-error-500";
-  if (ratio > 0.25) return "bg-warning-500";
-  return "bg-primary-500";
+  if (ratio > 0.5) return "bg-error-9";
+  if (ratio > 0.25) return "bg-warning-9";
+  return "bg-primary-9";
 }
 
 // =============================================================================
@@ -151,33 +193,35 @@ function SpanRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 py-1 px-2 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 cursor-pointer border-b border-neutral-100 dark:border-neutral-800",
-        isSelected && "bg-primary-50 dark:bg-primary-900/20",
+        "flex items-center gap-2 py-1 px-2 hover:bg-neutral-2 cursor-pointer border-b border-neutral-5",
+        isSelected && "bg-primary-1 dark:bg-primary-a3",
       )}
       onClick={onClick}
       data-span-id={span.spanId}
     >
       {/* Span name with depth indentation */}
       <div
-        className="flex items-center gap-1 min-w-[200px] max-w-[300px] truncate text-sm"
-        style={{ paddingLeft: `${span.depth * 16}px` }}
+        className={cn(
+          "flex items-center gap-1 min-w-[200px] max-w-[300px] truncate text-sm",
+          getIndentClass(span.depth * 16),
+        )}
       >
-        {getStatusIcon(span.status)}
+        <OTELStatusBadge type="span-status" value={span.status} size="sm" />
         <span className="truncate">{span.name}</span>
       </div>
 
       {/* Service name */}
-      <div className="text-xs text-neutral-500 dark:text-neutral-400 min-w-[100px] truncate">
+      <div className="text-xs text-neutral-10 min-w-28 truncate">
         {span.serviceName || "-"}
       </div>
 
       {/* Duration */}
-      <div className="text-xs text-neutral-500 dark:text-neutral-400 min-w-[60px]">
+      <div className="text-xs text-neutral-10 min-w-[60px]">
         {formatDuration(span.durationMs)}
       </div>
 
       {/* Timing bar with status-based coloring */}
-      <div className="flex-1 relative h-4 bg-neutral-100 dark:bg-neutral-800 rounded">
+      <div className="flex-1 relative h-4 bg-neutral-2 rounded">
         <div
           data-testid="span-timing-bar"
           data-status={span.status}
@@ -204,16 +248,18 @@ interface SpanDetailsProps {
 }
 
 function SpanDetails({ span, onClose }: SpanDetailsProps) {
+  const hasAttributes = Object.keys(span.attributes).length > 0;
+
   return (
     <div
       data-testid="span-details"
-      className="border-t border-neutral-200 dark:border-neutral-700 p-4 bg-neutral-50 dark:bg-neutral-800/50"
+      className="border-t border-neutral-5 p-4 bg-neutral-1"
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-medium">{span.name}</h3>
-        <Button
+        <Button size="icon"
           variant="secondary"
-          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
+          className="p-1 hover:bg-neutral-3 rounded"
           type="button"
           onClick={onClose}
           aria-label="Close"
@@ -222,34 +268,33 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
         </Button>
       </div>
       <dl className="grid grid-cols-2 gap-2 text-sm">
-        <dt className="text-neutral-500 dark:text-neutral-400">Span ID</dt>
+        <dt className="text-neutral-10">Span ID</dt>
         <dd className="font-mono text-xs">{span.spanId}</dd>
 
-        <dt className="text-neutral-500 dark:text-neutral-400">Service</dt>
+        <dt className="text-neutral-10">Service</dt>
         <dd>{span.serviceName || "-"}</dd>
 
-        <dt className="text-neutral-500 dark:text-neutral-400">Duration</dt>
+        <dt className="text-neutral-10">Duration</dt>
         <dd>{formatDuration(span.durationMs)}</dd>
 
-        <dt className="text-neutral-500 dark:text-neutral-400">Status</dt>
+        <dt className="text-neutral-10">Status</dt>
         <dd className="flex items-center gap-1">
-          {getStatusIcon(span.status)}
-          {span.status}
+          <OTELStatusBadge type="span-status" value={span.status} size="sm" />
         </dd>
 
         {span.errorMessage && (
           <>
-            <dt className="text-neutral-500 dark:text-neutral-400">Error</dt>
+            <dt className="text-neutral-10">Error</dt>
             <dd className={STATUS_TEXT_COLORS.error}>{span.errorMessage}</dd>
           </>
         )}
       </dl>
-      {Object.keys(span.attributes).length > 0 && (
+      {hasAttributes && (
         <div className="mt-4">
-          <h4 className="text-sm font-medium mb-2">Attributes</h4>
-          <pre className="text-xs bg-neutral-100 dark:bg-neutral-800 p-2 rounded overflow-auto max-h-40">
-            {JSON.stringify(span.attributes, null, 2)}
-          </pre>
+          <OTELDetailsPanel
+            data={span.attributes}
+            title="Attributes"
+          />
         </div>
       )}
     </div>
@@ -264,14 +309,15 @@ export function TracesTab({
   traces = [],
   spans = [],
   selectedTraceId,
-  grafanaUrl,
   isLoading = false,
   error,
   onTraceSelect,
   onSpanSelect,
   className,
 }: TracesTabProps): React.ReactElement {
+  const prefersReducedMotion = useReducedMotion();
   const timeline = useTimelineContext();
+  const lgtm = useLGTMIntegration();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "ok" | "error">(
     "all",
@@ -375,10 +421,13 @@ export function TracesTab({
 
   const handleOpenGrafana = useCallback(() => {
     const traceId = selectedTraceId ?? localSelectedTraceId;
-    if (grafanaUrl && traceId) {
-      window.open(`${grafanaUrl}?traceId=${traceId}`, "_blank");
+    if (traceId) {
+      const url = lgtm.getTraceUrl(traceId);
+      if (url) {
+        window.open(url, "_blank");
+      }
     }
-  }, [grafanaUrl, selectedTraceId, localSelectedTraceId]);
+  }, [lgtm, selectedTraceId, localSelectedTraceId]);
 
   const handleClearTrace = useCallback(() => {
     setLocalSelectedTraceId(null);
@@ -393,7 +442,7 @@ export function TracesTab({
         data-testid="traces-tab"
         className={cn("flex items-center justify-center h-full", className)}
       >
-        <div className="text-neutral-500 dark:text-neutral-400">
+        <div className="text-neutral-10">
           Loading traces...
         </div>
       </div>
@@ -418,138 +467,182 @@ export function TracesTab({
       className={cn("flex flex-col h-full overflow-hidden", className)}
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 p-2 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center gap-2 p-2 border-b border-neutral-5">
         {/* Search */}
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 dark:text-neutral-400" />
+          <Search
+            className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-9"
+            aria-hidden="true"
+          />
           <Input
-            className="pl-8 pr-3 py-1.5 text-sm"
+            className="h-8 pl-8 pr-2 py-1.5 text-sm"
             placeholder="Search traces..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            aria-label="Search traces"
           />
         </div>
 
         {/* Service filter */}
         <div className="relative">
-          <Button
-            variant="secondary"
-            size="sm"
-            className="flex px-2 py-1.5 text-sm border rounded bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700"
+          <motion.button
             type="button"
             onClick={() => setShowServiceMenu(!showServiceMenu)}
-            aria-label="Service"
+            className={traceFilterButtonVariants({ open: showServiceMenu })}
+            aria-label="Service filter"
+            aria-expanded={showServiceMenu}
+            aria-haspopup="listbox"
+            variants={prefersReducedMotion ? undefined : motionButtonVariants}
+            initial="rest"
+            whileHover="hover"
+            whileTap="pressed"
           >
-            <Filter className="h-4 w-4" />
+            <Filter className="h-4 w-4 mr-1" />
             Service: {serviceFilter === "all" ? "All" : serviceFilter}
-          </Button>
-          {showServiceMenu && (
-            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-neutral-800 border rounded shadow-lg z-10 min-w-[120px]">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
-                type="button"
-                role="option"
-                onClick={() => {
-                  setServiceFilter("all");
-                  setShowServiceMenu(false);
-                }}
+          </motion.button>
+          <AnimatePresence>
+            {showServiceMenu && (
+              <motion.div
+                className="absolute top-full left-0 mt-1 bg-neutral-1 border border-neutral-5 rounded shadow-lg z-dropdown min-w-32 overflow-hidden"
+                role="listbox"
+                aria-label="Service options"
+                variants={prefersReducedMotion ? undefined : dropdownVariants}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
               >
-                All
-              </Button>
-              {services.map((service) => (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
-                  key={service}
+                <motion.button
                   type="button"
                   role="option"
+                  aria-selected={serviceFilter === "all"}
+                  className={traceFilterOptionVariants({ selected: serviceFilter === "all" })}
                   onClick={() => {
-                    setServiceFilter(service);
+                    setServiceFilter("all");
                     setShowServiceMenu(false);
                   }}
+                  variants={prefersReducedMotion ? undefined : motionButtonVariants}
+                  initial="rest"
+                  whileHover="hover"
+                  whileTap="pressed"
                 >
-                  {service}
-                </Button>
-              ))}
-            </div>
-          )}
+                  All
+                </motion.button>
+                {services.map((service) => (
+                  <motion.button
+                    key={service}
+                    type="button"
+                    role="option"
+                    aria-selected={serviceFilter === service}
+                    className={traceFilterOptionVariants({ selected: serviceFilter === service })}
+                    onClick={() => {
+                      setServiceFilter(service);
+                      setShowServiceMenu(false);
+                    }}
+                    variants={prefersReducedMotion ? undefined : motionButtonVariants}
+                    initial="rest"
+                    whileHover="hover"
+                    whileTap="pressed"
+                  >
+                    {service}
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Status filter */}
         <div className="relative">
-          <Button
-            variant="secondary"
-            size="sm"
-            className="flex px-2 py-1.5 text-sm border rounded bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700"
+          <motion.button
             type="button"
             onClick={() => setShowStatusMenu(!showStatusMenu)}
-            aria-label="Status"
+            className={traceFilterButtonVariants({ open: showStatusMenu })}
+            aria-label="Status filter"
+            aria-expanded={showStatusMenu}
+            aria-haspopup="listbox"
+            variants={prefersReducedMotion ? undefined : motionButtonVariants}
+            initial="rest"
+            whileHover="hover"
+            whileTap="pressed"
           >
-            Status: {statusFilter}
-          </Button>
-          {showStatusMenu && (
-            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-neutral-800 border rounded shadow-lg z-10 min-w-[100px]">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
-                type="button"
-                role="option"
-                aria-label="All"
-                onClick={() => {
-                  setStatusFilter("all");
-                  setShowStatusMenu(false);
-                }}
+            Status: {statusFilter === "all" ? "All" : statusFilter === "ok" ? "OK" : "Error"}
+          </motion.button>
+          <AnimatePresence>
+            {showStatusMenu && (
+              <motion.div
+                className="absolute top-full left-0 mt-1 bg-neutral-1 border border-neutral-5 rounded shadow-lg z-dropdown min-w-28 overflow-hidden"
+                role="listbox"
+                aria-label="Status options"
+                variants={prefersReducedMotion ? undefined : dropdownVariants}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
               >
-                All
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
-                type="button"
-                role="option"
-                aria-label="ok"
-                onClick={() => {
-                  setStatusFilter("ok");
-                  setShowStatusMenu(false);
-                }}
-              >
-                OK
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
-                type="button"
-                role="option"
-                aria-label="error"
-                onClick={() => {
-                  setStatusFilter("error");
-                  setShowStatusMenu(false);
-                }}
-              >
-                Error
-              </Button>
-            </div>
-          )}
+                <motion.button
+                  type="button"
+                  role="option"
+                  aria-selected={statusFilter === "all"}
+                  className={traceFilterOptionVariants({ selected: statusFilter === "all" })}
+                  onClick={() => {
+                    setStatusFilter("all");
+                    setShowStatusMenu(false);
+                  }}
+                  variants={prefersReducedMotion ? undefined : motionButtonVariants}
+                  initial="rest"
+                  whileHover="hover"
+                  whileTap="pressed"
+                >
+                  All
+                </motion.button>
+                <motion.button
+                  type="button"
+                  role="option"
+                  aria-selected={statusFilter === "ok"}
+                  className={traceFilterOptionVariants({ selected: statusFilter === "ok" })}
+                  onClick={() => {
+                    setStatusFilter("ok");
+                    setShowStatusMenu(false);
+                  }}
+                  variants={prefersReducedMotion ? undefined : motionButtonVariants}
+                  initial="rest"
+                  whileHover="hover"
+                  whileTap="pressed"
+                >
+                  OK
+                </motion.button>
+                <motion.button
+                  type="button"
+                  role="option"
+                  aria-selected={statusFilter === "error"}
+                  className={traceFilterOptionVariants({ selected: statusFilter === "error" })}
+                  onClick={() => {
+                    setStatusFilter("error");
+                    setShowStatusMenu(false);
+                  }}
+                  variants={prefersReducedMotion ? undefined : motionButtonVariants}
+                  initial="rest"
+                  whileHover="hover"
+                  whileTap="pressed"
+                >
+                  Error
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Grafana link */}
-        {grafanaUrl && (selectedTraceId ?? localSelectedTraceId) && (
+        {/* Grafana/Tempo link */}
+        {lgtm.canOpenInTempo && (selectedTraceId ?? localSelectedTraceId) && (
           <Button
             variant="secondary"
             size="sm"
-            className="flex px-2 py-1.5 text-sm border rounded bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 ml-auto"
+            className="flex px-2 py-1.5 text-sm border rounded bg-neutral-1 border-neutral-5 hover:bg-neutral-1 ml-auto"
             type="button"
             onClick={handleOpenGrafana}
-            aria-label="View in Grafana"
+            aria-label="View in Tempo"
           >
             <ExternalLink className="h-4 w-4" />
-            View in Grafana
+            View in Tempo
           </Button>
         )}
       </div>
@@ -559,10 +652,10 @@ export function TracesTab({
         {(selectedTraceId ?? localSelectedTraceId) ? (
           <div className="flex flex-col h-full">
             {/* Selected trace header */}
-            <div className="flex items-center gap-2 p-2 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700">
-              <Button
+            <div className="flex items-center gap-2 p-2 bg-neutral-1 border-b border-neutral-5">
+              <Button size="icon"
                 variant="secondary"
-                className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
+                className="p-1 hover:bg-neutral-3 rounded"
                 type="button"
                 onClick={handleClearTrace}
                 aria-label="Back to list"
@@ -570,13 +663,13 @@ export function TracesTab({
                 <ChevronRight className="h-4 w-4 rotate-180" />
               </Button>
               <span className="font-medium">{selectedTrace?.name}</span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">
+              <span className="text-xs text-neutral-10">
                 {selectedTrace?.traceId.slice(0, 8)}...
               </span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">
+              <span className="text-xs text-neutral-10">
                 {formatDuration(selectedTrace?.durationMs ?? 0)}
               </span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">
+              <span className="text-xs text-neutral-10">
                 {selectedTrace?.spanCount} spans
               </span>
             </div>
@@ -584,9 +677,9 @@ export function TracesTab({
             {/* Waterfall view */}
             <div data-testid="trace-waterfall" className="flex-1 overflow-auto">
               {/* Timeline header */}
-              <div className="sticky top-0 z-10 flex items-center gap-2 py-1 px-2 text-xs text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
+              <div className="sticky top-0 z-10 flex items-center gap-2 py-1 px-2 text-xs text-neutral-10 border-b border-neutral-5 bg-neutral-1">
                 <div className="min-w-[200px] max-w-[300px]">Span</div>
-                <div className="min-w-[100px]">Service</div>
+                <div className="min-w-28">Service</div>
                 <div className="min-w-[60px]">Duration</div>
                 <div className="flex-1">Timeline</div>
               </div>
@@ -616,7 +709,7 @@ export function TracesTab({
           // Trace list
           <div>
             {filteredTraces.length === 0 ? (
-              <div className="flex flex-col items-center justify-center min-h-full text-center text-neutral-500 dark:text-neutral-400 p-8">
+              <div className="flex flex-col items-center justify-center min-h-full text-center text-neutral-10 p-8">
                 <Clock className="h-12 w-12 mb-4 opacity-50" />
                 <p>No traces found</p>
                 {searchTerm && (
@@ -632,31 +725,33 @@ export function TracesTab({
                   data-trace
                   data-status={trace.status}
                   className={cn(
-                    "flex items-center gap-4 p-3 border-b border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer",
+                    "flex items-center gap-4 p-3 border-b border-neutral-5 hover:bg-neutral-a6 cursor-pointer",
                     trace.status === "error" &&
-                      "bg-error-50 dark:bg-error-900/10",
+                      "bg-error-1 dark:bg-error-a2",
                   )}
                   onClick={() => handleTraceSelect(trace.traceId)}
                 >
-                  {getStatusIcon(trace.status)}
+                  <OTELStatusBadge type="span-status" value={trace.status} size="sm" />
 
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{trace.name}</div>
-                    <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                    <div className="text-xs text-neutral-10">
                       {trace.traceId.slice(0, 16)}...
                       {trace.serviceName && ` • ${trace.serviceName}`}
                     </div>
                   </div>
 
-                  <div className="text-sm text-neutral-500 dark:text-neutral-400">
+                  <HumanTimestamp timestamp={trace.startTime} format="relative" />
+
+                  <div className="text-sm text-neutral-10">
                     {formatDuration(trace.durationMs)}
                   </div>
 
-                  <div className="text-xs text-neutral-400 dark:text-neutral-400">
+                  <div className="text-xs text-neutral-9">
                     {trace.spanCount} spans
                   </div>
 
-                  <ChevronRight className="h-4 w-4 text-neutral-400 dark:text-neutral-400" />
+                  <ChevronRight className="h-4 w-4 text-neutral-9" />
                 </div>
               ))
             )}

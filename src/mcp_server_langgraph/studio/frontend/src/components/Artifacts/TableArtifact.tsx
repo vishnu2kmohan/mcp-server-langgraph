@@ -151,17 +151,17 @@ export function TableArtifact({
 
   return (
     <div
-      className={`bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden ${className}`}
+      className={`bg-neutral-1 border border-neutral-5 rounded-lg overflow-hidden ${className}`}
       data-testid="table-artifact"
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-neutral-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Table size={16} className="text-neutral-500 dark:text-neutral-400" />
-          <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+          <Table size={16} className="text-neutral-10" />
+          <h3 className="font-medium text-neutral-12">
             {title}
           </h3>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400">
+          <span className="text-xs text-neutral-10">
             ({sortedData.length} rows)
           </span>
         </div>
@@ -175,7 +175,7 @@ export function TableArtifact({
           {expandable && (
             <Button
               variant="secondary"
-              className="p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
+              className="p-1 text-neutral-11 hover:bg-neutral-2 rounded"
               onClick={() => setIsExpanded(!isExpanded)}
               aria-label={isExpanded ? "Collapse table" : "Expand table"}
             >
@@ -186,7 +186,7 @@ export function TableArtifact({
       </div>
       {/* Table */}
       {data.length === 0 ? (
-        <div className="px-4 py-8 text-center text-neutral-500 dark:text-neutral-400">
+        <div className="px-4 py-8 text-center text-neutral-10">
           No data available
         </div>
       ) : (
@@ -194,14 +194,14 @@ export function TableArtifact({
           className={`overflow-x-auto ${isExpanded ? "max-h-none" : "max-h-96"}`}
         >
           <table className="w-full">
-            <thead className="bg-neutral-50 dark:bg-neutral-700/50">
+            <thead className="bg-neutral-1">
               <tr>
                 {columns.map((column) => (
                   <th
                     key={column.key}
-                    className={`px-4 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider ${
+                    className={`px-4 py-3 text-left text-xs font-semibold text-neutral-10 uppercase tracking-wider ${
                       column.sortable
-                        ? "cursor-pointer hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                        ? "cursor-pointer hover:bg-neutral-2"
                         : ""
                     }`}
                     onClick={() => handleSort(column.key)}
@@ -214,13 +214,13 @@ export function TableArtifact({
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
+            <tbody className="divide-y divide-neutral-5 dark:divide-neutral-6">
               {sortedData.map((row, rowIndex) => (
                 <tr
                   key={rowIndex}
                   className={`${
                     onRowClick
-                      ? "cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
+                      ? "cursor-pointer hover:bg-neutral-a6"
                       : ""
                   }`}
                   onClick={() => onRowClick?.(row)}
@@ -228,7 +228,7 @@ export function TableArtifact({
                   {columns.map((column) => (
                     <td
                       key={column.key}
-                      className="px-4 py-3 text-sm text-neutral-900 dark:text-neutral-100 whitespace-nowrap"
+                      className="px-4 py-3 text-sm text-neutral-12 whitespace-nowrap"
                     >
                       {String(row[column.key] ?? "")}
                     </td>

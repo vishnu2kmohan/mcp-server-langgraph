@@ -16,14 +16,14 @@ import {
   Search,
   Upload,
 } from "lucide-react";
-import {
-  ErrorState,
-  ConfirmDialog,
-  Button,
-  Input,
-  Select,
-  Textarea,
-} from "../components/UI";
+// Direct imports to avoid Rollup circular dependency warnings
+// (page chunks end up separate from UI barrel)
+import { ErrorState } from "../components/UI/ErrorState";
+import { ConfirmDialog } from "../components/UI/ConfirmDialog";
+import { Button } from "../components/UI/Button";
+import { Input } from "../components/UI/Input";
+import { Select } from "../components/UI/Select";
+import { Textarea } from "../components/UI/Textarea";
 import {
   useListVectorCollectionsQuery,
   useCreateVectorCollectionMutation,
@@ -210,7 +210,7 @@ export function VectorsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <RefreshCw className="w-8 h-8 animate-spin text-primary-500" />
+        <RefreshCw className="w-8 h-8 animate-spin text-primary-9" />
       </div>
     );
   }
@@ -229,21 +229,22 @@ export function VectorsPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
+    <div className="h-screen flex flex-col bg-neutral-1">
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+      <header className="px-6 py-4 bg-neutral-2 border-b border-neutral-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            <h1 className="text-2xl font-bold text-neutral-12">
               Vector Collections
             </h1>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-11">
               Manage Qdrant vector collections for semantic search
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Button
-              className="flex px-4 py-2 bg-insight-600 text-white rounded-lg hover:bg-insight-700"
+              variant="secondary"
+              className="gap-2"
               onClick={() => setShowSearchPanel(true)}
             >
               <Search size={16} />
@@ -251,7 +252,7 @@ export function VectorsPage() {
             </Button>
             <Button
               variant="success"
-              className="flex px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700"
+              className="gap-2"
               onClick={() => setShowUpsertPanel(true)}
             >
               <Upload size={16} />
@@ -259,7 +260,7 @@ export function VectorsPage() {
             </Button>
             <Button
               variant="primary"
-              className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              className="gap-2"
               onClick={() => setShowCreateModal(true)}
             >
               <Plus size={16} />
@@ -267,7 +268,7 @@ export function VectorsPage() {
             </Button>
             <Button
               variant="secondary"
-              className="flex px-4 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+              className="gap-2"
               onClick={handleRefresh}
             >
               <RefreshCw size={16} />
@@ -278,26 +279,26 @@ export function VectorsPage() {
       </header>
       {/* Error Banner */}
       {error && collections.length > 0 && (
-        <div className="px-6 py-3 bg-error-50 dark:bg-error-900/20 border-b border-error-200 dark:border-error-800">
-          <p className="text-error-700 dark:text-error-400 text-sm">{error}</p>
+        <div className="px-6 py-3 bg-error-1 dark:bg-error-12/20 border-b border-error-4 dark:border-error-11">
+          <p className="text-error-11 dark:text-error-7 text-sm">{error}</p>
         </div>
       )}
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-4xl mx-auto">
           {/* Collections Count */}
-          <div className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
+          <div className="mb-4 text-sm text-neutral-11">
             {collections.length}{" "}
             {collections.length === 1 ? "collection" : "collections"} found
           </div>
 
           {collections.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-neutral-500 dark:text-neutral-400">
+            <div className="flex flex-col items-center justify-center h-64 text-neutral-11">
               <Database size={48} className="mb-4 opacity-50" />
               <p>No collections found</p>
               <Button
                 variant="primary"
-                className="mt-4 flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                className="mt-4 gap-2"
                 onClick={() => setShowCreateModal(true)}
               >
                 <Plus size={16} />
@@ -309,23 +310,23 @@ export function VectorsPage() {
               {collections.map((collection) => (
                 <div
                   key={collection.name}
-                  className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6"
+                  className="bg-neutral-2 rounded-lg border border-neutral-6 p-6"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Database size={24} className="text-primary-500" />
+                      <Database size={24} className="text-primary-9" />
                       <div>
-                        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                        <h3 className="text-lg font-semibold text-neutral-12">
                           {collection.name}
                         </h3>
-                        <div className="flex items-center gap-4 mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                        <div className="flex items-center gap-4 mt-1 text-sm text-neutral-11">
                           <span>{collection.vectors_count ?? 0} points</span>
                         </div>
                       </div>
                     </div>
                     <Button
                       variant="danger"
-                      className="p-2 text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
+                      className="p-2 text-error-9 hover:bg-error-1 dark:hover:bg-error-12/20 rounded"
                       onClick={() => handleDeleteCollection(collection.name)}
                       aria-label={`Delete ${collection.name}`}
                     >
@@ -341,17 +342,17 @@ export function VectorsPage() {
       {/* Create Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
+          <div className="bg-neutral-2 rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-semibold text-neutral-12 mb-4">
               Create Collection
             </h2>
             <form onSubmit={handleCreateCollection} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                <label className="block text-sm font-medium text-neutral-11 mb-2">
                   Collection Name
                 </label>
                 <Input
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                  className="px-3 py-2 text-neutral-12"
                   value={newCollectionName}
                   onChange={(e) => setNewCollectionName(e.target.value)}
                   placeholder="Collection name"
@@ -361,12 +362,12 @@ export function VectorsPage() {
               <div>
                 <label
                   htmlFor="vector-size"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
+                  className="block text-sm font-medium text-neutral-11 mb-2"
                 >
                   Vector Size
                 </label>
                 <Input
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                  className="px-3 py-2 text-neutral-12"
                   id="vector-size"
                   type="number"
                   value={newVectorSize}
@@ -377,12 +378,12 @@ export function VectorsPage() {
               <div>
                 <label
                   htmlFor="distance-metric"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
+                  className="block text-sm font-medium text-neutral-11 mb-2"
                 >
                   Distance Metric
                 </label>
                 <Select
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                  className="px-3 py-2 text-neutral-12"
                   id="distance-metric"
                   value={newDistance}
                   onChange={(e) => setNewDistance(e.target.value)}
@@ -395,7 +396,6 @@ export function VectorsPage() {
               <div className="flex gap-2 justify-end">
                 <Button
                   variant="secondary"
-                  className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700"
                   type="button"
                   onClick={() => setShowCreateModal(false)}
                 >
@@ -403,7 +403,6 @@ export function VectorsPage() {
                 </Button>
                 <Button
                   variant="primary"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                   type="submit"
                 >
                   Create
@@ -418,15 +417,15 @@ export function VectorsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-end z-50">
           <div
             data-testid="vector-search-panel"
-            className="bg-white dark:bg-neutral-800 h-full w-full max-w-lg shadow-xl overflow-y-auto"
+            className="bg-neutral-2 h-full w-full max-w-lg shadow-xl overflow-y-auto"
           >
-            <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+            <div className="px-6 py-4 border-b border-neutral-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-neutral-12">
                 Search Vectors
               </h2>
               <Button
                 variant="secondary"
-                className="p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
+                className="p-2 text-neutral-11 hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10 rounded"
                 onClick={() => {
                   setShowSearchPanel(false);
                   setSearchResults([]);
@@ -440,17 +439,17 @@ export function VectorsPage() {
 
             <form
               onSubmit={handleSearch}
-              className="p-6 space-y-4 border-b border-neutral-200 dark:border-neutral-700"
+              className="p-6 space-y-4 border-b border-neutral-6"
             >
               <div>
                 <label
                   htmlFor="search-collection"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
+                  className="block text-sm font-medium text-neutral-11 mb-2"
                 >
                   Select Collection
                 </label>
                 <Select
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                  className="px-3 py-2 text-neutral-12"
                   id="search-collection"
                   value={searchCollection}
                   onChange={(e) => setSearchCollection(e.target.value)}
@@ -467,12 +466,12 @@ export function VectorsPage() {
               <div>
                 <label
                   htmlFor="search-query"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
+                  className="block text-sm font-medium text-neutral-11 mb-2"
                 >
                   Search Query
                 </label>
                 <Input
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                  className="px-3 py-2 text-neutral-12"
                   id="search-query"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -483,12 +482,12 @@ export function VectorsPage() {
               <div>
                 <label
                   htmlFor="search-limit"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
+                  className="block text-sm font-medium text-neutral-11 mb-2"
                 >
                   Limit
                 </label>
                 <Input
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                  className="px-3 py-2 text-neutral-12"
                   id="search-limit"
                   type="number"
                   min={1}
@@ -498,7 +497,8 @@ export function VectorsPage() {
                 />
               </div>
               <Button
-                className="w-full px-4 py-2 bg-insight-600 text-white rounded-lg hover:bg-insight-700"
+                variant="primary"
+                fullWidth
                 type="submit"
                 disabled={isSearching}
               >
@@ -509,29 +509,29 @@ export function VectorsPage() {
             {/* Search Results */}
             <div className="p-6">
               {hasSearched && searchResults.length === 0 && !isSearching && (
-                <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+                <div className="text-center py-8 text-neutral-11">
                   No results found
                 </div>
               )}
               {searchResults.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                  <h3 className="text-sm font-medium text-neutral-11">
                     {searchResults.length} results
                   </h3>
                   {searchResults.map((result) => (
                     <div
                       key={result.id}
-                      className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700"
+                      className="p-4 bg-neutral-1 rounded-lg border border-neutral-6"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-mono text-neutral-500 dark:text-neutral-400">
+                        <span className="text-sm font-mono text-neutral-11">
                           ID: {result.id}
                         </span>
-                        <span className="px-2 py-0.5 bg-insight-100 dark:bg-insight-900/30 text-insight-700 dark:text-insight-400 text-sm rounded">
+                        <span className="px-2 py-0.5 bg-insight-2 dark:bg-insight-12/30 text-insight-11 dark:text-insight-9 text-sm rounded">
                           Score: {result.score.toFixed(2)}
                         </span>
                       </div>
-                      <div className="text-sm text-neutral-700 dark:text-neutral-300">
+                      <div className="text-sm text-neutral-11">
                         {result.payload?.text
                           ? String(result.payload.text)
                           : JSON.stringify(result.payload ?? {})}
@@ -549,15 +549,15 @@ export function VectorsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-end z-50">
           <div
             data-testid="vector-upsert-panel"
-            className="bg-white dark:bg-neutral-800 h-full w-full max-w-lg shadow-xl overflow-y-auto"
+            className="bg-neutral-2 h-full w-full max-w-lg shadow-xl overflow-y-auto"
           >
-            <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+            <div className="px-6 py-4 border-b border-neutral-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-neutral-12">
                 Upsert Point
               </h2>
               <Button
                 variant="secondary"
-                className="p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
+                className="p-2 text-neutral-11 hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10 rounded"
                 onClick={() => {
                   setShowUpsertPanel(false);
                   setUpsertSuccess(false);
@@ -572,14 +572,14 @@ export function VectorsPage() {
             <form onSubmit={handleUpsert} className="p-6 space-y-4">
               {/* Success Message */}
               {upsertSuccess && (
-                <div className="p-3 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg text-success-700 dark:text-success-400 text-sm">
+                <div className="p-3 bg-success-1 dark:bg-success-12/20 border border-success-4 dark:border-success-11 rounded-lg text-success-11 dark:text-success-7 text-sm">
                   Point upserted successfully!
                 </div>
               )}
 
               {/* Error Message */}
               {upsertError && (
-                <div className="p-3 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg text-error-700 dark:text-error-400 text-sm">
+                <div className="p-3 bg-error-1 dark:bg-error-12/20 border border-error-4 dark:border-error-11 rounded-lg text-error-11 dark:text-error-7 text-sm">
                   Failed to upsert: {upsertError}
                 </div>
               )}
@@ -587,12 +587,12 @@ export function VectorsPage() {
               <div>
                 <label
                   htmlFor="upsert-collection"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
+                  className="block text-sm font-medium text-neutral-11 mb-2"
                 >
                   Select Collection
                 </label>
                 <Select
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                  className="px-3 py-2 text-neutral-12"
                   id="upsert-collection"
                   value={upsertCollection}
                   onChange={(e) => setUpsertCollection(e.target.value)}
@@ -610,12 +610,12 @@ export function VectorsPage() {
               <div>
                 <label
                   htmlFor="upsert-text"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
+                  className="block text-sm font-medium text-neutral-11 mb-2"
                 >
                   Text Content
                 </label>
                 <Textarea
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100 resize-none"
+                  className="px-3 py-2 text-neutral-12 resize-none"
                   id="upsert-text"
                   value={upsertText}
                   onChange={(e) => setUpsertText(e.target.value)}
@@ -628,12 +628,12 @@ export function VectorsPage() {
               <div>
                 <label
                   htmlFor="upsert-metadata"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
+                  className="block text-sm font-medium text-neutral-11 mb-2"
                 >
                   Metadata (Optional JSON)
                 </label>
                 <Textarea
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100 resize-none font-mono text-sm"
+                  className="px-3 py-2 text-neutral-12 resize-none font-mono text-sm"
                   id="upsert-metadata"
                   value={upsertMetadata}
                   onChange={(e) => setUpsertMetadata(e.target.value)}
@@ -644,7 +644,7 @@ export function VectorsPage() {
 
               <Button
                 variant="success"
-                className="w-full px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700"
+                fullWidth
                 type="submit"
                 disabled={isUpserting}
               >

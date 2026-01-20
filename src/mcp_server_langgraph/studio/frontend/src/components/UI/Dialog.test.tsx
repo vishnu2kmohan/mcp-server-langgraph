@@ -263,4 +263,32 @@ describe("Dialog", () => {
       expect(typeof dialogVariants).toBe("function");
     });
   });
+
+  describe("Accessibility - Touch Targets (WCAG 2.5.8)", () => {
+    it("close button meets minimum 24x24px touch target", () => {
+      render(
+        <Dialog open={true} onClose={vi.fn()} title="Test">
+          <div>Content</div>
+        </Dialog>,
+      );
+
+      const closeButton = screen.getByRole("button", { name: "Close" });
+      // Check for h-8 w-8 (32px) or min-h-8 min-w-8 which exceeds 24px minimum
+      expect(closeButton.className).toMatch(/min-h-8|h-8/);
+      expect(closeButton.className).toMatch(/min-w-8|w-8/);
+    });
+
+    it("close button has adequate padding for touch interaction", () => {
+      render(
+        <Dialog open={true} onClose={vi.fn()} title="Test">
+          <div>Content</div>
+        </Dialog>,
+      );
+
+      const closeButton = screen.getByRole("button", { name: "Close" });
+      // Verify the button has padding and rounded styling for touch
+      expect(closeButton.className).toContain("rounded");
+      expect(closeButton.className).toMatch(/p-1/);
+    });
+  });
 });

@@ -44,16 +44,16 @@ const THINKING_LEVELS = ["low", "medium", "high", "ultra"] as const;
 function getComplexityIcon(complexity: string) {
   switch (complexity) {
     case "simple":
-      return <Zap size={14} className="text-success-500" />;
+      return <Zap size={14} className="text-success-9" />;
     case "complicated":
-      return <Gauge size={14} className="text-warning-500" />;
+      return <Gauge size={14} className="text-warning-9" />;
     case "complex":
-      return <Brain size={14} className="text-grafana-500" />;
+      return <Brain size={14} className="text-grafana-9" />;
     case "chaotic":
-      return <AlertTriangle size={14} className="text-error-500" />;
+      return <AlertTriangle size={14} className="text-error-9" />;
     default:
       return (
-        <Gauge size={14} className="text-neutral-400 dark:text-neutral-400" />
+        <Gauge size={14} className="text-neutral-9" />
       );
   }
 }
@@ -64,15 +64,15 @@ function getComplexityIcon(complexity: string) {
 function getLevelColorClass(level: string): string {
   switch (level) {
     case "low":
-      return "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400";
+      return "bg-success-3 text-success-11 bg-success-4 dark:text-success-7";
     case "medium":
-      return "bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-400";
+      return "bg-warning-3 text-warning-11 dark:bg-warning-a4 dark:text-warning-9";
     case "high":
-      return "bg-grafana-100 text-grafana-800 dark:bg-grafana-900/30 dark:text-grafana-400";
+      return "bg-grafana-2 text-grafana-11 dark:bg-grafana-12/30 dark:text-grafana-5";
     case "ultra":
-      return "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-400";
+      return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
     default:
-      return "bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-400";
+      return "bg-neutral-2 text-neutral-12";
   }
 }
 
@@ -128,7 +128,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
     <Card data-testid="thinking-budget-card">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Brain size={24} className="text-insight-500" />
+          <Brain size={24} className="text-insight-9" />
           <CardTitle>Thinking Budget</CardTitle>
         </div>
         <div className="flex items-center gap-2">
@@ -137,30 +137,30 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
               <span
                 className={`px-2 py-1 text-xs font-medium rounded-full ${
                   data.enabled
-                    ? "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400"
-                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
+                    ? "bg-success-3 text-success-11 bg-success-4 dark:text-success-7"
+                    : "bg-neutral-2 text-neutral-11"
                 }`}
               >
                 {data.enabled ? "Enabled" : "Disabled"}
               </span>
-              <Button
+              <Button size="icon"
                 variant="secondary"
-                className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800"
+                className="p-1.5 rounded hover:bg-neutral-2"
                 data-testid="edit-thinking-budget-button"
                 onClick={handleEdit}
                 title="Edit thinking budget configuration"
               >
                 <Pencil
                   size={16}
-                  className="text-neutral-500 dark:text-neutral-400"
+                  className="text-neutral-10"
                 />
               </Button>
             </>
           ) : (
             <>
-              <Button
+              <Button size="icon"
                 variant="secondary"
-                className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800"
+                className="p-1.5 rounded hover:bg-neutral-2"
                 data-testid="cancel-edit-button"
                 onClick={handleCancel}
                 disabled={isSaving}
@@ -168,18 +168,18 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
               >
                 <X
                   size={16}
-                  className="text-neutral-500 dark:text-neutral-400"
+                  className="text-neutral-10"
                 />
               </Button>
-              <Button
+              <Button size="icon"
                 variant="primary"
-                className="p-1.5 rounded bg-primary-500 hover:bg-primary-600"
+                className="p-1.5 rounded bg-primary-9 hover:bg-primary-10"
                 data-testid="save-thinking-budget-button"
                 onClick={handleSave}
                 disabled={isSaving}
                 title="Save changes"
               >
-                <Save size={16} className="text-white" />
+                <Save size={16} className="text-neutral-12" />
               </Button>
             </>
           )}
@@ -188,18 +188,18 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
       <CardContent>
         {/* Edit Controls (shown when editing) */}
         {isEditing && (
-          <div className="mb-4 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+          <div className="mb-4 p-3 bg-primary-1 dark:bg-primary-a3 rounded-lg border border-primary-4 dark:border-primary-11">
             <div className="space-y-4">
               {/* Level Selector */}
               <div>
                 <label
                   htmlFor="thinking-level-select"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+                  className="block text-sm font-medium text-neutral-11 mb-1"
                 >
                   Default Level
                 </label>
                 <Select
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100 disabled:opacity-50"
+                  className="px-3 py-2 text-neutral-12 disabled:opacity-50"
                   id="thinking-level-select"
                   data-testid="thinking-level-selector"
                   value={editLevel}
@@ -230,7 +230,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
         {/* Default Level (read-only view) */}
         {!isEditing && (
           <div className="mb-4">
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">
+            <p className="text-sm text-neutral-10 mb-1">
               Default Level
             </p>
             <span
@@ -243,7 +243,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
 
         {/* Complexity Mapping */}
         <div className="mb-4">
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
+          <p className="text-sm text-neutral-10 mb-2">
             Complexity Mapping
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -251,11 +251,11 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
               ([complexity, level]) => (
                 <div
                   key={complexity}
-                  className="flex items-center justify-between p-2 bg-neutral-50 dark:bg-neutral-800 rounded"
+                  className="flex items-center justify-between p-2 bg-neutral-1 rounded"
                 >
                   <div className="flex items-center gap-2">
                     {getComplexityIcon(complexity)}
-                    <span className="text-sm text-neutral-700 dark:text-neutral-300 capitalize">
+                    <span className="text-sm text-neutral-11 capitalize">
                       {complexity}
                     </span>
                   </div>
@@ -272,14 +272,14 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
 
         {/* Thinking Levels */}
         <div>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
+          <p className="text-sm text-neutral-10 mb-2">
             Available Levels
           </p>
           <div className="space-y-2">
             {data.levels.map((levelInfo) => (
               <div
                 key={levelInfo.level}
-                className="p-2 border border-neutral-200 dark:border-neutral-700 rounded"
+                className="p-2 border border-neutral-5 rounded"
               >
                 <div className="flex items-center justify-between mb-1">
                   <span
@@ -287,11 +287,11 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
                   >
                     {levelInfo.level}
                   </span>
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                  <span className="text-xs text-neutral-10">
                     {levelInfo.otherModelsTokens.toLocaleString()} tokens
                   </span>
                 </div>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                <p className="text-xs text-neutral-11">
                   {levelInfo.description}
                 </p>
               </div>

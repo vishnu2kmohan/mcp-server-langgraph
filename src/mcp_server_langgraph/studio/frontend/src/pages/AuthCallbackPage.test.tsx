@@ -2,8 +2,11 @@
  * AuthCallbackPage Tests
  *
  * TDD tests for OAuth2 Authorization Code + PKCE callback handling.
- * Tests cover token parsing, JWT decoding, Redux state updates,
+ * Tests cover token parsing, API-based user fetching, Redux state updates,
  * error handling, and navigation.
+ *
+ * Note: User info is now fetched via initializeAuth() which calls /api/v1/me,
+ * rather than being decoded from the JWT. Tests use MSW to mock this endpoint.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -12,10 +15,12 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
+import { http, HttpResponse } from "msw";
 import { AuthCallbackPage } from "./AuthCallbackPage";
 import authReducer, { initialAuthState } from "../store/slices/authSlice";
 import personaReducer from "../store/slices/personaSlice";
 import { INTENDED_ROUTE_KEY } from "../utils/intendedRoute";
+import { server } from "../mocks/server";
 
 // Mock react-router navigate
 const mockNavigate = vi.fn();
@@ -38,6 +43,38 @@ vi.mock("../utils/storage", async (importOriginal) => {
 
 // Import mocked module
 import { setAuthTokens } from "../utils/storage";
+
+// Helper to create MSW handler for /api/v1/me with custom user data
+const createMeHandler = (userData: Record<string, unknown>) =>
+  http.get("/api/v1/me", () =>
+    HttpResponse.json({
+      user_id: "user-test-123",
+      username: "testuser",
+      email: "test@example.com",
+      roles: ["user"],
+      persona: "user",
+      websocket_permissions: {
+        alerts: true,
+        devtools: true,
+        notifications: true,
+        audit: true,
+        mcp_tasks: true,
+        mcp_aggregated: true,
+        connections_health: true,
+        connections_realtime: true,
+        heart_metrics: true,
+        traces: true,
+        cost_tracking: true,
+        budget_alerts: true,
+        agent_requests: true,
+        ai_suggestions: true,
+        orchestrator_status: true,
+        llm_streaming: true,
+        session_metrics: true,
+      },
+      ...userData,
+    }),
+  );
 
 // Create a valid JWT for testing
 // Header: {"alg":"RS256","typ":"JWT"}
@@ -177,13 +214,22 @@ describe("AuthCallbackPage", () => {
       // Verify tokens were stored
       expect(setAuthTokens).toHaveBeenCalledWith(mockToken, "mock-refresh");
 
-      // Verify user was set in Redux
+      // Verify user was set in Redux (data comes from /api/v1/me via initializeAuth)
       const state = store.getState();
       expect(state.auth.user).not.toBeNull();
       expect(state.auth.user?.username).toBe("testuser");
     });
 
     it("extracts admin persona from roles", async () => {
+      // Override /api/v1/me to return admin user
+      server.use(
+        createMeHandler({
+          username: "adminuser",
+          roles: ["admin", "developer", "user"],
+          persona: "admin",
+        }),
+      );
+
       const mockToken = createMockJWT(mockAdminPayload);
       const hash = `#access_token=${mockToken}`;
 
@@ -198,6 +244,15 @@ describe("AuthCallbackPage", () => {
     });
 
     it("extracts developer persona from roles", async () => {
+      // Override /api/v1/me to return developer user
+      server.use(
+        createMeHandler({
+          username: "devuser",
+          roles: ["developer", "user"],
+          persona: "developer",
+        }),
+      );
+
       const mockToken = createMockJWT(mockDeveloperPayload);
       const hash = `#access_token=${mockToken}`;
 
@@ -212,6 +267,7 @@ describe("AuthCallbackPage", () => {
     });
 
     it("defaults to user persona when no admin/developer roles", async () => {
+      // Default handler already returns user persona
       const mockToken = createMockJWT({
         sub: "user-456",
         preferred_username: "basicuser",
@@ -314,23 +370,30 @@ describe("AuthCallbackPage", () => {
       expect(screen.getByText(/server_error/i)).toBeInTheDocument();
     });
 
-    it("shows error for invalid JWT format", async () => {
-      const hash = "#access_token=not-a-valid-jwt";
+    it("shows error when API call fails", async () => {
+      // Override /api/v1/me to return an error
+      server.use(
+        http.get("/api/v1/me", () => HttpResponse.json({ detail: "Unauthorized" }, { status: 401 })),
+      );
+
+      const mockToken = createMockJWT(mockUserPayload);
+      const hash = `#access_token=${mockToken}`;
 
       renderWithProviders(hash);
 
       await waitFor(() => {
         expect(screen.getByText(/Sign in failed/i)).toBeInTheDocument();
       });
-
-      expect(
-        screen.getByText(/Invalid access token format/i),
-      ).toBeInTheDocument();
     });
 
-    it("shows error for malformed JWT payload", async () => {
-      // JWT with invalid base64 payload
-      const hash = "#access_token=header.invalid!!!.signature";
+    it("shows error when API returns network error", async () => {
+      // Override /api/v1/me to return network error
+      server.use(
+        http.get("/api/v1/me", () => HttpResponse.error()),
+      );
+
+      const mockToken = createMockJWT(mockUserPayload);
+      const hash = `#access_token=${mockToken}`;
 
       renderWithProviders(hash);
 
@@ -365,12 +428,15 @@ describe("AuthCallbackPage", () => {
     });
   });
 
-  describe("JWT Payload Parsing", () => {
-    it("extracts username from preferred_username claim", async () => {
-      const mockToken = createMockJWT({
-        sub: "user-123",
-        preferred_username: "myusername",
-      });
+  describe("API-based User Fetching", () => {
+    // Note: User info is now fetched from /api/v1/me via initializeAuth(),
+    // not parsed from the JWT. These tests verify the API response is properly
+    // mapped to Redux state.
+
+    it("fetches username from API response", async () => {
+      server.use(createMeHandler({ username: "api-username" }));
+
+      const mockToken = createMockJWT(mockUserPayload);
       const hash = `#access_token=${mockToken}`;
 
       const { store } = renderWithProviders(hash);
@@ -379,14 +445,13 @@ describe("AuthCallbackPage", () => {
         expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
       });
 
-      expect(store.getState().auth.user?.username).toBe("myusername");
+      expect(store.getState().auth.user?.username).toBe("api-username");
     });
 
-    it("falls back to username claim if no preferred_username", async () => {
-      const mockToken = createMockJWT({
-        sub: "user-123",
-        username: "fallback-username",
-      });
+    it("fetches email from API response", async () => {
+      server.use(createMeHandler({ email: "api@example.com" }));
+
+      const mockToken = createMockJWT(mockUserPayload);
       const hash = `#access_token=${mockToken}`;
 
       const { store } = renderWithProviders(hash);
@@ -395,45 +460,15 @@ describe("AuthCallbackPage", () => {
         expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
       });
 
-      expect(store.getState().auth.user?.username).toBe("fallback-username");
+      expect(store.getState().auth.user?.email).toBe("api@example.com");
     });
 
-    it("falls back to sub claim if no username claims", async () => {
-      const mockToken = createMockJWT({
-        sub: "user-sub-id",
-      });
-      const hash = `#access_token=${mockToken}`;
+    it("fetches roles from API response", async () => {
+      server.use(
+        createMeHandler({ roles: ["custom-role-1", "custom-role-2"] }),
+      );
 
-      const { store } = renderWithProviders(hash);
-
-      await waitFor(() => {
-        expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
-      });
-
-      expect(store.getState().auth.user?.username).toBe("user-sub-id");
-    });
-
-    it("uses unknown as fallback when no username info", async () => {
-      const mockToken = createMockJWT({
-        // No sub, username, or preferred_username
-        email: "only-email@test.com",
-      });
-      const hash = `#access_token=${mockToken}`;
-
-      const { store } = renderWithProviders(hash);
-
-      await waitFor(() => {
-        expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
-      });
-
-      expect(store.getState().auth.user?.username).toBe("unknown");
-    });
-
-    it("extracts roles from realm_access.roles", async () => {
-      const mockToken = createMockJWT({
-        sub: "user-123",
-        realm_access: { roles: ["custom-role-1", "custom-role-2"] },
-      });
+      const mockToken = createMockJWT(mockUserPayload);
       const hash = `#access_token=${mockToken}`;
 
       const { store } = renderWithProviders(hash);
@@ -448,11 +483,18 @@ describe("AuthCallbackPage", () => {
       ]);
     });
 
-    it("extracts roles from top-level roles array", async () => {
-      const mockToken = createMockJWT({
-        sub: "user-123",
-        roles: ["top-level-role"],
-      });
+    it("fetches websocket permissions from API response", async () => {
+      server.use(
+        createMeHandler({
+          websocket_permissions: {
+            connections_health: true,
+            ai_suggestions: true,
+            alerts: false,
+          },
+        }),
+      );
+
+      const mockToken = createMockJWT(mockUserPayload);
       const hash = `#access_token=${mockToken}`;
 
       const { store } = renderWithProviders(hash);
@@ -461,13 +503,15 @@ describe("AuthCallbackPage", () => {
         expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
       });
 
-      expect(store.getState().auth.user?.roles).toEqual(["top-level-role"]);
+      const wsPerms = store.getState().auth.user?.websocketPermissions;
+      expect(wsPerms?.connections_health).toBe(true);
+      expect(wsPerms?.ai_suggestions).toBe(true);
     });
 
-    it("defaults to empty roles array when no roles claim", async () => {
-      const mockToken = createMockJWT({
-        sub: "user-123",
-      });
+    it("defaults to empty roles when API returns no roles", async () => {
+      server.use(createMeHandler({ roles: [] }));
+
+      const mockToken = createMockJWT(mockUserPayload);
       const hash = `#access_token=${mockToken}`;
 
       const { store } = renderWithProviders(hash);
@@ -477,6 +521,192 @@ describe("AuthCallbackPage", () => {
       });
 
       expect(store.getState().auth.user?.roles).toEqual([]);
+    });
+  });
+
+  describe("WebSocket Permissions Redux State", () => {
+    // These tests verify that websocket_permissions from /api/v1/me are properly
+    // mapped to Redux state. This is critical for WebSocket hooks to check
+    // permissions before attempting to connect.
+    //
+    // Reference: StatusBar "Disconnected" after OAuth login bug
+
+    it("stores all 17 websocket permissions in Redux state", async () => {
+      // Use default handler which has all 17 permissions set to true
+      const mockToken = createMockJWT(mockUserPayload);
+      const hash = `#access_token=${mockToken}`;
+
+      const { store } = renderWithProviders(hash);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
+      });
+
+      const wsPerms = store.getState().auth.user?.websocketPermissions;
+      expect(wsPerms).toBeDefined();
+
+      // Verify all 17 fields are present
+      const expectedFields = [
+        "alerts",
+        "notifications",
+        "devtools",
+        "audit",
+        "mcp_tasks",
+        "mcp_aggregated",
+        "connections_health",
+        "connections_realtime",
+        "heart_metrics",
+        "traces",
+        "cost_tracking",
+        "budget_alerts",
+        "agent_requests",
+        "ai_suggestions",
+        "orchestrator_status",
+        "llm_streaming",
+        "session_metrics",
+      ];
+
+      for (const field of expectedFields) {
+        expect(wsPerms).toHaveProperty(field);
+      }
+    });
+
+    it("maps connections_health permission correctly for StatusBar", async () => {
+      // This is the critical permission for StatusBar "Connected" state
+      server.use(
+        createMeHandler({
+          websocket_permissions: {
+            alerts: false,
+            devtools: false,
+            notifications: false,
+            audit: false,
+            mcp_tasks: false,
+            mcp_aggregated: false,
+            connections_health: true, // This is what StatusBar checks
+            connections_realtime: false,
+            heart_metrics: false,
+            traces: false,
+            cost_tracking: false,
+            budget_alerts: false,
+            agent_requests: false,
+            ai_suggestions: false,
+            orchestrator_status: false,
+            llm_streaming: false,
+            session_metrics: false,
+          },
+        }),
+      );
+
+      const mockToken = createMockJWT(mockUserPayload);
+      const hash = `#access_token=${mockToken}`;
+
+      const { store } = renderWithProviders(hash);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
+      });
+
+      const wsPerms = store.getState().auth.user?.websocketPermissions;
+      expect(wsPerms?.connections_health).toBe(true);
+    });
+
+    it("handles user without alert permission (developer)", async () => {
+      server.use(
+        createMeHandler({
+          persona: "developer",
+          websocket_permissions: {
+            alerts: false, // Developers don't get alerts
+            notifications: true,
+            devtools: true,
+            audit: true,
+            mcp_tasks: true,
+            mcp_aggregated: true,
+            connections_health: true,
+            connections_realtime: true,
+            heart_metrics: true,
+            traces: true,
+            cost_tracking: true,
+            budget_alerts: true,
+            agent_requests: true,
+            ai_suggestions: true,
+            orchestrator_status: true,
+            llm_streaming: true,
+            session_metrics: true,
+          },
+        }),
+      );
+
+      const mockToken = createMockJWT(mockDeveloperPayload);
+      const hash = `#access_token=${mockToken}`;
+
+      const { store } = renderWithProviders(hash);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
+      });
+
+      const wsPerms = store.getState().auth.user?.websocketPermissions;
+      expect(wsPerms?.alerts).toBe(false);
+      expect(wsPerms?.connections_health).toBe(true);
+    });
+
+    it("handles fail-closed permissions when all false", async () => {
+      // When OpenFGA is unavailable, all permissions should be false
+      server.use(
+        createMeHandler({
+          websocket_permissions: {
+            alerts: false,
+            notifications: false,
+            devtools: false,
+            audit: false,
+            mcp_tasks: false,
+            mcp_aggregated: false,
+            connections_health: false,
+            connections_realtime: false,
+            heart_metrics: false,
+            traces: false,
+            cost_tracking: false,
+            budget_alerts: false,
+            agent_requests: false,
+            ai_suggestions: false,
+            orchestrator_status: false,
+            llm_streaming: false,
+            session_metrics: false,
+          },
+        }),
+      );
+
+      const mockToken = createMockJWT(mockUserPayload);
+      const hash = `#access_token=${mockToken}`;
+
+      const { store } = renderWithProviders(hash);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
+      });
+
+      const wsPerms = store.getState().auth.user?.websocketPermissions;
+      expect(Object.values(wsPerms || {}).every((v) => v === false)).toBe(true);
+    });
+
+    it("websocketPermissions enables useConnectionHealthWebSocket hook", async () => {
+      // Verify the shape that useConnectionHealthWebSocket expects
+      const mockToken = createMockJWT(mockUserPayload);
+      const hash = `#access_token=${mockToken}`;
+
+      const { store } = renderWithProviders(hash);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
+      });
+
+      const authState = store.getState().auth;
+
+      // useConnectionHealthWebSocket checks:
+      // 1. isAuthenticated (derived as user !== null via selectIsAuthenticated)
+      // 2. websocketPermissions?.connections_health (from auth.user)
+      expect(authState.user).not.toBeNull(); // selectIsAuthenticated checks user !== null
+      expect(authState.user?.websocketPermissions?.connections_health).toBe(true);
     });
   });
 

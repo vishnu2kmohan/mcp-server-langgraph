@@ -319,17 +319,17 @@ export function InteractiveMermaidDiagram({
   // Error state
   if (error) {
     return (
-      <div className="my-2 p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg">
-        <div className="flex items-center gap-2 text-error-600 dark:text-error-400 mb-2">
+      <div className="my-2 p-4 bg-error-1 dark:bg-error-a3 border border-error-4 dark:border-error-11 rounded-lg">
+        <div className="flex items-center gap-2 text-error-10 dark:text-error-11 mb-2">
           <AlertCircle size={16} />
           <span className="font-medium">Diagram Error</span>
         </div>
-        <pre className="text-xs text-error-500 overflow-x-auto">{error}</pre>
+        <pre className="text-xs text-error-9 overflow-x-auto">{error}</pre>
         <details className="mt-2">
-          <summary className="text-xs text-neutral-500 dark:text-neutral-400 cursor-pointer">
+          <summary className="text-xs text-neutral-10 cursor-pointer">
             View source
           </summary>
-          <pre className="mt-1 text-xs bg-neutral-100 dark:bg-neutral-800 p-2 rounded overflow-x-auto">
+          <pre className="mt-1 text-xs bg-neutral-2 p-2 rounded overflow-x-auto">
             {code}
           </pre>
         </details>
@@ -338,8 +338,8 @@ export function InteractiveMermaidDiagram({
   }
 
   const containerClasses = isFullscreen
-    ? "fixed inset-0 z-50 bg-neutral-900"
-    : `my-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg overflow-hidden ${className}`;
+    ? "fixed inset-0 z-modal bg-neutral-2"
+    : `my-2 bg-neutral-1 rounded-lg overflow-hidden ${className}`;
 
   return (
     <div
@@ -350,24 +350,24 @@ export function InteractiveMermaidDiagram({
       tabIndex={0}
     >
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-2 p-2 bg-neutral-100 dark:bg-neutral-700 border-b border-neutral-200 dark:border-neutral-700 dark:border-neutral-600">
+      <div className="flex items-center justify-between gap-2 p-2 bg-neutral-2 border-b border-neutral-5">
         {/* Zoom controls */}
         <div className="flex items-center gap-1">
           <Button
-            variant="secondary"
-            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
+            variant="ghost"
+            size="icon"
             type="button"
             onClick={handleZoomOut}
             aria-label="Zoom out"
           >
             <ZoomOut size={16} />
           </Button>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400 w-12 text-center">
+          <span className="text-xs text-neutral-10 w-12 text-center">
             {Math.round(zoom * 100)}%
           </span>
           <Button
-            variant="secondary"
-            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
+            variant="ghost"
+            size="icon"
             type="button"
             onClick={handleZoomIn}
             aria-label="Zoom in"
@@ -375,8 +375,8 @@ export function InteractiveMermaidDiagram({
             <ZoomIn size={16} />
           </Button>
           <Button
-            variant="secondary"
-            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
+            variant="ghost"
+            size="icon"
             type="button"
             onClick={handleResetZoom}
             aria-label="Reset zoom"
@@ -388,21 +388,21 @@ export function InteractiveMermaidDiagram({
         {/* Action buttons */}
         <div className="flex items-center gap-1">
           <Button
-            variant="secondary"
-            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
+            variant="ghost"
+            size="icon"
             type="button"
             onClick={handleCopy}
             aria-label="Copy source"
           >
             {copied ? (
-              <Check size={16} className="text-success-500" />
+              <Check size={16} className="text-success-9" />
             ) : (
               <Copy size={16} />
             )}
           </Button>
           <Button
-            variant="secondary"
-            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
+            variant="ghost"
+            size="icon"
             type="button"
             onClick={handleDownload}
             aria-label="Download as PNG"
@@ -410,8 +410,8 @@ export function InteractiveMermaidDiagram({
             <Download size={16} />
           </Button>
           <Button
-            variant="secondary"
-            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
+            variant="ghost"
+            size="icon"
             type="button"
             onClick={handleToggleFullscreen}
             aria-label="Toggle fullscreen"

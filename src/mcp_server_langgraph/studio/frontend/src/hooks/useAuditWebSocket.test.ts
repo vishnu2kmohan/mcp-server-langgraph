@@ -17,9 +17,22 @@ import {
 const mockDispatch = vi.fn();
 vi.mock("../store/hooks", () => ({
   useAppDispatch: () => mockDispatch,
-  // Return true for selectIsAuthenticated (this hook only uses this selector)
-  useAppSelector: () => true,
+  // Return values for selectors: isAuthenticated=true, wsPermissions={audit: true}
+  useAppSelector: vi.fn((selector) => {
+    if (selector.name?.includes("Authenticated")) return true;
+    if (selector.name?.includes("WebSocketPermissions")) return { audit: true };
+    return true;
+  }),
 }));
+
+// Mock getAuthToken to return test token
+vi.mock("../utils/storage", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../utils/storage")>();
+  return {
+    ...actual,
+    getAuthToken: vi.fn(() => "mock-test-token"),
+  };
+});
 
 // Mock useRealtimeSync
 const mockSend = vi.fn();
@@ -113,18 +126,27 @@ describe("useAuditWebSocket", () => {
     it("should update currentFilter when filter_updated message is received", () => {
       const { result } = renderHook(() => useAuditWebSocket());
 
-      const filter: AuditFilter = {
+      // Backend sends snake_case format
+      const backendFilter = {
         categories: ["security"],
         regulations: ["HIPAA", "FedRAMP"],
         actors: ["user:alice"],
         event_types: ["login_success"],
       };
 
+      // Expected: frontend camelCase format after transformation
+      const expectedFilter: AuditFilter = {
+        categories: ["security"],
+        regulations: ["HIPAA", "FedRAMP"],
+        actors: ["user:alice"],
+        eventTypes: ["login_success"],
+      };
+
       act(() => {
-        mockOnMessage?.({ type: "filter_updated", filter });
+        mockOnMessage?.({ type: "filter_updated", filter: backendFilter });
       });
 
-      expect(result.current.currentFilter).toEqual(filter);
+      expect(result.current.currentFilter).toEqual(expectedFilter);
     });
 
     it("should clear filter when clearFilter is called", () => {
@@ -152,7 +174,8 @@ describe("useAuditWebSocket", () => {
     it("should add event when audit event message is received", () => {
       const { result } = renderHook(() => useAuditWebSocket());
 
-      const event: AuditEvent = {
+      // Input: backend snake_case format
+      const backendEvent = {
         event_id: "evt-001",
         timestamp: "2025-01-15T10:30:00Z",
         category: "authentication",
@@ -162,11 +185,22 @@ describe("useAuditWebSocket", () => {
         details: { ip: "192.168.1.1" },
       };
 
+      // Expected: frontend camelCase format
+      const expectedEvent: AuditEvent = {
+        eventId: "evt-001",
+        timestamp: "2025-01-15T10:30:00Z",
+        category: "authentication",
+        eventType: "login_success",
+        actor: "user:alice",
+        resource: "session:123",
+        details: { ip: "192.168.1.1" },
+      };
+
       act(() => {
-        mockOnMessage?.(event);
+        mockOnMessage?.(backendEvent);
       });
 
-      expect(result.current.events).toContainEqual(event);
+      expect(result.current.events).toContainEqual(expectedEvent);
     });
 
     it("should prepend new events (newest first)", () => {
@@ -193,8 +227,8 @@ describe("useAuditWebSocket", () => {
         mockOnMessage?.(event2);
       });
 
-      expect(result.current.events[0].event_id).toBe("evt-002");
-      expect(result.current.events[1].event_id).toBe("evt-001");
+      expect(result.current.events[0].eventId).toBe("evt-002");
+      expect(result.current.events[1].eventId).toBe("evt-001");
     });
 
     it("should respect maxEvents limit", () => {
@@ -231,8 +265,8 @@ describe("useAuditWebSocket", () => {
       });
 
       expect(result.current.events).toHaveLength(2);
-      expect(result.current.events[0].event_id).toBe("evt-003");
-      expect(result.current.events[1].event_id).toBe("evt-002");
+      expect(result.current.events[0].eventId).toBe("evt-003");
+      expect(result.current.events[1].eventId).toBe("evt-002");
     });
 
     it("should clear events when clearEvents is called", () => {
@@ -265,7 +299,8 @@ describe("useAuditWebSocket", () => {
       const onEvent = vi.fn();
       renderHook(() => useAuditWebSocket({ onEvent }));
 
-      const event: AuditEvent = {
+      // Input: backend snake_case format
+      const backendEvent = {
         event_id: "evt-001",
         timestamp: "2025-01-15T10:30:00Z",
         category: "security",
@@ -273,11 +308,20 @@ describe("useAuditWebSocket", () => {
         actor: "user:mallory",
       };
 
+      // Expected: frontend camelCase format (after transformation)
+      const expectedEvent: AuditEvent = {
+        eventId: "evt-001",
+        timestamp: "2025-01-15T10:30:00Z",
+        category: "security",
+        eventType: "access_denied",
+        actor: "user:mallory",
+      };
+
       act(() => {
-        mockOnMessage?.(event);
+        mockOnMessage?.(backendEvent);
       });
 
-      expect(onEvent).toHaveBeenCalledWith(event);
+      expect(onEvent).toHaveBeenCalledWith(expectedEvent);
     });
 
     it("should call onFilterUpdated callback when filter is updated", () => {
@@ -304,8 +348,8 @@ describe("useAuditWebSocket", () => {
       const { useRealtimeSync } = await import("./useRealtimeSync");
       expect(useRealtimeSync).toHaveBeenCalledWith(
         expect.objectContaining({
-          // Uses WS_ENDPOINTS.AUDIT which resolves to /ws/audit
-          url: expect.stringContaining("/ws/audit"),
+          // Uses WS_ENDPOINTS.AUDIT which resolves to /api/v1/ws/audit
+          url: expect.stringContaining("/api/v1/ws/audit"),
         }),
       );
     });

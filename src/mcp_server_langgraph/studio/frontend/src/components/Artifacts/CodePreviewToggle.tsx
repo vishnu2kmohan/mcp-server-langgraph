@@ -58,8 +58,8 @@ export function CodePreviewToggle({
       role="group"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex rounded-lg border border-neutral-200 dark:border-neutral-700 p-0.5",
-        "bg-neutral-100 dark:bg-neutral-800",
+        "inline-flex rounded-lg border border-neutral-5 p-0.5",
+        "bg-neutral-2",
         className,
       )}
       {...props}
@@ -72,8 +72,8 @@ export function CodePreviewToggle({
           "px-3 py-1 text-xs font-medium rounded-md transition-colors",
           "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1",
           mode === "code"
-            ? "bg-primary-500 text-white shadow-sm"
-            : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200",
+            ? "bg-primary-9 text-neutral-12 shadow-sm"
+            : "text-neutral-11 hover:text-neutral-12",
         )}
       >
         Code
@@ -88,8 +88,8 @@ export function CodePreviewToggle({
           "px-3 py-1 text-xs font-medium rounded-md transition-colors",
           "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1",
           mode === "preview"
-            ? "bg-primary-500 text-white shadow-sm"
-            : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200",
+            ? "bg-primary-9 text-neutral-12 shadow-sm"
+            : "text-neutral-11 hover:text-neutral-12",
           !previewSupported && "opacity-50 cursor-not-allowed",
         )}
       >

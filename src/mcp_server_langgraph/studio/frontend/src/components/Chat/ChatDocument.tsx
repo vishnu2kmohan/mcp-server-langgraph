@@ -39,7 +39,7 @@ import { useSlashCommands } from "../../hooks/useSlashCommands";
 import { useInlineSuggestions } from "../../hooks/useInlineSuggestions";
 import { useAISuggestionsWebSocket } from "../../hooks/useAISuggestionsWebSocket";
 import { useSessionAutoName } from "../../hooks/useSessionAutoName";
-import type { SlashCommand } from "./SlashCommandMenu";
+import type { SlashCommand } from "./ChatInput";
 import {
   ChatMessages,
   type Message,
@@ -54,7 +54,7 @@ import {
   type GoalSetData,
   type GoalResult,
 } from "./SessionGoalTracker";
-import { ChatInputForm } from "./ChatInputForm";
+import { ChatInput } from "./ChatInput";
 import { ChatSuggestions, type ChatSuggestion } from "./ChatSuggestions";
 import type { MentionOption } from "./RichTextInput";
 import {
@@ -64,6 +64,20 @@ import {
 } from "./StylePresets";
 import { Loader2, MessageSquare } from "lucide-react";
 import { recordSignal } from "../../analytics/gsm/SignalsRegistry";
+import {
+  TOAST_ID_CHAT_ERROR,
+  TOAST_ID_URL_FETCH_ERROR,
+  TOAST_ID_VOICE_ERROR,
+  TOAST_ID_FILE_ERROR,
+  TOAST_ID_CONVERSATION_CLEAR,
+  TOAST_ID_COPY,
+  TOAST_ID_SESSION_REFRESH,
+  TOAST_ID_FEEDBACK,
+  TOAST_ID_RATING_ERROR,
+  TOAST_ID_HALLUCINATION_REPORT,
+  TOAST_ID_GOAL,
+  TOAST_ID_SESSION_SUGGEST,
+} from "../../constants/toastIds";
 // SlashCommandMenu and ReasoningEffortSelector handled internally by ChatInputForm
 import { useFeatureFlag } from "../../contexts/FeatureFlagContext";
 import {
@@ -139,7 +153,12 @@ const DEFAULT_AVAILABLE_MODELS: ModelOption[] = [
   // Gemini family (default) - 2.5 stable, 3 preview
   { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", provider: "Google" },
   { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", provider: "Google" },
-  { id: "gemini-3-flash", name: "Gemini 3 Flash", provider: "Google" },
+  // NOTE: gemini-3-flash-preview is the default model per .env.test MODEL_NAME
+  {
+    id: "gemini-3-flash-preview",
+    name: "Gemini 3 Flash Preview",
+    provider: "Google",
+  },
   {
     id: "gemini-3-pro-preview",
     name: "Gemini 3 Pro (Preview)",
@@ -209,7 +228,7 @@ export function ChatDocument({
   onTemplateSelect,
   showStylePresets = false,
   onStylePresetChange,
-  enableRichTextMode = true,
+  enableRichTextMode: _enableRichTextMode = true,
   richTextMentionOptions,
   richTextMaxLength,
 }: ChatDocumentProps) {
@@ -350,6 +369,7 @@ export function ChatDocument({
     if (streamingError && !shownErrorsRef.current.has(streamingError)) {
       shownErrorsRef.current.add(streamingError);
       toast.error("Chat Error", {
+        id: TOAST_ID_CHAT_ERROR,
         description: streamingError,
         duration: 5000,
       });
@@ -362,6 +382,7 @@ export function ChatDocument({
       if (content.error && !shownErrorsRef.current.has(`url-${content.url}`)) {
         shownErrorsRef.current.add(`url-${content.url}`);
         toast.error("Failed to fetch URL", {
+          id: TOAST_ID_URL_FETCH_ERROR,
           description: `Could not load content from ${content.url}`,
           duration: 4000,
         });
@@ -374,6 +395,7 @@ export function ChatDocument({
     if (voiceError && !shownErrorsRef.current.has(`voice-${voiceError}`)) {
       shownErrorsRef.current.add(`voice-${voiceError}`);
       toast.error("Voice Input Error", {
+        id: TOAST_ID_VOICE_ERROR,
         description: voiceError,
         duration: 4000,
       });
@@ -385,6 +407,7 @@ export function ChatDocument({
     if (fileError && !shownErrorsRef.current.has(`file-${fileError}`)) {
       shownErrorsRef.current.add(`file-${fileError}`);
       toast.error("File Upload Error", {
+        id: TOAST_ID_FILE_ERROR,
         description: fileError,
         duration: 4000,
       });
@@ -420,6 +443,7 @@ Type \`/\` to see available commands.`,
           // Clear the conversation
           dispatch(clearMessages());
           toast.success("Conversation cleared", {
+            id: TOAST_ID_CONVERSATION_CLEAR,
             duration: 2000,
           });
           break;
@@ -435,11 +459,13 @@ Type \`/\` to see available commands.`,
               .writeText(lastAssistant.content)
               .then(() => {
                 toast.success("Copied to clipboard", {
+                  id: TOAST_ID_COPY,
                   duration: 2000,
                 });
               })
               .catch((err) => {
                 toast.error("Failed to copy", {
+                  id: TOAST_ID_COPY,
                   description:
                     err instanceof Error
                       ? err.message
@@ -449,6 +475,7 @@ Type \`/\` to see available commands.`,
               });
           } else {
             toast.info("Nothing to copy", {
+              id: TOAST_ID_COPY,
               description: "No assistant message found",
               duration: 2000,
             });
@@ -461,6 +488,7 @@ Type \`/\` to see available commands.`,
           if (currentSession) {
             dispatch(loadSession(currentSession.id));
             toast.success("Session refreshed", {
+              id: TOAST_ID_SESSION_REFRESH,
               duration: 2000,
             });
           }
@@ -723,6 +751,7 @@ Type \`/\` to see available commands.`,
               return updated;
             });
             toast.error("Failed to save rating", {
+              id: TOAST_ID_RATING_ERROR,
               description:
                 error instanceof Error ? error.message : "Please try again",
               duration: 3000,
@@ -749,14 +778,14 @@ Type \`/\` to see available commands.`,
         })
           .unwrap()
           .then(() => {
-            toast.success("Thank you for your feedback!", { duration: 2000 });
+            toast.success("Thank you for your feedback!", { id: TOAST_ID_FEEDBACK, duration: 2000 });
           })
           .catch(() => {
-            toast.error("Failed to save feedback", { duration: 3000 });
+            toast.error("Failed to save feedback", { id: TOAST_ID_FEEDBACK, duration: 3000 });
           });
       } else {
         // Fallback for local-only feedback
-        toast.success("Thank you for your feedback!", { duration: 2000 });
+        toast.success("Thank you for your feedback!", { id: TOAST_ID_FEEDBACK, duration: 2000 });
       }
     },
     [currentSession?.id, messageRatings, submitRating],
@@ -791,6 +820,7 @@ Type \`/\` to see available commands.`,
           .unwrap()
           .then(() => {
             toast.success("Thank you for reporting this issue", {
+              id: TOAST_ID_HALLUCINATION_REPORT,
               description: "Your feedback helps us improve AI accuracy.",
               duration: 3000,
             });
@@ -804,6 +834,7 @@ Type \`/\` to see available commands.`,
             });
             console.error("[HallucinationReport] Failed to submit:", error);
             toast.error("Failed to submit report", {
+              id: TOAST_ID_HALLUCINATION_REPORT,
               description: "Please try again later.",
               duration: 3000,
             });
@@ -812,6 +843,7 @@ Type \`/\` to see available commands.`,
         // Fallback for no session - local-only feedback
         console.info("[HallucinationReport] No session, local only:", report);
         toast.success("Thank you for reporting this issue", {
+          id: TOAST_ID_HALLUCINATION_REPORT,
           description: "Your feedback helps us improve AI accuracy.",
           duration: 3000,
         });
@@ -824,6 +856,7 @@ Type \`/\` to see available commands.`,
   const handleGoalSet = useCallback((data: GoalSetData) => {
     setCurrentGoal(data.goal);
     toast.success("Goal set", {
+      id: TOAST_ID_GOAL,
       description: data.goal,
       duration: 2000,
     });
@@ -840,6 +873,7 @@ Type \`/\` to see available commands.`,
           ? "partially achieved"
           : "not achieved";
     toast.info(`Goal ${achievementText}`, {
+      id: TOAST_ID_GOAL,
       description: result.goal,
       duration: 3000,
     });
@@ -1090,11 +1124,11 @@ Type \`/\` to see available commands.`,
         data-testid="chat-document"
         className={cn(
           "flex items-center justify-center h-full",
-          "bg-white dark:bg-neutral-900",
+          "bg-neutral-1",
           className,
         )}
       >
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-9" />
       </div>
     );
   }
@@ -1106,8 +1140,8 @@ Type \`/\` to see available commands.`,
         data-testid="chat-document"
         className={cn(
           "flex flex-col items-center justify-center h-full",
-          "bg-white dark:bg-neutral-900",
-          "text-neutral-500 dark:text-neutral-400",
+          "bg-neutral-1",
+          "text-neutral-10",
           className,
         )}
       >
@@ -1121,7 +1155,7 @@ Type \`/\` to see available commands.`,
           onSelect={(text) => {
             // User clicked a suggestion but no session exists
             // The parent component should handle session creation
-            toast.info(`Create a new session to ask: "${text}"`);
+            toast.info(`Create a new session to ask: "${text}"`, { id: TOAST_ID_SESSION_SUGGEST });
           }}
           title="Try asking about..."
           compact
@@ -1135,14 +1169,14 @@ Type \`/\` to see available commands.`,
       data-testid="chat-document"
       className={cn(
         "flex flex-col h-full",
-        "bg-white dark:bg-neutral-900",
+        "bg-neutral-1",
         compact && "text-sm",
         className,
       )}
     >
       {/* Session Goal Tracker - helps users track conversation goals */}
       {enableSessionGoalTracker && currentSession && (
-        <div className="px-4 py-2 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="px-4 py-2 border-b border-neutral-5">
           <SessionGoalTracker
             sessionId={currentSession.id}
             currentGoal={currentGoal}
@@ -1202,7 +1236,7 @@ Type \`/\` to see available commands.`,
 
       {/* Style Presets Selector */}
       {showStylePresets && (
-        <div className="px-4 py-2 border-t border-neutral-200 dark:border-neutral-700">
+        <div className="px-4 py-2 border-t border-neutral-5">
           <StylePresets
             onSelect={handleStylePresetChange}
             activePreset={activePreset}
@@ -1211,31 +1245,30 @@ Type \`/\` to see available commands.`,
         </div>
       )}
 
-      {/* Input Form - Consolidated to ChatInputForm with RichText mode */}
-      <ChatInputForm
-        input={input}
-        onInputChange={setInput}
+      {/* Input Form - ChatInput pill-style component */}
+      <ChatInput
+        value={input}
+        onChange={setInput}
         onSubmit={handleSubmit}
-        isProcessing={isProcessing}
+        disabled={isProcessing}
         isStreaming={isStreaming}
         onStopStreaming={stopStream}
         isListening={isListening}
         isVoiceSupported={isVoiceSupported}
-        voiceError={voiceError}
+        voiceError={voiceError ?? undefined}
         onStartListening={startListening}
         onStopListening={stopListening}
         uploadFiles={uploadFiles}
         isUploading={isUploading}
         isDragging={isDragging}
-        fileError={fileError}
+        fileError={fileError ?? undefined}
         onSelectFiles={selectFiles}
         onRemoveFile={removeFile}
         dragHandlers={dragHandlers}
-        // RichText mode props (Phase 6 consolidation)
-        enableRichTextMode={enableRichTextMode}
+        // Submit behavior
         submitOnEnter={submitOnEnter}
         mentionOptions={richTextMentionOptions}
-        richTextMaxLength={richTextMaxLength}
+        maxLength={richTextMaxLength}
         // Reasoning effort / thinking props
         modelSupportsThinking={modelSupportsThinking(model || "")}
         reasoningEffort={reasoningEffort}
@@ -1252,13 +1285,17 @@ Type \`/\` to see available commands.`,
         urlFetchLoading={loadingUrls}
         fetchedUrls={fetchedContent.map((c) => ({
           url: c.url,
-          title: c.title,
+          title: c.title || c.url,
           content: c.content || "",
         }))}
         onRemoveFetchedUrl={clearFetchedUrl}
         // Slash commands props
-        slashCommands={enableSlashCommands ? slashCommands : undefined}
-        onSlashCommandSelect={handleSlashCommandSelect}
+        slashCommands={
+          enableSlashCommands ? (slashCommands as SlashCommand[]) : undefined
+        }
+        onSlashCommandSelect={
+          handleSlashCommandSelect as (cmd: SlashCommand) => void
+        }
         // Inline AI suggestions props (VSCode Copilot style)
         // Uses WebSocket when available, falls back to REST
         enableInlineSuggestions={enableAiSuggestions}

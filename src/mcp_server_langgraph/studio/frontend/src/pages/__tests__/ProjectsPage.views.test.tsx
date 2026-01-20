@@ -94,10 +94,10 @@ describe("ProjectsPage - Views and Actions", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /grid view/i }),
+          screen.getByRole("radio", { name: /grid view/i }),
         ).toBeInTheDocument();
         expect(
-          screen.getByRole("button", { name: /table view/i }),
+          screen.getByRole("radio", { name: /table view/i }),
         ).toBeInTheDocument();
       });
     });
@@ -114,8 +114,8 @@ describe("ProjectsPage - Views and Actions", () => {
       renderWithRouter(<ProjectsPage />);
 
       await waitFor(() => {
-        const gridBtn = screen.getByRole("button", { name: /grid view/i });
-        expect(gridBtn).toHaveAttribute("aria-pressed", "true");
+        const gridBtn = screen.getByRole("radio", { name: /grid view/i });
+        expect(gridBtn).toHaveAttribute("aria-checked", "true");
       });
     });
 
@@ -135,13 +135,13 @@ describe("ProjectsPage - Views and Actions", () => {
       });
 
       // Click table view button
-      fireEvent.click(screen.getByRole("button", { name: /table view/i }));
+      fireEvent.click(screen.getByRole("radio", { name: /table view/i }));
 
       await waitFor(() => {
         // Table view should have a table element
         expect(screen.getByRole("table")).toBeInTheDocument();
-        const tableBtn = screen.getByRole("button", { name: /table view/i });
-        expect(tableBtn).toHaveAttribute("aria-pressed", "true");
+        const tableBtn = screen.getByRole("radio", { name: /table view/i });
+        expect(tableBtn).toHaveAttribute("aria-checked", "true");
       });
     });
 
@@ -161,7 +161,7 @@ describe("ProjectsPage - Views and Actions", () => {
       });
 
       // Switch to table view
-      fireEvent.click(screen.getByRole("button", { name: /table view/i }));
+      fireEvent.click(screen.getByRole("radio", { name: /table view/i }));
 
       await waitFor(() => {
         expect(screen.getByRole("table")).toBeInTheDocument();
@@ -223,7 +223,7 @@ describe("ProjectsPage - Views and Actions", () => {
       });
 
       // Switch to table view
-      fireEvent.click(screen.getByRole("button", { name: /table view/i }));
+      fireEvent.click(screen.getByRole("radio", { name: /table view/i }));
 
       await waitFor(() => {
         expect(screen.getByRole("table")).toBeInTheDocument();
@@ -254,7 +254,7 @@ describe("ProjectsPage - Views and Actions", () => {
       });
 
       // Switch to table view
-      fireEvent.click(screen.getByRole("button", { name: /table view/i }));
+      fireEvent.click(screen.getByRole("radio", { name: /table view/i }));
 
       await waitFor(() => {
         expect(screen.getByRole("table")).toBeInTheDocument();
@@ -287,7 +287,7 @@ describe("ProjectsPage - Views and Actions", () => {
       });
 
       // Switch to table view
-      fireEvent.click(screen.getByRole("button", { name: /table view/i }));
+      fireEvent.click(screen.getByRole("radio", { name: /table view/i }));
 
       await waitFor(() => {
         expect(screen.getByRole("table")).toBeInTheDocument();
@@ -323,7 +323,7 @@ describe("ProjectsPage - Views and Actions", () => {
       });
 
       // Switch to table view
-      fireEvent.click(screen.getByRole("button", { name: /table view/i }));
+      fireEvent.click(screen.getByRole("radio", { name: /table view/i }));
 
       await waitFor(() => {
         expect(screen.getByRole("table")).toBeInTheDocument();
@@ -418,7 +418,7 @@ describe("ProjectsPage - Views and Actions", () => {
       });
 
       // Switch to table view to see sortable headers
-      fireEvent.click(screen.getByRole("button", { name: /table view/i }));
+      fireEvent.click(screen.getByRole("radio", { name: /table view/i }));
 
       await waitFor(() => {
         expect(screen.getByRole("table")).toBeInTheDocument();
@@ -475,7 +475,7 @@ describe("ProjectsPage - Views and Actions", () => {
       });
 
       // Switch to table view
-      fireEvent.click(screen.getByRole("button", { name: /table view/i }));
+      fireEvent.click(screen.getByRole("radio", { name: /table view/i }));
 
       await waitFor(() => {
         expect(screen.getByRole("table")).toBeInTheDocument();
@@ -509,7 +509,7 @@ describe("ProjectsPage - Views and Actions", () => {
       });
 
       // Switch to table view
-      fireEvent.click(screen.getByRole("button", { name: /table view/i }));
+      fireEvent.click(screen.getByRole("radio", { name: /table view/i }));
 
       await waitFor(() => {
         expect(screen.getByRole("table")).toBeInTheDocument();

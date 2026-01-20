@@ -3,15 +3,22 @@
  *
  * Code-splits DevTools tabs for better initial load performance.
  * Each tab is loaded on-demand when first accessed.
+ *
+ * @deprecated Individual lazy tab exports are deprecated.
+ * DevToolsPanel handles internal lazy loading.
+ * Only LazyDevToolsPanel is maintained. Will be removed in next major version.
  */
 import { lazy } from "react";
 
 // =============================================================================
-// Lazy-loaded Tabs
+// DEPRECATED: Lazy-loaded Tabs
 // =============================================================================
+// These individual tab exports are deprecated. DevToolsPanel handles
+// internal lazy loading. Only LazyDevToolsPanel should be used externally.
 
 /**
  * Console tab - logs, notifications, errors
+ * @deprecated Use DevToolsPanel instead
  */
 export const LazyConsoleTab = lazy(() =>
   import("./tabs/ConsoleTab").then((m) => ({ default: m.ConsoleTab })),
@@ -19,6 +26,7 @@ export const LazyConsoleTab = lazy(() =>
 
 /**
  * Problems tab - aggregated errors/warnings
+ * @deprecated Use DevToolsPanel instead
  */
 export const LazyProblemsTab = lazy(() =>
   import("./tabs/ProblemsTab").then((m) => ({ default: m.ProblemsTab })),
@@ -26,6 +34,7 @@ export const LazyProblemsTab = lazy(() =>
 
 /**
  * State tab - Redux/session/workflow state inspection
+ * @deprecated Use DevToolsPanel instead
  */
 export const LazyStateTab = lazy(() =>
   import("./tabs/StateTab").then((m) => ({ default: m.StateTab })),
@@ -33,6 +42,7 @@ export const LazyStateTab = lazy(() =>
 
 /**
  * Agent Trace tab - LangGraph node visualization (session context)
+ * @deprecated Use DevToolsPanel instead
  */
 export const LazyAgentTraceTab = lazy(() =>
   import("./tabs/AgentTraceTab").then((m) => ({ default: m.AgentTraceTab })),
@@ -40,6 +50,7 @@ export const LazyAgentTraceTab = lazy(() =>
 
 /**
  * Execution Trace tab - Workflow node execution (workflow context)
+ * @deprecated Use DevToolsPanel instead
  */
 export const LazyExecutionTraceTab = lazy(() =>
   import("./tabs/ExecutionTraceTab").then((m) => ({
@@ -49,6 +60,7 @@ export const LazyExecutionTraceTab = lazy(() =>
 
 /**
  * Network tab - API/WebSocket/MCP calls
+ * @deprecated Use DevToolsPanel instead
  */
 export const LazyNetworkTab = lazy(() =>
   import("./tabs/NetworkTab").then((m) => ({ default: m.NetworkTab })),
@@ -56,17 +68,19 @@ export const LazyNetworkTab = lazy(() =>
 
 /**
  * AI Insights tab - AI-generated insights, anomalies, suggestions
+ * @deprecated Use DevToolsPanel instead
  */
 export const LazyAIInsightsTab = lazy(() =>
   import("./tabs/AIInsightsTab").then((m) => ({ default: m.AIInsightsTab })),
 );
 
 // =============================================================================
-// OTEL Observability Tabs
+// DEPRECATED: OTEL Observability Tabs
 // =============================================================================
 
 /**
  * Traces tab - OTEL distributed traces with waterfall view
+ * @deprecated Use DevToolsPanel instead
  */
 export const LazyTracesTab = lazy(() =>
   import("./tabs/TracesTab").then((m) => ({ default: m.TracesTab })),
@@ -74,6 +88,7 @@ export const LazyTracesTab = lazy(() =>
 
 /**
  * Metrics tab - OTEL/HEART metrics panels with sparklines
+ * @deprecated Use DevToolsPanel instead
  */
 export const LazyMetricsTab = lazy(() =>
   import("./tabs/MetricsTab").then((m) => ({ default: m.MetricsTab })),
@@ -81,6 +96,7 @@ export const LazyMetricsTab = lazy(() =>
 
 /**
  * Alerts tab - Grafana alerts integration
+ * @deprecated Use DevToolsPanel instead
  */
 export const LazyAlertsTab = lazy(() =>
   import("./tabs/AlertsTab").then((m) => ({ default: m.AlertsTab })),
@@ -88,6 +104,7 @@ export const LazyAlertsTab = lazy(() =>
 
 /**
  * Logs tab - OTEL structured logs with trace correlation
+ * @deprecated Use DevToolsPanel instead
  */
 export const LazyLogsTab = lazy(() =>
   import("./tabs/LogsTab").then((m) => ({ default: m.LogsTab })),
@@ -105,11 +122,14 @@ export const LazyDevToolsPanel = lazy(() =>
 );
 
 // =============================================================================
-// Preload Functions
+// DEPRECATED: Preload Functions
 // =============================================================================
+// These preload functions are deprecated and unused.
+// DevToolsPanel handles its own lazy loading.
 
 /**
  * Preload commonly used tabs to improve UX
+ * @deprecated No longer used - DevToolsPanel handles lazy loading
  */
 export function preloadCommonTabs(): void {
   // Preload console and problems tabs (most commonly used)
@@ -119,6 +139,7 @@ export function preloadCommonTabs(): void {
 
 /**
  * Preload all DevTools tabs
+ * @deprecated No longer used - DevToolsPanel handles lazy loading
  */
 export function preloadAllTabs(): void {
   import("./tabs/ConsoleTab");
@@ -137,6 +158,7 @@ export function preloadAllTabs(): void {
 
 /**
  * Preload context-specific tabs
+ * @deprecated No longer used - DevToolsPanel handles lazy loading
  */
 export function preloadContextTabs(
   context: "session" | "workflow" | "global",
@@ -175,6 +197,7 @@ export function preloadContextTabs(
 
 /**
  * Preload OTEL observability tabs only
+ * @deprecated No longer used - DevToolsPanel handles lazy loading
  */
 export function preloadOTELTabs(): void {
   import("./tabs/TracesTab");

@@ -252,10 +252,11 @@ describe("StudioShellLayout Model Selection", () => {
       renderWithProviders();
       await flushPromises();
 
-      // THEN: Error toast should be shown
+      // THEN: Error toast should be shown with deduplication id
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith(
           "Failed to load models. Using fallback models.",
+          expect.objectContaining({ id: "models-load-failed" }),
         );
       });
     });

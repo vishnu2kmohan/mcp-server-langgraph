@@ -108,7 +108,7 @@ describe("OrganizationManager", () => {
       const orgRow = screen
         .getByText("Acme Corp")
         .closest('[data-testid="org-row"]');
-      expect(orgRow).toHaveClass("bg-primary-50");
+      expect(orgRow).toHaveClass("bg-primary-1");
     });
   });
 

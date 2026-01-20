@@ -221,13 +221,13 @@ export function WorkflowEditor({
         data-testid="loading-indicator"
         className={cn(
           "flex items-center justify-center h-full",
-          "bg-white dark:bg-neutral-900",
+          "bg-neutral-1",
           className,
         )}
       >
         <Loader2
           size={24}
-          className="animate-spin text-neutral-400 dark:text-neutral-400"
+          className="animate-spin text-neutral-9"
         />
       </div>
     );
@@ -240,13 +240,13 @@ export function WorkflowEditor({
         data-testid="error-state"
         className={cn(
           "flex items-center justify-center h-full",
-          "bg-white dark:bg-neutral-900",
+          "bg-neutral-1",
           className,
         )}
       >
         <div className="text-center">
-          <AlertCircle size={32} className="mx-auto mb-2 text-error-500" />
-          <p className="text-neutral-500 dark:text-neutral-400">
+          <AlertCircle size={32} className="mx-auto mb-2 text-error-9" />
+          <p className="text-neutral-10">
             Failed to load workflow
           </p>
         </div>
@@ -258,18 +258,18 @@ export function WorkflowEditor({
     <div
       data-testid="workflow-editor"
       className={cn(
-        "flex flex-col h-full bg-white dark:bg-neutral-900",
+        "flex flex-col h-full bg-neutral-1",
         className,
       )}
     >
       {/* Header with tabs */}
-      <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700 px-4 py-2">
-        <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
+      <div className="flex items-center justify-between border-b border-neutral-5 px-4 py-2">
+        <h2 className="text-sm font-medium text-neutral-12 truncate">
           {workflow?.name || "Untitled Workflow"}
         </h2>
 
         {/* View tabs */}
-        <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-md p-0.5">
+        <div className="flex items-center gap-1 bg-neutral-2 rounded-md p-0.5">
           <Button
             data-testid="visual-tab"
             data-active={currentView === "visual"}
@@ -279,8 +279,8 @@ export function WorkflowEditor({
               "flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium",
               "transition-colors",
               currentView === "visual"
-                ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm"
-                : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300",
+                ? "bg-neutral-1 text-neutral-12 shadow-sm"
+                : "text-neutral-10 hover:text-neutral-11",
             )}
           >
             <LayoutGrid size={12} />
@@ -295,8 +295,8 @@ export function WorkflowEditor({
               "flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium",
               "transition-colors",
               currentView === "code"
-                ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm"
-                : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300",
+                ? "bg-neutral-1 text-neutral-12 shadow-sm"
+                : "text-neutral-10 hover:text-neutral-11",
             )}
           >
             <Code size={12} />
@@ -308,10 +308,10 @@ export function WorkflowEditor({
       {isSyncing && (
         <div
           data-testid="sync-status"
-          className="flex items-center gap-2 px-4 py-1.5 bg-insight-50 dark:bg-insight-900/20 border-b border-insight-200 dark:border-insight-800"
+          className="flex items-center gap-2 px-4 py-1.5 bg-insight-1 dark:bg-insight-a3 border-b border-insight-4 dark:border-insight-11"
         >
-          <RefreshCw size={12} className="animate-spin text-insight-500" />
-          <span className="text-xs text-insight-600 dark:text-insight-400">
+          <RefreshCw size={12} className="animate-spin text-insight-9" />
+          <span className="text-xs text-insight-10 dark:text-insight-9">
             Syncing...
           </span>
         </div>
@@ -320,19 +320,19 @@ export function WorkflowEditor({
       {parseError && (
         <div
           data-testid="parse-error"
-          className="flex items-center gap-2 px-4 py-1.5 bg-grafana-50 dark:bg-grafana-900/20 border-b border-grafana-200 dark:border-grafana-800"
+          className="flex items-center gap-2 px-4 py-1.5 bg-grafana-1 dark:bg-grafana-12/20 border-b border-grafana-3 dark:border-grafana-11"
         >
-          <AlertCircle size={12} className="text-grafana-500" />
-          <span className="text-xs text-grafana-600 dark:text-grafana-400">
+          <AlertCircle size={12} className="text-grafana-9" />
+          <span className="text-xs text-grafana-10 dark:text-grafana-5">
             JSON Error: {parseError}
           </span>
         </div>
       )}
       {/* Validation status bar */}
       {isValidating && (
-        <div className="flex items-center gap-2 px-4 py-1.5 bg-primary-50 dark:bg-primary-900/20 border-b border-primary-200 dark:border-primary-800">
-          <Loader2 size={12} className="animate-spin text-primary-500" />
-          <span className="text-xs text-primary-600 dark:text-primary-400">
+        <div className="flex items-center gap-2 px-4 py-1.5 bg-primary-1 dark:bg-primary-a3 border-b border-primary-4 dark:border-primary-11">
+          <Loader2 size={12} className="animate-spin text-primary-9" />
+          <span className="text-xs text-primary-10 dark:text-primary-7">
             Validating...
           </span>
         </div>
@@ -343,15 +343,15 @@ export function WorkflowEditor({
         validationResult.errors.length > 0 && (
           <div
             data-testid="validation-errors"
-            className="px-4 py-2 bg-error-50 dark:bg-error-900/20 border-b border-error-200 dark:border-error-800"
+            className="px-4 py-2 bg-error-1 dark:bg-error-a3 border-b border-error-4 dark:border-error-11"
           >
             <div className="flex items-center gap-2 mb-1">
-              <AlertCircle size={12} className="text-error-500" />
-              <span className="text-xs font-medium text-error-600 dark:text-error-400">
+              <AlertCircle size={12} className="text-error-9" />
+              <span className="text-xs font-medium text-error-10 dark:text-error-7">
                 Validation Errors
               </span>
             </div>
-            <ul className="text-xs text-error-600 dark:text-error-400 space-y-0.5 pl-4">
+            <ul className="text-xs text-error-10 dark:text-error-7 space-y-0.5 pl-4">
               {validationResult.errors.map((error, i) => (
                 <li key={i}>{error}</li>
               ))}
@@ -362,15 +362,15 @@ export function WorkflowEditor({
       {validationResult && validationResult.warnings.length > 0 && (
         <div
           data-testid="validation-warnings"
-          className="px-4 py-2 bg-warning-50 dark:bg-warning-900/20 border-b border-warning-200 dark:border-warning-800"
+          className="px-4 py-2 bg-warning-3 bg-warning-3 border-b border-warning-6 dark:border-warning-11"
         >
           <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle size={12} className="text-warning-500" />
-            <span className="text-xs font-medium text-warning-600 dark:text-warning-400">
+            <AlertTriangle size={12} className="text-warning-9" />
+            <span className="text-xs font-medium text-warning-9 dark:text-warning-9">
               Warnings
             </span>
           </div>
-          <ul className="text-xs text-warning-600 dark:text-warning-400 space-y-0.5 pl-4">
+          <ul className="text-xs text-warning-9 dark:text-warning-9 space-y-0.5 pl-4">
             {validationResult.warnings.map((warning, i) => (
               <li key={i}>{warning}</li>
             ))}

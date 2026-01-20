@@ -132,7 +132,7 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
         aria-label="Loading persona"
         className={cn(
           "flex flex-col items-center justify-center h-full gap-4",
-          "text-neutral-500 dark:text-neutral-400",
+          "text-neutral-10",
           className,
         )}
       >
@@ -151,12 +151,12 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
         aria-label="Access denied"
         className={cn(
           "flex flex-col items-center justify-center h-full gap-4 p-8",
-          "text-neutral-500 dark:text-neutral-400",
+          "text-neutral-10",
           className,
         )}
       >
-        <ShieldX className="h-16 w-16 text-error-400" />
-        <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
+        <ShieldX className="h-16 w-16 text-error-7" />
+        <h2 className="text-xl font-semibold text-neutral-12">
           Access Denied
         </h2>
         <p className="text-sm text-center max-w-md">
@@ -168,8 +168,8 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
             onClick={() => navigate(defaultRoute)}
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-md",
-              "bg-primary-600 text-white",
-              "hover:bg-primary-700 transition-colors",
+              "bg-primary-10 text-neutral-12",
+              "hover:bg-primary-11 transition-colors",
             )}
           >
             Go to Home
@@ -179,9 +179,9 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
             href="mailto:admin@example.com?subject=Access Request"
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-md",
-              "border border-neutral-300 dark:border-neutral-600",
-              "text-neutral-700 dark:text-neutral-300",
-              "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors",
+              "border border-neutral-5",
+              "text-neutral-11",
+              "hover:bg-neutral-2 transition-colors",
             )}
           >
             Request Access

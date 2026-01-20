@@ -156,19 +156,19 @@ export function HTMLArtifact({
   return (
     <div
       data-testid="html-artifact"
-      className={`bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden ${
+      className={`bg-neutral-1 border border-neutral-5 rounded-lg overflow-hidden ${
         theme === "dark" ? "dark" : ""
       } ${className}`}
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-neutral-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon size={16} className="text-neutral-500 dark:text-neutral-400" />
-          <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+          <Icon size={16} className="text-neutral-10" />
+          <h3 className="font-medium text-neutral-12">
             {displayTitle}
           </h3>
           {isBokeh && (
-            <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded">
+            <span className="px-2 py-0.5 text-xs bg-primary-3 bg-primary-4 text-primary-10 dark:text-primary-7 rounded">
               Bokeh
             </span>
           )}
@@ -176,7 +176,7 @@ export function HTMLArtifact({
         <div className="flex items-center gap-2">
           <Button
             variant="secondary"
-            className="p-1.5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
+            className="p-1.5 text-neutral-11 hover:bg-neutral-2 rounded"
             onClick={() => setIsExpanded(!isExpanded)}
             aria-label="Expand"
             title="Expand view"
@@ -191,12 +191,12 @@ export function HTMLArtifact({
         style={{ height: isExpanded ? "80vh" : height }}
       >
         {error ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-error-50 dark:bg-error-900/20 p-4">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-error-1 dark:bg-error-a3 p-4">
             <AlertCircle
               size={24}
-              className="text-error-500 dark:text-error-400 mb-2"
+              className="text-error-9 dark:text-error-7 mb-2"
             />
-            <p className="text-error-700 dark:text-error-300 text-sm text-center">
+            <p className="text-error-11 dark:text-error-9 text-sm text-center">
               {error}
             </p>
           </div>
@@ -211,7 +211,7 @@ export function HTMLArtifact({
             style={{ height: isExpanded ? "80vh" : height }}
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-neutral-500">
+          <div className="flex items-center justify-center h-full text-neutral-10">
             Loading...
           </div>
         )}

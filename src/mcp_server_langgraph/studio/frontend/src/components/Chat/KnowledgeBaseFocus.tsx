@@ -202,11 +202,11 @@ export function KnowledgeBaseFocus({
   const getStatusColor = (status: KBStatus): string => {
     switch (status) {
       case "ready":
-        return "bg-success-500";
+        return "bg-success-9";
       case "misconfigured":
-        return "bg-warning-500";
+        return "bg-warning-9";
       case "unavailable":
-        return "bg-neutral-400";
+        return "bg-neutral-4";
     }
   };
 
@@ -226,10 +226,10 @@ export function KnowledgeBaseFocus({
         aria-controls="kb-focus-listbox"
         className={cn(
           "flex items-center gap-1.5 rounded-lg transition-colors",
-          "border border-neutral-300 dark:border-neutral-600",
-          "bg-white dark:bg-neutral-800",
-          "hover:bg-neutral-50 dark:hover:bg-neutral-700",
-          "focus:outline-none focus:ring-2 focus:ring-primary-500",
+          "border border-neutral-5",
+          "bg-neutral-1",
+          "hover:bg-neutral-1",
+          "focus:outline-none focus:ring-2 focus:ring-primary-7",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           compact ? "p-2" : "px-3 py-1.5 text-sm",
         )}
@@ -247,11 +247,11 @@ export function KnowledgeBaseFocus({
         )}
 
         {/* Icon */}
-        <CurrentIcon className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
+        <CurrentIcon className="w-4 h-4 text-neutral-10" />
 
         {/* Label (hidden in compact mode) */}
         {!compact && (
-          <span className="font-medium text-neutral-700 dark:text-neutral-200">
+          <span className="font-medium text-neutral-11">
             {currentOption?.label || "All"}
           </span>
         )}
@@ -259,7 +259,7 @@ export function KnowledgeBaseFocus({
         {/* Chevron */}
         <ChevronDown
           className={cn(
-            "w-3 h-3 text-neutral-400 dark:text-neutral-400 transition-transform",
+            "w-3 h-3 text-neutral-9 transition-transform",
             isOpen && "rotate-180",
           )}
           aria-hidden="true"
@@ -273,9 +273,9 @@ export function KnowledgeBaseFocus({
           role="listbox"
           aria-label="Source focus options"
           className={cn(
-            "absolute z-50 mt-1 w-56 py-1",
-            "bg-white dark:bg-neutral-800",
-            "border border-neutral-200 dark:border-neutral-700",
+            "absolute z-dropdown mt-1 w-56 py-1",
+            "bg-neutral-1",
+            "border border-neutral-5",
             "rounded-lg shadow-lg",
             // Position above or below based on space (simplified: always below)
             "bottom-full mb-1", // Position above the button for chat input
@@ -297,17 +297,17 @@ export function KnowledgeBaseFocus({
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2 text-sm",
                   "transition-colors",
-                  isFocused && "bg-neutral-100 dark:bg-neutral-700",
+                  isFocused && "bg-neutral-2",
                   isSelected &&
-                    "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+                    "bg-primary-1 bg-primary-4 text-primary-11 dark:text-primary-11",
                 )}
               >
                 <Icon
                   className={cn(
                     "w-4 h-4 flex-shrink-0",
                     isSelected
-                      ? "text-primary-600 dark:text-primary-400"
-                      : "text-neutral-500 dark:text-neutral-400",
+                      ? "text-primary-10 dark:text-primary-11"
+                      : "text-neutral-10",
                   )}
                 />
                 <div className="flex-1 text-left">
@@ -315,19 +315,19 @@ export function KnowledgeBaseFocus({
                     className={cn(
                       "font-medium",
                       isSelected
-                        ? "text-primary-700 dark:text-primary-300"
-                        : "text-neutral-900 dark:text-neutral-100",
+                        ? "text-primary-11 dark:text-primary-11"
+                        : "text-neutral-12",
                     )}
                   >
                     {option.label}
                   </div>
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                  <div className="text-xs text-neutral-10">
                     {option.description}
                   </div>
                 </div>
                 {isSelected && (
                   <Check
-                    className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0"
+                    className="w-4 h-4 text-primary-10 dark:text-primary-11 flex-shrink-0"
                     aria-hidden="true"
                   />
                 )}

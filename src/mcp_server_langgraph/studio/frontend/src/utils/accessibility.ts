@@ -120,11 +120,11 @@ export function meetsWCAGAAA(
  * These are the Tailwind colors commonly used in the app
  */
 export const colorPalette = {
-  // Text colors
-  textPrimary: "#1f2937", // neutral-800
-  textSecondary: "#4b5563", // neutral-600
-  textMuted: "#9ca3af", // neutral-400
-  textDisabled: "#d1d5db", // neutral-300
+  // Text colors (Radix scale)
+  textPrimary: "#1f2937", // neutral-12
+  textSecondary: "#4b5563", // neutral-11
+  textMuted: "#9ca3af", // neutral-9
+  textDisabled: "#d1d5db", // neutral-5
 
   // Background colors
   bgWhite: "#ffffff",

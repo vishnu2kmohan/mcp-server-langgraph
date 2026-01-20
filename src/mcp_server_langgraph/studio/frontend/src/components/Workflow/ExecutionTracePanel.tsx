@@ -62,23 +62,23 @@ function formatRelativeTime(timestamp: number): string {
 function getLogLevelIcon(level: string) {
   switch (level) {
     case "error":
-      return <XCircle className="w-4 h-4 text-error-500" />;
+      return <XCircle className="w-4 h-4 text-error-9" />;
     case "warning":
-      return <AlertTriangle className="w-4 h-4 text-warning-500" />;
+      return <AlertTriangle className="w-4 h-4 text-warning-9" />;
     case "info":
     default:
-      return <Info className="w-4 h-4 text-primary-500" />;
+      return <Info className="w-4 h-4 text-primary-9" />;
   }
 }
 
 function getLogLevelClass(level: string): string {
   switch (level) {
     case "error":
-      return "bg-error-50 border-error-200 dark:bg-error-900/20 dark:border-error-800";
+      return "bg-error-1 border-error-4 dark:bg-error-a3 dark:border-error-11";
     case "warning":
-      return "bg-warning-50 border-warning-200 dark:bg-warning-900/20 dark:border-warning-800";
+      return "bg-warning-3 border-warning-6 bg-warning-3 dark:border-warning-11";
     default:
-      return "bg-neutral-50 border-neutral-200 dark:border-neutral-700 dark:bg-neutral-800/50 dark:border-neutral-700";
+      return "bg-neutral-1 border-neutral-5";
   }
 }
 
@@ -96,7 +96,7 @@ const ExecutionStateIndicator = memo(
       switch (state) {
         case "running":
           return (
-            <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400">
+            <div className="flex items-center gap-2 text-primary-10 dark:text-primary-7">
               <Loader2
                 className="w-4 h-4 animate-spin"
                 data-testid="execution-spinner"
@@ -106,14 +106,14 @@ const ExecutionStateIndicator = memo(
           );
         case "completed":
           return (
-            <div className="flex items-center gap-2 text-success-600 dark:text-success-400">
+            <div className="flex items-center gap-2 text-success-10 dark:text-success-7">
               <CheckCircle className="w-4 h-4" />
               <span>Completed</span>
             </div>
           );
         case "error":
           return (
-            <div className="flex items-center gap-2 text-error-600 dark:text-error-400">
+            <div className="flex items-center gap-2 text-error-10 dark:text-error-7">
               <XCircle className="w-4 h-4" />
               <span>Error</span>
             </div>
@@ -121,8 +121,8 @@ const ExecutionStateIndicator = memo(
         case "idle":
         default:
           return (
-            <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
-              <div className="w-3 h-3 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+            <div className="flex items-center gap-2 text-neutral-10">
+              <div className="w-3 h-3 rounded-full bg-neutral-3" />
               <span>Idle</span>
             </div>
           );
@@ -173,21 +173,21 @@ const LogEntry = memo(
           {getLogLevelIcon(log.level)}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm text-neutral-900 dark:text-neutral-100 truncate">
+              <span className="text-sm text-neutral-12 truncate">
                 {log.message}
               </span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400 shrink-0">
+              <span className="text-xs text-neutral-10 shrink-0">
                 {formatRelativeTime(log.timestamp)}
               </span>
             </div>
             {log.nodeId && (
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">
+              <span className="text-xs text-neutral-10">
                 Node: {log.nodeId}
               </span>
             )}
           </div>
           {hasDetails && (
-            <Button className="text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300">
+            <Button variant="ghost" size="icon">
               {isExpanded ? (
                 <ChevronDown className="w-4 h-4" />
               ) : (
@@ -198,13 +198,13 @@ const LogEntry = memo(
         </div>
         {/* Expandable details */}
         {isExpanded && log.data && (
-          <div className="mt-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
-            <pre className="text-xs bg-white dark:bg-neutral-900 p-2 rounded overflow-auto max-h-40">
+          <div className="mt-2 pt-2 border-t border-neutral-5">
+            <pre className="text-xs bg-neutral-1 p-2 rounded overflow-auto max-h-40">
               {typeof log.data === "object" ? (
                 <>
                   {log.data.output && <div>{log.data.output}</div>}
                   {log.data.tokens !== undefined && (
-                    <div className="text-neutral-500 dark:text-neutral-400">
+                    <div className="text-neutral-10">
                       tokens: {log.data.tokens}
                     </div>
                   )}
@@ -293,16 +293,16 @@ export const ExecutionTracePanel = memo(
     );
 
     return (
-      <div className="flex flex-col h-full bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-700">
+      <div className="flex flex-col h-full bg-neutral-1 border-l border-neutral-5">
         {/* Header */}
-        <div className="flex items-center justify-between p-3 border-b border-neutral-200 dark:border-neutral-700">
-          <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+        <div className="flex items-center justify-between p-3 border-b border-neutral-5">
+          <h2 className="text-sm font-semibold text-neutral-12">
             Execution Trace
           </h2>
           <ExecutionStateIndicator state={executionState} />
         </div>
         {/* Toolbar */}
-        <div className="flex items-center gap-2 p-2 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center gap-2 p-2 border-b border-neutral-5">
           {/* Level filters */}
           <div className="flex items-center gap-1">
             <Button
@@ -325,7 +325,7 @@ export const ExecutionTracePanel = memo(
           {/* Node filter */}
           <Input
             size="sm"
-            className="flex-1 px-2 py-1 text-xs bg-neutral-50 focus:ring-primary-500"
+            className="flex-1 px-2 py-1 text-xs bg-neutral-1 focus:ring-primary-7"
             placeholder="Filter by node..."
             value={nodeFilter}
             onChange={(e) => setNodeFilter(e.target.value)}
@@ -341,9 +341,9 @@ export const ExecutionTracePanel = memo(
             <ArrowDownToLine className="w-4 h-4" />
           </Button>
 
-          <Button
+          <Button size="icon"
             variant="secondary"
-            className="p-1.5 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 rounded text-neutral-500 dark:text-neutral-400 hover:text-error-500"
+            className="p-1.5 hover:bg-neutral-2 rounded text-neutral-10 hover:text-error-9"
             onClick={handleClearLogs}
             aria-label="Clear"
           >
@@ -358,7 +358,7 @@ export const ExecutionTracePanel = memo(
           className="flex-1 overflow-y-auto p-2 space-y-2"
         >
           {filteredLogs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-neutral-500 dark:text-neutral-400">
+            <div className="flex flex-col items-center justify-center h-full text-neutral-10">
               <Info className="w-8 h-8 mb-2 opacity-50" />
               <p className="text-sm">No execution events yet</p>
               <p className="text-xs mt-1">

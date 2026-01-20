@@ -457,4 +457,82 @@ describe("ObservabilityPage - Core", () => {
       });
     });
   });
+
+  // ===========================================================================
+  // ACCESSIBILITY TESTS
+  // ===========================================================================
+
+  describe("Accessibility", () => {
+    it("should have role=tablist on tab container", () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      const tablist = screen.getByRole("tablist");
+      expect(tablist).toBeInTheDocument();
+    });
+
+    it("should have role=tab on each tab button", () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      const tabs = screen.getAllByRole("tab");
+      expect(tabs.length).toBeGreaterThan(0);
+    });
+
+    it("should have aria-selected on active tab", () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      const tabs = screen.getAllByRole("tab");
+      const selectedTab = tabs.find(
+        (tab) => tab.getAttribute("aria-selected") === "true",
+      );
+      expect(selectedTab).toBeInTheDocument();
+    });
+
+    it("should have aria-busy on loading container when loading", () => {
+      mockUseListSessionsQuery.mockReturnValue({
+        data: null,
+        isLoading: true,
+        error: null,
+        refetch: mockRefetchSessions,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      const loadingContainer = screen.getByTestId("observability-loading-container");
+      expect(loadingContainer).toHaveAttribute("aria-busy", "true");
+    });
+
+    it("should have aria-label on loading container", () => {
+      mockUseListSessionsQuery.mockReturnValue({
+        data: null,
+        isLoading: true,
+        error: null,
+        refetch: mockRefetchSessions,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      const loadingContainer = screen.getByTestId("observability-loading-container");
+      expect(loadingContainer).toHaveAttribute("aria-label", "Loading observability data");
+    });
+  });
 });

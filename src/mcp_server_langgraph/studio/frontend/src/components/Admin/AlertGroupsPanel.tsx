@@ -33,15 +33,15 @@ export interface AlertGroupsPanelProps {
 // =============================================================================
 
 const severityStyles: Record<string, string> = {
-  critical: "bg-error-500 text-white",
-  warning: "bg-warning-500 text-black",
-  info: "bg-primary-500 text-white",
+  critical: "bg-error-9 text-neutral-12",
+  warning: "bg-warning-9 text-neutral-1",
+  info: "bg-primary-9 text-neutral-12",
 };
 
 const stateStyles: Record<string, string> = {
-  firing: "bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-200",
+  firing: "bg-error-3 text-error-11 dark:bg-error-12 dark:text-error-4",
   resolved:
-    "bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-200",
+    "bg-success-3 text-success-11 dark:bg-success-12 dark:text-success-4",
 };
 
 // =============================================================================
@@ -67,7 +67,7 @@ export function AlertGroupsPanel({
   if (groups.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center p-8 text-neutral-500 dark:text-neutral-400"
+        className="flex flex-col items-center justify-center p-8 text-neutral-10"
         data-testid="alert-groups-empty"
       >
         <p>No alert groups</p>
@@ -83,7 +83,7 @@ export function AlertGroupsPanel({
         return (
           <div
             key={group.groupKey}
-            className="border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden"
+            className="border border-neutral-5 rounded-lg overflow-hidden"
             data-testid={`alert-group-${group.groupKey}`}
           >
             {/* Group Header */}
@@ -91,7 +91,7 @@ export function AlertGroupsPanel({
               role="button"
               tabIndex={0}
               aria-expanded={isExpanded}
-              className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 cursor-pointer hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors"
+              className="flex items-center justify-between p-3 bg-neutral-1 cursor-pointer hover:bg-neutral-2 transition-colors"
               data-testid={`group-header-${group.groupKey}`}
               onClick={() => onToggleGroup(group.groupKey)}
               onKeyDown={(e) => handleKeyDown(e, group.groupKey)}
@@ -100,24 +100,24 @@ export function AlertGroupsPanel({
                 {/* Expand/Collapse Icon */}
                 {isExpanded ? (
                   <ChevronDown
-                    className="w-4 h-4 text-neutral-500 dark:text-neutral-400"
+                    className="w-4 h-4 text-neutral-10"
                     data-testid={`collapse-icon-${group.groupKey}`}
                   />
                 ) : (
                   <ChevronRight
-                    className="w-4 h-4 text-neutral-500 dark:text-neutral-400"
+                    className="w-4 h-4 text-neutral-10"
                     data-testid={`expand-icon-${group.groupKey}`}
                   />
                 )}
 
                 {/* Alert Name */}
-                <span className="font-medium text-neutral-900 dark:text-neutral-100">
+                <span className="font-medium text-neutral-12">
                   {group.alertName}
                 </span>
 
                 {/* Service Name */}
                 {group.service && (
-                  <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                  <span className="text-sm text-neutral-10">
                     {group.service}
                   </span>
                 )}
@@ -141,7 +141,7 @@ export function AlertGroupsPanel({
                 </span>
 
                 {/* Alert Count */}
-                <span className="flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 text-sm font-medium bg-neutral-200 dark:bg-neutral-700 dark:bg-neutral-600 text-neutral-700 dark:text-neutral-200 rounded-full">
+                <span className="flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 text-sm font-medium bg-neutral-3 text-neutral-11 rounded-full">
                   {group.count}
                 </span>
               </div>
@@ -149,15 +149,15 @@ export function AlertGroupsPanel({
 
             {/* Expanded Alerts */}
             {isExpanded && (
-              <div className="divide-y divide-neutral-100 dark:divide-neutral-700">
+              <div className="divide-y divide-neutral-5">
                 {group.alerts.map((alert: Alert) => (
                   <div
                     key={alert.alertId}
                     role="button"
                     tabIndex={0}
-                    className={`p-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors ${
+                    className={`p-3 cursor-pointer hover:bg-neutral-1 transition-colors ${
                       selectedAlertId === alert.alertId
-                        ? "border-l-4 border-primary-500 bg-primary-50 dark:bg-primary-900/20"
+                        ? "border-l-4 border-primary-9 bg-primary-1 dark:bg-primary-a3"
                         : "border-l-4 border-transparent"
                     }`}
                     data-testid={`alert-item-${alert.alertId}`}
@@ -171,10 +171,10 @@ export function AlertGroupsPanel({
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-neutral-900 dark:text-neutral-100 truncate">
+                        <p className="text-sm text-neutral-12 truncate">
                           {alert.message}
                         </p>
-                        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                        <p className="text-xs text-neutral-10 mt-1">
                           Started: {new Date(alert.startedAt).toLocaleString()}
                         </p>
                       </div>

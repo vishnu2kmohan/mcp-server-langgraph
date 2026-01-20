@@ -26,6 +26,7 @@ import type {
   MCPClientCapabilities,
   MCPServerInfo,
   MCPServerCapabilities,
+  JSONRPCId,
 } from "../../types/mcp";
 
 // ============================================================================
@@ -205,7 +206,7 @@ export const mcpSlice = createSlice({
       state.pendingElicitations.push(action.payload);
     },
 
-    respondToElicitation: (state, action: PayloadAction<string>) => {
+    respondToElicitation: (state, action: PayloadAction<JSONRPCId>) => {
       const id = action.payload;
       state.pendingElicitations = state.pendingElicitations.filter(
         (e) => e.id !== id,
@@ -219,7 +220,7 @@ export const mcpSlice = createSlice({
       state.pendingSamplingRequests.push(action.payload);
     },
 
-    respondToSampling: (state, action: PayloadAction<string>) => {
+    respondToSampling: (state, action: PayloadAction<JSONRPCId>) => {
       const id = action.payload;
       state.pendingSamplingRequests = state.pendingSamplingRequests.filter(
         (r) => r.id !== id,

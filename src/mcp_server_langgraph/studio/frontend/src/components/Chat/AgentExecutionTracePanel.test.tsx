@@ -226,8 +226,8 @@ describe("AgentExecutionTracePanel", () => {
 
       const stepItem = screen.getByText("Completed Step").closest("li");
       expect(stepItem).toBeInTheDocument();
-      // Check for success indicator (bg-success-500)
-      const indicator = stepItem?.querySelector(".bg-success-500");
+      // Check for success indicator (bg-success-9)
+      const indicator = stepItem?.querySelector(".bg-success-9");
       expect(indicator).toBeInTheDocument();
     });
 
@@ -240,8 +240,8 @@ describe("AgentExecutionTracePanel", () => {
 
       const stepItem = screen.getByText("Running Step").closest("li");
       expect(stepItem).toBeInTheDocument();
-      // Check for primary pulsing indicator (bg-primary-500 animate-pulse)
-      const indicator = stepItem?.querySelector(".bg-primary-500");
+      // Check for primary pulsing indicator (bg-primary-9 animate-pulse)
+      const indicator = stepItem?.querySelector(".bg-primary-9");
       expect(indicator).toBeInTheDocument();
       expect(indicator).toHaveClass("animate-pulse");
     });
@@ -255,8 +255,8 @@ describe("AgentExecutionTracePanel", () => {
 
       const stepItem = screen.getByText("Pending Step").closest("li");
       expect(stepItem).toBeInTheDocument();
-      // Check for gray indicator (bg-neutral-400)
-      const indicator = stepItem?.querySelector(".bg-neutral-400");
+      // Check for gray indicator (bg-neutral-4)
+      const indicator = stepItem?.querySelector(".bg-neutral-4");
       expect(indicator).toBeInTheDocument();
     });
 

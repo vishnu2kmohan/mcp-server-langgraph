@@ -173,23 +173,23 @@ export function ShareWorkflowDialog({
       {/* Loading State */}
       {isLoadingShares && (
         <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-9"></div>
         </div>
       )}
       {/* Error State */}
       {sharesError && (
-        <div className="flex items-center gap-2 p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg">
-          <AlertCircle size={20} className="text-error-500" />
-          <p className="text-sm text-error-700 dark:text-error-300">
+        <div className="flex items-center gap-2 p-4 bg-error-1 dark:bg-error-a3 border border-error-4 dark:border-error-11 rounded-lg">
+          <AlertCircle size={20} className="text-error-9" />
+          <p className="text-sm text-error-11 dark:text-error-9">
             Failed to load sharing settings. Please try again.
           </p>
         </div>
       )}
       {/* Operation Error Toast */}
       {operationError && (
-        <div className="flex items-center gap-2 p-3 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg">
-          <AlertCircle size={16} className="text-error-500 shrink-0" />
-          <p className="text-sm text-error-700 dark:text-error-300">
+        <div className="flex items-center gap-2 p-3 bg-error-1 dark:bg-error-a3 border border-error-4 dark:border-error-11 rounded-lg">
+          <AlertCircle size={16} className="text-error-9 shrink-0" />
+          <p className="text-sm text-error-11 dark:text-error-9">
             {operationError}
           </p>
         </div>
@@ -199,13 +199,13 @@ export function ShareWorkflowDialog({
         <>
           {/* Add User Section */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <label className="block text-sm font-medium text-neutral-11 mb-2">
               Share with people
             </label>
             <div className="flex gap-2">
               <div className="flex-1">
                 <Input
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
+                  className="px-3 py-2 text-neutral-12 focus:ring-primary-7"
                   type="email"
                   placeholder="Email address"
                   value={email}
@@ -215,13 +215,13 @@ export function ShareWorkflowDialog({
                   }}
                 />
                 {emailError && (
-                  <p className="mt-1 text-sm text-error-600 dark:text-error-400">
+                  <p className="mt-1 text-sm text-error-10 dark:text-error-7">
                     {emailError}
                   </p>
                 )}
               </div>
               <Select
-                className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
+                className="px-3 py-2 text-neutral-12 focus:ring-primary-7"
                 data-testid="permission-select"
                 value={permission}
                 onChange={(e) => setPermission(e.target.value as Permission)}
@@ -232,7 +232,7 @@ export function ShareWorkflowDialog({
               </Select>
               <Button
                 variant="primary"
-                className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                className="flex px-4 py-2 bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11"
                 onClick={handleAddShare}
                 disabled={isAddingShare || !email}
                 aria-label="Share"
@@ -246,32 +246,32 @@ export function ShareWorkflowDialog({
           {/* Current Shares */}
           {shares.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+              <h3 className="text-sm font-medium text-neutral-11 mb-2">
                 People with access
               </h3>
               <div className="space-y-2">
                 {shares.map((share) => (
                   <div
                     key={share.userId}
-                    className="flex items-center justify-between p-2 bg-neutral-50 dark:bg-neutral-700/50 rounded-lg"
+                    className="flex items-center justify-between p-2 bg-neutral-1 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center">
-                        <span className="text-primary-600 dark:text-primary-400 text-sm font-medium">
+                      <div className="w-8 h-8 bg-primary-3 bg-primary-4 rounded-full flex items-center justify-center">
+                        <span className="text-primary-10 dark:text-primary-7 text-sm font-medium">
                           {(share.email[0] ?? "?").toUpperCase()}
                         </span>
                       </div>
                       <div>
-                        <p className="text-sm text-neutral-900 dark:text-neutral-100">
+                        <p className="text-sm text-neutral-12">
                           {share.email}
                         </p>
-                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                        <p className="text-xs text-neutral-10">
                           {share.permission}
                         </p>
                       </div>
                     </div>
                     <Button
-                      className="p-1 text-neutral-500 dark:text-neutral-400 hover:text-error-600 dark:text-neutral-400 dark:hover:text-error-400 rounded"
+                      className="p-1 text-neutral-10 hover:text-error-10 dark:hover:text-error-7 rounded"
                       onClick={() => handleRemoveShare(share.userId)}
                       aria-label="Remove"
                     >
@@ -284,18 +284,18 @@ export function ShareWorkflowDialog({
           )}
 
           {/* Public Link Section */}
-          <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
+          <div className="pt-4 border-t border-neutral-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 {isPublic ? (
-                  <Globe size={18} className="text-success-500" />
+                  <Globe size={18} className="text-success-9" />
                 ) : (
                   <Lock
                     size={18}
-                    className="text-neutral-500 dark:text-neutral-400"
+                    className="text-neutral-10"
                   />
                 )}
-                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                <span className="text-sm font-medium text-neutral-11">
                   {isPublic ? "Public access enabled" : "Private"}
                 </span>
               </div>
@@ -305,7 +305,7 @@ export function ShareWorkflowDialog({
                 onClick={handleTogglePublic}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-full bg-neutral-1 transition-transform ${
                     isPublic ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
@@ -317,26 +317,26 @@ export function ShareWorkflowDialog({
                 <div className="flex-1 relative">
                   <Link2
                     size={16}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-9"
                   />
                   <Input
-                    className="pl-9 pr-3 py-2 bg-neutral-50 text-neutral-900 dark:text-neutral-100 text-sm"
+                    className="pl-9 pr-3 py-2 bg-neutral-1 text-neutral-12 text-sm"
                     readOnly
                     value={shareLink}
                   />
                 </div>
                 <Button
                   variant="secondary"
-                  className="flex px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                  className="flex px-3 py-2 border border-neutral-5 rounded-lg hover:bg-neutral-1"
                   onClick={handleCopyLink}
                   aria-label="Copy link"
                 >
                   {linkCopied ? (
-                    <Check size={16} className="text-success-500" />
+                    <Check size={16} className="text-success-9" />
                   ) : (
                     <Copy
                       size={16}
-                      className="text-neutral-500 dark:text-neutral-400"
+                      className="text-neutral-10"
                     />
                   )}
                   Copy
@@ -344,7 +344,7 @@ export function ShareWorkflowDialog({
               </div>
             )}
 
-            <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+            <p className="mt-2 text-xs text-neutral-10">
               {isPublic
                 ? "Anyone with the link can view this workflow"
                 : "Only people you share with can access this workflow"}

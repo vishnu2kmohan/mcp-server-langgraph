@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 import { useAIOnboarding } from "../../hooks/useAIOnboarding";
 
-import { Button } from "@/components/UI";
+import { Button, SelectionCard } from "@/components/UI";
 
 export interface WorkflowTemplate {
   id: string;
@@ -260,14 +260,14 @@ export function OnboardingWizard({
       role="dialog"
       aria-modal="true"
       aria-labelledby="wizard-title"
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-60 flex items-center justify-center bg-neutral-a7"
     >
-      <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-neutral-2 border border-neutral-6 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col backdrop-blur-sm">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="px-6 py-4 border-b border-neutral-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="text-sm text-neutral-500 dark:text-neutral-400">
+              <div className="text-sm text-neutral-10">
                 Step {currentStep} of {totalSteps}
               </div>
               <div
@@ -275,17 +275,17 @@ export function OnboardingWizard({
                 aria-valuenow={currentStep}
                 aria-valuemin={1}
                 aria-valuemax={totalSteps}
-                className="w-32 h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden"
+                className="w-32 h-1.5 bg-neutral-4 rounded-full overflow-hidden"
               >
                 <div
-                  className="h-full bg-primary-500 transition-all duration-300"
-                  style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                  className="h-full bg-primary-9 transition-all duration-300"
+                  style={{ '--progress': `${(currentStep / totalSteps) * 100}%` } as React.CSSProperties}
                 />
               </div>
             </div>
-            <Button
+            <Button size="icon"
               variant="secondary"
-              className="p-2 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+              className="p-2 text-neutral-9 hover:text-neutral-11 rounded-lg hover:bg-neutral-3"
               onClick={onSkip}
               aria-label="Skip"
             >
@@ -299,35 +299,35 @@ export function OnboardingWizard({
           {/* Step 1: Welcome */}
           {currentStep === 1 && (
             <div className="text-center py-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 mb-6">
-                <Sparkles className="w-8 h-8 text-primary-500" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-3 mb-6">
+                <Sparkles className="w-8 h-8 text-primary-9" />
               </div>
               <h2
                 id="wizard-title"
-                className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-3"
+                className="text-2xl font-bold text-neutral-12 mb-3"
               >
                 Welcome to Agent Studio
               </h2>
-              <p className="text-neutral-600 dark:text-neutral-400 max-w-md mx-auto mb-8">
+              <p className="text-neutral-11 max-w-md mx-auto mb-8">
                 Build AI agents that work for you. Create powerful workflows,
                 connect to external services, and deploy intelligent assistants.
               </p>
               <div className="grid grid-cols-3 gap-4 max-w-md mx-auto text-center">
                 <div className="p-4">
-                  <Bot className="w-8 h-8 mx-auto text-primary-500 mb-2" />
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  <Bot className="w-8 h-8 mx-auto text-primary-9 mb-2" />
+                  <p className="text-sm text-neutral-11">
                     AI Agents
                   </p>
                 </div>
                 <div className="p-4">
-                  <GitBranch className="w-8 h-8 mx-auto text-success-500 mb-2" />
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  <GitBranch className="w-8 h-8 mx-auto text-success-9 mb-2" />
+                  <p className="text-sm text-neutral-11">
                     Workflows
                   </p>
                 </div>
                 <div className="p-4">
-                  <Server className="w-8 h-8 mx-auto text-insight-500 mb-2" />
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  <Server className="w-8 h-8 mx-auto text-insight-9 mb-2" />
+                  <p className="text-sm text-neutral-11">
                     Integrations
                   </p>
                 </div>
@@ -340,23 +340,23 @@ export function OnboardingWizard({
             <div>
               <h2
                 id="wizard-title"
-                className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2 text-center"
+                className="text-xl font-bold text-neutral-12 mb-2 text-center"
               >
                 How will you use Agent Studio?
               </h2>
-              <p className="text-neutral-600 dark:text-neutral-400 text-center mb-6">
+              <p className="text-neutral-11 text-center mb-6">
                 We&apos;ll customize your experience based on your role
               </p>
 
               {/* AI Suggestion Banner (Phase 6.5) */}
               {detectedIntent && confidence >= 0.7 && (
-                <div className="mb-4 p-3 bg-insight-50 dark:bg-insight-900/20 border border-insight-200 dark:border-insight-800 rounded-lg">
-                  <div className="flex items-center gap-2 text-insight-700 dark:text-insight-300">
+                <div className="mb-4 p-3 bg-insight-3 border border-insight-6 rounded-lg">
+                  <div className="flex items-center gap-2 text-insight-11">
                     <Zap className="w-4 h-4" />
                     <span className="text-sm font-medium">
                       AI detected: {detectedIntent.replace(/_/g, " ")}
                     </span>
-                    <span className="text-xs text-insight-500 dark:text-insight-400">
+                    <span className="text-xs text-insight-9">
                       ({Math.round(confidence * 100)}% confidence)
                     </span>
                   </div>
@@ -370,54 +370,32 @@ export function OnboardingWizard({
                     confidence >= 0.7;
 
                   return (
-                    <Button
-                      className="w-full flex p-4 rounded-lg border-2"
+                    <SelectionCard
                       key={option.id}
+                      title={option.title}
+                      description={option.description}
+                      icon={option.icon}
+                      selected={selectedPersona === option.id}
                       onClick={() => handlePersonaSelect(option.id)}
-                      aria-pressed={selectedPersona === option.id}
-                    >
-                      <div
-                        className={`p-3 rounded-lg ${
-                          selectedPersona === option.id
-                            ? "bg-primary-100 text-primary-600 dark:bg-primary-900/40 dark:text-primary-400"
-                            : "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
-                        }`}
-                      >
-                        {option.icon}
-                      </div>
-                      <div className="text-left flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-                            {option.title}
-                          </h3>
-                          {isAIRecommended && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-insight-700 dark:text-insight-300 bg-insight-100 dark:bg-insight-900/40 rounded-full">
-                              <Zap className="w-3 h-3" />
-                              Recommended
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                          {option.description}
-                        </p>
-                      </div>
-                    </Button>
+                      badge={isAIRecommended ? "Recommended" : undefined}
+                    />
                   );
                 })}
               </div>
 
               {/* Skip Step Suggestion (Phase 6.5) */}
               {shouldSkipCurrentStep && (
-                <div className="mt-4 p-3 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg">
+                <div className="mt-4 p-3 bg-success-3 border border-success-6 rounded-lg">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-success-700 dark:text-success-300">
+                    <div className="flex items-center gap-2 text-success-11">
                       <Zap className="w-4 h-4" />
                       <span className="text-sm">
                         AI suggests skipping this step based on your experience
                       </span>
                     </div>
                     <Button
-                      className="text-sm text-success-600 dark:text-success-400 hover:underline"
+                      variant="ghost"
+                      className="text-sm text-success-11 hover:underline"
                       onClick={handleNext}
                     >
                       Skip →
@@ -433,18 +411,18 @@ export function OnboardingWizard({
             <div>
               <h2
                 id="wizard-title"
-                className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2 text-center"
+                className="text-xl font-bold text-neutral-12 mb-2 text-center"
               >
                 Choose a template to get started
               </h2>
-              <p className="text-neutral-600 dark:text-neutral-400 text-center mb-6">
+              <p className="text-neutral-11 text-center mb-6">
                 Or start from scratch with a blank workflow
               </p>
 
               {/* AI Template Recommendation (Phase 6.5) */}
               {aiRecommendedTemplateId && confidence >= 0.7 && (
-                <div className="mb-4 p-3 bg-insight-50 dark:bg-insight-900/20 border border-insight-200 dark:border-insight-800 rounded-lg">
-                  <div className="flex items-center gap-2 text-insight-700 dark:text-insight-300">
+                <div className="mb-4 p-3 bg-insight-3 border border-insight-6 rounded-lg">
+                  <div className="flex items-center gap-2 text-insight-11">
                     <Zap className="w-4 h-4" />
                     <span className="text-sm font-medium">
                       AI recommends:{" "}
@@ -455,7 +433,7 @@ export function OnboardingWizard({
               )}
 
               {templates.length === 0 ? (
-                <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+                <div className="text-center py-8 text-neutral-9">
                   <FileCode className="w-12 h-12 mx-auto mb-4 opacity-50" />
                   <p>No templates available</p>
                 </div>
@@ -467,54 +445,28 @@ export function OnboardingWizard({
                       confidence >= 0.7;
 
                     return (
-                      <Button
-                        className="flex items-start p-4 text-left rounded-lg border-2"
+                      <SelectionCard
                         key={template.id}
+                        title={template.name}
+                        description={template.description}
+                        icon={getCategoryIcon(template.category)}
+                        selected={selectedTemplate?.id === template.id}
                         onClick={() => handleTemplateSelect(template)}
-                        aria-pressed={selectedTemplate?.id === template.id}
-                      >
-                        <div
-                          className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                            selectedTemplate?.id === template.id
-                              ? "bg-primary-100 text-primary-600 dark:bg-primary-900/40"
-                              : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 dark:bg-neutral-700"
-                          }`}
-                        >
-                          {getCategoryIcon(template.category)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-                              {template.name}
-                            </h3>
-                            {isAIRecommended && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-insight-700 dark:text-insight-300 bg-insight-100 dark:bg-insight-900/40 rounded-full">
-                                <Zap className="w-3 h-3" />
-                                AI Pick
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                            {template.description}
-                          </p>
-                        </div>
-                      </Button>
+                        badge={isAIRecommended ? "AI Pick" : undefined}
+                      />
                     );
                   })}
                 </div>
               )}
 
-              <Button
-                className="w-full flex p-3 rounded-lg border-2"
+              <SelectionCard
+                title="Start from scratch"
+                description="Begin with a blank workflow"
+                icon={<FileCode className="w-5 h-5" />}
+                selected={scratchSelected}
                 onClick={handleScratchSelect}
-                aria-label="Start from scratch"
-                aria-pressed={scratchSelected}
-              >
-                <FileCode className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
-                <span className="text-neutral-700 dark:text-neutral-300">
-                  Start from scratch
-                </span>
-              </Button>
+                ariaLabel="Start from scratch"
+              />
             </div>
           )}
 
@@ -523,27 +475,27 @@ export function OnboardingWizard({
             <div>
               <h2
                 id="wizard-title"
-                className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2 text-center"
+                className="text-xl font-bold text-neutral-12 mb-2 text-center"
               >
                 Quick Tour
               </h2>
-              <p className="text-neutral-600 dark:text-neutral-400 text-center mb-6">
+              <p className="text-neutral-11 text-center mb-6">
                 Here are some key features to help you get started
               </p>
               <div className="space-y-4">
                 {tourFeatures.map((feature, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-4 p-4 bg-neutral-50 dark:bg-neutral-700/50 rounded-lg"
+                    className="flex items-start gap-4 p-4 bg-neutral-3 rounded-lg"
                   >
-                    <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg text-primary-600 dark:text-primary-400">
+                    <div className="p-2 bg-primary-3 rounded-lg text-primary-11">
                       {feature.icon}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+                      <h3 className="font-semibold text-neutral-12">
                         {feature.title}
                       </h3>
-                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                      <p className="text-sm text-neutral-11">
                         {feature.description}
                       </p>
                     </div>
@@ -555,11 +507,12 @@ export function OnboardingWizard({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-neutral-6 flex items-center justify-between">
           <div>
             {currentStep > 1 && (
               <Button
-                className="flex px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
+                variant="secondary"
+                className="flex gap-2 px-4 py-2 text-neutral-11 hover:text-neutral-12 hover:bg-neutral-3 rounded-lg"
                 onClick={handleBack}
                 aria-label="Back"
               >
@@ -575,7 +528,7 @@ export function OnboardingWizard({
                   <Button
                     variant="primary"
                     size="lg"
-                    className="flex px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                    className="flex gap-2 px-6 py-2 bg-primary-9 text-primary-contrast rounded-lg hover:bg-primary-10"
                     onClick={handleNext}
                     aria-label="Get Started"
                   >
@@ -585,8 +538,9 @@ export function OnboardingWizard({
                 )}
                 {currentStep === 2 && (
                   <Button
+                    variant="primary"
                     size="lg"
-                    className="flex px-6 py-2 rounded-lg"
+                    className="flex gap-2 px-6 py-2 bg-primary-9 text-primary-contrast rounded-lg hover:bg-primary-10 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleNext}
                     disabled={!canProceedStep2}
                     aria-label="Next"
@@ -597,8 +551,9 @@ export function OnboardingWizard({
                 )}
                 {currentStep === 3 && (
                   <Button
+                    variant="primary"
                     size="lg"
-                    className="flex px-6 py-2 rounded-lg"
+                    className="flex gap-2 px-6 py-2 bg-primary-9 text-primary-contrast rounded-lg hover:bg-primary-10 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleNext}
                     disabled={!canProceedStep3}
                     aria-label="Next"
@@ -612,7 +567,7 @@ export function OnboardingWizard({
               <Button
                 variant="success"
                 size="lg"
-                className="flex px-6 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700"
+                className="flex gap-2 px-6 py-2 bg-success-9 text-success-contrast rounded-lg hover:bg-success-10"
                 onClick={handleComplete}
                 aria-label="Complete"
               >

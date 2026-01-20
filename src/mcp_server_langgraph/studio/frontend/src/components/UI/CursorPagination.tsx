@@ -34,16 +34,16 @@ export function CursorPagination({
   return (
     <div
       data-testid="cursor-pagination"
-      className="flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700"
+      className="flex items-center justify-between px-4 py-3 bg-neutral-1 border-t border-neutral-5"
     >
       <div className="flex items-center gap-2">
         {isLoading && (
           <div data-testid="pagination-loading">
-            <Loader2 className="w-4 h-4 animate-spin text-neutral-400 dark:text-neutral-400" />
+            <Loader2 className="w-4 h-4 animate-spin text-neutral-9" />
           </div>
         )}
         {itemCount !== undefined && totalCount !== undefined && (
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+          <span className="text-sm text-neutral-10">
             {itemCount} of {totalCount}
           </span>
         )}

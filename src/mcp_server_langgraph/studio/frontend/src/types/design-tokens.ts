@@ -28,7 +28,7 @@ export type SemanticColor =
 
 /**
  * Color scale values (50-950)
- * Used for generating utility classes like `bg-primary-500`
+ * Used for generating utility classes like `bg-primary-9`
  */
 export type ColorScale =
   | 50

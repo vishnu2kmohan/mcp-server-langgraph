@@ -253,7 +253,7 @@ export const PillVariants: Story = {
 
 export const DarkMode: Story = {
   render: () => (
-    <div className="dark bg-neutral-900 p-6 rounded-lg">
+    <div className="dark bg-neutral-2 p-6 rounded-lg">
       <div className="flex flex-wrap gap-2">
         <Badge variant="default">Default</Badge>
         <Badge variant="primary">Primary</Badge>

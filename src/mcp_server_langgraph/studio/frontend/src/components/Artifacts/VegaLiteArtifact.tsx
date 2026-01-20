@@ -237,27 +237,27 @@ export function VegaLiteArtifact({
   return (
     <div
       data-testid="vega-lite-artifact"
-      className={`bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden w-full ${
+      className={`bg-neutral-1 border border-neutral-5 rounded-lg overflow-hidden w-full ${
         theme === "dark" ? "dark" : ""
       } ${className}`}
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-neutral-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart3
             size={16}
-            className="text-neutral-500 dark:text-neutral-400"
+            className="text-neutral-10"
           />
-          <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+          <h3 className="font-medium text-neutral-12">
             {displayTitle}
           </h3>
         </div>
         <div className="flex items-center gap-2">
           {/* Export button */}
           {!error && !isLoading && (
-            <Button
+            <Button size="icon"
               variant="secondary"
-              className="p-1.5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
+              className="p-1.5 text-neutral-11 hover:bg-neutral-2 rounded"
               onClick={handleExport}
               aria-label="Export chart"
               title="Export as PNG"
@@ -267,9 +267,9 @@ export function VegaLiteArtifact({
           )}
           {/* Retry button (shown on error) */}
           {error && (
-            <Button
+            <Button size="icon"
               variant="secondary"
-              className="p-1.5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
+              className="p-1.5 text-neutral-11 hover:bg-neutral-2 rounded"
               onClick={handleRetry}
               aria-label="Retry"
               title="Retry rendering"
@@ -285,10 +285,10 @@ export function VegaLiteArtifact({
         {isLoading && (
           <div
             data-testid="vega-loading"
-            className="absolute inset-0 flex items-center justify-center bg-neutral-50 dark:bg-neutral-900/50"
+            className="absolute inset-0 flex items-center justify-center bg-neutral-1"
           >
-            <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-neutral-300 border-t-primary-500" />
+            <div className="flex items-center gap-2 text-neutral-10">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-neutral-5 border-t-primary-500" />
               <span>Loading chart...</span>
             </div>
           </div>
@@ -298,18 +298,18 @@ export function VegaLiteArtifact({
         {error && (
           <div
             data-testid="vega-error"
-            className="absolute inset-0 flex flex-col items-center justify-center bg-error-50 dark:bg-error-900/20 p-4"
+            className="absolute inset-0 flex flex-col items-center justify-center bg-error-1 dark:bg-error-a3 p-4"
           >
             <AlertCircle
               size={24}
-              className="text-error-500 dark:text-error-400 mb-2"
+              className="text-error-9 dark:text-error-7 mb-2"
             />
-            <p className="text-error-700 dark:text-error-300 text-sm text-center">
+            <p className="text-error-11 dark:text-error-9 text-sm text-center">
               {error}
             </p>
             <Button
               variant="danger"
-              className="mt-3 px-3 py-1.5 text-sm bg-error-100 dark:bg-error-900/50 text-error-700 dark:text-error-300 rounded hover:bg-error-200 dark:hover:bg-error-900/70"
+              className="mt-3 px-3 py-1.5 text-sm bg-error-3 dark:bg-error-a6 text-error-11 dark:text-error-9 rounded hover:bg-error-4 dark:hover:bg-error-a8"
               onClick={handleRetry}
             >
               Retry

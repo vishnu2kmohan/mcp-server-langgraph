@@ -1,6 +1,15 @@
 /**
  * ChatInputForm Component
  *
+ * @deprecated Use ChatInput component instead for new development.
+ * ChatInput provides a consolidated interface with:
+ * - Model settings dropdown (brain icon) with model selector + thinking controls
+ * - Single bottom controls row: [+] [🧠 Model▼] [Tools▼] [KB▼] [🎤] [Send/Stop]
+ * - Keyboard shortcuts for formatting (no toolbar)
+ * - Cleaner, more maintainable codebase
+ *
+ * This component is kept for backwards compatibility with ConnectedChatInputForm.
+ *
  * Rich chat input form with voice input, file uploads, and drag-drop support.
  *
  * Layout Design (inspired by ChatGPT, Claude, OpenWebUI):
@@ -44,6 +53,8 @@ import {
   type KBFocusMode,
   type KBStatus,
 } from "./KnowledgeBaseFocus";
+import { ToolSelector, type ToolOption } from "./ToolSelector";
+import type { ToolSelectionMode } from "@/types/tools";
 
 import { Button, Input, Textarea } from "@/components/UI";
 import { MODEL_LIFECYCLE_BADGE_STYLES } from "../../utils/colors";
@@ -179,6 +190,23 @@ export interface ChatInputFormProps {
   kbStatusMessage?: string;
   /** Whether to render KB Focus in compact mode (icon only) */
   kbFocusCompact?: boolean;
+  // Tool Selection props (Manual Tool Selection)
+  /** Whether to show the tool selector */
+  showToolSelector?: boolean;
+  /** Currently selected tool names (for manual mode) */
+  selectedTools?: string[];
+  /** Callback when tool selection changes */
+  onSelectedToolsChange?: (tools: string[]) => void;
+  /** Current tool selection mode (auto/manual/none) */
+  toolSelectionMode?: ToolSelectionMode;
+  /** Callback when tool selection mode changes */
+  onToolSelectionModeChange?: (mode: ToolSelectionMode) => void;
+  /** Available tools for manual selection */
+  availableTools?: ToolOption[];
+  /** Whether tools are currently loading */
+  isToolsLoading?: boolean;
+  /** Whether to render tool selector in compact mode */
+  toolSelectorCompact?: boolean;
   // Cursor position tracking (for WebSocket suggestions)
   /** Callback when cursor position changes in the input */
   onCursorPositionChange?: (position: number) => void;
@@ -245,6 +273,15 @@ export function ChatInputForm({
   kbStatus,
   kbStatusMessage,
   kbFocusCompact = false,
+  // Tool Selection props
+  showToolSelector = false,
+  selectedTools = [],
+  onSelectedToolsChange,
+  toolSelectionMode = "auto",
+  onToolSelectionModeChange,
+  availableTools = [],
+  isToolsLoading = false,
+  toolSelectorCompact = false,
   // Cursor position tracking
   onCursorPositionChange,
 }: ChatInputFormProps) {
@@ -566,9 +603,9 @@ export function ChatInputForm({
       {isDragging && (
         <div
           data-testid="drop-zone-overlay"
-          className="absolute inset-0 bg-primary-500/20 border-2 border-dashed border-primary-500 rounded-lg flex items-center justify-center z-10"
+          className="absolute inset-0 bg-primary-4 border-2 border-dashed border-primary-7 rounded-lg flex items-center justify-center z-10"
         >
-          <p className="text-primary-600 font-medium">Drop files here</p>
+          <p className="text-primary-11 font-medium">Drop files here</p>
         </div>
       )}
       {/* Attached files preview */}
@@ -577,19 +614,19 @@ export function ChatInputForm({
           {uploadFiles.map((file) => (
             <div
               key={file.id}
-              className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 px-3 py-1.5 rounded-full text-sm border border-neutral-200 dark:border-neutral-700"
+              className="flex items-center gap-2 bg-neutral-2 px-3 py-1.5 rounded-full text-sm border border-neutral-5"
             >
               <span className="truncate max-w-[150px]">{file.file.name}</span>
               {file.status === "uploading" && (
-                <span className="text-primary-500 text-xs">
+                <span className="text-primary-9 text-xs">
                   {file.progress}%
                 </span>
               )}
               {file.status === "error" && (
-                <span className="text-error-500 text-xs">{file.error}</span>
+                <span className="text-error-9 text-xs">{file.error}</span>
               )}
               <Button
-                className="text-neutral-400 dark:text-neutral-400 hover:text-error-500"
+                className="text-neutral-9 hover:text-error-9"
                 type="button"
                 onClick={() => onRemoveFile(file.id)}
                 aria-label="Remove file"
@@ -602,18 +639,18 @@ export function ChatInputForm({
       )}
       {/* Error messages */}
       {voiceError && (
-        <p className="text-error-500 text-sm mb-2 px-1">{voiceError}</p>
+        <p className="text-error-11 text-sm mb-2 px-1">{voiceError}</p>
       )}
       {fileError && (
-        <p className="text-error-500 text-sm mb-2 px-1">{fileError}</p>
+        <p className="text-error-11 text-sm mb-2 px-1">{fileError}</p>
       )}
       {/* Voice input browser compatibility banner */}
       {!isVoiceSupported && !isVoiceBannerDismissed && (
         <div
           data-testid="voice-not-supported-banner"
-          className="flex items-center justify-between gap-3 mb-3 px-3 py-2 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg text-sm"
+          className="flex items-center justify-between gap-3 mb-3 px-3 py-2 bg-warning-3 border border-warning-6 rounded-lg text-sm"
         >
-          <div className="flex items-center gap-2 text-warning-800 dark:text-warning-200">
+          <div className="flex items-center gap-2 text-warning-11">
             <Mic className="w-4 h-4 flex-shrink-0" />
             <span>
               Voice input is not supported in this browser. For best experience,
@@ -621,7 +658,7 @@ export function ChatInputForm({
             </span>
           </div>
           <Button
-            className="p-1 text-warning-600 hover:text-warning-800 dark:text-warning-400 dark:hover:text-warning-200"
+            className="p-1 text-warning-9 hover:text-warning-11"
             type="button"
             onClick={() => setIsVoiceBannerDismissed(true)}
             aria-label="Dismiss"
@@ -634,9 +671,9 @@ export function ChatInputForm({
       {isListening && (
         <div
           data-testid="recording-indicator"
-          className="flex items-center gap-2 mb-3 text-error-500 px-1"
+          className="flex items-center gap-2 mb-3 text-error-9 px-1"
         >
-          <span className="w-2 h-2 bg-error-500 rounded-full animate-pulse" />
+          <span className="w-2 h-2 bg-error-9 rounded-full animate-pulse" />
           <span className="text-sm">Listening...</span>
         </div>
       )}
@@ -656,7 +693,7 @@ export function ChatInputForm({
                 <span
                   key={detected.url}
                   data-testid="url-fetch-loading"
-                  className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full"
+                  className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-primary-3 text-primary-11 rounded-full"
                 >
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span>{hostname}</span>
@@ -669,14 +706,14 @@ export function ChatInputForm({
                 <span
                   key={detected.url}
                   data-testid="url-fetched-badge"
-                  className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-300 rounded-full"
+                  className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-success-3 text-success-11 rounded-full"
                 >
                   <Check className="w-3 h-3" />
                   <span>{fetched.title || hostname}</span>
                   {onRemoveFetchedUrl && (
                     <Button
                       variant="success"
-                      className="ml-1 p-0.5 hover:bg-success-200 dark:hover:bg-success-800 rounded-full"
+                      className="ml-1 p-0.5 hover:bg-success-4 rounded-full"
                       type="button"
                       onClick={() => onRemoveFetchedUrl(detected.url)}
                       aria-label={`Remove ${hostname}`}
@@ -692,7 +729,7 @@ export function ChatInputForm({
             return (
               <span
                 key={detected.url}
-                className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-full"
+                className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-neutral-2 text-neutral-11 rounded-full"
               >
                 <span>{hostname}</span>
               </span>
@@ -707,7 +744,7 @@ export function ChatInputForm({
           <div
             data-testid="deprecation-warning-banner"
             role="alert"
-            className="flex items-center justify-between gap-3 mb-3 px-3 py-2 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg text-sm text-warning-800 dark:text-warning-200"
+            className="flex items-center justify-between gap-3 mb-3 px-3 py-2 bg-warning-3 border border-warning-6 rounded-lg text-sm text-warning-11"
           >
             <div className="flex items-center gap-2">
               <span className="font-medium">{currentModel.name}</span>
@@ -723,7 +760,7 @@ export function ChatInputForm({
             </div>
             <Button
               variant="secondary"
-              className="p-1 text-warning-600 hover:text-warning-800 dark:text-warning-400 dark:hover:text-warning-200"
+              className="p-1 text-warning-9 hover:text-warning-11"
               type="button"
               onClick={() => setIsDeprecationWarningDismissed(true)}
               aria-label="Dismiss deprecation warning"
@@ -738,7 +775,7 @@ export function ChatInputForm({
         <div data-testid="model-selector" className="mb-3 relative">
           <Button
             variant="secondary"
-            className="flex px-3 py-1.5 text-sm rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:ring-primary-500"
+            className="flex px-3 py-1.5 text-sm rounded-lg border border-neutral-5 bg-neutral-1 hover:bg-neutral-1 focus:ring-primary-7"
             ref={modelButtonRef}
             type="button"
             data-testid="model-selector-button"
@@ -760,10 +797,10 @@ export function ChatInputForm({
               <>
                 <span
                   data-testid="model-selector-loading"
-                  className="w-4 h-4 border-2 border-neutral-300 border-t-primary-500 rounded-full animate-spin"
+                  className="w-4 h-4 border-2 border-neutral-5 border-t-primary-9 rounded-full animate-spin"
                   aria-hidden="true"
                 />
-                <span className="font-medium text-neutral-500">
+                <span className="font-medium text-neutral-10">
                   Loading models...
                 </span>
               </>
@@ -773,29 +810,29 @@ export function ChatInputForm({
                   {selectedModel || "Select model"}
                 </span>
                 {currentModel && (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-2 text-neutral-10">
                     {currentModel.provider}
                   </span>
                 )}
                 {/* Capability badge for selected model (show thinking indicator) */}
                 {currentModel?.supportsThinking && (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-insight-3 text-insight-11">
                     Thinking
                   </span>
                 )}
                 {/* Status badge for selected model (preview, legacy, deprecated) */}
                 {currentModel?.status === "preview" && (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-info-100 dark:bg-info-900/30 text-info-600 dark:text-info-400">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-info-3 text-info-11">
                     Preview
                   </span>
                 )}
                 {currentModel?.status === "legacy" && (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-warning-100 dark:bg-warning-900/30 text-warning-600 dark:text-warning-400">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-warning-3 text-warning-11">
                     Legacy
                   </span>
                 )}
                 {currentModel?.status === "deprecated" && (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-error-3 text-error-11">
                     Deprecated
                   </span>
                 )}
@@ -813,13 +850,13 @@ export function ChatInputForm({
               id="model-selector-listbox"
               role="listbox"
               aria-label="Available AI models"
-              className="absolute z-20 mt-1 w-64 py-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg max-h-80 overflow-y-auto"
+              className="absolute z-10 mt-1 w-64 py-1 bg-neutral-1 border border-neutral-5 rounded-lg shadow-lg max-h-80 overflow-y-auto"
             >
               {/* Search Input */}
               {enableModelSearch && (
                 <div className="px-2 pb-2 pt-1">
                   <Input
-                    className="px-3 py-1.5 text-sm bg-neutral-50 focus:ring-primary-500 placeholder-neutral-400 dark:placeholder-neutral-500"
+                    className="px-3 py-1.5 text-sm bg-neutral-1 focus:ring-primary-7 placeholder-neutral-9"
                     ref={modelSearchInputRef}
                     data-testid="model-search-input"
                     placeholder="Search models..."
@@ -840,13 +877,13 @@ export function ChatInputForm({
               {/* Recent Models Section (hidden when searching) */}
               {validatedRecentModels.length > 0 && !modelSearchQuery && (
                 <div data-testid="recent-models-section">
-                  <div className="px-3 py-1.5 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                  <div className="px-3 py-1.5 text-xs font-semibold text-neutral-10 uppercase tracking-wider">
                     Recent
                   </div>
                   {validatedRecentModels.map((model) => (
                     <Button
                       variant="primary"
-                      className="w-full flex justify-between px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 focus:bg-primary-50 dark:focus:bg-primary-900/30"
+                      className="w-full flex justify-between px-3 py-2 text-sm hover:bg-neutral-2 focus:bg-primary-3"
                       key={`recent-${model.id}`}
                       type="button"
                       role="option"
@@ -856,33 +893,33 @@ export function ChatInputForm({
                     >
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{model.name}</span>
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400">
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-2 text-neutral-10">
                           {model.provider}
                         </span>
                       </div>
                       {model.id === selectedModel && (
                         <Check
-                          className="w-4 h-4 text-success-500"
+                          className="w-4 h-4 text-success-9"
                           aria-hidden="true"
                         />
                       )}
                     </Button>
                   ))}
                   {/* Divider between recent and all models */}
-                  <div className="border-t border-neutral-200 dark:border-neutral-700 my-1" />
+                  <div className="border-t border-neutral-5 my-1" />
                 </div>
               )}
 
               {/* All Models Section Header (only shown when recent models exist and not searching) */}
               {validatedRecentModels.length > 0 && !modelSearchQuery && (
-                <div className="px-3 py-1.5 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                <div className="px-3 py-1.5 text-xs font-semibold text-neutral-10 uppercase tracking-wider">
                   All Models
                 </div>
               )}
 
               {/* No Models Found Message */}
               {filteredModels.length === 0 && modelSearchQuery && (
-                <div className="px-3 py-4 text-sm text-neutral-500 dark:text-neutral-400 text-center">
+                <div className="px-3 py-4 text-sm text-neutral-10 text-center">
                   No models found
                 </div>
               )}
@@ -891,7 +928,7 @@ export function ChatInputForm({
               {filteredModels.map((model, index) => (
                 <Button
                   variant="primary"
-                  className="w-full flex flex-col px-3 py-2 text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 focus:bg-primary-50 dark:focus:bg-primary-900/30"
+                  className="w-full flex flex-col px-3 py-2 text-sm hover:bg-neutral-2 focus:bg-primary-3"
                   key={model.id}
                   id={`model-option-${model.id}`}
                   type="button"
@@ -904,13 +941,13 @@ export function ChatInputForm({
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{model.name}</span>
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400">
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-2 text-neutral-10">
                         {model.provider}
                       </span>
                     </div>
                     {model.id === selectedModel && (
                       <Check
-                        className="w-4 h-4 text-success-500"
+                        className="w-4 h-4 text-success-9"
                         aria-hidden="true"
                       />
                     )}
@@ -923,7 +960,7 @@ export function ChatInputForm({
                       {model.supportsThinking && (
                         <span
                           data-testid={`capability-badge-thinking-${model.id}`}
-                          className="text-xs px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400"
+                          className="text-xs px-1.5 py-0.5 rounded bg-insight-3 text-insight-11"
                         >
                           Thinking
                         </span>
@@ -931,7 +968,7 @@ export function ChatInputForm({
                       {model.supportsVision && (
                         <span
                           data-testid={`capability-badge-vision-${model.id}`}
-                          className="text-xs px-1.5 py-0.5 rounded bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+                          className="text-xs px-1.5 py-0.5 rounded bg-primary-3 text-primary-11"
                         >
                           Vision
                         </span>
@@ -939,7 +976,7 @@ export function ChatInputForm({
                       {model.supportsTools && (
                         <span
                           data-testid={`capability-badge-tools-${model.id}`}
-                          className="text-xs px-1.5 py-0.5 rounded bg-success-100 dark:bg-success-900/30 text-success-600 dark:text-success-400"
+                          className="text-xs px-1.5 py-0.5 rounded bg-success-3 text-success-11"
                         >
                           Tools
                         </span>
@@ -972,7 +1009,7 @@ export function ChatInputForm({
                         Deprecated
                       </span>
                       {model.sunsetDate && (
-                        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                        <span className="text-xs text-neutral-10">
                           Sunset{" "}
                           {new Date(model.sunsetDate).toLocaleDateString(
                             "en-US",
@@ -1009,7 +1046,7 @@ export function ChatInputForm({
         {enableRichTextMode ? (
           <div
             data-testid="pill-container"
-            className="relative flex flex-col bg-white dark:bg-neutral-800/95 rounded-2xl shadow-lg ring-1 ring-neutral-200/50 dark:ring-neutral-700/50 backdrop-blur-sm transition-all duration-200 focus-within:ring-2 focus-within:ring-chat-accent/50 focus-within:shadow-xl"
+            className="relative flex flex-col bg-neutral-1 rounded-2xl shadow-lg ring-1 ring-neutral-a6 backdrop-blur-sm transition-all duration-200 focus-within:ring-2 focus-within:ring-chat-accent/50 focus-within:shadow-xl"
           >
             {/* RichTextInput area */}
             <div data-testid="rich-text-input" className="px-3 pt-3">
@@ -1033,7 +1070,7 @@ export function ChatInputForm({
             </div>
 
             {/* Controls row - OUTSIDE RichTextInput */}
-            <div className="flex items-center justify-between px-3 pb-3 border-t border-neutral-100 dark:border-neutral-700 pt-2 mt-2">
+            <div className="flex items-center justify-between px-3 pb-3 border-t border-neutral-5 pt-2 mt-2">
               {/* Left: File upload, Voice */}
               <div className="flex items-center gap-2">
                 {/* Hidden file input */}
@@ -1047,7 +1084,7 @@ export function ChatInputForm({
                 />
                 <Button
                   variant="secondary"
-                  className="p-2 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                  className="p-2 text-neutral-9 hover:text-neutral-11 rounded-lg hover:bg-neutral-2"
                   type="button"
                   disabled={isProcessing || isUploading}
                   aria-label="Attach file"
@@ -1088,6 +1125,20 @@ export function ChatInputForm({
                   />
                 )}
 
+                {/* Tool Selector (Manual Tool Selection) */}
+                {showToolSelector && onSelectedToolsChange && onToolSelectionModeChange && (
+                  <ToolSelector
+                    selectedTools={selectedTools}
+                    onSelectionChange={onSelectedToolsChange}
+                    mode={toolSelectionMode}
+                    onModeChange={onToolSelectionModeChange}
+                    availableTools={availableTools}
+                    isLoading={isToolsLoading}
+                    disabled={isProcessing}
+                    compact={toolSelectorCompact}
+                  />
+                )}
+
                 {/* Reasoning Effort Selector in controls row (RichText mode only) */}
                 {modelSupportsThinking &&
                   enableThinking &&
@@ -1105,9 +1156,9 @@ export function ChatInputForm({
               {/* Right: Send/Stop button */}
               <div className="flex items-center gap-2">
                 {isStreaming && onStopStreaming ? (
-                  <Button
+                  <Button size="icon"
                     variant="danger"
-                    className="p-2 bg-error-500 text-white rounded-lg hover:bg-error-600"
+                    className="p-2 bg-error-9 text-neutral-12 rounded-lg hover:bg-error-10"
                     type="button"
                     onClick={onStopStreaming}
                     aria-label="Stop generating"
@@ -1118,7 +1169,7 @@ export function ChatInputForm({
                 ) : (
                   <Button
                     variant="primary"
-                    className="p-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+                    className="p-2 bg-primary-9 text-neutral-12 rounded-lg hover:bg-primary-10"
                     type="submit"
                     disabled={!canSend}
                     aria-label="Send"
@@ -1141,7 +1192,7 @@ export function ChatInputForm({
           /* Legacy Mode: Plain textarea with existing styling */
           <div
             data-testid="input-wrapper"
-            className="flex items-end gap-2 p-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all"
+            className="flex items-end gap-2 p-2 bg-neutral-1 border border-neutral-5 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-primary-7 focus-within:border-transparent transition-all"
           >
             {/* Left controls - Attachment button */}
             <div className="flex items-center gap-1 pb-1">
@@ -1156,7 +1207,7 @@ export function ChatInputForm({
               />
               <Button
                 variant="secondary"
-                className="p-2 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                className="p-2 text-neutral-9 hover:text-neutral-11 rounded-lg hover:bg-neutral-2"
                 type="button"
                 disabled={isProcessing || isUploading}
                 aria-label="Attach file"
@@ -1181,7 +1232,7 @@ export function ChatInputForm({
                   {/* Ghost text suggestion */}
                   <span
                     data-testid="inline-suggestion"
-                    className="text-neutral-400 dark:text-neutral-400"
+                    className="text-neutral-9"
                   >
                     {inlineSuggestion}
                   </span>
@@ -1196,13 +1247,13 @@ export function ChatInputForm({
                     data-testid="suggestion-loading"
                     className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
                   >
-                    <Loader2 className="w-4 h-4 animate-spin text-neutral-400 dark:text-neutral-400" />
+                    <Loader2 className="w-4 h-4 animate-spin text-neutral-9" />
                   </div>
                 )}
 
               <Textarea
                 size="sm"
-                className="px-2 py-2 bg-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 resize-none focus:ring-primary-500 focus:ring-inset disabled:opacity-50 min-h-[40px] max-h-[200px]"
+                className="px-2 py-2 bg-transparent text-neutral-12 placeholder-neutral-9 resize-none focus:ring-primary-7 focus:ring-inset disabled:opacity-50 min-h-[40px] max-h-[200px]"
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => onInputChange(e.target.value)}
@@ -1221,7 +1272,7 @@ export function ChatInputForm({
               {showInlineSuggestion && (
                 <div
                   data-testid="suggestion-hint"
-                  className="absolute -bottom-5 left-2 text-xs text-neutral-400 dark:text-neutral-400"
+                  className="absolute -bottom-5 left-2 text-xs text-neutral-9"
                 >
                   Press Tab to accept
                 </div>
@@ -1249,9 +1300,9 @@ export function ChatInputForm({
 
               {/* Stop button when streaming, otherwise Send button */}
               {isStreaming && onStopStreaming ? (
-                <Button
+                <Button size="icon"
                   variant="danger"
-                  className="p-2 bg-error-500 text-white rounded-lg hover:bg-error-600"
+                  className="p-2 bg-error-9 text-neutral-12 rounded-lg hover:bg-error-10"
                   type="button"
                   onClick={onStopStreaming}
                   aria-label="Stop generating"
@@ -1262,7 +1313,7 @@ export function ChatInputForm({
               ) : (
                 <Button
                   variant="primary"
-                  className="p-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+                  className="p-2 bg-primary-9 text-neutral-12 rounded-lg hover:bg-primary-10"
                   type="submit"
                   disabled={!canSend}
                   aria-label="Send"
@@ -1288,9 +1339,9 @@ export function ChatInputForm({
         <div className="flex items-center justify-between mt-3 px-1">
           {/* Enable Thinking Toggle */}
           {onEnableThinkingChange && (
-            <Button
+            <Button variant="ghost"
               size="sm"
-              className="flex text-xs focus:ring-violet-500 rounded-lg p-1"
+              className="flex text-xs focus:ring-insight-9 rounded-lg p-1"
               type="button"
               data-testid="enable-thinking-toggle"
               onClick={() => onEnableThinkingChange(!enableThinking)}
@@ -1304,11 +1355,11 @@ export function ChatInputForm({
               <span
                 className={`w-8 h-4 rounded-full transition-colors flex items-center px-0.5 ${
                   enableThinking
-                    ? "bg-violet-600 justify-end"
-                    : "bg-neutral-300 dark:bg-neutral-600 justify-start"
+                    ? "bg-insight-10 justify-end"
+                    : "bg-neutral-3 justify-start"
                 }`}
               >
-                <span className="w-3 h-3 bg-white rounded-full shadow" />
+                <span className="w-3 h-3 bg-neutral-1 rounded-full shadow" />
               </span>
               <span>Extended Thinking</span>
             </Button>
@@ -1327,7 +1378,7 @@ export function ChatInputForm({
         </div>
       )}
       {/* Hint text */}
-      <p className="text-xs text-neutral-400 dark:text-neutral-400 text-center mt-2">
+      <p className="text-xs text-neutral-9 text-center mt-2">
         Press Enter to send, Shift+Enter for new line
       </p>
     </div>

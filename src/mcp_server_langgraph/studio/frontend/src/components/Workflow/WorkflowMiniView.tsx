@@ -59,39 +59,39 @@ const statusStyles: Record<
   { bg: string; border: string; text: string; icon: React.ReactNode }
 > = {
   idle: {
-    bg: "bg-neutral-100 dark:bg-neutral-800",
-    border: "border-neutral-300 dark:border-neutral-600",
-    text: "text-neutral-500 dark:text-neutral-400",
+    bg: "bg-neutral-2",
+    border: "border-neutral-5",
+    text: "text-neutral-10",
     icon: (
-      <Circle size={12} className="text-neutral-400 dark:text-neutral-400" />
+      <Circle size={12} className="text-neutral-9" />
     ),
   },
   pending: {
-    bg: "bg-neutral-100 dark:bg-neutral-800",
+    bg: "bg-neutral-2",
     border:
-      "border-neutral-400 dark:border-neutral-500 dark:border-neutral-500",
-    text: "text-neutral-600 dark:text-neutral-300",
+      "border-neutral-6",
+    text: "text-neutral-11",
     icon: (
-      <Circle size={12} className="text-neutral-400 dark:text-neutral-400" />
+      <Circle size={12} className="text-neutral-9" />
     ),
   },
   running: {
-    bg: "bg-primary-50 dark:bg-primary-900/30",
-    border: "border-primary-500",
-    text: "text-primary-700 dark:text-primary-300",
-    icon: <Loader2 size={12} className="text-primary-500 animate-spin" />,
+    bg: "bg-primary-1 bg-primary-4",
+    border: "border-primary-9",
+    text: "text-primary-11 dark:text-primary-5",
+    icon: <Loader2 size={12} className="text-primary-9 animate-spin" />,
   },
   success: {
-    bg: "bg-success-50 dark:bg-success-900/30",
-    border: "border-success-500",
-    text: "text-success-700 dark:text-success-300",
-    icon: <CheckCircle size={12} className="text-success-500" />,
+    bg: "bg-success-1 bg-success-4",
+    border: "border-success-9",
+    text: "text-success-11 dark:text-success-5",
+    icon: <CheckCircle size={12} className="text-success-9" />,
   },
   error: {
-    bg: "bg-error-50 dark:bg-error-900/30",
-    border: "border-error-500",
-    text: "text-error-700 dark:text-error-300",
-    icon: <XCircle size={12} className="text-error-500" />,
+    bg: "bg-error-1 bg-error-4",
+    border: "border-error-9",
+    text: "text-error-11 dark:text-error-9",
+    icon: <XCircle size={12} className="text-error-9" />,
   },
 };
 
@@ -139,45 +139,45 @@ export function WorkflowMiniView({
 
   return (
     <div
-      className={`bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 ${className}`}
+      className={`bg-neutral-1 border border-neutral-5 rounded-lg p-3 ${className}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+          <span className="text-xs font-medium text-neutral-10">
             Workflow
           </span>
           {activeNode && (
-            <span className="text-xs text-primary-600 dark:text-primary-400 flex items-center gap-1">
+            <span className="text-xs text-primary-10 dark:text-primary-7 flex items-center gap-1">
               <Loader2 size={10} className="animate-spin" />
               {activeNode.name}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-neutral-500 dark:text-neutral-400">
+          <span className="text-xs text-neutral-10">
             {progress}%
           </span>
           {onExpand && (
-            <Button
+            <Button size="icon"
               variant="secondary"
-              className="p-1 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 rounded"
+              className="p-1 hover:bg-neutral-2 rounded"
               onClick={onExpand}
               title="Expand workflow view"
             >
               <ChevronRight
                 size={14}
-                className="text-neutral-400 dark:text-neutral-400"
+                className="text-neutral-9"
               />
             </Button>
           )}
         </div>
       </div>
       {/* Progress bar */}
-      <div className="h-1 bg-neutral-200 dark:bg-neutral-700 rounded-full mb-3 overflow-hidden">
+      <div className="h-1 bg-neutral-3 rounded-full mb-3 overflow-hidden">
         <div
-          className="h-full bg-primary-500 transition-all duration-500 ease-out"
-          style={{ width: `${progress}%` }}
+          className="h-full bg-primary-9 transition-all duration-500 ease-out"
+          style={{ '--progress': `${progress}%` } as React.CSSProperties}
         />
       </div>
       {/* Nodes */}
@@ -190,7 +190,7 @@ export function WorkflowMiniView({
             {isHorizontal && index < nodes.length - 1 && (
               <ChevronRight
                 size={12}
-                className="text-neutral-400 dark:text-neutral-400 flex-shrink-0"
+                className="text-neutral-9 flex-shrink-0"
               />
             )}
           </div>

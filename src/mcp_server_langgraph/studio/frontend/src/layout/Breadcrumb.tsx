@@ -13,6 +13,7 @@
  * @see ADR-0091 - StudioShell UX Audit Phase 2.2
  */
 import { Link } from "react-router";
+import { useReducedMotion } from "motion/react";
 import { cn } from "../utils/cn";
 import type { BreadcrumbItem } from "../hooks/useBreadcrumb";
 
@@ -36,6 +37,9 @@ export interface BreadcrumbProps {
  * ```
  */
 export function Breadcrumb({ items, className }: BreadcrumbProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   // Don't render if no items
   if (items.length === 0) {
     return null;
@@ -57,7 +61,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
             {/* Separator (except for first item) */}
             {index > 0 && (
               <span
-                className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300"
+                className="text-neutral-9"
                 aria-hidden="true"
               >
                 /
@@ -68,7 +72,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
             {item.isCurrent ? (
               <span
                 aria-current="page"
-                className="text-sm font-medium text-neutral-900 dark:text-white"
+                className="truncate max-w-32 min-w-0 text-sm font-medium text-neutral-12"
               >
                 {item.label}
               </span>
@@ -76,11 +80,12 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
               <Link
                 to={item.path}
                 className={cn(
+                  "truncate max-w-32 min-w-0",
                   "text-sm font-medium",
-                  "text-neutral-500 dark:text-neutral-400",
-                  "hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-200",
+                  "text-neutral-10",
+                  "hover:text-neutral-11",
                   "hover:underline",
-                  "transition-colors",
+                  !prefersReducedMotion && "transition-colors",
                 )}
               >
                 {item.label}

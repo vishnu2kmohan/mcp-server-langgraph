@@ -207,9 +207,9 @@ export function ChatMessages({
             {showAvatars && message.role !== "user" && (
               <div
                 data-testid="assistant-avatar"
-                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-neutral-500 to-neutral-600"
+                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-neutral-10 to-neutral-11"
               >
-                <Bot className="w-4 h-4 text-white" />
+                <Bot className="w-4 h-4 text-neutral-12" />
               </div>
             )}
             {/* Message Actions - appears on hover (before message for assistant, after for user) */}
@@ -230,8 +230,8 @@ export function ChatMessages({
             <div
               className={`max-w-[70%] px-4 py-3 rounded-2xl ${
                 message.role === "user"
-                  ? "bg-chat-user-bubble dark:bg-chat-user-bubble-dark text-white rounded-br-md"
-                  : "bg-chat-ai-bubble dark:bg-chat-ai-bubble-dark border border-neutral-200 dark:border-neutral-700/50 dark:border-neutral-700/50 text-neutral-900 dark:text-neutral-100 rounded-bl-md"
+                  ? "bg-chat-user-bubble dark:bg-chat-user-bubble-dark text-neutral-12 rounded-br-md"
+                  : "bg-chat-ai-bubble dark:bg-chat-ai-bubble-dark border border-neutral-a6/50 text-neutral-12 rounded-bl-md"
               }`}
             >
               {/* Rich markdown rendering for all messages */}
@@ -249,8 +249,8 @@ export function ChatMessages({
               {message.role === "assistant" &&
                 message.sources &&
                 message.sources.length > 0 && (
-                  <div className="mt-3 pt-2 border-t border-neutral-200 dark:border-neutral-700 dark:border-neutral-600">
-                    <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                  <div className="mt-3 pt-2 border-t border-neutral-5">
+                    <p className="text-xs font-medium text-neutral-10 mb-1">
                       Sources:
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -260,7 +260,7 @@ export function ChatMessages({
                           href={source.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:underline"
+                          className="inline-flex items-center gap-1 text-xs text-primary-10 dark:text-primary-11 hover:underline"
                         >
                           <ExternalLink size={10} />
                           {source.title}
@@ -271,7 +271,7 @@ export function ChatMessages({
                 )}
               {/* AI-specific indicators for assistant messages */}
               {message.role === "assistant" && (
-                <div className="mt-2 pt-2 border-t border-neutral-100 dark:border-neutral-700 flex items-center gap-3 flex-wrap">
+                <div className="mt-2 pt-2 border-t border-neutral-5 flex items-center gap-3 flex-wrap">
                   {/* Confidence indicator */}
                   {message.confidence !== undefined && (
                     <ConfidenceIndicator score={message.confidence} />
@@ -316,8 +316,8 @@ export function ChatMessages({
               <p
                 className={`text-xs mt-1 ${
                   message.role === "user"
-                    ? "text-primary-200"
-                    : "text-neutral-400 dark:text-neutral-400"
+                    ? "text-primary-4"
+                    : "text-neutral-9"
                 }`}
               >
                 {new Date(message.timestamp).toLocaleTimeString()}
@@ -342,14 +342,14 @@ export function ChatMessages({
             {showAvatars && message.role === "user" && (
               <div
                 data-testid="user-avatar"
-                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-chat-accent to-indigo-600"
+                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-chat-accent to-primary-10"
               >
                 {userInitials ? (
-                  <span className="text-white text-xs font-medium">
+                  <span className="text-neutral-12 text-xs font-medium">
                     {userInitials}
                   </span>
                 ) : (
-                  <User className="w-4 h-4 text-white" />
+                  <User className="w-4 h-4 text-neutral-12" />
                 )}
               </div>
             )}
@@ -377,7 +377,7 @@ export function ChatMessages({
       {/* Streaming response with markdown rendering */}
       {isStreaming && (
         <div className="flex justify-start">
-          <div className="max-w-[70%] bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-4 py-3 rounded-lg text-neutral-900 dark:text-neutral-100">
+          <div className="max-w-[70%] bg-neutral-1 border border-neutral-5 px-4 py-3 rounded-lg text-neutral-12">
             {streamingContent ? (
               <div className="relative prose prose-sm dark:prose-invert max-w-none">
                 <MarkdownContent
@@ -385,13 +385,13 @@ export function ChatMessages({
                   enableInteractiveArtifacts={enableInteractiveArtifacts}
                   isStreaming={true}
                 />
-                <span className="inline-block w-2 h-4 ml-1 bg-primary-500 animate-pulse align-middle" />
+                <span className="inline-block w-2 h-4 ml-1 bg-primary-9 animate-pulse align-middle" />
               </div>
             ) : (
               <div className="space-y-2">
                 {/* Processing indicator with agent trace toggle */}
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
+                  <div className="flex items-center gap-2 text-neutral-10">
                     <RefreshCw size={16} className="animate-spin" />
                     <span>Processing...</span>
                   </div>
@@ -408,7 +408,7 @@ export function ChatMessages({
                 {showAgentExecutionTrace && (
                   <Suspense
                     fallback={
-                      <div className="flex items-center gap-2 p-3 text-neutral-400 dark:text-neutral-400">
+                      <div className="flex items-center gap-2 p-3 text-neutral-9">
                         <Loader2 size={14} className="animate-spin" />
                         <span className="text-xs">Loading trace panel...</span>
                       </div>
@@ -426,9 +426,9 @@ export function ChatMessages({
       {/* Legacy sending indicator (fallback) */}
       {isSending && !isStreaming && (
         <div className="flex justify-start">
-          <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-4 py-3 rounded-lg">
+          <div className="bg-neutral-1 border border-neutral-5 px-4 py-3 rounded-lg">
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
+              <div className="flex items-center gap-2 text-neutral-10">
                 <RefreshCw size={16} className="animate-spin" />
                 <span>Processing...</span>
               </div>
@@ -444,7 +444,7 @@ export function ChatMessages({
             {showAgentExecutionTrace && (
               <Suspense
                 fallback={
-                  <div className="flex items-center gap-2 p-3 text-neutral-400 dark:text-neutral-400">
+                  <div className="flex items-center gap-2 p-3 text-neutral-9">
                     <Loader2 size={14} className="animate-spin" />
                     <span className="text-xs">Loading trace panel...</span>
                   </div>

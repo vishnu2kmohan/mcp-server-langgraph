@@ -86,24 +86,24 @@ export function ExecutableCanvas({
       role="region"
       aria-label={config.title}
       className={cn(
-        "flex flex-col bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden",
+        "flex flex-col bg-neutral-1 rounded-lg border border-neutral-5 overflow-hidden",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/50">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-5 bg-neutral-1">
         <div className="flex items-center gap-3">
-          <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+          <h3 className="font-medium text-neutral-12">
             {config.title}
           </h3>
-          <span className="px-2 py-0.5 text-xs rounded bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400">
+          <span className="px-2 py-0.5 text-xs rounded bg-neutral-3 text-neutral-11">
             {config.language}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           {/* View mode toggles */}
-          <div className="flex items-center border border-neutral-200 dark:border-neutral-700 rounded">
+          <div className="flex items-center border border-neutral-5 rounded">
             <Button
               data-testid="view-split"
               type="button"
@@ -111,8 +111,8 @@ export function ExecutableCanvas({
               className={cn(
                 "p-1.5",
                 viewMode === "split"
-                  ? "bg-neutral-200 dark:bg-neutral-700"
-                  : "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
+                  ? "bg-neutral-3"
+                  : "hover:bg-neutral-2",
               )}
               aria-label="Split view"
             >
@@ -125,8 +125,8 @@ export function ExecutableCanvas({
               className={cn(
                 "p-1.5",
                 viewMode === "code"
-                  ? "bg-neutral-200 dark:bg-neutral-700"
-                  : "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
+                  ? "bg-neutral-3"
+                  : "hover:bg-neutral-2",
               )}
               aria-label="Code only"
             >
@@ -139,8 +139,8 @@ export function ExecutableCanvas({
               className={cn(
                 "p-1.5",
                 viewMode === "preview"
-                  ? "bg-neutral-200 dark:bg-neutral-700"
-                  : "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
+                  ? "bg-neutral-3"
+                  : "hover:bg-neutral-2",
               )}
               aria-label="Preview only"
             >
@@ -152,7 +152,7 @@ export function ExecutableCanvas({
           {isRunning ? (
             <Button
               variant="danger"
-              className="flex px-3 py-1.5 text-sm bg-error-500 text-white rounded hover:bg-error-600"
+              className="flex px-3 py-1.5 text-sm bg-error-9 text-neutral-12 rounded hover:bg-error-10"
               data-testid="stop-button"
               type="button"
               onClick={onStop}
@@ -163,7 +163,7 @@ export function ExecutableCanvas({
           ) : (
             <Button
               variant="success"
-              className="flex px-3 py-1.5 text-sm bg-success-500 text-white rounded hover:bg-success-600"
+              className="flex px-3 py-1.5 text-sm bg-success-9 text-neutral-12 rounded hover:bg-success-10"
               data-testid="run-button"
               type="button"
               onClick={handleRun}
@@ -192,12 +192,12 @@ export function ExecutableCanvas({
             className={cn(
               "flex flex-col",
               viewMode === "split"
-                ? "w-1/2 border-r border-neutral-200 dark:border-neutral-700"
+                ? "w-1/2 border-r border-neutral-5"
                 : "flex-1",
             )}
           >
             <Textarea
-              className="flex-1 p-4 font-mono text-sm bg-neutral-900 text-neutral-100 resize-none"
+              className="flex-1 p-4 font-mono text-sm bg-neutral-2 text-neutral-9 resize-none"
               data-testid="code-input"
               value={code}
               onChange={handleCodeChange}
@@ -219,15 +219,15 @@ export function ExecutableCanvas({
             {isPreviewLoading ? (
               <div
                 data-testid="preview-loading"
-                className="flex-1 flex items-center justify-center bg-neutral-50 dark:bg-neutral-900"
+                className="flex-1 flex items-center justify-center bg-neutral-1"
               >
-                <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
+                <Loader2 className="w-6 h-6 text-primary-9 animate-spin" />
               </div>
             ) : (
               <iframe
                 data-testid="sandbox-iframe"
                 sandbox="allow-scripts"
-                className="flex-1 bg-white"
+                className="flex-1 bg-neutral-1"
                 title="Preview"
               />
             )}
@@ -238,10 +238,10 @@ export function ExecutableCanvas({
       {error && (
         <div
           data-testid="error-panel"
-          className="error flex items-center gap-2 px-4 py-2 bg-error-50 dark:bg-error-900/20 border-t border-error-200 dark:border-error-800"
+          className="error flex items-center gap-2 px-4 py-2 bg-error-1 dark:bg-error-a3 border-t border-error-4 dark:border-error-11"
         >
-          <AlertTriangle size={16} className="text-error-500" />
-          <span className="text-sm text-error-600 dark:text-error-400">
+          <AlertTriangle size={16} className="text-error-9" />
+          <span className="text-sm text-error-10 dark:text-error-7">
             {error}
           </span>
         </div>
@@ -250,14 +250,14 @@ export function ExecutableCanvas({
       {consoleOutput.length > 0 && (
         <div
           data-testid="console-panel"
-          className="border-t border-neutral-200 dark:border-neutral-700"
+          className="border-t border-neutral-5"
         >
-          <div className="flex items-center justify-between px-4 py-1 bg-neutral-100 dark:bg-neutral-800">
-            <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+          <div className="flex items-center justify-between px-4 py-1 bg-neutral-2">
+            <span className="text-xs font-medium text-neutral-10">
               Console
             </span>
-            <Button
-              className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300"
+            <Button size="icon" variant="ghost"
+              className="p-1 text-neutral-9 hover:text-neutral-11"
               data-testid="clear-console"
               type="button"
               onClick={onClearConsole}
@@ -266,7 +266,7 @@ export function ExecutableCanvas({
               <Trash2 size={12} />
             </Button>
           </div>
-          <div className="max-h-32 overflow-y-auto p-2 font-mono text-xs bg-neutral-900 text-neutral-100">
+          <div className="max-h-32 overflow-y-auto p-2 font-mono text-xs bg-neutral-2 text-neutral-9">
             {consoleOutput.map((line, index) => (
               <div key={index} className="py-0.5">
                 {line}

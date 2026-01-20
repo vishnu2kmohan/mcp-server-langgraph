@@ -286,7 +286,7 @@ function LineNumbers({ content }: { content: string }) {
   return (
     <div
       data-testid="line-numbers"
-      className="select-none pr-3 mr-3 border-r border-neutral-300 dark:border-neutral-600 text-neutral-400 dark:text-neutral-400 text-right"
+      className="select-none pr-3 mr-3 border-r border-neutral-5 text-neutral-11 text-right"
     >
       {Array.from({ length: lines }, (_, i) => (
         <div key={i + 1}>{i + 1}</div>
@@ -321,9 +321,10 @@ export function CanvasArtifact({
 
   const [editContent, setEditContent] = useState(artifact.content);
 
+  // Phase 4: Use new EditMetadata structure for AI detection
   const isAIGenerated =
-    artifact.editMetadata?.editedBy === "ai-generation" ||
-    artifact.editMetadata?.editedBy === "ai-suggestion";
+    artifact.editMetadata?.origin === "ai" &&
+    !artifact.editMetadata?.modified;
 
   const aiConfidence = artifact.editMetadata?.aiConfidence;
   const language =
@@ -665,9 +666,9 @@ _altair_spec
           onChange={handleContentChange}
           className={cn(
             "w-full h-64 p-4 font-mono text-sm",
-            "bg-neutral-50 dark:bg-neutral-900 rounded-lg",
-            "border border-neutral-200 dark:border-neutral-700",
-            "focus:outline-none focus:ring-2 focus:ring-primary-500",
+            "bg-neutral-1 rounded-lg",
+            "border border-neutral-5",
+            "focus:outline-none focus:ring-2 focus:ring-primary-7",
             "resize-y",
           )}
         />
@@ -708,8 +709,8 @@ _altair_spec
               data-testid="json-content"
               className={cn(
                 "p-4 rounded-lg text-sm overflow-auto",
-                "bg-neutral-50 dark:bg-neutral-900",
-                "text-neutral-800 dark:text-neutral-200",
+                "bg-neutral-1",
+                "text-neutral-12",
                 "font-mono",
               )}
             >
@@ -723,18 +724,18 @@ _altair_spec
           <div data-testid="mermaid-content" className="w-full">
             <Suspense
               fallback={
-                <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 animate-pulse">
-                  <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
+                <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5 animate-pulse">
+                  <div className="flex items-center gap-2 text-neutral-11">
                     <Loader2 size={16} className="animate-spin" />
                     <span className="text-sm">Loading diagram...</span>
                   </div>
-                  <div className="mt-3 h-32 bg-neutral-200 dark:bg-neutral-700 rounded" />
+                  <div className="mt-3 h-32 bg-neutral-3 rounded" />
                 </div>
               }
             >
               <InteractiveMermaidDiagram
                 code={artifact.content}
-                className="rounded-lg border border-neutral-200 dark:border-neutral-700"
+                className="rounded-lg border border-neutral-5"
               />
             </Suspense>
           </div>
@@ -746,8 +747,8 @@ _altair_spec
             data-testid="html-content"
             className={cn(
               "p-4 rounded-lg overflow-auto",
-              "bg-white dark:bg-neutral-900",
-              "border border-neutral-200 dark:border-neutral-700",
+              "bg-neutral-1",
+              "border border-neutral-5",
             )}
           >
             {/* Render HTML content in an iframe for sandboxing */}
@@ -766,18 +767,18 @@ _altair_spec
           <div data-testid="jsx-content" className="w-full">
             <Suspense
               fallback={
-                <div className="bg-neutral-900 rounded-lg overflow-hidden animate-pulse border border-neutral-700">
-                  <div className="flex items-center gap-2 p-3 bg-neutral-800 border-b border-neutral-700">
-                    <div className="h-4 bg-neutral-700 rounded w-32" />
-                    <div className="ml-auto h-6 w-16 bg-neutral-700 rounded" />
+                <div className="bg-neutral-2 rounded-lg overflow-hidden animate-pulse border border-neutral-7">
+                  <div className="flex items-center gap-2 p-3 bg-neutral-3 border-b border-neutral-7">
+                    <div className="h-4 bg-neutral-4 rounded w-32" />
+                    <div className="ml-auto h-6 w-16 bg-neutral-4 rounded" />
                   </div>
                   <div className="p-4 space-y-2">
-                    <div className="h-3 bg-neutral-800 rounded w-2/3" />
-                    <div className="h-3 bg-neutral-800 rounded w-1/2" />
-                    <div className="h-3 bg-neutral-800 rounded w-3/4" />
+                    <div className="h-3 bg-neutral-3 rounded w-2/3" />
+                    <div className="h-3 bg-neutral-3 rounded w-1/2" />
+                    <div className="h-3 bg-neutral-3 rounded w-3/4" />
                   </div>
-                  <div className="p-4 bg-neutral-800 border-t border-neutral-700">
-                    <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
+                  <div className="p-4 bg-neutral-3 border-t border-neutral-7">
+                    <div className="flex items-center gap-2 text-neutral-11">
                       <Loader2 size={14} className="animate-spin" />
                       <span className="text-xs">
                         Loading interactive editor...
@@ -810,8 +811,8 @@ _altair_spec
             <div
               className={cn(
                 "flex-1 p-4 rounded-lg text-sm overflow-auto",
-                "bg-neutral-50 dark:bg-neutral-900",
-                "text-neutral-800 dark:text-neutral-200",
+                "bg-neutral-1",
+                "text-neutral-12",
                 "font-mono",
               )}
             >
@@ -829,27 +830,27 @@ _altair_spec
       aria-label={ariaLabel || artifact.title || "Artifact"}
       className={cn(
         "flex flex-col rounded-lg border",
-        "bg-white dark:bg-neutral-800",
-        "border-neutral-200 dark:border-neutral-700",
+        "bg-neutral-1",
+        "border-neutral-5",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-5">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+          <h3 className="text-sm font-medium text-neutral-12">
             {artifact.title || "Untitled"}
           </h3>
           <span
             data-testid="content-type-badge"
-            className="px-1.5 py-0.5 text-xs rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
+            className="px-1.5 py-0.5 text-xs rounded bg-neutral-2 text-neutral-11"
           >
             {artifact.contentType}
           </span>
           {language && (
             <span
               data-testid="language-badge"
-              className="px-1.5 py-0.5 text-xs rounded bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+              className="px-1.5 py-0.5 text-xs rounded bg-primary-3 bg-primary-4 text-primary-11 dark:text-primary-11"
             >
               {language}
             </span>
@@ -857,7 +858,7 @@ _altair_spec
           {isAIGenerated && (
             <span
               data-testid="ai-badge"
-              className="flex items-center gap-1 px-1.5 py-0.5 text-xs rounded bg-insight-100 dark:bg-insight-900/30 text-insight-600 dark:text-insight-400"
+              className="flex items-center gap-1 px-1.5 py-0.5 text-xs rounded bg-insight-2 dark:bg-insight-a4 text-insight-11 dark:text-insight-11"
             >
               <Sparkles size={10} />
               AI
@@ -870,7 +871,7 @@ _altair_spec
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-neutral-400 dark:text-neutral-400">
+          <span className="text-xs text-neutral-11">
             v{artifact.version}
           </span>
           {editable && !isEditing && (
@@ -881,8 +882,8 @@ _altair_spec
               aria-label="Edit artifact"
               className={cn(
                 "p-1.5 rounded transition-colors",
-                "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200",
-                "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+                "text-neutral-11 hover:text-neutral-11",
+                "hover:bg-neutral-2",
               )}
             >
               <Edit2 size={14} />
@@ -890,28 +891,28 @@ _altair_spec
           )}
           {isEditing && (
             <>
-              <Button
+              <Button size="icon" variant="ghost"
                 data-testid="save-button"
                 type="button"
                 onClick={handleSave}
                 aria-label="Save changes"
                 className={cn(
                   "p-1.5 rounded transition-colors",
-                  "text-success-600 hover:text-success-700",
-                  "hover:bg-success-100 dark:hover:bg-success-900/30",
+                  "text-success-11 hover:text-success-11",
+                  "hover:bg-success-3 dark:hover:bg-success-a4",
                 )}
               >
                 <Save size={14} />
               </Button>
-              <Button
+              <Button size="icon" variant="ghost"
                 data-testid="cancel-button"
                 type="button"
                 onClick={handleCancel}
                 aria-label="Cancel editing"
                 className={cn(
                   "p-1.5 rounded transition-colors",
-                  "text-error-600 hover:text-error-700",
-                  "hover:bg-error-100 dark:hover:bg-error-900/30",
+                  "text-error-11 hover:text-error-11",
+                  "hover:bg-error-3 dark:hover:bg-error-a4",
                 )}
               >
                 <X size={14} />
@@ -924,15 +925,15 @@ _altair_spec
       {enableAI && userId && isCodeArtifact && (
         <div
           data-testid="ai-code-analysis"
-          className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50"
+          className="px-4 py-3 border-b border-neutral-5 bg-neutral-1"
         >
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles size={16} className="text-primary-500" />
-            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            <Sparkles size={16} className="text-primary-11" />
+            <span className="text-sm font-medium text-neutral-11">
               Code Analysis
             </span>
             {aiLoading && (
-              <Loader2 size={14} className="animate-spin text-primary-500" />
+              <Loader2 size={14} className="animate-spin text-primary-11" />
             )}
             {!hasTriggeredAnalysis && !aiLoading && (
               <Button
@@ -944,8 +945,8 @@ _altair_spec
                 }}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 text-xs font-medium rounded",
-                  "bg-primary-100 text-primary-700 hover:bg-primary-200",
-                  "dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50",
+                  "bg-primary-3 text-primary-11 hover:bg-primary-4",
+                  "bg-primary-4 dark:text-primary-11 dark:hover:bg-primary-a6",
                   "transition-colors",
                 )}
               >
@@ -956,7 +957,7 @@ _altair_spec
             {aiError && hasTriggeredAnalysis && (
               <Button
                 size="sm"
-                className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400"
+                className="text-xs text-primary-11 hover:text-primary-11 dark:text-primary-11"
                 type="button"
                 onClick={() => refetchAI()}
               >
@@ -966,19 +967,19 @@ _altair_spec
           </div>
 
           {!hasTriggeredAnalysis && !aiLoading && (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-11">
               Click &quot;Analyze&quot; to get AI-powered code insights.
             </p>
           )}
 
           {aiLoading && (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-11">
               Analyzing code...
             </p>
           )}
 
           {aiError && hasTriggeredAnalysis && (
-            <p className="text-sm text-error-600 dark:text-error-400">
+            <p className="text-sm text-error-11 dark:text-error-11">
               Failed to analyze code. Click retry to try again.
             </p>
           )}
@@ -992,17 +993,17 @@ _altair_spec
                     data-testid="complexity-score"
                     className="flex items-center gap-1.5"
                   >
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                    <span className="text-xs text-neutral-11">
                       Complexity:
                     </span>
                     <span
                       className={cn(
                         "px-1.5 py-0.5 text-xs font-medium rounded",
                         aiComplexity <= 10
-                          ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300"
+                          ? "bg-success-3 text-success-11 bg-success-4 dark:text-success-11"
                           : aiComplexity <= 20
-                            ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-300"
-                            : "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-300",
+                            ? "bg-warning-3 text-warning-11 dark:bg-warning-a4 dark:text-warning-11"
+                            : "bg-error-3 text-error-11 bg-error-4 dark:text-error-11",
                       )}
                     >
                       {aiComplexity}
@@ -1015,25 +1016,25 @@ _altair_spec
                     data-testid="quality-score"
                     className="flex items-center gap-1.5"
                   >
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                    <span className="text-xs text-neutral-11">
                       Quality:
                     </span>
                     <div className="flex items-center gap-1">
                       {aiQualityScore >= 0.8 ? (
-                        <CheckCircle2 size={12} className="text-success-500" />
+                        <CheckCircle2 size={12} className="text-success-9" />
                       ) : aiQualityScore >= 0.6 ? (
-                        <AlertTriangle size={12} className="text-warning-500" />
+                        <AlertTriangle size={12} className="text-warning-11" />
                       ) : (
-                        <AlertTriangle size={12} className="text-error-500" />
+                        <AlertTriangle size={12} className="text-error-11" />
                       )}
                       <span
                         className={cn(
                           "text-xs font-medium",
                           aiQualityScore >= 0.8
-                            ? "text-success-600 dark:text-success-400"
+                            ? "text-success-11 dark:text-success-11"
                             : aiQualityScore >= 0.6
-                              ? "text-warning-600 dark:text-warning-400"
-                              : "text-error-600 dark:text-error-400",
+                              ? "text-warning-11 dark:text-warning-11"
+                              : "text-error-11 dark:text-error-11",
                         )}
                       >
                         {Math.round(aiQualityScore * 100)}%
@@ -1046,7 +1047,7 @@ _altair_spec
               {/* Issues */}
               {aiIssues && aiIssues.length > 0 && (
                 <div data-testid="code-issues" className="space-y-1">
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                  <span className="text-xs text-neutral-11">
                     Issues ({aiIssues.length}):
                   </span>
                   <div className="flex flex-wrap gap-1">
@@ -1056,10 +1057,10 @@ _altair_spec
                         className={cn(
                           "px-2 py-0.5 text-xs rounded-full",
                           issue.severity === "error"
-                            ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-300"
+                            ? "bg-error-3 text-error-11 bg-error-4 dark:text-error-11"
                             : issue.severity === "warning"
-                              ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-300"
-                              : "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300",
+                              ? "bg-warning-3 text-warning-11 dark:bg-warning-a4 dark:text-warning-11"
+                              : "bg-neutral-2 text-neutral-11",
                         )}
                         title={issue.message}
                       >
@@ -1068,7 +1069,7 @@ _altair_spec
                       </span>
                     ))}
                     {aiIssues.length > 3 && (
-                      <span className="px-2 py-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+                      <span className="px-2 py-0.5 text-xs text-neutral-11">
                         +{aiIssues.length - 3} more
                       </span>
                     )}
@@ -1080,7 +1081,7 @@ _altair_spec
               {aiSuggestions &&
                 aiSuggestions.length > 0 &&
                 aiSuggestions[0] && (
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                  <div className="text-xs text-neutral-11">
                     <span className="font-medium">Suggestion:</span>{" "}
                     {aiSuggestions[0].description}
                   </div>
@@ -1093,10 +1094,10 @@ _altair_spec
       <div className="flex-1 p-4 overflow-auto">{renderContent()}</div>
       {/* Execution controls (server sandbox + optional Pyodide for Python) */}
       {!isEditing && artifact.contentType === "code" && (
-        <div className="border-t border-neutral-200 dark:border-neutral-700 px-4 py-3 space-y-3">
+        <div className="border-t border-neutral-5 px-4 py-3 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-neutral-600 dark:text-neutral-400">
+              <span className="text-xs text-neutral-11">
                 Runtime:
               </span>
               <div className="flex items-center gap-1">
@@ -1106,8 +1107,8 @@ _altair_spec
                   className={cn(
                     "px-2 py-1 text-xs rounded border",
                     runtime === "sandbox"
-                      ? "bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 text-primary-700 dark:text-primary-200"
-                      : "border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
+                      ? "bg-primary-1 bg-primary-4 border-primary-4 dark:border-primary-7 text-primary-11 dark:text-primary-11"
+                      : "border-neutral-5 text-neutral-11 hover:bg-neutral-2",
                   )}
                 >
                   Server sandbox
@@ -1119,8 +1120,8 @@ _altair_spec
                     className={cn(
                       "px-2 py-1 text-xs rounded border",
                       runtime === "pyodide"
-                        ? "bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 text-primary-700 dark:text-primary-200"
-                        : "border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
+                        ? "bg-primary-1 bg-primary-4 border-primary-4 dark:border-primary-7 text-primary-11 dark:text-primary-11"
+                        : "border-neutral-5 text-neutral-11 hover:bg-neutral-2",
                     )}
                   >
                     Pyodide (browser)
@@ -1139,7 +1140,7 @@ _altair_spec
               }
               className={cn(
                 "flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium",
-                "bg-success-600 text-white hover:bg-success-700",
+                "bg-success-10 text-neutral-12 hover:bg-success-11",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
               )}
             >
@@ -1172,13 +1173,13 @@ _altair_spec
           {runtime === "sandbox" && (sandboxResult || sandboxError) && (
             <div className="space-y-2">
               {sandboxError && (
-                <div className="rounded border border-error-200 dark:border-error-800 bg-error-50 dark:bg-error-950/40 p-3 text-sm text-error-800 dark:text-error-200">
+                <div className="rounded border border-error-4 dark:border-error-7 bg-error-1 dark:bg-error-a5 p-3 text-sm text-error-11 dark:text-error-11">
                   {sandboxError}
                 </div>
               )}
               {sandboxResult && (
                 <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-600 dark:text-neutral-400">
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-11">
                     {sandboxResult.exitCode !== undefined &&
                       sandboxResult.exitCode !== null && (
                         <span>
@@ -1202,15 +1203,15 @@ _altair_spec
                       if (dfResult.isDataFrame) {
                         return (
                           <div
-                            className="rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-3"
+                            className="rounded border border-neutral-5 bg-neutral-1 p-3"
                             data-testid="dataframe-output"
                           >
-                            <div className="text-xs font-semibold text-neutral-600 dark:text-neutral-300 mb-2">
+                            <div className="text-xs font-semibold text-neutral-11 mb-2">
                               DataFrame Output
                             </div>
                             <Suspense
                               fallback={
-                                <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 p-2">
+                                <div className="flex items-center gap-2 text-neutral-11 p-2">
                                   <Loader2 size={16} className="animate-spin" />
                                   <span className="text-sm">
                                     Loading table...
@@ -1237,15 +1238,15 @@ _altair_spec
                       if (bokehResult.isBokeh) {
                         return (
                           <div
-                            className="rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-3"
+                            className="rounded border border-neutral-5 bg-neutral-1 p-3"
                             data-testid="bokeh-output"
                           >
-                            <div className="text-xs font-semibold text-neutral-600 dark:text-neutral-300 mb-2">
+                            <div className="text-xs font-semibold text-neutral-11 mb-2">
                               Bokeh Chart
                             </div>
                             <Suspense
                               fallback={
-                                <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 p-2">
+                                <div className="flex items-center gap-2 text-neutral-11 p-2">
                                   <Loader2 size={16} className="animate-spin" />
                                   <span className="text-sm">
                                     Loading chart...
@@ -1265,28 +1266,28 @@ _altair_spec
 
                       // Default: plain text stdout
                       return (
-                        <div className="rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-3">
-                          <div className="text-xs font-semibold text-neutral-600 dark:text-neutral-300 mb-1">
+                        <div className="rounded border border-neutral-5 bg-neutral-1 p-3">
+                          <div className="text-xs font-semibold text-neutral-11 mb-1">
                             stdout
                           </div>
-                          <pre className="text-sm text-neutral-800 dark:text-neutral-100 whitespace-pre-wrap">
+                          <pre className="text-sm text-neutral-12 whitespace-pre-wrap">
                             {sandboxResult.stdout}
                           </pre>
                         </div>
                       );
                     })()}
                   {sandboxResult.stderr && (
-                    <div className="rounded border border-error-200 dark:border-error-800 bg-error-50 dark:bg-error-950/40 p-3">
-                      <div className="text-xs font-semibold text-error-700 dark:text-error-300 mb-1">
+                    <div className="rounded border border-error-4 dark:border-error-7 bg-error-1 dark:bg-error-a5 p-3">
+                      <div className="text-xs font-semibold text-error-11 dark:text-error-11 mb-1">
                         stderr
                       </div>
-                      <pre className="text-sm text-error-800 dark:text-error-200 whitespace-pre-wrap">
+                      <pre className="text-sm text-error-11 dark:text-error-11 whitespace-pre-wrap">
                         {sandboxResult.stderr}
                       </pre>
                     </div>
                   )}
                   {sandboxResult.error && !sandboxResult.stderr && (
-                    <div className="rounded border border-error-200 dark:border-error-800 bg-error-50 dark:bg-error-950/40 p-3 text-sm text-error-800 dark:text-error-200">
+                    <div className="rounded border border-error-4 dark:border-error-7 bg-error-1 dark:bg-error-a5 p-3 text-sm text-error-11 dark:text-error-11">
                       {sandboxResult.error}
                     </div>
                   )}
@@ -1296,8 +1297,8 @@ _altair_spec
           )}
 
           {runtime === "pyodide" && loadingPackages && (
-            <div className="rounded border border-info-200 dark:border-info-800 bg-info-50 dark:bg-info-900/30 p-3">
-              <div className="flex items-center gap-2 text-sm text-info-600 dark:text-info-400">
+            <div className="rounded border border-info-4 dark:border-info-11 bg-info-1 bg-info-4 p-3">
+              <div className="flex items-center gap-2 text-sm text-info-11 dark:text-info-11">
                 <svg
                   className="animate-spin h-4 w-4"
                   xmlns="http://www.w3.org/2000/svg"
@@ -1329,33 +1330,33 @@ _altair_spec
             (pythonStdout || pythonStderr || pythonError) && (
               <div className="space-y-2">
                 {pythonStdout && (
-                  <div className="rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-3">
-                    <div className="text-xs font-semibold text-neutral-600 dark:text-neutral-300 mb-1">
+                  <div className="rounded border border-neutral-5 bg-neutral-1 p-3">
+                    <div className="text-xs font-semibold text-neutral-11 mb-1">
                       stdout
                     </div>
-                    <pre className="text-sm text-neutral-800 dark:text-neutral-100 whitespace-pre-wrap">
+                    <pre className="text-sm text-neutral-12 whitespace-pre-wrap">
                       {pythonStdout}
                     </pre>
                   </div>
                 )}
                 {pythonStderr && (
-                  <div className="rounded border border-error-200 dark:border-error-800 bg-error-50 dark:bg-error-950/40 p-3">
-                    <div className="text-xs font-semibold text-error-700 dark:text-error-300 mb-1">
+                  <div className="rounded border border-error-4 dark:border-error-7 bg-error-1 dark:bg-error-a5 p-3">
+                    <div className="text-xs font-semibold text-error-11 dark:text-error-11 mb-1">
                       stderr
                     </div>
-                    <pre className="text-sm text-error-800 dark:text-error-200 whitespace-pre-wrap">
+                    <pre className="text-sm text-error-11 dark:text-error-11 whitespace-pre-wrap">
                       {pythonStderr}
                     </pre>
                   </div>
                 )}
                 {pythonError && (
-                  <div className="rounded border border-error-200 dark:border-error-800 bg-error-50 dark:bg-error-950/40 p-3 text-sm text-error-800 dark:text-error-200">
+                  <div className="rounded border border-error-4 dark:border-error-7 bg-error-1 dark:bg-error-a5 p-3 text-sm text-error-11 dark:text-error-11">
                     {pythonError}
                   </div>
                 )}
                 {pythonImage && (
-                  <div className="rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-3">
-                    <div className="text-xs font-semibold text-neutral-600 dark:text-neutral-300 mb-2">
+                  <div className="rounded border border-neutral-5 bg-neutral-1 p-3">
+                    <div className="text-xs font-semibold text-neutral-11 mb-2">
                       Matplotlib Render
                     </div>
                     <img
@@ -1366,13 +1367,13 @@ _altair_spec
                   </div>
                 )}
                 {vegaLiteSpec && (
-                  <div className="rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-3">
-                    <div className="text-xs font-semibold text-neutral-600 dark:text-neutral-300 mb-2">
+                  <div className="rounded border border-neutral-5 bg-neutral-1 p-3">
+                    <div className="text-xs font-semibold text-neutral-11 mb-2">
                       {altairChartTitle}
                     </div>
                     <Suspense
                       fallback={
-                        <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 p-4">
+                        <div className="flex items-center gap-2 text-neutral-11 p-4">
                           <Loader2 size={16} className="animate-spin" />
                           <span className="text-sm">Loading chart...</span>
                         </div>

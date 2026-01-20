@@ -48,7 +48,7 @@ interface StatusBadgeProps {
 function StatusBadge({ successRate }: StatusBadgeProps): React.ReactElement {
   if (successRate === null) {
     return (
-      <span className="px-2 py-0.5 text-xs rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400">
+      <span className="px-2 py-0.5 text-xs rounded-full bg-neutral-2 text-neutral-11">
         N/A
       </span>
     );
@@ -56,10 +56,10 @@ function StatusBadge({ successRate }: StatusBadgeProps): React.ReactElement {
 
   const color =
     successRate >= 90
-      ? "bg-success-100 text-success-700 dark:bg-success-900 dark:text-success-300"
+      ? "bg-success-3 text-success-11 dark:bg-success-12 dark:text-success-5"
       : successRate >= 70
-        ? "bg-warning-100 text-warning-700 dark:bg-warning-900 dark:text-warning-300"
-        : "bg-error-100 text-error-700 dark:bg-error-900 dark:text-error-300";
+        ? "bg-warning-3 text-warning-10 dark:bg-warning-12 dark:text-warning-6"
+        : "bg-error-3 text-error-11 dark:bg-error-12 dark:text-error-9";
 
   return (
     <span className={cn("px-2 py-0.5 text-xs rounded-full font-medium", color)}>
@@ -82,21 +82,21 @@ function MetricCard({
   icon,
 }: MetricCardProps): React.ReactElement {
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4">
+    <div className="bg-neutral-1 rounded-lg border border-neutral-5 p-4">
       <div className="flex items-center gap-2">
         {icon && (
-          <div className="text-neutral-400 dark:text-neutral-400">{icon}</div>
+          <div className="text-neutral-9">{icon}</div>
         )}
-        <span className="text-sm text-neutral-500 dark:text-neutral-400">
+        <span className="text-sm text-neutral-10">
           {label}
         </span>
       </div>
       <div className="mt-2">
-        <span className="text-2xl font-semibold text-neutral-900 dark:text-white">
+        <span className="text-2xl font-semibold text-neutral-12">
           {value}
         </span>
         {subValue && (
-          <span className="ml-2 text-sm text-neutral-500 dark:text-neutral-400">
+          <span className="ml-2 text-sm text-neutral-10">
             {subValue}
           </span>
         )}
@@ -124,7 +124,7 @@ function FailureBreakdown({
 
   return (
     <div className="mt-4">
-      <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+      <h4 className="text-sm font-medium text-neutral-11 mb-2">
         Failure Breakdown
       </h4>
       <div className="space-y-2">
@@ -133,10 +133,10 @@ function FailureBreakdown({
             key={reason}
             className="flex items-center justify-between text-sm"
           >
-            <span className="text-neutral-600 dark:text-neutral-400">
+            <span className="text-neutral-11">
               {reason}
             </span>
-            <span className="font-medium text-neutral-900 dark:text-white">
+            <span className="font-medium text-neutral-12">
               {count}
             </span>
           </div>
@@ -157,7 +157,7 @@ function EndpointTable({ endpoints }: EndpointTableProps): React.ReactElement {
 
   if (sortedEndpoints.length === 0) {
     return (
-      <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+      <div className="text-center py-8 text-neutral-10">
         No WebSocket connections
       </div>
     );
@@ -167,20 +167,20 @@ function EndpointTable({ endpoints }: EndpointTableProps): React.ReactElement {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-neutral-200 dark:border-neutral-700">
-            <th className="text-left py-2 px-3 font-medium text-neutral-700 dark:text-neutral-300">
+          <tr className="border-b border-neutral-5">
+            <th className="text-left py-2 px-3 font-medium text-neutral-11">
               Endpoint
             </th>
-            <th className="text-right py-2 px-3 font-medium text-neutral-700 dark:text-neutral-300">
+            <th className="text-right py-2 px-3 font-medium text-neutral-11">
               Attempts
             </th>
-            <th className="text-right py-2 px-3 font-medium text-neutral-700 dark:text-neutral-300">
+            <th className="text-right py-2 px-3 font-medium text-neutral-11">
               Success
             </th>
-            <th className="text-right py-2 px-3 font-medium text-neutral-700 dark:text-neutral-300">
+            <th className="text-right py-2 px-3 font-medium text-neutral-11">
               Rate
             </th>
-            <th className="text-right py-2 px-3 font-medium text-neutral-700 dark:text-neutral-300">
+            <th className="text-right py-2 px-3 font-medium text-neutral-11">
               Avg Duration
             </th>
           </tr>
@@ -189,21 +189,21 @@ function EndpointTable({ endpoints }: EndpointTableProps): React.ReactElement {
           {sortedEndpoints.map(([name, metrics]) => (
             <tr
               key={name}
-              className="border-b border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+              className="border-b border-neutral-5 hover:bg-neutral-1"
             >
-              <td className="py-2 px-3 font-mono text-neutral-900 dark:text-white">
+              <td className="py-2 px-3 font-mono text-neutral-12">
                 {name}
               </td>
-              <td className="py-2 px-3 text-right text-neutral-600 dark:text-neutral-400">
+              <td className="py-2 px-3 text-right text-neutral-11">
                 {metrics.totalAttempts}
               </td>
-              <td className="py-2 px-3 text-right text-neutral-600 dark:text-neutral-400">
+              <td className="py-2 px-3 text-right text-neutral-11">
                 {metrics.totalReconnections}
               </td>
               <td className="py-2 px-3 text-right">
                 <StatusBadge successRate={metrics.successRate} />
               </td>
-              <td className="py-2 px-3 text-right text-neutral-600 dark:text-neutral-400">
+              <td className="py-2 px-3 text-right text-neutral-11">
                 {metrics.avgReconnectionDurationMs !== null
                   ? `${metrics.avgReconnectionDurationMs}ms`
                   : "-"}
@@ -249,23 +249,23 @@ export function WebSocketMetricsPanel({
     <div
       data-testid="ws-metrics-panel"
       className={cn(
-        "flex flex-col h-full bg-neutral-50 dark:bg-neutral-900",
+        "flex flex-col h-full bg-neutral-1",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
-        <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-5 bg-neutral-1">
+        <h3 className="text-lg font-semibold text-neutral-12">
           WebSocket Metrics
         </h3>
         <Button
           variant="secondary"
-          className="p-1.5 rounded-md hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+          className="p-1.5 rounded-md hover:bg-neutral-2"
           onClick={refresh}
           aria-label="Refresh"
         >
           <svg
-            className="w-4 h-4 text-neutral-600 dark:text-neutral-400"
+            className="w-4 h-4 text-neutral-11"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -284,7 +284,7 @@ export function WebSocketMetricsPanel({
         {!hasConnections ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <svg
-              className="w-12 h-12 text-neutral-400 dark:text-neutral-400 mb-4"
+              className="w-12 h-12 text-neutral-9 mb-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -296,10 +296,10 @@ export function WebSocketMetricsPanel({
                 d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
               />
             </svg>
-            <p className="text-neutral-500 dark:text-neutral-400">
+            <p className="text-neutral-10">
               No WebSocket connections
             </p>
-            <p className="text-sm text-neutral-400 dark:text-neutral-400 mt-1">
+            <p className="text-sm text-neutral-9 mt-1">
               Metrics will appear when WebSocket hooks report data
             </p>
           </div>
@@ -334,10 +334,10 @@ export function WebSocketMetricsPanel({
 
             {/* Per-Endpoint Table */}
             <div>
-              <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+              <h4 className="text-sm font-medium text-neutral-11 mb-3">
                 Per-Endpoint Metrics
               </h4>
-              <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+              <div className="bg-neutral-1 rounded-lg border border-neutral-5">
                 <EndpointTable endpoints={metrics.byEndpoint} />
               </div>
             </div>

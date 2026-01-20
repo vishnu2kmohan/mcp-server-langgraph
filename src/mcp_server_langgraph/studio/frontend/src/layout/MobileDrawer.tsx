@@ -14,7 +14,9 @@
  * Gated behind feature flag: mobile_drawer
  */
 import { useCallback, useEffect, useRef } from "react";
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate, useLocation, useRouteLoaderData } from "react-router";
+import type { SessionsLoaderData } from "../router/loaders";
+import type { SessionCamelCase } from "../types";
 import {
   MessageSquare,
   GitBranch,
@@ -33,6 +35,7 @@ import {
   Scale,
   X,
 } from "lucide-react";
+import { useReducedMotion } from "motion/react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setActiveNavItem } from "../store/slices/canvasSlice";
 import { selectSidebarItems } from "../store/slices/personaSlice";
@@ -170,6 +173,9 @@ export function MobileDrawer({
   onClose,
   className,
 }: MobileDrawerProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -177,6 +183,19 @@ export function MobileDrawer({
 
   // RBAC: Get allowed sidebar items from persona slice
   const allowedItems = useAppSelector(selectSidebarItems);
+
+  // Get sessions from route loader data
+  const loaderData = useRouteLoaderData("studio") as SessionsLoaderData | undefined;
+  const sessions = loaderData?.sessions ?? [];
+
+  // Handle session click
+  const handleSessionClick = useCallback(
+    (session: SessionCamelCase) => {
+      navigate(`/studio/chat/${session.id}`);
+      onClose();
+    },
+    [navigate, onClose],
+  );
 
   // Filter navigation items based on permissions
   const visibleNavItems = MOBILE_NAV_ITEMS.filter((item) =>
@@ -233,8 +252,8 @@ export function MobileDrawer({
         data-testid="mobile-drawer-backdrop"
         onClick={onClose}
         className={cn(
-          "fixed inset-0 z-40 bg-black/50",
-          "transition-opacity duration-200",
+          "fixed inset-0 z-panel bg-neutral-a6",
+          !prefersReducedMotion && "transition-opacity duration-200",
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         aria-hidden="true"
@@ -248,35 +267,80 @@ export function MobileDrawer({
         aria-modal="true"
         aria-label="Mobile navigation"
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-72",
-          "bg-white dark:bg-neutral-900",
-          "border-r border-neutral-200 dark:border-neutral-700",
+          "fixed top-0 left-0 z-panel h-full w-72 max-w-[80vw]",
+          "bg-neutral-1",
+          "border-r border-neutral-5",
           "shadow-xl",
-          "transform transition-transform duration-200 ease-out",
+          "drawer-safe-area",
+          !prefersReducedMotion && "transform transition-transform duration-200 ease-out",
           isOpen ? "translate-x-0" : "-translate-x-full",
           className,
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
-          <span className="text-lg font-semibold text-neutral-900 dark:text-white">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-5">
+          <span className="text-lg font-semibold text-neutral-12">
             Navigation
           </span>
-          <Button
+          <Button size="icon" variant="ghost"
             type="button"
             data-testid="mobile-drawer-close"
             onClick={onClose}
             aria-label="Close navigation menu"
             className={cn(
               "p-2 rounded-lg",
-              "text-neutral-500 dark:text-neutral-400",
-              "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
-              "focus:outline-none focus:ring-2 focus:ring-primary-500",
+              "text-neutral-10",
+              "hover:bg-neutral-2",
+              "focus:outline-none focus:ring-2 focus:ring-primary-7",
             )}
           >
             <X size={20} />
           </Button>
         </div>
+
+        {/* Recent Sessions Section */}
+        {sessions.length > 0 && (
+          <section className="border-b border-neutral-5 py-2">
+            <div className="flex items-center justify-between px-4 mb-2">
+              <h3 className="text-sm font-medium text-neutral-11">
+                Recent Sessions
+              </h3>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  navigate("/studio/chat");
+                  onClose();
+                }}
+                className="text-xs"
+              >
+                New Chat
+              </Button>
+            </div>
+            <ul className="space-y-1 px-2">
+              {sessions.slice(0, 5).map((session) => (
+                <li key={session.id}>
+                  <Button
+                    type="button"
+                    onClick={() => handleSessionClick(session)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left",
+                      !prefersReducedMotion && "transition-colors",
+                      "focus:outline-none focus:ring-2 focus:ring-primary-9",
+                      "text-neutral-11 hover:bg-neutral-3",
+                    )}
+                  >
+                    <MessageSquare className="w-4 h-4 text-neutral-9 flex-shrink-0" />
+                    <span className="text-sm truncate">
+                      {session.name || `Session ${session.id.slice(0, 8)}`}
+                    </span>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* Navigation Items */}
         <nav className="flex flex-col flex-1 overflow-y-auto py-4">
@@ -289,11 +353,12 @@ export function MobileDrawer({
                 onClick={() => handleNavClick(item)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg",
-                  "text-left transition-colors",
-                  "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                  "text-left",
+                  !prefersReducedMotion && "transition-colors",
+                  "focus:outline-none focus:ring-2 focus:ring-primary-7",
                   activeItem === item.id
-                    ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                    : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
+                    ? "bg-primary-3 bg-primary-4 text-primary-11 dark:text-primary-5"
+                    : "text-neutral-11 hover:bg-neutral-2",
                 )}
               >
                 {item.icon}
@@ -306,7 +371,7 @@ export function MobileDrawer({
           <div className="flex-1" />
 
           {/* Bottom Items */}
-          <div className="flex flex-col gap-1 px-2 pt-4 mt-4 border-t border-neutral-200 dark:border-neutral-700">
+          <div className="flex flex-col gap-1 px-2 pt-4 mt-4 border-t border-neutral-5">
             {visibleBottomItems.map((item) => (
               <Button
                 key={item.id}
@@ -315,11 +380,12 @@ export function MobileDrawer({
                 onClick={() => handleNavClick(item)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg",
-                  "text-left transition-colors",
-                  "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                  "text-left",
+                  !prefersReducedMotion && "transition-colors",
+                  "focus:outline-none focus:ring-2 focus:ring-primary-7",
                   activeItem === item.id
-                    ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                    : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
+                    ? "bg-primary-3 bg-primary-4 text-primary-11 dark:text-primary-5"
+                    : "text-neutral-11 hover:bg-neutral-2",
                 )}
               >
                 {item.icon}

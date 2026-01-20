@@ -62,10 +62,18 @@ vi.mock("./useRealtimeSync", () => ({
   }),
 }));
 
-// Mock auth store hooks and selectors
+// Mock Redux hooks to avoid needing Provider wrapper
+const mockDispatch = vi.fn();
 vi.mock("../store/hooks", () => ({
-  useAppSelector: vi.fn(() => true), // isAuthenticated = true
-  useAppDispatch: vi.fn(() => vi.fn()),
+  useAppDispatch: () => mockDispatch,
+  // Return values for selectors: isAuthenticated=true, wsPermissions={connections_health: true}
+  // Note: uses 'connections_health' (plural) per hook implementation
+  useAppSelector: vi.fn((selector) => {
+    if (selector.name?.includes("Authenticated")) return true;
+    if (selector.name?.includes("WebSocketPermissions"))
+      return { connections_health: true };
+    return true;
+  }),
 }));
 
 // Mock getAuthToken and STORAGE_KEYS
@@ -637,4 +645,8 @@ describe("useConnectionHealthWebSocket", () => {
       expect(notFound).toBeUndefined();
     });
   });
+
+  // Permission-based connection control tests are in separate file:
+  // useConnectionHealthWebSocket.permissions.test.ts
+  // This allows for different mock configurations for permission testing
 });

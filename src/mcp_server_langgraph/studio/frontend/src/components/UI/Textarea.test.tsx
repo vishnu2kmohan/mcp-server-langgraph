@@ -70,19 +70,19 @@ describe("Textarea", () => {
     it("renders default variant", () => {
       render(<Textarea variant="default" data-testid="textarea" />);
       const textarea = screen.getByTestId("textarea");
-      expect(textarea).toHaveClass("border-neutral-300");
+      expect(textarea).toHaveClass("border-neutral-5");
     });
 
     it("renders error variant", () => {
       render(<Textarea variant="error" data-testid="textarea" />);
       const textarea = screen.getByTestId("textarea");
-      expect(textarea).toHaveClass("border-error-500");
+      expect(textarea).toHaveClass("border-error-9");
     });
 
     it("renders success variant", () => {
       render(<Textarea variant="success" data-testid="textarea" />);
       const textarea = screen.getByTestId("textarea");
-      expect(textarea).toHaveClass("border-success-500");
+      expect(textarea).toHaveClass("border-success-9");
     });
   });
 

@@ -116,14 +116,14 @@ describe("TraceViewer", () => {
       render(<TraceViewer trace={mockTrace} />);
 
       const successSpan = screen.getByTestId("span-status-span-1");
-      expect(successSpan).toHaveClass("bg-success-500");
+      expect(successSpan).toHaveClass("bg-success-9");
     });
 
     it("should show error status with red indicator", () => {
       render(<TraceViewer trace={mockTrace} />);
 
       const errorSpan = screen.getByTestId("span-status-span-3");
-      expect(errorSpan).toHaveClass("bg-error-500");
+      expect(errorSpan).toHaveClass("bg-error-9");
     });
   });
 
@@ -134,7 +134,7 @@ describe("TraceViewer", () => {
       const spanRow = screen.getByTestId("span-row-span-2");
       fireEvent.click(spanRow);
 
-      expect(spanRow).toHaveClass("bg-primary-50");
+      expect(spanRow).toHaveClass("bg-primary-1");
     });
 
     it("should show span details panel when span is selected", () => {
@@ -182,7 +182,7 @@ describe("TraceViewer", () => {
       render(<TraceViewer trace={mockTrace} />);
 
       const errorBar = screen.getByTestId("span-bar-span-3");
-      expect(errorBar).toHaveClass("bg-error-400");
+      expect(errorBar).toHaveClass("bg-error-7");
     });
   });
 

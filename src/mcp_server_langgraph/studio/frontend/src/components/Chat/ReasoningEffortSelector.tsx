@@ -24,7 +24,22 @@ import { Button } from "@/components/UI";
 // Types
 // =============================================================================
 
-export type ReasoningEffortLevel = "low" | "medium" | "high";
+/**
+ * Reasoning effort levels for extended thinking models.
+ *
+ * Maps to FF_MAX_THINKING_BUDGET on the backend:
+ * - none: No extended thinking, standard response mode
+ * - low: Quick responses, minimal reasoning (~1K thinking tokens)
+ * - medium: Balanced reasoning (default, ~10K thinking tokens)
+ * - high: Deep reasoning, comprehensive analysis (~100K thinking tokens)
+ * - ultra: Maximum reasoning depth, exhaustive analysis (model-dependent max)
+ *
+ * Support varies by vendor:
+ * - OpenAI o1/o3: low, medium, high (native reasoning_effort)
+ * - Anthropic Claude: all levels (extended_thinking budget)
+ * - Google Gemini: all levels (thinking_budget)
+ */
+export type ReasoningEffortLevel = "none" | "low" | "medium" | "high" | "ultra";
 
 export interface ReasoningEffortSelectorProps {
   /** Current effort level */
@@ -57,6 +72,14 @@ const EFFORT_LEVELS: {
   description: string;
 }[] = [
   {
+    value: "none",
+    label: "None",
+    shortLabel: "0",
+    tooltip: "No extended thinking - Standard response mode",
+    description:
+      "Standard response mode without extended thinking. Fastest, lowest cost.",
+  },
+  {
     value: "low",
     label: "Low",
     shortLabel: "L",
@@ -77,6 +100,14 @@ const EFFORT_LEVELS: {
     shortLabel: "H",
     tooltip: "Deep, comprehensive reasoning - Thorough analysis",
     description: "Deep, comprehensive analysis. Best for complex problems.",
+  },
+  {
+    value: "ultra",
+    label: "Ultra",
+    shortLabel: "U",
+    tooltip: "Maximum reasoning depth - Exhaustive analysis",
+    description:
+      "Maximum reasoning depth with exhaustive analysis. Best for hardest problems.",
   },
 ];
 
@@ -138,19 +169,19 @@ export function ReasoningEffortSelector({
       <div className="flex items-center gap-2">
         <Brain
           size={14}
-          className="text-violet-600 dark:text-violet-400"
+          className="text-insight-10 dark:text-insight-11"
           data-testid="brain-icon"
         />
-        <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+        <span className="text-xs font-medium text-neutral-11">
           Thinking
         </span>
         {modelName && (
-          <span className="text-xs text-neutral-400 dark:text-neutral-400">
+          <span className="text-xs text-neutral-9">
             ({modelName})
           </span>
         )}
         {!modelSupportsThinking && (
-          <span className="text-xs text-warning-600 dark:text-warning-400">
+          <span className="text-xs text-warning-9 dark:text-warning-9">
             Not supported
           </span>
         )}
@@ -182,7 +213,7 @@ export function ReasoningEffortSelector({
       {showDescription && selectedLevel && (
         <p
           data-testid="effort-description"
-          className="text-xs text-neutral-500 dark:text-neutral-400"
+          className="text-xs text-neutral-10"
         >
           {selectedLevel.description}
         </p>

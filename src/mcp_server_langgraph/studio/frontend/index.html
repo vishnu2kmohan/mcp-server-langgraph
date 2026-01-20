@@ -1,16 +1,109 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-transitions">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Agent Studio - Unified Workflow Builder and Chat Interface" />
-    <meta name="theme-color" content="#3b82f6" />
+    <!-- Theme color follows Radix violet-9 for default theme -->
+    <meta name="theme-color" content="#6e56cf" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#7c66dc" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <!-- Font Preloading Strategy
+         Preconnect to Google Fonts for faster font loading.
+         We preload the most common weights to avoid FOUT/FOIT.
+         @see https://web.dev/articles/preload-critical-assets
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Inter - Primary UI Font (400, 500, 600, 700 weights) -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
+
+    <!-- JetBrains Mono - Code Font (400, 500, 700 weights) -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap"
+    />
+
+    <!-- Fira Code - Alternative Code Font (preconnect only, loaded on-demand) -->
+    <!-- Note: Loaded lazily when user selects it in preferences -->
+
     <title>Agent Studio</title>
+
+    <!-- Inline Critical CSS for Theme Initialization
+         This prevents flash of unstyled content (FOUC) on initial load.
+         IMPORTANT: Default to dark mode for Agent Studio branding.
+    -->
+    <script>
+      // Apply saved theme immediately to prevent flash
+      (function() {
+        // Helper to apply effective theme
+        function applyTheme(theme) {
+          if (theme === 'system') {
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.classList.add(prefersDark ? 'dark' : 'light');
+          } else {
+            document.documentElement.classList.add(theme);
+          }
+        }
+
+        try {
+          // Check Redux theme storage first (uiSlice)
+          var uiTheme = localStorage.getItem('studio:theme');
+          if (uiTheme === 'light' || uiTheme === 'dark' || uiTheme === 'system') {
+            applyTheme(uiTheme);
+          } else {
+            // Check preferences storage
+            var stored = localStorage.getItem('studio:preferences');
+            if (stored) {
+              var prefs = JSON.parse(stored);
+              var theme = prefs?.general?.theme || 'dark';
+              var colorTheme = prefs?.general?.colorTheme || 'violet-sage';
+              var codeFontTheme = prefs?.general?.codeFontTheme || 'jetbrains';
+              var reducedMotion = prefs?.accessibility?.reducedMotion || false;
+
+              applyTheme(theme);
+
+              // Apply data attributes for theme customization
+              document.documentElement.dataset.colorTheme = colorTheme;
+              document.documentElement.dataset.codeFont = codeFontTheme;
+              document.documentElement.dataset.reducedMotion = String(reducedMotion);
+            } else {
+              // Default to dark mode for Agent Studio branding
+              document.documentElement.classList.add('dark');
+            }
+          }
+        } catch (e) {
+          // Fallback to dark mode (Agent Studio default)
+          document.documentElement.classList.add('dark');
+        }
+
+        // Remove no-transitions class after a short delay to enable smooth theme changes
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            document.documentElement.classList.remove('no-transitions');
+          });
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -36,22 +36,22 @@ function RouterFallback() {
   return (
     <div
       data-testid="router-loading"
-      className="flex flex-col h-screen bg-white dark:bg-neutral-900 animate-pulse"
+      className="flex flex-col h-screen bg-neutral-1 animate-pulse"
     >
       {/* TopBar skeleton */}
-      <div className="h-12 bg-neutral-100 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700" />
+      <div className="h-12 bg-neutral-2 border-b border-neutral-5" />
       {/* Main content skeleton */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-64 bg-neutral-50 dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700">
+        <div className="w-64 bg-neutral-1 border-r border-neutral-5">
           <div className="p-4 space-y-3">
-            <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4" />
-            <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-1/2" />
+            <div className="h-4 bg-neutral-3 rounded w-3/4" />
+            <div className="h-4 bg-neutral-3 rounded w-1/2" />
           </div>
         </div>
-        <div className="flex-1 bg-white dark:bg-neutral-900" />
+        <div className="flex-1 bg-neutral-1" />
       </div>
       {/* StatusBar skeleton */}
-      <div className="h-6 bg-neutral-100 dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700" />
+      <div className="h-6 bg-neutral-2 border-t border-neutral-5" />
     </div>
   );
 }
@@ -101,20 +101,23 @@ export const router = createBrowserRouter(
                 return { Component: ProjectDetailPage };
               },
             },
-            // Workflows - unified view (all personas can access)
-            // Shows owned workflows (editable) + shared workflows (read-only)
+            // Workflows - list view with grid/table (all personas can access)
+            // /studio/workflows -> WorkflowsListPage (list view for browsing)
+            // /studio/workflows/builder -> WorkflowsPage (canvas for new workflows)
+            // /studio/workflows/:id -> WorkflowsPage (canvas for editing)
             {
               path: "workflows",
               handle: { breadcrumb: "Workflows" },
               // Explicit Outlet element ensures React Router properly renders children
               element: <Outlet />,
               children: [
+                // List view (default)
                 {
                   index: true,
                   lazy: async () => {
-                    const { WorkflowsPage } =
-                      await import("../pages/WorkflowsPage");
-                    return { Component: WorkflowsPage };
+                    const { WorkflowsListPage } =
+                      await import("../pages/WorkflowsListPage");
+                    return { Component: WorkflowsListPage };
                   },
                 },
                 // Workflow builder/canvas - admin/developer only
@@ -186,24 +189,10 @@ export const router = createBrowserRouter(
               path: "sessions",
               element: <Navigate to="/studio/chat" replace />,
             },
-            // MCP - admin/developer only
+            // MCP - redirect to Connections Capabilities tab (ADR-0102 consolidation)
             {
               path: "mcp",
-              handle: { breadcrumb: "MCP" },
-              element: (
-                <PersonaGuard allowedPersonas={["admin", "developer"]}>
-                  <Outlet />
-                </PersonaGuard>
-              ),
-              children: [
-                {
-                  index: true,
-                  lazy: async () => {
-                    const { MCPPage } = await import("../pages/MCPPage");
-                    return { Component: MCPPage };
-                  },
-                },
-              ],
+              element: <Navigate to="/studio/connections?tab=capabilities" replace />,
             },
             // Connections section - admin/developer only
             {
@@ -223,13 +212,10 @@ export const router = createBrowserRouter(
                     return { Component: ConnectionsPage };
                   },
                 },
+                // MCP - redirect to Capabilities tab (ADR-0102 consolidation)
                 {
                   path: "mcp",
-                  handle: { breadcrumb: "MCP" },
-                  lazy: async () => {
-                    const { MCPPage } = await import("../pages/MCPPage");
-                    return { Component: MCPPage };
-                  },
+                  element: <Navigate to="/studio/connections?tab=capabilities" replace />,
                 },
                 {
                   path: "agents",

@@ -15,6 +15,7 @@
  * - Keyboard shortcut hints
  * - Feature flag toggle (dev mode)
  */
+import { useRef, useEffect } from "react";
 import {
   Cpu,
   Hash,
@@ -23,6 +24,7 @@ import {
   Terminal,
   Database,
 } from "lucide-react";
+import { useReducedMotion } from "motion/react";
 import { cn } from "../utils/cn";
 import { FeatureFlagToggle } from "./FeatureFlagToggle";
 import type { ConnectionStatus } from "../types/connection";
@@ -33,7 +35,7 @@ import type {
 } from "../types/session";
 import type { KBStatusValue, KBContextStats } from "../types/api";
 
-import { Button } from "@/components/UI";
+import { Button, Badge } from "@/components/UI";
 
 // =============================================================================
 // Types
@@ -152,17 +154,18 @@ function buildTokenTooltip(
 
 /**
  * Get provider-specific color class
+ * Uses step 11 for high-contrast text per Radix design system
  */
 function getProviderColorClass(provider: ModelProvider): string {
   switch (provider) {
     case "openai":
-      return "text-success-600 dark:text-success-400";
+      return "text-success-11";
     case "anthropic":
-      return "text-grafana-600 dark:text-grafana-400";
+      return "text-grafana-11";
     case "google":
-      return "text-primary-600 dark:text-primary-400";
+      return "text-primary-11";
     case "azure":
-      return "text-sky-600 dark:text-sky-400";
+      return "text-primary-11";
     default:
       return "";
   }
@@ -228,11 +231,11 @@ function deriveContextualStatus(
 function getKBStatusValueColor(status: KBStatusValue): string {
   switch (status) {
     case "ready":
-      return "bg-success-500";
+      return "bg-success-9";
     case "misconfigured":
-      return "bg-warning-500";
+      return "bg-warning-9";
     case "unavailable":
-      return "bg-neutral-400";
+      return "bg-neutral-4";
   }
 }
 
@@ -303,6 +306,27 @@ export function StatusBar({
   kbContextStats,
   className,
 }: StatusBarProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
+  // Ref for dynamic height tracking
+  const statusBarRef = useRef<HTMLDivElement>(null);
+
+  // Update CSS variable with actual height for overlay positioning
+  useEffect(() => {
+    if (!statusBarRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        document.documentElement.style.setProperty(
+          "--statusbar-height",
+          `${entry.contentRect.height}px`,
+        );
+      }
+    });
+    observer.observe(statusBarRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   // Check if we're in dev mode
   const isDev = import.meta.env.DEV;
 
@@ -318,19 +342,20 @@ export function StatusBar({
 
   return (
     <div
+      ref={statusBarRef}
       data-testid="status-bar"
       role="status"
       aria-live="polite"
       className={cn(
         "flex items-center justify-between px-4 py-1",
-        "bg-neutral-100 dark:bg-neutral-800",
-        "border-t border-neutral-200 dark:border-neutral-700",
-        "text-xs text-neutral-500 dark:text-neutral-400",
+        "bg-neutral-2",
+        "border-t border-neutral-5",
+        "text-xs text-neutral-11",
         className,
       )}
     >
       {/* Left section: Status and connection */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-wrap min-w-0">
         {/* Connection indicator */}
         {connectionStatus && (
           <span
@@ -339,10 +364,10 @@ export function StatusBar({
             title={`Connection: ${connectionStatus}`}
             className={cn(
               "w-2 h-2 rounded-full cursor-help",
-              connectionStatus === "connected" && "bg-success-500",
-              connectionStatus === "disconnected" && "bg-error-500",
-              connectionStatus === "connecting" && "bg-warning-500",
-              connectionStatus === "error" && "bg-error-500",
+              connectionStatus === "connected" && "bg-success-9",
+              connectionStatus === "disconnected" && "bg-error-9",
+              connectionStatus === "connecting" && "bg-warning-9",
+              connectionStatus === "error" && "bg-error-9",
             )}
             aria-label={`Connection status: ${connectionStatus}`}
           />
@@ -356,7 +381,10 @@ export function StatusBar({
               data-testid="reconnecting-indicator"
               role="status"
               aria-label={`Reconnecting, attempt ${reconnectAttempts}`}
-              className="flex items-center gap-1 text-warning-600 dark:text-warning-400 animate-pulse"
+              className={cn(
+                "flex items-center gap-1 text-warning-11",
+                !prefersReducedMotion && "animate-pulse",
+              )}
             >
               <span>Reconnecting ({reconnectAttempts})...</span>
             </span>
@@ -391,7 +419,7 @@ export function StatusBar({
             <span>
               {tokenCount.toLocaleString()} tokens
               {costBreakdown && (
-                <span className="ml-1 text-neutral-400 dark:text-neutral-400">
+                <span className="ml-1 text-neutral-11">
                   ({formatCost(costBreakdown.estimatedCostUsd)})
                 </span>
               )}
@@ -419,14 +447,14 @@ export function StatusBar({
             <Database
               size={12}
               aria-hidden="true"
-              className="text-neutral-500 dark:text-neutral-400"
+              className="text-neutral-11"
             />
             <span>KB</span>
             {kbContextStats && (
               <span
                 data-testid="kb-context-stats"
                 title={`Context usage: ${Math.round((kbContextStats.tokensUsed / kbContextStats.tokenBudget) * 100)}%`}
-                className="text-neutral-400 dark:text-neutral-400"
+                className="text-neutral-11"
               >
                 {kbContextStats.refsCount} refs ·{" "}
                 {kbContextStats.tokensUsed.toLocaleString()}
@@ -439,7 +467,7 @@ export function StatusBar({
         {errorMessage && (
           <span
             data-testid="error-message"
-            className="text-error-500 dark:text-error-400"
+            className="text-error-11"
             role="alert"
           >
             {errorMessage}
@@ -459,9 +487,9 @@ export function StatusBar({
             aria-label={`Toggle agent task queue (${agentCount} agents)`}
             className={cn(
               "flex items-center gap-1 px-2 py-0.5 rounded",
-              "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
-              "transition-colors",
-              agentQueueOpen && "bg-primary-100 dark:bg-primary-900/30",
+              "hover:bg-neutral-3",
+              !prefersReducedMotion && "transition-colors",
+              agentQueueOpen && "bg-primary-3 bg-primary-4",
             )}
           >
             <ListTodo size={12} aria-hidden="true" />
@@ -481,19 +509,19 @@ export function StatusBar({
               aria-label={`View ${pendingApprovals} pending agent approval${pendingApprovals === 1 ? "" : "s"}`}
               className={cn(
                 "flex items-center gap-1 px-2 py-0.5 rounded",
-                "transition-colors",
+                !prefersReducedMotion && "transition-colors",
                 approvalsPanelOpen
-                  ? "bg-warning-200 dark:bg-warning-800/50"
-                  : "bg-warning-100 dark:bg-warning-900/30",
-                "hover:bg-warning-200 dark:hover:bg-warning-800/50",
+                  ? "bg-warning-6 dark:bg-warning-a6"
+                  : "bg-warning-3 dark:bg-warning-a4",
+                "hover:bg-warning-6 dark:hover:bg-warning-a6",
               )}
             >
               <AlertTriangle
                 size={12}
-                className="text-warning-600 dark:text-warning-400"
+                className="text-warning-11"
                 aria-hidden="true"
               />
-              <span className="font-medium text-warning-700 dark:text-warning-300">
+              <span className="font-medium text-warning-11">
                 {pendingApprovals} pending
               </span>
             </Button>
@@ -510,19 +538,22 @@ export function StatusBar({
             aria-pressed={!devToolsCollapsed}
             className={cn(
               "flex items-center gap-1 px-2 py-0.5 rounded",
-              "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
-              "transition-colors",
-              !devToolsCollapsed && "bg-primary-100 dark:bg-primary-900/30",
+              "hover:bg-neutral-3",
+              !prefersReducedMotion && "transition-colors",
+              !devToolsCollapsed && "bg-primary-3 bg-primary-4",
             )}
           >
             <Terminal size={12} aria-hidden="true" />
             {problemCount !== undefined && problemCount > 0 && (
-              <span
+              <Badge
                 data-testid="devtools-problem-count"
-                className="min-w-[1rem] h-4 px-1 text-xs font-medium text-white bg-error-500 rounded-full flex items-center justify-center"
+                variant="error"
+                size="sm"
+                pill
+                className="min-w-4 h-4 px-1 flex items-center justify-center"
               >
                 {problemCount > 99 ? "99+" : problemCount}
-              </span>
+              </Badge>
             )}
           </Button>
         )}

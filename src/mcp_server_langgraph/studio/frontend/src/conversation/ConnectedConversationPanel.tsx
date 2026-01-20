@@ -23,8 +23,6 @@ import {
   AlertTriangle,
   Target,
   Sparkles,
-  Wifi,
-  WifiOff,
   X,
   Lightbulb,
   AlertCircle,
@@ -33,6 +31,12 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
+import {
+  addAuthRequirement,
+  dismissAuthRequirement,
+  selectPendingAuthRequirements,
+} from "../store/slices/chatConnectionSlice";
+import { InlineConnectionCard } from "../components/Chat/InlineConnectionCard";
 import {
   sendMessage,
   selectCurrentSession,
@@ -58,7 +62,7 @@ import { ConversationPanel } from "./ConversationPanel";
 import type {
   SlashCommand,
   ModelOption,
-} from "../components/Chat/ChatInputForm";
+} from "../components/Chat/ChatInput";
 import type { ReasoningEffortLevel } from "../components/Chat/ReasoningEffortSelector";
 import type { KBFocusMode } from "../hooks/useStreamingChat";
 import type { ChatLoaderData } from "../router/loaders";
@@ -219,6 +223,7 @@ export const ConnectedConversationPanel = forwardRef<
     usage: streamingUsage, // Token usage from streaming response
     thinkingTokens,
     startStream,
+    authRequired, // Auth required event from SSE stream (ADR-0102)
   } = useStreamingChat();
 
   // Reset dismissed error state when a new error occurs
@@ -227,6 +232,14 @@ export const ConnectedConversationPanel = forwardRef<
       setIsStreamingErrorDismissed(false);
     }
   }, [streamingError]);
+
+  // Dispatch auth_required events to Redux (ADR-0102)
+  // This allows InlineConnectionCard to display and handle authentication
+  useEffect(() => {
+    if (authRequired) {
+      dispatch(addAuthRequirement(authRequired));
+    }
+  }, [authRequired, dispatch]);
 
   // Track if we need to save the streaming response when complete
   const streamingCompleteRef = useRef(false);
@@ -275,8 +288,8 @@ export const ConnectedConversationPanel = forwardRef<
   // =============================================================================
 
   const {
-    isConnected: aiSuggestionsConnected,
-    error: aiSuggestionsError,
+    isConnected: _aiSuggestionsConnected,
+    error: _aiSuggestionsError,
     suggestions: aiSuggestions,
     isEnabled: aiSuggestionsEnabled,
     requestSuggestions,
@@ -349,6 +362,17 @@ export const ConnectedConversationPanel = forwardRef<
 
   // Get current session from Redux (contains optimistic updates)
   const currentSession = useAppSelector(selectCurrentSession);
+
+  // Get pending auth requirements for InlineConnectionCard (ADR-0102)
+  const pendingAuthRequirements = useAppSelector(selectPendingAuthRequirements);
+
+  // Handle dismissing an auth requirement
+  const handleDismissAuthRequirement = useCallback(
+    (id: string) => {
+      dispatch(dismissAuthRequirement(id));
+    },
+    [dispatch],
+  );
 
   // Combine Redux messages with loader data for display.
   // CRITICAL: Redux currentSession.messages contains optimistic updates (user messages added immediately)
@@ -513,10 +537,20 @@ export const ConnectedConversationPanel = forwardRef<
   const handleSendMessage = useCallback(
     async (content: string) => {
       // Get effective session ID (from URL params or current session)
-      const effectiveSessionId =
-        sessionId ?? currentSession?.id ?? "default-session";
+      let effectiveSessionId = sessionId ?? currentSession?.id;
 
       try {
+        // Auto-create session on first message if no session exists
+        if (!effectiveSessionId) {
+          logger.debug("No session found, creating new session for first message");
+          const newSession = await dispatch(
+            createSession({ name: "New Chat" }),
+          ).unwrap();
+          effectiveSessionId = newSession.id;
+          // Navigate to the new session URL
+          navigate(`/studio/chat/${newSession.id}`, { replace: true });
+        }
+
         // 1. Store the user message in the session
         await dispatch(sendMessage(content)).unwrap();
 
@@ -532,8 +566,8 @@ export const ConnectedConversationPanel = forwardRef<
 
         // 3. Trigger revalidation to sync loader data
         revalidateMessages();
-      } catch {
-        // Error is already logged by the thunk
+      } catch (error) {
+        logger.error("Failed to send message", { error });
       }
 
       // Clear input for next message
@@ -541,6 +575,7 @@ export const ConnectedConversationPanel = forwardRef<
     },
     [
       dispatch,
+      navigate,
       revalidateMessages,
       sessionId,
       currentSession?.id,
@@ -633,9 +668,9 @@ export const ConnectedConversationPanel = forwardRef<
           data-testid="streaming-error"
           className={cn(
             "flex items-center gap-2 px-4 py-2",
-            "bg-error-50 dark:bg-error-900/20",
-            "border-b border-error-200 dark:border-error-800",
-            "text-sm text-error-700 dark:text-error-300",
+            "bg-error-1 dark:bg-error-a3",
+            "border-b border-error-4 dark:border-error-11",
+            "text-sm text-error-11 dark:text-error-9",
           )}
         >
           <AlertCircle size={16} className="flex-shrink-0" />
@@ -645,7 +680,7 @@ export const ConnectedConversationPanel = forwardRef<
           </div>
           <Button
             variant="danger"
-            className="p-1 hover:bg-error-100 dark:hover:bg-error-800/50 rounded"
+            className="p-1 hover:bg-error-3 dark:hover:bg-error-a6 rounded"
             data-testid="dismiss-streaming-error"
             onClick={() => setIsStreamingErrorDismissed(true)}
             aria-label="Dismiss error"
@@ -660,9 +695,9 @@ export const ConnectedConversationPanel = forwardRef<
           data-testid="thinking-content"
           className={cn(
             "flex flex-col gap-1 px-4 py-2",
-            "bg-insight-50 dark:bg-insight-900/20",
-            "border-b border-insight-200 dark:border-insight-800",
-            "text-sm text-insight-700 dark:text-insight-300",
+            "bg-insight-1 dark:bg-insight-a3",
+            "border-b border-insight-4 dark:border-insight-11",
+            "text-sm text-insight-11 dark:text-insight-5",
           )}
         >
           <div className="flex items-center gap-2">
@@ -671,13 +706,13 @@ export const ConnectedConversationPanel = forwardRef<
             {thinkingTokens && (
               <span
                 data-testid="thinking-tokens-badge"
-                className="px-1.5 py-0.5 bg-insight-100 dark:bg-insight-800/50 rounded text-xs"
+                className="px-1.5 py-0.5 bg-insight-2 dark:bg-insight-a6 rounded text-xs"
               >
                 {thinkingTokens.toLocaleString()}
               </span>
             )}
             <Button
-              className="ml-auto p-1 hover:bg-insight-100 dark:hover:bg-insight-800/50 rounded"
+              className="ml-auto p-1 hover:bg-insight-2 dark:hover:bg-insight-a6 rounded"
               data-testid="toggle-thinking-content"
               onClick={() =>
                 setIsThinkingContentCollapsed(!isThinkingContentCollapsed)
@@ -696,7 +731,7 @@ export const ConnectedConversationPanel = forwardRef<
             </Button>
           </div>
           {!isThinkingContentCollapsed && (
-            <div className="pl-6 text-xs text-insight-600 dark:text-insight-400 whitespace-pre-wrap max-h-24 overflow-y-auto">
+            <div className="pl-6 text-xs text-insight-10 dark:text-insight-9 whitespace-pre-wrap max-h-24 overflow-y-auto">
               {thinkingContent}
             </div>
           )}
@@ -708,9 +743,9 @@ export const ConnectedConversationPanel = forwardRef<
           data-testid="goal-tracker"
           className={cn(
             "flex items-center gap-2 px-4 py-2",
-            "bg-primary-50 dark:bg-primary-900/20",
-            "border-b border-primary-200 dark:border-primary-800",
-            "text-sm text-primary-700 dark:text-primary-300",
+            "bg-primary-1 dark:bg-primary-a3",
+            "border-b border-primary-4 dark:border-primary-11",
+            "text-sm text-primary-11 dark:text-primary-5",
           )}
         >
           <Target size={16} className="flex-shrink-0" />
@@ -718,7 +753,7 @@ export const ConnectedConversationPanel = forwardRef<
             <span className="font-medium">Goal: </span>
             <span className="truncate">{goalTracking.primaryGoal}</span>
             {goalTracking.progressPercent !== null && (
-              <span className="ml-2 text-primary-600 dark:text-primary-400">
+              <span className="ml-2 text-primary-10 dark:text-primary-7">
                 ({goalTracking.progressPercent}% complete)
               </span>
             )}
@@ -731,9 +766,9 @@ export const ConnectedConversationPanel = forwardRef<
           data-testid="context-warning"
           className={cn(
             "flex items-center gap-2 px-4 py-2",
-            "bg-warning-50 dark:bg-warning-900/20",
-            "border-b border-warning-200 dark:border-warning-800",
-            "text-sm text-warning-700 dark:text-warning-300",
+            "bg-warning-3 bg-warning-3",
+            "border-b border-warning-6 dark:border-warning-11",
+            "text-sm text-warning-10 dark:text-warning-6",
           )}
         >
           <AlertTriangle size={16} className="flex-shrink-0" />
@@ -741,7 +776,7 @@ export const ConnectedConversationPanel = forwardRef<
             <span className="font-medium">Context Usage: </span>
             <span>{contextOptimization.usagePercent?.toFixed(0)}%</span>
             {contextOptimization.recommendedAction && (
-              <span className="ml-2 text-warning-600 dark:text-warning-400">
+              <span className="ml-2 text-warning-9 dark:text-warning-9">
                 - {contextOptimization.recommendedAction.replace(/_/g, " ")}
               </span>
             )}
@@ -754,9 +789,9 @@ export const ConnectedConversationPanel = forwardRef<
           data-testid="intent-indicator"
           className={cn(
             "flex items-center gap-2 px-4 py-1.5",
-            "bg-insight-50 dark:bg-insight-900/20",
-            "border-b border-insight-200 dark:border-insight-800",
-            "text-xs text-insight-700 dark:text-insight-300",
+            "bg-insight-1 dark:bg-insight-a3",
+            "border-b border-insight-4 dark:border-insight-11",
+            "text-xs text-insight-11 dark:text-insight-5",
           )}
         >
           <Sparkles size={12} className="flex-shrink-0" />
@@ -766,52 +801,10 @@ export const ConnectedConversationPanel = forwardRef<
               {intentDetection.intent.replace(/_/g, " ")}
             </span>
             {intentDetection.confidence !== null && (
-              <span className="ml-1 text-insight-500 dark:text-insight-400">
+              <span className="ml-1 text-insight-9 dark:text-insight-9">
                 ({(intentDetection.confidence * 100).toFixed(0)}%)
               </span>
             )}
-          </span>
-        </div>
-      )}
-      {/* AI Suggestions Status Indicator (Real-time WebSocket) */}
-      {enableRealTimeSuggestions && (
-        <div
-          data-testid="ai-suggestions-status"
-          data-connected={aiSuggestionsConnected ? "true" : "false"}
-          data-error={aiSuggestionsError ? "true" : "false"}
-          className={cn(
-            "flex items-center gap-2 px-4 py-1",
-            "border-b",
-            aiSuggestionsError
-              ? "bg-error-50 dark:bg-error-900/20 border-error-200 dark:border-error-800"
-              : aiSuggestionsConnected
-                ? "bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-800"
-                : "bg-neutral-50 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-700",
-          )}
-        >
-          {aiSuggestionsConnected ? (
-            <Wifi size={12} className="text-success-500" />
-          ) : (
-            <WifiOff
-              size={12}
-              className="text-neutral-400 dark:text-neutral-400"
-            />
-          )}
-          <span
-            className={cn(
-              "text-xs",
-              aiSuggestionsError
-                ? "text-error-600 dark:text-error-400"
-                : aiSuggestionsConnected
-                  ? "text-success-600 dark:text-success-400"
-                  : "text-neutral-500 dark:text-neutral-400",
-            )}
-          >
-            {aiSuggestionsError
-              ? "AI suggestions offline"
-              : aiSuggestionsConnected
-                ? "AI suggestions active"
-                : "AI suggestions connecting..."}
           </span>
         </div>
       )}
@@ -824,8 +817,8 @@ export const ConnectedConversationPanel = forwardRef<
             className={cn(
               "flex items-center gap-2 px-4 py-2",
               suggestion.priority === "high"
-                ? "bg-grafana-50 dark:bg-grafana-900/20 border-b border-grafana-200 dark:border-grafana-800"
-                : "bg-info-50 dark:bg-info-900/20 border-b border-info-200 dark:border-info-800",
+                ? "bg-grafana-1 dark:bg-grafana-12/20 border-b border-grafana-3 dark:border-grafana-11"
+                : "bg-info-1 dark:bg-info-a3 border-b border-info-4 dark:border-info-11",
             )}
           >
             <Lightbulb
@@ -833,21 +826,21 @@ export const ConnectedConversationPanel = forwardRef<
               className={cn(
                 "flex-shrink-0",
                 suggestion.priority === "high"
-                  ? "text-grafana-500"
-                  : "text-info-500",
+                  ? "text-grafana-9"
+                  : "text-info-9",
               )}
             />
-            <div className="flex-1 text-sm text-neutral-700 dark:text-neutral-300">
+            <div className="flex-1 text-sm text-neutral-11">
               {suggestion.message}
             </div>
             <Button
               variant="secondary"
-              className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
+              className="p-1 hover:bg-neutral-3 rounded"
               data-testid="dismiss-suggestion-button"
               onClick={() => dismissSuggestion(suggestion.id)}
               aria-label="Dismiss suggestion"
             >
-              <X size={14} className="text-neutral-400 dark:text-neutral-400" />
+              <X size={14} className="text-neutral-9" />
             </Button>
           </div>
         ))}
@@ -859,25 +852,25 @@ export const ConnectedConversationPanel = forwardRef<
             data-testid="ai-suggestion-spotlight"
             className={cn(
               "flex items-center gap-3 px-4 py-3",
-              "bg-gradient-to-r from-insight-50 to-pink-50",
-              "dark:from-insight-900/20 dark:to-pink-900/20",
-              "border-b border-insight-200 dark:border-insight-800",
+              "bg-gradient-to-r from-insight-50 to-error-2",
+              "dark:from-insight-900/20 dark:to-error-3",
+              "border-b border-insight-4 dark:border-insight-11",
             )}
           >
             <Sparkles
               size={20}
-              className="flex-shrink-0 text-insight-500 animate-pulse"
+              className="flex-shrink-0 text-insight-9 animate-pulse"
             />
-            <div className="flex-1 text-sm font-medium text-insight-700 dark:text-insight-300">
+            <div className="flex-1 text-sm font-medium text-insight-11 dark:text-insight-5">
               {suggestion.message}
             </div>
             <Button
-              className="p-1 hover:bg-insight-200 dark:hover:bg-insight-700 rounded"
+              className="p-1 hover:bg-insight-4 dark:hover:bg-insight-11 rounded"
               data-testid="dismiss-suggestion-button"
               onClick={() => dismissSuggestion(suggestion.id)}
               aria-label="Dismiss suggestion"
             >
-              <X size={14} className="text-insight-400" />
+              <X size={14} className="text-insight-9" />
             </Button>
           </div>
         ))}
@@ -889,17 +882,17 @@ export const ConnectedConversationPanel = forwardRef<
             data-testid="ai-suggestion-tooltip"
             className={cn(
               "flex items-center gap-2 px-4 py-1.5",
-              "bg-neutral-50 dark:bg-neutral-800/50",
-              "border-b border-neutral-200 dark:border-neutral-700",
+              "bg-neutral-1",
+              "border-b border-neutral-5",
             )}
           >
             <Lightbulb
               size={12}
-              className="flex-shrink-0 text-neutral-400 dark:text-neutral-400"
+              className="flex-shrink-0 text-neutral-9"
             />
-            <div className="flex-1 text-xs text-neutral-600 dark:text-neutral-400">
+            <div className="flex-1 text-xs text-neutral-11">
               {suggestion.targetElement && (
-                <span className="font-mono text-xs text-neutral-400 dark:text-neutral-400 mr-2">
+                <span className="font-mono text-xs text-neutral-9 mr-2">
                   [{suggestion.targetElement}]
                 </span>
               )}
@@ -907,15 +900,28 @@ export const ConnectedConversationPanel = forwardRef<
             </div>
             <Button
               variant="secondary"
-              className="p-0.5 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
+              className="p-0.5 hover:bg-neutral-3 rounded"
               data-testid="dismiss-suggestion-button"
               onClick={() => dismissSuggestion(suggestion.id)}
               aria-label="Dismiss suggestion"
             >
-              <X size={12} className="text-neutral-400 dark:text-neutral-400" />
+              <X size={12} className="text-neutral-9" />
             </Button>
           </div>
         ))}
+      {/* Inline Connection Cards (ADR-0102) */}
+      {pendingAuthRequirements.map((authReq) => (
+        <InlineConnectionCard
+          key={authReq.id}
+          data-testid="inline-connection-card"
+          templateId={authReq.templateId}
+          toolName={authReq.toolName}
+          message={authReq.message}
+          connectionId={authReq.connectionId}
+          retryMessageId={authReq.retryMessageId}
+          onDismiss={() => handleDismissAuthRequirement(authReq.id)}
+        />
+      ))}
       <ConversationPanel
         data-testid="connected-conversation-panel"
         messages={messages}

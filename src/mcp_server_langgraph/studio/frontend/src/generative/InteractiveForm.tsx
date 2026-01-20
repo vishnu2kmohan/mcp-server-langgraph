@@ -120,12 +120,12 @@ export function InteractiveForm({
 
     const baseInputClass = cn(
       "w-full px-3 py-2 rounded-lg",
-      "bg-neutral-50 dark:bg-neutral-900",
+      "bg-neutral-1",
       "border",
-      error ? "border-error-500" : "border-neutral-200 dark:border-neutral-700",
-      "text-neutral-900 dark:text-neutral-100",
-      "placeholder-neutral-500 dark:placeholder-neutral-400",
-      "focus:outline-none focus:ring-2 focus:ring-primary-500",
+      error ? "border-error-9" : "border-neutral-5",
+      "text-neutral-12",
+      "placeholder-neutral-9",
+      "focus:outline-none focus:ring-2 focus:ring-primary-7",
     );
 
     switch (field.type) {
@@ -197,17 +197,17 @@ export function InteractiveForm({
       noValidate
       onSubmit={handleSubmit}
       className={cn(
-        "bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6",
+        "bg-neutral-1 rounded-lg border border-neutral-5 p-6",
         className,
       )}
     >
       {/* Title */}
-      <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
+      <h2 className="text-lg font-semibold text-neutral-12 mb-4">
         {config.title}
       </h2>
       {/* Description */}
       {config.description && (
-        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
+        <p className="text-sm text-neutral-11 mb-6">
           {config.description}
         </p>
       )}
@@ -226,12 +226,12 @@ export function InteractiveForm({
             <label
               htmlFor={`field-${field.id}`}
               className={cn(
-                "text-sm font-medium text-neutral-700 dark:text-neutral-300",
+                "text-sm font-medium text-neutral-11",
                 field.type === "checkbox" && "order-2",
               )}
             >
               {field.label}
-              {field.required && <span className="text-error-500 ml-1">*</span>}
+              {field.required && <span className="text-error-9 ml-1">*</span>}
             </label>
 
             {renderField(field)}
@@ -239,7 +239,7 @@ export function InteractiveForm({
             {errors[field.id] && (
               <span
                 data-testid={`error-${field.id}`}
-                className="text-xs text-error-500"
+                className="text-xs text-error-9"
               >
                 {errors[field.id]}
               </span>
@@ -253,8 +253,8 @@ export function InteractiveForm({
         disabled={isSubmitting}
         className={cn(
           "mt-6 w-full px-4 py-2 rounded-lg",
-          "bg-primary-500 text-white font-medium",
-          "hover:bg-primary-600",
+          "bg-primary-9 text-neutral-12 font-medium",
+          "hover:bg-primary-10",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           "transition-colors",
           "flex items-center justify-center gap-2",

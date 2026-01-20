@@ -9,6 +9,7 @@
  * - Math rendering with KaTeX
  * - Syntax highlighting for code blocks
  * - Interactive artifacts (mermaid diagrams, charts, JSX/TSX execution)
+ * - Markdown references ([[type:qualifier:id]] syntax)
  *
  * Extracted from ChatMessages.tsx for reusability.
  *
@@ -22,20 +23,25 @@
  */
 
 import { useMemo, lazy, Suspense, useState, useEffect, memo } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import { Loader2, AlertCircle } from "lucide-react";
 import "katex/dist/katex.min.css";
 
+// Markdown references support ([[type:qualifier:id]] syntax)
+import { remarkReferences } from "@/remark/remarkReferences";
+import { ReferenceChip } from "@/components/References";
+import type { ReferenceType } from "@/types/references";
+
 // Rich media artifact components
 import { InteractiveSVGArtifact } from "../Artifacts/InteractiveSVGArtifact";
 import { AudioArtifact } from "../Artifacts/AudioArtifact";
 import { VideoArtifact } from "../Artifacts/VideoArtifact";
 import { ExecutableArtifact } from "../Artifacts/ExecutableArtifact";
-import { VegaLiteArtifact } from "../Artifacts/VegaLiteArtifact";
 import { InteractiveChart, type ChartData } from "./InteractiveChart";
+import { isVegaLiteContent } from "../../utils/artifactParser";
 
 // Lazy loaded components for bundle optimization
 const InteractiveMermaidDiagram = lazy(
@@ -43,6 +49,11 @@ const InteractiveMermaidDiagram = lazy(
 );
 const CodeBlock = lazy(() => import("./CodeBlock"));
 const SandpackExecutor = lazy(() => import("../Artifacts/SandpackExecutor"));
+const VegaLiteArtifact = lazy(() =>
+  import("../Artifacts/VegaLiteArtifact").then((m) => ({
+    default: m.VegaLiteArtifact,
+  })),
+);
 
 // =============================================================================
 // Loading Fallbacks
@@ -53,12 +64,12 @@ const SandpackExecutor = lazy(() => import("../Artifacts/SandpackExecutor"));
  */
 export function DiagramLoadingFallback() {
   return (
-    <div className="my-2 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 animate-pulse">
-      <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
+    <div className="my-2 p-4 bg-neutral-1 rounded-lg border border-neutral-5 animate-pulse">
+      <div className="flex items-center gap-2 text-neutral-10">
         <Loader2 size={16} className="animate-spin" />
         <span className="text-sm">Loading diagram...</span>
       </div>
-      <div className="mt-3 h-32 bg-neutral-200 dark:bg-neutral-700 rounded" />
+      <div className="mt-3 h-32 bg-neutral-3 rounded" />
     </div>
   );
 }
@@ -68,13 +79,13 @@ export function DiagramLoadingFallback() {
  */
 export function CodeLoadingFallback() {
   return (
-    <div className="my-2 bg-neutral-900 rounded-lg overflow-hidden animate-pulse">
+    <div className="my-2 bg-neutral-2 rounded-lg overflow-hidden animate-pulse">
       <div className="p-4">
-        <div className="h-4 bg-neutral-700 rounded w-1/4 mb-3" />
+        <div className="h-4 bg-neutral-4 rounded w-1/4 mb-3" />
         <div className="space-y-2">
-          <div className="h-3 bg-neutral-800 rounded w-3/4" />
-          <div className="h-3 bg-neutral-800 rounded w-1/2" />
-          <div className="h-3 bg-neutral-800 rounded w-2/3" />
+          <div className="h-3 bg-neutral-3 rounded w-3/4" />
+          <div className="h-3 bg-neutral-3 rounded w-1/2" />
+          <div className="h-3 bg-neutral-3 rounded w-2/3" />
         </div>
       </div>
     </div>
@@ -86,18 +97,18 @@ export function CodeLoadingFallback() {
  */
 export function SandpackLoadingFallback() {
   return (
-    <div className="my-2 bg-neutral-900 rounded-lg overflow-hidden animate-pulse border border-neutral-700">
-      <div className="flex items-center gap-2 p-3 bg-neutral-800 border-b border-neutral-700">
-        <div className="h-4 bg-neutral-700 rounded w-32" />
-        <div className="ml-auto h-6 w-16 bg-neutral-700 rounded" />
+    <div className="my-2 bg-neutral-2 rounded-lg overflow-hidden animate-pulse border border-neutral-7">
+      <div className="flex items-center gap-2 p-3 bg-neutral-3 border-b border-neutral-7">
+        <div className="h-4 bg-neutral-4 rounded w-32" />
+        <div className="ml-auto h-6 w-16 bg-neutral-4 rounded" />
       </div>
       <div className="p-4 space-y-2">
-        <div className="h-3 bg-neutral-800 rounded w-2/3" />
-        <div className="h-3 bg-neutral-800 rounded w-1/2" />
-        <div className="h-3 bg-neutral-800 rounded w-3/4" />
+        <div className="h-3 bg-neutral-3 rounded w-2/3" />
+        <div className="h-3 bg-neutral-3 rounded w-1/2" />
+        <div className="h-3 bg-neutral-3 rounded w-3/4" />
       </div>
-      <div className="p-4 bg-neutral-800 border-t border-neutral-700">
-        <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
+      <div className="p-4 bg-neutral-3 border-t border-neutral-7">
+        <div className="flex items-center gap-2 text-neutral-10">
           <Loader2 size={14} className="animate-spin" />
           <span className="text-xs">Loading interactive editor...</span>
         </div>
@@ -132,13 +143,13 @@ function StreamingArtifactPlaceholder({ language }: { language?: string }) {
   return (
     <div
       data-testid="streaming-artifact-placeholder"
-      className="my-2 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
+      className="my-2 p-4 bg-neutral-1 rounded-lg border border-neutral-5"
     >
-      <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
+      <div className="flex items-center gap-2 text-neutral-10">
         <Loader2 size={16} className="animate-spin" />
         <span className="text-sm">Generating {getLabel()}...</span>
       </div>
-      <div className="mt-3 h-24 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse" />
+      <div className="mt-3 h-24 bg-neutral-3 rounded animate-pulse" />
     </div>
   );
 }
@@ -172,12 +183,12 @@ function ChartCodeBlock({ code }: { code: string }) {
 
   if (error) {
     return (
-      <div className="my-2 p-4 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
-        <div className="flex items-center gap-2 text-warning-600 dark:text-warning-400 mb-2">
+      <div className="my-2 p-4 bg-warning-3 bg-warning-3 border border-warning-6 dark:border-warning-11 rounded-lg">
+        <div className="flex items-center gap-2 text-warning-9 dark:text-warning-9 mb-2">
           <AlertCircle size={16} />
           <span className="font-medium">Chart Error</span>
         </div>
-        <pre className="text-xs text-warning-600 overflow-x-auto">{error}</pre>
+        <pre className="text-xs text-warning-9 overflow-x-auto">{error}</pre>
       </div>
     );
   }
@@ -262,12 +273,34 @@ function MarkdownContentImpl({
 
           // Handle Vega-Lite/Altair blocks (preferred for interactive charts)
           if (isVegaLiteLanguage && !inline) {
-            return <VegaLiteArtifact spec={codeContent} />;
+            return (
+              <Suspense fallback={<DiagramLoadingFallback />}>
+                <VegaLiteArtifact spec={codeContent} />
+              </Suspense>
+            );
           }
 
           // Handle chart blocks (deprecated: prefer vega-lite)
           if (language === "chart" && !inline) {
             return <ChartCodeBlock code={codeContent} />;
+          }
+
+          // Auto-detect Vega-Lite specs in JSON blocks by checking $schema
+          // This allows users to paste Vega-Lite JSON without explicit language tag
+          if (
+            (language === "json" || language === "jsonc") &&
+            !inline &&
+            isVegaLiteContent(codeContent)
+          ) {
+            // Defer during streaming to prevent incomplete JSON parse errors
+            if (isStreaming) {
+              return <StreamingArtifactPlaceholder language="vega-lite" />;
+            }
+            return (
+              <Suspense fallback={<DiagramLoadingFallback />}>
+                <VegaLiteArtifact spec={codeContent} />
+              </Suspense>
+            );
           }
 
           // Handle SVG blocks with interactive controls
@@ -339,29 +372,68 @@ function MarkdownContentImpl({
 
         return (
           <code
-            className="bg-neutral-200 dark:bg-neutral-700 px-1.5 py-0.5 rounded text-sm font-mono text-pink-600 dark:text-pink-400"
+            className="bg-neutral-3 px-1.5 py-0.5 rounded text-sm font-mono text-error-10 dark:text-error-11"
             {...props}
           >
             {children}
           </code>
         );
       },
-      // Links open in new tab
+      // Links: handle ref:// for references, otherwise open in new tab
       a: ({
         href,
         children,
+        title,
         ...props
-      }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary-600 dark:text-primary-400 hover:underline"
-          {...props}
-        >
-          {children}
-        </a>
-      ),
+      }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+        // Handle markdown references (ref://type/qualifier:id)
+        if (href?.startsWith('ref://')) {
+          // Parse ref:// URL: ref://type/qualifier:id
+          // Examples:
+          //   ref://tool/filesystem:read_file -> type=tool, qualifier=filesystem, id=read_file
+          //   ref://skill/code-review -> type=skill, qualifier=code-review, id=code-review
+          //   ref://artifact/chart-123 -> type=artifact, qualifier=chart-123, id=chart-123
+          const match = href.match(/^ref:\/\/(tool|skill|artifact)\/(.+)$/);
+          if (match) {
+            const [, refType, refId] = match;
+            const type = refType as ReferenceType;
+
+            // For tools, split qualifier:id; for others, use id as both
+            let qualifier: string;
+            let id: string;
+            if (type === 'tool' && refId.includes(':')) {
+              const colonIndex = refId.indexOf(':');
+              qualifier = refId.slice(0, colonIndex);
+              id = refId.slice(colonIndex + 1);
+            } else {
+              qualifier = refId;
+              id = refId;
+            }
+
+            return (
+              <ReferenceChip
+                type={type}
+                qualifier={qualifier}
+                id={id}
+                label={title || undefined}
+              />
+            );
+          }
+        }
+
+        // Regular link - open in new tab
+        return (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary-10 dark:text-primary-11 hover:underline"
+            {...props}
+          >
+            {children}
+          </a>
+        );
+      },
       // Paragraphs with proper spacing
       p: ({
         children,
@@ -416,7 +488,7 @@ function MarkdownContentImpl({
         ...props
       }: React.BlockquoteHTMLAttributes<HTMLQuoteElement>) => (
         <blockquote
-          className="border-l-4 border-neutral-300 dark:border-neutral-600 pl-4 italic text-neutral-600 dark:text-neutral-400 my-2"
+          className="border-l-4 border-neutral-5 pl-4 italic text-neutral-11 my-2"
           {...props}
         >
           {children}
@@ -429,7 +501,7 @@ function MarkdownContentImpl({
       }: React.TableHTMLAttributes<HTMLTableElement>) => (
         <div className="overflow-x-auto my-2">
           <table
-            className="min-w-full border-collapse border border-neutral-300 dark:border-neutral-600"
+            className="min-w-full border-collapse border border-neutral-5"
             {...props}
           >
             {children}
@@ -441,7 +513,7 @@ function MarkdownContentImpl({
         ...props
       }: React.ThHTMLAttributes<HTMLTableHeaderCellElement>) => (
         <th
-          className="border border-neutral-300 dark:border-neutral-600 px-3 py-2 bg-neutral-100 dark:bg-neutral-700 font-semibold text-left"
+          className="border border-neutral-5 px-3 py-2 bg-neutral-2 font-semibold text-left"
           {...props}
         >
           {children}
@@ -452,7 +524,7 @@ function MarkdownContentImpl({
         ...props
       }: React.TdHTMLAttributes<HTMLTableDataCellElement>) => (
         <td
-          className="border border-neutral-300 dark:border-neutral-600 px-3 py-2"
+          className="border border-neutral-5 px-3 py-2"
           {...props}
         >
           {children}
@@ -461,7 +533,7 @@ function MarkdownContentImpl({
       // Horizontal rule
       hr: (props: React.HTMLAttributes<HTMLHRElement>) => (
         <hr
-          className="my-4 border-neutral-300 dark:border-neutral-600"
+          className="my-4 border-neutral-5"
           {...props}
         />
       ),
@@ -471,9 +543,13 @@ function MarkdownContentImpl({
 
   return (
     <ReactMarkdown
-      remarkPlugins={[remarkGfm, remarkMath]}
+      remarkPlugins={[remarkGfm, remarkMath, remarkReferences]}
       rehypePlugins={[rehypeKatex]}
       components={components}
+      // Allow ref:// URLs for markdown references (normally sanitized by default)
+      urlTransform={(url) =>
+        url.startsWith("ref://") ? url : defaultUrlTransform(url)
+      }
     >
       {content}
     </ReactMarkdown>

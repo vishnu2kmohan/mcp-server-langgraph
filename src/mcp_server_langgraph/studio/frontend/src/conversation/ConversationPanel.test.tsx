@@ -14,7 +14,7 @@ import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import type { ChatMessage } from "./MessageBubble";
 import type { Suggestion } from "./FollowUpSuggestions";
-import type { SlashCommand } from "../components/Chat/ChatInputForm";
+import type { SlashCommand } from "../components/Chat/ChatInput";
 
 expect.extend(toHaveNoViolations);
 

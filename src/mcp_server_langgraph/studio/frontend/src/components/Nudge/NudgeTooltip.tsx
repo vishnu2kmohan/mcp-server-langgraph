@@ -4,9 +4,11 @@
  * Sprint 3 - Phase 1.3: Nudge System
  *
  * A tooltip-style nudge for contextual hints and feature discovery.
+ * Styled with design system colors for a subtle, non-intrusive appearance.
  */
 
 import React from "react";
+import { Lightbulb, X } from "lucide-react";
 import type { Nudge } from "../../hooks/useNudges";
 
 import { Button } from "@/components/UI";
@@ -34,37 +36,55 @@ export function NudgeTooltip({
   return (
     <div
       role="tooltip"
-      className={`nudge-tooltip nudge-priority-${nudge.priority} ${className}`}
+      className={`
+        rounded-lg border border-neutral-6 bg-neutral-2 p-3 shadow-lg
+        max-w-xs
+        ${className}
+      `}
       data-testid={`nudge-tooltip-${nudge.id}`}
     >
-      <div className="nudge-header">
-        <span className="nudge-icon" aria-hidden="true">
-          💡
-        </span>
-        {nudge.priority === "high" && (
-          <span className="nudge-priority-badge">High</span>
-        )}
+      {/* Header with icon and close button */}
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="flex items-center gap-2">
+          <Lightbulb
+            className="h-4 w-4 text-warning-9 flex-shrink-0"
+            aria-hidden="true"
+          />
+          {nudge.priority === "high" && (
+            <span className="text-xs font-medium text-warning-11 bg-warning-3 px-1.5 py-0.5 rounded">
+              High
+            </span>
+          )}
+        </div>
         <Button
-          className="nudge-dismiss"
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 min-h-6 min-w-6 p-1 text-neutral-10 hover:text-neutral-12"
           data-testid="nudge-dismiss"
           onClick={onDismiss}
           aria-label="Dismiss"
         >
-          ×
+          <X className="h-4 w-4" />
         </Button>
       </div>
-      <p className="nudge-message">{nudge.message}</p>
-      <div className="nudge-actions">
-        {onAccept && (
+
+      {/* Message */}
+      <p className="text-sm text-neutral-12 leading-relaxed">{nudge.message}</p>
+
+      {/* Action button */}
+      {onAccept && (
+        <div className="mt-3">
           <Button
-            className="nudge-accept"
+            variant="secondary"
+            size="sm"
             onClick={onAccept}
             aria-label={actionText}
+            className="w-full min-h-6"
           >
             {actionText}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

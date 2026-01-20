@@ -152,24 +152,24 @@ export function ObservabilityDocument({
   const getLogLevelColor = (level: "info" | "warn" | "error" | "debug") => {
     switch (level) {
       case "error":
-        return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
+        return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
       case "warn":
-        return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400";
+        return "bg-warning-3 text-warning-10 dark:bg-warning-a4 dark:text-warning-9";
       case "info":
-        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
+        return "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7";
       case "debug":
-        return "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 dark:bg-neutral-900/30 dark:text-neutral-400";
+        return "bg-neutral-2 text-neutral-11";
     }
   };
 
   const getStatusColor = (status: "success" | "error" | "running") => {
     switch (status) {
       case "success":
-        return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
+        return "bg-success-3 text-success-11 bg-success-4 dark:text-success-7";
       case "error":
-        return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
+        return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
       case "running":
-        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
+        return "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7";
     }
   };
 
@@ -184,25 +184,25 @@ export function ObservabilityDocument({
       data-testid="observability-document"
       className={cn(
         "flex flex-col h-full",
-        "bg-neutral-50 dark:bg-neutral-900",
+        "bg-neutral-1",
         compact && "text-sm",
         className,
       )}
     >
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+      <header className="px-6 py-4 bg-neutral-1 border-b border-neutral-5">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+            <h2 className="text-xl font-bold text-neutral-12">
               Observability
             </h2>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-10">
               Monitor traces, logs, and metrics for your AI agents
             </p>
           </div>
           <Button
             variant="secondary"
-            className="flex px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300"
+            className="flex px-3 py-2 bg-neutral-2 rounded-lg hover:bg-neutral-3 text-neutral-11"
             onClick={handleRefresh}
           >
             <RefreshCw size={16} />
@@ -216,17 +216,17 @@ export function ObservabilityDocument({
             data-testid="context-indicator"
             className="mt-3 flex items-center gap-2 flex-wrap"
           >
-            <span className="text-sm text-neutral-500 dark:text-neutral-400">
+            <span className="text-sm text-neutral-10">
               Filtered by:
             </span>
             {sessionId && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 rounded-full text-sm">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7 rounded-full text-sm">
                 <MessageSquare size={14} />
                 {sessionId}
               </span>
             )}
             {workflowId && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400 rounded-full text-sm">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-insight-2 text-insight-11 dark:bg-insight-a4 dark:text-insight-9 rounded-full text-sm">
                 <GitBranch size={14} />
                 {workflowId}
               </span>
@@ -235,7 +235,7 @@ export function ObservabilityDocument({
               <Button
                 variant="secondary"
                 size="sm"
-                className="px-2 py-1 text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
+                className="px-2 py-1 text-sm text-neutral-10 hover:text-neutral-11 hover:bg-neutral-2 rounded"
                 data-testid="clear-context-filter"
                 onClick={onClearContext}
               >
@@ -247,7 +247,7 @@ export function ObservabilityDocument({
         )}
       </header>
       {/* Tabs */}
-      <div className="px-6 py-2 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="px-6 py-2 bg-neutral-1 border-b border-neutral-5">
         <div className="flex gap-1">
           {tabs.map((tab) => (
             <Button
@@ -263,7 +263,7 @@ export function ObservabilityDocument({
       </div>
       {/* Traces Filters */}
       {activeTab === "traces" && (
-        <div className="px-6 py-3 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="px-6 py-3 bg-neutral-1 border-b border-neutral-5">
           <div className="flex items-center gap-4 flex-wrap">
             {/* Status filter buttons */}
             <div className="flex items-center gap-1">
@@ -283,7 +283,7 @@ export function ObservabilityDocument({
             {/* Time range filter */}
             <Select
               size="sm"
-              className="px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
+              className="px-2 py-1 text-sm text-neutral-12 focus:ring-primary-7"
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
               aria-label="Time range"
@@ -297,7 +297,7 @@ export function ObservabilityDocument({
 
             {/* Trace count */}
             {tracesData && (
-              <span className="text-sm text-neutral-500 dark:text-neutral-400 ml-auto">
+              <span className="text-sm text-neutral-10 ml-auto">
                 Showing {traces.length} traces
                 {tracesData.hasNext ? " (more available)" : ""}
               </span>
@@ -328,23 +328,23 @@ export function ObservabilityDocument({
             {activeTab === "traces" && (
               <div className="space-y-3">
                 {traces.length === 0 ? (
-                  <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
+                  <div className="text-center py-12 text-neutral-10">
                     No traces found
                   </div>
                 ) : (
                   traces.map((trace) => (
                     <div
                       key={trace.id}
-                      className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-primary-500 transition-colors cursor-pointer"
+                      className="p-4 bg-neutral-1 rounded-lg border border-neutral-5 hover:border-primary-9 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Activity size={20} className="text-primary-500" />
+                          <Activity size={20} className="text-primary-9" />
                           <div>
-                            <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+                            <h3 className="font-medium text-neutral-12">
                               {trace.name}
                             </h3>
-                            <div className="flex items-center gap-3 mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                            <div className="flex items-center gap-3 mt-1 text-sm text-neutral-10">
                               <span className="flex items-center gap-1">
                                 <Clock size={14} />
                                 {trace.duration}ms
@@ -372,14 +372,14 @@ export function ObservabilityDocument({
             {activeTab === "logs" && (
               <div className="space-y-2">
                 {logs.length === 0 ? (
-                  <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
+                  <div className="text-center py-12 text-neutral-10">
                     No logs found
                   </div>
                 ) : (
                   logs.map((log) => (
                     <div
                       key={log.id}
-                      className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
+                      className="p-4 bg-neutral-1 rounded-lg border border-neutral-5"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -388,11 +388,11 @@ export function ObservabilityDocument({
                           >
                             {log.level}
                           </span>
-                          <span className="text-neutral-900 dark:text-neutral-100">
+                          <span className="text-neutral-12">
                             {log.message}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm text-neutral-500 dark:text-neutral-400">
+                        <div className="flex items-center gap-3 text-sm text-neutral-10">
                           {log.service && (
                             <span className="flex items-center gap-1">
                               <Server size={14} />
@@ -414,51 +414,51 @@ export function ObservabilityDocument({
             {/* Metrics Tab */}
             {activeTab === "metrics" && metrics && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5">
+                  <h3 className="text-sm font-medium text-neutral-10 mb-1">
                     Total Requests
                   </h3>
-                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                  <div className="text-2xl font-semibold text-neutral-12">
                     {(metrics.requestsTotal ?? 0).toLocaleString()}
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5">
+                  <h3 className="text-sm font-medium text-neutral-10 mb-1">
                     Total Errors
                   </h3>
-                  <div className="text-2xl font-semibold text-error-600 dark:text-error-400">
+                  <div className="text-2xl font-semibold text-error-10 dark:text-error-7">
                     {(metrics.errorsTotal ?? 0).toLocaleString()}
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5">
+                  <h3 className="text-sm font-medium text-neutral-10 mb-1">
                     Avg Latency
                   </h3>
-                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                  <div className="text-2xl font-semibold text-neutral-12">
                     {metrics.avgLatencyMs ?? 0}ms
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5">
+                  <h3 className="text-sm font-medium text-neutral-10 mb-1">
                     P99 Latency
                   </h3>
-                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                  <div className="text-2xl font-semibold text-neutral-12">
                     {metrics.p99LatencyMs ?? 0}ms
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5">
+                  <h3 className="text-sm font-medium text-neutral-10 mb-1">
                     Tokens Used
                   </h3>
-                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                  <div className="text-2xl font-semibold text-neutral-12">
                     {(metrics.tokensUsed ?? 0).toLocaleString()}
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5">
+                  <h3 className="text-sm font-medium text-neutral-10 mb-1">
                     Active Sessions
                   </h3>
-                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                  <div className="text-2xl font-semibold text-neutral-12">
                     {metrics.activeSessions ?? 0}
                   </div>
                 </div>
@@ -467,7 +467,7 @@ export function ObservabilityDocument({
 
             {/* Empty metrics state */}
             {activeTab === "metrics" && !metrics && !isMetricsLoading && (
-              <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
+              <div className="text-center py-12 text-neutral-10">
                 No metrics data available
               </div>
             )}

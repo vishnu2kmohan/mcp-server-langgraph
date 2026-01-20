@@ -441,9 +441,9 @@ describe("ChatInputForm", () => {
         />,
       );
 
-      // In compact mode, button shows "H" for high and should be highlighted
-      const highButton = screen.getByText("H");
-      expect(highButton).toHaveClass("bg-violet-600");
+      // In compact mode, button shows "H" for high and should be selected
+      const highButton = screen.getByText("H").closest("button");
+      expect(highButton).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should show enable thinking toggle when model supports thinking", () => {

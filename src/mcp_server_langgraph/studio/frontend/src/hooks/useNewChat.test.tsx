@@ -9,8 +9,10 @@ import { renderHook, act, cleanup } from "@testing-library/react";
 
 // Mock react-router
 const mockNavigate = vi.fn();
+const mockRevalidate = vi.fn();
 vi.mock("react-router", () => ({
   useNavigate: () => mockNavigate,
+  useRevalidator: () => ({ revalidate: mockRevalidate }),
 }));
 
 // Mock authenticatedFetch - create mock as module-level variable

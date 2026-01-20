@@ -17,6 +17,7 @@
  */
 
 import { useState, useMemo, useCallback } from "react";
+import { useReducedMotion } from "motion/react";
 import { CheckCircle, XCircle, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "../../utils/cn";
 import type { AgentApprovalRequestCamelCase } from "../../types/hitl";
@@ -55,20 +56,20 @@ export interface BatchApprovalPanelProps {
  * Get confidence color based on value
  */
 function getConfidenceColor(confidence: number): string {
-  if (confidence >= 0.9) return "text-success-600 dark:text-success-400";
-  if (confidence >= 0.7) return "text-primary-600 dark:text-primary-400";
-  if (confidence >= 0.5) return "text-warning-600 dark:text-warning-400";
-  return "text-error-600 dark:text-error-400";
+  if (confidence >= 0.9) return "text-success-10 dark:text-success-7";
+  if (confidence >= 0.7) return "text-primary-10 dark:text-primary-7";
+  if (confidence >= 0.5) return "text-warning-9 dark:text-warning-9";
+  return "text-error-10 dark:text-error-7";
 }
 
 /**
  * Get confidence background color
  */
 function getConfidenceBgColor(confidence: number): string {
-  if (confidence >= 0.9) return "bg-success-500";
-  if (confidence >= 0.7) return "bg-primary-500";
-  if (confidence >= 0.5) return "bg-warning-500";
-  return "bg-error-500";
+  if (confidence >= 0.9) return "bg-success-9";
+  if (confidence >= 0.7) return "bg-primary-9";
+  if (confidence >= 0.5) return "bg-warning-9";
+  return "bg-error-9";
 }
 
 // =============================================================================
@@ -83,6 +84,9 @@ export function BatchApprovalPanel({
   isRejecting = false,
   className,
 }: BatchApprovalPanelProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [reason, setReason] = useState("");
 
@@ -138,15 +142,15 @@ export function BatchApprovalPanel({
       <div
         className={cn(
           "flex flex-col items-center justify-center p-8 text-center",
-          "border border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg",
+          "border border-dashed border-neutral-5 rounded-lg",
           className,
         )}
       >
         <CheckCircle
-          className="w-12 h-12 text-success-500 mb-4"
+          className="w-12 h-12 text-success-9 mb-4"
           aria-hidden="true"
         />
-        <p className="text-neutral-600 dark:text-neutral-400">
+        <p className="text-neutral-11">
           No pending approvals
         </p>
       </div>
@@ -157,14 +161,14 @@ export function BatchApprovalPanel({
     <div
       data-testid="batch-approval-panel"
       className={cn(
-        "flex flex-col border border-neutral-200 dark:border-neutral-700 rounded-lg",
+        "flex flex-col border border-neutral-5 rounded-lg",
         className,
       )}
       role="region"
       aria-label="Batch approval panel"
     >
       {/* Header with select all and actions */}
-      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-5 bg-neutral-1">
         {/* Select all */}
         <div className="flex items-center gap-3">
           <Checkbox
@@ -176,7 +180,7 @@ export function BatchApprovalPanel({
             size="sm"
           />
           {selectedCount > 0 && (
-            <span className="text-sm text-neutral-500 dark:text-neutral-400">
+            <span className="text-sm text-neutral-10">
               {selectedCount} selected
             </span>
           )}
@@ -192,14 +196,14 @@ export function BatchApprovalPanel({
             aria-label="Approve selected"
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium",
-              "bg-success-600 text-white hover:bg-success-700",
+              "bg-success-10 text-neutral-12 hover:bg-success-11",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               "transition-colors",
             )}
           >
             {isApproving ? (
               <Loader2
-                className="w-4 h-4 animate-spin"
+                className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
                 data-testid="batch-approve-loading"
               />
             ) : (
@@ -215,14 +219,14 @@ export function BatchApprovalPanel({
             aria-label="Reject selected"
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium",
-              "bg-error-600 text-white hover:bg-error-700",
+              "bg-error-10 text-neutral-12 hover:bg-error-11",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               "transition-colors",
             )}
           >
             {isRejecting ? (
               <Loader2
-                className="w-4 h-4 animate-spin"
+                className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
                 data-testid="batch-reject-loading"
               />
             ) : (
@@ -233,7 +237,7 @@ export function BatchApprovalPanel({
         </div>
       </div>
       {/* Common reason input */}
-      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="p-4 border-b border-neutral-5">
         <Input
           value={reason}
           onChange={(e) => setReason(e.target.value)}
@@ -241,17 +245,17 @@ export function BatchApprovalPanel({
           disabled={isLoading}
           className={cn(
             "w-full px-3 py-2 rounded border",
-            "border-neutral-300 dark:border-neutral-600",
-            "bg-white dark:bg-neutral-800",
-            "text-neutral-900 dark:text-neutral-100",
-            "placeholder-neutral-400 dark:placeholder-neutral-500",
-            "focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
+            "border-neutral-5",
+            "bg-neutral-1",
+            "text-neutral-12",
+            "placeholder-neutral-9",
+            "focus:ring-2 focus:ring-primary-7 focus:border-primary-9",
             "disabled:opacity-50",
           )}
         />
       </div>
       {/* Approval list */}
-      <div className="divide-y divide-neutral-200 dark:divide-neutral-700 max-h-96 overflow-y-auto">
+      <div className="divide-y divide-neutral-5 dark:divide-neutral-6 max-h-96 overflow-y-auto">
         {approvals.map((approval) => {
           const isSelected = selectedIds.has(approval.requestId);
           const confidencePercent = Math.round(approval.confidence * 100);
@@ -261,8 +265,8 @@ export function BatchApprovalPanel({
               key={approval.requestId}
               className={cn(
                 "flex items-center gap-4 p-4",
-                "hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
-                isSelected && "bg-primary-50 dark:bg-primary-900/20",
+                "hover:bg-neutral-a6",
+                isSelected && "bg-primary-1 dark:bg-primary-a3",
               )}
             >
               {/* Checkbox */}
@@ -284,30 +288,30 @@ export function BatchApprovalPanel({
                 >
                   {confidencePercent}%
                 </span>
-                <div className="w-full h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full mt-1">
+                <div className="w-full h-1.5 bg-neutral-3 rounded-full mt-1">
                   <div
                     className={cn(
                       "h-full rounded-full",
                       getConfidenceBgColor(approval.confidence),
                     )}
-                    style={{ width: `${confidencePercent}%` }}
+                    style={{ '--progress': `${confidencePercent}%` } as React.CSSProperties}
                   />
                 </div>
               </div>
               {/* Agent info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-neutral-900 dark:text-white">
+                  <span className="font-medium text-neutral-12">
                     {approval.agentName}
                   </span>
                   {approval.confidence < approval.threshold && (
                     <AlertTriangle
-                      className="w-4 h-4 text-warning-500"
+                      className="w-4 h-4 text-warning-9"
                       aria-hidden="true"
                     />
                   )}
                 </div>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 truncate">
+                <p className="text-sm text-neutral-11 truncate">
                   {approval.proposedAction}
                 </p>
               </div>
@@ -315,7 +319,7 @@ export function BatchApprovalPanel({
               <span
                 className={cn(
                   "px-2 py-0.5 text-xs font-medium rounded",
-                  "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300",
+                  "bg-neutral-2 text-neutral-11",
                 )}
               >
                 {approval.triggerReason.replace(/_/g, " ")}

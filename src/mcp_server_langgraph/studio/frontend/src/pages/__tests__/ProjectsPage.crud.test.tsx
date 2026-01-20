@@ -20,6 +20,11 @@ vi.mock("../../api", () => ({
   useListProjectsQuery: () => mockListProjectsQuery(),
   useCreateProjectMutation: () => mockCreateProjectMutation(),
   useDeleteProjectMutation: () => mockDeleteProjectMutation(),
+  // Required for AIEmptyState used in empty state
+  useGetEmptyStateSuggestionsMutation: () => [
+    vi.fn(),
+    { isLoading: false, data: null },
+  ],
 }));
 
 // =============================================================================
@@ -398,7 +403,7 @@ describe("ProjectsPage - CRUD Operations", () => {
 
       // Find and click the X button (close button)
       const closeButtons = document.querySelectorAll(
-        'button[class*="hover:text-neutral-600"]',
+        'button[class*="hover:text-neutral-11"]',
       );
       const xButton = Array.from(closeButtons).find((btn) =>
         btn.querySelector("svg"),

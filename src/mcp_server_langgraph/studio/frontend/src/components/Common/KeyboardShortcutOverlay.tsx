@@ -202,7 +202,7 @@ export function KeyboardShortcutOverlay({
       {/* Backdrop */}
       <div
         data-testid="overlay-backdrop"
-        className="fixed inset-0 z-50 bg-black/50 dark:bg-black/70"
+        className="fixed inset-0 z-50 bg-neutral-a6/70"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -216,27 +216,27 @@ export function KeyboardShortcutOverlay({
         className={cn(
           "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
           "w-full max-w-md max-h-[80vh] overflow-auto",
-          "bg-white dark:bg-neutral-800 rounded-lg shadow-xl",
-          "border border-neutral-200 dark:border-neutral-700",
+          "bg-neutral-1 rounded-lg shadow-xl",
+          "border border-neutral-5",
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-5">
           <h2
             id="shortcut-overlay-title"
-            className="text-lg font-semibold text-neutral-900 dark:text-white"
+            className="text-lg font-semibold text-neutral-12"
           >
             Keyboard Shortcuts
           </h2>
-          <Button
+          <Button size="icon" variant="ghost"
             data-testid="close-button"
             type="button"
             onClick={onClose}
             className={cn(
               "p-1 rounded-md",
-              "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200",
-              "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
-              "focus:outline-none focus:ring-2 focus:ring-primary-500",
+              "text-neutral-10 hover:text-neutral-11",
+              "hover:bg-neutral-2",
+              "focus:outline-none focus:ring-2 focus:ring-primary-7",
             )}
             aria-label="Close shortcuts"
           >
@@ -248,7 +248,7 @@ export function KeyboardShortcutOverlay({
         <div data-testid="shortcut-list" className="p-4 space-y-4">
           {Object.entries(groupedShortcuts).map(([category, shortcuts]) => (
             <div key={category}>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-10 mb-2">
                 {category}
               </h3>
               <div className="space-y-1">
@@ -257,15 +257,15 @@ export function KeyboardShortcutOverlay({
                     key={shortcut.key}
                     className="flex items-center justify-between py-1"
                   >
-                    <span className="text-sm text-neutral-700 dark:text-neutral-300">
+                    <span className="text-sm text-neutral-11">
                       {shortcut.description}
                     </span>
                     <kbd
                       className={cn(
                         "px-2 py-1 rounded",
-                        "bg-neutral-100 dark:bg-neutral-700",
-                        "text-sm font-mono text-neutral-800 dark:text-neutral-200",
-                        "border border-neutral-300 dark:border-neutral-600",
+                        "bg-neutral-2",
+                        "text-sm font-mono text-neutral-12",
+                        "border border-neutral-5",
                       )}
                     >
                       {shortcut.displayKey}
@@ -277,17 +277,17 @@ export function KeyboardShortcutOverlay({
           ))}
 
           {formattedShortcuts.length === 0 && (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center py-4">
+            <p className="text-sm text-neutral-10 text-center py-4">
               No keyboard shortcuts available.
             </p>
           )}
         </div>
 
         {/* Footer hint */}
-        <div className="px-4 py-3 border-t border-neutral-200 dark:border-neutral-700">
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center">
+        <div className="px-4 py-3 border-t border-neutral-5">
+          <p className="text-xs text-neutral-10 text-center">
             Press{" "}
-            <kbd className="px-1 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 font-mono">
+            <kbd className="px-1 py-0.5 rounded bg-neutral-2 font-mono">
               Esc
             </kbd>{" "}
             to close

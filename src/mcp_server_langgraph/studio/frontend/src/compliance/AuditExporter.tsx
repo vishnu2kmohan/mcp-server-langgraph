@@ -5,6 +5,7 @@
  * rate limiting, and watermarking support.
  */
 import { useState, useCallback, useMemo } from "react";
+import { useReducedMotion } from "motion/react";
 import {
   Download,
   FileText,
@@ -111,6 +112,9 @@ export function AuditExporter({
   showFieldSelection = false,
   className,
 }: AuditExporterProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>("csv");
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<
@@ -185,7 +189,7 @@ export function AuditExporter({
     <div
       data-testid="audit-exporter"
       className={cn(
-        "bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4",
+        "bg-neutral-1 rounded-lg border border-neutral-5 p-4",
         className,
       )}
     >
@@ -194,9 +198,9 @@ export function AuditExporter({
         <div className="flex items-center gap-2">
           <Download
             size={18}
-            className="text-neutral-500 dark:text-neutral-400"
+            className="text-neutral-10"
           />
-          <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+          <h3 className="text-sm font-medium text-neutral-12">
             Export Audit Logs
           </h3>
         </div>
@@ -205,8 +209,8 @@ export function AuditExporter({
             className={cn(
               "text-xs",
               isRateLimited
-                ? "text-error-500"
-                : "text-neutral-500 dark:text-neutral-400",
+                ? "text-error-9"
+                : "text-neutral-10",
             )}
           >
             {isRateLimited
@@ -216,15 +220,15 @@ export function AuditExporter({
         )}
       </div>
       {/* Summary */}
-      <div className="mb-4 p-3 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg">
-        <div className="text-sm text-neutral-700 dark:text-neutral-300">
+      <div className="mb-4 p-3 bg-neutral-1 rounded-lg">
+        <div className="text-sm text-neutral-11">
           <span className="font-medium">{auditLogs.length} records</span>
           {isEmpty ? (
-            <span className="ml-2 text-neutral-500 dark:text-neutral-400">
+            <span className="ml-2 text-neutral-10">
               No audit logs to export
             </span>
           ) : (
-            <span className="ml-2 text-neutral-500 dark:text-neutral-400">
+            <span className="ml-2 text-neutral-10">
               from {dateRangeText.start} to {dateRangeText.end}
             </span>
           )}
@@ -232,7 +236,7 @@ export function AuditExporter({
       </div>
       {/* Format Selection */}
       <div className="mb-4">
-        <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-2">
+        <label className="block text-xs font-medium text-neutral-10 mb-2">
           Export Format
         </label>
         <div
@@ -251,8 +255,8 @@ export function AuditExporter({
               className={cn(
                 "flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors",
                 selectedFormat === value
-                  ? "selected border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300"
-                  : "border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300 dark:border-neutral-600 dark:hover:border-neutral-600",
+                  ? "selected border-primary-9 bg-primary-1 dark:bg-primary-a3 text-primary-11 dark:text-primary-5"
+                  : "border-neutral-5 text-neutral-11 hover:border-neutral-5 dark:hover:border-neutral-6",
               )}
             >
               <Icon size={16} />
@@ -275,7 +279,7 @@ export function AuditExporter({
       {/* Field Selection */}
       {showFieldSelection && (
         <div data-testid="field-selection" className="mb-4">
-          <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-2">
+          <label className="block text-xs font-medium text-neutral-10 mb-2">
             Fields to Include
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -300,8 +304,8 @@ export function AuditExporter({
         className={cn(
           "w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
           canExport
-            ? "bg-primary-500 text-white hover:bg-primary-600"
-            : "bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 cursor-not-allowed",
+            ? "bg-primary-9 text-neutral-12 hover:bg-primary-10"
+            : "bg-neutral-3 text-neutral-10 cursor-not-allowed",
         )}
       >
         {isExporting ? (
@@ -309,7 +313,7 @@ export function AuditExporter({
             <Loader2
               data-testid="export-loading"
               size={16}
-              className="animate-spin"
+              className={cn(!prefersReducedMotion && "animate-spin")}
             />
             <span>Exporting...</span>
           </>
@@ -325,7 +329,7 @@ export function AuditExporter({
         <div
           role="status"
           data-testid="export-success"
-          className="mt-3 flex items-center gap-2 text-success-600 dark:text-success-400"
+          className="mt-3 flex items-center gap-2 text-success-10 dark:text-success-7"
         >
           <Check size={16} />
           <span className="text-sm">Export complete! Download started.</span>
@@ -334,7 +338,7 @@ export function AuditExporter({
       {exportStatus === "error" && error && (
         <div
           role="alert"
-          className="mt-3 flex items-center gap-2 text-error-600 dark:text-error-400"
+          className="mt-3 flex items-center gap-2 text-error-10 dark:text-error-7"
         >
           <AlertCircle size={16} />
           <span className="text-sm">{error}</span>

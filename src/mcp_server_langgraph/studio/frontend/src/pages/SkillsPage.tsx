@@ -35,7 +35,10 @@ import {
 } from "../api";
 import { useFeatureFlags } from "../contexts/FeatureFlagContext";
 
-import { Button, Input } from "@/components/UI";
+// Direct imports to avoid Rollup circular dependency warnings
+// (page chunks end up separate from UI barrel)
+import { Button } from "@/components/UI/Button";
+import { Input } from "@/components/UI/Input";
 
 type SkillsTab = "browse" | "installed" | "updates";
 

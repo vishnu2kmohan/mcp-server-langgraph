@@ -21,12 +21,10 @@ export const cardVariants = cva(
     variants: {
       variant: {
         default: [
-          "border border-neutral-200 dark:border-neutral-700 bg-white",
-          "dark:bg-neutral-900",
+          "border border-neutral-5 bg-neutral-1",
         ],
         elevated: [
-          "border border-neutral-100 bg-white shadow-elevated",
-          "dark:border-neutral-700 dark:bg-neutral-900",
+          "border border-neutral-5 bg-neutral-1 shadow-elevated",
         ],
         ghost: [
           "border border-transparent bg-transparent",
@@ -42,8 +40,8 @@ export const cardVariants = cva(
       interactive: {
         true: [
           "cursor-pointer transition-all duration-fast",
-          "hover:shadow-soft hover:border-neutral-300",
-          "dark:hover:border-neutral-600",
+          "hover:shadow-soft hover:border-neutral-5",
+          "dark:hover:border-neutral-6",
         ],
         false: "",
       },
@@ -98,8 +96,7 @@ export function CardHeader({ className, children, ...props }: CardHeaderProps) {
     <div
       className={cn(
         "flex items-center justify-between gap-4",
-        "-m-4 mb-4 p-4 border-b border-neutral-100",
-        "dark:border-neutral-800",
+        "-m-4 mb-4 p-4 border-b border-neutral-5",
         className,
       )}
       {...props}
@@ -118,8 +115,7 @@ export function CardTitle({ className, children, ...props }: CardTitleProps) {
   return (
     <h3
       className={cn(
-        "text-lg font-semibold text-neutral-900",
-        "dark:text-neutral-100",
+        "text-lg font-semibold text-neutral-12",
         className,
       )}
       {...props}
@@ -141,7 +137,7 @@ export function CardContent({
 }: CardContentProps) {
   return (
     <div
-      className={cn("text-neutral-600 dark:text-neutral-400", className)}
+      className={cn("text-neutral-11", className)}
       {...props}
     >
       {children}
@@ -159,8 +155,7 @@ export function CardFooter({ className, children, ...props }: CardFooterProps) {
     <div
       className={cn(
         "flex items-center justify-end gap-2",
-        "-m-4 mt-4 p-4 border-t border-neutral-100",
-        "dark:border-neutral-800",
+        "-m-4 mt-4 p-4 border-t border-neutral-5",
         className,
       )}
       {...props}

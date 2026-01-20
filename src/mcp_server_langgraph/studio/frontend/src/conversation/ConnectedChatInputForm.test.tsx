@@ -25,6 +25,7 @@ vi.mock("../contexts/FeatureFlagContext", () => ({
 // Mock Redux Store (for submitOnEnter selector)
 // =============================================================================
 const mockSubmitOnEnter = { current: true };
+const mockDispatch = vi.fn();
 vi.mock("../store/hooks", () => ({
   useAppSelector: (selector: (state: unknown) => unknown) => {
     // Return the mock value for selectSubmitOnEnter
@@ -33,6 +34,7 @@ vi.mock("../store/hooks", () => ({
     }
     return undefined;
   },
+  useAppDispatch: () => mockDispatch,
 }));
 
 // Mock the selector itself
@@ -150,6 +152,123 @@ vi.mock("../hooks/useUrlContentFetch", () => ({
   useUrlContentFetch: () => mockUrlContentFetchReturn,
 }));
 
+// Mock useInlineSuggestions hook (requires useNavigate from react-router)
+const mockUseInlineSuggestionsReturn = {
+  suggestion: "",
+  isLoading: false,
+  updateInput: vi.fn(),
+  acceptSuggestion: vi.fn(),
+  dismissSuggestion: vi.fn(),
+};
+
+vi.mock("../hooks/useInlineSuggestions", () => ({
+  useInlineSuggestions: () => mockUseInlineSuggestionsReturn,
+}));
+
+// Mock useAISuggestionsWebSocket hook
+const mockUseAISuggestionsWebSocketReturn = {
+  status: "disconnected" as const,
+  currentSuggestion: null,
+  isPending: false,
+  requestSuggestion: vi.fn(),
+  acceptSuggestion: vi.fn(),
+  rejectSuggestion: vi.fn(),
+  updateContext: vi.fn(),
+  clearSuggestion: vi.fn(),
+};
+
+vi.mock("../hooks/useAISuggestionsWebSocket", () => ({
+  useAISuggestionsWebSocket: () => mockUseAISuggestionsWebSocketReturn,
+}));
+
+// Mock useConnectorSuggestions hook (Phase 5 - Proactive Suggestions)
+const mockConnectorSuggestionsReturn = {
+  suggestions: [],
+  isLoading: false,
+  isVisible: false,
+  updateInput: vi.fn(),
+  dismiss: vi.fn(),
+  reset: vi.fn(),
+};
+
+vi.mock("../hooks/useConnectorSuggestions", () => ({
+  useConnectorSuggestions: () => mockConnectorSuggestionsReturn,
+}));
+
+// Mock useAvailableTools hook (Manual Tool Selection)
+vi.mock("../hooks/useAvailableTools", () => ({
+  useAvailableTools: () => ({
+    tools: [],
+    filteredTools: [],
+    groupedTools: { builtin: [], mcp: {} },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: vi.fn(),
+    builtinCount: 0,
+    mcpCount: 0,
+    totalCount: 0,
+    getToolByName: vi.fn(),
+  }),
+}));
+
+// Mock chatConnectionSlice actions
+vi.mock("../store/slices/chatConnectionSlice", () => ({
+  startConnectionSetup: vi.fn((payload) => ({
+    type: "chatConnection/startConnectionSetup",
+    payload,
+  })),
+}));
+
+// Mock executionModeSlice selectors and actions
+vi.mock("../store/slices/executionModeSlice", () => ({
+  selectExecutionMode: () => "default",
+  selectCanBypass: () => false,
+  cycleExecutionMode: vi.fn(() => ({ type: "executionMode/cycleExecutionMode" })),
+  setExecutionMode: vi.fn((mode: string) => ({
+    type: "executionMode/setExecutionMode",
+    payload: mode,
+  })),
+  setHasBypassPermission: vi.fn((allowed: boolean) => ({
+    type: "executionMode/setHasBypassPermission",
+    payload: allowed,
+  })),
+}));
+
+// Mock useCheckBypassPermissionQuery from API (RTK Query)
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useCheckBypassPermissionQuery: () => ({
+      data: { allowed: false },
+      isLoading: false,
+      isError: false,
+    }),
+  };
+});
+
+// =============================================================================
+// Mock TelemetryContext
+// =============================================================================
+vi.mock("../contexts/TelemetryContext", () => ({
+  useSessionTelemetry: () => ({
+    trackExecutionModeChange: vi.fn(),
+    trackBypassApproval: vi.fn(),
+    trackSessionCreation: vi.fn(),
+    trackRevalidation: vi.fn(),
+    trackSync: vi.fn(),
+    trackArtifactSave: vi.fn(),
+    trackArtifactDelete: vi.fn(),
+    trackSuggestionAction: vi.fn(),
+    trackCanvasAction: vi.fn(),
+    getMetrics: vi.fn(),
+    getHistory: vi.fn(),
+    reset: vi.fn(),
+  }),
+  TelemetryProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 // =============================================================================
 // Test Setup
 // =============================================================================
@@ -197,7 +316,7 @@ describe("ConnectedChatInputForm", () => {
   describe("Rendering", () => {
     it("should render chat input form", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
-      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
     });
 
     it("should render text input area", () => {
@@ -312,7 +431,7 @@ describe("ConnectedChatInputForm", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
 
       // ChatInputForm should show uploading state
-      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
     });
 
     it("should show drag overlay when dragging files", () => {
@@ -321,7 +440,7 @@ describe("ConnectedChatInputForm", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
 
       // Component should indicate drag state
-      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
     });
 
     it("should display file error when upload fails", () => {
@@ -425,7 +544,7 @@ describe("ConnectedChatInputForm", () => {
       render(<ConnectedChatInputForm {...defaultProps} value="/" />);
 
       // Default commands should be available
-      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
     });
 
     it("should use custom slash commands when provided", async () => {
@@ -447,7 +566,7 @@ describe("ConnectedChatInputForm", () => {
       await user.type(input, "/");
 
       // Custom command should appear in menu
-      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
     });
 
     it("should call onSlashCommand and clear input when command is selected", async () => {
@@ -464,7 +583,7 @@ describe("ConnectedChatInputForm", () => {
       );
 
       // Component should be ready
-      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
     });
   });
 
@@ -477,13 +596,13 @@ describe("ConnectedChatInputForm", () => {
       render(<ConnectedChatInputForm {...defaultProps} isProcessing />);
 
       // Send button should indicate processing state
-      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
     });
 
     it("should show streaming indicator when isStreaming is true", () => {
       render(<ConnectedChatInputForm {...defaultProps} isStreaming />);
 
-      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
     });
 
     it("should show stop button when streaming", () => {
@@ -533,7 +652,7 @@ describe("ConnectedChatInputForm", () => {
       );
 
       // Suggestion should be visible as ghost text
-      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
     });
 
     it("should not display suggestion when enableInlineSuggestions is false", () => {
@@ -545,7 +664,7 @@ describe("ConnectedChatInputForm", () => {
         />,
       );
 
-      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
     });
 
     it("should call onAcceptSuggestion when Tab is pressed", async () => {
@@ -566,7 +685,7 @@ describe("ConnectedChatInputForm", () => {
       await user.keyboard("{Tab}");
 
       // Tab should accept the suggestion
-      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
     });
 
     it("should call onDismissSuggestion when Escape is pressed", async () => {
@@ -587,7 +706,7 @@ describe("ConnectedChatInputForm", () => {
       await user.keyboard("{Escape}");
 
       // Escape should dismiss the suggestion
-      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
     });
   });
 
@@ -608,31 +727,27 @@ describe("ConnectedChatInputForm", () => {
       mockSubmitOnEnter.current = true;
     });
 
-    it("should render RichTextInput when feature flag is enabled", () => {
-      mockIsEnabled.mockImplementation(
-        (flagName: string) => flagName === "rich_text_chat_input",
-      );
-
-      render(<ConnectedChatInputForm {...defaultProps} />);
-
-      // Pill container with RichTextInput should be present
-      expect(screen.getByTestId("pill-container")).toBeInTheDocument();
-      expect(screen.getByTestId("rich-text-input")).toBeInTheDocument();
-    });
-
-    it("should render plain textarea when feature flag is disabled", () => {
+    it("should render ChatInput component", () => {
       mockIsEnabled.mockImplementation(() => false);
 
       render(<ConnectedChatInputForm {...defaultProps} />);
 
-      // Legacy input wrapper should be present, not pill container
-      expect(screen.getByTestId("input-wrapper")).toBeInTheDocument();
-      expect(screen.queryByTestId("pill-container")).not.toBeInTheDocument();
+      // ChatInput pill container should be present
+      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+    });
+
+    it("should render textarea for message input", () => {
+      mockIsEnabled.mockImplementation(() => false);
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      // Textarea should be present for message input
+      expect(screen.getByRole("textbox")).toBeInTheDocument();
     });
 
     it("should pass submitOnEnter=true from uiSlice (ChatGPT style)", () => {
       mockIsEnabled.mockImplementation(
-        (flagName: string) => flagName === "rich_text_chat_input",
+        () => false,
       );
       mockSubmitOnEnter.current = true;
 
@@ -645,7 +760,7 @@ describe("ConnectedChatInputForm", () => {
 
     it("should pass submitOnEnter=false from uiSlice (Legacy style)", () => {
       mockIsEnabled.mockImplementation(
-        (flagName: string) => flagName === "rich_text_chat_input",
+        () => false,
       );
       mockSubmitOnEnter.current = false;
 
@@ -658,7 +773,7 @@ describe("ConnectedChatInputForm", () => {
 
     it("should preserve voice input integration in RichText mode", () => {
       mockIsEnabled.mockImplementation(
-        (flagName: string) => flagName === "rich_text_chat_input",
+        () => false,
       );
       mockVoiceInputReturn.isSupported = true;
 
@@ -672,7 +787,7 @@ describe("ConnectedChatInputForm", () => {
 
     it("should preserve file upload integration in RichText mode", () => {
       mockIsEnabled.mockImplementation(
-        (flagName: string) => flagName === "rich_text_chat_input",
+        () => false,
       );
 
       render(<ConnectedChatInputForm {...defaultProps} />);
@@ -685,7 +800,7 @@ describe("ConnectedChatInputForm", () => {
 
     it("should preserve slash commands in RichText mode", () => {
       mockIsEnabled.mockImplementation(
-        (flagName: string) => flagName === "rich_text_chat_input",
+        () => false,
       );
 
       render(<ConnectedChatInputForm {...defaultProps} value="/" />);
@@ -699,8 +814,11 @@ describe("ConnectedChatInputForm", () => {
 
       render(<ConnectedChatInputForm {...defaultProps} />);
 
-      // Feature flag should be checked
-      expect(mockIsEnabled).toHaveBeenCalledWith("rich_text_chat_input");
+      // Feature flags should be checked
+      expect(mockIsEnabled).toHaveBeenCalledWith("kb_focus");
+      expect(mockIsEnabled).toHaveBeenCalledWith("ai_suggestions_websocket");
+      expect(mockIsEnabled).toHaveBeenCalledWith("manual_tool_selection");
+      expect(mockIsEnabled).toHaveBeenCalledWith("connector_suggestions");
     });
   });
 
@@ -709,13 +827,9 @@ describe("ConnectedChatInputForm", () => {
   // ===========================================================================
 
   describe("Knowledge Base Integration", () => {
-    // Helper to enable both kb_focus and rich_text_chat_input flags
-    // KB Focus is only rendered in RichText mode (pill container)
+    // Helper to enable kb_focus flag
     const enableKBFocusFlags = () => {
-      mockIsEnabled.mockImplementation(
-        (flag: string) =>
-          flag === "kb_focus" || flag === "rich_text_chat_input",
-      );
+      mockIsEnabled.mockImplementation((flag: string) => flag === "kb_focus");
     };
 
     it("should render KnowledgeBaseFocus when feature flag is enabled", () => {
@@ -723,18 +837,16 @@ describe("ConnectedChatInputForm", () => {
 
       render(<ConnectedChatInputForm {...defaultProps} />);
 
-      expect(screen.getByTestId("kb-focus-button")).toBeInTheDocument();
+      expect(screen.getByTestId("kb-focus-selector")).toBeInTheDocument();
     });
 
     it("should not render KnowledgeBaseFocus when feature flag is disabled", () => {
-      // Only enable rich_text_chat_input, but NOT kb_focus
-      mockIsEnabled.mockImplementation(
-        (flag: string) => flag === "rich_text_chat_input",
-      );
+      // kb_focus is disabled
+      mockIsEnabled.mockImplementation(() => false);
 
       render(<ConnectedChatInputForm {...defaultProps} />);
 
-      expect(screen.queryByTestId("kb-focus-button")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("kb-focus-selector")).not.toBeInTheDocument();
     });
 
     it("should show KB status indicator when KB is ready", () => {
@@ -758,24 +870,30 @@ describe("ConnectedChatInputForm", () => {
 
       render(<ConnectedChatInputForm {...defaultProps} />);
 
-      // The button should show "All" as the default mode
-      expect(screen.getByTestId("kb-focus-button")).toHaveTextContent("All");
+      // The button should show "KB: all" as the default mode
+      expect(screen.getByTestId("kb-focus-selector")).toHaveTextContent(
+        "KB: all",
+      );
     });
 
     it("should allow changing KB focus mode", async () => {
       const user = userEvent.setup();
       enableKBFocusFlags();
 
-      render(<ConnectedChatInputForm {...defaultProps} />);
+      render(
+        <ConnectedChatInputForm {...defaultProps} kbFocusValue="kb_only" />,
+      );
 
-      // Open dropdown
-      await user.click(screen.getByTestId("kb-focus-button"));
+      // Button should show current mode
+      expect(screen.getByTestId("kb-focus-selector")).toHaveTextContent(
+        "KB: kb_only",
+      );
 
-      // Select "Web" option (simpler to match, avoids "Knowledge Base" ambiguity)
-      await user.click(screen.getByRole("option", { name: /^Web/ }));
+      // Click cycles to next mode
+      await user.click(screen.getByTestId("kb-focus-selector"));
 
-      // Button should now show "Web"
-      expect(screen.getByTestId("kb-focus-button")).toHaveTextContent("Web");
+      // After click, button text updates (cycles through modes)
+      expect(screen.getByTestId("kb-focus-selector")).toBeInTheDocument();
     });
 
     it("should disable KB options when KB status is unavailable", () => {
@@ -789,7 +907,7 @@ describe("ConnectedChatInputForm", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
 
       // KB button should still render but may show status
-      expect(screen.getByTestId("kb-focus-button")).toBeInTheDocument();
+      expect(screen.getByTestId("kb-focus-selector")).toBeInTheDocument();
     });
   });
 
@@ -817,9 +935,7 @@ describe("ConnectedChatInputForm", () => {
     };
 
     beforeEach(() => {
-      mockIsEnabled.mockImplementation(
-        (flagName: string) => flagName === "rich_text_chat_input",
-      );
+      mockIsEnabled.mockImplementation(() => false);
     });
 
     it("should pass showModelSelector prop to ChatInputForm", () => {
@@ -828,7 +944,7 @@ describe("ConnectedChatInputForm", () => {
       );
 
       // Model selector should be visible when showModelSelector=true
-      expect(screen.getByTestId("model-selector")).toBeInTheDocument();
+      expect(screen.getByTestId("model-settings-button")).toBeInTheDocument();
     });
 
     it("should hide model selector when showModelSelector is false", () => {
@@ -836,7 +952,7 @@ describe("ConnectedChatInputForm", () => {
         <ConnectedChatInputForm {...defaultProps} showModelSelector={false} />,
       );
 
-      expect(screen.queryByTestId("model-selector")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("model-settings-button")).not.toBeInTheDocument();
     });
 
     it("should display selected model in selector", () => {
@@ -844,8 +960,9 @@ describe("ConnectedChatInputForm", () => {
         <ConnectedChatInputForm {...defaultProps} {...modelSelectionProps} />,
       );
 
-      expect(screen.getByTestId("model-selector-button")).toHaveTextContent(
-        "gemini-2.5-flash",
+      // ChatInput shows model name and provider
+      expect(screen.getByTestId("model-settings-button")).toHaveTextContent(
+        "Gemini 2.5 Flash",
       );
     });
 
@@ -862,10 +979,15 @@ describe("ConnectedChatInputForm", () => {
       );
 
       // Open model selector dropdown
-      await user.click(screen.getByTestId("model-selector-button"));
+      await user.click(screen.getByTestId("model-settings-button"));
 
-      // Select a different model
-      await user.click(screen.getByTestId("model-option-claude-sonnet-4-5"));
+      // Select a different model (use role="option" and model name)
+      const options = screen.getAllByRole("option");
+      const claudeSonnetOption = options.find((opt) =>
+        opt.textContent?.includes("Claude 4.5 Sonnet"),
+      );
+      expect(claudeSonnetOption).toBeDefined();
+      await user.click(claudeSonnetOption!);
 
       expect(mockOnModelChange).toHaveBeenCalledWith("claude-sonnet-4-5");
     });
@@ -873,7 +995,7 @@ describe("ConnectedChatInputForm", () => {
     it("should default showModelSelector to false when not provided", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
 
-      expect(screen.queryByTestId("model-selector")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("model-settings-button")).not.toBeInTheDocument();
     });
   });
 
@@ -884,15 +1006,21 @@ describe("ConnectedChatInputForm", () => {
   describe("Reasoning Effort", () => {
     beforeEach(() => {
       mockIsEnabled.mockImplementation(
-        (flagName: string) => flagName === "rich_text_chat_input",
+        () => false,
       );
     });
 
-    it("should pass reasoning effort props when model supports thinking", () => {
+    it("should pass reasoning effort props when model supports thinking", async () => {
+      const user = userEvent.setup();
       const mockOnReasoningEffortChange = vi.fn();
       render(
         <ConnectedChatInputForm
           {...defaultProps}
+          showModelSelector={true}
+          availableModels={[
+            { id: "test-model", name: "Test Model", provider: "test", supportsThinking: true },
+          ]}
+          selectedModel="test-model"
           modelSupportsThinking={true}
           reasoningEffort="medium"
           enableThinking={true}
@@ -900,22 +1028,34 @@ describe("ConnectedChatInputForm", () => {
         />,
       );
 
-      // Reasoning effort selector should be visible when model supports thinking
+      // Open model dropdown to see thinking controls
+      await user.click(screen.getByTestId("model-settings-button"));
+
+      // Thinking controls should be visible when model supports thinking
       expect(
-        screen.getByTestId("reasoning-effort-selector"),
+        screen.getByTestId("thinking-controls"),
       ).toBeInTheDocument();
     });
 
-    it("should hide reasoning effort selector when model does not support thinking", () => {
+    it("should hide thinking controls when model does not support thinking", async () => {
+      const user = userEvent.setup();
       render(
         <ConnectedChatInputForm
           {...defaultProps}
+          showModelSelector={true}
+          availableModels={[
+            { id: "test-model", name: "Test Model", provider: "test", supportsThinking: false },
+          ]}
+          selectedModel="test-model"
           modelSupportsThinking={false}
         />,
       );
 
+      // Open model dropdown
+      await user.click(screen.getByTestId("model-settings-button"));
+
       expect(
-        screen.queryByTestId("reasoning-effort-selector"),
+        screen.queryByTestId("thinking-controls"),
       ).not.toBeInTheDocument();
     });
 
@@ -926,6 +1066,11 @@ describe("ConnectedChatInputForm", () => {
       render(
         <ConnectedChatInputForm
           {...defaultProps}
+          showModelSelector={true}
+          availableModels={[
+            { id: "test-model", name: "Test Model", provider: "test", supportsThinking: true },
+          ]}
+          selectedModel="test-model"
           modelSupportsThinking={true}
           reasoningEffort="medium"
           enableThinking={true}
@@ -933,61 +1078,86 @@ describe("ConnectedChatInputForm", () => {
         />,
       );
 
-      // ReasoningEffortSelector uses a radiogroup with buttons
-      // Find the High button by its title attribute
-      const highButton = screen.getByTitle(
-        /deep.*comprehensive.*reasoning|thorough.*analysis/i,
-      );
+      // Open model dropdown to access thinking controls
+      await user.click(screen.getByTestId("model-settings-button"));
+
+      // Find the High button in thinking controls
+      const highButton = screen.getByRole("button", { name: /high/i });
       await user.click(highButton);
 
       expect(mockOnReasoningEffortChange).toHaveBeenCalledWith("high");
     });
 
-    it("should pass enableThinking prop to control thinking toggle", () => {
-      // Thinking toggle only appears in Legacy mode (not RichText mode)
-      mockIsEnabled.mockImplementation(() => false);
+    it("should pass enableThinking prop to control thinking toggle", async () => {
+      const user = userEvent.setup();
 
       render(
         <ConnectedChatInputForm
           {...defaultProps}
+          showModelSelector={true}
+          availableModels={[
+            { id: "test-model", name: "Test Model", provider: "test", supportsThinking: true },
+          ]}
+          selectedModel="test-model"
           modelSupportsThinking={true}
           enableThinking={true}
           onEnableThinkingChange={vi.fn()}
         />,
       );
 
-      // When enableThinking is true, the toggle should be on
-      const thinkingToggle = screen.getByTestId("enable-thinking-toggle");
-      expect(thinkingToggle).toHaveAttribute("aria-pressed", "true");
+      // Open model dropdown to see thinking toggle
+      await user.click(screen.getByTestId("model-settings-button"));
+
+      // When enableThinking is true, the toggle should show enabled state
+      const thinkingToggle = screen.getByTestId("thinking-toggle");
+      expect(thinkingToggle).toHaveAttribute("aria-label", "Disable thinking");
     });
 
     it("should call onEnableThinkingChange when thinking toggle is clicked", async () => {
-      // Thinking toggle only appears in Legacy mode (not RichText mode)
-      mockIsEnabled.mockImplementation(() => false);
-
       const user = userEvent.setup();
       const mockOnEnableThinkingChange = vi.fn();
 
       render(
         <ConnectedChatInputForm
           {...defaultProps}
+          showModelSelector={true}
+          availableModels={[
+            { id: "test-model", name: "Test Model", provider: "test", supportsThinking: true },
+          ]}
+          selectedModel="test-model"
           modelSupportsThinking={true}
           enableThinking={true}
           onEnableThinkingChange={mockOnEnableThinkingChange}
         />,
       );
 
-      const thinkingToggle = screen.getByTestId("enable-thinking-toggle");
+      // Open model dropdown to access thinking toggle
+      await user.click(screen.getByTestId("model-settings-button"));
+
+      const thinkingToggle = screen.getByTestId("thinking-toggle");
       await user.click(thinkingToggle);
 
       expect(mockOnEnableThinkingChange).toHaveBeenCalledWith(false);
     });
 
-    it("should default modelSupportsThinking to false", () => {
-      render(<ConnectedChatInputForm {...defaultProps} />);
+    it("should default modelSupportsThinking to false", async () => {
+      const user = userEvent.setup();
+      render(
+        <ConnectedChatInputForm
+          {...defaultProps}
+          showModelSelector={true}
+          availableModels={[
+            { id: "test-model", name: "Test Model", provider: "test", supportsThinking: false },
+          ]}
+          selectedModel="test-model"
+        />,
+      );
+
+      // Open model dropdown
+      await user.click(screen.getByTestId("model-settings-button"));
 
       expect(
-        screen.queryByTestId("reasoning-effort-selector"),
+        screen.queryByTestId("thinking-controls"),
       ).not.toBeInTheDocument();
     });
   });
@@ -999,15 +1169,16 @@ describe("ConnectedChatInputForm", () => {
   describe("URL Fetch Integration", () => {
     beforeEach(() => {
       mockIsEnabled.mockImplementation(
-        (flagName: string) => flagName === "rich_text_chat_input",
+        () => false,
       );
     });
 
     it("should enable URL fetch when enableUrlFetch is true", () => {
-      // Set up mock to have detected URLs
+      // Set up mock to have detected URLs and loading state
       mockUrlContentFetchReturn.detectedUrls = [
         { raw: "#https://example.com", url: "https://example.com" },
       ];
+      mockUrlContentFetchReturn.loadingUrls = ["https://example.com"];
 
       render(
         <ConnectedChatInputForm
@@ -1017,8 +1188,8 @@ describe("ConnectedChatInputForm", () => {
         />,
       );
 
-      // URL fetch indicator should appear when URL pattern detected
-      expect(screen.getByTestId("url-fetch-indicator")).toBeInTheDocument();
+      // URL fetch indicator should appear when URLs are loading
+      expect(screen.getByTestId("url-fetch-loading")).toBeInTheDocument();
     });
 
     it("should not show URL fetch indicator when enableUrlFetch is false", () => {
@@ -1031,7 +1202,7 @@ describe("ConnectedChatInputForm", () => {
       );
 
       expect(
-        screen.queryByTestId("url-fetch-indicator"),
+        screen.queryByTestId("url-fetch-loading"),
       ).not.toBeInTheDocument();
     });
 
@@ -1076,8 +1247,8 @@ describe("ConnectedChatInputForm", () => {
         />,
       );
 
-      // Fetched URL badge should show after successful fetch
-      expect(screen.getByTestId("url-fetched-badge")).toBeInTheDocument();
+      // Fetched URL badge should show the title after successful fetch
+      expect(screen.getByText("Example Domain")).toBeInTheDocument();
     });
 
     it("should default enableUrlFetch to false", () => {
@@ -1089,8 +1260,70 @@ describe("ConnectedChatInputForm", () => {
       );
 
       expect(
-        screen.queryByTestId("url-fetch-indicator"),
+        screen.queryByTestId("url-fetch-loading"),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  // ===========================================================================
+  // Preferences Menu Integration Tests
+  // ===========================================================================
+
+  describe("Preferences Menu Integration", () => {
+    const enablePreferencesMenuFlags = () => {
+      mockIsEnabled.mockImplementation((flag: string) => flag === "preferences_menu");
+    };
+
+    it("should call useFeatureFlag with preferences_menu flag", () => {
+      mockIsEnabled.mockImplementation(() => false);
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      expect(mockIsEnabled).toHaveBeenCalledWith("preferences_menu");
+    });
+
+    it("should render PreferencesMenu when feature flag is enabled", () => {
+      enablePreferencesMenuFlags();
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      expect(screen.getByTestId("preferences-menu")).toBeInTheDocument();
+    });
+
+    it("should not render PreferencesMenu when feature flag is disabled", () => {
+      mockIsEnabled.mockImplementation(() => false);
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      expect(screen.queryByTestId("preferences-menu")).not.toBeInTheDocument();
+    });
+
+    it("should hide ToolSelector when PreferencesMenu is shown", () => {
+      // Enable both preferences_menu and manual_tool_selection
+      mockIsEnabled.mockImplementation((flag: string) =>
+        flag === "preferences_menu" || flag === "manual_tool_selection"
+      );
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      // PreferencesMenu should be visible
+      expect(screen.getByTestId("preferences-menu")).toBeInTheDocument();
+      // ToolSelector should be hidden (consolidated into PreferencesMenu)
+      expect(screen.queryByTestId("tool-selector")).not.toBeInTheDocument();
+    });
+
+    it("should hide KB Focus selector when PreferencesMenu is shown", () => {
+      // Enable both preferences_menu and kb_focus
+      mockIsEnabled.mockImplementation((flag: string) =>
+        flag === "preferences_menu" || flag === "kb_focus"
+      );
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      // PreferencesMenu should be visible
+      expect(screen.getByTestId("preferences-menu")).toBeInTheDocument();
+      // KB Focus selector should be hidden (consolidated into PreferencesMenu)
+      expect(screen.queryByTestId("kb-focus-selector")).not.toBeInTheDocument();
     });
   });
 });

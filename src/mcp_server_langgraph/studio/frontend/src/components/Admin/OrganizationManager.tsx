@@ -5,7 +5,9 @@
  */
 
 import { useState, useMemo } from "react";
+import { useReducedMotion } from "motion/react";
 import { Plus, Edit2, Trash2, Loader2, Search } from "lucide-react";
+import { cn } from "../../utils/cn";
 import { Dialog } from "../UI/Dialog";
 
 import { Button, Input } from "@/components/UI";
@@ -44,6 +46,9 @@ export function OrganizationManager({
   onDelete,
   onSelect,
 }: OrganizationManagerProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -113,7 +118,7 @@ export function OrganizationManager({
         data-testid="org-loading"
         className="flex items-center justify-center h-full"
       >
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+        <Loader2 className={cn("w-8 h-8 text-primary-9", !prefersReducedMotion && "animate-spin")} />
       </div>
     );
   }
@@ -122,12 +127,12 @@ export function OrganizationManager({
     <div className="p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
+        <h2 className="text-xl font-semibold text-neutral-12">
           Organizations
         </h2>
         <Button
           variant="primary"
-          className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          className="flex px-4 py-2 bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11"
           onClick={() => setIsCreateModalOpen(true)}
         >
           <Plus className="w-4 h-4" />
@@ -136,9 +141,9 @@ export function OrganizationManager({
       </div>
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-9" />
         <Input
-          className="pl-10 pr-4 py-2 text-neutral-900 dark:text-white focus:ring-primary-500"
+          className="pl-10 pr-4 py-2 text-neutral-12 focus:ring-primary-7"
           placeholder="Search organizations..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -146,7 +151,7 @@ export function OrganizationManager({
       </div>
       {/* Organization List */}
       {filteredOrganizations.length === 0 ? (
-        <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+        <div className="text-center py-8 text-neutral-10">
           No organizations found
         </div>
       ) : (
@@ -156,26 +161,27 @@ export function OrganizationManager({
               key={org.id}
               data-testid="org-row"
               onClick={() => onSelect(org.id)}
-              className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors ${
+              className={cn(
+                "flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors",
                 selectedOrgId === org.id
-                  ? "bg-primary-50 dark:bg-primary-900 border-primary-300 dark:border-primary-700"
-                  : "bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700"
-              }`}
+                  ? "bg-primary-1 dark:bg-primary-12 border-primary-5 dark:border-primary-11"
+                  : "bg-neutral-1 border-neutral-5 hover:bg-neutral-1",
+              )}
             >
               <div className="flex-1">
-                <h3 className="font-medium text-neutral-900 dark:text-white">
+                <h3 className="font-medium text-neutral-12">
                   {org.name}
                 </h3>
-                <div className="flex items-center gap-4 mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                <div className="flex items-center gap-4 mt-1 text-sm text-neutral-10">
                   <span>{org.memberCount} members</span>
-                  <span className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded text-xs">
+                  <span className="px-2 py-0.5 bg-neutral-2 rounded text-xs">
                     {getTierLabel(org.tier)}
                   </span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
-                  className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-primary-600"
+                  className="p-2 text-neutral-10 hover:text-primary-10"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEdit(org);
@@ -185,7 +191,7 @@ export function OrganizationManager({
                   <Edit2 className="w-4 h-4" />
                 </Button>
                 <Button
-                  className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-error-600"
+                  className="p-2 text-neutral-10 hover:text-error-10"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteClick(org.id);
@@ -208,14 +214,14 @@ export function OrganizationManager({
           <>
             <Button
               variant="secondary"
-              className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
+              className="px-4 py-2 text-neutral-11 hover:bg-neutral-2 rounded-lg"
               onClick={() => setIsCreateModalOpen(false)}
             >
               Cancel
             </Button>
             <Button
               variant="primary"
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              className="px-4 py-2 bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11"
               onClick={handleCreate}
             >
               Create
@@ -226,12 +232,12 @@ export function OrganizationManager({
         <div>
           <label
             htmlFor="org-name"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+            className="block text-sm font-medium text-neutral-11 mb-1"
           >
             Organization Name
           </label>
           <Input
-            className="px-3 py-2 text-neutral-900 dark:text-white focus:ring-primary-500"
+            className="px-3 py-2 text-neutral-12 focus:ring-primary-7"
             id="org-name"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -247,14 +253,14 @@ export function OrganizationManager({
           <>
             <Button
               variant="secondary"
-              className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
+              className="px-4 py-2 text-neutral-11 hover:bg-neutral-2 rounded-lg"
               onClick={() => setIsEditModalOpen(false)}
             >
               Cancel
             </Button>
             <Button
               variant="primary"
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              className="px-4 py-2 bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11"
               onClick={handleUpdate}
             >
               Save
@@ -265,12 +271,12 @@ export function OrganizationManager({
         <div>
           <label
             htmlFor="edit-org-name"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+            className="block text-sm font-medium text-neutral-11 mb-1"
           >
             Organization Name
           </label>
           <Input
-            className="px-3 py-2 text-neutral-900 dark:text-white focus:ring-primary-500"
+            className="px-3 py-2 text-neutral-12 focus:ring-primary-7"
             id="edit-org-name"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -286,14 +292,14 @@ export function OrganizationManager({
           <>
             <Button
               variant="secondary"
-              className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
+              className="px-4 py-2 text-neutral-11 hover:bg-neutral-2 rounded-lg"
               onClick={() => setIsDeleteConfirmOpen(false)}
             >
               Cancel
             </Button>
             <Button
               variant="danger"
-              className="px-4 py-2 bg-error-600 text-white rounded-lg hover:bg-error-700"
+              className="px-4 py-2 bg-error-10 text-neutral-12 rounded-lg hover:bg-error-11"
               onClick={handleDeleteConfirm}
             >
               Confirm
@@ -301,7 +307,7 @@ export function OrganizationManager({
           </>
         }
       >
-        <p className="text-neutral-700 dark:text-neutral-300">
+        <p className="text-neutral-11">
           Are you sure you want to delete this organization? This action cannot
           be undone.
         </p>

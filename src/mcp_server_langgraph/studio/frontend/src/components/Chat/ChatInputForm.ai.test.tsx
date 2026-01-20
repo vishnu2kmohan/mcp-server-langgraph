@@ -195,7 +195,7 @@ describe("ChatInputForm AI Features", () => {
       );
 
       const suggestion = screen.getByTestId("inline-suggestion");
-      expect(suggestion).toHaveClass("text-neutral-400");
+      expect(suggestion).toHaveClass("text-neutral-9");
     });
 
     it("should show hint text about Tab to accept", () => {
@@ -565,7 +565,7 @@ describe("ChatInputForm AI Features", () => {
 
       const indicator = screen.getByTestId("kb-status-indicator");
       expect(indicator).toBeInTheDocument();
-      expect(indicator).toHaveClass("bg-success-500");
+      expect(indicator).toHaveClass("bg-success-9");
     });
 
     it("should show misconfigured status with yellow indicator", () => {
@@ -582,7 +582,7 @@ describe("ChatInputForm AI Features", () => {
       );
 
       const indicator = screen.getByTestId("kb-status-indicator");
-      expect(indicator).toHaveClass("bg-warning-500");
+      expect(indicator).toHaveClass("bg-warning-9");
     });
 
     it("should render KnowledgeBaseFocus in compact mode", () => {

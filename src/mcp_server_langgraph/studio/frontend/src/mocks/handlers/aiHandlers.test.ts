@@ -3,6 +3,10 @@
  *
  * Tests for AI API mock handlers.
  * Validates the contract between frontend and backend for AI endpoints.
+ *
+ * API Contract Testing:
+ * - Handlers return snake_case responses (via apiJsonResponse)
+ * - Tests use transformSnakeToCamel to validate transformation
  */
 import {
   describe,
@@ -14,6 +18,7 @@ import {
   vi,
 } from "vitest";
 import { setupServer } from "msw/node";
+import { transformSnakeToCamel } from "../../api/transforms";
 import {
   aiHandlers,
   mockAIInterpretation,
@@ -497,16 +502,20 @@ describe("aiHandlers", () => {
       expect(response.ok).toBe(true);
       const data = await response.json();
 
-      // RTK Query schema: nudge_type, message, confidence, action_cta?, action_target?, dismiss_duration_ms?
-      expect(data).toHaveProperty("nudge_type");
-      expect(typeof data.nudge_type).toBe("string");
-      expect(data).toHaveProperty("message");
-      expect(typeof data.message).toBe("string");
+      // NudgeRecommendResponse schema: should_show, confidence, nudge?
+      expect(data).toHaveProperty("should_show");
+      expect(typeof data.should_show).toBe("boolean");
       expect(data).toHaveProperty("confidence");
       expect(typeof data.confidence).toBe("number");
+      // Nudge object contains type and message
+      expect(data).toHaveProperty("nudge");
+      expect(data.nudge).toHaveProperty("type");
+      expect(typeof data.nudge.type).toBe("string");
+      expect(data.nudge).toHaveProperty("message");
+      expect(typeof data.nudge.message).toBe("string");
     });
 
-    it("returns optional action fields when present", async () => {
+    it("returns optional nudge fields when present", async () => {
       const response = await fetch("/api/v1/ai/nudges/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -518,15 +527,21 @@ describe("aiHandlers", () => {
 
       const data = await response.json();
 
-      // Optional fields
-      if (data.action_cta !== undefined) {
-        expect(typeof data.action_cta).toBe("string");
-      }
-      if (data.action_target !== undefined) {
-        expect(typeof data.action_target).toBe("string");
-      }
-      if (data.dismiss_duration_ms !== undefined) {
-        expect(typeof data.dismiss_duration_ms).toBe("number");
+      // Optional nudge fields from NudgeRecommendResponse schema
+      if (data.nudge) {
+        if (data.nudge.priority !== undefined) {
+          expect(typeof data.nudge.priority).toBe("string");
+        }
+        if (data.nudge.show_after_ms !== undefined) {
+          expect(typeof data.nudge.show_after_ms).toBe("number");
+        }
+        // target_element can be string or null
+        if (data.nudge.target_element !== undefined) {
+          expect(
+            data.nudge.target_element === null ||
+              typeof data.nudge.target_element === "string",
+          ).toBe(true);
+        }
       }
     });
 
@@ -543,8 +558,11 @@ describe("aiHandlers", () => {
       expect(response.ok).toBe(true);
       const data = await response.json();
 
-      expect(data).toHaveProperty("nudge_type");
-      expect(data).toHaveProperty("message");
+      // NudgeRecommendResponse schema: should_show, confidence, nudge
+      expect(data).toHaveProperty("should_show");
+      expect(data).toHaveProperty("nudge");
+      expect(data.nudge).toHaveProperty("type");
+      expect(data.nudge).toHaveProperty("message");
     });
 
     it("includes confidence score", async () => {
@@ -746,6 +764,155 @@ describe("aiHandlers", () => {
         expect(suggestion).toHaveProperty("content");
         expect(suggestion).toHaveProperty("confidence");
       });
+    });
+  });
+
+  describe("API Contract Transformation", () => {
+    it("should return disclosure response in snake_case and transform to camelCase", async () => {
+      const response = await fetch("/api/v1/ai/disclosure/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ current_level: "beginner" }),
+      });
+
+      const rawData = await response.json();
+
+      // Verify raw response is in snake_case (backend format)
+      expect(rawData).toHaveProperty("current_level");
+      expect(rawData).toHaveProperty("recommended_level");
+      expect(rawData).toHaveProperty("unlock_features");
+      expect(rawData).toHaveProperty("personalized_message");
+
+      // Transform and verify camelCase (frontend format)
+      const transformedData = transformSnakeToCamel(rawData);
+      expect(transformedData).toHaveProperty("currentLevel");
+      expect(transformedData).toHaveProperty("recommendedLevel");
+      expect(transformedData).toHaveProperty("unlockFeatures");
+      expect(transformedData).toHaveProperty("personalizedMessage");
+    });
+
+    it("should return nudge response in snake_case and transform to camelCase", async () => {
+      const response = await fetch("/api/v1/ai/nudges/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: "user-123",
+          current_context: { page: "chat" },
+        }),
+      });
+
+      const rawData = await response.json();
+
+      // Verify raw response is in snake_case (backend format)
+      expect(rawData).toHaveProperty("should_show");
+      expect(rawData.nudge).toHaveProperty("show_after_ms");
+      expect(rawData.nudge).toHaveProperty("target_element");
+
+      // Transform and verify camelCase (frontend format)
+      const transformedData = transformSnakeToCamel(rawData);
+      expect(transformedData).toHaveProperty("shouldShow");
+      expect(transformedData.nudge).toHaveProperty("showAfterMs");
+      expect(transformedData.nudge).toHaveProperty("targetElement");
+    });
+
+    it("should return onboarding response in snake_case and transform to camelCase", async () => {
+      const response = await fetch("/api/v1/ai/onboarding/personalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: "user-123" }),
+      });
+
+      const rawData = await response.json();
+
+      // Verify raw response is in snake_case (backend format)
+      expect(rawData).toHaveProperty("detected_intent");
+      expect(rawData).toHaveProperty("recommended_path");
+      expect(rawData).toHaveProperty("skip_steps");
+      expect(rawData).toHaveProperty("persona_prediction");
+
+      // Transform and verify camelCase (frontend format)
+      const transformedData = transformSnakeToCamel(rawData);
+      expect(transformedData).toHaveProperty("detectedIntent");
+      expect(transformedData).toHaveProperty("recommendedPath");
+      expect(transformedData).toHaveProperty("skipSteps");
+      expect(transformedData).toHaveProperty("personaPrediction");
+    });
+
+    it("should return persona response in snake_case and transform to camelCase", async () => {
+      const response = await fetch("/api/v1/ai/persona/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: "user-123",
+          assigned_persona: "bob",
+        }),
+      });
+
+      const rawData = await response.json();
+
+      // Verify raw response is in snake_case (backend format)
+      expect(rawData).toHaveProperty("assigned_persona");
+      expect(rawData).toHaveProperty("detected_persona");
+      expect(rawData).toHaveProperty("behavior_signals");
+      expect(rawData).toHaveProperty("ui_adaptations");
+
+      // Transform and verify camelCase (frontend format)
+      const transformedData = transformSnakeToCamel(rawData);
+      expect(transformedData).toHaveProperty("assignedPersona");
+      expect(transformedData).toHaveProperty("detectedPersona");
+      expect(transformedData).toHaveProperty("behaviorSignals");
+      expect(transformedData).toHaveProperty("uiAdaptations");
+    });
+
+    it("should return composite response in snake_case and transform to camelCase", async () => {
+      const response = await fetch("/api/v1/ai/composite/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: "user-123",
+          session_id: "session-456",
+          include_persona: true,
+          include_disclosure: true,
+        }),
+      });
+
+      const rawData = await response.json();
+
+      // Verify raw response is in snake_case (backend format)
+      expect(rawData).toHaveProperty("user_id");
+      expect(rawData).toHaveProperty("session_id");
+      expect(rawData).toHaveProperty("persona_result");
+      expect(rawData).toHaveProperty("disclosure_result");
+      expect(rawData).toHaveProperty("cross_insights");
+
+      // Transform and verify camelCase (frontend format)
+      const transformedData = transformSnakeToCamel(rawData);
+      expect(transformedData).toHaveProperty("userId");
+      expect(transformedData).toHaveProperty("sessionId");
+      expect(transformedData).toHaveProperty("personaResult");
+      expect(transformedData).toHaveProperty("disclosureResult");
+      expect(transformedData).toHaveProperty("crossInsights");
+    });
+
+    it("should return metrics insights in snake_case and transform to camelCase", async () => {
+      const response = await fetch("/api/v1/ai/metrics/insights");
+
+      const rawData = await response.json();
+
+      // Verify raw response contains snake_case nested fields
+      const anomalyInsight = rawData.insights.find(
+        (i: { type: string }) => i.type === "anomaly",
+      );
+      expect(anomalyInsight).toHaveProperty("suggested_actions");
+      expect(anomalyInsight).toHaveProperty("detected_at");
+
+      // Transform and verify camelCase
+      const transformedData = transformSnakeToCamel(rawData);
+      const transformedAnomaly = transformedData.insights.find(
+        (i: { type: string }) => i.type === "anomaly",
+      );
+      expect(transformedAnomaly).toHaveProperty("suggestedActions");
+      expect(transformedAnomaly).toHaveProperty("detectedAt");
     });
   });
 });

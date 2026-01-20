@@ -29,9 +29,9 @@ export interface MetricCardProps {
  * Get color class based on value (for percentage metrics)
  */
 function getValueColor(value: number): string {
-  if (value >= 80) return "text-success-600";
-  if (value >= 60) return "text-warning-600";
-  return "text-error-600";
+  if (value >= 80) return "text-success-10";
+  if (value >= 60) return "text-warning-9";
+  return "text-error-10";
 }
 
 /**
@@ -86,14 +86,14 @@ export function MetricCard({
   return (
     <div
       data-testid="metric-card"
-      className={`bg-neutral-50 dark:bg-neutral-700 rounded-lg ${getVariantPadding(variant)}`}
+      className={`bg-neutral-1 rounded-lg ${getVariantPadding(variant)}`}
     >
       {/* Header with label and icon */}
       <div className="flex items-center gap-2 mb-2">
         {icon && (
-          <span className="text-neutral-500 dark:text-neutral-400">{icon}</span>
+          <span className="text-neutral-10">{icon}</span>
         )}
-        <span className="text-sm text-neutral-600 dark:text-neutral-300">
+        <span className="text-sm text-neutral-11">
           {label}
         </span>
       </div>
@@ -108,7 +108,7 @@ export function MetricCard({
         {showTrend && (
           <span
             className={`flex items-center text-sm ${
-              isPositiveTrend ? "text-success-500" : "text-error-500"
+              isPositiveTrend ? "text-success-9" : "text-error-9"
             }`}
           >
             {isPositiveTrend ? (
@@ -132,7 +132,7 @@ export function MetricCard({
 
       {/* Description */}
       {description && (
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+        <p className="text-xs text-neutral-10 mt-1">
           {description}
         </p>
       )}

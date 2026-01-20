@@ -12,7 +12,8 @@
  * - GET /api/v1/compliance/reports/fedramp - FedRAMP authorization report
  */
 
-import { http, HttpResponse, delay } from "msw";
+import { http, delay } from "msw";
+import { apiJsonResponse } from "../utils/apiResponse";
 
 // =============================================================================
 // Types
@@ -222,7 +223,7 @@ export const complianceHandlers = [
    */
   http.get("/api/v1/compliance/reports/summary", async () => {
     await delay(50);
-    return HttpResponse.json(mockComplianceSummary);
+    return apiJsonResponse(mockComplianceSummary);
   }),
 
   /**
@@ -230,7 +231,7 @@ export const complianceHandlers = [
    */
   http.get("/api/v1/compliance/reports/soc2", async () => {
     await delay(50);
-    return HttpResponse.json({
+    return apiJsonResponse({
       controls: mockSOC2Controls,
       summary: mockComplianceSummary.soc2,
       last_audit: new Date(Date.now() - 2592000000).toISOString(),
@@ -243,7 +244,7 @@ export const complianceHandlers = [
    */
   http.get("/api/v1/compliance/reports/hipaa", async () => {
     await delay(50);
-    return HttpResponse.json({
+    return apiJsonResponse({
       controls: mockHIPAAControls,
       phi_access_logs: mockPHIAccessLogs,
       summary: mockComplianceSummary.hipaa,
@@ -257,7 +258,7 @@ export const complianceHandlers = [
    */
   http.get("/api/v1/compliance/reports/gdpr", async () => {
     await delay(50);
-    return HttpResponse.json({
+    return apiJsonResponse({
       controls: mockGDPRControls,
       data_subject_requests: mockDataSubjectRequests,
       summary: mockComplianceSummary.gdpr,
@@ -271,7 +272,7 @@ export const complianceHandlers = [
    */
   http.get("/api/v1/compliance/reports/fedramp", async () => {
     await delay(50);
-    return HttpResponse.json({
+    return apiJsonResponse({
       controls: mockFedRAMPControls,
       authorization_status: "Authorized",
       authorization_level: "Moderate",

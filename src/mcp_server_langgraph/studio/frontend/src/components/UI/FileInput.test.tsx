@@ -180,7 +180,7 @@ describe("FileInput", () => {
     it("shows error styling", () => {
       render(<FileInput onChange={() => {}} error="File too large" />);
       const container = screen.getByTestId("file-input-container");
-      expect(container).toHaveClass("border-error-500");
+      expect(container).toHaveClass("border-error-9");
     });
   });
 

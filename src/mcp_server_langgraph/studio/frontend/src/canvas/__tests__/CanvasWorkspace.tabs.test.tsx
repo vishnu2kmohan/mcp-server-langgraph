@@ -54,7 +54,13 @@ vi.mock("../../hooks/useCanvasIntelligence", () => ({
 }));
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
+import {
+  screen,
+  fireEvent,
+  cleanup,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { CanvasWorkspace } from "../CanvasWorkspace";
 import {
   mockArtifacts,
@@ -128,7 +134,8 @@ describe("CanvasWorkspace - Tabs", () => {
         store,
       });
 
-      const dataTab = screen.getByRole("tab", { name: /data/i });
+      const viewTabs = within(screen.getByTestId("canvas-tabs"));
+      const dataTab = viewTabs.getByRole("tab", { name: /data/i });
       fireEvent.click(dataTab);
 
       await waitFor(() => {
@@ -145,14 +152,15 @@ describe("CanvasWorkspace - Tabs", () => {
         store,
       });
 
-      expect(screen.getByRole("tab", { name: /code/i })).toBeInTheDocument();
+      const viewTabs = within(screen.getByTestId("canvas-tabs"));
+      expect(viewTabs.getByRole("tab", { name: /code/i })).toBeInTheDocument();
 
       expect(
-        screen.queryByRole("tab", { name: /preview/i }),
+        viewTabs.queryByRole("tab", { name: /preview/i }),
       ).not.toBeInTheDocument();
 
       expect(
-        screen.queryByRole("tab", { name: /data/i }),
+        viewTabs.queryByRole("tab", { name: /data/i }),
       ).not.toBeInTheDocument();
     });
 
@@ -163,8 +171,9 @@ describe("CanvasWorkspace - Tabs", () => {
         store,
       });
 
-      expect(screen.getByRole("tab", { name: /code/i })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /preview/i })).toBeInTheDocument();
+      const viewTabs = within(screen.getByTestId("canvas-tabs"));
+      expect(viewTabs.getByRole("tab", { name: /code/i })).toBeInTheDocument();
+      expect(viewTabs.getByRole("tab", { name: /preview/i })).toBeInTheDocument();
     });
 
     it("should show Code and Data tabs for JSON artifacts", () => {
@@ -174,8 +183,9 @@ describe("CanvasWorkspace - Tabs", () => {
         store,
       });
 
-      expect(screen.getByRole("tab", { name: /code/i })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /data/i })).toBeInTheDocument();
+      const viewTabs = within(screen.getByTestId("canvas-tabs"));
+      expect(viewTabs.getByRole("tab", { name: /code/i })).toBeInTheDocument();
+      expect(viewTabs.getByRole("tab", { name: /data/i })).toBeInTheDocument();
     });
   });
 

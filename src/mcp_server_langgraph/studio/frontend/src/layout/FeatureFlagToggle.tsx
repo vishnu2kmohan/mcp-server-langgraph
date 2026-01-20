@@ -10,6 +10,7 @@
  * - Toggle state is persisted to localStorage
  */
 import { useState, useCallback, useEffect } from "react";
+import { useReducedMotion } from "motion/react";
 import { cn } from "../utils/cn";
 import { storage } from "../utils/storage";
 
@@ -49,6 +50,9 @@ export function FeatureFlagToggle({
   onChange,
   className,
 }: FeatureFlagToggleProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   const [isHybridEnabled, setIsHybridEnabled] = useState(getInitialState);
 
   // Persist to storage when state changes
@@ -74,8 +78,8 @@ export function FeatureFlagToggle({
       data-testid="feature-flag-toggle"
       className={cn(
         "flex items-center gap-2 px-2 py-1 rounded-lg",
-        "bg-neutral-100 dark:bg-neutral-800",
-        "text-xs text-neutral-600 dark:text-neutral-400",
+        "bg-neutral-2",
+        "text-xs text-neutral-11",
         className,
       )}
     >
@@ -88,15 +92,16 @@ export function FeatureFlagToggle({
         onClick={handleToggle}
         className={cn(
           "relative flex items-center w-10 h-5 rounded-full",
-          "transition-colors",
+          !prefersReducedMotion && "transition-colors",
           isHybridEnabled
-            ? "bg-primary-500"
-            : "bg-neutral-300 dark:bg-neutral-600",
+            ? "bg-primary-9"
+            : "bg-neutral-3",
         )}
       >
         <span
           className={cn(
-            "absolute w-4 h-4 rounded-full bg-white shadow-sm transition-transform",
+            "absolute w-4 h-4 rounded-full bg-neutral-1 shadow-sm",
+            !prefersReducedMotion && "transition-transform",
             isHybridEnabled ? "translate-x-5" : "translate-x-0.5",
           )}
         />
@@ -106,8 +111,8 @@ export function FeatureFlagToggle({
         className={cn(
           "min-w-12",
           isHybridEnabled
-            ? "text-primary-600 dark:text-primary-400"
-            : "text-neutral-500 dark:text-neutral-400",
+            ? "text-primary-10 dark:text-primary-7"
+            : "text-neutral-10",
         )}
       >
         {modeLabel}

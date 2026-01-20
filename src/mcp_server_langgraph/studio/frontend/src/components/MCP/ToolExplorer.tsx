@@ -66,7 +66,7 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
 
   if (error) {
     return (
-      <div className="p-4 text-center text-error-500">
+      <div className="p-4 text-center text-error-9">
         Failed to load tools. Please try again.
       </div>
     );
@@ -82,15 +82,15 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
           onChange={(e) => setSearchTerm(e.target.value)}
           className={cn(
             "w-full px-4 py-2 rounded-lg border",
-            "border-neutral-300 dark:border-neutral-600",
-            "bg-white dark:bg-neutral-800",
-            "text-neutral-900 dark:text-neutral-100",
-            "placeholder-neutral-500 dark:placeholder-neutral-400",
+            "border-neutral-5",
+            "bg-neutral-1",
+            "text-neutral-12",
+            "placeholder-neutral-9",
             "focus:outline-none focus:ring-2 focus:ring-brand-primary",
           )}
         />
         <svg
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 dark:text-neutral-400"
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-9"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -107,7 +107,7 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
       {/* Tool list */}
       <div className="flex flex-col gap-2">
         {filteredTools.length === 0 ? (
-          <div className="p-4 text-center text-neutral-500 dark:text-neutral-400">
+          <div className="p-4 text-center text-neutral-10">
             No tools found
           </div>
         ) : (
@@ -116,20 +116,20 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
               key={tool.qualifiedName}
               variant="default"
               padding="sm"
-              className="hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+              className="hover:bg-neutral-1 transition-colors"
             >
               <div className="flex items-start justify-between gap-4">
                 {/* Tool info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    <span className="font-mono text-sm font-medium text-neutral-12">
                       {tool.qualifiedName}
                     </span>
                     <Badge variant="outline" size="sm">
                       {tool.serverName}
                     </Badge>
                   </div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">
+                  <p className="text-sm text-neutral-11 line-clamp-2">
                     {tool.description}
                   </p>
                 </div>
@@ -140,7 +140,7 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
                   onClick={() => handleInvoke(tool.qualifiedName)}
                   className={cn(
                     "shrink-0 px-3 py-1.5 text-sm font-medium rounded-md",
-                    "bg-brand-primary text-white",
+                    "bg-brand-primary text-neutral-12",
                     "hover:bg-brand-primary/90",
                     "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2",
                     "transition-colors",

@@ -16,7 +16,13 @@ import { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { Cpu, RefreshCw, Wrench, Check, X } from "lucide-react";
 import { useGetAgentConfigQuery } from "../api";
-import { ErrorState, Button, Select, Toggle, Slider } from "../components/UI";
+// Direct imports to avoid Rollup circular dependency warnings
+// (page chunks end up separate from UI barrel)
+import { Button } from "../components/UI/Button";
+import { ErrorState } from "../components/UI/ErrorState";
+import { Select } from "../components/UI/Select";
+import { Slider } from "../components/UI/Slider";
+import { Toggle } from "../components/UI/Toggle";
 import {
   ThinkingBudgetCard,
   FeatureFlagsCard,
@@ -88,7 +94,7 @@ export function AgentsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <RefreshCw className="w-8 h-8 animate-spin text-primary-500" />
+        <RefreshCw className="w-8 h-8 animate-spin text-primary-9" />
       </div>
     );
   }
@@ -112,21 +118,21 @@ export function AgentsPage() {
   const tools = config?.tools ?? [];
 
   return (
-    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
+    <div className="h-screen flex flex-col bg-neutral-1">
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+      <header className="px-6 py-4 bg-neutral-2 border-b border-neutral-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            <h1 className="text-2xl font-bold text-neutral-12">
               {pageConfig.title}
             </h1>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-11">
               {pageConfig.description}
             </p>
           </div>
           <Button
             variant="secondary"
-            className="flex px-4 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+            className="flex px-4 py-2 bg-neutral-3 rounded-lg hover:bg-neutral-3 dark:bg-neutral-10 dark:hover:bg-neutral-9"
             onClick={handleRefresh}
           >
             <RefreshCw size={16} />
@@ -138,10 +144,10 @@ export function AgentsPage() {
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Model Configuration Card */}
-          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
+          <div className="bg-neutral-2 rounded-lg border border-neutral-6 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Cpu size={24} className="text-primary-500" />
-              <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+              <Cpu size={24} className="text-primary-9" />
+              <h2 className="text-xl font-semibold text-neutral-12">
                 Model Configuration
               </h2>
             </div>
@@ -151,12 +157,12 @@ export function AgentsPage() {
               <div>
                 <label
                   htmlFor="model-select"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
+                  className="block text-sm font-medium text-neutral-11 mb-2"
                 >
                   Model
                 </label>
                 <Select
-                  className="px-3 py-2 bg-neutral-100 text-neutral-900 dark:text-neutral-100 cursor-not-allowed"
+                  className="px-3 py-2 bg-neutral-2 text-neutral-12 cursor-not-allowed"
                   id="model-select"
                   value={model}
                   disabled
@@ -164,7 +170,7 @@ export function AgentsPage() {
                   <option value={model}>{model}</option>
                 </Select>
                 {provider && (
-                  <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                  <p className="mt-1 text-sm text-neutral-11">
                     Provider: {provider}
                   </p>
                 )}
@@ -192,11 +198,11 @@ export function AgentsPage() {
                 <div>
                   <label
                     htmlFor="verification-toggle"
-                    className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                    className="text-sm font-medium text-neutral-11"
                   >
                     Enable Verification
                   </label>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                  <p className="text-xs text-neutral-11 mt-1">
                     Verify agent responses before executing
                   </p>
                 </div>
@@ -208,9 +214,9 @@ export function AgentsPage() {
                     aria-label="Enable Verification"
                   />
                   {localVerification ? (
-                    <Check size={16} className="text-success-500" />
+                    <Check size={16} className="text-success-9" />
                   ) : (
-                    <X size={16} className="text-neutral-400" />
+                    <X size={16} className="text-neutral-6" />
                   )}
                 </div>
               </div>
@@ -218,19 +224,19 @@ export function AgentsPage() {
           </div>
 
           {/* Tools Card */}
-          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
+          <div className="bg-neutral-2 rounded-lg border border-neutral-6 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Wrench size={24} className="text-insight-500" />
-              <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+              <Wrench size={24} className="text-insight-9" />
+              <h2 className="text-xl font-semibold text-neutral-12">
                 Available Tools
               </h2>
-              <span className="px-2 py-1 text-xs bg-insight-100 dark:bg-insight-900/30 text-insight-700 dark:text-insight-400 rounded-full">
+              <span className="px-2 py-1 text-xs bg-insight-2 dark:bg-insight-12/30 text-insight-11 dark:text-insight-9 rounded-full">
                 {tools.length} tools available
               </span>
             </div>
 
             {tools.length === 0 ? (
-              <p className="text-neutral-500 dark:text-neutral-400">
+              <p className="text-neutral-11">
                 No tools available
               </p>
             ) : (
@@ -238,16 +244,16 @@ export function AgentsPage() {
                 {tools.map((tool) => (
                   <div
                     key={tool.name}
-                    className="p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:border-primary-500 transition-colors"
+                    className="p-3 border border-neutral-6 rounded-lg hover:border-primary-9 transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <Wrench size={16} className="text-insight-500" />
+                      <Wrench size={16} className="text-insight-9" />
                       <div>
-                        <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+                        <h3 className="font-medium text-neutral-12">
                           {tool.name}
                         </h3>
                         {tool.description && (
-                          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                          <p className="text-sm text-neutral-11">
                             {tool.description}
                           </p>
                         )}

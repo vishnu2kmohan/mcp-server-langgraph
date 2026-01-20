@@ -23,6 +23,14 @@ import {
   selectWebSocketPermissions,
 } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
+import {
+  addElicitation,
+  addSamplingRequest,
+} from "../store/slices/mcpSlice";
+import type {
+  PendingElicitation,
+  PendingSamplingRequest,
+} from "../types/mcp";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
@@ -35,11 +43,16 @@ import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 // ============================================================================
 
 /**
+ * JSON-RPC ID type (number or string per JSON-RPC 2.0 spec)
+ */
+type JSONRPCId = number | string;
+
+/**
  * JSON-RPC 2.0 Request
  */
 export interface MCPRequest {
   jsonrpc: "2.0";
-  id: number;
+  id: JSONRPCId;
   method: string;
   params?: Record<string, unknown>;
 }
@@ -49,7 +62,7 @@ export interface MCPRequest {
  */
 export interface MCPResponse {
   jsonrpc: "2.0";
-  id: number | null;
+  id: JSONRPCId | null;
   result?: unknown;
   error?: MCPError;
 }
@@ -212,6 +225,18 @@ export interface UseMCPWebSocketReturn {
     name: string,
     args?: Record<string, unknown>,
   ) => Promise<Array<{ role: string; content: unknown }>>;
+  /**
+   * Send a JSON-RPC response (for inbound requests like elicitation/sampling)
+   *
+   * @param id - The request ID to respond to
+   * @param result - The result payload (if success)
+   * @param error - The error payload (if error)
+   */
+  sendResponse: (
+    id: JSONRPCId,
+    result: unknown,
+    error?: MCPError,
+  ) => void;
   /** Disconnect */
   disconnect: () => void;
   /** Reconnect */
@@ -242,13 +267,38 @@ function isMCPResponse(data: unknown): data is MCPResponse {
 }
 
 /**
- * Check if a message is an MCP notification
+ * Check if a message is an MCP notification (has method but NO id)
  */
 function isMCPNotification(data: unknown): data is MCPNotification {
   if (typeof data !== "object" || data === null) return false;
   const msg = data as Record<string, unknown>;
   return (
     msg.jsonrpc === "2.0" && "method" in msg && !("id" in msg && msg.id != null)
+  );
+}
+
+/**
+ * JSON-RPC 2.0 Request (inbound from server)
+ */
+interface MCPInboundRequest {
+  jsonrpc: "2.0";
+  id: JSONRPCId;
+  method: string;
+  params?: Record<string, unknown>;
+}
+
+/**
+ * Check if a message is an MCP request (has method AND id)
+ * These are server-initiated requests like elicitation/sampling
+ */
+function isMCPRequest(data: unknown): data is MCPInboundRequest {
+  if (typeof data !== "object" || data === null) return false;
+  const msg = data as Record<string, unknown>;
+  return (
+    msg.jsonrpc === "2.0" &&
+    "method" in msg &&
+    "id" in msg &&
+    msg.id != null
   );
 }
 
@@ -318,7 +368,7 @@ export function useMCPWebSocket(
   const messageIdRef = useRef(0);
   const pendingRequestsRef = useRef<
     Map<
-      number,
+      JSONRPCId,
       {
         resolve: (value: unknown) => void;
         reject: (error: Error) => void;
@@ -361,6 +411,51 @@ export function useMCPWebSocket(
 
   // Handle incoming messages
   const handleMessage = useCallback((data: unknown) => {
+    // JSON-RPC Request (server-initiated, has method AND id)
+    // These are inbound requests like elicitation/sampling that need a response
+    if (isMCPRequest(data)) {
+      const { id, method, params = {} } = data;
+
+      switch (method) {
+        case "elicitation/create": {
+          // Server is requesting user input via elicitation
+          const elicitation: PendingElicitation = {
+            id,
+            serverId: "primary", // TODO: Get from connection context when available
+            message: (params.message as string) ?? "",
+            requestedSchema: (params.requestedSchema as PendingElicitation["requestedSchema"]) ?? { type: "object" },
+            createdAt: Date.now(),
+            mode: (params.mode as PendingElicitation["mode"]) ?? "inline",
+            url: params.url as string | undefined,
+          };
+          dispatch(addElicitation(elicitation));
+          break;
+        }
+        case "sampling/createMessage": {
+          // Server is requesting LLM sampling
+          const samplingRequest: PendingSamplingRequest = {
+            id,
+            serverId: "primary", // TODO: Get from connection context when available
+            messages: (params.messages as PendingSamplingRequest["messages"]) ?? [],
+            modelPreferences: params.modelPreferences as PendingSamplingRequest["modelPreferences"],
+            systemPrompt: params.systemPrompt as string | undefined,
+            includeContext: params.includeContext as PendingSamplingRequest["includeContext"],
+            maxTokens: (params.maxTokens as number) ?? 1000,
+            createdAt: Date.now(),
+            tools: params.tools as PendingSamplingRequest["tools"],
+            toolChoice: params.toolChoice as PendingSamplingRequest["toolChoice"],
+          };
+          dispatch(addSamplingRequest(samplingRequest));
+          break;
+        }
+        default:
+          // Unknown method - log for debugging
+          console.warn(`[useMCPWebSocket] Unknown inbound request method: ${method}`);
+      }
+      return;
+    }
+
+    // JSON-RPC Response (response to our requests)
     if (isMCPResponse(data)) {
       // Handle response to a request
       const id = data.id;
@@ -393,7 +488,7 @@ export function useMCPWebSocket(
         callbacksRef.current.onStreamingEnd?.(params.streamId as string);
       }
     }
-  }, []);
+  }, [dispatch]);
 
   // Use the underlying realtimeSync hook
   // Enable exponential backoff for better reconnection behavior
@@ -492,11 +587,17 @@ export function useMCPWebSocket(
   );
 
   // Initialize MCP connection
+  // Advertises sampling and elicitation capabilities per MCP 2025-11-25 spec
   const initialize = useCallback(async () => {
     try {
       const result = (await sendRequest("initialize", {
         protocolVersion: "2025-11-25",
-        capabilities: {},
+        capabilities: {
+          // Advertise client support for server-initiated sampling requests
+          sampling: {},
+          // Advertise client support for server-initiated elicitation requests
+          elicitation: {},
+        },
         clientInfo,
       })) as {
         protocolVersion: string;
@@ -589,6 +690,19 @@ export function useMCPWebSocket(
     [sendRequest],
   );
 
+  // Send a JSON-RPC response (for inbound requests like elicitation/sampling)
+  // This is used to respond to server-initiated requests
+  const sendResponse = useCallback(
+    (id: JSONRPCId, result: unknown, error?: MCPError): void => {
+      const response: MCPResponse = error
+        ? { jsonrpc: "2.0", id, error }
+        : { jsonrpc: "2.0", id, result };
+
+      send(response);
+    },
+    [send],
+  );
+
   // Auto-initialize when connected
   useEffect(() => {
     if (status === "connected" && !isInitialized && effectiveEnabled) {
@@ -627,6 +741,7 @@ export function useMCPWebSocket(
     callTool,
     readResource,
     getPrompt,
+    sendResponse,
     disconnect,
     reconnect,
   };

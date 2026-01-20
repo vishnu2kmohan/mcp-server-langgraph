@@ -413,7 +413,7 @@ describe("SharedWorkflowsList", () => {
       await waitFor(() => {
         // Viewer permission now shows "View Only" badge with amber styling
         const badge = screen.getByText("View Only");
-        expect(badge).toHaveClass("bg-warning-100");
+        expect(badge).toHaveClass("bg-warning-2");
       });
     });
 
@@ -441,7 +441,7 @@ describe("SharedWorkflowsList", () => {
         const badges = screen.getAllByText("Executor");
         // Find the one with badge styling
         const badge = badges.find((el) =>
-          el.classList.contains("bg-primary-100"),
+          el.classList.contains("bg-primary-2"),
         );
         expect(badge).toBeTruthy();
       });
@@ -471,7 +471,7 @@ describe("SharedWorkflowsList", () => {
         const badges = screen.getAllByText("Editor");
         // Find the one with badge styling
         const badge = badges.find((el) =>
-          el.classList.contains("bg-success-100"),
+          el.classList.contains("bg-success-2"),
         );
         expect(badge).toBeTruthy();
       });
@@ -897,7 +897,7 @@ describe("SharedWorkflowsList", () => {
 
       // The View Only badge should have distinctive styling
       const viewOnlyBadge = screen.getByText("View Only");
-      expect(viewOnlyBadge).toHaveClass("bg-warning-100");
+      expect(viewOnlyBadge).toHaveClass("bg-warning-2");
     });
   });
 });

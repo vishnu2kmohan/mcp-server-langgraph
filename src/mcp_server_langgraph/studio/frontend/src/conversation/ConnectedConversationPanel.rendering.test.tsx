@@ -128,6 +128,48 @@ vi.mock("../hooks/useKBStatus", () => ({
   }),
 }));
 
+vi.mock("../hooks/useAvailableTools", () => ({
+  useAvailableTools: () => ({
+    tools: [],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
+}));
+
+vi.mock("../hooks/useAISuggestionsWebSocket", () => ({
+  useAISuggestionsWebSocket: () => ({
+    isConnected: false,
+    suggestions: [],
+    contextStats: null,
+    error: null,
+  }),
+}));
+
+vi.mock("../hooks/useConnectorSuggestions", () => ({
+  useConnectorSuggestions: () => ({
+    suggestions: [],
+    visible: false,
+    dismiss: vi.fn(),
+    isLoading: false,
+    inputValue: "",
+    setInputValue: vi.fn(),
+    enabled: false,
+  }),
+}));
+
+// Mock RTK Query hooks for InlineConnectionCard
+vi.mock("../api", () => ({
+  useListConnectionTemplatesQuery: () => ({
+    data: { templates: [] },
+    isLoading: false,
+    error: null,
+  }),
+  useCreateConnectionMutation: () => [vi.fn(), { isLoading: false }],
+  useTestConnectionMutation: () => [vi.fn(), { isLoading: false }],
+  useStartOAuth2FlowMutation: () => [vi.fn(), { isLoading: false }],
+}));
+
 // =============================================================================
 // Tests
 // =============================================================================

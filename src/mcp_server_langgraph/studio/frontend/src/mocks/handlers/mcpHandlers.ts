@@ -18,6 +18,7 @@
  */
 
 import { http, HttpResponse } from "msw";
+import { apiJsonResponse } from "../utils/apiResponse";
 
 // =============================================================================
 // Types
@@ -243,7 +244,7 @@ export function createErrorHandler(
     if (details) {
       body.details = details;
     }
-    return HttpResponse.json(body, { status });
+    return apiJsonResponse(body, { status });
   });
   return handler;
 }
@@ -288,7 +289,7 @@ export function createDelayedHandler(
 ) {
   return http[method](path, async () => {
     await new Promise((resolve) => setTimeout(resolve, delayMs));
-    return HttpResponse.json(response as Record<string, unknown>);
+    return apiJsonResponse(response as Record<string, unknown>);
   });
 }
 
@@ -299,7 +300,7 @@ export function createDelayedHandler(
 export const mcpHandlers = [
   // GET /api/v1/mcp/resources - List resources
   http.get("/api/v1/mcp/resources", () => {
-    return HttpResponse.json({
+    return apiJsonResponse({
       resources: MOCK_RESOURCES,
     });
   }),
@@ -310,7 +311,7 @@ export const mcpHandlers = [
     const uri = url.searchParams.get("uri");
 
     if (!uri) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { error: "Missing uri parameter" },
         { status: 400 },
       );
@@ -320,13 +321,13 @@ export const mcpHandlers = [
     const content = RESOURCE_CONTENT[decodedUri];
 
     if (!content) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { error: "Resource not found" },
         { status: 404 },
       );
     }
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       contents: [
         {
           uri: decodedUri,
@@ -339,7 +340,7 @@ export const mcpHandlers = [
 
   // GET /api/v1/mcp/tools - List tools
   http.get("/api/v1/mcp/tools", () => {
-    return HttpResponse.json({
+    return apiJsonResponse({
       tools: MOCK_TOOLS,
     });
   }),
@@ -355,14 +356,14 @@ export const mcpHandlers = [
     // Check if tool exists
     const tool = MOCK_TOOLS.find((t) => t.name === name);
     if (!tool) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { error: `Tool '${name}' not found` },
         { status: 404 },
       );
     }
 
     // Return mock result
-    return HttpResponse.json({
+    return apiJsonResponse({
       content: [
         {
           type: "text",
@@ -383,7 +384,7 @@ export const mcpHandlers = [
 
     const modelHint = body.modelPreferences?.hints?.[0]?.name;
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       role: "assistant",
       content: {
         type: "text",
@@ -397,7 +398,7 @@ export const mcpHandlers = [
   // POST /api/v1/mcp/elicitation - Request elicitation
   http.post("/api/v1/mcp/elicitation", async () => {
     // Simulate user accepting the elicitation
-    return HttpResponse.json({
+    return apiJsonResponse({
       action: "accept",
       content: {
         name: "John Doe",
@@ -408,7 +409,7 @@ export const mcpHandlers = [
 
   // GET /api/v1/mcp/prompts - List prompts
   http.get("/api/v1/mcp/prompts", () => {
-    return HttpResponse.json({
+    return apiJsonResponse({
       prompts: MOCK_PROMPTS,
     });
   }),
@@ -424,14 +425,14 @@ export const mcpHandlers = [
     // Check if prompt exists
     const prompt = MOCK_PROMPTS.find((p) => p.name === name);
     if (!prompt) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { error: `Prompt '${name}' not found` },
         { status: 404 },
       );
     }
 
     // Generate prompt messages based on the prompt template
-    return HttpResponse.json({
+    return apiJsonResponse({
       description: prompt.description,
       messages: [
         {
@@ -447,7 +448,7 @@ export const mcpHandlers = [
 
   // GET /api/v1/mcp/tasks - List tasks
   http.get("/api/v1/mcp/tasks", () => {
-    return HttpResponse.json({
+    return apiJsonResponse({
       tasks: MOCK_TASKS,
     });
   }),
@@ -458,13 +459,13 @@ export const mcpHandlers = [
     const task = MOCK_TASKS.find((t) => t.id === id);
 
     if (!task) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { error: `Task '${id}' not found` },
         { status: 404 },
       );
     }
 
-    return HttpResponse.json(task);
+    return apiJsonResponse(task);
   }),
 
   // POST /api/v1/mcp/tasks/:id/cancel - Cancel task
@@ -473,14 +474,14 @@ export const mcpHandlers = [
     const task = MOCK_TASKS.find((t) => t.id === id);
 
     if (!task) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { error: `Task '${id}' not found` },
         { status: 404 },
       );
     }
 
     // Return the task with cancelled status
-    return HttpResponse.json({
+    return apiJsonResponse({
       ...task,
       status: "cancelled",
       updatedAt: new Date().toISOString(),

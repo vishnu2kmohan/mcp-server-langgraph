@@ -49,20 +49,26 @@ const PERSONA_CONFIGS: Record<Persona, PersonaConfig> = {
     // Default to chat-first experience
     defaultRoute: "/studio/chat",
     sidebarItems: [
+      // Core
       "projects",
       "chat",
       "workflows",
-      "mcp",
+      // AI & Data
       "agents",
       "vectors",
-      "observability",
+      "connections",
       "artifacts",
-      "traces",
+      // Observability
+      "observability",
       "cost",
-      "settings",
+      // Admin
       "admin",
-      "audit-logs",
+      "skills",
+      "audit",
+      "compliance",
+      // Bottom
       "help",
+      "settings",
     ],
     // Admin has access to all routes
     allowedRoutePatterns: ["/admin/", "/studio/"],
@@ -71,18 +77,21 @@ const PERSONA_CONFIGS: Record<Persona, PersonaConfig> = {
     // Default to chat-first experience
     defaultRoute: "/studio/chat",
     sidebarItems: [
+      // Core
       "projects",
       "chat",
       "workflows",
-      "mcp",
+      // AI & Data
       "agents",
       "vectors",
-      "observability",
+      "connections",
       "artifacts",
-      "traces",
+      // Observability
+      "observability",
       "cost",
-      "settings",
+      // Bottom
       "help",
+      "settings",
     ],
     // Developer has access to all studio routes
     allowedRoutePatterns: ["/studio/"],
@@ -94,13 +103,25 @@ const PERSONA_CONFIGS: Record<Persona, PersonaConfig> = {
     // Improves Adoption (HEART) by giving Bob access to:
     // - workflows: Unified view of owned workflows + shared workflows (read-only)
     // - cost: Basic cost tracking for transparency
-    sidebarItems: ["projects", "chat", "workflows", "cost", "help"],
+    // - settings: Personal preferences and accessibility options
+    sidebarItems: [
+      // Core
+      "projects",
+      "chat",
+      "workflows",
+      // Observability (limited)
+      "cost",
+      // Bottom
+      "help",
+      "settings",
+    ],
     // User has limited access
     allowedRoutePatterns: [
       "/studio/projects",
       "/studio/chat",
       "/studio/workflows",
       "/studio/cost",
+      "/studio/settings",
     ],
   },
 };

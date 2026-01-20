@@ -24,6 +24,8 @@ export type { MCPServerCardProps } from "./MCPServerCard";
 export type { ToolExplorerProps } from "./ToolExplorer";
 export type { ResourceBrowserProps } from "./ResourceBrowser";
 export type { PromptLibraryProps } from "./PromptLibrary";
+export type { InboundElicitationModalProps } from "./InboundElicitationModal";
+export type { InboundSamplingModalProps } from "./InboundSamplingModal";
 
 // Lazy exports (code-split, loaded on demand)
 export {
@@ -38,4 +40,7 @@ export {
   LazyToolExplorer,
   LazyResourceBrowser,
   LazyPromptLibrary,
+  // Inbound JSON-RPC components (MCP 2025-11-25 server-initiated requests)
+  LazyInboundElicitationModal,
+  LazyInboundSamplingModal,
 } from "./lazy";

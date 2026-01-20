@@ -4,6 +4,12 @@
  * Displays Redux/session/workflow state inspection in DevTools.
  * Provides a tree view of state with search and expand/collapse.
  * Includes time-travel debugging for history replay.
+ *
+ * Design System Compliance:
+ * - Uses CVA for toolbar button variants
+ * - Uses Motion.dev for button press feedback
+ * - Implements useReducedMotion() for accessibility
+ * - Uses semantic colors per STYLE.md
  */
 import { useState, useMemo, useCallback, useEffect } from "react";
 import {
@@ -15,6 +21,9 @@ import {
   Clock,
 } from "lucide-react";
 
+import { motion, useReducedMotion } from "motion/react";
+import { cva } from "class-variance-authority";
+import { buttonVariants as motionButtonVariants } from "@/design-system/micro-interactions";
 import { cn } from "../../../utils/cn";
 import { useAppSelector } from "../../../store/hooks";
 import { useStateHistory } from "../hooks/useStateHistory";
@@ -23,6 +32,29 @@ import type { StateTabProps } from "../types";
 import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 
 import { Button, Input } from "@/components/UI";
+
+// =============================================================================
+// CVA Variants
+// =============================================================================
+
+/**
+ * Time-travel toggle button variants
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const timeTravelToggleVariants = cva(
+  "flex items-center gap-1 px-2 py-0.5 rounded text-xs transition-colors",
+  {
+    variants: {
+      active: {
+        true: "bg-primary-3 dark:bg-primary-4 text-primary-10 dark:text-primary-7",
+        false: "bg-neutral-2 text-neutral-10",
+      },
+    },
+    defaultVariants: {
+      active: false,
+    },
+  },
+);
 
 // =============================================================================
 // Types
@@ -146,24 +178,24 @@ function StateNodeRow({
       return STATUS_TEXT_COLORS.info;
     }
     if (typeof node.value === "boolean") {
-      return "text-insight-600 dark:text-insight-400";
+      return "text-insight-10 dark:text-insight-9";
     }
-    return "text-neutral-600 dark:text-neutral-400";
+    return "text-neutral-11";
   }, [node.value]);
 
   return (
     <div
       className={cn(
-        "flex items-center py-0.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
-        isMatch && "bg-warning-50 dark:bg-warning-900/20",
+        "flex items-center py-0.5 hover:bg-neutral-a6 tree-indent",
+        isMatch && "bg-warning-3",
       )}
-      style={{ paddingLeft: `${depth * 16 + 8}px` }}
+      style={{ "--indent": `${depth * 16 + 8}px` } as React.CSSProperties}
     >
       {/* Expand/collapse button */}
       {hasChildren ? (
         <Button
           variant="secondary"
-          className="p-0.5 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
+          className="p-0.5 hover:bg-neutral-3 rounded"
           data-testid={`expand-${node.path.replace(/\./g, "-")}`}
           type="button"
           onClick={onToggle}
@@ -175,12 +207,12 @@ function StateNodeRow({
           {isExpanded ? (
             <ChevronDown
               size={12}
-              className="text-neutral-500 dark:text-neutral-400"
+              className="text-neutral-10"
             />
           ) : (
             <ChevronRight
               size={12}
-              className="text-neutral-500 dark:text-neutral-400"
+              className="text-neutral-10"
             />
           )}
         </Button>
@@ -188,10 +220,10 @@ function StateNodeRow({
         <span className="w-4" />
       )}
       {/* Key */}
-      <span className="ml-1 text-sm text-neutral-700 dark:text-neutral-300 font-medium">
+      <span className="ml-1 text-sm text-neutral-11 font-medium">
         {node.key}
       </span>
-      <span className="text-neutral-400 dark:text-neutral-400 mx-1">:</span>
+      <span className="text-neutral-9 mx-1">:</span>
       {/* Value */}
       <span className={cn("text-sm", valueColor)}>
         {formatValue(node.value)}
@@ -274,6 +306,7 @@ function StateTree({ state, searchTerm }: StateTreeProps) {
 // =============================================================================
 
 export function StateTab({ context, contextEntityId }: StateTabProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [searchTerm, setSearchTerm] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [timeTravelEnabled, setTimeTravelEnabled] = useState(true);
@@ -359,44 +392,43 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
   return (
     <div
       data-testid="state-tab"
-      className="flex flex-col h-full bg-white dark:bg-neutral-900"
+      className="flex flex-col h-full bg-neutral-1"
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
+      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-5 bg-neutral-1">
         {/* Context indicator */}
         <div className="flex items-center gap-1.5">
           <Database
             size={14}
-            className="text-neutral-500 dark:text-neutral-400"
+            className="text-neutral-10"
             aria-hidden="true"
           />
-          <span className="text-xs text-neutral-600 dark:text-neutral-400 capitalize">
+          <span className="text-xs text-neutral-11 capitalize">
             {context}
           </span>
           {contextEntityId && (
-            <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded">
+            <span className="text-xs text-neutral-10 ml-1 px-1.5 py-0.5 bg-neutral-2 rounded">
               {contextEntityId}
             </span>
           )}
         </div>
 
         {/* Time-travel toggle */}
-        <Button
+        <motion.button
           data-testid="time-travel-toggle"
           type="button"
           onClick={toggleTimeTravel}
-          className={cn(
-            "flex items-center gap-1 px-2 py-0.5 rounded text-xs",
-            timeTravelEnabled
-              ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
-              : "bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
-          )}
+          className={timeTravelToggleVariants({ active: timeTravelEnabled })}
           aria-pressed={timeTravelEnabled}
           aria-label="Toggle time-travel debugging"
+          variants={prefersReducedMotion ? undefined : motionButtonVariants}
+          initial="rest"
+          whileHover="hover"
+          whileTap="pressed"
         >
           <Clock size={10} />
           {timeTravelEnabled ? "Recording" : "Paused"}
-        </Button>
+        </motion.button>
 
         {/* Spacer */}
         <div className="flex-1" />
@@ -404,8 +436,7 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
         {/* Search */}
         <div className="relative">
           <Search
-            size={12}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
+            className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-9"
             aria-hidden="true"
           />
           <Input
@@ -414,10 +445,10 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
             value={searchTerm}
             onChange={handleSearchChange}
             className={cn(
-              "pl-6 pr-2 py-1 text-xs",
-              "bg-white dark:bg-neutral-900",
-              "border border-neutral-200 dark:border-neutral-700 rounded",
-              "focus:outline-none focus:ring-1 focus:ring-primary-500",
+              "h-8 pl-8 pr-2 py-1.5 text-sm",
+              "bg-neutral-1",
+              "border border-neutral-5 rounded",
+              "focus:outline-none focus:ring-1 focus:ring-primary-7",
               "w-40",
             )}
             aria-label="Search state"
@@ -425,9 +456,9 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
         </div>
 
         {/* Refresh button */}
-        <Button
+        <Button size="icon"
           variant="secondary"
-          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400"
+          className="p-1 hover:bg-neutral-3 rounded text-neutral-10"
           data-testid="refresh-button"
           type="button"
           onClick={handleRefresh}

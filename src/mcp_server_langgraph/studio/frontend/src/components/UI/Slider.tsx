@@ -16,21 +16,21 @@ export const sliderVariants = cva(
   // Base styles
   [
     "w-full appearance-none cursor-pointer rounded-full",
-    "bg-neutral-200 dark:bg-neutral-700",
-    "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
-    "dark:focus:ring-offset-neutral-900",
+    "bg-neutral-3",
+    "focus:outline-none focus:ring-2 focus:ring-primary-7 focus:ring-offset-2",
+    "dark:focus:ring-offset-neutral-12",
     // Thumb styles (webkit)
     "[&::-webkit-slider-thumb]:appearance-none",
     "[&::-webkit-slider-thumb]:rounded-full",
-    "[&::-webkit-slider-thumb]:bg-primary-500",
-    "[&::-webkit-slider-thumb]:hover:bg-primary-600",
+    "[&::-webkit-slider-thumb]:bg-primary-9",
+    "[&::-webkit-slider-thumb]:hover:bg-primary-10",
     "[&::-webkit-slider-thumb]:transition-colors",
     // Thumb styles (moz)
     "[&::-moz-range-thumb]:appearance-none",
     "[&::-moz-range-thumb]:border-none",
     "[&::-moz-range-thumb]:rounded-full",
-    "[&::-moz-range-thumb]:bg-primary-500",
-    "[&::-moz-range-thumb]:hover:bg-primary-600",
+    "[&::-moz-range-thumb]:bg-primary-9",
+    "[&::-moz-range-thumb]:hover:bg-primary-10",
     "[&::-moz-range-thumb]:transition-colors",
   ],
   {
@@ -148,7 +148,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(
               <label
                 htmlFor={id}
                 className={cn(
-                  "text-sm font-medium text-neutral-700 dark:text-neutral-300",
+                  "text-sm font-medium text-neutral-11",
                   disabled && "opacity-50",
                 )}
               >
@@ -158,7 +158,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(
             {showValue && (
               <span
                 className={cn(
-                  "text-sm font-medium text-neutral-900 dark:text-neutral-100",
+                  "text-sm font-medium text-neutral-12",
                   disabled && "opacity-50",
                 )}
               >
@@ -190,7 +190,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(
               <span
                 key={mark.value}
                 className={cn(
-                  "text-xs text-neutral-500 dark:text-neutral-400",
+                  "text-xs text-neutral-10",
                   disabled && "opacity-50",
                 )}
               >

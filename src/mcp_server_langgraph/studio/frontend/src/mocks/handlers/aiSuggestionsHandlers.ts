@@ -11,7 +11,8 @@
  * - GET /api/v1/ai/suggestions/health - Health check for fallback mode
  */
 
-import { http, HttpResponse } from "msw";
+import { http } from "msw";
+import { apiJsonResponse, apiErrorResponse } from "../utils/apiResponse";
 
 // =============================================================================
 // Types
@@ -151,10 +152,10 @@ export const aiSuggestionsHandlers = [
    * Health check for suggestions service
    */
   http.get("/api/v1/ai/suggestions/health", () => {
-    return HttpResponse.json({
+    return apiJsonResponse({
       status: "healthy",
-      websocket_available: false,
-      fallback_active: true,
+      websocketAvailable: false,
+      fallbackActive: true,
       timestamp: Date.now(),
     });
   }),
@@ -167,13 +168,7 @@ export const aiSuggestionsHandlers = [
     const body = (await request.json()) as SuggestionRequestBody;
 
     if (!body.context) {
-      return HttpResponse.json(
-        {
-          type: "error",
-          message: "Missing context in request body",
-        },
-        { status: 400 },
-      );
+      return apiErrorResponse("Missing context in request body", 400);
     }
 
     // Generate context-aware suggestions
@@ -186,7 +181,7 @@ export const aiSuggestionsHandlers = [
       }
     }
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       type: "suggestions",
       data: newSuggestions,
       timestamp: Date.now(),
@@ -201,30 +196,18 @@ export const aiSuggestionsHandlers = [
     const body = (await request.json()) as DismissRequestBody;
 
     if (!body.id) {
-      return HttpResponse.json(
-        {
-          type: "error",
-          message: "Missing suggestion ID",
-        },
-        { status: 400 },
-      );
+      return apiErrorResponse("Missing suggestion ID", 400);
     }
 
     const index = suggestions.findIndex((s) => s.id === body.id);
 
     if (index === -1) {
-      return HttpResponse.json(
-        {
-          type: "error",
-          message: `Suggestion not found: ${body.id}`,
-        },
-        { status: 404 },
-      );
+      return apiErrorResponse(`Suggestion not found: ${body.id}`, 404);
     }
 
     suggestions.splice(index, 1);
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       type: "dismissed",
       id: body.id,
       timestamp: Date.now(),
@@ -237,7 +220,7 @@ export const aiSuggestionsHandlers = [
    * NOTE: Must be LAST to not match sub-paths
    */
   http.get("/api/v1/ai/suggestions", () => {
-    return HttpResponse.json({
+    return apiJsonResponse({
       type: "suggestions",
       data: suggestions,
       timestamp: Date.now(),

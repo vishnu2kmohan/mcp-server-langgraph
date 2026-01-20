@@ -36,7 +36,6 @@ export const NAV_ITEM_IDS = [
   "chat",
   "workflows",
   "agents",
-  "mcp",
   "vectors",
   "connections",
   "artifacts",

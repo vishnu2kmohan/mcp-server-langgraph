@@ -14,6 +14,7 @@
 /* eslint-disable react-refresh/only-export-components -- Exports NavItem types and constants alongside component */
 import { useCallback, useMemo, useEffect, forwardRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
+import { useReducedMotion } from "motion/react";
 import {
   MessageSquare,
   GitBranch,
@@ -24,7 +25,6 @@ import {
   Command,
   HelpCircle,
   FileText,
-  Database,
   DollarSign,
   FolderKanban,
   Boxes,
@@ -98,7 +98,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     id: "ai-data",
     label: "AI & Data",
-    items: ["agents", "mcp", "vectors", "connections", "artifacts"],
+    items: ["agents", "vectors", "connections", "artifacts"],
   },
   {
     id: "observability",
@@ -150,13 +150,6 @@ export const NAV_ITEMS: NavItem[] = [
     icon: <Cpu size={20} />,
     label: "Agents",
     path: "/studio/agents",
-    group: "ai-data",
-  },
-  {
-    id: "mcp",
-    icon: <Database size={20} />,
-    label: "MCP",
-    path: "/studio/mcp",
     group: "ai-data",
   },
   {
@@ -277,6 +270,8 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
     const navigate = useNavigate();
     const location = useLocation();
     const activeNavItem = useAppSelector(selectActiveNavItem);
+    // WCAG 2.2 AA: Respect user's reduced motion preference
+    const prefersReducedMotion = useReducedMotion();
 
     // Sprint 4.2: Collapsible groups state with storage persistence
     const [collapsedGroups, setCollapsedGroups] =
@@ -428,12 +423,14 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
         data-testid="activity-bar"
         aria-label="Main navigation"
         className={cn(
-          "flex flex-col items-center w-14 py-2",
-          "bg-neutral-100 dark:bg-neutral-800",
-          "border-r border-neutral-200 dark:border-neutral-700",
+          "flex flex-col items-center w-14 h-full",
+          "bg-neutral-2",
+          "border-r border-neutral-5",
           className,
         )}
       >
+        {/* Primary nav - scrollable */}
+        <div className="flex-1 min-h-0 overflow-y-auto py-2 w-full flex flex-col items-center">
         {/* Main navigation icons - RBAC filtered */}
         {/* Sprint 4.2: Render as collapsible groups or flat list */}
         {enableCollapsibleGroups ? (
@@ -450,6 +447,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                   {/* Group Header (collapsible) */}
                   <Button
                     type="button"
+                    variant="ghost"
                     data-testid={`nav-group-${group.id}`}
                     aria-label={`${group.label} group`}
                     aria-expanded={!isCollapsed}
@@ -463,10 +461,12 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                       }
                     }}
                     className={cn(
-                      "p-1.5 rounded-lg transition-all flex items-center justify-center",
-                      "text-neutral-400 dark:text-neutral-400",
-                      "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
-                      "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                      "p-1.5 rounded-lg flex items-center justify-center",
+                      "min-h-[44px] min-w-[44px]", // WCAG 2.5.8 AAA touch target
+                      !prefersReducedMotion && "transition-all",
+                      "text-neutral-9",
+                      "hover:bg-neutral-3",
+                      "focus:outline-none focus:ring-2 focus:ring-primary-7",
                     )}
                   >
                     {isCollapsed ? (
@@ -487,6 +487,7 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                           <Button
                             key={item.id}
                             type="button"
+                            variant="ghost"
                             data-testid={`nav-${item.id}`}
                             aria-label={item.label}
                             title={
@@ -496,12 +497,14 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                             }
                             onClick={() => handleNavClick(item)}
                             className={cn(
-                              "p-2 rounded-lg transition-all relative",
-                              "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                              "p-2 rounded-lg relative",
+                              "min-h-[44px] min-w-[44px]", // WCAG 2.5.8 AAA touch target
+                              !prefersReducedMotion && "transition-all",
+                              "focus:outline-none focus:ring-2 focus:ring-primary-7",
                               activeNavItem === item.id &&
-                                "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+                                "bg-primary-3 dark:bg-primary-4 text-primary-11 dark:text-primary-9",
                               activeNavItem !== item.id &&
-                                "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
+                                "text-neutral-10 hover:bg-neutral-3",
                             )}
                           >
                             {item.icon}
@@ -511,8 +514,8 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                                 data-testid="nav-prediction-indicator"
                                 className={cn(
                                   "absolute -top-0.5 -right-0.5 w-2 h-2",
-                                  "bg-warning-400 dark:bg-warning-500 rounded-full",
-                                  "animate-pulse",
+                                  "bg-primary-9 dark:bg-primary-9 rounded-full",
+                                  !prefersReducedMotion && "animate-pulse",
                                 )}
                                 aria-label="AI suggested"
                               />
@@ -539,17 +542,20 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                 <Button
                   key={item.id}
                   type="button"
+                  variant="ghost"
                   data-testid={`nav-${item.id}`}
                   aria-label={item.label}
                   title={isPredicted ? `${item.label} (Suggested)` : item.label}
                   onClick={() => handleNavClick(item)}
                   className={cn(
-                    "p-2 rounded-lg transition-all relative",
-                    "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                    "p-2 rounded-lg relative",
+                    "min-h-[44px] min-w-[44px]", // WCAG 2.5.8 AAA touch target
+                    !prefersReducedMotion && "transition-all",
+                    "focus:outline-none focus:ring-2 focus:ring-primary-7",
                     activeNavItem === item.id &&
-                      "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+                      "bg-primary-3 dark:bg-primary-4 text-primary-11 dark:text-primary-9",
                     activeNavItem !== item.id &&
-                      "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
+                      "text-neutral-10 hover:bg-neutral-3",
                   )}
                 >
                   {item.icon}
@@ -559,8 +565,8 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
                       data-testid="nav-prediction-indicator"
                       className={cn(
                         "absolute -top-0.5 -right-0.5 w-2 h-2",
-                        "bg-warning-400 dark:bg-warning-500 rounded-full",
-                        "animate-pulse",
+                        "bg-primary-9 dark:bg-primary-9 rounded-full",
+                        !prefersReducedMotion && "animate-pulse",
                       )}
                       aria-label="AI suggested"
                     />
@@ -570,25 +576,27 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
             })}
           </div>
         )}
-        {/* Spacer */}
-        <div className="flex-1" aria-hidden="true" />
-        {/* Bottom icons - RBAC filtered */}
+        </div>
+        {/* Bottom icons - RBAC filtered, pinned to bottom */}
         <div
-          className="flex flex-col gap-1"
+          className="flex-shrink-0 flex flex-col gap-1 py-2 border-t border-neutral-5"
           role="group"
           aria-label="Secondary navigation"
         >
           <Button
             type="button"
+            variant="ghost"
             data-testid="command-palette-button"
             aria-label="Command Palette"
             title="Command Palette (⌘K)"
             onClick={handleCommandPaletteClick}
             className={cn(
-              "p-2 rounded-lg transition-all",
-              "text-neutral-500 dark:text-neutral-400",
-              "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
-              "focus:outline-none focus:ring-2 focus:ring-primary-500",
+              "p-2 rounded-lg",
+              "min-h-[44px] min-w-[44px]", // WCAG 2.5.8 AAA touch target
+              !prefersReducedMotion && "transition-all",
+              "text-neutral-10",
+              "hover:bg-neutral-3",
+              "focus:outline-none focus:ring-2 focus:ring-primary-7",
             )}
           >
             <Command size={20} />
@@ -597,17 +605,20 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
             <Button
               key={item.id}
               type="button"
+              variant="ghost"
               data-testid={`nav-${item.id}`}
               aria-label={item.label}
               title={item.label}
               onClick={() => handleNavClick(item)}
               className={cn(
-                "p-2 rounded-lg transition-all",
-                "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                "p-2 rounded-lg",
+                "min-h-[44px] min-w-[44px]", // WCAG 2.5.8 AAA touch target
+                !prefersReducedMotion && "transition-all",
+                "focus:outline-none focus:ring-2 focus:ring-primary-7",
                 activeNavItem === item.id &&
-                  "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+                  "bg-primary-3 dark:bg-primary-4 text-primary-11 dark:text-primary-9",
                 activeNavItem !== item.id &&
-                  "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
+                  "text-neutral-10 hover:bg-neutral-3",
               )}
             >
               {item.icon}

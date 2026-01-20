@@ -40,13 +40,13 @@ export function TaskMappingCard({
   );
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
+    <div className="bg-neutral-1 rounded-lg border border-neutral-5 p-6">
       <div className="flex items-center gap-3 mb-4">
-        <GitBranch size={24} className="text-indigo-500" />
-        <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+        <GitBranch size={24} className="text-primary-9" />
+        <h2 className="text-xl font-semibold text-neutral-12">
           Task Mapping
         </h2>
-        <span className="px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-full">
+        <span className="px-2 py-1 text-xs bg-primary-3 dark:bg-primary-4 text-primary-11 dark:text-primary-7 rounded-full">
           {totalCategories} task categories
         </span>
       </div>
@@ -54,17 +54,17 @@ export function TaskMappingCard({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 dark:border-neutral-700">
-              <th className="text-left py-2 px-3 text-neutral-600 dark:text-neutral-400 font-medium">
+            <tr className="border-b border-neutral-5">
+              <th className="text-left py-2 px-3 text-neutral-11 font-medium">
                 Orchestrator
               </th>
-              <th className="text-left py-2 px-3 text-neutral-600 dark:text-neutral-400 font-medium">
+              <th className="text-left py-2 px-3 text-neutral-11 font-medium">
                 Task Categories
               </th>
-              <th className="text-center py-2 px-3 text-neutral-600 dark:text-neutral-400 font-medium">
+              <th className="text-center py-2 px-3 text-neutral-11 font-medium">
                 Count
               </th>
-              <th className="text-center py-2 px-3 text-neutral-600 dark:text-neutral-400 font-medium">
+              <th className="text-center py-2 px-3 text-neutral-11 font-medium">
                 Status
               </th>
             </tr>
@@ -77,13 +77,13 @@ export function TaskMappingCard({
               return (
                 <tr
                   key={orchestrator.name}
-                  className="border-b border-neutral-100 dark:border-neutral-700/50 hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
+                  className="border-b border-neutral-a6 hover:bg-neutral-a6"
                 >
                   <td className="py-3 px-3">
-                    <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                    <div className="font-medium text-neutral-12">
                       {orchestrator.displayName}
                     </div>
-                    <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                    <div className="text-xs text-neutral-10">
                       {orchestrator.description}
                     </div>
                   </td>
@@ -92,7 +92,7 @@ export function TaskMappingCard({
                       {orchestrator.taskCategories?.map((category) => (
                         <span
                           key={category}
-                          className="px-2 py-0.5 text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded"
+                          className="px-2 py-0.5 text-xs bg-neutral-2 text-neutral-11 rounded"
                         >
                           {category}
                         </span>
@@ -100,17 +100,17 @@ export function TaskMappingCard({
                     </div>
                   </td>
                   <td className="py-3 px-3 text-center">
-                    <span className="font-mono text-neutral-900 dark:text-neutral-100">
+                    <span className="font-mono text-neutral-12">
                       {categoryCount}
                     </span>
                   </td>
                   <td className="py-3 px-3 text-center">
                     {isEnabled ? (
-                      <span className="px-2 py-1 text-xs bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 rounded-full">
+                      <span className="px-2 py-1 text-xs bg-success-3 bg-success-4 text-success-11 dark:text-success-7 rounded-full">
                         Active
                       </span>
                     ) : (
-                      <span className="px-2 py-1 text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 rounded-full">
+                      <span className="px-2 py-1 text-xs bg-neutral-2 text-neutral-10 rounded-full">
                         Inactive
                       </span>
                     )}

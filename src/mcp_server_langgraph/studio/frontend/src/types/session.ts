@@ -32,14 +32,42 @@ export interface SessionConfig {
 }
 
 /**
+ * Reasoning effort levels for extended thinking models.
+ *
+ * Maps to FF_MAX_THINKING_BUDGET on the backend:
+ * - none: No extended thinking, standard response mode
+ * - low: Quick responses, minimal reasoning (~1K thinking tokens)
+ * - medium: Balanced reasoning (default, ~10K thinking tokens)
+ * - high: Deep reasoning, comprehensive analysis (~100K thinking tokens)
+ * - ultra: Maximum reasoning depth, exhaustive analysis (model-dependent max)
+ *
+ * Support varies by vendor:
+ * - OpenAI o1/o3: low, medium, high (native reasoning_effort)
+ * - Anthropic Claude: all levels (extended_thinking budget)
+ * - Google Gemini: all levels (thinking_budget)
+ */
+export type ReasoningEffortLevel = "none" | "low" | "medium" | "high" | "ultra";
+
+/**
  * Server configuration response from /api/v1/config/defaults
  * Used for frontend hydration of backend-configured defaults.
+ *
+ * 12-Factor App Pattern: Configuration is read from environment variables
+ * by the backend and exposed via this endpoint. The frontend uses these
+ * values to initialize UI state, ensuring consistency across deployments
+ * (AWS/EKS, GCP/GKE, Azure/AKS, OpenShift, Rancher, etc.).
  */
 export interface ServerConfig {
   model_name: string;
   model_provider: ModelProvider | "unknown";
   max_tokens: number;
   temperature: number;
+  /**
+   * Default reasoning effort level for extended thinking models.
+   * Corresponds to FF_MAX_THINKING_BUDGET environment variable.
+   * Optional for backward compatibility with older backend versions.
+   */
+  default_reasoning_effort?: ReasoningEffortLevel;
 }
 
 /**

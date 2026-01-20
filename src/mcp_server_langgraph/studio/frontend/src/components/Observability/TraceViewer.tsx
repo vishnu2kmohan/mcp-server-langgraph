@@ -61,14 +61,14 @@ export function TraceViewer({
         data-testid="trace-loading"
         className="flex items-center justify-center h-64"
       >
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-9" />
       </div>
     );
   }
 
   if (!trace) {
     return (
-      <div className="flex items-center justify-center h-64 text-neutral-500 dark:text-neutral-400">
+      <div className="flex items-center justify-center h-64 text-neutral-10">
         No trace data available
       </div>
     );
@@ -77,12 +77,12 @@ export function TraceViewer({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-5">
         <div>
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-neutral-12">
             Trace: {trace.traceId}
           </h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="text-sm text-neutral-10">
             Total Duration: {trace.durationMs}ms | {trace.spans.length} spans
           </p>
         </div>
@@ -93,7 +93,7 @@ export function TraceViewer({
               href={grafanaUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 text-sm text-primary-600 hover:text-primary-800 dark:text-primary-400"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-primary-10 hover:text-primary-11 dark:text-primary-7"
               aria-label="View in Grafana"
             >
               <ExternalLink className="w-4 h-4" />
@@ -103,14 +103,18 @@ export function TraceViewer({
         </div>
       </div>
       {/* Search */}
-      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="p-4 border-b border-neutral-5">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+          <Search
+            className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-9"
+            aria-hidden="true"
+          />
           <Input
-            className="pl-9 pr-3 py-2 text-neutral-900 dark:text-white text-sm"
+            className="h-8 pl-8 pr-2 py-1.5 text-sm text-neutral-12"
             placeholder="Search spans..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search spans"
           />
         </div>
       </div>
@@ -119,7 +123,7 @@ export function TraceViewer({
         {/* Timeline */}
         <div className="flex-1 overflow-auto p-4">
           {filteredSpans.length === 0 ? (
-            <div className="text-center text-neutral-500 dark:text-neutral-400 py-8">
+            <div className="text-center text-neutral-10 py-8">
               No spans found matching your search
             </div>
           ) : (
@@ -176,29 +180,29 @@ function SpanRow({
       onClick={onClick}
       className={`flex items-center gap-4 p-2 rounded cursor-pointer transition-colors ${
         isSelected
-          ? "bg-primary-50 dark:bg-primary-900/20"
-          : "hover:bg-neutral-50 dark:hover:bg-neutral-800"
+          ? "bg-primary-1 dark:bg-primary-a3"
+          : "hover:bg-neutral-1"
       } ${span.depth > 0 ? "ml-4" : ""}`}
     >
       {/* Status indicator */}
       <div
         data-testid={`span-status-${span.spanId}`}
         className={`w-2 h-2 rounded-full flex-shrink-0 ${
-          isError ? "bg-error-500" : "bg-success-500"
+          isError ? "bg-error-9" : "bg-success-9"
         }`}
       />
 
       {/* Span name */}
-      <div className="flex-shrink-0 w-48 truncate text-sm text-neutral-900 dark:text-white">
+      <div className="flex-shrink-0 w-48 truncate text-sm text-neutral-12">
         {span.name}
       </div>
 
       {/* Timeline bar */}
-      <div className="flex-1 h-6 bg-neutral-100 dark:bg-neutral-700 rounded relative">
+      <div className="flex-1 h-6 bg-neutral-2 rounded relative">
         <div
           data-testid={`span-bar-${span.spanId}`}
           className={`absolute h-full rounded ${
-            isError ? "bg-error-400" : "bg-primary-400"
+            isError ? "bg-error-7" : "bg-primary-7"
           }`}
           style={{
             left: `${barOffset}%`,
@@ -208,7 +212,7 @@ function SpanRow({
       </div>
 
       {/* Duration */}
-      <div className="flex-shrink-0 w-20 text-right text-sm text-neutral-500 dark:text-neutral-400">
+      <div className="flex-shrink-0 w-20 text-right text-sm text-neutral-10">
         {span.durationMs}ms
       </div>
     </li>
@@ -226,47 +230,49 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
   return (
     <div
       data-testid="span-details"
-      className="w-80 border-l border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-auto"
+      className="w-80 border-l border-neutral-5 bg-neutral-1 overflow-auto"
     >
       {/* Header */}
-      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="p-4 border-b border-neutral-5">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-neutral-900 dark:text-white">
+          <h3 className="font-semibold text-neutral-12">
             {span.name}
           </h3>
           <Button
-            className="text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-200"
+            variant="ghost"
+            size="icon"
+            className="min-h-[44px] min-w-[44px] text-neutral-9 hover:text-neutral-11"
             onClick={onClose}
             aria-label="Close details"
           >
             ×
           </Button>
         </div>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+        <p className="text-sm text-neutral-10 mt-1">
           Duration: {span.durationMs}ms
         </p>
       </div>
       {/* Error Message */}
       {isError && span.errorMessage && (
-        <div className="p-4 bg-error-50 dark:bg-error-900/20 border-b border-error-100 dark:border-error-800">
-          <p className="text-sm font-medium text-error-800 dark:text-error-200">
+        <div className="p-4 bg-error-1 dark:bg-error-a3 border-b border-error-3 dark:border-error-11">
+          <p className="text-sm font-medium text-error-11 dark:text-error-4">
             Error
           </p>
-          <p className="text-sm text-error-600 dark:text-error-300 mt-1">
+          <p className="text-sm text-error-10 dark:text-error-9 mt-1">
             {span.errorMessage}
           </p>
         </div>
       )}
       {/* Attributes */}
-      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
-        <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
+      <div className="p-4 border-b border-neutral-5">
+        <h4 className="text-sm font-medium text-neutral-12 mb-2">
           Attributes
         </h4>
         <dl className="space-y-2">
           {Object.entries(span.attributes).map(([key, value]) => (
             <div key={key} className="flex justify-between text-sm">
-              <dt className="text-neutral-500 dark:text-neutral-400">{key}</dt>
-              <dd className="text-neutral-900 dark:text-white font-mono">
+              <dt className="text-neutral-10">{key}</dt>
+              <dd className="text-neutral-12 font-mono">
                 {String(value)}
               </dd>
             </div>
@@ -276,16 +282,16 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
       {/* Events */}
       {span.events.length > 0 && (
         <div className="p-4">
-          <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
+          <h4 className="text-sm font-medium text-neutral-12 mb-2">
             Events
           </h4>
           <ul className="space-y-2">
             {span.events.map((event, index) => (
               <li key={index} className="text-sm">
-                <span className="text-neutral-900 dark:text-white">
+                <span className="text-neutral-12">
                   {event.name}
                 </span>
-                <span className="text-neutral-500 dark:text-neutral-400 ml-2 text-xs">
+                <span className="text-neutral-10 ml-2 text-xs">
                   {new Date(event.timestamp).toISOString()}
                 </span>
               </li>

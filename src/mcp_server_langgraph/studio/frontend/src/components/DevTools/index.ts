@@ -53,24 +53,43 @@ export type {
 } from "./context/DevToolsTimelineProvider";
 
 // Lazy loading
+// NOTE: Only LazyDevToolsPanel is actively maintained.
+// Individual tab exports and preload functions are deprecated.
+// DevToolsPanel handles internal lazy loading. See lazy.ts for details.
 export {
+  /** Main DevTools panel - actively maintained */
   LazyDevToolsPanel,
+  /** @deprecated Use DevToolsPanel instead */
   LazyConsoleTab,
+  /** @deprecated Use DevToolsPanel instead */
   LazyProblemsTab,
+  /** @deprecated Use DevToolsPanel instead */
   LazyStateTab,
+  /** @deprecated Use DevToolsPanel instead */
   LazyAgentTraceTab,
+  /** @deprecated Use DevToolsPanel instead */
   LazyExecutionTraceTab,
+  /** @deprecated Use DevToolsPanel instead */
   LazyNetworkTab,
+  /** @deprecated Use DevToolsPanel instead */
   LazyAIInsightsTab,
   // OTEL tabs
+  /** @deprecated Use DevToolsPanel instead */
   LazyTracesTab,
+  /** @deprecated Use DevToolsPanel instead */
   LazyMetricsTab,
+  /** @deprecated Use DevToolsPanel instead */
   LazyAlertsTab,
+  /** @deprecated Use DevToolsPanel instead */
   LazyLogsTab,
   // Preload functions
+  /** @deprecated No longer used - DevToolsPanel handles lazy loading */
   preloadCommonTabs,
+  /** @deprecated No longer used - DevToolsPanel handles lazy loading */
   preloadAllTabs,
+  /** @deprecated No longer used - DevToolsPanel handles lazy loading */
   preloadContextTabs,
+  /** @deprecated No longer used - DevToolsPanel handles lazy loading */
   preloadOTELTabs,
 } from "./lazy";
 

@@ -397,7 +397,7 @@ describe("AgentTaskQueue", () => {
       render(<AgentTaskQueue />, { wrapper: createWrapper(store) });
 
       const badge = screen.getByTestId("status-badge-1");
-      expect(badge).toHaveClass("bg-primary-500");
+      expect(badge).toHaveClass("bg-primary-9");
     });
 
     it("should show status badge with correct color for completed", () => {
@@ -407,7 +407,7 @@ describe("AgentTaskQueue", () => {
       render(<AgentTaskQueue />, { wrapper: createWrapper(store) });
 
       const badge = screen.getByTestId("status-badge-1");
-      expect(badge).toHaveClass("bg-success-500");
+      expect(badge).toHaveClass("bg-success-9");
     });
 
     it("should show status badge with correct color for failed", () => {
@@ -417,7 +417,7 @@ describe("AgentTaskQueue", () => {
       render(<AgentTaskQueue />, { wrapper: createWrapper(store) });
 
       const badge = screen.getByTestId("status-badge-1");
-      expect(badge).toHaveClass("bg-error-500");
+      expect(badge).toHaveClass("bg-error-9");
     });
   });
 });

@@ -123,7 +123,7 @@ export function ThemeToggle({
     <div ref={dropdownRef} className="relative">
       <Button
         variant="secondary"
-        className="px-3 py-2 rounded-md text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:ring-primary-500"
+        className="px-3 py-2 rounded-md text-neutral-11 hover:bg-neutral-2 focus:ring-primary-7"
         type="button"
         onClick={handleClick}
         aria-label={`Theme: ${config.label}`}
@@ -146,17 +146,17 @@ export function ThemeToggle({
       {compact && showTooltip && (
         <div
           role="tooltip"
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-900 dark:bg-neutral-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-50"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-2 text-neutral-12 text-xs rounded shadow-lg whitespace-nowrap z-50"
         >
           {config.label}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-900 dark:border-t-neutral-700" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-12 dark:border-t-neutral-11" />
         </div>
       )}
       {/* Dropdown menu */}
       {variant === "dropdown" && isDropdownOpen && (
         <div
           role="menu"
-          className="absolute top-full right-0 mt-1 w-40 rounded-md bg-white dark:bg-neutral-900 shadow-lg ring-1 ring-black/5 dark:ring-white/10 z-50"
+          className="absolute top-full right-0 mt-1 w-40 rounded-md bg-neutral-1 shadow-lg ring-1 ring-neutral-a1 dark:ring-neutral-a2 z-dropdown"
         >
           <div className="py-1">
             {THEME_CYCLE.map((themeOption) => {
@@ -167,7 +167,7 @@ export function ThemeToggle({
               return (
                 <Button
                   variant="secondary"
-                  className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800"
+                  className="w-full flex px-3 py-2 text-sm text-neutral-11 hover:bg-neutral-2"
                   key={themeOption}
                   role="menuitem"
                   onClick={() => handleSelectTheme(themeOption)}
@@ -177,7 +177,7 @@ export function ThemeToggle({
                   {isSelected && (
                     <Check
                       size={16}
-                      className="text-primary-600 dark:text-primary-400"
+                      className="text-primary-10 dark:text-primary-7"
                     />
                   )}
                 </Button>

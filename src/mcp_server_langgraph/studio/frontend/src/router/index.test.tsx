@@ -30,9 +30,7 @@ vi.mock("../pages/ChatPage", () => ({
   ChatPage: () => <div data-testid="chat-page">Chat Page</div>,
 }));
 // SessionsPage removed - now redirects to ChatPage
-vi.mock("../pages/MCPPage", () => ({
-  MCPPage: () => <div data-testid="mcp-page">MCP Page</div>,
-}));
+// MCPPage removed - now redirects to ConnectionsPage?tab=capabilities (ADR-0102)
 vi.mock("../pages/AgentsPage", () => ({
   AgentsPage: () => <div data-testid="agents-page">Agents Page</div>,
 }));
@@ -154,7 +152,7 @@ describe("Router", () => {
       expect(sessionsRoute?.lazy).toBeUndefined();
     });
 
-    it("should have mcp route under studio", () => {
+    it("should have mcp route redirect to connections capabilities tab", () => {
       const rootRoute = router.routes.find((r: RouteObject) => r.path === "/");
       const studioRoute = rootRoute?.children?.find(
         (r: RouteObject) => r.path === "studio",
@@ -163,6 +161,9 @@ describe("Router", () => {
         (r: RouteObject) => r.path === "mcp",
       );
       expect(mcpRoute).toBeDefined();
+      // MCP now redirects to connections?tab=capabilities (ADR-0102)
+      expect(mcpRoute?.element).toBeDefined();
+      expect(mcpRoute?.lazy).toBeUndefined();
     });
 
     it("should have observability route under studio", () => {
@@ -372,7 +373,7 @@ describe("Router", () => {
       expect(indexRoute?.lazy).toBeUndefined();
     });
 
-    it("should load MCP page via lazy function (via child)", async () => {
+    it("should have MCP route as redirect (no lazy loading)", () => {
       const rootRoute = router.routes.find((r: RouteObject) => r.path === "/");
       const studioRoute = rootRoute?.children?.find(
         (r: RouteObject) => r.path === "studio",
@@ -380,14 +381,11 @@ describe("Router", () => {
       const mcpRoute = studioRoute?.children?.find(
         (r: RouteObject) => r.path === "mcp",
       );
-      // MCP now has PersonaGuard element with lazy child
-      const indexRoute = mcpRoute?.children?.find((r: RouteObject) => r.index);
-      expect(indexRoute?.lazy).toBeDefined();
-
-      if (indexRoute?.lazy) {
-        const result = await indexRoute.lazy();
-        expect(result).toHaveProperty("Component");
-      }
+      // MCP now redirects to connections?tab=capabilities (ADR-0102)
+      // No children, just a redirect element
+      expect(mcpRoute?.element).toBeDefined();
+      expect(mcpRoute?.children).toBeUndefined();
+      expect(mcpRoute?.lazy).toBeUndefined();
     });
 
     it("should load observability page via lazy function (via child)", async () => {
@@ -584,7 +582,7 @@ describe("Router", () => {
       expect(connectionsRoute?.children).toBeDefined();
     });
 
-    it("should have mcp route under connections", () => {
+    it("should have mcp route redirect under connections", () => {
       const rootRoute = router.routes.find((r: RouteObject) => r.path === "/");
       const studioRoute = rootRoute?.children?.find(
         (r: RouteObject) => r.path === "studio",
@@ -596,7 +594,9 @@ describe("Router", () => {
         (r: RouteObject) => r.path === "mcp",
       );
       expect(mcpRoute).toBeDefined();
-      expect(mcpRoute?.lazy).toBeDefined();
+      // MCP now redirects to connections?tab=capabilities (ADR-0102)
+      expect(mcpRoute?.element).toBeDefined();
+      expect(mcpRoute?.lazy).toBeUndefined();
     });
 
     it("should have agents route under connections", () => {

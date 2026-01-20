@@ -190,7 +190,7 @@ describe("StudioShellLayout - KB Status", () => {
       const kbIndicator = screen.getByTestId("kb-status-indicator");
       expect(kbIndicator).toBeInTheDocument();
       // Should have green color class for ready status
-      expect(kbIndicator).toHaveClass("bg-success-500");
+      expect(kbIndicator).toHaveClass("bg-success-9");
     });
 
     it("should display 'misconfigured' status with warning indicator", () => {
@@ -202,7 +202,7 @@ describe("StudioShellLayout - KB Status", () => {
       const kbIndicator = screen.getByTestId("kb-status-indicator");
       expect(kbIndicator).toBeInTheDocument();
       // Should have yellow color class for misconfigured status
-      expect(kbIndicator).toHaveClass("bg-warning-500");
+      expect(kbIndicator).toHaveClass("bg-warning-9");
     });
 
     it("should display 'unavailable' status with gray indicator", () => {
@@ -214,7 +214,7 @@ describe("StudioShellLayout - KB Status", () => {
       const kbIndicator = screen.getByTestId("kb-status-indicator");
       expect(kbIndicator).toBeInTheDocument();
       // Should have gray color class for unavailable status
-      expect(kbIndicator).toHaveClass("bg-neutral-400");
+      expect(kbIndicator).toHaveClass("bg-neutral-4");
     });
 
     it("should display context stats when available", () => {

@@ -21,6 +21,10 @@ import type { ReactNode } from "react";
 
 import { AlertsPanel, type AlertsPanelProps } from "./AlertsPanel";
 import alertReducer, { type Alert } from "../../store/slices/alertSlice";
+import personaReducer from "../../store/slices/personaSlice";
+import sessionReducer, {
+  initialSessionState,
+} from "../../store/slices/sessionSlice";
 
 // =============================================================================
 // Test Data
@@ -80,6 +84,8 @@ const createTestStore = (
   configureStore({
     reducer: {
       alerts: alertReducer,
+      persona: personaReducer,
+      session: sessionReducer,
     },
     preloadedState: {
       alerts: {
@@ -90,6 +96,18 @@ const createTestStore = (
         lastCriticalAlertTime: null,
         filters,
       },
+      persona: {
+        persona: "admin" as const,
+        subPersona: "admin" as const,
+        username: "test-user",
+        email: "test@example.com",
+        permissions: [],
+        isPersonaLoading: false,
+        visibleModules: [],
+        featureFlags: {},
+        apiVersion: null,
+      },
+      session: initialSessionState,
     },
   });
 
@@ -163,7 +181,7 @@ describe("AlertsPanel", () => {
       renderWithStore(<AlertsPanel {...defaultProps} />);
 
       const criticalBadge = screen.getByTestId("severity-badge-alert-001");
-      expect(criticalBadge).toHaveClass("bg-error-500");
+      expect(criticalBadge).toHaveClass("bg-error-9");
     });
 
     it("should show warning severity indicator", () => {
@@ -174,7 +192,7 @@ describe("AlertsPanel", () => {
       renderWithStore(<AlertsPanel {...defaultProps} />, warningStore);
 
       const warningBadge = screen.getByTestId("severity-badge-alert-002");
-      expect(warningBadge).toHaveClass("bg-warning-500");
+      expect(warningBadge).toHaveClass("bg-warning-9");
     });
 
     it("should show firing state indicator", () => {
@@ -200,7 +218,11 @@ describe("AlertsPanel", () => {
 
     it("should highlight selected alert", () => {
       const storeWithSelection = configureStore({
-        reducer: { alerts: alertReducer },
+        reducer: {
+          alerts: alertReducer,
+          persona: personaReducer,
+          session: sessionReducer,
+        },
         preloadedState: {
           alerts: {
             alerts: mockAlerts,
@@ -210,13 +232,25 @@ describe("AlertsPanel", () => {
             lastCriticalAlertTime: null,
             filters: { severity: ["critical", "warning"], state: ["firing"] },
           },
+          persona: {
+            persona: "admin" as const,
+            subPersona: "admin" as const,
+            username: "test-user",
+            email: "test@example.com",
+            permissions: [],
+            isPersonaLoading: false,
+            visibleModules: [],
+            featureFlags: {},
+            apiVersion: null,
+          },
+          session: initialSessionState,
         },
       });
 
       renderWithStore(<AlertsPanel {...defaultProps} />, storeWithSelection);
 
       const selectedItem = screen.getByTestId("alert-item-alert-001");
-      expect(selectedItem).toHaveClass("border-primary-500");
+      expect(selectedItem).toHaveClass("border-primary-9");
     });
   });
 
@@ -341,7 +375,7 @@ describe("AlertsPanel", () => {
       );
 
       expect(screen.getByTestId("connection-status")).toHaveClass(
-        "bg-success-500",
+        "bg-success-9",
       );
     });
 
@@ -351,7 +385,7 @@ describe("AlertsPanel", () => {
       );
 
       expect(screen.getByTestId("connection-status")).toHaveClass(
-        "bg-error-500",
+        "bg-error-9",
       );
     });
 
@@ -361,7 +395,7 @@ describe("AlertsPanel", () => {
       );
 
       expect(screen.getByTestId("connection-status")).toHaveClass(
-        "bg-warning-500",
+        "bg-warning-9",
       );
     });
   });
@@ -482,7 +516,7 @@ describe("AlertsPanel", () => {
       );
 
       expect(screen.getByTestId("connection-status")).toHaveClass(
-        "bg-warning-500",
+        "bg-warning-9",
       );
     });
 
@@ -492,7 +526,7 @@ describe("AlertsPanel", () => {
       );
 
       expect(screen.getByTestId("connection-status")).toHaveClass(
-        "bg-error-500",
+        "bg-error-9",
       );
     });
 
@@ -504,7 +538,7 @@ describe("AlertsPanel", () => {
 
       // Default value is "connected" which shows green
       expect(screen.getByTestId("connection-status")).toHaveClass(
-        "bg-success-500",
+        "bg-success-9",
       );
     });
 
@@ -673,7 +707,8 @@ describe("AlertsPanel", () => {
       // Switch to grouped view
       fireEvent.click(screen.getByTestId("view-mode-grouped"));
 
-      expect(screen.getByText(/no alert groups/i)).toBeInTheDocument();
+      // AIEmptyState with context="alerts" and emptyType="no-matches" shows "No alerts found"
+      expect(screen.getByText(/no alerts found/i)).toBeInTheDocument();
     });
   });
 });

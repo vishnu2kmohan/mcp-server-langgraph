@@ -71,13 +71,13 @@ describe("Toggle", () => {
     it("applies checked visual styles when checked", () => {
       render(<Toggle checked={true} onChange={() => {}} />);
       const toggle = screen.getByRole("switch");
-      expect(toggle).toHaveClass("bg-primary-500");
+      expect(toggle).toHaveClass("bg-primary-9");
     });
 
     it("applies unchecked visual styles when unchecked", () => {
       render(<Toggle checked={false} onChange={() => {}} />);
       const toggle = screen.getByRole("switch");
-      expect(toggle).toHaveClass("bg-neutral-200");
+      expect(toggle).toHaveClass("bg-neutral-3");
     });
   });
 

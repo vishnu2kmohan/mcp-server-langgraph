@@ -213,4 +213,5 @@ export * from "./connection";
 export * from "./hitl";
 export * from "./mcp";
 export * from "./session";
+export * from "./tools";
 export * from "./workflow";

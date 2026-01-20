@@ -9,7 +9,8 @@
  * - GET /api/v1/feedback/summary - Aggregated feedback metrics
  */
 
-import { http, HttpResponse, delay } from "msw";
+import { http, delay } from "msw";
+import { apiJsonResponse } from "../utils/apiResponse";
 import type {
   FeedbackSummaryResponse,
   HallucinationCategoryCounts,
@@ -90,10 +91,10 @@ export function createFeedbackSummaryHandler(
 
     if (callback) {
       const customResponse = callback(timeframe);
-      return HttpResponse.json(customResponse);
+      return apiJsonResponse(customResponse);
     }
 
-    return HttpResponse.json(createMockFeedbackSummary({ timeframe }));
+    return apiJsonResponse(createMockFeedbackSummary({ timeframe }));
   });
 }
 

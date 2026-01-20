@@ -11,6 +11,7 @@
  */
 import { forwardRef } from "react";
 import { Menu, X } from "lucide-react";
+import { useReducedMotion } from "motion/react";
 import { cn } from "../utils/cn";
 
 import { Button } from "@/components/UI";
@@ -26,6 +27,9 @@ export interface HamburgerMenuProps {
 
 export const HamburgerMenu = forwardRef<HTMLButtonElement, HamburgerMenuProps>(
   function HamburgerMenu({ onClick, isOpen = false, className }, ref) {
+    // WCAG 2.2 AA: Respect user's reduced motion preference
+    const prefersReducedMotion = useReducedMotion();
+
     return (
       <Button
         ref={ref}
@@ -36,10 +40,11 @@ export const HamburgerMenu = forwardRef<HTMLButtonElement, HamburgerMenuProps>(
         aria-expanded={isOpen}
         aria-controls="mobile-drawer"
         className={cn(
-          "p-2 rounded-lg transition-colors",
-          "text-neutral-600 dark:text-neutral-300",
-          "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
-          "focus:outline-none focus:ring-2 focus:ring-primary-500",
+          "p-2 rounded-lg",
+          !prefersReducedMotion && "transition-colors",
+          "text-neutral-11",
+          "hover:bg-neutral-2",
+          "focus:outline-none focus:ring-2 focus:ring-primary-7",
           className,
         )}
       >

@@ -201,19 +201,19 @@ export const Sizes: Story = {
     return (
       <div className="space-y-6">
         <div>
-          <span className="text-sm text-neutral-600 dark:text-neutral-400 mb-2 block">
+          <span className="text-sm text-neutral-11 mb-2 block">
             Small
           </span>
           <Slider value={sm} onChange={setSm} size="sm" showValue />
         </div>
         <div>
-          <span className="text-sm text-neutral-600 dark:text-neutral-400 mb-2 block">
+          <span className="text-sm text-neutral-11 mb-2 block">
             Medium (default)
           </span>
           <Slider value={md} onChange={setMd} size="md" showValue />
         </div>
         <div>
-          <span className="text-sm text-neutral-600 dark:text-neutral-400 mb-2 block">
+          <span className="text-sm text-neutral-11 mb-2 block">
             Large
           </span>
           <Slider value={lg} onChange={setLg} size="lg" showValue />
@@ -233,8 +233,8 @@ export const ModelConfigExample: Story = {
     const [maxTokens, setMaxTokens] = useState(2048);
 
     return (
-      <div className="max-w-md space-y-6 p-4 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700">
-        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+      <div className="max-w-md space-y-6 p-4 bg-neutral-1 rounded-lg border border-neutral-5">
+        <h3 className="text-lg font-semibold text-neutral-12">
           Model Configuration
         </h3>
         <div className="space-y-4">
@@ -286,7 +286,7 @@ export const DarkMode: Story = {
     const [value1, setValue1] = useState(30);
     const [value2, setValue2] = useState(70);
     return (
-      <div className="dark bg-neutral-900 p-6 rounded-lg">
+      <div className="dark bg-neutral-2 p-6 rounded-lg">
         <div className="space-y-4">
           <Slider
             value={value1}

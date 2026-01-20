@@ -147,8 +147,8 @@ export function WorkflowDocument({
         data-testid="workflow-document"
         className={cn(
           "flex flex-col items-center justify-center h-full",
-          "bg-neutral-50 dark:bg-neutral-900",
-          "text-neutral-500 dark:text-neutral-400",
+          "bg-neutral-1",
+          "text-neutral-10",
           compact && "text-sm",
           className,
         )}
@@ -166,11 +166,11 @@ export function WorkflowDocument({
         data-testid="workflow-document"
         className={cn(
           "flex items-center justify-center h-full",
-          "bg-neutral-50 dark:bg-neutral-900",
+          "bg-neutral-1",
           className,
         )}
       >
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-9" />
       </div>
     );
   }
@@ -181,38 +181,38 @@ export function WorkflowDocument({
         data-testid="workflow-document"
         className={cn(
           "flex flex-col h-full",
-          "bg-neutral-50 dark:bg-neutral-900",
+          "bg-neutral-1",
           compact && "text-sm",
           className,
         )}
       >
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center justify-between px-4 py-2 bg-neutral-1 border-b border-neutral-5">
           <div className="flex items-center gap-3">
             <GitBranch
               size={18}
-              className="text-neutral-500 dark:text-neutral-400"
+              className="text-neutral-10"
             />
-            <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+            <h2 className="text-base font-semibold text-neutral-12">
               {metadata?.name || "Workflow"}
-              {isDirty && <span className="text-warning-500 ml-1">*</span>}
+              {isDirty && <span className="text-warning-9 ml-1">*</span>}
             </h2>
 
             {isReadOnly && (
-              <span className="flex items-center gap-1 text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded">
+              <span className="flex items-center gap-1 text-xs px-2 py-1 bg-neutral-2 text-neutral-11 rounded">
                 <Lock size={12} />
                 Read-Only
               </span>
             )}
 
             {!validation.isValid && (
-              <span className="text-xs px-2 py-1 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded">
+              <span className="text-xs px-2 py-1 bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded">
                 {validation.errors.length} errors
               </span>
             )}
 
             {validationError && (
-              <div className="flex items-center gap-2 px-2 py-1 bg-error-100 dark:bg-error-900/30 rounded text-xs text-error-700 dark:text-error-400">
+              <div className="flex items-center gap-2 px-2 py-1 bg-error-3 bg-error-4 rounded text-xs text-error-11 dark:text-error-7">
                 <AlertCircle size={12} />
                 {validationError}
               </div>
@@ -223,11 +223,11 @@ export function WorkflowDocument({
                 className={cn(
                   "text-xs px-2 py-1 rounded",
                   executionState === "running" &&
-                    "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400",
+                    "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7",
                   executionState === "completed" &&
-                    "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400",
+                    "bg-success-3 text-success-11 bg-success-4 dark:text-success-7",
                   executionState === "error" &&
-                    "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400",
+                    "bg-error-3 text-error-11 bg-error-4 dark:text-error-7",
                 )}
               >
                 {executionState}
@@ -237,7 +237,7 @@ export function WorkflowDocument({
 
           <div className="flex items-center gap-2">
             <Button
-              className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 rounded"
+              className="p-1.5 text-neutral-10 hover:text-neutral-11 rounded"
               onClick={() => dispatch(undo())}
               disabled={!canUndo || isReadOnly}
               title="Undo"
@@ -245,7 +245,7 @@ export function WorkflowDocument({
               <Undo size={16} />
             </Button>
             <Button
-              className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 rounded"
+              className="p-1.5 text-neutral-10 hover:text-neutral-11 rounded"
               onClick={() => dispatch(redo())}
               disabled={!canRedo || isReadOnly}
               title="Redo"
@@ -253,12 +253,12 @@ export function WorkflowDocument({
               <Redo size={16} />
             </Button>
 
-            <div className="w-px h-5 bg-neutral-300 dark:bg-neutral-600 mx-1" />
+            <div className="w-px h-5 bg-neutral-3 mx-1" />
 
             <Button
               variant="success"
               size="sm"
-              className="flex .5 px-2.5 py-1.5 text-xs bg-success-600 text-white rounded hover:bg-success-700"
+              className="flex .5 px-2.5 py-1.5 text-xs bg-success-10 text-neutral-12 rounded hover:bg-success-11"
               onClick={handleRun}
               disabled={executionState === "running" || !validation.isValid}
               title="Run"
@@ -274,7 +274,7 @@ export function WorkflowDocument({
             <Button
               variant="secondary"
               size="sm"
-              className="flex .5 px-2.5 py-1.5 text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded hover:bg-neutral-200 dark:bg-neutral-700"
+              className="flex .5 px-2.5 py-1.5 text-xs bg-neutral-2 text-neutral-11 rounded hover:bg-neutral-3"
               onClick={handleExportJSON}
               title="Export"
             >
@@ -285,7 +285,7 @@ export function WorkflowDocument({
             <Button
               variant="primary"
               size="sm"
-              className="flex .5 px-2.5 py-1.5 text-xs bg-primary-600 text-white rounded hover:bg-primary-700"
+              className="flex .5 px-2.5 py-1.5 text-xs bg-primary-10 text-neutral-12 rounded hover:bg-primary-11"
               onClick={handleSave}
               disabled={isSaving || !isDirty || isReadOnly}
               title="Save"
@@ -318,7 +318,7 @@ export function WorkflowDocument({
           </div>
 
           {/* Execution Trace Panel - collapsible right panel */}
-          <div className="w-80 border-l border-neutral-200 dark:border-neutral-700 overflow-hidden">
+          <div className="w-80 border-l border-neutral-5 overflow-hidden">
             <ExecutionTracePanel onNodeHighlight={handleNodeHighlight} />
           </div>
         </div>

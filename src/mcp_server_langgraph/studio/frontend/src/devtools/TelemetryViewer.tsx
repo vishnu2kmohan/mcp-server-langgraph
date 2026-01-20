@@ -38,27 +38,16 @@ function CollapsibleSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="telemetry-section">
-      <Button
-        className="telemetry-section-header"
+    <div className="border-b border-neutral-3 last:border-b-0">
+      <button
+        type="button"
+        className="flex items-center w-full p-2 bg-transparent border-none cursor-pointer font-semibold text-sm text-neutral-12 hover:bg-neutral-2 transition-colors"
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          width: "100%",
-          padding: "8px",
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          fontWeight: 600,
-          fontSize: "14px",
-          color: "#333",
-        }}
       >
-        <span style={{ marginRight: "8px" }}>{isOpen ? "▼" : "▶"}</span>
+        <span className="mr-2">{isOpen ? "▼" : "▶"}</span>
         {title}
-      </Button>
-      {isOpen && <div style={{ padding: "8px 8px 8px 24px" }}>{children}</div>}
+      </button>
+      {isOpen && <div className="py-2 px-2 pl-6">{children}</div>}
     </div>
   );
 }
@@ -75,16 +64,9 @@ function MetricRow({
   value: string | number;
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        padding: "4px 0",
-        fontSize: "12px",
-      }}
-    >
-      <span style={{ color: "#666" }}>{label}</span>
-      <span style={{ fontWeight: 500 }}>{value}</span>
+    <div className="flex justify-between py-1 text-xs">
+      <span className="text-neutral-10">{label}</span>
+      <span className="font-medium text-neutral-12">{value}</span>
     </div>
   );
 }
@@ -129,67 +111,23 @@ export function TelemetryViewer() {
   }
 
   return (
-    <div
-      className="telemetry-viewer"
-      style={{
-        position: "fixed",
-        bottom: 16,
-        right: 16,
-        width: 320,
-        maxHeight: 400,
-        overflow: "auto",
-        background: "#fff",
-        border: "1px solid #ddd",
-        borderRadius: 8,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-        zIndex: 9999,
-        fontFamily: "system-ui, sans-serif",
-      }}
-    >
+    <div className="fixed bottom-4 right-4 w-80 max-h-[400px] overflow-auto bg-neutral-1 border border-neutral-5 rounded-lg shadow-lg z-dropdown font-sans">
       {/* Header */}
-      <div
-        style={{
-          padding: "12px 16px",
-          borderBottom: "1px solid #eee",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <span style={{ fontWeight: 600, fontSize: "14px" }}>
+      <div className="p-3 border-b border-neutral-3 flex justify-between items-center">
+        <span className="font-semibold text-sm text-neutral-12">
           Telemetry Viewer
         </span>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <Button
-            onClick={handleExport}
-            style={{
-              padding: "4px 8px",
-              fontSize: "11px",
-              cursor: "pointer",
-              border: "1px solid #ddd",
-              borderRadius: 4,
-              background: "#f5f5f5",
-            }}
-          >
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             Export
           </Button>
-          <Button
-            onClick={handleReset}
-            style={{
-              padding: "4px 8px",
-              fontSize: "11px",
-              cursor: "pointer",
-              border: "1px solid #ddd",
-              borderRadius: 4,
-              background: "#f5f5f5",
-            }}
-          >
+          <Button variant="outline" size="sm" onClick={handleReset}>
             Reset
           </Button>
         </div>
       </div>
       {/* Metrics */}
-      <div style={{ padding: "8px" }}>
+      <div className="p-2">
         {/* Session Creations */}
         <CollapsibleSection title="Session Creations">
           <MetricRow label="Total" value={metrics.sessionCreations.total} />
@@ -249,25 +187,8 @@ export function TelemetryViewer() {
         </CollapsibleSection>
       </div>
       {/* Refresh Button */}
-      <div
-        style={{
-          padding: "8px 16px",
-          borderTop: "1px solid #eee",
-          textAlign: "center",
-        }}
-      >
-        <Button
-          onClick={refresh}
-          style={{
-            padding: "6px 16px",
-            fontSize: "12px",
-            cursor: "pointer",
-            border: "1px solid #ddd",
-            borderRadius: 4,
-            background: "#f5f5f5",
-            width: "100%",
-          }}
-        >
+      <div className="p-3 border-t border-neutral-3 text-center">
+        <Button variant="outline" size="sm" className="w-full" onClick={refresh}>
           Refresh Metrics
         </Button>
       </div>

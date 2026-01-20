@@ -136,7 +136,7 @@ export function AIFollowUpSuggestions({
         data-testid="suggestions-loading"
         className={`flex flex-col gap-2 ${className}`}
       >
-        <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="flex items-center gap-1 text-xs text-neutral-10">
           <Sparkles size={12} className="animate-pulse" />
           <span>Generating follow-up questions...</span>
         </div>
@@ -145,7 +145,7 @@ export function AIFollowUpSuggestions({
             <div
               key={i}
               data-testid="skeleton-suggestion"
-              className="h-8 rounded-full bg-neutral-100 dark:bg-neutral-700 animate-pulse"
+              className="h-8 rounded-full bg-neutral-2 animate-pulse"
               style={{ width: `${80 + i * 20}px` }}
             />
           ))}
@@ -167,7 +167,7 @@ export function AIFollowUpSuggestions({
       className={`flex flex-col gap-2 ${textSize} ${className}`}
     >
       {/* Header */}
-      <div className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
+      <div className="flex items-center gap-1 text-neutral-10">
         <Sparkles size={compact ? 10 : 12} />
         <span className="text-xs">Related questions to explore</span>
       </div>
@@ -184,7 +184,7 @@ export function AIFollowUpSuggestions({
             >
               <Button
                 variant="primary"
-                className=".5 px-3 py-1.5 rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-900/40 border border-primary-200 dark:border-primary-800"
+                className=".5 px-3 py-1.5 rounded-full bg-primary-1 dark:bg-primary-a3 text-primary-11 dark:text-primary-11 hover:bg-primary-3 dark:hover:bg-primary-a5 border border-primary-4 dark:border-primary-11"
                 type="button"
                 onClick={() => onSelect(suggestion)}
                 onKeyDown={(e) => {
@@ -199,7 +199,7 @@ export function AIFollowUpSuggestions({
                   <Icon size={compact ? 10 : 12} />
                 </span>
                 {showCategories && (
-                  <span className="text-xs uppercase font-semibold text-primary-500 dark:text-primary-400">
+                  <span className="text-xs uppercase font-semibold text-primary-9 dark:text-primary-11">
                     {CATEGORY_LABELS[category]}
                   </span>
                 )}
@@ -212,7 +212,7 @@ export function AIFollowUpSuggestions({
                 <div className="absolute right-1 flex items-center gap-0.5">
                   <Button
                     variant="success"
-                    className="p-1 rounded-full text-neutral-400 dark:text-neutral-500 hover:text-success-600 dark:hover:text-success-400 hover:bg-success-50 dark:hover:bg-success-900/20"
+                    className="p-1 rounded-full text-neutral-9 hover:text-success-10 dark:hover:text-success-7 hover:bg-success-1 dark:hover:bg-success-a3"
                     type="button"
                     data-testid="feedback-positive"
                     onClick={(e) => {
@@ -226,7 +226,7 @@ export function AIFollowUpSuggestions({
                   </Button>
                   <Button
                     variant="danger"
-                    className="p-1 rounded-full text-neutral-400 dark:text-neutral-500 hover:text-error-600 dark:hover:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20"
+                    className="p-1 rounded-full text-neutral-9 hover:text-error-10 dark:hover:text-error-7 hover:bg-error-1 dark:hover:bg-error-a3"
                     type="button"
                     data-testid="feedback-negative"
                     onClick={(e) => {

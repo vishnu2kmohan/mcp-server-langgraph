@@ -42,7 +42,7 @@ import {
 } from "../../hooks/useSessionIntelligence";
 import type { SessionSummary } from "../../types/session";
 import { AIEmptyState } from "../EmptyState/AIEmptyState";
-
+import { cn } from "../../utils/cn";
 import { Button, Input } from "@/components/UI";
 
 // ==============================================================================
@@ -313,18 +313,17 @@ export function SessionList({
       <li
         key={session.id}
         aria-current={isSelected ? "true" : undefined}
-        className={`group relative px-3 py-2 cursor-pointer border-b border-neutral-100 dark:border-neutral-800 ${
-          isSelected
-            ? "bg-primary-50 dark:bg-primary-900/30"
-            : "hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
-        }`}
+        className={cn(
+          "group relative px-3 py-2 cursor-pointer border-b border-neutral-5",
+          isSelected ? "bg-primary-4" : "hover:bg-neutral-a6",
+        )}
         onClick={() => !isEditing && onSelect?.(session.id)}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             {isEditing ? (
               <Input
-                className="px-1 py-0.5 text-sm border-primary-500 focus:ring-primary-500"
+                className="px-1 py-0.5 text-sm border-primary-9 focus:ring-primary-7"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 onKeyDown={(e) => handleRenameKeyDown(e, session.id)}
@@ -336,16 +335,16 @@ export function SessionList({
                 {isPinned && (
                   <Pin
                     size={12}
-                    className="text-primary-500 flex-shrink-0"
+                    className="text-primary-9 flex-shrink-0"
                     aria-label="Pinned"
                   />
                 )}
-                <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
+                <span className="text-sm font-medium text-neutral-12 truncate">
                   {session.name}
                 </span>
               </div>
             )}
-            <div className="flex items-center gap-2 mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+            <div className="flex items-center gap-2 mt-0.5 text-xs text-neutral-10">
               <span>{session.messageCount} messages</span>
               <span>•</span>
               <span>{formatRelativeTime(session.updatedAt)}</span>
@@ -354,15 +353,16 @@ export function SessionList({
 
           {/* Actions button */}
           <div
-            className={`flex-shrink-0 ${
+            className={cn(
+              "flex-shrink-0",
               activeMenuId === session.id
                 ? "opacity-100"
-                : "opacity-0 group-hover:opacity-100"
-            }`}
+                : "opacity-0 group-hover:opacity-100",
+            )}
           >
             <Button
-              variant="secondary"
-              className="p-1 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 focus:ring-primary-500"
+              variant="ghost"
+              size="icon"
               onClick={(e) => {
                 e.stopPropagation();
                 setActiveMenuId(
@@ -381,12 +381,12 @@ export function SessionList({
               <div
                 ref={menuRef}
                 role="menu"
-                className="absolute right-2 top-10 z-10 w-36 rounded-md bg-white dark:bg-neutral-900 shadow-lg ring-1 ring-black/5 dark:ring-white/10"
+                className="absolute right-2 top-10 z-10 w-36 rounded-md bg-neutral-1 shadow-lg ring-1 ring-neutral-a1 dark:ring-neutral-a2"
               >
                 <div className="py-1">
                   <Button
-                    variant="secondary"
-                    className="w-full flex px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800"
+                    variant="ghost"
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm justify-start"
                     role="menuitem"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -406,8 +406,8 @@ export function SessionList({
                     )}
                   </Button>
                   <Button
-                    variant="secondary"
-                    className="w-full flex px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800"
+                    variant="ghost"
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm justify-start"
                     role="menuitem"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -419,7 +419,7 @@ export function SessionList({
                   </Button>
                   <Button
                     variant="danger"
-                    className="w-full flex px-3 py-1.5 text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20"
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm"
                     role="menuitem"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -444,19 +444,19 @@ export function SessionList({
   const renderGroupHeader = (group: SessionGroup) => (
     <li
       key={`group-${group.topic}`}
-      className="px-3 py-2 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700"
+      className="px-3 py-2 bg-neutral-1 border-b border-neutral-5"
       role="presentation"
       data-testid={`group-header-${group.topic.toLowerCase().replace(/\s+/g, "-")}`}
     >
       <div className="flex items-center gap-2">
         <FolderOpen
           size={14}
-          className="text-neutral-500 dark:text-neutral-400"
+          className="text-neutral-10"
         />
-        <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wide">
+        <span className="text-xs font-semibold text-neutral-11 uppercase tracking-wide">
           {group.topic}
         </span>
-        <span className="text-xs text-neutral-400 dark:text-neutral-400">
+        <span className="text-xs text-neutral-9">
           ({group.sessionIds.length})
         </span>
       </div>
@@ -475,7 +475,7 @@ export function SessionList({
           data-testid="ai-grouping-loading"
           role="status"
         >
-          <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary-500" />
+          <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary-9" />
           <span className="sr-only">Loading AI groups...</span>
         </li>
       );
@@ -485,7 +485,7 @@ export function SessionList({
     if (enableAIGrouping && groupsError) {
       return (
         <li
-          className="p-4 text-center text-sm text-warning-600 dark:text-warning-400"
+          className="p-4 text-center text-sm text-warning-9 dark:text-warning-9"
           data-testid="ai-grouping-error"
           role="alert"
         >
@@ -527,18 +527,18 @@ export function SessionList({
         elements.push(
           <li
             key="group-ungrouped"
-            className="px-3 py-2 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700"
+            className="px-3 py-2 bg-neutral-1 border-b border-neutral-5"
             role="presentation"
           >
             <div className="flex items-center gap-2">
               <MessageSquare
                 size={14}
-                className="text-neutral-500 dark:text-neutral-400"
+                className="text-neutral-10"
               />
-              <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wide">
+              <span className="text-xs font-semibold text-neutral-11 uppercase tracking-wide">
                 Other
               </span>
-              <span className="text-xs text-neutral-400 dark:text-neutral-400">
+              <span className="text-xs text-neutral-9">
                 ({ungroupedIds.length})
               </span>
             </div>
@@ -601,13 +601,13 @@ export function SessionList({
     return (
       <div
         data-testid="session-list-loading"
-        className={`session-list ${className}`}
+        className={cn("session-list", className)}
       >
         <div className="p-3 space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="animate-pulse">
-              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4 mb-2" />
-              <div className="h-3 bg-neutral-200 dark:bg-neutral-700 rounded w-1/2" />
+              <div className="h-4 bg-neutral-3 rounded w-3/4 mb-2" />
+              <div className="h-3 bg-neutral-3 rounded w-1/2" />
             </div>
           ))}
         </div>
@@ -620,7 +620,7 @@ export function SessionList({
   // ---------------------------------------------------------------------------
   if (sessions.length === 0) {
     return (
-      <div className={`session-list ${className}`}>
+      <div className={cn("session-list", className)}>
         <AIEmptyState
           context="sessions"
           emptyType="empty"
@@ -636,18 +636,18 @@ export function SessionList({
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <div className={`session-list flex flex-col h-full ${className}`}>
+    <div className={cn("session-list flex flex-col h-full", className)}>
       {/* Header with search and new button */}
-      <div className="p-3 border-b border-neutral-200 dark:border-neutral-700 space-y-2">
+      <div className="p-3 border-b border-neutral-5 space-y-2">
         {/* Search */}
         <div className="relative">
           <Search
             size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-9"
             aria-hidden="true"
           />
           <Input
-            className="pl-9 pr-8 py-1.5 text-sm -500 focus:ring-primary-500"
+            className="pl-9 pr-8 py-1.5 text-sm focus:ring-primary-7"
             ref={searchInputRef}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -656,7 +656,9 @@ export function SessionList({
           />
           {searchQuery && (
             <Button
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300"
+              variant="ghost"
+              size="sm"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5"
               onClick={() => setSearchQuery("")}
               aria-label="Clear search"
             >
@@ -669,7 +671,8 @@ export function SessionList({
         {onCreate && (
           <Button
             variant="secondary"
-            className="w-full flex .5 px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded-md hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 focus:ring-primary-500"
+            size="sm"
+            className="w-full justify-center gap-1.5"
             onClick={onCreate}
           >
             <Plus size={16} />

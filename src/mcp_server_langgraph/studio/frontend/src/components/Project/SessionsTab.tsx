@@ -47,14 +47,21 @@ function Dialog({ isOpen, onClose, title, children }: DialogProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
-          <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+      <div
+        className="absolute inset-0 bg-neutral-a6"
+        onClick={onClose}
+        onKeyDown={(e) => e.key === "Enter" && onClose()}
+        role="button"
+        tabIndex={0}
+        aria-label="Close dialog"
+      />
+      <div className="relative bg-neutral-1 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-5">
+          <h3 className="text-lg font-medium text-neutral-12">
             {title}
           </h3>
-          <Button
-            className="p-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
+          <Button size="icon" variant="ghost"
+            className="p-1 text-neutral-10 hover:text-neutral-11"
             onClick={onClose}
           >
             <X className="w-5 h-5" />
@@ -94,12 +101,12 @@ function CreateSessionDialog({
         <div className="mb-4">
           <label
             htmlFor="session-name"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+            className="block text-sm font-medium text-neutral-11 mb-1"
           >
             Session Name
           </label>
           <Input
-            className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
+            className="px-3 py-2 text-neutral-12 focus:ring-primary-7"
             id="session-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -110,7 +117,7 @@ function CreateSessionDialog({
         <div className="flex justify-end gap-2">
           <Button
             variant="secondary"
-            className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
+            className="px-4 py-2 text-sm text-neutral-11 hover:bg-neutral-2 rounded-lg"
             type="button"
             onClick={onClose}
           >
@@ -118,7 +125,7 @@ function CreateSessionDialog({
           </Button>
           <Button
             variant="primary"
-            className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="px-4 py-2 text-sm bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11"
             type="submit"
             disabled={!name.trim()}
           >
@@ -254,7 +261,7 @@ export function SessionsTab({
       />
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+          <h2 className="text-lg font-medium text-neutral-12">
             Sessions
           </h2>
           {sessions.length > 0 && (
@@ -270,7 +277,7 @@ export function SessionsTab({
         </div>
         <Button
           variant="primary"
-          className="flex px-3 py-1.5 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700"
+          className="flex px-3 py-1.5 bg-primary-10 text-neutral-12 text-sm rounded-lg hover:bg-primary-11"
           onClick={() => setShowDialog(true)}
         >
           <Plus className="w-4 h-4" />
@@ -278,7 +285,7 @@ export function SessionsTab({
         </Button>
       </div>
       {sessions.length === 0 ? (
-        <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
+        <div className="text-center py-12 text-neutral-10">
           No sessions yet. Create your first session to start chatting.
         </div>
       ) : (
@@ -286,7 +293,7 @@ export function SessionsTab({
           {sessions.map((session) => (
             <div
               key={session.id}
-              className="flex items-center gap-3 p-4 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:shadow-sm cursor-pointer"
+              className="flex items-center gap-3 p-4 bg-neutral-1 border border-neutral-5 rounded-lg hover:shadow-sm cursor-pointer"
               onClick={() => navigate(`/studio/chat?session=${session.id}`)}
             >
               <Checkbox
@@ -296,23 +303,23 @@ export function SessionsTab({
                 size="sm"
               />
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                <div className="font-medium text-neutral-12">
                   {session.name}
                 </div>
-                <div className="text-sm text-neutral-500 dark:text-neutral-400">
+                <div className="text-sm text-neutral-10">
                   {session.messageCount} messages
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="danger"
-                  className="p-1.5 text-neutral-400 dark:text-neutral-400 hover:text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
+                  className="p-1.5 text-neutral-9 hover:text-error-9 hover:bg-error-1 dark:hover:bg-error-a3 rounded"
                   aria-label="Remove session"
                   onClick={(e) => handleRemoveSession(session.id, e)}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
-                <MessageSquare className="w-5 h-5 text-neutral-400 dark:text-neutral-400" />
+                <MessageSquare className="w-5 h-5 text-neutral-9" />
               </div>
             </div>
           ))}

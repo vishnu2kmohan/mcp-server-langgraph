@@ -192,7 +192,7 @@ describe("ActivityBar", () => {
       await user.click(chatButton);
 
       // Check that the button has active styling
-      expect(chatButton).toHaveClass("bg-primary-100");
+      expect(chatButton).toHaveClass("bg-primary-3");
     });
   });
 
@@ -335,7 +335,7 @@ describe("ActivityBar", () => {
 
       // After render, the workflows nav item should be highlighted
       const workflowsButton = screen.getByTestId("nav-workflows");
-      expect(workflowsButton).toHaveClass("bg-primary-100");
+      expect(workflowsButton).toHaveClass("bg-primary-3");
     });
 
     it("should handle deep links correctly (e.g., /studio/workflows)", () => {
@@ -347,10 +347,10 @@ describe("ActivityBar", () => {
 
       // Agents should be highlighted, not chat (default)
       const agentsButton = screen.getByTestId("nav-agents");
-      expect(agentsButton).toHaveClass("bg-primary-100");
+      expect(agentsButton).toHaveClass("bg-primary-3");
 
       const chatButton = screen.getByTestId("nav-chat");
-      expect(chatButton).not.toHaveClass("bg-primary-100");
+      expect(chatButton).not.toHaveClass("bg-primary-3");
     });
 
     it("should handle deep links with sub-paths", () => {
@@ -362,7 +362,7 @@ describe("ActivityBar", () => {
 
       // Chat should be highlighted (prefix match)
       const chatButton = screen.getByTestId("nav-chat");
-      expect(chatButton).toHaveClass("bg-primary-100");
+      expect(chatButton).toHaveClass("bg-primary-3");
     });
 
     it("should ignore unknown routes (doesn't set activeNavItem to invalid value)", () => {

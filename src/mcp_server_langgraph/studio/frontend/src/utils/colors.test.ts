@@ -178,7 +178,7 @@ describe("Global Color Helper Functions", () => {
 
     it("should return stronger error color for critical risk", async () => {
       const { getRiskLevelColor } = await import("./colors");
-      expect(getRiskLevelColor("critical")).toMatch(/text-error-700/);
+      expect(getRiskLevelColor("critical")).toMatch(/text-error-11/);
     });
 
     it("should include dark mode variants for all risk levels", async () => {
@@ -395,16 +395,16 @@ describe("WCAG 2.2 Accessibility Compliance", () => {
     it("should use lighter shades in dark mode for contrast", async () => {
       const { CONFIDENCE_COLORS } = await import("./colors");
       // Dark mode should use 400 shade (lighter) for readability on dark backgrounds
-      expect(CONFIDENCE_COLORS.high).toMatch(/dark:text-success-400/);
-      expect(CONFIDENCE_COLORS.medium).toMatch(/dark:text-warning-400/);
-      expect(CONFIDENCE_COLORS.low).toMatch(/dark:text-error-400/);
+      expect(CONFIDENCE_COLORS.high).toMatch(/dark:text-success-5/);
+      expect(CONFIDENCE_COLORS.medium).toMatch(/dark:text-warning-5/);
+      expect(CONFIDENCE_COLORS.low).toMatch(/dark:text-error-5/);
     });
 
     it("should use 600 shade in light mode for contrast", async () => {
       const { CONFIDENCE_COLORS } = await import("./colors");
-      expect(CONFIDENCE_COLORS.high).toMatch(/text-success-600/);
-      expect(CONFIDENCE_COLORS.medium).toMatch(/text-warning-600/);
-      expect(CONFIDENCE_COLORS.low).toMatch(/text-error-600/);
+      expect(CONFIDENCE_COLORS.high).toMatch(/text-success-10/);
+      expect(CONFIDENCE_COLORS.medium).toMatch(/text-warning-10/);
+      expect(CONFIDENCE_COLORS.low).toMatch(/text-error-10/);
     });
   });
 
@@ -460,14 +460,14 @@ describe("Info Color Utilities", () => {
 
     it("should have proper contrast ratios (600 light / 400 dark for text)", async () => {
       const { INFO_COLORS } = await import("./colors");
-      expect(INFO_COLORS.text).toMatch(/text-info-600/);
-      expect(INFO_COLORS.text).toMatch(/dark:text-info-400/);
+      expect(INFO_COLORS.text).toMatch(/text-info-10/);
+      expect(INFO_COLORS.text).toMatch(/dark:text-info-5/);
     });
 
     it("should have subtle background (50 light / 900 with opacity dark)", async () => {
       const { INFO_COLORS } = await import("./colors");
-      expect(INFO_COLORS.bg).toMatch(/bg-info-50/);
-      expect(INFO_COLORS.bg).toMatch(/dark:bg-info-900/);
+      expect(INFO_COLORS.bg).toMatch(/bg-info-1/);
+      expect(INFO_COLORS.bg).toMatch(/dark:bg-info-12/);
     });
   });
 

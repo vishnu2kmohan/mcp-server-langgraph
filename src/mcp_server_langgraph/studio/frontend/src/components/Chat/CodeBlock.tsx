@@ -9,14 +9,65 @@
  * - Copy to clipboard
  * - Word wrap toggle
  * - Download as file
+ *
+ * Design System Compliance:
+ * - Uses CVA for language badge variant
+ * - Uses Motion.dev for copy button feedback
+ * - Implements useReducedMotion() for accessibility
+ * - Uses semantic colors per STYLE.md
  */
 
 import { useState, useCallback } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { cva } from "class-variance-authority";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Copy, Check } from "lucide-react";
+import { buttonVariants as motionButtonVariants } from "@/design-system/micro-interactions";
 
 import { Button } from "@/components/UI";
+
+// =============================================================================
+// CVA Variants
+// =============================================================================
+
+/**
+ * Language badge variant
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const languageBadgeVariants = cva(
+  "absolute left-3 top-2 z-10 text-xs font-mono",
+  {
+    variants: {
+      theme: {
+        dark: "text-neutral-9",
+        light: "text-neutral-11",
+      },
+    },
+    defaultVariants: {
+      theme: "dark",
+    },
+  },
+);
+
+/**
+ * Toolbar button variant
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const toolbarButtonVariants = cva(
+  "p-1.5 rounded focus:ring-primary-7",
+  {
+    variants: {
+      variant: {
+        default: "bg-neutral-4 hover:bg-neutral-5 text-neutral-9 hover:text-neutral-12",
+        active: "bg-primary-4 text-primary-11",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
 
 /**
  * Get file extension for a language
@@ -65,6 +116,7 @@ export interface CodeBlockProps {
  * - Download as file
  */
 export function CodeBlock({ language, children }: CodeBlockProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [copied, setCopied] = useState(false);
   const [wordWrap, setWordWrap] = useState(false);
 
@@ -98,7 +150,7 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
         aria-label="Code block actions"
       >
         <Button
-          className="p-1.5 rounded focus:ring-primary-500"
+          className="p-1.5 rounded focus:ring-primary-7"
           onClick={handleToggleWordWrap}
           title="Toggle word wrap"
           aria-label={wordWrap ? "Disable word wrap" : "Enable word wrap"}
@@ -124,7 +176,7 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
         </Button>
         <Button
           variant="secondary"
-          className="p-1.5 bg-neutral-700 hover:bg-neutral-600 rounded text-neutral-300 hover:text-white focus:ring-primary-500"
+          className="p-1.5 bg-neutral-4 hover:bg-neutral-5 rounded text-neutral-9 hover:text-neutral-12 focus:ring-primary-7"
           onClick={handleDownload}
           title="Download file"
           aria-label="Download code as file"
@@ -146,24 +198,27 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
         </Button>
-        <Button
-          variant="secondary"
-          className="p-1.5 bg-neutral-700 hover:bg-neutral-600 rounded text-neutral-300 hover:text-white focus:ring-primary-500"
+        <motion.button
+          className={toolbarButtonVariants({ variant: "default" })}
           onClick={handleCopy}
           title="Copy code"
           aria-label={
             copied ? "Code copied to clipboard" : "Copy code to clipboard"
           }
+          variants={prefersReducedMotion ? undefined : motionButtonVariants}
+          initial="rest"
+          whileHover="hover"
+          whileTap="pressed"
         >
           {copied ? (
             <Check size={14} aria-hidden="true" />
           ) : (
             <Copy size={14} aria-hidden="true" />
           )}
-        </Button>
+        </motion.button>
       </div>
       {language && (
-        <div className="absolute left-3 top-2 z-10 text-xs text-neutral-400 dark:text-neutral-400 font-mono">
+        <div className={languageBadgeVariants({ theme: "dark" })}>
           {language}
         </div>
       )}

@@ -29,6 +29,7 @@ vi.mock("../utils/authenticatedFetch", () => ({
 
 vi.mock("../utils/intendedRoute", () => ({
   setIntendedRoute: (...args: unknown[]) => mockSetIntendedRoute(...args),
+  saveCurrentRouteAsIntended: (...args: unknown[]) => mockSetIntendedRoute(...args),
 }));
 
 import { useTokenUsage } from "./useTokenUsage";

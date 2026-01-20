@@ -288,7 +288,9 @@ describe("CanvasArtifact", () => {
       const aiArtifact: CanvasArtifactType = {
         ...mockCodeArtifact,
         editMetadata: {
-          editedBy: "ai-generation",
+          origin: "ai",
+          modified: false,
+          lastEditedBy: "ai",
           aiConfidence: 0.95,
         },
       };
@@ -301,7 +303,9 @@ describe("CanvasArtifact", () => {
       const aiArtifact: CanvasArtifactType = {
         ...mockCodeArtifact,
         editMetadata: {
-          editedBy: "ai-generation",
+          origin: "ai",
+          modified: false,
+          lastEditedBy: "ai",
           aiConfidence: 0.95,
         },
       };

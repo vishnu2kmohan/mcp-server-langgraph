@@ -15,6 +15,7 @@ import { useAppDispatch } from "../store/hooks";
 import { logout } from "../store/slices/authSlice";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
+import { transformSnakeToCamel } from "../api/transforms";
 import {
   WS_CLOSE_TOKEN_EXPIRED,
   WS_CLOSE_PROTOCOL_VERSION,
@@ -215,8 +216,10 @@ export function useMCPConnection(
         onAuthFailure: handleAuthFailure,
       });
       if (response.ok) {
-        const data = await response.json();
-        setTools(data.tools || []);
+        const rawData = await response.json();
+        // Transform snake_case API response to camelCase (e.g., input_schema -> inputSchema)
+        const data = transformSnakeToCamel(rawData);
+        setTools((data.tools || []) as Tool[]);
       }
     } catch {
       throw new Error("Failed to fetch tools via REST");
@@ -298,8 +301,9 @@ export function useMCPConnection(
         sendRequest("tools/list")
           .then((result) => {
             if (!isMountedRef.current) return;
-            const toolsResult = result as { tools: Tool[] };
-            setTools(toolsResult.tools || []);
+            // Transform snake_case response to camelCase (e.g., input_schema -> inputSchema)
+            const transformed = transformSnakeToCamel(result as { tools: unknown[] });
+            setTools((transformed.tools || []) as Tool[]);
           })
           .catch(() => {
             // Ignore errors for now

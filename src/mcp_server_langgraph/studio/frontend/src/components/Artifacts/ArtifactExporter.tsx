@@ -439,7 +439,7 @@ export function ArtifactExporter({
     <div className={`relative inline-block ${className}`}>
       <Button
         variant="secondary"
-        className="text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
+        className="text-neutral-11 hover:bg-neutral-2 rounded"
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         disabled={!canExport()}
@@ -454,18 +454,18 @@ export function ArtifactExporter({
           role="menu"
           className="
             absolute right-0 mt-1 w-36
-            bg-white dark:bg-neutral-800
-            border border-neutral-200 dark:border-neutral-700
+            bg-neutral-1
+            border border-neutral-5
             rounded-lg shadow-lg
-            z-50 overflow-hidden
+            z-dropdown overflow-hidden
           "
         >
           {isLoading && (
             <div
               data-testid="export-loading"
-              className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-neutral-800/80"
+              className="absolute inset-0 flex items-center justify-center bg-neutral-a9"
             >
-              <Loader2 size={20} className="animate-spin text-primary-500" />
+              <Loader2 size={20} className="animate-spin text-primary-9" />
             </div>
           )}
 
@@ -474,7 +474,7 @@ export function ArtifactExporter({
               <li key={format}>
                 <Button
                   variant="secondary"
-                  className="w-full px-3 py-2 flex text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                  className="w-full px-3 py-2 flex text-sm text-neutral-11 hover:bg-neutral-2"
                   role="menuitem"
                   onClick={() => handleExport(format)}
                   disabled={isLoading}

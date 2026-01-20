@@ -730,7 +730,7 @@ describe("AIInsightsTab - Predictive Alerts", () => {
     await user.click(screen.getByTestId("observability-insights-toggle"));
 
     const alert = screen.getByTestId("predictive-alert-pred-critical");
-    expect(alert).toHaveClass("bg-error-100");
+    expect(alert).toHaveClass("bg-error-2");
   });
 });
 

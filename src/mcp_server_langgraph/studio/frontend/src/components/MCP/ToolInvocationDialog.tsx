@@ -15,6 +15,11 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useListMcpToolsQuery, useInvokeMcpToolMutation } from "../../api";
 
 import { Button, Input, Select } from "@/components/UI";
+import {
+  parseSchemaToFields,
+  type FormField,
+  type JSONSchema,
+} from "@/utils/schemaForm";
 
 export interface ToolInvocationDialogProps {
   open: boolean;
@@ -23,12 +28,8 @@ export interface ToolInvocationDialogProps {
   preselectedToolName?: string;
 }
 
-interface ToolArgument {
-  name: string;
-  type: string;
-  description?: string;
-  required: boolean;
-}
+/** Tool argument is an alias for FormField from schema utilities */
+type ToolArgument = FormField;
 
 interface ToolResult {
   content: Array<{
@@ -86,25 +87,10 @@ export function ToolInvocationDialog({
     return toolsData.tools.find((t) => t.name === selectedToolName) || null;
   }, [selectedToolName, toolsData?.tools]);
 
-  // Parse input schema to get arguments
+  // Parse input schema to get arguments using shared utility
   const toolArguments = useMemo((): ToolArgument[] => {
     if (!selectedTool?.inputSchema) return [];
-
-    const schema = selectedTool.inputSchema as {
-      properties?: Record<string, { type?: string; description?: string }>;
-      required?: string[];
-    };
-
-    if (!schema.properties) return [];
-
-    const required = schema.required || [];
-
-    return Object.entries(schema.properties).map(([name, prop]) => ({
-      name,
-      type: prop.type || "string",
-      description: prop.description,
-      required: required.includes(name),
-    }));
+    return parseSchemaToFields(selectedTool.inputSchema as JSONSchema);
   }, [selectedTool]);
 
   // Check if form is valid
@@ -161,15 +147,15 @@ export function ToolInvocationDialog({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-neutral-a6"
         onClick={onClose}
         aria-hidden="true"
       />
       {/* Dialog content */}
-      <div className="relative z-10 w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-neutral-800">
+      <div className="relative z-10 w-full max-w-2xl rounded-lg bg-neutral-1 p-6 shadow-xl">
         <h2
           id="tool-invocation-title"
-          className="mb-4 text-xl font-semibold text-neutral-900 dark:text-white"
+          className="mb-4 text-xl font-semibold text-neutral-12"
         >
           Invoke Tool
         </h2>
@@ -177,7 +163,7 @@ export function ToolInvocationDialog({
         {/* Loading state */}
         {isLoadingTools && (
           <div className="flex items-center justify-center py-8">
-            <span className="text-neutral-500 dark:text-neutral-400">
+            <span className="text-neutral-10">
               Loading tools...
             </span>
           </div>
@@ -185,7 +171,7 @@ export function ToolInvocationDialog({
 
         {/* Error state */}
         {toolsError && (
-          <div className="rounded-md bg-error-50 p-4 text-error-700 dark:bg-error-900/20 dark:text-error-400">
+          <div className="rounded-md bg-error-1 p-4 text-error-11 dark:bg-error-a3 dark:text-error-7">
             Error loading tools. Please try again.
           </div>
         )}
@@ -197,12 +183,12 @@ export function ToolInvocationDialog({
             <div>
               <label
                 htmlFor="tool-select"
-                className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                className="mb-1 block text-sm font-medium text-neutral-11"
               >
                 Select Tool
               </label>
               <Select
-                className="px-3 py-2 text-neutral-900 -500 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
+                className="px-3 py-2 text-neutral-12 -500 focus:ring-primary-7"
                 id="tool-select"
                 value={selectedToolName}
                 onChange={handleToolSelect}
@@ -218,7 +204,7 @@ export function ToolInvocationDialog({
 
             {/* Tool description */}
             {selectedTool && (
-              <div className="rounded-md bg-neutral-50 p-3 text-sm text-neutral-600 dark:text-neutral-300 dark:bg-neutral-700/50 dark:text-neutral-400">
+              <div className="rounded-md bg-neutral-1 p-3 text-sm text-neutral-11">
                 {selectedTool.description}
               </div>
             )}
@@ -226,27 +212,27 @@ export function ToolInvocationDialog({
             {/* Tool arguments */}
             {selectedTool && toolArguments.length > 0 && (
               <div className="space-y-3">
-                <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                <h3 className="text-sm font-medium text-neutral-11">
                   Arguments
                 </h3>
                 {toolArguments.map((arg) => (
                   <div key={arg.name}>
                     <label
                       htmlFor={`arg-${arg.name}`}
-                      className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                      className="mb-1 block text-sm font-medium text-neutral-11"
                     >
                       {arg.name}
                       {arg.required && (
-                        <span className="text-error-500">*</span>
+                        <span className="text-error-9">*</span>
                       )}
                     </label>
                     {arg.description && (
-                      <p className="mb-1 text-xs text-neutral-500 dark:text-neutral-400">
+                      <p className="mb-1 text-xs text-neutral-10">
                         {arg.description}
                       </p>
                     )}
                     <Input
-                      className="px-3 py-2 text-neutral-900 -500 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
+                      className="px-3 py-2 text-neutral-12 -500 focus:ring-primary-7"
                       id={`arg-${arg.name}`}
                       value={argumentValues[arg.name] || ""}
                       onChange={(e) =>
@@ -264,8 +250,8 @@ export function ToolInvocationDialog({
               <div
                 className={`rounded-md p-4 ${
                   result.isError
-                    ? "bg-error-50 text-error-700 dark:bg-error-900/20 dark:text-error-400"
-                    : "bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-400"
+                    ? "bg-error-1 text-error-11 dark:bg-error-a3 dark:text-error-7"
+                    : "bg-success-1 text-success-11 dark:bg-success-a3 dark:text-success-7"
                 }`}
               >
                 <h3 className="mb-2 font-medium">
@@ -285,7 +271,7 @@ export function ToolInvocationDialog({
         <div className="mt-6 flex justify-end gap-3">
           <Button
             variant="secondary"
-            className="rounded-md border border-neutral-300 dark:border-neutral-600 bg-white px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 focus:ring-primary-500 focus:ring-offset-2 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600"
+            className="rounded-md border border-neutral-5 bg-neutral-1 px-4 py-2 text-sm text-neutral-11 hover:bg-neutral-1 focus:ring-primary-7 focus:ring-offset-2"
             type="button"
             onClick={onClose}
           >
@@ -293,7 +279,7 @@ export function ToolInvocationDialog({
           </Button>
           <Button
             variant="primary"
-            className="rounded-md bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700 focus:ring-primary-500 focus:ring-offset-2"
+            className="rounded-md bg-primary-10 px-4 py-2 text-sm text-neutral-12 hover:bg-primary-11 focus:ring-primary-7 focus:ring-offset-2"
             type="button"
             onClick={handleInvoke}
             disabled={!isFormValid || isInvoking}

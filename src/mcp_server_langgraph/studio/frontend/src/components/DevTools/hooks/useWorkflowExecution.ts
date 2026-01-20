@@ -2,14 +2,39 @@
  * useWorkflowExecution Hook
  *
  * Fetches and manages workflow execution step data.
+ * Transforms API response (snake_case) to frontend format (camelCase).
  */
 import { useState, useEffect, useCallback } from "react";
 import { authenticatedFetch } from "../../../utils/authenticatedFetch";
+import { transformSnakeToCamel } from "../../../api/transforms";
 
 // =============================================================================
 // Types
 // =============================================================================
 
+/**
+ * API response format from /api/v1/workflows/{workflowId}/execution
+ * (uses snake_case from Python backend)
+ */
+interface WorkflowExecutionApiResponse {
+  steps?: Array<{
+    id: string;
+    node_id: string;
+    node_name: string;
+    status: string;
+    duration: number;
+    start_time: number;
+    end_time?: number;
+    input?: Record<string, unknown>;
+    output?: Record<string, unknown>;
+    error?: string;
+  }>;
+  current_step_id?: string | null;
+}
+
+/**
+ * Frontend format after transformation (camelCase)
+ */
 export interface ExecutionStep {
   /** Step ID */
   id: string;
@@ -84,8 +109,10 @@ export function useWorkflowExecution(
         throw new Error(`Failed to fetch execution: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      setSteps(data.steps ?? []);
+      const rawData: WorkflowExecutionApiResponse = await response.json();
+      // Transform snake_case API response to camelCase frontend format
+      const data = transformSnakeToCamel(rawData);
+      setSteps((data.steps ?? []) as ExecutionStep[]);
       setCurrentStepId(data.currentStepId ?? null);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Unknown error"));

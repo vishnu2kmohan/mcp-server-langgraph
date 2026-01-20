@@ -264,7 +264,7 @@ export const AllVariantsDisabled: Story = {
 
 export const DarkMode: Story = {
   render: () => (
-    <div className="dark bg-neutral-900 p-6 rounded-lg">
+    <div className="dark bg-neutral-2 p-6 rounded-lg">
       <div className="flex flex-wrap gap-4">
         <Button variant="primary">Primary</Button>
         <Button variant="secondary">Secondary</Button>

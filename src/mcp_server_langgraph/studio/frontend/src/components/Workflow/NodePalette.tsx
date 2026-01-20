@@ -58,28 +58,28 @@ interface NodeTemplate {
  */
 const COLORS = {
   // Node type colors (semantic)
-  start: "bg-emerald-500 dark:bg-emerald-600",
-  end: "bg-rose-500 dark:bg-rose-600",
-  llm: "bg-violet-500 dark:bg-violet-600",
-  tool: "bg-warning-500 dark:bg-warning-600",
-  conditional: "bg-sky-500 dark:bg-sky-600",
-  approval: "bg-pink-500 dark:bg-pink-600",
-  custom: "bg-slate-500 dark:bg-slate-600",
+  start: "bg-success-9 dark:bg-success-10",
+  end: "bg-error-9 dark:bg-error-10",
+  llm: "bg-insight-9 dark:bg-insight-10",
+  tool: "bg-warning-9 dark:bg-warning-9",
+  conditional: "bg-primary-9 dark:bg-primary-10",
+  approval: "bg-error-9 dark:bg-error-10",
+  custom: "bg-neutral-8 dark:bg-neutral-9",
   // Border colors for cards
   startBorder:
-    "border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 dark:hover:border-emerald-500",
+    "border-success-4 dark:border-success-11 hover:border-success-7 dark:hover:border-success-9",
   endBorder:
-    "border-rose-200 dark:border-rose-700 hover:border-rose-400 dark:hover:border-rose-500",
+    "border-error-4 dark:border-error-11 hover:border-error-7 dark:hover:border-error-9",
   llmBorder:
-    "border-violet-200 dark:border-violet-700 hover:border-violet-400 dark:hover:border-violet-500",
+    "border-insight-4 dark:border-insight-11 hover:border-insight-7 dark:hover:border-insight-9",
   toolBorder:
-    "border-warning-200 dark:border-warning-700 hover:border-warning-400 dark:hover:border-warning-500",
+    "border-warning-6 dark:border-warning-10 hover:border-warning-9 dark:hover:border-warning-9",
   conditionalBorder:
-    "border-sky-200 dark:border-sky-700 hover:border-sky-400 dark:hover:border-sky-500",
+    "border-primary-4 dark:border-primary-11 hover:border-primary-7 dark:hover:border-primary-9",
   approvalBorder:
-    "border-pink-200 dark:border-pink-700 hover:border-pink-400 dark:hover:border-pink-500",
+    "border-error-4 dark:border-error-11 hover:border-error-7 dark:hover:border-error-9",
   customBorder:
-    "border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500",
+    "border-neutral-4 dark:border-neutral-8 hover:border-neutral-6 dark:hover:border-neutral-7",
 };
 
 const NODE_TEMPLATES: NodeTemplate[] = [
@@ -242,7 +242,7 @@ function DraggableNode({
       case "custom":
         return COLORS.customBorder;
       default:
-        return "border-neutral-200 dark:border-neutral-700";
+        return "border-neutral-5";
     }
   };
 
@@ -256,7 +256,7 @@ function DraggableNode({
       onClick={handleClick}
       className={`
         group flex items-center gap-3 p-3 rounded-lg border-2 cursor-grab
-        bg-white dark:bg-neutral-800 ${getBorderColor()}
+        bg-neutral-1 ${getBorderColor()}
         transition-all duration-150 ease-out
         hover:shadow-md hover:-translate-y-0.5
         active:cursor-grabbing active:shadow-lg active:scale-[1.02]
@@ -268,23 +268,23 @@ function DraggableNode({
       data-testid={`node-${template.type}`}
     >
       {/* Drag handle indicator */}
-      <div className="flex-shrink-0 text-neutral-400 dark:text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex-shrink-0 text-neutral-9 opacity-0 group-hover:opacity-100 transition-opacity">
         <GripVertical size={14} />
       </div>
 
       {/* Icon with colored background */}
       <div
-        className={`flex-shrink-0 w-8 h-8 rounded-lg ${template.color} flex items-center justify-center text-white shadow-sm`}
+        className={`flex-shrink-0 w-8 h-8 rounded-lg ${template.color} flex items-center justify-center text-neutral-12 shadow-sm`}
       >
         {template.icon}
       </div>
 
       {/* Label and description */}
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+        <div className="text-sm font-medium text-neutral-12">
           {template.label}
         </div>
-        <div className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+        <div className="text-xs text-neutral-10 truncate">
           {template.description}
         </div>
       </div>
@@ -317,13 +317,13 @@ export function NodePalette({
     // Collapsed view - just icons
     return (
       <aside
-        className={`w-16 bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 p-2 flex flex-col gap-2 ${className}`}
+        className={`w-16 bg-neutral-1 border-r border-neutral-5 p-2 flex flex-col gap-2 ${className}`}
         data-testid="node-palette"
       >
         <h2 className="sr-only">Node Types</h2>
         {NODE_TEMPLATES.map((template) => (
           <Button
-            className="w-12 h-12 rounded-lg text-white flex hover:opacity-90 -opacity focus:ring-primary-500 focus:ring-offset-2"
+            className="w-12 h-12 rounded-lg text-neutral-12 flex hover:opacity-90 -opacity focus:ring-primary-7 focus:ring-offset-2"
             key={template.type}
             onClick={() => onAddNode?.(template.type)}
             title={`Add ${template.label}: ${template.description}`}
@@ -338,12 +338,12 @@ export function NodePalette({
 
   return (
     <aside
-      className={`w-72 bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 flex flex-col ${className}`}
+      className={`w-72 bg-neutral-1 border-r border-neutral-5 flex flex-col ${className}`}
       data-testid="node-palette"
     >
       {/* Header */}
-      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700 dark:border-neutral-800">
-        <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3">
+      <div className="p-4 border-b border-neutral-5">
+        <h2 className="text-sm font-semibold text-neutral-12 mb-3">
           Node Types
         </h2>
 
@@ -351,10 +351,10 @@ export function NodePalette({
         <div className="relative">
           <Search
             size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-9"
           />
           <Input
-            className="pl-9 pr-4 py-2 text-sm bg-neutral-100 text-neutral-400 dark:placeholder:text-neutral-500 focus:ring-primary-500"
+            className="pl-9 pr-4 py-2 text-sm bg-neutral-2 text-neutral-9 dark:placeholder:text-neutral-10 focus:ring-primary-7"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search nodes..."
@@ -365,13 +365,13 @@ export function NodePalette({
       {/* Node list */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {groupedTemplates.length === 0 ? (
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center py-4">
+          <p className="text-sm text-neutral-10 text-center py-4">
             No nodes match your search
           </p>
         ) : (
           groupedTemplates.map((group) => (
             <div key={group.category}>
-              <h3 className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-2">
+              <h3 className="text-xs font-semibold text-neutral-10 uppercase tracking-wider mb-2">
                 {group.label}
               </h3>
               <div className="space-y-2">
@@ -388,8 +388,8 @@ export function NodePalette({
         )}
       </div>
       {/* Footer hint */}
-      <div className="p-4 border-t border-neutral-200 dark:border-neutral-700 dark:border-neutral-800">
-        <p className="text-xs text-neutral-400 dark:text-neutral-400 text-center">
+      <div className="p-4 border-t border-neutral-5">
+        <p className="text-xs text-neutral-9 text-center">
           Drag nodes to canvas or click to add
         </p>
       </div>

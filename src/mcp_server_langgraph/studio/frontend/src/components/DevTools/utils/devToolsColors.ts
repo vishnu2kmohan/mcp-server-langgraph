@@ -47,11 +47,11 @@ export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | string;
  * Uses 400 shade for dark mode (good contrast on dark backgrounds)
  */
 export const STATUS_TEXT_COLORS = {
-  success: "text-success-600 dark:text-success-400",
-  warning: "text-warning-600 dark:text-warning-400",
-  error: "text-error-600 dark:text-error-400",
-  info: "text-primary-600 dark:text-primary-400",
-  neutral: "text-neutral-500 dark:text-neutral-400",
+  success: "text-success-10 dark:text-success-7",
+  warning: "text-warning-9 dark:text-warning-9",
+  error: "text-error-10 dark:text-error-7",
+  info: "text-primary-10 dark:text-primary-7",
+  neutral: "text-neutral-10",
 } as const;
 
 // =============================================================================
@@ -64,11 +64,11 @@ export const STATUS_TEXT_COLORS = {
  * Uses 900 with 30% opacity for dark mode (subtle on dark backgrounds)
  */
 export const STATUS_BG_COLORS = {
-  success: "bg-success-50 dark:bg-success-900/30",
-  warning: "bg-warning-50 dark:bg-warning-900/30",
-  error: "bg-error-50 dark:bg-error-900/30",
-  info: "bg-primary-50 dark:bg-primary-900/30",
-  neutral: "bg-neutral-50 dark:bg-neutral-800",
+  success: "bg-success-1 bg-success-4",
+  warning: "bg-warning-3 dark:bg-warning-a4",
+  error: "bg-error-1 bg-error-4",
+  info: "bg-primary-1 bg-primary-4",
+  neutral: "bg-neutral-1",
 } as const;
 
 // =============================================================================
@@ -82,11 +82,11 @@ export const STATUS_BG_COLORS = {
  */
 export const LEVEL_BADGE_STYLES = {
   debug:
-    "bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300",
-  info: "bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300",
+    "bg-neutral-2 text-neutral-11",
+  info: "bg-primary-3 text-primary-11 dark:bg-primary-a6 dark:text-primary-5",
   warning:
-    "bg-warning-100 text-warning-700 dark:bg-warning-900/50 dark:text-warning-300",
-  error: "bg-error-100 text-error-700 dark:bg-error-900/50 dark:text-error-300",
+    "bg-warning-3 text-warning-10 dark:bg-warning-a6 dark:text-warning-6",
+  error: "bg-error-3 text-error-11 dark:bg-error-a6 dark:text-error-9",
 } as const;
 
 // =============================================================================
@@ -103,12 +103,12 @@ export const LEVEL_BADGE_STYLES = {
  * - PATCH: purple (partial update)
  */
 export const HTTP_METHOD_COLORS = {
-  GET: "text-success-600 dark:text-success-400",
-  POST: "text-primary-600 dark:text-primary-400",
-  PUT: "text-warning-600 dark:text-warning-400",
-  DELETE: "text-error-600 dark:text-error-400",
-  PATCH: "text-insight-600 dark:text-insight-400",
-  DEFAULT: "text-neutral-600 dark:text-neutral-400",
+  GET: "text-success-10 dark:text-success-7",
+  POST: "text-primary-10 dark:text-primary-7",
+  PUT: "text-warning-9 dark:text-warning-9",
+  DELETE: "text-error-10 dark:text-error-7",
+  PATCH: "text-insight-10 dark:text-insight-9",
+  DEFAULT: "text-neutral-11",
 } as const;
 
 // =============================================================================
@@ -121,12 +121,12 @@ export const HTTP_METHOD_COLORS = {
  */
 export const STREAM_STATUS_STYLES = {
   active:
-    "border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-950",
+    "border-primary-4 dark:border-primary-11 bg-primary-1 dark:bg-primary-12",
   success:
-    "border-success-200 dark:border-success-800 bg-success-50 dark:bg-success-950",
-  error: "border-error-200 dark:border-error-800 bg-error-50 dark:bg-error-950",
+    "border-success-4 dark:border-success-11 bg-success-1 dark:bg-success-12",
+  error: "border-error-4 dark:border-error-11 bg-error-1 dark:bg-error-12",
   cancelled:
-    "border-warning-200 dark:border-warning-800 bg-warning-50 dark:bg-warning-950",
+    "border-warning-6 dark:border-warning-11 bg-warning-3 dark:bg-warning-12",
 } as const;
 
 // =============================================================================
@@ -158,9 +158,9 @@ export const GRAFANA_COLORS = {
   primary: colors.grafana[500], // #F46800
   /** Button styles for "View in Grafana" links */
   button:
-    "bg-grafana-500 hover:bg-grafana-600 text-white dark:bg-grafana-600 dark:hover:bg-grafana-500",
+    "bg-grafana-9 hover:bg-grafana-10 text-neutral-12 dark:bg-grafana-10 dark:hover:bg-grafana-9",
   /** Text link styles for Grafana references */
-  text: "text-grafana-600 dark:text-grafana-400",
+  text: "text-grafana-10 dark:text-grafana-5",
 } as const;
 
 // =============================================================================
@@ -180,12 +180,12 @@ export const AI_INSIGHT_COLORS = {
   /** Glow effect color for sparkle animations */
   glow: colors.insight[400], // #c084fc
   /** Text styles for AI insight labels */
-  text: "text-insight-600 dark:text-insight-400",
+  text: "text-insight-10 dark:text-insight-9",
   /** Background styles for AI insight containers */
-  bg: "bg-insight-50 dark:bg-insight-900/30",
+  bg: "bg-insight-1 dark:bg-insight-a4",
   /** Badge styles for AI insight indicators */
   badge:
-    "bg-insight-100 text-insight-700 dark:bg-insight-900/50 dark:text-insight-300",
+    "bg-insight-2 text-insight-11 dark:bg-insight-a6 dark:text-insight-5",
 } as const;
 
 // =============================================================================

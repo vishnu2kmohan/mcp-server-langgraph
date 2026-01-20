@@ -57,22 +57,22 @@ function NodeStatusIcon({ status, nodeId }: NodeStatusIconProps) {
   return (
     <span data-testid={`node-status-${nodeId}`}>
       {status === "completed" && (
-        <CheckCircle {...iconProps} className="text-success-500" />
+        <CheckCircle {...iconProps} className="text-success-9" />
       )}
       {status === "running" && (
-        <Loader2 {...iconProps} className="text-primary-500 animate-spin" />
+        <Loader2 {...iconProps} className="text-primary-9 animate-spin" />
       )}
       {status === "pending" && (
         <Clock
           {...iconProps}
-          className="text-neutral-400 dark:text-neutral-400"
+          className="text-neutral-9"
         />
       )}
       {status === "error" && (
-        <AlertCircle {...iconProps} className="text-error-500" />
+        <AlertCircle {...iconProps} className="text-error-9" />
       )}
       {status === "skipped" && (
-        <Clock {...iconProps} className="text-neutral-300" />
+        <Clock {...iconProps} className="text-neutral-9" />
       )}
     </span>
   );
@@ -98,16 +98,16 @@ function TraceNodeRow({
       data-testid={`trace-node-${node.id}`}
       className={cn(
         "flex items-center gap-2 px-2 py-1.5 cursor-pointer",
-        "border-b border-neutral-100 dark:border-neutral-800",
-        "hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
-        isSelected && "bg-primary-50 dark:bg-primary-900/20",
+        "border-b border-neutral-5",
+        "hover:bg-neutral-a6",
+        isSelected && "bg-primary-1 dark:bg-primary-a3",
       )}
       onClick={onSelect}
     >
       {/* Expand button */}
       <Button
         variant="secondary"
-        className="p-0.5 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
+        className="p-0.5 hover:bg-neutral-3 rounded"
         data-testid={`expand-node-${node.id}`}
         type="button"
         onClick={(e) => {
@@ -122,24 +122,24 @@ function TraceNodeRow({
         {isExpanded ? (
           <ChevronDown
             size={12}
-            className="text-neutral-500 dark:text-neutral-400"
+            className="text-neutral-10"
           />
         ) : (
           <ChevronRight
             size={12}
-            className="text-neutral-500 dark:text-neutral-400"
+            className="text-neutral-10"
           />
         )}
       </Button>
       {/* Status icon */}
       <NodeStatusIcon status={node.status} nodeId={node.id} />
       {/* Node name */}
-      <span className="flex-1 text-sm text-neutral-700 dark:text-neutral-300">
+      <span className="flex-1 text-sm text-neutral-11">
         {node.name}
       </span>
       {/* Duration */}
       {node.duration !== undefined && node.duration > 0 && (
-        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+        <span className="text-xs text-neutral-10">
           {node.duration}ms
         </span>
       )}
@@ -155,37 +155,37 @@ function NodeDetails({ node }: NodeDetailsProps) {
   return (
     <div
       data-testid={`node-details-${node.id}`}
-      className="px-4 py-2 bg-neutral-50 dark:bg-neutral-800/50 text-xs"
+      className="px-4 py-2 bg-neutral-1 text-xs"
     >
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <span className="text-neutral-500 dark:text-neutral-400">ID:</span>
-          <span className="ml-2 text-neutral-700 dark:text-neutral-300">
+          <span className="text-neutral-10">ID:</span>
+          <span className="ml-2 text-neutral-11">
             {node.id}
           </span>
         </div>
         <div>
-          <span className="text-neutral-500 dark:text-neutral-400">
+          <span className="text-neutral-10">
             Status:
           </span>
-          <span className="ml-2 text-neutral-700 dark:text-neutral-300 capitalize">
+          <span className="ml-2 text-neutral-11 capitalize">
             {node.status}
           </span>
         </div>
         {node.startTime && (
           <div>
-            <span className="text-neutral-500 dark:text-neutral-400">
+            <span className="text-neutral-10">
               Start:
             </span>
-            <span className="ml-2 text-neutral-700 dark:text-neutral-300">
+            <span className="ml-2 text-neutral-11">
               {new Date(node.startTime).toISOString()}
             </span>
           </div>
         )}
         {node.endTime && (
           <div>
-            <span className="text-neutral-500 dark:text-neutral-400">End:</span>
-            <span className="ml-2 text-neutral-700 dark:text-neutral-300">
+            <span className="text-neutral-10">End:</span>
+            <span className="ml-2 text-neutral-11">
               {new Date(node.endTime).toISOString()}
             </span>
           </div>
@@ -207,19 +207,19 @@ function TimelineNode({ node, totalDuration, startOffset }: TimelineNodeProps) {
   const left = totalDuration > 0 ? (startOffset / totalDuration) * 100 : 0;
 
   const statusColors: Record<TraceNode["status"], string> = {
-    completed: "bg-success-500",
-    running: "bg-primary-500",
-    pending: "bg-neutral-300 dark:bg-neutral-600",
-    error: "bg-error-500",
-    skipped: "bg-neutral-200 dark:bg-neutral-700",
+    completed: "bg-success-9",
+    running: "bg-primary-9",
+    pending: "bg-neutral-3",
+    error: "bg-error-9",
+    skipped: "bg-neutral-3",
   };
 
   return (
     <div className="flex items-center gap-2 py-1">
-      <span className="w-24 text-xs text-neutral-600 dark:text-neutral-400 truncate">
+      <span className="w-24 text-xs text-neutral-11 truncate">
         {node.name}
       </span>
-      <div className="flex-1 h-4 bg-neutral-100 dark:bg-neutral-800 rounded relative">
+      <div className="flex-1 h-4 bg-neutral-2 rounded relative">
         <div
           className={cn("h-full rounded", statusColors[node.status])}
           style={{
@@ -229,7 +229,7 @@ function TimelineNode({ node, totalDuration, startOffset }: TimelineNodeProps) {
           title={`${node.name}: ${node.duration ?? 0}ms`}
         />
       </div>
-      <span className="w-12 text-xs text-right text-neutral-500 dark:text-neutral-400">
+      <span className="w-12 text-xs text-right text-neutral-10">
         {node.duration ?? 0}ms
       </span>
     </div>
@@ -347,13 +347,13 @@ export function AgentTraceTab({
     return (
       <div
         data-testid="agent-trace-tab"
-        className="flex flex-col h-full bg-white dark:bg-neutral-900"
+        className="flex flex-col h-full bg-neutral-1"
       >
         <div
           data-testid="agent-trace-loading"
           className="flex-1 flex items-center justify-center"
         >
-          <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary-9" />
         </div>
       </div>
     );
@@ -364,7 +364,7 @@ export function AgentTraceTab({
     return (
       <div
         data-testid="agent-trace-tab"
-        className="flex flex-col h-full bg-white dark:bg-neutral-900"
+        className="flex flex-col h-full bg-neutral-1"
       >
         <div
           data-testid="agent-trace-error"
@@ -385,11 +385,11 @@ export function AgentTraceTab({
     return (
       <div
         data-testid="agent-trace-tab"
-        className="flex flex-col h-full bg-white dark:bg-neutral-900"
+        className="flex flex-col h-full bg-neutral-1"
       >
         <div
           data-testid="agent-trace-empty"
-          className="flex-1 flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-400"
+          className="flex-1 flex flex-col items-center justify-center text-neutral-9"
         >
           <Activity size={32} className="mb-2 opacity-50" />
           <p className="text-sm">No trace data available</p>
@@ -402,21 +402,21 @@ export function AgentTraceTab({
   return (
     <div
       data-testid="agent-trace-tab"
-      className="flex flex-col h-full bg-white dark:bg-neutral-900"
+      className="flex flex-col h-full bg-neutral-1"
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
+      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-5 bg-neutral-1">
         {/* Session indicator */}
         <div className="flex items-center gap-1.5">
           <Activity
             size={14}
-            className="text-neutral-500 dark:text-neutral-400"
+            className="text-neutral-10"
             aria-hidden="true"
           />
-          <h3 className="text-xs text-neutral-600 dark:text-neutral-400">
+          <h3 className="text-xs text-neutral-11">
             Trace
           </h3>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded">
+          <span className="text-xs text-neutral-10 ml-1 px-1.5 py-0.5 bg-neutral-2 rounded">
             {sessionId}
           </span>
         </div>
@@ -427,22 +427,22 @@ export function AgentTraceTab({
         {/* Token counts */}
         {trace?.tokens && (
           <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
-              <Zap size={12} className="text-primary-500" />
+            <span className="flex items-center gap-1 text-neutral-10">
+              <Zap size={12} className="text-primary-9" />
               <span data-testid="token-input">{trace.tokens.input}</span>
-              <span className="text-neutral-400 dark:text-neutral-400">in</span>
+              <span className="text-neutral-9">in</span>
             </span>
-            <span className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
+            <span className="flex items-center gap-1 text-neutral-10">
               <span data-testid="token-output">{trace.tokens.output}</span>
-              <span className="text-neutral-400 dark:text-neutral-400">
+              <span className="text-neutral-9">
                 out
               </span>
             </span>
-            <span className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
+            <span className="flex items-center gap-1 text-neutral-10">
               <span data-testid="token-total">
                 {trace.tokens.input + trace.tokens.output}
               </span>
-              <span className="text-neutral-400 dark:text-neutral-400">
+              <span className="text-neutral-9">
                 total
               </span>
             </span>
@@ -458,8 +458,8 @@ export function AgentTraceTab({
             className={cn(
               "p-1 rounded",
               viewMode === "list"
-                ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
+                ? "bg-primary-3 bg-primary-4 text-primary-10"
+                : "hover:bg-neutral-3 text-neutral-10",
             )}
             aria-label="List view"
             aria-pressed={viewMode === "list"}
@@ -473,8 +473,8 @@ export function AgentTraceTab({
             className={cn(
               "p-1 rounded",
               viewMode === "timeline"
-                ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
+                ? "bg-primary-3 bg-primary-4 text-primary-10"
+                : "hover:bg-neutral-3 text-neutral-10",
             )}
             aria-label="Timeline view"
             aria-pressed={viewMode === "timeline"}
@@ -484,9 +484,9 @@ export function AgentTraceTab({
         </div>
 
         {/* Refresh button */}
-        <Button
+        <Button size="icon"
           variant="secondary"
-          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400"
+          className="p-1 hover:bg-neutral-3 rounded text-neutral-10"
           data-testid="refresh-trace-button"
           type="button"
           onClick={refetch}

@@ -201,7 +201,7 @@ export const Sizes: Story = {
     return (
       <div className="space-y-6">
         <div>
-          <span className="text-sm text-neutral-600 dark:text-neutral-400 mb-2 block">
+          <span className="text-sm text-neutral-11 mb-2 block">
             Small
           </span>
           <FileInput
@@ -212,7 +212,7 @@ export const Sizes: Story = {
           />
         </div>
         <div>
-          <span className="text-sm text-neutral-600 dark:text-neutral-400 mb-2 block">
+          <span className="text-sm text-neutral-11 mb-2 block">
             Medium (default)
           </span>
           <FileInput
@@ -223,7 +223,7 @@ export const Sizes: Story = {
           />
         </div>
         <div>
-          <span className="text-sm text-neutral-600 dark:text-neutral-400 mb-2 block">
+          <span className="text-sm text-neutral-11 mb-2 block">
             Large
           </span>
           <FileInput
@@ -268,7 +268,7 @@ export const DarkMode: Story = {
   render: function Render() {
     const [files, setFiles] = useState<File[]>([]);
     return (
-      <div className="dark bg-neutral-900 p-6 rounded-lg">
+      <div className="dark bg-neutral-2 p-6 rounded-lg">
         <FileInput
           onChange={setFiles}
           selectedFiles={files}

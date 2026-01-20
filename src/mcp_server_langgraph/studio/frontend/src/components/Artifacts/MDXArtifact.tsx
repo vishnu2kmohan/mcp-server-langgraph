@@ -44,22 +44,22 @@ function Accordion({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-neutral-200 dark:border-neutral-700 rounded-lg mb-2">
+    <div className="border border-neutral-5 rounded-lg mb-2">
       <Button
         variant="secondary"
-        className="w-full flex p-3 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800"
+        className="w-full flex p-3 text-left hover:bg-neutral-1"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         {icon && (
-          <span className="text-neutral-500 dark:text-neutral-400">{icon}</span>
+          <span className="text-neutral-10">{icon}</span>
         )}
-        <span className="font-medium text-neutral-900 dark:text-neutral-100">
+        <span className="font-medium text-neutral-12">
           {title}
         </span>
       </Button>
       {isOpen && (
-        <div className="p-3 pt-0 text-neutral-700 dark:text-neutral-300">
+        <div className="p-3 pt-0 text-neutral-11">
           {children}
         </div>
       )}
@@ -85,41 +85,41 @@ const calloutStyles: Record<
   { bg: string; border: string; icon: React.ReactNode }
 > = {
   note: {
-    bg: "bg-primary-50 dark:bg-primary-900/20",
-    border: "border-primary-200 dark:border-primary-800",
+    bg: "bg-primary-1 dark:bg-primary-a3",
+    border: "border-primary-4 dark:border-primary-11",
     icon: (
-      <InfoIcon size={18} className="text-primary-600 dark:text-primary-400" />
+      <InfoIcon size={18} className="text-primary-10 dark:text-primary-7" />
     ),
   },
   warning: {
-    bg: "bg-warning-50 dark:bg-warning-900/20",
-    border: "border-warning-200 dark:border-warning-800",
+    bg: "bg-warning-3 bg-warning-3",
+    border: "border-warning-6 dark:border-warning-11",
     icon: (
       <AlertTriangle
         size={18}
-        className="text-warning-600 dark:text-warning-400"
+        className="text-warning-9 dark:text-warning-9"
       />
     ),
   },
   info: {
-    bg: "bg-primary-50 dark:bg-primary-900/20",
-    border: "border-primary-200 dark:border-primary-800",
+    bg: "bg-primary-1 dark:bg-primary-a3",
+    border: "border-primary-4 dark:border-primary-11",
     icon: (
-      <InfoIcon size={18} className="text-primary-600 dark:text-primary-400" />
+      <InfoIcon size={18} className="text-primary-10 dark:text-primary-7" />
     ),
   },
   tip: {
-    bg: "bg-success-50 dark:bg-success-900/20",
-    border: "border-success-200 dark:border-success-800",
+    bg: "bg-success-1 dark:bg-success-a3",
+    border: "border-success-4 dark:border-success-11",
     icon: (
-      <Lightbulb size={18} className="text-success-600 dark:text-success-400" />
+      <Lightbulb size={18} className="text-success-10 dark:text-success-7" />
     ),
   },
   check: {
-    bg: "bg-success-50 dark:bg-success-900/20",
-    border: "border-success-200 dark:border-success-800",
+    bg: "bg-success-1 dark:bg-success-a3",
+    border: "border-success-4 dark:border-success-11",
     icon: (
-      <Check size={18} className="text-success-600 dark:text-success-400" />
+      <Check size={18} className="text-success-10 dark:text-success-7" />
     ),
   },
 };
@@ -135,11 +135,11 @@ function Callout({ type = "note", emoji, title, children }: CalloutProps) {
         </span>
         <div className="flex-1">
           {title && (
-            <div className="font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
+            <div className="font-semibold text-neutral-12 mb-1">
               {title}
             </div>
           )}
-          <div className="text-neutral-700 dark:text-neutral-300">
+          <div className="text-neutral-11">
             {children}
           </div>
         </div>
@@ -168,17 +168,17 @@ interface CardProps {
 
 function Card({ title, icon, href, children }: CardProps) {
   const content = (
-    <div className="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:border-primary-500 dark:hover:border-primary-400 transition-colors">
+    <div className="p-4 border border-neutral-5 rounded-lg hover:border-primary-9 dark:hover:border-primary-7 transition-colors">
       <div className="flex items-center gap-2 mb-2">
         {icon && (
-          <span className="text-neutral-500 dark:text-neutral-400">{icon}</span>
+          <span className="text-neutral-10">{icon}</span>
         )}
-        <h4 className="font-semibold text-neutral-900 dark:text-neutral-100">
+        <h4 className="font-semibold text-neutral-12">
           {title}
         </h4>
       </div>
       {children && (
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="text-sm text-neutral-11">
           {children}
         </p>
       )}
@@ -187,7 +187,7 @@ function Card({ title, icon, href, children }: CardProps) {
 
   if (href) {
     return (
-      <a href={href} className="block no-underline">
+      <a href={href} className="block no-underline focus-visible:ring-2 focus-visible:ring-primary-9 focus-visible:ring-offset-2 rounded">
         {content}
       </a>
     );
@@ -205,8 +205,8 @@ function CardGroup({
 }) {
   return (
     <div
-      className={`grid gap-4 my-4`}
-      style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+      className="grid-dynamic-cols gap-4 my-4"
+      style={{ "--cols": cols } as React.CSSProperties}
     >
       {children}
     </div>
@@ -237,7 +237,7 @@ function Tabs({ children }: TabsProps) {
 
   return (
     <div className="my-4">
-      <div className="flex border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex border-b border-neutral-5">
         {tabs.map((tab, index) => (
           <Button
             className="px-4 py-2 text-sm border-b-2"
@@ -281,16 +281,16 @@ function Step({
 }) {
   return (
     <div className="flex gap-4">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-        <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-3 dark:bg-primary-12 flex items-center justify-center">
+        <span className="text-sm font-semibold text-primary-10 dark:text-primary-7">
           •
         </span>
       </div>
-      <div className="flex-1 pb-4 border-l-2 border-neutral-200 dark:border-neutral-700 pl-4 -ml-4 relative before:absolute before:left-0 before:top-4 before:w-4 before:h-0.5 before:bg-neutral-200 dark:bg-neutral-700 dark:before:bg-neutral-700">
-        <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
+      <div className="flex-1 pb-4 border-l-2 border-neutral-5 pl-4 -ml-4 relative before:absolute before:left-0 before:top-4 before:w-4 before:h-0.5 before:bg-neutral-3 dark:before:bg-neutral-4">
+        <h4 className="font-semibold text-neutral-12 mb-1">
           {title}
         </h4>
-        <div className="text-neutral-700 dark:text-neutral-300">{children}</div>
+        <div className="text-neutral-11">{children}</div>
       </div>
     </div>
   );
@@ -315,11 +315,11 @@ interface CodeGroupProps {
 function CodeGroup({ children }: CodeGroupProps) {
   // CodeGroup renders children in a tabbed code block view
   return (
-    <div className="my-4 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
-      <div className="bg-neutral-100 dark:bg-neutral-800 px-4 py-2 text-sm font-mono text-neutral-600 dark:text-neutral-400">
+    <div className="my-4 border border-neutral-5 rounded-lg overflow-hidden">
+      <div className="bg-neutral-2 px-4 py-2 text-sm font-mono text-neutral-11">
         Code Examples
       </div>
-      <div className="p-4 bg-neutral-50 dark:bg-neutral-900 font-mono text-sm overflow-x-auto">
+      <div className="p-4 bg-neutral-1 font-mono text-sm overflow-x-auto">
         {children}
       </div>
     </div>
@@ -334,11 +334,11 @@ interface FrameProps {
 function Frame({ caption, children }: FrameProps) {
   return (
     <figure className="my-4">
-      <div className="border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
+      <div className="border border-neutral-5 rounded-lg overflow-hidden">
         {children}
       </div>
       {caption && (
-        <figcaption className="mt-2 text-sm text-center text-neutral-500 dark:text-neutral-400">
+        <figcaption className="mt-2 text-sm text-center text-neutral-10">
           {caption}
         </figcaption>
       )}
@@ -357,14 +357,14 @@ function Expandable({ title, children }: ExpandableProps) {
   return (
     <div className="my-4">
       <Button
-        className="flex text-primary-600 dark:text-primary-400 hover:underline"
+        className="flex text-primary-10 dark:text-primary-7 hover:underline"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         <span>{title}</span>
       </Button>
       {isOpen && (
-        <div className="mt-2 pl-6 text-neutral-700 dark:text-neutral-300">
+        <div className="mt-2 pl-6 text-neutral-11">
           {children}
         </div>
       )}
@@ -382,7 +382,7 @@ function Icon({ icon, size = 16, color }: IconProps) {
   // Simple icon placeholder - in a full implementation, would map to actual icons
   return (
     <span
-      className={`inline-flex items-center justify-center ${color || "text-neutral-500 dark:text-neutral-400"}`}
+      className={`inline-flex items-center justify-center ${color || "text-neutral-10"}`}
       style={{ width: size, height: size }}
       aria-label={icon}
     >
@@ -406,24 +406,24 @@ interface ResponseFieldProps {
 
 function ResponseField({ name, type, required, children }: ResponseFieldProps) {
   return (
-    <div className="my-4 p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+    <div className="my-4 p-4 border border-neutral-5 rounded-lg">
       <div className="flex items-center gap-2 mb-2">
-        <code className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-primary-600 dark:text-primary-400 rounded">
+        <code className="px-2 py-0.5 bg-neutral-2 text-primary-10 dark:text-primary-7 rounded">
           {name}
         </code>
         {type && (
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+          <span className="text-sm text-neutral-10">
             {type}
           </span>
         )}
         {required && (
-          <span className="px-2 py-0.5 text-xs bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400 rounded">
+          <span className="px-2 py-0.5 text-xs bg-error-3 bg-error-4 text-error-10 dark:text-error-7 rounded">
             required
           </span>
         )}
       </div>
       {children && (
-        <div className="text-sm text-neutral-700 dark:text-neutral-300">
+        <div className="text-sm text-neutral-11">
           {children}
         </div>
       )}
@@ -452,27 +452,27 @@ function ParamField({
   const paramType = path ? "path" : query ? "query" : body ? "body" : "param";
 
   return (
-    <div className="my-4 p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+    <div className="my-4 p-4 border border-neutral-5 rounded-lg">
       <div className="flex items-center gap-2 mb-2">
-        <code className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-primary-600 dark:text-primary-400 rounded">
+        <code className="px-2 py-0.5 bg-neutral-2 text-primary-10 dark:text-primary-7 rounded">
           {name}
         </code>
-        <span className="px-2 py-0.5 text-xs bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded">
+        <span className="px-2 py-0.5 text-xs bg-neutral-2 text-neutral-11 rounded">
           {paramType}
         </span>
         {type && (
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+          <span className="text-sm text-neutral-10">
             {type}
           </span>
         )}
         {required && (
-          <span className="px-2 py-0.5 text-xs bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400 rounded">
+          <span className="px-2 py-0.5 text-xs bg-error-3 bg-error-4 text-error-10 dark:text-error-7 rounded">
             required
           </span>
         )}
       </div>
       {children && (
-        <div className="text-sm text-neutral-700 dark:text-neutral-300">
+        <div className="text-sm text-neutral-11">
           {children}
         </div>
       )}
@@ -588,7 +588,7 @@ function renderNode(
       return (
         <pre
           key={`unknown-${index}`}
-          className="text-sm font-mono bg-neutral-100 dark:bg-neutral-800 p-3 rounded overflow-x-auto"
+          className="text-sm font-mono bg-neutral-2 p-3 rounded overflow-x-auto"
         >
           {`<${node.component}>...</${node.component}>`}
         </pre>
@@ -648,11 +648,11 @@ export function MDXArtifact({
     return (
       <div
         data-testid="mdx-artifact"
-        className="bg-neutral-50 dark:bg-neutral-800 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700"
+        className="bg-neutral-1 rounded-lg overflow-hidden border border-neutral-5"
       >
         {title && (
-          <div className="px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800">
-            <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <div className="px-4 py-2 border-b border-neutral-5 bg-neutral-2">
+            <h4 className="text-sm font-medium text-neutral-11">
               {title}
             </h4>
           </div>
@@ -668,15 +668,15 @@ export function MDXArtifact({
   return (
     <div
       data-testid="mdx-artifact"
-      className="bg-white dark:bg-neutral-800 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700"
+      className="bg-neutral-1 rounded-lg overflow-hidden border border-neutral-5"
     >
       {title && (
-        <div className="px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900/50 flex items-center gap-2">
-          <InfoIcon size={14} className="text-primary-500" />
-          <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <div className="px-4 py-2 border-b border-neutral-5 bg-neutral-2 flex items-center gap-2">
+          <InfoIcon size={14} className="text-primary-9" />
+          <h4 className="text-sm font-medium text-neutral-11">
             {title}
           </h4>
-          <span className="ml-auto px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded">
+          <span className="ml-auto px-2 py-0.5 text-xs bg-primary-3 bg-primary-4 text-primary-10 dark:text-primary-7 rounded">
             Interactive
           </span>
         </div>

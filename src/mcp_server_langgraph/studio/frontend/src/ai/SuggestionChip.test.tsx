@@ -241,7 +241,7 @@ describe("SuggestionChip", () => {
       render(<SuggestionChip {...defaultProps} variant="subtle" />);
 
       expect(screen.getByTestId("suggestion-chip")).toHaveClass(
-        "bg-neutral-100",
+        "bg-neutral-2",
       );
     });
   });

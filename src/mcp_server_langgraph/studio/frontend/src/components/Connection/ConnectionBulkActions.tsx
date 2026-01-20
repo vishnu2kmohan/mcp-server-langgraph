@@ -125,15 +125,15 @@ export function ConnectionBulkActions({
   return (
     <div
       data-testid="bulk-actions"
-      className="mb-4 flex items-center gap-4 rounded-lg border border-primary-200 bg-primary-50 p-3 dark:border-primary-800 dark:bg-primary-900/30"
+      className="mb-4 flex items-center gap-4 rounded-lg border border-primary-4 bg-primary-1 p-3 dark:border-primary-11 bg-primary-4"
     >
-      <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
+      <span className="text-sm font-medium text-primary-11 dark:text-primary-5">
         {selectedIds.length} selected
       </span>
       <div className="flex items-center gap-2">
         <Button
           variant="danger"
-          className="flex .5 rounded-md bg-error-600 px-3 py-1.5 text-sm text-white hover:bg-error-700"
+          className="flex .5 rounded-md bg-error-10 px-3 py-1.5 text-sm text-neutral-12 hover:bg-error-11"
           onClick={handleDeleteClick}
           disabled={isDeleting || isTesting}
         >
@@ -143,7 +143,7 @@ export function ConnectionBulkActions({
 
         <Button
           variant="primary"
-          className="flex .5 rounded-md bg-primary-600 px-3 py-1.5 text-sm text-white hover:bg-primary-700"
+          className="flex .5 rounded-md bg-primary-10 px-3 py-1.5 text-sm text-neutral-12 hover:bg-primary-11"
           onClick={handleTest}
           disabled={isDeleting || isTesting}
         >
@@ -157,7 +157,7 @@ export function ConnectionBulkActions({
 
         <Button
           variant="secondary"
-          className="flex .5 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+          className="flex .5 rounded-md border border-neutral-5 bg-neutral-1 px-3 py-1.5 text-sm text-neutral-11 hover:bg-neutral-1"
           onClick={handleClearSelection}
           disabled={isDeleting || isTesting}
         >
@@ -167,7 +167,7 @@ export function ConnectionBulkActions({
       </div>
       {error && (
         <div
-          className="flex items-center gap-2 text-sm text-error-600 dark:text-error-400"
+          className="flex items-center gap-2 text-sm text-error-10 dark:text-error-7"
           role="alert"
         >
           <AlertCircle className="h-4 w-4" />
@@ -182,7 +182,7 @@ export function ConnectionBulkActions({
           <>
             <Button
               variant="secondary"
-              className="rounded-md px-4 py-2 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+              className="rounded-md px-4 py-2 text-neutral-11 hover:bg-neutral-2"
               onClick={handleCancelDelete}
               disabled={isDeleting}
             >
@@ -190,7 +190,7 @@ export function ConnectionBulkActions({
             </Button>
             <Button
               variant="danger"
-              className="flex rounded-md bg-error-600 px-4 py-2 text-white hover:bg-error-700"
+              className="flex rounded-md bg-error-10 px-4 py-2 text-neutral-12 hover:bg-error-11"
               onClick={handleConfirmDelete}
               disabled={isDeleting}
             >
@@ -200,16 +200,16 @@ export function ConnectionBulkActions({
           </>
         }
       >
-        <p className="mb-4 text-neutral-600 dark:text-neutral-400">
+        <p className="mb-4 text-neutral-11">
           Are you sure you want to delete {selectedIds.length} connections?
         </p>
 
         {deleteResult && deleteResult.failed_ids.length > 0 && (
-          <div className="rounded-md bg-warning-50 p-3 dark:bg-warning-900/30">
-            <p className="text-sm text-success-600 dark:text-success-400">
+          <div className="rounded-md bg-warning-3 p-3 dark:bg-warning-a4">
+            <p className="text-sm text-success-10 dark:text-success-7">
               {deleteResult.deleted_count} deleted successfully
             </p>
-            <p className="text-sm text-error-600 dark:text-error-400">
+            <p className="text-sm text-error-10 dark:text-error-7">
               {deleteResult.failed_ids.length} failed to delete
             </p>
           </div>

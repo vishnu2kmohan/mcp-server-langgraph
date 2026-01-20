@@ -39,8 +39,45 @@ export interface StreamingUsage {
 
 /**
  * Reasoning effort level for thinking models
+ *
+ * Maps to FF_MAX_THINKING_BUDGET on the backend:
+ * - none: No extended thinking, standard response mode
+ * - low: Quick responses, minimal reasoning (~1K thinking tokens)
+ * - medium: Balanced reasoning (default, ~10K thinking tokens)
+ * - high: Deep reasoning, comprehensive analysis (~100K thinking tokens)
+ * - ultra: Maximum reasoning depth, exhaustive analysis (model-dependent max)
  */
-export type ReasoningEffortLevel = "low" | "medium" | "high";
+export type ReasoningEffortLevel = "none" | "low" | "medium" | "high" | "ultra";
+
+/**
+ * Auth required event from SSE stream (ADR-0102)
+ * Emitted when a tool call requires authentication
+ */
+export interface AuthRequiredEvent {
+  connectionId: string | null;
+  templateId: string | null;
+  toolName: string;
+  message: string;
+  retryMessageId: string | null;
+}
+
+/**
+ * Plan generated event from SSE stream
+ * Emitted when an execution plan is generated and requires approval
+ */
+export interface PlanGeneratedEvent {
+  planId: string;
+  status: "awaiting_approval" | "approved" | "rejected";
+  complexity: "simple" | "complicated" | "complex";
+  riskLevel: "low" | "medium" | "high";
+  taskType: string;
+  executorModel: string;
+  estimatedCost: string;
+  toolsNeeded: string[];
+  thinkingBudget: string;
+  critiqueRounds: number;
+  requiresApproval: boolean;
+}
 
 /**
  * Knowledge Base focus mode for context retrieval
@@ -48,8 +85,18 @@ export type ReasoningEffortLevel = "low" | "medium" | "high";
 export type KBFocusMode = "all" | "kb_only" | "web_only" | "none";
 
 /**
+ * Tool selection mode for chat requests
+ */
+export type ToolSelectionMode = "auto" | "manual" | "none";
+
+/**
  * Options for starting a stream
  */
+/**
+ * Execution mode for plan-and-execute workflow
+ */
+export type ExecutionModeType = "default" | "plan" | "auto_accept" | "bypass";
+
 export interface StartStreamOptions {
   /** Model ID to use for this request (overrides server default) */
   model?: string;
@@ -59,6 +106,12 @@ export interface StartStreamOptions {
   enableThinking?: boolean;
   /** Knowledge Base focus mode for context retrieval */
   kbFocus?: KBFocusMode;
+  /** Tool selection mode: auto (semantic), manual (explicit), none (disabled) */
+  toolSelectionMode?: ToolSelectionMode;
+  /** Explicitly selected tool names (used when toolSelectionMode is "manual") */
+  selectedTools?: string[];
+  /** Execution mode for plan approval workflow (Ctrl/Cmd+Shift+M toggle) */
+  executionMode?: ExecutionModeType;
 }
 
 /**
@@ -108,6 +161,8 @@ interface StreamingChatState {
   selectionScores: Record<string, number>;
   /** Total number of tools available for selection */
   totalAvailableTools: number | null;
+  /** Auth required event from stream (ADR-0102) */
+  authRequired: AuthRequiredEvent | null;
 }
 
 /**
@@ -162,6 +217,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
     selectedTools: [],
     selectionScores: {},
     totalAvailableTools: null,
+    authRequired: null,
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -188,6 +244,8 @@ export function useStreamingChat(): UseStreamingChatReturn {
       selectedTools?: string[];
       selectionScores?: Record<string, number>;
       totalAvailableTools?: number;
+      authRequired?: AuthRequiredEvent;
+      planGenerated?: PlanGeneratedEvent;
     } | null => {
       // Check for done signal
       if (line === "data: [DONE]") {
@@ -213,6 +271,8 @@ export function useStreamingChat(): UseStreamingChatReturn {
             selectedTools?: string[];
             selectionScores?: Record<string, number>;
             totalAvailableTools?: number;
+            authRequired?: AuthRequiredEvent;
+            planGenerated?: PlanGeneratedEvent;
           } = {};
 
           // Handle content - support both direct content and delta.content formats
@@ -285,6 +345,34 @@ export function useStreamingChat(): UseStreamingChatReturn {
             result.totalAvailableTools = data.total_available;
           }
 
+          // Handle auth_required events (ADR-0102)
+          if (data.type === "auth_required") {
+            result.authRequired = {
+              connectionId: data.connection_id ?? null,
+              templateId: data.template_id ?? null,
+              toolName: data.tool_name,
+              message: data.message,
+              retryMessageId: data.retry_message_id ?? null,
+            };
+          }
+
+          // Handle plan_generated events (Execution Mode feature)
+          if (data.plan_generated) {
+            result.planGenerated = {
+              planId: data.plan_generated.plan_id,
+              status: data.plan_generated.status,
+              complexity: data.plan_generated.complexity,
+              riskLevel: data.plan_generated.risk_level,
+              taskType: data.plan_generated.task_type,
+              executorModel: data.plan_generated.executor_model,
+              estimatedCost: data.plan_generated.estimated_cost,
+              toolsNeeded: data.plan_generated.tools_needed ?? [],
+              thinkingBudget: data.plan_generated.thinking_budget,
+              critiqueRounds: data.plan_generated.critique_rounds,
+              requiresApproval: data.plan_generated.requires_approval,
+            };
+          }
+
           return result;
         } catch {
           // Ignore non-JSON data lines
@@ -334,6 +422,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
         selectedTools: [],
         selectionScores: {},
         totalAvailableTools: null,
+        authRequired: null,
       });
 
       // Build request body matching ChatCompletionRequest
@@ -360,6 +449,25 @@ export function useStreamingChat(): UseStreamingChatReturn {
       // Add KB focus mode if provided
       if (options?.kbFocus) {
         requestBody.kb_focus = options.kbFocus;
+      }
+
+      // Add tool selection mode if provided (defaults to "auto" on server)
+      if (options?.toolSelectionMode) {
+        requestBody.tool_selection_mode = options.toolSelectionMode;
+      }
+
+      // Add selected tools for manual mode
+      if (
+        options?.toolSelectionMode === "manual" &&
+        options?.selectedTools &&
+        options.selectedTools.length > 0
+      ) {
+        requestBody.selected_tools = options.selectedTools;
+      }
+
+      // Add execution mode for plan approval workflow (Ctrl/Cmd+Shift+M toggle)
+      if (options?.executionMode) {
+        requestBody.execution_mode = options.executionMode;
       }
 
       // Start the fetch + stream processing
@@ -513,6 +621,11 @@ export function useStreamingChat(): UseStreamingChatReturn {
                   updates.totalAvailableTools = parsed.totalAvailableTools;
                 }
 
+                // Handle auth_required events (ADR-0102)
+                if (parsed.authRequired !== undefined) {
+                  updates.authRequired = parsed.authRequired;
+                }
+
                 return { ...prev, ...updates };
               });
             }
@@ -567,6 +680,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
       selectedTools: [],
       selectionScores: {},
       totalAvailableTools: null,
+      authRequired: null,
     }));
   }, []);
 

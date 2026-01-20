@@ -14,7 +14,8 @@
  * - POST /api/v1/agents/requests/batch/reject - Batch reject requests
  */
 
-import { http, HttpResponse, delay } from "msw";
+import { http, delay } from "msw";
+import { apiJsonResponse } from "../utils/apiResponse";
 import type {
   AgentRequestStatus,
   PendingAgentRequestsResponse,
@@ -151,7 +152,7 @@ export const agentRequestHandlers = [
       approvals = [];
     }
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       approvals,
       clarifications,
       total_count: approvals.length + clarifications.length,
@@ -195,7 +196,7 @@ export const agentRequestHandlers = [
     const processed = results.filter((r) => r.success).length;
     const failed = results.filter((r) => !r.success).length;
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       success: failed === 0,
       processed,
       failed,
@@ -240,7 +241,7 @@ export const agentRequestHandlers = [
     const processed = results.filter((r) => r.success).length;
     const failed = results.filter((r) => !r.success).length;
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       success: failed === 0,
       processed,
       failed,
@@ -261,7 +262,7 @@ export const agentRequestHandlers = [
       (a) => a.request_id === requestId,
     );
     if (approval) {
-      return HttpResponse.json({
+      return apiJsonResponse({
         ...approval,
         type: "approval",
         status: "pending",
@@ -273,7 +274,7 @@ export const agentRequestHandlers = [
       (c) => c.request_id === requestId,
     );
     if (clarification) {
-      return HttpResponse.json({
+      return apiJsonResponse({
         ...clarification,
         type: "clarification",
         status: "pending",
@@ -281,7 +282,7 @@ export const agentRequestHandlers = [
     }
 
     // Not found
-    return HttpResponse.json(
+    return apiJsonResponse(
       { error: "Request not found", request_id: requestId },
       { status: 404 },
     );
@@ -307,14 +308,14 @@ export const agentRequestHandlers = [
         (a) => a.request_id === requestId,
       );
       if (!approval) {
-        return HttpResponse.json(
+        return apiJsonResponse(
           { error: "Request not found", request_id: requestId },
           { status: 404 },
         );
       }
 
       // Return success response
-      return HttpResponse.json({
+      return apiJsonResponse({
         success: true,
         request_id: requestId as string,
         status: "approved",
@@ -342,13 +343,13 @@ export const agentRequestHandlers = [
         (a) => a.request_id === requestId,
       );
       if (!approval) {
-        return HttpResponse.json(
+        return apiJsonResponse(
           { error: "Request not found", request_id: requestId },
           { status: 404 },
         );
       }
 
-      return HttpResponse.json({
+      return apiJsonResponse({
         success: true,
         request_id: requestId as string,
         status: "rejected",
@@ -378,13 +379,13 @@ export const agentRequestHandlers = [
         (c) => c.request_id === requestId,
       );
       if (!clarification) {
-        return HttpResponse.json(
+        return apiJsonResponse(
           { error: "Request not found", request_id: requestId },
           { status: 404 },
         );
       }
 
-      return HttpResponse.json({
+      return apiJsonResponse({
         success: true,
         request_id: requestId as string,
         status: "responded",

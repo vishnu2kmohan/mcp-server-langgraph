@@ -349,8 +349,8 @@ describe("WorkflowVersionHistory", () => {
         .getAllByText("v1")
         .filter(
           (el) =>
-            el.className.includes("bg-neutral-100") ||
-            el.className.includes("bg-neutral-800"),
+            el.className.includes("bg-neutral-2") ||
+            el.className.includes("bg-neutral-3"),
         );
       expect(promptVersionBadges.length).toBeGreaterThanOrEqual(2);
     });

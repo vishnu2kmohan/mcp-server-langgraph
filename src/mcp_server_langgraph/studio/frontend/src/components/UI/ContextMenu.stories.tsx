@@ -24,7 +24,7 @@ type Story = StoryObj<typeof ContextMenu>;
 export const Default: Story = {
   render: () => (
     <div className="p-8">
-      <p className="text-neutral-500 mb-4">Right-click on the area below:</p>
+      <p className="text-neutral-10 mb-4">Right-click on the area below:</p>
       <ContextMenu
         items={[
           { id: "edit", label: "Edit", action: () => console.log("Edit") },
@@ -36,7 +36,7 @@ export const Default: Story = {
           { id: "copy", label: "Copy", action: () => console.log("Copy") },
         ]}
       >
-        <div className="w-64 h-32 border-2 border-dashed border-neutral-300 rounded-lg flex items-center justify-center">
+        <div className="w-64 h-32 border-2 border-dashed border-neutral-5 rounded-lg flex items-center justify-center">
           Right-click here
         </div>
       </ContextMenu>
@@ -59,7 +59,7 @@ export const WithDisabledItems: Story = {
           { id: "copy", label: "Copy", action: () => console.log("Copy") },
         ]}
       >
-        <div className="w-64 h-32 border-2 border-dashed border-neutral-300 rounded-lg flex items-center justify-center">
+        <div className="w-64 h-32 border-2 border-dashed border-neutral-5 rounded-lg flex items-center justify-center">
           Right-click here
         </div>
       </ContextMenu>

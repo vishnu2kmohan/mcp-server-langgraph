@@ -24,16 +24,16 @@ export const checkboxVariants = cva(
     "shrink-0 rounded border cursor-pointer",
     "appearance-none",
     "transition-colors duration-fast",
-    "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
-    "dark:focus:ring-offset-neutral-900",
+    "focus:outline-none focus:ring-2 focus:ring-primary-7 focus:ring-offset-2",
+    "dark:focus:ring-offset-neutral-12",
     // Checked state
-    "checked:bg-primary-500 checked:border-primary-500",
-    "checked:dark:bg-primary-600 checked:dark:border-primary-600",
+    "checked:bg-primary-9 checked:border-primary-9",
+    "checked:dark:bg-primary-10 checked:dark:border-primary-10",
     // Unchecked state
-    "bg-white dark:bg-neutral-800",
-    "border-neutral-300 dark:border-neutral-600",
+    "bg-neutral-1",
+    "border-neutral-5",
     // Hover
-    "hover:border-primary-400 dark:hover:border-primary-500",
+    "hover:border-primary-7 dark:hover:border-primary-9",
     // Checkmark via background image
     "checked:bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22white%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M12.207%204.793a1%201%200%20010%201.414l-5%205a1%201%200%2001-1.414%200l-2-2a1%201%200%20011.414-1.414L6.5%209.086l4.293-4.293a1%201%200%20011.414%200z%22%2F%3E%3C%2Fsvg%3E')]",
     "bg-center bg-no-repeat",
@@ -167,7 +167,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           {label && (
             <span
               className={cn(
-                "text-sm font-medium text-neutral-900 dark:text-neutral-100",
+                "text-sm font-medium text-neutral-12",
                 disabled && "opacity-50",
               )}
             >
@@ -178,7 +178,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             <span
               id={descriptionId}
               className={cn(
-                "text-xs text-neutral-500 dark:text-neutral-400",
+                "text-xs text-neutral-10",
                 disabled && "opacity-50",
               )}
             >

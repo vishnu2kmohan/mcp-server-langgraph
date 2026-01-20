@@ -53,6 +53,25 @@ export interface ArtifactRendererProps {
 }
 
 /**
+ * ASCII art detection patterns
+ * Used to exclude ASCII diagrams from being detected as code
+ */
+const ASCII_ART_PATTERNS = [
+  // Box-drawing characters (Unicode)
+  /[│├└┘┌┐─┬┴┼╔╗╚╝═╬╭╮╯╰]/,
+  // ASCII box borders with repeated characters
+  /^\s*[|+\-*#]{3,}/m,
+  // Repeated dashes or equals (horizontal lines)
+  /^[-=]{5,}$/m,
+  // ASCII tree-like structures
+  /^\s*[/\\]{2,}/m,
+  // Block art patterns (repeated non-word characters)
+  /^[^\w\s]{4,}$/m,
+  // ASCII diagram arrows
+  /[<>]{2,}|[-=]{2,}>/,
+];
+
+/**
  * Mermaid diagram type patterns
  */
 const MERMAID_PATTERNS = [
@@ -161,6 +180,18 @@ export function detectArtifactType(
           type: "mermaid",
           confidence: 0.95,
           reason: "Mermaid diagram syntax",
+        };
+      }
+    }
+
+    // Check for ASCII art BEFORE code detection
+    // ASCII diagrams often contain characters that look like code patterns
+    for (const pattern of ASCII_ART_PATTERNS) {
+      if (pattern.test(trimmed)) {
+        return {
+          type: "text",
+          confidence: 0.85,
+          reason: "ASCII art detected",
         };
       }
     }
@@ -466,7 +497,7 @@ export function ArtifactRenderer({
       return (
         <div
           data-testid="artifact-text"
-          className={`p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap ${className}`}
+          className={`p-4 bg-neutral-1 rounded-lg text-neutral-11 whitespace-pre-wrap ${className}`}
         >
           {(artifactToRender as TextArtifactType).data}
         </div>

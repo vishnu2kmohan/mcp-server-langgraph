@@ -96,7 +96,7 @@ export function WorkflowCanvas({
       // Apply highlight styling when node matches highlightedNodeId
       className:
         highlightedNodeId === node.id
-          ? "ring-2 ring-primary-500 ring-offset-2"
+          ? "ring-2 ring-primary-7 ring-offset-2"
           : undefined,
       data: {
         ...node.data,
@@ -248,13 +248,13 @@ export function WorkflowCanvas({
           variant={BackgroundVariant.Dots}
           gap={15}
           size={1}
-          className="bg-neutral-50 dark:bg-neutral-900"
+          className="bg-neutral-1"
         />
-        <Controls className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700" />
+        <Controls className="bg-neutral-1 border border-neutral-5" />
         <MiniMap
           nodeColor={getNodeColor}
-          maskColor="rgba(0,0,0,0.1)"
-          className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700"
+          maskColor="var(--neutral-a3)"
+          className="bg-neutral-1 border border-neutral-5"
         />
       </ReactFlow>
     </div>

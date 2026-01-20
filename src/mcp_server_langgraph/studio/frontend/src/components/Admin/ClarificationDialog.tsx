@@ -15,7 +15,9 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useReducedMotion } from "motion/react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { cn } from "../../utils/cn";
 import {
   X,
   HelpCircle,
@@ -71,6 +73,9 @@ export function ClarificationDialog({
   error = null,
   currentUser = "unknown",
 }: ClarificationDialogProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   const [textValue, setTextValue] = useState("");
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
 
@@ -158,21 +163,21 @@ export function ClarificationDialog({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-neutral-a6"
         onClick={onClose}
         aria-hidden="true"
       />
       {/* Dialog */}
-      <div className="relative bg-white dark:bg-neutral-900 rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-hidden">
+      <div className="relative bg-neutral-1 rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-primary-500" />
+        <div className="flex items-center justify-between p-4 border-b border-neutral-5">
+          <h2 className="text-lg font-semibold text-neutral-12 flex items-center gap-2">
+            <HelpCircle className="w-5 h-5 text-primary-9" />
             Agent Needs Your Input
           </h2>
-          <Button
+          <Button size="icon"
             variant="secondary"
-            className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 rounded-lg"
+            className="p-2 text-neutral-10 hover:text-neutral-11 hover:bg-neutral-2 rounded-lg"
             data-testid="close-dialog"
             onClick={onClose}
           >
@@ -184,37 +189,37 @@ export function ClarificationDialog({
         <div className="p-4 space-y-4 overflow-y-auto max-h-[60vh]">
           {/* Error Message */}
           {error && (
-            <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg p-3 text-error-700 dark:text-error-400">
+            <div className="bg-error-1 dark:bg-error-a3 border border-error-4 dark:border-error-11 rounded-lg p-3 text-error-11 dark:text-error-7">
               {error}
             </div>
           )}
 
           {/* Agent Info */}
-          <div className="text-sm text-neutral-500 dark:text-neutral-400">
+          <div className="text-sm text-neutral-10">
             Agent:{" "}
-            <strong className="text-neutral-900 dark:text-white">
+            <strong className="text-neutral-12">
               {request.agentName}
             </strong>
           </div>
 
           {/* Question */}
-          <p className="text-base font-medium text-neutral-900 dark:text-white">
+          <p className="text-base font-medium text-neutral-12">
             {request.question}
           </p>
 
           {/* Context Display */}
           {Object.keys(request.context).length > 0 && (
-            <div className="bg-neutral-50 dark:bg-neutral-800/50 rounded-lg p-3 text-sm">
-              <div className="text-neutral-500 dark:text-neutral-400">
+            <div className="bg-neutral-1 rounded-lg p-3 text-sm">
+              <div className="text-neutral-10">
                 Context:
               </div>
               <div className="mt-1 space-y-1">
                 {Object.entries(request.context).map(([key, value]) => (
                   <div
                     key={key}
-                    className="text-neutral-700 dark:text-neutral-300"
+                    className="text-neutral-11"
                   >
-                    <span className="text-neutral-500 dark:text-neutral-400">
+                    <span className="text-neutral-10">
                       {key}:
                     </span>{" "}
                     {String(value)}
@@ -228,7 +233,7 @@ export function ClarificationDialog({
           {isTextType && (
             <div>
               <Textarea
-                className="px-3 py-2 text-sm text-neutral-900 dark:text-white placeholder-neutral-400 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-2 text-sm text-neutral-12 placeholder-neutral-9 focus:ring-primary-7 disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid="text-input"
                 value={textValue}
                 onChange={(e) => setTextValue(e.target.value)}
@@ -251,17 +256,17 @@ export function ClarificationDialog({
                   disabled={isSubmitting}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-neutral-900 dark:text-white">
+                    <span className="font-medium text-neutral-12">
                       {option.label}
                     </span>
                     {option.isRecommended && (
-                      <span className="text-xs px-2 py-0.5 bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 rounded">
+                      <span className="text-xs px-2 py-0.5 bg-success-3 bg-success-4 text-success-11 dark:text-success-7 rounded">
                         Recommended
                       </span>
                     )}
                   </div>
                   {option.description && (
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                    <p className="text-sm text-neutral-10 mt-1">
                       {option.description}
                     </p>
                   )}
@@ -276,21 +281,21 @@ export function ClarificationDialog({
               data-testid="confirmation-warning"
               className={`flex items-start gap-3 rounded-lg p-3 ${
                 hasDestructiveContext
-                  ? "bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800"
-                  : "bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800"
+                  ? "bg-error-1 dark:bg-error-a3 border border-error-4 dark:border-error-11"
+                  : "bg-warning-3 bg-warning-3 border border-warning-6 dark:border-warning-11"
               }`}
             >
               <AlertTriangle
                 className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                  hasDestructiveContext ? "text-error-500" : "text-warning-500"
+                  hasDestructiveContext ? "text-error-9" : "text-warning-9"
                 }`}
               />
               <div>
                 <p
                   className={`font-medium ${
                     hasDestructiveContext
-                      ? "text-error-700 dark:text-error-400"
-                      : "text-warning-700 dark:text-warning-400"
+                      ? "text-error-11 dark:text-error-7"
+                      : "text-warning-10 dark:text-warning-9"
                   }`}
                 >
                   Please confirm to proceed
@@ -298,8 +303,8 @@ export function ClarificationDialog({
                 <p
                   className={`text-sm ${
                     hasDestructiveContext
-                      ? "text-error-600 dark:text-error-400/80"
-                      : "text-warning-600 dark:text-warning-400/80"
+                      ? "text-error-10 dark:text-error-a9"
+                      : "text-warning-9 dark:text-warning-a9"
                   }`}
                 >
                   This action requires your explicit confirmation.
@@ -310,12 +315,12 @@ export function ClarificationDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
+        <div className="flex items-center justify-end gap-3 p-4 border-t border-neutral-5 bg-neutral-1">
           {isConfirmationType ? (
             <>
               <Button
                 variant="danger"
-                className="flex px-4 py-2 text-sm text-error-700 dark:text-error-400 bg-error-100 dark:bg-error-900/30 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50"
+                className="flex px-4 py-2 text-sm text-error-11 dark:text-error-7 bg-error-3 bg-error-4 rounded-lg hover:bg-error-4 dark:hover:bg-error-a6"
                 data-testid="confirm-no"
                 onClick={() => handleConfirmation(false)}
                 disabled={isSubmitting}
@@ -325,7 +330,7 @@ export function ClarificationDialog({
               </Button>
               <Button
                 variant="success"
-                className="flex px-4 py-2 text-sm text-white bg-success-600 rounded-lg hover:bg-success-700"
+                className="flex px-4 py-2 text-sm text-neutral-12 bg-success-10 rounded-lg hover:bg-success-11"
                 data-testid="confirm-yes"
                 onClick={() => handleConfirmation(true)}
                 disabled={isSubmitting}
@@ -333,7 +338,7 @@ export function ClarificationDialog({
                 {isSubmitting ? (
                   <Loader2
                     data-testid="submit-loading"
-                    className="w-4 h-4 animate-spin"
+                    className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
                   />
                 ) : (
                   <Check className="w-4 h-4" />
@@ -345,14 +350,14 @@ export function ClarificationDialog({
             <>
               <Button
                 variant="secondary"
-                className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700"
+                className="px-4 py-2 text-sm text-neutral-11 bg-neutral-2 rounded-lg hover:bg-neutral-3"
                 onClick={onClose}
               >
                 Cancel
               </Button>
               <Button
                 variant="primary"
-                className="flex px-4 py-2 text-sm text-white bg-primary-600 rounded-lg hover:bg-primary-700"
+                className="flex px-4 py-2 text-sm text-neutral-12 bg-primary-10 rounded-lg hover:bg-primary-11"
                 data-testid="submit-button"
                 onClick={isTextType ? handleTextSubmit : handleChoiceSubmit}
                 disabled={!canSubmit || isSubmitting}
@@ -360,7 +365,7 @@ export function ClarificationDialog({
                 {isSubmitting ? (
                   <Loader2
                     data-testid="submit-loading"
-                    className="w-4 h-4 animate-spin"
+                    className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
                   />
                 ) : (
                   <Check className="w-4 h-4" />

@@ -56,26 +56,26 @@ export function ExecutionHistoryPanel({
   const getStatusColor = (status: WorkflowExecution["status"]) => {
     switch (status) {
       case "completed":
-        return "bg-success-500";
+        return "bg-success-9";
       case "running":
-        return "bg-primary-500";
+        return "bg-primary-9";
       case "failed":
-        return "bg-error-500";
+        return "bg-error-9";
       case "pending":
-        return "bg-warning-500";
+        return "bg-warning-9";
     }
   };
 
   const getStatusIcon = (status: WorkflowExecution["status"]) => {
     switch (status) {
       case "completed":
-        return <CheckCircle className="w-4 h-4 text-success-500" />;
+        return <CheckCircle className="w-4 h-4 text-success-9" />;
       case "running":
-        return <PlayCircle className="w-4 h-4 text-primary-500 animate-spin" />;
+        return <PlayCircle className="w-4 h-4 text-primary-9 animate-spin" />;
       case "failed":
-        return <AlertCircle className="w-4 h-4 text-error-500" />;
+        return <AlertCircle className="w-4 h-4 text-error-9" />;
       case "pending":
-        return <Clock className="w-4 h-4 text-warning-500" />;
+        return <Clock className="w-4 h-4 text-warning-9" />;
     }
   };
 
@@ -105,20 +105,20 @@ export function ExecutionHistoryPanel({
         data-testid="execution-loading"
         className="flex items-center justify-center h-full p-8"
       >
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-9" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-neutral-800 rounded-lg shadow">
+    <div className="flex flex-col h-full bg-neutral-1 rounded-lg shadow">
       {/* Header */}
-      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="p-4 border-b border-neutral-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-neutral-12">
             Execution History
           </h2>
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+          <span className="text-sm text-neutral-10">
             {filteredExecutions.length} executions
           </span>
         </div>
@@ -143,24 +143,24 @@ export function ExecutionHistoryPanel({
       <div className="flex-1 overflow-y-auto">
         {filteredExecutions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-            <Clock className="w-12 h-12 text-neutral-300 dark:text-neutral-600 dark:text-neutral-300 mb-4" />
-            <p className="text-neutral-600 dark:text-neutral-400 font-medium">
+            <Clock className="w-12 h-12 text-neutral-9 mb-4" />
+            <p className="text-neutral-11 font-medium">
               No executions yet
             </p>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+            <p className="text-sm text-neutral-10 mt-1">
               Run this workflow to see execution history
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-neutral-100 dark:divide-neutral-700">
+          <div className="divide-y divide-neutral-5">
             {filteredExecutions.map((execution) => (
               <div
                 key={execution.id}
                 data-testid={`execution-${execution.id}`}
                 onClick={() => onSelectExecution(execution)}
-                className={`p-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors ${
+                className={`p-4 cursor-pointer hover:bg-neutral-1 transition-colors ${
                   selectedExecutionId === execution.id
-                    ? "bg-primary-50 dark:bg-primary-900/20 ring-2 ring-primary-500"
+                    ? "bg-primary-1 dark:bg-primary-a3 ring-2 ring-primary-7"
                     : ""
                 }`}
               >
@@ -178,11 +178,11 @@ export function ExecutionHistoryPanel({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       {getStatusIcon(execution.status)}
-                      <span className="text-sm font-medium text-neutral-900 dark:text-white capitalize">
+                      <span className="text-sm font-medium text-neutral-12 capitalize">
                         {execution.status}
                       </span>
                       {execution.completedAt && (
-                        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                        <span className="text-xs text-neutral-10">
                           {formatDuration(
                             execution.startedAt,
                             execution.completedAt,
@@ -192,14 +192,14 @@ export function ExecutionHistoryPanel({
                     </div>
 
                     <div className="flex items-center gap-2 mt-1">
-                      <Clock className="w-3 h-3 text-neutral-400 dark:text-neutral-400" />
-                      <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                      <Clock className="w-3 h-3 text-neutral-9" />
+                      <span className="text-xs text-neutral-10">
                         {formatTime(execution.startedAt)}
                       </span>
                     </div>
 
                     {execution.error && (
-                      <div className="mt-2 p-2 bg-error-50 dark:bg-error-900/20 rounded text-xs text-error-600 dark:text-error-400">
+                      <div className="mt-2 p-2 bg-error-1 dark:bg-error-a3 rounded text-xs text-error-10 dark:text-error-7">
                         {execution.error}
                       </div>
                     )}
@@ -212,10 +212,10 @@ export function ExecutionHistoryPanel({
       </div>
       {/* Load More */}
       {hasMore && (
-        <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
+        <div className="p-4 border-t border-neutral-5">
           <Button
             variant="primary"
-            className="w-full py-2 text-sm text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded"
+            className="w-full py-2 text-sm text-primary-10 dark:text-primary-7 hover:bg-primary-1 dark:hover:bg-primary-a3 rounded"
             onClick={onLoadMore}
             disabled={isLoading}
           >

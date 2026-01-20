@@ -20,6 +20,11 @@ vi.mock("../../api", () => ({
   useListProjectsQuery: () => mockListProjectsQuery(),
   useCreateProjectMutation: () => mockCreateProjectMutation(),
   useDeleteProjectMutation: () => mockDeleteProjectMutation(),
+  // Required for AIEmptyState used in empty state
+  useGetEmptyStateSuggestionsMutation: () => [
+    vi.fn(),
+    { isLoading: false, data: null },
+  ],
 }));
 
 // =============================================================================
@@ -333,21 +338,18 @@ describe("ProjectsPage - List View", () => {
       renderWithRouter(<ProjectsPage />);
 
       await waitFor(() => {
-        // Should have filter chips for Active and Archived
-        const filterGroup = screen.getByRole("group", {
-          name: /filter projects by status/i,
+        // Should have status filter dropdown
+        const statusFilter = screen.getByTestId("status-filter");
+        expect(statusFilter).toBeInTheDocument();
+        // StatusFilter uses a select element
+        const select = screen.getByRole("combobox", {
+          name: /filter by status/i,
         });
-        expect(filterGroup).toBeInTheDocument();
-        expect(
-          screen.getByRole("button", { name: /active/i }),
-        ).toBeInTheDocument();
-        expect(
-          screen.getByRole("button", { name: /archived/i }),
-        ).toBeInTheDocument();
+        expect(select).toBeInTheDocument();
       });
     });
 
-    it("should have no filter selected by default", async () => {
+    it("should have 'All Statuses' selected by default", async () => {
       mockListProjectsQuery.mockReturnValue({
         data: mockSingleProjectData,
         isLoading: false,
@@ -359,11 +361,11 @@ describe("ProjectsPage - List View", () => {
       renderWithRouter(<ProjectsPage />);
 
       await waitFor(() => {
-        // Both filter chips should be unpressed by default
-        const activeBtn = screen.getByRole("button", { name: /active/i });
-        const archivedBtn = screen.getByRole("button", { name: /archived/i });
-        expect(activeBtn).toHaveAttribute("aria-pressed", "false");
-        expect(archivedBtn).toHaveAttribute("aria-pressed", "false");
+        // StatusFilter should have "All Statuses" selected by default
+        const select = screen.getByRole("combobox", {
+          name: /filter by status/i,
+        }) as HTMLSelectElement;
+        expect(select.value).toBe("");
       });
     });
   });
@@ -523,7 +525,7 @@ describe("ProjectsPage - List View", () => {
       });
 
       // Switch to table view to see the date column
-      fireEvent.click(screen.getByRole("button", { name: /table view/i }));
+      fireEvent.click(screen.getByRole("radio", { name: /table view/i }));
 
       await waitFor(() => {
         // Should show "-" for missing date

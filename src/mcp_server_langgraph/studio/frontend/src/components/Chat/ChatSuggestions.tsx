@@ -87,7 +87,7 @@ export function ChatSuggestions({
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="h-10 w-40 bg-neutral-200 dark:bg-neutral-700 rounded-lg animate-pulse"
+            className="h-10 w-40 bg-neutral-3 rounded-lg animate-pulse"
           />
         ))}
       </div>
@@ -106,7 +106,7 @@ export function ChatSuggestions({
 
   return (
     <div className={`px-4 py-3 ${className}`}>
-      <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
+      <p className="text-sm text-neutral-10 mb-2">
         {title}
       </p>
       <ul
@@ -119,7 +119,7 @@ export function ChatSuggestions({
             <li key={suggestion.id}>
               <Button
                 variant="secondary"
-                className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 hover:border-primary-300 dark:hover:border-primary-600 focus:ring-primary-500/50"
+                className="bg-neutral-1 border border-neutral-5 rounded-lg text-neutral-11 hover:bg-neutral-1 hover:border-primary-5 dark:hover:border-primary-10 focus:ring-primary-a6"
                 type="button"
                 onClick={() => onSelect(suggestion.text)}
                 onKeyDown={(e) => {
@@ -130,7 +130,7 @@ export function ChatSuggestions({
               >
                 <Icon
                   size={compact ? 14 : 16}
-                  className="text-neutral-400 dark:text-neutral-400"
+                  className="text-neutral-9"
                 />
                 <span>{suggestion.text}</span>
               </Button>

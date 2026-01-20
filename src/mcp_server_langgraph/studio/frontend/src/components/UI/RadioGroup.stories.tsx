@@ -167,7 +167,7 @@ export const RatingVariant: Story = {
     const [rating, setRating] = useState("");
     return (
       <div className="space-y-4">
-        <p className="text-sm text-neutral-700 dark:text-neutral-300">
+        <p className="text-sm text-neutral-11">
           How satisfied are you with our service?
         </p>
         <RadioGroup
@@ -182,7 +182,7 @@ export const RatingVariant: Story = {
           <Radio value="4" label="4" />
           <Radio value="5" label="5" />
         </RadioGroup>
-        <p className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="flex justify-between text-xs text-neutral-10">
           <span>Not satisfied</span>
           <span>Very satisfied</span>
         </p>

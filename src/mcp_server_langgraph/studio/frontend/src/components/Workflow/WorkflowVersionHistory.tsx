@@ -129,14 +129,14 @@ export function WorkflowVersionHistory({
         data-testid="version-history-panel"
         className={cn(
           "flex items-center justify-center h-48",
-          "bg-white dark:bg-neutral-900",
+          "bg-neutral-1",
           className,
         )}
       >
         <Loader2
           data-testid="loading-spinner"
           size={24}
-          className="animate-spin text-neutral-400 dark:text-neutral-400"
+          className="animate-spin text-neutral-9"
         />
       </div>
     );
@@ -149,12 +149,12 @@ export function WorkflowVersionHistory({
         data-testid="version-history-panel"
         className={cn(
           "flex flex-col items-center justify-center h-48 gap-2",
-          "bg-white dark:bg-neutral-900",
+          "bg-neutral-1",
           className,
         )}
       >
-        <AlertCircle size={24} className="text-error-500" />
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+        <AlertCircle size={24} className="text-error-9" />
+        <p className="text-sm text-neutral-10">
           Failed to load versions
         </p>
       </div>
@@ -168,12 +168,12 @@ export function WorkflowVersionHistory({
         data-testid="version-history-panel"
         className={cn(
           "flex flex-col items-center justify-center h-48 gap-2",
-          "bg-white dark:bg-neutral-900",
+          "bg-neutral-1",
           className,
         )}
       >
-        <History size={24} className="text-neutral-400 dark:text-neutral-400" />
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+        <History size={24} className="text-neutral-9" />
+        <p className="text-sm text-neutral-10">
           No versions yet
         </p>
       </div>
@@ -183,10 +183,10 @@ export function WorkflowVersionHistory({
   return (
     <div
       data-testid="version-history-panel"
-      className={cn("flex flex-col bg-white dark:bg-neutral-900", className)}
+      className={cn("flex flex-col bg-neutral-1", className)}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-5">
         <Button
           className="flex text-left"
           type="button"
@@ -194,9 +194,9 @@ export function WorkflowVersionHistory({
         >
           <History
             size={16}
-            className="text-neutral-500 dark:text-neutral-400"
+            className="text-neutral-10"
           />
-          <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+          <h3 className="text-sm font-medium text-neutral-12">
             Version History
           </h3>
         </Button>
@@ -206,7 +206,7 @@ export function WorkflowVersionHistory({
           <Button
             variant="primary"
             size="sm"
-            className="flex px-2 py-1 text-xs text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded"
+            className="flex px-2 py-1 text-xs text-primary-10 dark:text-primary-7 hover:bg-primary-1 dark:hover:bg-primary-a3 rounded"
             type="button"
           >
             <GitCompare size={12} />
@@ -216,7 +216,7 @@ export function WorkflowVersionHistory({
       </div>
       {/* Version list */}
       <div className="flex-1 overflow-y-auto">
-        <ul className="divide-y divide-neutral-100 dark:divide-neutral-800">
+        <ul className="divide-y divide-neutral-5">
           {versions.map((version) => {
             const isCurrent = version.id === currentVersionId;
             const isSelected = version.id === selectedVersionId;
@@ -230,8 +230,8 @@ export function WorkflowVersionHistory({
                 className={cn(
                   "px-4 py-3 cursor-pointer transition-colors",
                   isSelected
-                    ? "bg-primary-50 dark:bg-primary-900/20"
-                    : "hover:bg-neutral-50 dark:hover:bg-neutral-800",
+                    ? "bg-primary-1 dark:bg-primary-a3"
+                    : "hover:bg-neutral-1",
                 )}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -247,11 +247,11 @@ export function WorkflowVersionHistory({
                           size="sm"
                         />
                       )}
-                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      <span className="text-sm font-medium text-neutral-12">
                         v{version.versionNumber}
                       </span>
                       {isCurrent && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400 rounded">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-success-3 text-success-11 bg-success-4 dark:text-success-7 rounded">
                           <Check size={10} />
                           Current
                         </span>
@@ -260,13 +260,13 @@ export function WorkflowVersionHistory({
 
                     {/* Commit message */}
                     {version.commitMessage && (
-                      <p className="mt-0.5 text-sm text-neutral-700 dark:text-neutral-300 truncate">
+                      <p className="mt-0.5 text-sm text-neutral-11 truncate">
                         {version.commitMessage}
                       </p>
                     )}
 
                     {/* Meta info */}
-                    <div className="mt-1 flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                    <div className="mt-1 flex items-center gap-2 text-xs text-neutral-10">
                       <span>{version.createdBy}</span>
                       <span>-</span>
                       <span>{formatDate(version.createdAt)}</span>
@@ -274,14 +274,14 @@ export function WorkflowVersionHistory({
 
                     {/* Telemetry info */}
                     {(version.promptVersion || version.promptModel) && (
-                      <div className="mt-1 flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-400">
+                      <div className="mt-1 flex items-center gap-2 text-xs text-neutral-9">
                         {version.promptVersion && (
-                          <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded">
+                          <span className="px-1.5 py-0.5 bg-neutral-2 rounded">
                             {version.promptVersion}
                           </span>
                         )}
                         {version.promptModel && (
-                          <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded">
+                          <span className="px-1.5 py-0.5 bg-neutral-2 rounded">
                             {version.promptModel}
                           </span>
                         )}
@@ -301,8 +301,8 @@ export function WorkflowVersionHistory({
                       disabled={isRestoring}
                       className={cn(
                         "flex items-center gap-1 px-2 py-1 text-xs font-medium rounded",
-                        "text-neutral-600 dark:text-neutral-400",
-                        "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+                        "text-neutral-11",
+                        "hover:bg-neutral-2",
                         "disabled:opacity-50 disabled:cursor-not-allowed",
                       )}
                     >

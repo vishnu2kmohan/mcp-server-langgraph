@@ -154,7 +154,7 @@ export function MessageList({
           data-testid="rich-message"
         >
           <div
-            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-insight-100 dark:bg-insight-900/30 text-insight-600 dark:text-insight-400"
+            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-insight-2 dark:bg-insight-a4 text-insight-10 dark:text-insight-9"
             data-testid="ai-avatar"
           >
             <Bot size={16} />
@@ -164,7 +164,7 @@ export function MessageList({
               name="MarkdownContent"
               fallback={
                 <div
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-warning-700 dark:text-warning-300 bg-warning-50 dark:bg-warning-900/20 rounded border border-warning-200 dark:border-warning-800"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-warning-10 dark:text-warning-6 bg-warning-3 bg-warning-3 rounded border border-warning-6 dark:border-warning-11"
                   role="alert"
                   data-testid="message-render-error"
                 >
@@ -198,11 +198,11 @@ export function MessageList({
       role="log"
       aria-live="polite"
       aria-label="Chat messages"
-      className={cn("flex flex-col flex-1 overflow-y-auto p-4", className)}
+      className={cn("relative flex flex-col flex-1 overflow-y-auto p-4", className)}
     >
       {/* Empty state */}
       {messages.length === 0 && !isLoading && (
-        <div className="flex items-center justify-center flex-1 text-neutral-500 dark:text-neutral-400">
+        <div className="flex items-center justify-center flex-1 text-neutral-10">
           <p>No messages yet. Start a conversation!</p>
         </div>
       )}
@@ -224,43 +224,37 @@ export function MessageList({
           data-testid="loading-indicator"
           className="flex items-center justify-center py-4"
         >
-          <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-primary-9 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
       {/* Streaming indicator */}
       {isStreaming && (
         <div
           data-testid="streaming-indicator"
-          className="flex items-center gap-2 py-2 px-4 text-neutral-500 dark:text-neutral-400"
+          className="flex items-center gap-2 py-2 px-4 text-neutral-10"
         >
           <div className="flex gap-1">
-            <div className="w-2 h-2 bg-neutral-400 rounded-full animate-pulse" />
-            <div
-              className="w-2 h-2 bg-neutral-400 rounded-full animate-pulse"
-              style={{ animationDelay: "150ms" }}
-            />
-            <div
-              className="w-2 h-2 bg-neutral-400 rounded-full animate-pulse"
-              style={{ animationDelay: "300ms" }}
-            />
+            <div className="w-2 h-2 bg-neutral-4 rounded-full animate-pulse animation-delay-0" />
+            <div className="w-2 h-2 bg-neutral-4 rounded-full animate-pulse animation-delay-150" />
+            <div className="w-2 h-2 bg-neutral-4 rounded-full animate-pulse animation-delay-300" />
           </div>
           <span className="text-sm">AI is typing...</span>
         </div>
       )}
       {/* Scroll anchor */}
       <div ref={endRef} />
-      {/* Scroll to bottom button */}
+      {/* Scroll to bottom button - uses sticky positioning to stay above DevTools */}
       {isScrolledUp && (
         <Button
+          variant="ghost"
+          size="icon"
           data-testid="scroll-to-bottom-button"
           type="button"
           onClick={handleScrollToBottom}
           className={cn(
-            "fixed bottom-24 right-8 p-2 rounded-full",
-            "bg-white dark:bg-neutral-800 shadow-lg",
-            "text-neutral-600 dark:text-neutral-300",
-            "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
-            "transition-all",
+            "sticky bottom-4 self-end mr-4 rounded-full",
+            "bg-neutral-1 shadow-lg",
+            "z-10",
           )}
           aria-label="Scroll to bottom"
         >

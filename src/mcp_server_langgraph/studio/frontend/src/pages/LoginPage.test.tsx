@@ -16,6 +16,7 @@ import { LoginPage } from "./LoginPage";
 import authSliceReducer from "../store/slices/authSlice";
 import personaSliceReducer from "../store/slices/personaSlice";
 import { INTENDED_ROUTE_KEY } from "../utils/intendedRoute";
+import { getDisplayVersion, APP_VERSION } from "../config/version";
 
 import * as apiModule from "../api";
 
@@ -196,6 +197,70 @@ describe("LoginPage", () => {
       renderWithProviders(<LoginPage />);
 
       expect(screen.getByText(/agent studio v/i)).toBeInTheDocument();
+    });
+  });
+
+  describe("Version Contract", () => {
+    /**
+     * Version contract tests to prevent hardcoded version regressions.
+     *
+     * These tests ensure the LoginPage uses the dynamic version from
+     * config/version.ts rather than hardcoded strings like "v0.1.0".
+     *
+     * Regression prevention for: version reverting from v2.9.0-dev to v0.1.0
+     */
+
+    it("should display version from getDisplayVersion()", () => {
+      renderWithProviders(<LoginPage />);
+
+      // Get the expected version from the config
+      const expectedVersion = getDisplayVersion();
+
+      // Find the version text in the footer
+      const versionElement = screen.getByText(
+        new RegExp(`Agent Studio ${expectedVersion}`),
+      );
+      expect(versionElement).toBeInTheDocument();
+    });
+
+    it("should NOT contain hardcoded 'v0.1.0' version", () => {
+      renderWithProviders(<LoginPage />);
+
+      // This is a regression test - v0.1.0 was accidentally hardcoded
+      expect(screen.queryByText(/v0\.1\.0/)).not.toBeInTheDocument();
+    });
+
+    it("should NOT contain hardcoded version strings", () => {
+      renderWithProviders(<LoginPage />);
+
+      // Guard against common hardcoded version patterns
+      // These would indicate the version was accidentally hardcoded instead
+      // of using getDisplayVersion()
+      const hardcodedPatterns = [
+        /v0\.0\.1/,
+        /v0\.1\.0/,
+        /v1\.0\.0(?!-)/i, // v1.0.0 without suffix (but allow v1.0.0-dev)
+        /version not set/i,
+        /unknown version/i,
+      ];
+
+      hardcodedPatterns.forEach((pattern) => {
+        expect(screen.queryByText(pattern)).not.toBeInTheDocument();
+      });
+    });
+
+    it("should use the current APP_VERSION", () => {
+      renderWithProviders(<LoginPage />);
+
+      // The displayed version should contain the APP_VERSION
+      expect(screen.getByText(new RegExp(APP_VERSION))).toBeInTheDocument();
+    });
+
+    it("should display version with 'v' prefix", () => {
+      renderWithProviders(<LoginPage />);
+
+      // The version should be prefixed with 'v' (e.g., "v2.9.0-dev")
+      expect(screen.getByText(/Agent Studio v\d+\.\d+\.\d+/)).toBeInTheDocument();
     });
   });
 

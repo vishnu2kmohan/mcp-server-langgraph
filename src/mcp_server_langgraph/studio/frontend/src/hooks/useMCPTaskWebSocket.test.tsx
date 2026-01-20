@@ -56,6 +56,31 @@ const MOCK_TASK_3: MCPTask = {
 };
 
 // =============================================================================
+// Mock Redux hooks to avoid needing Provider wrapper
+// =============================================================================
+
+const mockDispatch = vi.fn();
+vi.mock("../store/hooks", () => ({
+  useAppDispatch: () => mockDispatch,
+  // Return values for selectors: isAuthenticated=true, wsPermissions={mcp_tasks: true}
+  useAppSelector: vi.fn((selector) => {
+    if (selector.name?.includes("Authenticated")) return true;
+    if (selector.name?.includes("WebSocketPermissions"))
+      return { mcp_tasks: true };
+    return true;
+  }),
+}));
+
+// Mock getAuthToken to return test token
+vi.mock("../utils/storage", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../utils/storage")>();
+  return {
+    ...actual,
+    getAuthToken: vi.fn(() => "mock-test-token"),
+  };
+});
+
+// =============================================================================
 // Mock useRealtimeSync
 // =============================================================================
 
@@ -89,6 +114,7 @@ vi.mock("./useRealtimeSync", () => ({
       send: mockSend,
       disconnect: mockDisconnect,
       reconnect: mockReconnect,
+      metrics: { totalAttempts: 0 },
     };
   },
 }));

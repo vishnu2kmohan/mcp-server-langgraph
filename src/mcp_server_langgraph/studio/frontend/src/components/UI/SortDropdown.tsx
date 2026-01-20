@@ -93,7 +93,7 @@ export function SortDropdown({
       className={`flex items-center gap-2 ${className}`}
     >
       {label && (
-        <label className="text-sm text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
+        <label className="text-sm text-neutral-10 whitespace-nowrap">
           {label}
         </label>
       )}
@@ -102,7 +102,7 @@ export function SortDropdown({
         onChange={handleFieldChange}
         disabled={isDisabled}
         aria-label={ariaLabel ?? "Sort by"}
-        className="px-3 py-1.5 text-sm border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-3 py-1.5 text-sm border border-neutral-5 rounded-md bg-neutral-1 text-neutral-12 focus:outline-none focus:ring-2 focus:ring-primary-7 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {allowClear && <option value="">None</option>}
         {options.map((option) => (
@@ -113,7 +113,7 @@ export function SortDropdown({
       </select>
       <Button
         variant="secondary"
-        className="p-1.5 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:ring-primary-500"
+        className="p-1.5 border border-neutral-5 rounded-md bg-neutral-1 text-neutral-11 hover:bg-neutral-1 focus:ring-primary-7"
         type="button"
         onClick={handleOrderToggle}
         disabled={isDisabled}

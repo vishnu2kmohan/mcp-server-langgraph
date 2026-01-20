@@ -99,49 +99,49 @@ function TemplatePreview({
   compact: boolean;
 }) {
   return (
-    <div className="mt-3 p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+    <div className="mt-3 p-3 bg-neutral-1 rounded-lg border border-neutral-5">
       {!compact && (
-        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+        <p className="text-sm text-neutral-11 mb-3">
           {template.description}
         </p>
       )}
 
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="flex items-center gap-1.5">
-          <span className="text-neutral-500 dark:text-neutral-400">
+          <span className="text-neutral-10">
             Orchestrator:
           </span>
-          <span className="font-medium text-neutral-900 dark:text-white">
+          <span className="font-medium text-neutral-12">
             {template.orchestrator}
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <Brain className="w-3 h-3 text-neutral-400 dark:text-neutral-400" />
-          <span className="text-neutral-500 dark:text-neutral-400">
+          <Brain className="w-3 h-3 text-neutral-9" />
+          <span className="text-neutral-10">
             Thinking:
           </span>
-          <span className="font-medium text-neutral-900 dark:text-white">
+          <span className="font-medium text-neutral-12">
             {template.thinkingBudget}
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <MessageSquare className="w-3 h-3 text-neutral-400 dark:text-neutral-400" />
-          <span className="text-neutral-500 dark:text-neutral-400">
+          <MessageSquare className="w-3 h-3 text-neutral-9" />
+          <span className="text-neutral-10">
             Critique:
           </span>
-          <span className="font-medium text-neutral-900 dark:text-white">
+          <span className="font-medium text-neutral-12">
             {template.critiqueRounds} rounds
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <CheckCircle className="w-3 h-3 text-neutral-400 dark:text-neutral-400" />
-          <span className="text-neutral-500 dark:text-neutral-400">
+          <CheckCircle className="w-3 h-3 text-neutral-9" />
+          <span className="text-neutral-10">
             Success:
           </span>
-          <span className="font-medium text-success-600 dark:text-success-400">
+          <span className="font-medium text-success-10 dark:text-success-7">
             {Math.round(template.successRate * 100)}%
           </span>
         </div>
@@ -185,9 +185,9 @@ export function TemplateSelector({
     return (
       <div
         data-testid="template-selector"
-        className={`bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 ${compact ? "compact" : ""}`}
+        className={`bg-neutral-1 rounded-lg border border-neutral-5 p-4 ${compact ? "compact" : ""}`}
       >
-        <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
+        <p className="text-sm text-neutral-10 text-center">
           No template suggestions available
         </p>
       </div>
@@ -197,22 +197,22 @@ export function TemplateSelector({
   return (
     <div
       data-testid="template-selector"
-      className={`bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 ${compact ? "compact" : ""}`}
+      className={`bg-neutral-1 rounded-lg border border-neutral-5 p-4 ${compact ? "compact" : ""}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-warning-500" />
-          <h4 className="text-sm font-medium text-neutral-900 dark:text-white">
+          <Sparkles className="w-4 h-4 text-warning-9" />
+          <h4 className="text-sm font-medium text-neutral-12">
             Suggested Templates
           </h4>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400">
+          <span className="text-xs text-neutral-10">
             {suggestions.length} suggestions
           </span>
         </div>
 
-        <Button
-          className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded"
+        <Button size="icon" variant="ghost"
+          className="p-1 text-neutral-9 hover:text-neutral-11 rounded"
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss"
@@ -223,7 +223,7 @@ export function TemplateSelector({
       {/* Loading State */}
       {isLoading ? (
         <div role="status" className="flex items-center justify-center py-4">
-          <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
+          <Loader2 className="w-5 h-5 animate-spin text-primary-9" />
           <span className="sr-only">Loading suggestions...</span>
         </div>
       ) : (
@@ -251,7 +251,7 @@ export function TemplateSelector({
             <div className="mt-3 flex justify-end">
               <Button
                 variant="primary"
-                className="flex px-4 py-2 bg-primary-500 text-white text-sm rounded-lg hover:bg-primary-600"
+                className="flex px-4 py-2 bg-primary-9 text-neutral-12 text-sm rounded-lg hover:bg-primary-10"
                 type="button"
                 onClick={handleApply}
               >

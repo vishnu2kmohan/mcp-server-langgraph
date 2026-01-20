@@ -509,6 +509,37 @@ export interface FileUploadResult {
 // =============================================================================
 
 /**
+ * Edit metadata for tracking artifact origin and modifications
+ */
+export interface EditMetadata {
+  /** Who originally created this artifact (never changes after creation) */
+  origin: "ai" | "user";
+  /** Has user edited this artifact after creation? */
+  modified: boolean;
+  /** Who made the last edit */
+  lastEditedBy: "user" | "ai";
+  /** AI confidence score (0-1) if AI-edited */
+  aiConfidence?: number;
+  /** Language for code artifacts */
+  language?: string;
+}
+
+/**
+ * Attribution type derived from edit metadata
+ */
+export type AttributionType = "ai-generated" | "user-modified" | "user-created";
+
+/**
+ * Helper to derive attribution type from edit metadata
+ */
+export function getAttributionType(metadata?: EditMetadata): AttributionType {
+  if (!metadata) return "user-created";
+  if (metadata.origin === "ai" && !metadata.modified) return "ai-generated";
+  if (metadata.origin === "ai" && metadata.modified) return "user-modified";
+  return "user-created";
+}
+
+/**
  * Canvas artifact - extends base with session association and versioning
  * Used in StudioShell Canvas Panel for Gemini/ChatGPT-style editing
  */
@@ -525,15 +556,8 @@ export interface CanvasArtifact extends BaseArtifact {
   createdAt: string;
   /** Last update timestamp (ISO 8601) */
   updatedAt: string;
-  /** Edit metadata */
-  editMetadata?: {
-    /** Who made the edit */
-    editedBy: "user" | "ai-suggestion" | "ai-generation";
-    /** AI confidence score (0-1) if AI-edited */
-    aiConfidence?: number;
-    /** Language for code artifacts */
-    language?: string;
-  };
+  /** Edit metadata - tracks origin and modifications */
+  editMetadata?: EditMetadata;
 }
 
 /**
@@ -549,7 +573,9 @@ export interface ArtifactVersion {
   createdAt: string;
   parentVersion?: number;
   metadata: {
-    editType: "user" | "ai-suggestion" | "ai-generation";
+    /** Who made this version edit */
+    editedBy: "user" | "ai";
+    /** AI confidence score (0-1) if AI-edited */
     aiConfidence?: number;
   };
 }
@@ -609,7 +635,9 @@ export interface UpdateArtifactRequest {
   name?: string;
   /** Description explaining the artifact purpose or context */
   description?: string;
-  editedBy?: "user" | "ai-suggestion" | "ai-generation";
+  /** Who made the edit */
+  editedBy?: "user" | "ai";
+  /** AI confidence score (0-1) if AI-edited */
   aiConfidence?: number;
 }
 
@@ -638,4 +666,36 @@ export interface ForkArtifactResponse {
   id: string;
   parentId: string;
   version: number;
+}
+
+// =============================================================================
+// AI Suggestion Types (Phase 4 - Canvas UX Improvements)
+// =============================================================================
+
+/**
+ * AI suggestion type for categorization
+ */
+export type AISuggestionType =
+  | "refactor"
+  | "optimize"
+  | "fix"
+  | "explain"
+  | "expand"
+  | "summarize";
+
+/**
+ * AI suggestion for canvas artifacts
+ * Used in SuggestionsFooterBar for actionable AI recommendations
+ */
+export interface AISuggestion {
+  /** Unique identifier for the suggestion */
+  id: string;
+  /** Type of suggestion for categorization and styling */
+  type: AISuggestionType | string;
+  /** Short display label */
+  label: string;
+  /** Detailed description of what the suggestion does */
+  description: string;
+  /** Confidence score (0-1) for ranking suggestions */
+  confidence: number;
 }

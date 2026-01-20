@@ -14,7 +14,8 @@
  * Reference: docs-internal/CACHING_ARCHITECTURE_AUDIT.md
  */
 
-import { http, HttpResponse } from "msw";
+import { http } from "msw";
+import { apiJsonResponse } from "../utils/apiResponse";
 
 // =============================================================================
 // Types
@@ -74,7 +75,7 @@ export function createCacheGetHandler(
 
     if (callback) {
       const result = callback(key);
-      return HttpResponse.json({
+      return apiJsonResponse({
         key,
         hit: result.hit,
         value: result.value,
@@ -84,14 +85,14 @@ export function createCacheGetHandler(
     // Default behavior: check mock store
     const entry = mockCacheStore.get(key);
     if (entry) {
-      return HttpResponse.json({
+      return apiJsonResponse({
         key,
         hit: true,
         value: entry,
       });
     }
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       key,
       hit: false,
       value: null,
@@ -117,14 +118,14 @@ export function createCacheSetHandler(
       body = (await request.json()) as CacheSetRequest;
     } catch {
       // Handle malformed JSON gracefully
-      return HttpResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+      return apiJsonResponse({ error: "Invalid JSON body" }, { status: 400 });
     }
 
     const ttl = body.ttl_seconds ?? DEFAULT_TTL_SECONDS;
 
     if (callback) {
       const customResponse = callback(key, body.value, ttl);
-      return HttpResponse.json({
+      return apiJsonResponse({
         key,
         success: true,
         ttl_seconds: ttl,
@@ -135,7 +136,7 @@ export function createCacheSetHandler(
     // Default behavior: store in mock store
     mockCacheStore.set(key, body.value);
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       key,
       success: true,
       ttl_seconds: ttl,
@@ -154,7 +155,7 @@ export function createCacheDeleteHandler(
 
     if (callback) {
       const customResponse = callback(key);
-      return HttpResponse.json({
+      return apiJsonResponse({
         key,
         deleted: true,
         ...customResponse,
@@ -164,7 +165,7 @@ export function createCacheDeleteHandler(
     // Default behavior: remove from mock store
     mockCacheStore.delete(key);
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       key,
       deleted: true,
     });
@@ -182,7 +183,7 @@ export function createCachePrefixDeleteHandler(
 
     if (callback) {
       const result = callback(prefix);
-      return HttpResponse.json({
+      return apiJsonResponse({
         prefix,
         deleted_count: result.deleted_count,
       });
@@ -197,7 +198,7 @@ export function createCachePrefixDeleteHandler(
       }
     }
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       prefix,
       deleted_count: deletedCount,
     });

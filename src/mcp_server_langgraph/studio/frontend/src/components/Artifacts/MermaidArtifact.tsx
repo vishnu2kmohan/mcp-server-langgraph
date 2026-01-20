@@ -93,29 +93,29 @@ export function MermaidArtifact({
   return (
     <div
       data-testid="mermaid-container"
-      className={`border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden ${theme === "dark" ? "dark" : ""} ${className}`}
+      className={`border border-neutral-5 rounded-lg overflow-hidden ${theme === "dark" ? "dark" : ""} ${className}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
-        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+      <div className="flex items-center justify-between px-4 py-2 bg-neutral-1 border-b border-neutral-5">
+        <span className="text-sm font-medium text-neutral-11">
           {title || "Mermaid Diagram"}
         </span>
         <div className="flex items-center gap-1">
           <Button
             variant="secondary"
-            className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+            className="p-1.5 text-neutral-10 hover:text-neutral-11 rounded hover:bg-neutral-2"
             onClick={handleCopy}
             title="Copy code"
           >
             {isCopied ? (
-              <Check size={16} className="text-success-500" />
+              <Check size={16} className="text-success-9" />
             ) : (
               <Copy size={16} />
             )}
           </Button>
-          <Button
+          <Button size="icon"
             variant="secondary"
-            className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+            className="p-1.5 text-neutral-10 hover:text-neutral-11 rounded hover:bg-neutral-2"
             onClick={handleOpenInLive}
             title="Open in Mermaid Live"
           >
@@ -130,7 +130,7 @@ export function MermaidArtifact({
           {expandable && (
             <Button
               variant="secondary"
-              className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+              className="p-1.5 text-neutral-10 hover:text-neutral-11 rounded hover:bg-neutral-2"
               onClick={handleToggleExpand}
               title={isExpanded ? "Collapse" : "Expand"}
             >
@@ -141,7 +141,7 @@ export function MermaidArtifact({
       </div>
       {/* Code Content */}
       <div
-        className={`bg-neutral-900 text-neutral-100 p-4 overflow-auto ${isExpanded ? "max-h-[600px]" : "max-h-[300px]"}`}
+        className={`bg-neutral-2 text-neutral-9 p-4 overflow-auto ${isExpanded ? "max-h-[600px]" : "max-h-[300px]"}`}
       >
         <pre className="text-sm font-mono whitespace-pre-wrap">
           <code>{code}</code>

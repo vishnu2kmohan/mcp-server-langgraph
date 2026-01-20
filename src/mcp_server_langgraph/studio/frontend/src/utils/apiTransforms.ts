@@ -454,21 +454,42 @@ export function transformApiArtifactToClient(
   const updatedAt =
     (artifact.updated_at as string) ?? (artifact.updatedAt as string) ?? "";
 
-  // Transform edit_metadata
+  // Transform edit_metadata (old API format to new client format)
   const editMeta =
     (artifact.edit_metadata as Record<string, unknown>) ??
     (artifact.editMetadata as Record<string, unknown>);
-  const editMetadata = editMeta
-    ? {
-        editedBy: ((editMeta.edited_by as string) ??
-          (editMeta.editedBy as string) ??
-          "user") as "user" | "ai-suggestion" | "ai-generation",
+
+  // Derive origin from old editedBy field or use new structure if present
+  let editMetadata: CanvasArtifact["editMetadata"] | undefined;
+  if (editMeta) {
+    // Check if already in new format
+    if ("origin" in editMeta) {
+      editMetadata = {
+        origin: (editMeta.origin as "ai" | "user") ?? "user",
+        modified: (editMeta.modified as boolean) ?? false,
+        lastEditedBy: (editMeta.lastEditedBy as "ai" | "user") ?? "user",
+        aiConfidence: editMeta.aiConfidence as number | undefined,
+        language: editMeta.language as string | undefined,
+      };
+    } else {
+      // Transform from old format (editedBy) to new format (origin, modified, lastEditedBy)
+      const oldEditedBy =
+        (editMeta.edited_by as string) ??
+        (editMeta.editedBy as string) ??
+        "user";
+      const isAI =
+        oldEditedBy === "ai-generation" || oldEditedBy === "ai-suggestion";
+      editMetadata = {
+        origin: isAI ? "ai" : "user",
+        modified: false,
+        lastEditedBy: isAI ? "ai" : "user",
         aiConfidence:
           (editMeta.ai_confidence as number) ??
           (editMeta.aiConfidence as number),
         language: (editMeta.language as string) ?? undefined,
-      }
-    : undefined;
+      };
+    }
+  }
 
   return {
     id: artifact.id as string,

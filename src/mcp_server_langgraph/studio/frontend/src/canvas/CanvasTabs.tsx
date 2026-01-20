@@ -114,7 +114,7 @@ export function CanvasTabs({
       aria-label="Artifact view tabs"
       className={cn(
         "flex items-center gap-1 p-1",
-        "bg-neutral-100 dark:bg-neutral-800 rounded-lg",
+        "bg-neutral-2 rounded-lg",
         className,
       )}
     >
@@ -138,12 +138,12 @@ export function CanvasTabs({
             onKeyDown={(e) => handleKeyDown(e, tab)}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium",
-              "transition-all focus:outline-none focus:ring-2 focus:ring-primary-500",
+              "transition-all focus:outline-none focus:ring-2 focus:ring-primary-7",
               isActive &&
-                "bg-white dark:bg-neutral-700 text-primary-600 dark:text-primary-400 shadow-sm",
+                "bg-neutral-1 text-primary-11 dark:text-primary-11 shadow-sm",
               !isActive &&
                 !isDisabled &&
-                "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600",
+                "text-neutral-11 hover:bg-neutral-3",
               isDisabled && "opacity-50 cursor-not-allowed",
             )}
           >

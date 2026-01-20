@@ -236,7 +236,7 @@ describe("ShareWorkflowDialog", () => {
       });
 
       // Click on the backdrop
-      const backdrop = document.querySelector(".bg-black\\/50");
+      const backdrop = document.querySelector(".bg-neutral-12\\/50");
       if (backdrop) {
         fireEvent.click(backdrop);
       }

@@ -103,11 +103,11 @@ function BarChartRenderer({
               data-testid="chart-bar"
             >
               {/* Tooltip */}
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-2 text-neutral-12 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                 {formatValue(point.value)}
               </div>
             </div>
-            <span className="mt-2 text-xs text-neutral-600 dark:text-neutral-400 truncate max-w-full text-center">
+            <span className="mt-2 text-xs text-neutral-11 truncate max-w-full text-center">
               {point.label}
             </span>
           </div>
@@ -155,7 +155,7 @@ function LineChartRenderer({
         <path
           d={pathD}
           fill="none"
-          stroke="#3B82F6"
+          className="stroke-primary-9"
           strokeWidth="0.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -167,8 +167,7 @@ function LineChartRenderer({
             cx={point.x}
             cy={point.y}
             r="1.5"
-            fill="#3B82F6"
-            className="cursor-pointer hover:r-2"
+            className="fill-primary-9 cursor-pointer hover:r-2"
             onClick={() => {
               const dataPoint = data[index];
               if (dataPoint) onDataPointClick?.(dataPoint);
@@ -184,7 +183,7 @@ function LineChartRenderer({
         {data.map((point) => (
           <span
             key={point.label}
-            className="text-xs text-neutral-600 dark:text-neutral-400 truncate"
+            className="text-xs text-neutral-11 truncate"
           >
             {point.label}
           </span>
@@ -267,7 +266,7 @@ function PieChartRenderer({
                   point.color || CHART_COLORS[index % CHART_COLORS.length],
               }}
             />
-            <span className="text-xs text-neutral-600 dark:text-neutral-400">
+            <span className="text-xs text-neutral-11">
               {point.label}
             </span>
           </div>
@@ -335,23 +334,23 @@ export function ChartArtifact({
 
   return (
     <div
-      className={`bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden ${className}`}
+      className={`bg-neutral-1 border border-neutral-5 rounded-lg overflow-hidden ${className}`}
       data-testid="chart-artifact"
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-neutral-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ChartIcon
             size={16}
-            className="text-neutral-500 dark:text-neutral-400"
+            className="text-neutral-10"
           />
-          <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+          <h3 className="font-medium text-neutral-12">
             {title}
           </h3>
         </div>
         <div className="flex items-center gap-2">
           {showTypeSwitcher && (
-            <div className="flex bg-neutral-100 dark:bg-neutral-700 rounded p-0.5">
+            <div className="flex bg-neutral-2 rounded p-0.5">
               {typeButtons.map(({ type, icon, label }) => (
                 <Button
                   size="sm"
@@ -375,7 +374,7 @@ export function ChartArtifact({
           {expandable && (
             <Button
               variant="secondary"
-              className="p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
+              className="p-1 text-neutral-11 hover:bg-neutral-2 rounded"
               onClick={() => setIsExpanded(!isExpanded)}
               aria-label={isExpanded ? "Collapse chart" : "Expand chart"}
             >
@@ -387,7 +386,7 @@ export function ChartArtifact({
       {/* Chart */}
       <div ref={chartContainerRef} data-testid="chart-container">
         {data.length === 0 ? (
-          <div className="h-48 flex items-center justify-center text-neutral-500 dark:text-neutral-400">
+          <div className="h-48 flex items-center justify-center text-neutral-10">
             No data available
           </div>
         ) : chartType === "bar" ? (

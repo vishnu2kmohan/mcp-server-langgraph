@@ -48,19 +48,19 @@ function getDecisionTypeClass(type: DecisionType): string {
   const baseClass = "px-2 py-0.5 rounded text-xs font-medium";
   switch (type) {
     case "routing":
-      return `${baseClass} bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200`;
+      return `${baseClass} bg-primary-3 text-primary-11 dark:bg-primary-12 dark:text-primary-4`;
     case "tool_selection":
-      return `${baseClass} bg-insight-100 text-insight-800 dark:bg-insight-900 dark:text-insight-200`;
+      return `${baseClass} bg-insight-2 text-insight-11 dark:bg-insight-12 dark:text-insight-4`;
     case "skill_selection":
-      return `${baseClass} bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-200`;
+      return `${baseClass} bg-success-3 text-success-11 dark:bg-success-12 dark:text-success-4`;
     case "model_selection":
-      return `${baseClass} bg-grafana-100 text-grafana-800 dark:bg-grafana-900 dark:text-grafana-200`;
+      return `${baseClass} bg-grafana-2 text-grafana-11 dark:bg-grafana-12 dark:text-grafana-3`;
     case "approval":
-      return `${baseClass} bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-200`;
+      return `${baseClass} bg-warning-3 text-warning-11 dark:bg-warning-12 dark:text-warning-6`;
     case "exception":
-      return `${baseClass} bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-200`;
+      return `${baseClass} bg-error-3 text-error-11 dark:bg-error-12 dark:text-error-4`;
     default:
-      return `${baseClass} bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200`;
+      return `${baseClass} bg-neutral-2 text-neutral-12`;
   }
 }
 
@@ -69,9 +69,9 @@ function getDecisionTypeClass(type: DecisionType): string {
  * Uses semantic color tokens
  */
 function getConfidenceColor(confidence: number): string {
-  if (confidence >= 0.9) return "text-success-600 dark:text-success-400";
-  if (confidence >= 0.7) return "text-warning-600 dark:text-warning-400";
-  return "text-error-600 dark:text-error-400";
+  if (confidence >= 0.9) return "text-success-10 dark:text-success-7";
+  if (confidence >= 0.7) return "text-warning-9 dark:text-warning-9";
+  return "text-error-10 dark:text-error-7";
 }
 
 /**
@@ -81,11 +81,11 @@ function TimelineSkeleton() {
   return (
     <div className="animate-pulse" data-testid="timeline-skeleton">
       <div className="flex items-start gap-3 p-3">
-        <div className="w-3 h-3 rounded-full bg-neutral-300 dark:bg-neutral-600 mt-1.5" />
+        <div className="w-3 h-3 rounded-full bg-neutral-3 mt-1.5" />
         <div className="flex-1 space-y-2">
-          <div className="h-4 bg-neutral-300 dark:bg-neutral-600 rounded w-24" />
-          <div className="h-3 bg-neutral-200 dark:bg-neutral-700 rounded w-48" />
-          <div className="h-3 bg-neutral-200 dark:bg-neutral-700 rounded w-16" />
+          <div className="h-4 bg-neutral-3 rounded w-24" />
+          <div className="h-3 bg-neutral-3 rounded w-48" />
+          <div className="h-3 bg-neutral-3 rounded w-16" />
         </div>
       </div>
     </div>
@@ -99,10 +99,10 @@ function TimelineEmpty() {
   return (
     <div
       data-testid="timeline-empty"
-      className="flex flex-col items-center justify-center py-8 text-neutral-500 dark:text-neutral-400"
+      className="flex flex-col items-center justify-center py-8 text-neutral-10"
     >
       <svg
-        className="w-12 h-12 mb-3 text-neutral-400"
+        className="w-12 h-12 mb-3 text-neutral-9"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -132,7 +132,7 @@ function OutcomeIndicator({
     return (
       <span
         data-testid="outcome-success"
-        className="inline-flex items-center text-success-600 dark:text-success-400"
+        className="inline-flex items-center text-success-10 dark:text-success-7"
         title="Success"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -150,7 +150,7 @@ function OutcomeIndicator({
     return (
       <span
         data-testid="outcome-failure"
-        className="inline-flex items-center text-error-600 dark:text-error-400"
+        className="inline-flex items-center text-error-10 dark:text-error-7"
         title="Failure"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -168,7 +168,7 @@ function OutcomeIndicator({
   return (
     <span
       data-testid="outcome-pending"
-      className="inline-flex items-center text-warning-600 dark:text-warning-400"
+      className="inline-flex items-center text-warning-9 dark:text-warning-9"
       title="Pending"
     >
       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -195,10 +195,10 @@ function TimelineItem({ trace }: { trace: DecisionTraceSummary }) {
       role="listitem"
     >
       {/* Timeline connector line */}
-      <div className="absolute left-1.5 top-3 bottom-0 w-px bg-neutral-200 dark:bg-neutral-700 last:hidden" />
+      <div className="absolute left-1.5 top-3 bottom-0 w-px bg-neutral-3 last:hidden" />
 
       {/* Timeline dot */}
-      <div className="relative z-10 w-3 h-3 rounded-full bg-primary-500 mt-1.5 ring-2 ring-white dark:ring-neutral-800" />
+      <div className="relative z-10 w-3 h-3 rounded-full bg-primary-9 mt-1.5 ring-2 ring-neutral-1" />
 
       {/* Content */}
       <div className="flex-1 min-w-0">
@@ -206,13 +206,13 @@ function TimelineItem({ trace }: { trace: DecisionTraceSummary }) {
           <span className={getDecisionTypeClass(trace.decisionType)}>
             {trace.decisionType}
           </span>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400">
+          <span className="text-xs text-neutral-10">
             {formatTime(trace.timestamp)}
           </span>
           <OutcomeIndicator outcome={trace.outcome} />
         </div>
 
-        <p className="mt-1 text-sm text-neutral-900 dark:text-neutral-100 truncate">
+        <p className="mt-1 text-sm text-neutral-12 truncate">
           {trace.chosenAction}
         </p>
 

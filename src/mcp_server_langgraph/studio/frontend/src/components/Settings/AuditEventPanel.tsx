@@ -58,17 +58,17 @@ function cn(...classes: (string | undefined | boolean)[]): string {
 // Category color mapping
 const categoryColors: Record<string, string> = {
   authentication:
-    "bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-300",
+    "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-5",
   authorization:
-    "bg-insight-100 text-insight-800 dark:bg-insight-900/30 dark:text-insight-300",
+    "bg-insight-2 text-insight-11 dark:bg-insight-a4 dark:text-insight-5",
   data_access:
-    "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-300",
+    "bg-success-3 text-success-11 bg-success-4 dark:text-success-5",
   data_modification:
-    "bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-300",
+    "bg-warning-3 text-warning-11 dark:bg-warning-a4 dark:text-warning-6",
   system:
-    "bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300",
+    "bg-neutral-2 text-neutral-12",
   security:
-    "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-300",
+    "bg-error-3 text-error-11 bg-error-4 dark:text-error-9",
 };
 
 function formatTimestamp(timestamp: string): string {
@@ -167,21 +167,21 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
   const isConnecting = status === "connecting";
   const isReconnecting = status === "reconnecting";
   const statusColor = isConnected
-    ? "text-success-500"
+    ? "text-success-9"
     : isConnecting || isReconnecting
-      ? "text-warning-500"
-      : "text-error-500";
+      ? "text-warning-9"
+      : "text-error-9";
 
   return (
     <div
       data-testid="audit-event-panel"
-      className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
+      className="bg-neutral-1 rounded-lg border border-neutral-5"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-5">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-insight-600" />
-          <h3 className="font-semibold text-neutral-900 dark:text-white">
+          <Shield className="w-5 h-5 text-insight-10" />
+          <h3 className="font-semibold text-neutral-12">
             Audit Events
           </h3>
         </div>
@@ -215,9 +215,9 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
 
           {/* Reconnect button (when disconnected) */}
           {!isConnected && !isConnecting && !isReconnecting && (
-            <Button
+            <Button size="icon"
               variant="primary"
-              className="p-1.5 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded"
+              className="p-1.5 text-primary-10 hover:bg-primary-1 dark:hover:bg-primary-a4 rounded"
               data-testid="reconnect-button"
               onClick={reconnect}
               title="Reconnect"
@@ -233,8 +233,8 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
             className={cn(
               "p-1.5 rounded relative",
               isFilterOpen
-                ? "text-primary-600 bg-primary-50 dark:bg-primary-900/30"
-                : "text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700",
+                ? "text-primary-10 bg-primary-1 bg-primary-4"
+                : "text-neutral-11 hover:bg-neutral-2",
             )}
             title="Filter events"
           >
@@ -242,16 +242,16 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
             {hasActiveFilter && (
               <span
                 data-testid="filter-active-badge"
-                className="absolute -top-1 -right-1 w-2 h-2 bg-primary-500 rounded-full"
+                className="absolute -top-1 -right-1 w-2 h-2 bg-primary-9 rounded-full"
               />
             )}
           </Button>
 
           {/* Clear filter button (when filter is active) */}
           {hasActiveFilter && (
-            <Button
+            <Button size="icon"
               variant="secondary"
-              className="p-1.5 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 rounded"
+              className="p-1.5 text-neutral-11 hover:bg-neutral-2 rounded"
               data-testid="clear-filter-button"
               onClick={handleClearFilter}
               title="Clear filter"
@@ -267,8 +267,8 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
             className={cn(
               "p-1.5 rounded",
               isPaused
-                ? "text-success-600 hover:bg-success-50 dark:hover:bg-success-900/30"
-                : "text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700",
+                ? "text-success-10 hover:bg-success-1 dark:hover:bg-success-a4"
+                : "text-neutral-11 hover:bg-neutral-2",
             )}
             title={isPaused ? "Resume" : "Pause"}
           >
@@ -281,9 +281,9 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
 
           {/* Clear button */}
           {events.length > 0 && (
-            <Button
+            <Button size="icon"
               variant="danger"
-              className="p-1.5 text-error-600 hover:bg-error-50 dark:hover:bg-error-900/30 rounded"
+              className="p-1.5 text-error-10 hover:bg-error-1 dark:hover:bg-error-a4 rounded"
               data-testid="clear-button"
               onClick={clearEvents}
               title="Clear events"
@@ -297,9 +297,9 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
       {isFilterOpen && (
         <div
           data-testid="filter-panel"
-          className="px-4 py-3 bg-neutral-50 dark:bg-neutral-700/50 border-b border-neutral-200 dark:border-neutral-700"
+          className="px-4 py-3 bg-neutral-1 border-b border-neutral-5"
         >
-          <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-2">
+          <div className="text-xs font-medium text-neutral-10 mb-2">
             Filter by Category
           </div>
           <div className="flex flex-wrap gap-2">
@@ -318,11 +318,11 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
       )}
       {/* Paused indicator */}
       {isPaused && (
-        <div className="px-4 py-2 bg-warning-50 dark:bg-warning-900/20 border-b border-warning-200 dark:border-warning-800">
-          <p className="text-sm text-warning-700 dark:text-warning-300 flex items-center gap-2">
+        <div className="px-4 py-2 bg-warning-3 bg-warning-3 border-b border-warning-6 dark:border-warning-11">
+          <p className="text-sm text-warning-10 dark:text-warning-6 flex items-center gap-2">
             <Pause className="w-4 h-4" />
             Event streaming paused. Click{" "}
-            <Button className="underline hover:no-underline" onClick={resume}>
+            <Button variant="ghost" className="underline hover:no-underline" onClick={resume}>
               resume
             </Button>{" "}
             to continue.
@@ -332,13 +332,13 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
       {/* Event list */}
       <div className="overflow-y-auto" style={{ maxHeight }}>
         {events.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-neutral-500 dark:text-neutral-400">
+          <div className="flex flex-col items-center justify-center py-12 text-neutral-10">
             <Shield className="w-12 h-12 mb-3 opacity-30" />
             <p>No audit events</p>
             <p className="text-sm mt-1">Events will appear here in real-time</p>
           </div>
         ) : (
-          <div className="divide-y divide-neutral-100 dark:divide-neutral-700">
+          <div className="divide-y divide-neutral-5">
             {events.map((event) => (
               <AuditEventItem key={event.eventId} event={event} />
             ))}
@@ -347,12 +347,12 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
       </div>
       {/* Footer with event count and active filter info */}
       {(events.length > 0 || hasActiveFilter) && (
-        <div className="px-4 py-2 border-t border-neutral-200 dark:border-neutral-700 text-xs text-neutral-500 dark:text-neutral-400 flex items-center justify-between">
+        <div className="px-4 py-2 border-t border-neutral-5 text-xs text-neutral-10 flex items-center justify-between">
           <span>
             {events.length} event{events.length !== 1 ? "s" : ""}
           </span>
           {hasActiveFilter && (
-            <span className="text-primary-600 dark:text-primary-400">
+            <span className="text-primary-10 dark:text-primary-7">
               Filter active: {currentFilter?.categories?.join(", ")}
             </span>
           )}
@@ -374,7 +374,7 @@ function AuditEventItem({ event }: AuditEventItemProps) {
   const categoryColor = categoryColors[event.category] || categoryColors.system;
 
   return (
-    <div className="px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+    <div className="px-4 py-3 hover:bg-neutral-a6">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
@@ -386,25 +386,25 @@ function AuditEventItem({ event }: AuditEventItemProps) {
             >
               {event.category}
             </span>
-            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+            <span className="text-xs text-neutral-10">
               {event.eventType}
             </span>
             {event.regulation && (
-              <span className="px-1.5 py-0.5 text-xs font-medium bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-300 rounded">
+              <span className="px-1.5 py-0.5 text-xs font-medium bg-insight-2 text-insight-11 dark:bg-insight-a4 dark:text-insight-5 rounded">
                 {event.regulation}
               </span>
             )}
           </div>
-          <div className="text-sm text-neutral-900 dark:text-neutral-100">
+          <div className="text-sm text-neutral-12">
             {event.actor}
           </div>
           {event.resource && (
-            <div className="text-xs text-neutral-500 dark:text-neutral-400 font-mono truncate">
+            <div className="text-xs text-neutral-10 font-mono truncate">
               {event.resource}
             </div>
           )}
         </div>
-        <div className="text-xs text-neutral-400 dark:text-neutral-400 flex-shrink-0">
+        <div className="text-xs text-neutral-9 flex-shrink-0">
           {formatTimestamp(event.timestamp)}
         </div>
       </div>

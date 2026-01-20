@@ -13,7 +13,9 @@ import { personaSlice } from "../store/slices/personaSlice";
 import type { MCPConnectionSummary } from "../types/connection";
 import type React from "react";
 
-import { Button } from "@/components/UI";
+// Direct imports to avoid Rollup circular dependency warnings
+// (page chunks end up separate from UI barrel)
+import { Button } from "@/components/UI/Button";
 
 // =============================================================================
 // Hoisted Mock Functions and Data

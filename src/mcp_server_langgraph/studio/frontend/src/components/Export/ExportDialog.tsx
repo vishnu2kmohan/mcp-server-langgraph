@@ -54,7 +54,7 @@ function FormatButton({
 }: FormatButtonProps) {
   return (
     <Button
-      className="flex px-4 py-2 rounded-lg border-2 focus:ring-primary-500"
+      className="flex px-4 py-2 rounded-lg border-2 focus:ring-primary-7"
       type="button"
       data-testid={`format-${format}`}
       role="radio"
@@ -189,7 +189,7 @@ export function ExportDialog({
       onClick={onClose}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute inset-0 bg-neutral-a6" />
       {/* Dialog */}
       <div
         ref={dialogRef}
@@ -198,20 +198,20 @@ export function ExportDialog({
         aria-modal="true"
         aria-labelledby="export-dialog-title"
         tabIndex={-1}
-        className={`relative w-full max-w-2xl bg-white dark:bg-neutral-800 rounded-xl shadow-2xl overflow-hidden ${className}`}
+        className={`relative w-full max-w-2xl bg-neutral-1 rounded-xl shadow-2xl overflow-hidden ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-5">
           <h2
             id="export-dialog-title"
-            className="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
+            className="text-lg font-semibold text-neutral-12"
           >
             Export Conversation
           </h2>
-          <Button
+          <Button size="icon"
             variant="secondary"
-            className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-200 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 focus:ring-primary-500"
+            className="p-1 text-neutral-9 hover:text-neutral-11 rounded-lg hover:bg-neutral-2 focus:ring-primary-7"
             type="button"
             onClick={onClose}
             aria-label="Close"
@@ -224,7 +224,7 @@ export function ExportDialog({
         <div className="px-6 py-4 space-y-6">
           {/* Format Selection */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <label className="block text-sm font-medium text-neutral-11 mb-2">
               Format
             </label>
             <div
@@ -251,7 +251,7 @@ export function ExportDialog({
 
           {/* Options */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+            <label className="block text-sm font-medium text-neutral-11 mb-3">
               Options
             </label>
             <div className="space-y-3">
@@ -274,12 +274,12 @@ export function ExportDialog({
 
           {/* Preview */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <label className="block text-sm font-medium text-neutral-11 mb-2">
               Preview
             </label>
             <pre
               data-testid="export-preview"
-              className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-sm text-neutral-700 dark:text-neutral-300 overflow-auto max-h-48 font-mono"
+              className="p-4 bg-neutral-1 rounded-lg text-sm text-neutral-11 overflow-auto max-h-48 font-mono"
             >
               {preview.slice(0, 500)}
               {preview.length > 500 && "..."}
@@ -288,10 +288,10 @@ export function ExportDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-neutral-5 bg-neutral-1">
           <Button
             variant="secondary"
-            className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg focus:ring-primary-500"
+            className="px-4 py-2 text-sm text-neutral-11 hover:bg-neutral-2 rounded-lg focus:ring-primary-7"
             type="button"
             onClick={onClose}
           >
@@ -301,13 +301,13 @@ export function ExportDialog({
           <div className="flex gap-3">
             <Button
               variant="secondary"
-              className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-600 focus:ring-primary-500"
+              className="px-4 py-2 text-sm text-neutral-11 bg-neutral-1 border border-neutral-5 rounded-lg hover:bg-neutral-1 focus:ring-primary-7"
               type="button"
               onClick={handleCopy}
             >
               {actionState === "copied" ? (
                 <>
-                  <Check size={16} className="text-success-500" />
+                  <Check size={16} className="text-success-9" />
                   Copied!
                 </>
               ) : (
@@ -320,7 +320,7 @@ export function ExportDialog({
 
             <Button
               variant="primary"
-              className="px-4 py-2 text-sm text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:ring-primary-500 focus:ring-offset-2"
+              className="px-4 py-2 text-sm text-neutral-12 bg-primary-10 rounded-lg hover:bg-primary-11 focus:ring-primary-7 focus:ring-offset-2"
               type="button"
               onClick={handleDownload}
             >

@@ -75,23 +75,23 @@ const SIZE_CLASSES: Record<
 const STATUS_CLASSES: Record<StepStatus, { circle: string; text: string }> = {
   pending: {
     circle:
-      "bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600 text-neutral-400 dark:text-neutral-400",
-    text: "text-neutral-500 dark:text-neutral-400",
+      "bg-neutral-2 border-neutral-5 text-neutral-9",
+    text: "text-neutral-10",
   },
   current: {
     circle:
-      "bg-primary-100 dark:bg-primary-900/30 border-primary-600 dark:border-primary-400 text-primary-600 dark:text-primary-400",
-    text: "text-primary-700 dark:text-primary-300 font-medium",
+      "bg-primary-3 bg-primary-4 border-primary-10 dark:border-primary-7 text-primary-10 dark:text-primary-7",
+    text: "text-primary-11 dark:text-primary-5 font-medium",
   },
   completed: {
     circle:
-      "bg-success-600 dark:bg-success-500 border-success-600 dark:border-success-500 text-white",
-    text: "text-neutral-700 dark:text-neutral-300",
+      "bg-success-10 dark:bg-success-9 border-success-10 dark:border-success-9 text-neutral-12",
+    text: "text-neutral-11",
   },
   error: {
     circle:
-      "bg-error-100 dark:bg-error-900/30 border-error-600 dark:border-error-400 text-error-600 dark:text-error-400",
-    text: "text-error-700 dark:text-error-300",
+      "bg-error-3 bg-error-4 border-error-10 dark:border-error-7 text-error-10 dark:text-error-7",
+    text: "text-error-11 dark:text-error-9",
   },
 };
 
@@ -254,7 +254,7 @@ export function StepProgress({
                 </span>
                 {showDescriptions && step.description && (
                   <span
-                    className={`block mt-0.5 text-neutral-500 dark:text-neutral-400 ${
+                    className={`block mt-0.5 text-neutral-10 ${
                       size === "sm" ? "text-xs" : "text-xs"
                     }`}
                   >
@@ -274,8 +274,8 @@ export function StepProgress({
                     : `ml-4 w-0.5 h-8`
                 } rounded-full transition-colors ${
                   index < currentStep
-                    ? "bg-success-600 dark:bg-success-500"
-                    : "bg-neutral-200 dark:bg-neutral-700"
+                    ? "bg-success-10 dark:bg-success-9"
+                    : "bg-neutral-3"
                 }`}
                 aria-hidden="true"
               />

@@ -14,7 +14,7 @@
  */
 
 import { useSessionSimilarity } from "../../hooks/useSessionIntelligence";
-import { AlertCircle, RefreshCw, Link2, Sparkles } from "lucide-react";
+import { AlertCircle, RefreshCw, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/UI";
 
@@ -65,15 +65,15 @@ export function SimilarSessionsPanel({
         data-testid="similar-sessions-loading"
         className={`similar-sessions-panel p-4 ${className}`}
       >
-        <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-3 flex items-center gap-2">
-          <Sparkles size={16} className="text-insight-500" />
+        <h3 className="text-sm font-medium text-neutral-12 mb-3 flex items-center gap-2">
+          <Sparkles size={16} className="text-insight-9" />
           Similar Sessions
         </h3>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="animate-pulse">
-              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4 mb-2" />
-              <div className="h-3 bg-neutral-200 dark:bg-neutral-700 rounded w-1/2" />
+              <div className="h-4 bg-neutral-3 rounded w-3/4 mb-2" />
+              <div className="h-3 bg-neutral-3 rounded w-1/2" />
             </div>
           ))}
         </div>
@@ -91,21 +91,21 @@ export function SimilarSessionsPanel({
         className={`similar-sessions-panel p-4 ${className}`}
         role="alert"
       >
-        <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-3 flex items-center gap-2">
-          <Sparkles size={16} className="text-insight-500" />
+        <h3 className="text-sm font-medium text-neutral-12 mb-3 flex items-center gap-2">
+          <Sparkles size={16} className="text-insight-9" />
           Similar Sessions
         </h3>
         <div className="text-center py-4">
           <AlertCircle
-            className="mx-auto h-8 w-8 text-warning-500 mb-2"
+            className="mx-auto h-8 w-8 text-warning-9 mb-2"
             aria-hidden="true"
           />
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+          <p className="text-sm text-neutral-11 mb-3">
             Failed to load similar sessions
           </p>
           <Button
             variant="secondary"
-            className=".5 px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded-md hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 focus:ring-insight-500"
+            className=".5 px-3 py-1.5 text-sm text-neutral-11 bg-neutral-2 rounded-md hover:bg-neutral-3 focus:ring-insight-7"
             onClick={refetch}
           >
             <RefreshCw size={14} />
@@ -117,26 +117,10 @@ export function SimilarSessionsPanel({
   }
 
   // ---------------------------------------------------------------------------
-  // Render empty state
+  // Hide panel when no similar sessions found
   // ---------------------------------------------------------------------------
   if (similarSessions.length === 0) {
-    return (
-      <div className={`similar-sessions-panel p-4 ${className}`}>
-        <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-3 flex items-center gap-2">
-          <Sparkles size={16} className="text-insight-500" />
-          Similar Sessions
-        </h3>
-        <div className="text-center py-4">
-          <Link2
-            className="mx-auto h-8 w-8 text-neutral-400 dark:text-neutral-400 dark:text-neutral-600 dark:text-neutral-300 mb-2"
-            aria-hidden="true"
-          />
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            No similar sessions found
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // ---------------------------------------------------------------------------
@@ -144,8 +128,8 @@ export function SimilarSessionsPanel({
   // ---------------------------------------------------------------------------
   return (
     <div className={`similar-sessions-panel p-4 ${className}`}>
-      <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-3 flex items-center gap-2">
-        <Sparkles size={16} className="text-insight-500" />
+      <h3 className="text-sm font-medium text-neutral-12 mb-3 flex items-center gap-2">
+        <Sparkles size={16} className="text-insight-9" />
         Similar Sessions
       </h3>
       <div className="space-y-2" aria-label="Similar sessions">
@@ -156,16 +140,16 @@ export function SimilarSessionsPanel({
 
           return (
             <Button
-              className="w-full text-left group p-2 rounded-md border border-neutral-200 dark:border-neutral-700 hover:border-insight-300 dark:hover:border-insight-600 hover:bg-insight-50 dark:hover:bg-insight-900/10 focus:ring-insight-500"
+              className="w-full text-left group p-2 rounded-md border border-neutral-5 hover:border-insight-5 dark:hover:border-insight-10 hover:bg-insight-1 dark:hover:bg-insight-a2 focus:ring-insight-7"
               key={session.sessionId}
               type="button"
               onClick={() => onSessionSelect?.(session.sessionId)}
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate flex-1">
+                <span className="text-sm font-medium text-neutral-12 truncate flex-1">
                   {sessionName}
                 </span>
-                <span className="text-xs font-medium text-insight-600 dark:text-insight-400 ml-2">
+                <span className="text-xs font-medium text-insight-10 dark:text-insight-9 ml-2">
                   {scorePercent}%
                 </span>
               </div>
@@ -174,7 +158,7 @@ export function SimilarSessionsPanel({
                   {session.commonTopics.map((topic) => (
                     <span
                       key={topic}
-                      className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded"
+                      className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-neutral-2 text-neutral-11 rounded"
                     >
                       {topic}
                     </span>

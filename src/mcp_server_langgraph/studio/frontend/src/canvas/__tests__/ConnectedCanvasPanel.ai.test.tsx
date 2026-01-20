@@ -128,7 +128,7 @@ describe("ConnectedCanvasPanel - AI Suggestions", () => {
           title: "Code File",
           content: 'function hello() { console.log("world"); }',
           contentType: "code",
-          editMetadata: { editedBy: "user", language: "javascript" },
+          editMetadata: { origin: "user", modified: false, lastEditedBy: "user", language: "javascript" },
         }),
       ];
       render(<ConnectedCanvasPanel />, { wrapper: createWrapper(store) });

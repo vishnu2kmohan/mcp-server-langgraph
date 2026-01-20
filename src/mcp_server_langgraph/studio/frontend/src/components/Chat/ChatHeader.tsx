@@ -42,7 +42,7 @@ function ChatHeaderActions({
       )}
       <Button
         variant="danger"
-        className="flex px-3 py-1.5 text-sm text-error-600 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
+        className="flex px-3 py-1.5 text-sm text-error-10 hover:bg-error-1 dark:hover:bg-error-a3 rounded"
         onClick={onClear}
       >
         <Trash2 size={16} />
@@ -94,19 +94,19 @@ export function ChatHeader({
 
   return (
     <>
-      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+      <header className="px-6 py-4 bg-neutral-1 border-b border-neutral-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Connection Status */}
             <div
               className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
                 isReconnecting
-                  ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400"
+                  ? "bg-primary-3 text-primary-11 dark:bg-primary-a3 dark:text-primary-11"
                   : connectionMode === "websocket"
-                    ? "bg-success-100 text-success-700 dark:bg-success-900/20 dark:text-success-400"
+                    ? "bg-success-3 text-success-11 dark:bg-success-a3 dark:text-success-11"
                     : connectionMode === "rest"
-                      ? "bg-warning-100 text-warning-700 dark:bg-warning-900/20 dark:text-warning-400"
-                      : "bg-error-100 text-error-700 dark:bg-error-900/20 dark:text-error-400"
+                      ? "bg-warning-3 text-warning-10 bg-warning-3 dark:text-warning-9"
+                      : "bg-error-3 text-error-11 dark:bg-error-a3 dark:text-error-11"
               }`}
             >
               {isReconnecting ? (
@@ -142,14 +142,14 @@ export function ChatHeader({
                     }}
                     placeholder="Session name"
                     aria-label={`Rename session ${sessionName}`}
-                    className="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
+                    className="text-lg font-semibold text-neutral-12"
                   />
                 ) : (
-                  <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                  <h1 className="text-lg font-semibold text-neutral-12">
                     {sessionName}
                   </h1>
                 )}
-                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                <p className="text-sm text-neutral-10">
                   {messageLabel}
                 </p>
               </div>
@@ -168,33 +168,29 @@ export function ChatHeader({
       </header>
       {/* MCP Connection Error Banner */}
       {mcpError && (
-        <div className="px-6 py-3 bg-grafana-50 dark:bg-grafana-900/20 border-b border-grafana-200 dark:border-grafana-800 flex items-center justify-between">
-          <p className="text-grafana-700 dark:text-grafana-400 text-sm">
+        <div className="px-6 py-3 bg-grafana-1 dark:bg-grafana-12/20 border-b border-grafana-3 dark:border-grafana-11 flex items-center justify-between">
+          <p className="text-grafana-11 dark:text-grafana-11 text-sm">
             {mcpError}
           </p>
-          <Button
-            className="text-grafana-600 hover:text-grafana-800 text-sm"
+          <Button variant="primary"
+            className="text-grafana-10 hover:text-grafana-11 text-sm"
             onClick={onConnect}
             aria-label="Retry connection"
-          >
-            Retry
-          </Button>
+          >Retry</Button>
         </div>
       )}
       {/* Session Error Banner */}
       {sessionError && (
-        <div className="px-6 py-3 bg-error-50 dark:bg-error-900/20 border-b border-error-200 dark:border-error-800 flex items-center justify-between">
-          <p className="text-error-700 dark:text-error-400 text-sm">
+        <div className="px-6 py-3 bg-error-1 dark:bg-error-a3 border-b border-error-4 dark:border-error-11 flex items-center justify-between">
+          <p className="text-error-11 dark:text-error-11 text-sm">
             {sessionError}
           </p>
           {onClearError && (
-            <Button
-              className="text-error-600 hover:text-error-800 text-sm"
+            <Button variant="secondary"
+              className="text-error-10 hover:text-error-11 text-sm"
               onClick={onClearError}
               aria-label="Dismiss error"
-            >
-              Dismiss
-            </Button>
+            >Dismiss</Button>
           )}
         </div>
       )}

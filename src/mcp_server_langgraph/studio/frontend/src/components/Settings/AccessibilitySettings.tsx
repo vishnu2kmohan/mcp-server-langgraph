@@ -52,8 +52,8 @@ function SettingToggle({
   icon,
 }: SettingToggleProps) {
   return (
-    <div className="flex items-start gap-4 p-4 rounded-lg bg-neutral-50 dark:bg-neutral-800/50">
-      <div className="text-neutral-500 dark:text-neutral-400 mt-0.5">
+    <div className="flex items-start gap-4 p-4 rounded-lg bg-neutral-1">
+      <div className="text-neutral-10 mt-0.5">
         {icon}
       </div>
       <div className="flex-1 min-w-0">
@@ -87,15 +87,15 @@ function FontSizeSelector({ value, onChange }: FontSizeSelectorProps) {
   ];
 
   return (
-    <div className="flex items-start gap-4 p-4 rounded-lg bg-neutral-50 dark:bg-neutral-800/50">
-      <div className="text-neutral-500 dark:text-neutral-400 mt-0.5">
+    <div className="flex items-start gap-4 p-4 rounded-lg bg-neutral-1">
+      <div className="text-neutral-10 mt-0.5">
         <Type size={20} />
       </div>
       <div className="flex-1 min-w-0">
-        <span className="block text-sm font-medium text-neutral-900 dark:text-neutral-100">
+        <span className="block text-sm font-medium text-neutral-12">
           Font Size
         </span>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+        <p className="text-sm text-neutral-10 mt-0.5">
           Adjust text size for better readability
         </p>
         <div
@@ -105,7 +105,7 @@ function FontSizeSelector({ value, onChange }: FontSizeSelectorProps) {
         >
           {sizes.map((size) => (
             <Button
-              className="flex flex-col px-4 py-2 rounded-lg border-2 focus:ring-primary-500 focus:ring-offset-2"
+              className="flex flex-col px-4 py-2 rounded-lg border-2 focus:ring-primary-7 focus:ring-offset-2"
               key={size.key}
               type="button"
               role="radio"
@@ -160,10 +160,10 @@ export function AccessibilitySettings({
       className={`space-y-6 ${className}`}
     >
       <div>
-        <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+        <h2 className="text-lg font-semibold text-neutral-12">
           Accessibility
         </h2>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+        <p className="text-sm text-neutral-10 mt-1">
           Customize accessibility features to improve your experience
         </p>
       </div>
@@ -210,10 +210,10 @@ export function AccessibilitySettings({
           icon={<Focus size={20} />}
         />
       </div>
-      <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
+      <div className="pt-4 border-t border-neutral-5">
         <Button
           variant="secondary"
-          className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:ring-primary-500 focus:ring-offset-2"
+          className="px-4 py-2 text-sm text-neutral-11 bg-neutral-1 border border-neutral-5 rounded-lg hover:bg-neutral-1 focus:ring-primary-7 focus:ring-offset-2"
           type="button"
           onClick={resetToDefaults}
         >

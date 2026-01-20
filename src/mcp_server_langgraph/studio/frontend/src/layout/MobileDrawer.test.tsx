@@ -31,6 +31,23 @@ vi.mock("react-router", async () => {
     ...actual,
     useNavigate: () => mockNavigate,
     useLocation: () => ({ pathname: "/studio/chat" }),
+    // Mock useRouteLoaderData to avoid data router requirement
+    useRouteLoaderData: (routeId: string) => {
+      if (routeId === "studio") {
+        return {
+          sessions: [
+            {
+              id: "session-1",
+              name: "Test Session 1",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              status: "active",
+            },
+          ],
+        };
+      }
+      return undefined;
+    },
   };
 });
 

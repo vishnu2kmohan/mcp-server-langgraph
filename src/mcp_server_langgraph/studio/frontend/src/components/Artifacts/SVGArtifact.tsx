@@ -172,20 +172,20 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
   if (error) {
     return (
       <div
-        className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg"
+        className="p-4 bg-error-1 dark:bg-error-a3 border border-error-4 dark:border-error-11 rounded-lg"
         role="alert"
       >
-        <p className="text-sm text-error-600 dark:text-error-400">{error}</p>
+        <p className="text-sm text-error-10 dark:text-error-7">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700">
+    <div className="bg-neutral-1 rounded-lg overflow-hidden border border-neutral-5">
       {/* Header with title and actions */}
-      <div className="px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+      <div className="px-4 py-2 border-b border-neutral-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <h4 className="text-sm font-medium text-neutral-11">
             {title || "SVG"}
           </h4>
           <CodePreviewToggle
@@ -197,12 +197,12 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
         <div className="flex items-center gap-1">
           <Button
             variant="secondary"
-            className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+            className="p-1.5 text-neutral-10 hover:text-neutral-11 rounded hover:bg-neutral-2"
             onClick={handleCopy}
             aria-label="Copy SVG"
           >
             {copied ? (
-              <Check size={16} className="text-success-500" />
+              <Check size={16} className="text-success-9" />
             ) : (
               <Copy size={16} />
             )}
@@ -227,7 +227,7 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
       {/* SVG Source Code - Code Mode */}
       {viewMode === "code" && (
         <div data-testid="svg-source-code" className="p-4">
-          <pre className="bg-neutral-900 dark:bg-neutral-950 text-neutral-100 p-4 rounded-lg overflow-x-auto text-sm font-mono">
+          <pre className="bg-neutral-2 text-neutral-9 p-4 rounded-lg overflow-x-auto text-sm font-mono">
             <code>{data}</code>
           </pre>
         </div>

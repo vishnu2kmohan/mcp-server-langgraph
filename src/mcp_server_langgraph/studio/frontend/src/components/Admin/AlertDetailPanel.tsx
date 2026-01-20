@@ -13,6 +13,7 @@
  * Reference: ADR-0026 - Comprehensive Client Resilience Patterns
  */
 
+import { useReducedMotion } from "motion/react";
 import {
   X,
   AlertTriangle,
@@ -25,6 +26,7 @@ import {
   Clock,
   Ban,
 } from "lucide-react";
+import { cn } from "../../utils/cn";
 import type { Alert } from "../../store/slices/alertSlice";
 import type {
   AIRecommendation,
@@ -71,11 +73,11 @@ export interface AlertDetailPanelProps {
 function getSeverityStyle(severity: Alert["severity"]): string {
   switch (severity) {
     case "critical":
-      return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
+      return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
     case "warning":
-      return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400";
+      return "bg-warning-3 text-warning-10 dark:bg-warning-a4 dark:text-warning-9";
     default:
-      return "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-400";
+      return "bg-neutral-2 text-neutral-11";
   }
 }
 
@@ -85,11 +87,11 @@ function getSeverityStyle(severity: Alert["severity"]): string {
 function getStateStyle(state: Alert["state"]): string {
   switch (state) {
     case "firing":
-      return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
+      return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
     case "resolved":
-      return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
+      return "bg-success-3 text-success-11 bg-success-4 dark:text-success-7";
     default:
-      return "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-400";
+      return "bg-neutral-2 text-neutral-11";
   }
 }
 
@@ -99,13 +101,13 @@ function getStateStyle(state: Alert["state"]): string {
 function getRiskColor(risk: RiskLevel): string {
   switch (risk) {
     case "low":
-      return "bg-success-500";
+      return "bg-success-9";
     case "medium":
-      return "bg-warning-500";
+      return "bg-warning-9";
     case "high":
-      return "bg-error-500";
+      return "bg-error-9";
     default:
-      return "bg-neutral-500";
+      return "bg-neutral-5";
   }
 }
 
@@ -115,20 +117,20 @@ function getRiskColor(risk: RiskLevel): string {
 function getStatusIcon(status: RemediationRequest["status"]) {
   switch (status) {
     case "pending":
-      return <Clock className="w-4 h-4 text-warning-500" />;
+      return <Clock className="w-4 h-4 text-warning-9" />;
     case "approved":
-      return <CheckCircle className="w-4 h-4 text-success-500" />;
+      return <CheckCircle className="w-4 h-4 text-success-9" />;
     case "rejected":
-      return <XCircle className="w-4 h-4 text-error-500" />;
+      return <XCircle className="w-4 h-4 text-error-9" />;
     case "executing":
-      return <Play className="w-4 h-4 text-primary-500 animate-pulse" />;
+      return <Play className="w-4 h-4 text-primary-9" />;
     case "completed":
-      return <CheckCircle className="w-4 h-4 text-success-500" />;
+      return <CheckCircle className="w-4 h-4 text-success-9" />;
     case "failed":
-      return <Ban className="w-4 h-4 text-error-500" />;
+      return <Ban className="w-4 h-4 text-error-9" />;
     default:
       return (
-        <Clock className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
+        <Clock className="w-4 h-4 text-neutral-10" />
       );
   }
 }
@@ -170,28 +172,28 @@ function RemediationStepCard({
   const isPending = remediation?.status === "pending";
 
   return (
-    <div className="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+    <div className="p-4 border border-neutral-5 rounded-lg">
       {/* Step Header */}
       <div className="flex items-center gap-3 mb-2">
         <span
           data-testid={`step-number-${step.stepNumber}`}
-          className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-500 text-white text-sm font-medium"
+          className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-9 text-neutral-12 text-sm font-medium"
         >
           {step.stepNumber}
         </span>
-        <span className="font-medium text-neutral-900 dark:text-white">
+        <span className="font-medium text-neutral-12">
           {step.action.charAt(0).toUpperCase() + step.action.slice(1)}
         </span>
         <span
           data-testid={`step-risk-${step.stepNumber}`}
-          className={`text-xs px-2 py-0.5 rounded-full ${getRiskColor(step.riskLevel)} text-white`}
+          className={`text-xs px-2 py-0.5 rounded-full ${getRiskColor(step.riskLevel)} text-neutral-12`}
         >
           {step.riskLevel}
         </span>
         {remediation && (
           <span
             data-testid={`step-status-${step.stepNumber}`}
-            className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400"
+            className="flex items-center gap-1 text-xs text-neutral-10"
           >
             {getStatusIcon(remediation.status)}
             {remediation.status.charAt(0).toUpperCase() +
@@ -200,12 +202,12 @@ function RemediationStepCard({
         )}
       </div>
       {/* Description */}
-      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+      <p className="text-sm text-neutral-11 mb-2">
         {step.description}
       </p>
       {/* Command */}
       {step.command && (
-        <pre className="text-xs bg-neutral-100 dark:bg-neutral-800 p-2 rounded mb-3 overflow-x-auto">
+        <pre className="text-xs bg-neutral-2 p-2 rounded mb-3 overflow-x-auto">
           <code>{step.command}</code>
         </pre>
       )}
@@ -214,7 +216,7 @@ function RemediationStepCard({
         <div className="flex gap-2">
           <Button
             variant="success"
-            className="flex px-3 py-1.5 text-sm bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400 rounded-lg hover:bg-success-200 dark:hover:bg-success-900/50"
+            className="min-h-[44px] flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg"
             data-testid={`approve-step-${step.stepNumber}`}
             onClick={() => onApprove(remediation.remediationId)}
           >
@@ -223,7 +225,7 @@ function RemediationStepCard({
           </Button>
           <Button
             variant="danger"
-            className="flex px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50"
+            className="min-h-[44px] flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg"
             data-testid={`reject-step-${step.stepNumber}`}
             onClick={() => onReject(remediation.remediationId)}
           >
@@ -252,10 +254,13 @@ export function AlertDetailPanel({
   recommendationError = null,
   isRegenerating = false,
 }: AlertDetailPanelProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   // Empty state
   if (!alert) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-neutral-500 dark:text-neutral-400 p-8">
+      <div className="flex flex-col items-center justify-center h-full text-neutral-10 p-8">
         <AlertTriangle className="w-12 h-12 mb-4 opacity-50" />
         <p className="text-lg">Select an alert to view details</p>
       </div>
@@ -272,11 +277,11 @@ export function AlertDetailPanel({
       className="flex flex-col h-full overflow-hidden"
     >
       {/* Header */}
-      <div className="flex items-start justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-start justify-between p-4 border-b border-neutral-5">
         <div className="flex-1">
           {/* Alert Name and Badges */}
           <div className="flex items-center gap-2 mb-2">
-            <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-neutral-12">
               {alert.name}
             </h2>
             <span
@@ -298,7 +303,7 @@ export function AlertDetailPanel({
           </div>
 
           {/* Message */}
-          <p className="text-neutral-600 dark:text-neutral-400 mb-2">
+          <p className="text-neutral-11 mb-2">
             {alert.message}
           </p>
 
@@ -307,7 +312,7 @@ export function AlertDetailPanel({
             {Object.entries(alert.labels).map(([key, value]) => (
               <span
                 key={key}
-                className="text-xs px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded"
+                className="text-xs px-2 py-0.5 bg-neutral-2 text-neutral-11 rounded"
               >
                 {value}
               </span>
@@ -317,18 +322,19 @@ export function AlertDetailPanel({
           {/* Started Time */}
           <div
             data-testid="alert-started"
-            className="text-xs text-neutral-500 dark:text-neutral-400"
+            className="text-xs text-neutral-10"
           >
             Started: {formatRelativeTime(alert.startedAt)}
           </div>
         </div>
 
         {/* Close Button */}
-        <Button
-          variant="secondary"
-          className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 rounded-lg"
+        <Button size="icon"
+          variant="ghost"
+          className="min-h-[44px] min-w-[44px] p-2 text-neutral-10 hover:text-neutral-11 hover:bg-neutral-2 rounded-lg"
           data-testid="close-detail-panel"
           onClick={onClose}
+          aria-label="Close detail panel"
         >
           <X className="w-5 h-5" />
         </Button>
@@ -341,22 +347,25 @@ export function AlertDetailPanel({
             data-testid="recommendation-loading"
             className="flex items-center justify-center py-12"
           >
-            <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+            <Loader2
+              className={cn(
+                "w-8 h-8 text-primary-9",
+                !prefersReducedMotion && "animate-spin",
+              )}
+            />
           </div>
         )}
 
         {/* Error State */}
         {recommendationError && (
-          <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg p-4">
-            <p className="text-error-700 dark:text-error-400">
+          <div className="bg-error-1 dark:bg-error-a3 border border-error-4 dark:border-error-11 rounded-lg p-4">
+            <p className="text-error-11 dark:text-error-7">
               Failed to generate recommendation: {recommendationError}
             </p>
-            <Button
-              className="mt-2 text-sm text-error-600 dark:text-error-400 underline"
+            <Button variant="primary"
+              className="mt-2 text-sm text-error-10 dark:text-error-7 underline"
               onClick={onRegenerate}
-            >
-              Try again
-            </Button>
+            >Try again</Button>
           </div>
         )}
 
@@ -365,27 +374,27 @@ export function AlertDetailPanel({
           <>
             {/* Root Cause Analysis */}
             <section>
-              <h3 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
+              <h3 className="text-sm font-medium text-neutral-12 mb-2">
                 Root Cause Analysis
               </h3>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-lg">
+              <p className="text-sm text-neutral-11 bg-neutral-1 p-3 rounded-lg">
                 {recommendation.rootCauseAnalysis}
               </p>
             </section>
 
             {/* Risk Assessment */}
             <section>
-              <h3 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
+              <h3 className="text-sm font-medium text-neutral-12 mb-2">
                 Risk Assessment
               </h3>
-              <div className="bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-lg space-y-2">
+              <div className="bg-neutral-1 p-3 rounded-lg space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                  <span className="text-sm text-neutral-11">
                     Overall Risk:
                   </span>
                   <span
                     data-testid="overall-risk"
-                    className={`text-xs px-2 py-0.5 rounded-full text-white ${getRiskColor(
+                    className={`text-xs px-2 py-0.5 rounded-full text-neutral-12 ${getRiskColor(
                       recommendation.riskAssessment.overallRisk,
                     )}`}
                   >
@@ -393,18 +402,18 @@ export function AlertDetailPanel({
                   </span>
                 </div>
                 <div>
-                  <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                  <span className="text-sm text-neutral-11">
                     Impact:{" "}
                   </span>
-                  <span className="text-sm text-neutral-700 dark:text-neutral-300">
+                  <span className="text-sm text-neutral-11">
                     {recommendation.riskAssessment.impactAnalysis}
                   </span>
                 </div>
                 <div>
-                  <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                  <span className="text-sm text-neutral-11">
                     Rollback:{" "}
                   </span>
-                  <code className="text-xs bg-neutral-100 dark:bg-neutral-700 px-1 py-0.5 rounded">
+                  <code className="text-xs bg-neutral-2 px-1 py-0.5 rounded">
                     {recommendation.riskAssessment.rollbackPlan}
                   </code>
                 </div>
@@ -414,18 +423,22 @@ export function AlertDetailPanel({
             {/* Remediation Steps */}
             <section>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-neutral-900 dark:text-white">
+                <h3 className="text-sm font-medium text-neutral-12">
                   Remediation Steps
                 </h3>
                 <Button
+                  variant="ghost"
                   size="sm"
-                  className="flex text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                  className="min-h-[44px] min-w-[44px] flex items-center gap-1 text-xs text-primary-10 dark:text-primary-7 hover:text-primary-11 dark:hover:text-primary-5"
                   data-testid="regenerate-recommendation"
                   onClick={onRegenerate}
                   disabled={isRegenerating}
                 >
                   <RefreshCw
-                    className={`w-3 h-3 ${isRegenerating ? "animate-spin" : ""}`}
+                    className={cn(
+                      "w-3 h-3",
+                      isRegenerating && !prefersReducedMotion && "animate-spin",
+                    )}
                   />
                   Regenerate
                 </Button>
@@ -446,7 +459,7 @@ export function AlertDetailPanel({
             {/* Runbook Reference */}
             {recommendation.runbookReference && (
               <section>
-                <h3 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
+                <h3 className="text-sm font-medium text-neutral-12 mb-2">
                   Runbook
                 </h3>
                 <a
@@ -454,7 +467,7 @@ export function AlertDetailPanel({
                   href={recommendation.runbookReference}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-sm text-primary-600 dark:text-primary-400 hover:underline"
+                  className="flex items-center gap-1 text-sm text-primary-10 dark:text-primary-7 hover:underline"
                 >
                   <ExternalLink className="w-4 h-4" />
                   View Runbook
@@ -463,7 +476,7 @@ export function AlertDetailPanel({
             )}
 
             {/* Model Info */}
-            <div className="text-xs text-neutral-500 dark:text-neutral-400 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+            <div className="text-xs text-neutral-10 pt-4 border-t border-neutral-5">
               <span>
                 Generated by {recommendation.modelUsed} •{" "}
                 {formatRelativeTime(recommendation.generatedAt)}

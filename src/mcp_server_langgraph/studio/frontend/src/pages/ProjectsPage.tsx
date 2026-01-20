@@ -22,28 +22,28 @@ import {
   List,
   User,
 } from "lucide-react";
-import {
-  SearchInput,
-  PagePagination,
-  SortDropdown,
-  type SortOrder,
-  FilterChips,
-  Checkbox,
-} from "@/components/UI";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import {
   useListProjectsQuery,
   useCreateProjectMutation,
   useDeleteProjectMutation,
 } from "../api";
+// Direct imports to avoid Rollup circular dependency warnings
+import { SearchInput } from "../components/UI/SearchInput";
+import { PagePagination } from "../components/UI/Pagination";
+import { SortDropdown, type SortOrder } from "../components/UI/SortDropdown";
+import { StatusFilter } from "../components/UI/StatusFilter";
+import { Checkbox } from "../components/UI/Checkbox";
 import {
-  SkeletonList,
-  ErrorState,
-  ConfirmDialog,
-  Button,
-  Input,
-  Textarea,
-} from "../components/UI";
+  SegmentedControl,
+  SegmentedControlItem,
+} from "../components/UI/SegmentedControl";
+import { SkeletonList } from "../components/UI/Skeleton";
+import { Button } from "../components/UI/Button";
+import { Input } from "../components/UI/Input";
+import { Textarea } from "../components/UI/Textarea";
+import { ErrorState } from "../components/UI/ErrorState";
+import { ConfirmDialog } from "../components/UI/ConfirmDialog";
 import { AIEmptyState } from "../components/EmptyState/AIEmptyState";
 
 // Sort options for projects
@@ -58,8 +58,8 @@ const SORT_OPTIONS = [
 
 // Status options for filtering
 const STATUS_OPTIONS = [
-  { value: "active", label: "Active", color: "green" },
-  { value: "archived", label: "Archived", color: "gray" },
+  { value: "active", label: "Active" },
+  { value: "archived", label: "Archived" },
 ];
 
 /**
@@ -100,16 +100,16 @@ function SortableHeader({
 
   return (
     <th
-      className={`px-4 py-3 text-${align} text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors select-none`}
+      className={`px-4 py-3 text-${align} text-xs font-medium text-neutral-11 uppercase tracking-wider cursor-pointer hover:bg-neutral-a6 transition-colors select-none`}
       onClick={handleClick}
     >
       <div className={`flex items-center gap-1 ${alignClass}`}>
         <span>{label}</span>
         {isActive &&
           (currentSortOrder === "asc" ? (
-            <ArrowUp className="w-3 h-3 text-primary-500" />
+            <ArrowUp className="w-3 h-3 text-primary-9" />
           ) : (
-            <ArrowDown className="w-3 h-3 text-primary-500" />
+            <ArrowDown className="w-3 h-3 text-primary-9" />
           ))}
       </div>
     </th>
@@ -334,12 +334,12 @@ export function ProjectsPage() {
   // Loading state - only show on initial load
   if (isLoading && !projectsResponse) {
     return (
-      <div className="h-full p-6 bg-neutral-50 dark:bg-neutral-900">
+      <div className="h-full p-6 bg-neutral-1">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+          <h1 className="text-2xl font-bold text-neutral-12">
             Projects
           </h1>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="text-sm text-neutral-11">
             Loading your projects...
           </p>
         </div>
@@ -364,15 +364,15 @@ export function ProjectsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+      {/* Header - Unified toolbar following STYLE.md */}
+      <div className="px-6 py-4 border-b border-neutral-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <FolderKanban className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-            <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+            <FolderKanban className="w-6 h-6 text-primary-11" />
+            <h1 className="text-xl font-semibold text-neutral-12">
               Projects
             </h1>
-            <span className="text-sm text-neutral-500 dark:text-neutral-400">
+            <span className="text-sm text-neutral-11">
               ({total})
             </span>
           </div>
@@ -385,6 +385,14 @@ export function ProjectsPage() {
               isLoading={isFetching}
               debounceMs={300}
             />
+            {/* Status filter dropdown (replaces FilterChips) */}
+            <StatusFilter
+              options={STATUS_OPTIONS}
+              value={statusFilter || null}
+              onChange={handleStatusChange}
+              allLabel="All Statuses"
+              ariaLabel="Filter by status"
+            />
             {/* Sort dropdown */}
             <SortDropdown
               options={SORT_OPTIONS}
@@ -393,56 +401,42 @@ export function ProjectsPage() {
               onChange={handleSortChange}
               ariaLabel="Sort projects"
             />
-            {/* View mode toggle */}
-            <div className="flex items-center border border-neutral-300 dark:border-neutral-600 rounded-lg overflow-hidden">
-              <Button
-                className="p-2"
-                onClick={() => setViewMode("grid")}
-                title="Grid view"
-                aria-label="Grid view"
-                aria-pressed={viewMode === "grid"}
-              >
-                <LayoutGrid className="w-5 h-5" />
-              </Button>
-              <Button
-                className="p-2"
-                onClick={() => setViewMode("table")}
-                title="Table view"
-                aria-label="Table view"
-                aria-pressed={viewMode === "table"}
-              >
-                <List className="w-5 h-5" />
-              </Button>
-            </div>
+            {/* View mode toggle (SegmentedControl) */}
+            <SegmentedControl
+              value={viewMode}
+              onValueChange={(value) => setViewMode(value as "grid" | "table")}
+              aria-label="View mode"
+              size="sm"
+            >
+              <SegmentedControlItem value="grid" aria-label="Grid view">
+                <LayoutGrid className="w-4 h-4" />
+              </SegmentedControlItem>
+              <SegmentedControlItem value="table" aria-label="Table view">
+                <List className="w-4 h-4" />
+              </SegmentedControlItem>
+            </SegmentedControl>
+            {/* Refresh button - uses ghost variant for toolbar */}
             <Button
-              variant="secondary"
-              className="p-2 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
+              size="icon"
+              variant="ghost"
               onClick={handleRefresh}
               disabled={isFetching}
               title="Refresh"
+              aria-label="Refresh projects"
             >
               <RefreshCw
                 className={`w-5 h-5 ${isFetching ? "animate-spin" : ""}`}
               />
             </Button>
+            {/* Create button - primary action */}
             <Button
               variant="primary"
-              className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
               onClick={() => setShowCreateDialog(true)}
             >
               <Plus className="w-4 h-4" />
               Create Project
             </Button>
           </div>
-        </div>
-        {/* Status filter chips */}
-        <div className="mt-3">
-          <FilterChips
-            options={STATUS_OPTIONS}
-            value={statusFilter || null}
-            onChange={handleStatusChange}
-            ariaLabel="Filter projects by status"
-          />
         </div>
       </div>
       {/* Content */}
@@ -462,16 +456,16 @@ export function ProjectsPage() {
                 {projects.map((project) => (
                   <div
                     key={project.id}
-                    className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    className="bg-neutral-1 border border-neutral-5 rounded-lg p-4 hover:shadow-md transition-shadow"
                   >
                     {/* Project header */}
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+                        <h3 className="font-medium text-neutral-12">
                           {project.name}
                         </h3>
                         {project.description && (
-                          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                          <p className="text-sm text-neutral-11 mt-1">
                             {project.description}
                           </p>
                         )}
@@ -479,8 +473,8 @@ export function ProjectsPage() {
                       <span
                         className={`px-2 py-0.5 text-xs rounded-full ${
                           project.status === "active"
-                            ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400"
-                            : "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
+                            ? "bg-success-3 text-success-11 dark:text-success-11"
+                            : "bg-neutral-2 text-neutral-11"
                         }`}
                       >
                         {project.status}
@@ -488,13 +482,13 @@ export function ProjectsPage() {
                     </div>
 
                     {/* Owner info */}
-                    <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 mb-3">
+                    <div className="flex items-center gap-1.5 text-xs text-neutral-11 mb-3">
                       <User className="w-3.5 h-3.5" />
                       <span>{project.owner_name || project.owner_id}</span>
                     </div>
 
                     {/* Resource counts */}
-                    <div className="flex items-center gap-4 text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                    <div className="flex items-center gap-4 text-sm text-neutral-11 mb-4">
                       <div className="flex items-center gap-1" title="Sessions">
                         <MessageSquare className="w-4 h-4" />
                         <span>{project.session_count} sessions</span>
@@ -516,10 +510,10 @@ export function ProjectsPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-neutral-700">
+                    <div className="flex items-center justify-between pt-3 border-t border-neutral-5">
                       <Button
-                        variant="primary"
-                        className="flex px-3 py-1.5 text-sm text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleOpenProject(project.id)}
                         aria-label="Open project"
                       >
@@ -528,7 +522,7 @@ export function ProjectsPage() {
                       </Button>
                       <Button
                         variant="danger"
-                        className="flex px-3 py-1.5 text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
+                        size="sm"
                         onClick={() =>
                           handleDeleteProject(project.id, project.name)
                         }
@@ -543,17 +537,17 @@ export function ProjectsPage() {
               </div>
             ) : (
               /* Table View */
-              <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
+              <div className="bg-neutral-1 border border-neutral-5 rounded-lg overflow-hidden">
                 {/* Bulk action bar */}
                 {selectedProjects.size > 0 && (
-                  <div className="px-4 py-2 bg-primary-50 dark:bg-primary-900/20 border-b border-primary-200 dark:border-primary-800 flex items-center justify-between">
-                    <span className="text-sm text-primary-700 dark:text-primary-300">
+                  <div className="px-4 py-2 bg-primary-2 dark:bg-primary-a3 border-b border-primary-5 dark:border-primary-7 flex items-center justify-between">
+                    <span className="text-sm text-primary-11">
                       {selectedProjects.size} project
                       {selectedProjects.size > 1 ? "s" : ""} selected
                     </span>
                     <Button
                       variant="danger"
-                      className="flex .5 px-3 py-1.5 text-sm bg-error-600 text-white rounded hover:bg-error-700"
+                      size="sm"
                       onClick={handleBulkDelete}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -562,7 +556,7 @@ export function ProjectsPage() {
                   </div>
                 )}
                 <table className="w-full">
-                  <thead className="bg-neutral-50 dark:bg-neutral-900/50">
+                  <thead className="bg-neutral-1">
                     <tr>
                       {/* Select all checkbox */}
                       <th className="px-4 py-3 w-10">
@@ -583,10 +577,10 @@ export function ProjectsPage() {
                         currentSortOrder={sortOrder}
                         onSort={handleSortChange}
                       />
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-11 uppercase tracking-wider">
                         Owner
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-11 uppercase tracking-wider">
                         Status
                       </th>
                       <SortableHeader
@@ -621,18 +615,18 @@ export function ProjectsPage() {
                         onSort={handleSortChange}
                         align="center"
                       />
-                      <th className="px-4 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-neutral-11 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                  <tbody className="divide-y divide-neutral-5 dark:divide-neutral-6">
                     {projects.map((project) => (
                       <tr
                         key={project.id}
-                        className={`hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors ${
+                        className={`hover:bg-neutral-a6 transition-colors ${
                           selectedProjects.has(project.id)
-                            ? "bg-primary-50 dark:bg-primary-900/10"
+                            ? "bg-primary-1 dark:bg-primary-a2"
                             : ""
                         }`}
                       >
@@ -647,17 +641,17 @@ export function ProjectsPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div>
-                            <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                            <div className="font-medium text-neutral-12">
                               {project.name}
                             </div>
                             {project.description && (
-                              <div className="text-sm text-neutral-500 dark:text-neutral-400 truncate max-w-xs">
+                              <div className="text-sm text-neutral-11 truncate max-w-xs">
                                 {project.description}
                               </div>
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-neutral-600 dark:text-neutral-400">
+                        <td className="px-4 py-3 text-sm text-neutral-11">
                           <div className="flex items-center gap-1.5">
                             <User className="w-4 h-4" />
                             <span className="truncate max-w-[120px]">
@@ -669,32 +663,32 @@ export function ProjectsPage() {
                           <span
                             className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
                               project.status === "active"
-                                ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400"
-                                : "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
+                                ? "bg-success-3 text-success-11 dark:text-success-11"
+                                : "bg-neutral-2 text-neutral-11"
                             }`}
                           >
                             {project.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-center text-sm text-neutral-600 dark:text-neutral-400">
+                        <td className="px-4 py-3 text-center text-sm text-neutral-11">
                           <div className="flex items-center justify-center gap-1">
                             <MessageSquare className="w-4 h-4" />
                             {project.session_count}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-center text-sm text-neutral-600 dark:text-neutral-400">
+                        <td className="px-4 py-3 text-center text-sm text-neutral-11">
                           <div className="flex items-center justify-center gap-1">
                             <GitBranch className="w-4 h-4" />
                             {project.workflow_count}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-center text-sm text-neutral-600 dark:text-neutral-400">
+                        <td className="px-4 py-3 text-center text-sm text-neutral-11">
                           <div className="flex items-center justify-center gap-1">
                             <Plug className="w-4 h-4" />
                             {project.connection_count}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                        <td className="px-4 py-3 text-center text-sm text-neutral-11">
                           {project.updated_at
                             ? new Date(project.updated_at).toLocaleDateString()
                             : "-"}
@@ -702,8 +696,8 @@ export function ProjectsPage() {
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Button
-                              variant="primary"
-                              className="p-1.5 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded"
+                              variant="ghost"
+                              size="icon"
                               onClick={() => handleOpenProject(project.id)}
                               aria-label="Open project"
                               title="Open"
@@ -711,13 +705,14 @@ export function ProjectsPage() {
                               <ExternalLink className="w-4 h-4" />
                             </Button>
                             <Button
-                              variant="danger"
-                              className="p-1.5 text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 rounded"
+                              variant="ghost"
+                              size="icon"
                               onClick={() =>
                                 handleDeleteProject(project.id, project.name)
                               }
                               aria-label="Delete project"
                               title="Delete"
+                              className="text-error-11 hover:text-error-11 hover:bg-error-a3"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -749,15 +744,15 @@ export function ProjectsPage() {
       </div>
       {/* Create Project Dialog */}
       {showCreateDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-neutral-a6 flex items-center justify-center z-60">
+          <div className="bg-neutral-1 rounded-lg shadow-xl w-full max-w-md mx-4">
             {/* Dialog header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-              <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-5">
+              <h2 className="text-lg font-semibold text-neutral-12">
                 Create New Project
               </h2>
               <Button
-                className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-200"
+                className="p-1 text-neutral-9 hover:text-neutral-11"
                 onClick={() => setShowCreateDialog(false)}
               >
                 <X className="w-5 h-5" />
@@ -769,12 +764,12 @@ export function ProjectsPage() {
               <div className="mb-4">
                 <label
                   htmlFor="projectName"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+                  className="block text-sm font-medium text-neutral-11 mb-1"
                 >
                   Project Name
                 </label>
                 <Input
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
+                  className="px-3 py-2 text-neutral-12 focus:ring-primary-7"
                   id="projectName"
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
@@ -785,12 +780,12 @@ export function ProjectsPage() {
               <div>
                 <label
                   htmlFor="projectDescription"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+                  className="block text-sm font-medium text-neutral-11 mb-1"
                 >
                   Description (optional)
                 </label>
                 <Textarea
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500 resize-none"
+                  className="px-3 py-2 text-neutral-12 focus:ring-primary-7 resize-none"
                   id="projectDescription"
                   value={newProjectDescription}
                   onChange={(e) => setNewProjectDescription(e.target.value)}
@@ -801,17 +796,15 @@ export function ProjectsPage() {
             </div>
 
             {/* Dialog footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-neutral-200 dark:border-neutral-700">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-neutral-5">
               <Button
                 variant="secondary"
-                className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
                 onClick={() => setShowCreateDialog(false)}
               >
                 Cancel
               </Button>
               <Button
                 variant="primary"
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                 onClick={handleCreateProject}
                 disabled={!newProjectName.trim() || isCreating}
               >

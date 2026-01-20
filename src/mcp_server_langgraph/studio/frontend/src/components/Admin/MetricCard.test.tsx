@@ -47,21 +47,21 @@ describe("MetricCard", () => {
       render(<MetricCard label="Happiness" value={85} />);
 
       const valueElement = screen.getByText("85%");
-      expect(valueElement).toHaveClass("text-success-600");
+      expect(valueElement).toHaveClass("text-success-10");
     });
 
     it("should show yellow for medium values (60-79)", () => {
       render(<MetricCard label="Adoption" value={68} />);
 
       const valueElement = screen.getByText("68%");
-      expect(valueElement).toHaveClass("text-warning-600");
+      expect(valueElement).toHaveClass("text-warning-9");
     });
 
     it("should show red for low values (< 60)", () => {
       render(<MetricCard label="Engagement" value={45} />);
 
       const valueElement = screen.getByText("45%");
-      expect(valueElement).toHaveClass("text-error-600");
+      expect(valueElement).toHaveClass("text-error-10");
     });
   });
 
@@ -98,14 +98,14 @@ describe("MetricCard", () => {
       render(<MetricCard label="Happiness" value={85} trend={12} />);
 
       const trendElement = screen.getByText("+12%");
-      expect(trendElement).toHaveClass("text-success-500");
+      expect(trendElement).toHaveClass("text-success-9");
     });
 
     it("should show negative trend in red", () => {
       render(<MetricCard label="Engagement" value={68} trend={-5} />);
 
       const trendElement = screen.getByText("-5%");
-      expect(trendElement).toHaveClass("text-error-500");
+      expect(trendElement).toHaveClass("text-error-9");
     });
   });
 

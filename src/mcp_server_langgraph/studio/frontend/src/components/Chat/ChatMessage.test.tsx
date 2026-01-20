@@ -6,7 +6,43 @@
 
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import { MemoryRouter } from "react-router";
+import canvasReducer from "../../store/slices/canvasSlice";
 import { ChatMessage } from "./ChatMessage";
+
+// Wrapper for tests that render artifacts (need Redux for ArtifactInteractionWrapper)
+function createTestStore() {
+  return configureStore({
+    reducer: { canvas: canvasReducer },
+    preloadedState: {
+      canvas: {
+        panelSizes: { sessionNav: 20, conversation: 40, canvas: 40 },
+        sessionNavCollapsed: false,
+        canvasCollapsed: true,
+        activeNavItem: "chat",
+        selectedArtifactId: null,
+        tabOrder: [],
+        preferences: {
+          showTimestamps: true,
+          compactMode: false,
+          showLineNumbers: true,
+          codeTheme: "auto",
+        },
+      },
+    },
+  });
+}
+
+function renderWithProviders(ui: React.ReactElement) {
+  const store = createTestStore();
+  return render(
+    <Provider store={store}>
+      <MemoryRouter>{ui}</MemoryRouter>
+    </Provider>
+  );
+}
 
 describe("ChatMessage", () => {
   afterEach(() => {
@@ -378,7 +414,8 @@ describe("ChatMessage", () => {
       );
 
       const link = screen.getByRole("link", { name: "Styled Link" });
-      expect(link).toHaveClass("text-primary-600");
+      // Updated to Radix color scale (Phase 4 design system compliance)
+      expect(link).toHaveClass("text-primary-10");
     });
   });
 
@@ -392,7 +429,7 @@ describe("ChatMessage", () => {
 
 Hope this helps!`;
 
-      render(
+      renderWithProviders(
         <ChatMessage
           role="assistant"
           content={content}
@@ -412,7 +449,7 @@ graph TD
     A --> B
 \`\`\``;
 
-      render(
+      renderWithProviders(
         <ChatMessage
           role="assistant"
           content={content}
@@ -434,7 +471,7 @@ export default function App() {
 }
 \`\`\``;
 
-      render(
+      renderWithProviders(
         <ChatMessage
           role="assistant"
           content={content}
@@ -451,7 +488,7 @@ export default function App() {
 {"type": "bar", "data": []}
 \`\`\``;
 
-      render(
+      renderWithProviders(
         <ChatMessage
           role="assistant"
           content={content}
@@ -470,7 +507,7 @@ export default function App() {
 {"key": "value", "nested": {"a": 1}}
 \`\`\``;
 
-      render(
+      renderWithProviders(
         <ChatMessage
           role="assistant"
           content={content}
@@ -489,7 +526,7 @@ export default function App() {
 <svg width="100" height="100"><circle cx="50" cy="50" r="40" fill="red"/></svg>
 \`\`\``;
 
-      render(
+      renderWithProviders(
         <ChatMessage
           role="assistant"
           content={content}
@@ -509,7 +546,7 @@ def hello():
     print("world")
 \`\`\``;
 
-      render(
+      renderWithProviders(
         <ChatMessage
           role="assistant"
           content={content}
@@ -534,7 +571,7 @@ And JSON:
 {"key": "value"}
 \`\`\``;
 
-      render(
+      renderWithProviders(
         <ChatMessage
           role="assistant"
           content={content}
@@ -556,7 +593,7 @@ And JSON:
 
 Conclusion text.`;
 
-      render(
+      renderWithProviders(
         <ChatMessage
           role="assistant"
           content={content}

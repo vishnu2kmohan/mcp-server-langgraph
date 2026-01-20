@@ -92,7 +92,7 @@ describe("ExecutableArtifact", () => {
       );
       const errorOutput = screen.getByText(/Something went wrong/);
       expect(errorOutput).toBeInTheDocument();
-      expect(errorOutput.closest("div")).toHaveClass("text-error-600");
+      expect(errorOutput.closest("div")).toHaveClass("text-error-10");
     });
 
     it("should show execution time when available", () => {

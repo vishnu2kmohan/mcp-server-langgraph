@@ -64,6 +64,8 @@ const _EXPECTED_API_RESPONSE_KEYS = [
   "batch_composite_analysis",
   // HITL Features (Confidence-Based Agent Approval)
   "agent_hitl",
+  // Markdown References ([[type:qualifier:id]] syntax)
+  "markdown_references",
 ] as const;
 
 describe("Feature Flags API Contract", () => {
@@ -130,6 +132,13 @@ describe("Feature Flags API Contract", () => {
       // Backend: enable_agent_hitl → API response: agent_hitl
       expect(mockFeatureFlags).toHaveProperty("agent_hitl");
       expect(typeof mockFeatureFlags.agent_hitl).toBe("boolean");
+    });
+
+    it("should include markdown references feature flag", () => {
+      // Markdown references ([[type:qualifier:id]] syntax)
+      // Backend: enable_markdown_references → API response: markdown_references
+      expect(mockFeatureFlags).toHaveProperty("markdown_references");
+      expect(typeof mockFeatureFlags.markdown_references).toBe("boolean");
     });
 
     it("should include Sprint Block 5 strategy fields", () => {

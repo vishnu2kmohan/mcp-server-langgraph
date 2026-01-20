@@ -43,8 +43,8 @@ describe("ResponseRating", () => {
       const thumbsDown = screen.getByTestId("rating-thumbs-down");
 
       // Neither should be active initially
-      expect(thumbsUp).not.toHaveClass("text-success-500");
-      expect(thumbsDown).not.toHaveClass("text-error-500");
+      expect(thumbsUp).not.toHaveClass("text-success-9");
+      expect(thumbsDown).not.toHaveClass("text-error-9");
     });
   });
 
@@ -79,14 +79,14 @@ describe("ResponseRating", () => {
       render(<ResponseRating {...defaultProps} currentRating="up" />);
 
       const thumbsUp = screen.getByTestId("rating-thumbs-up");
-      expect(thumbsUp).toHaveClass("text-success-500");
+      expect(thumbsUp).toHaveClass("text-success-9");
     });
 
     it("should highlight thumbs down when currentRating is down", () => {
       render(<ResponseRating {...defaultProps} currentRating="down" />);
 
       const thumbsDown = screen.getByTestId("rating-thumbs-down");
-      expect(thumbsDown).toHaveClass("text-error-500");
+      expect(thumbsDown).toHaveClass("text-error-9");
     });
   });
 

@@ -8,7 +8,9 @@
 
 import { useState } from "react";
 import { Building2, Folder, Users, TrendingUp } from "lucide-react";
-import { Skeleton, SkeletonCard, ErrorState } from "../UI";
+import { Skeleton, SkeletonCard } from "../UI";
+// Direct import to avoid circular dependency through barrel export
+import { ErrorState } from "../UI/ErrorState";
 import {
   useGetCostByOrganizationQuery,
   useGetCostByProjectQuery,
@@ -129,7 +131,7 @@ export function OrganizationCostDashboard({
   return (
     <div className="space-y-6">
       {/* View Mode Tabs */}
-      <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center gap-2 border-b border-neutral-5">
         <Button
           className="flex px-4 py-2 border-b-2"
           onClick={() => setViewMode("organization")}
@@ -144,7 +146,7 @@ export function OrganizationCostDashboard({
           <Folder size={16} />
           Projects
           {selectedOrg && (
-            <span className="ml-1 text-xs bg-primary-100 dark:bg-primary-900 px-1.5 py-0.5 rounded">
+            <span className="ml-1 text-xs bg-primary-3 dark:bg-primary-12 px-1.5 py-0.5 rounded">
               {selectedOrg.replace("organization:", "")}
             </span>
           )}
@@ -156,7 +158,7 @@ export function OrganizationCostDashboard({
           <Users size={16} />
           Teams
           {selectedProject && (
-            <span className="ml-1 text-xs bg-primary-100 dark:bg-primary-900 px-1.5 py-0.5 rounded">
+            <span className="ml-1 text-xs bg-primary-3 dark:bg-primary-12 px-1.5 py-0.5 rounded">
               {selectedProject.replace("project:", "")}
             </span>
           )}
@@ -165,47 +167,47 @@ export function OrganizationCostDashboard({
       {/* Summary Cards */}
       {viewMode === "organization" && (
         <div className="grid gap-4 md:grid-cols-4">
-          <div className="p-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+          <div className="p-6 bg-neutral-1 rounded-lg border border-neutral-5">
             <div className="flex items-center gap-2 mb-2">
-              <Building2 size={20} className="text-primary-500" />
-              <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+              <Building2 size={20} className="text-primary-9" />
+              <h3 className="text-sm font-medium text-neutral-10">
                 Total Organizations
               </h3>
             </div>
-            <span className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+            <span className="text-3xl font-bold text-neutral-12">
               {orgCosts?.length ?? 0}
             </span>
           </div>
-          <div className="p-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+          <div className="p-6 bg-neutral-1 rounded-lg border border-neutral-5">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp size={20} className="text-success-500" />
-              <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+              <TrendingUp size={20} className="text-success-9" />
+              <h3 className="text-sm font-medium text-neutral-10">
                 Total Cost
               </h3>
             </div>
-            <span className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+            <span className="text-3xl font-bold text-neutral-12">
               {formatCurrency(totalOrgCost)}
             </span>
           </div>
-          <div className="p-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+          <div className="p-6 bg-neutral-1 rounded-lg border border-neutral-5">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp size={20} className="text-insight-500" />
-              <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+              <TrendingUp size={20} className="text-insight-9" />
+              <h3 className="text-sm font-medium text-neutral-10">
                 Total Tokens
               </h3>
             </div>
-            <span className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+            <span className="text-3xl font-bold text-neutral-12">
               {formatNumber(totalOrgTokens)}
             </span>
           </div>
-          <div className="p-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+          <div className="p-6 bg-neutral-1 rounded-lg border border-neutral-5">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp size={20} className="text-warning-500" />
-              <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+              <TrendingUp size={20} className="text-warning-9" />
+              <h3 className="text-sm font-medium text-neutral-10">
                 Total Requests
               </h3>
             </div>
-            <span className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+            <span className="text-3xl font-bold text-neutral-12">
               {formatNumber(totalOrgRequests)}
             </span>
           </div>
@@ -231,65 +233,65 @@ export function OrganizationCostDashboard({
           onRetry={handleRetry}
         />
       ) : (
-        <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+        <div className="bg-neutral-1 rounded-lg border border-neutral-5">
           {/* Organization View */}
           {viewMode === "organization" && (
             <>
-              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-                <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              <div className="px-6 py-4 border-b border-neutral-5">
+                <h2 className="text-lg font-semibold text-neutral-12">
                   Cost by Organization
                 </h2>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                <p className="text-sm text-neutral-10">
                   Click an organization to see project breakdown
                 </p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-neutral-50 dark:bg-neutral-700/50">
+                  <thead className="bg-neutral-1">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Organization
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Cost
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Tokens
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Requests
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         % of Total
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                  <tbody className="divide-y divide-neutral-5 dark:divide-neutral-6">
                     {orgCosts?.map((org) => (
                       <tr
                         key={org.organizationId}
                         onClick={() => handleOrgClick(org.organizationId)}
-                        className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
+                        className="cursor-pointer hover:bg-neutral-a6"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-12">
                           <div className="flex items-center gap-2">
                             <Building2
                               size={16}
-                              className="text-neutral-400 dark:text-neutral-400"
+                              className="text-neutral-9"
                             />
                             {org.organizationId.replace("organization:", "")}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-900 dark:text-neutral-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-12">
                           {formatCurrency(org.totalCost)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-500 dark:text-neutral-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-10">
                           {formatNumber(org.totalTokens)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-500 dark:text-neutral-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-10">
                           {formatNumber(org.requestCount)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-500 dark:text-neutral-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-10">
                           {totalOrgCost > 0
                             ? `${((org.totalCost / totalOrgCost) * 100).toFixed(1)}%`
                             : "0%"}
@@ -300,7 +302,7 @@ export function OrganizationCostDashboard({
                       <tr>
                         <td
                           colSpan={5}
-                          className="px-6 py-8 text-center text-neutral-500 dark:text-neutral-400"
+                          className="px-6 py-8 text-center text-neutral-10"
                         >
                           No organizational cost data available
                         </td>
@@ -315,67 +317,67 @@ export function OrganizationCostDashboard({
           {/* Project View */}
           {viewMode === "project" && (
             <>
-              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-                <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              <div className="px-6 py-4 border-b border-neutral-5">
+                <h2 className="text-lg font-semibold text-neutral-12">
                   Cost by Project
                   {selectedOrg && (
-                    <span className="ml-2 text-sm font-normal text-neutral-500 dark:text-neutral-400">
+                    <span className="ml-2 text-sm font-normal text-neutral-10">
                       in {selectedOrg.replace("organization:", "")}
                     </span>
                   )}
                 </h2>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                <p className="text-sm text-neutral-10">
                   Click a project to see team breakdown
                 </p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-neutral-50 dark:bg-neutral-700/50">
+                  <thead className="bg-neutral-1">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Project
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Organization
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Cost
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Tokens
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Requests
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                  <tbody className="divide-y divide-neutral-5 dark:divide-neutral-6">
                     {projectCosts?.map((proj) => (
                       <tr
                         key={proj.projectId}
                         onClick={() => handleProjectClick(proj.projectId)}
-                        className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
+                        className="cursor-pointer hover:bg-neutral-a6"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-12">
                           <div className="flex items-center gap-2">
                             <Folder
                               size={16}
-                              className="text-neutral-400 dark:text-neutral-400"
+                              className="text-neutral-9"
                             />
                             {proj.projectId.replace("project:", "")}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-10">
                           {proj.organizationId?.replace("organization:", "") ??
                             "—"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-900 dark:text-neutral-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-12">
                           {formatCurrency(proj.totalCost)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-500 dark:text-neutral-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-10">
                           {formatNumber(proj.totalTokens)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-500 dark:text-neutral-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-10">
                           {formatNumber(proj.requestCount)}
                         </td>
                       </tr>
@@ -384,7 +386,7 @@ export function OrganizationCostDashboard({
                       <tr>
                         <td
                           colSpan={5}
-                          className="px-6 py-8 text-center text-neutral-500 dark:text-neutral-400"
+                          className="px-6 py-8 text-center text-neutral-10"
                         >
                           No project cost data available
                         </td>
@@ -399,11 +401,11 @@ export function OrganizationCostDashboard({
           {/* Team View */}
           {viewMode === "team" && (
             <>
-              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-                <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              <div className="px-6 py-4 border-b border-neutral-5">
+                <h2 className="text-lg font-semibold text-neutral-12">
                   Cost by Team
                   {selectedProject && (
-                    <span className="ml-2 text-sm font-normal text-neutral-500 dark:text-neutral-400">
+                    <span className="ml-2 text-sm font-normal text-neutral-10">
                       in {selectedProject.replace("project:", "")}
                     </span>
                   )}
@@ -411,57 +413,57 @@ export function OrganizationCostDashboard({
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-neutral-50 dark:bg-neutral-700/50">
+                  <thead className="bg-neutral-1">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Team
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Organization
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Project
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Cost
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Tokens
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Requests
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                  <tbody className="divide-y divide-neutral-5 dark:divide-neutral-6">
                     {teamCosts?.map((team) => (
                       <tr
                         key={team.teamId}
-                        className="hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
+                        className="hover:bg-neutral-a6"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-12">
                           <div className="flex items-center gap-2">
                             <Users
                               size={16}
-                              className="text-neutral-400 dark:text-neutral-400"
+                              className="text-neutral-9"
                             />
                             {team.teamId.replace("team:", "")}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-10">
                           {team.organizationId?.replace("organization:", "") ??
                             "—"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-10">
                           {team.projectId?.replace("project:", "") ?? "—"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-900 dark:text-neutral-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-12">
                           {formatCurrency(team.totalCost)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-500 dark:text-neutral-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-10">
                           {formatNumber(team.totalTokens)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-500 dark:text-neutral-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-10">
                           {formatNumber(team.requestCount)}
                         </td>
                       </tr>
@@ -470,7 +472,7 @@ export function OrganizationCostDashboard({
                       <tr>
                         <td
                           colSpan={6}
-                          className="px-6 py-8 text-center text-neutral-500 dark:text-neutral-400"
+                          className="px-6 py-8 text-center text-neutral-10"
                         >
                           No team cost data available
                         </td>

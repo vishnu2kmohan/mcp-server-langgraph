@@ -10,7 +10,8 @@
  * - POST /api/v1/ai/fetch-url - Fetch and extract content from URL
  */
 
-import { http, HttpResponse, delay } from "msw";
+import { http, delay } from "msw";
+import { apiJsonResponse, apiErrorResponse } from "../utils/apiResponse";
 import type { AIInterpretation, Suggestion } from "../../ai";
 
 // =============================================================================
@@ -78,15 +79,7 @@ interface DisclosureAnalysisResult {
   personalized_message: string;
 }
 
-interface BatchCompositeResponse {
-  user_id: string;
-  session_id: string;
-  persona_result: PersonaAnalysisResult | null;
-  disclosure_result: DisclosureAnalysisResult | null;
-  error_result: ErrorAnalysisResponse | null;
-  cross_insights: string[];
-  confidence: number;
-}
+// BatchCompositeResponse type removed - now using inline object in apiJsonResponse
 
 // Disclosure analysis types (Phase 6.1)
 type DisclosureLevel = "beginner" | "intermediate" | "advanced" | "expert";
@@ -95,13 +88,8 @@ interface DisclosureAnalysisRequest {
   current_level?: DisclosureLevel;
 }
 
-interface DisclosureAnalysisResponse {
-  current_level: DisclosureLevel;
-  recommended_level: DisclosureLevel;
-  confidence: number;
-  unlock_features: string[];
-  personalized_message: string;
-}
+// DisclosureAnalysisResponse interface removed - now using inline object in apiJsonResponse
+// Handler returns camelCase which is transformed to snake_case by apiJsonResponse
 
 // Nudge recommendation types (Phase 6.3) - matches generated OpenAPI types (ADR-0091)
 // NudgeContext from generated-api.ts
@@ -125,22 +113,7 @@ interface NudgeRecommendRequest {
   nudge_history?: NudgeHistoryItem[];
 }
 
-// Nudge from generated-api.ts
-interface Nudge {
-  id: string;
-  type: string;
-  message: string;
-  priority: string;
-  show_after_ms: number;
-  target_element?: string | null;
-}
-
-// NudgeRecommendResponse from generated-api.ts
-interface NudgeRecommendResponse {
-  should_show: boolean;
-  confidence: number;
-  nudge?: Nudge | null;
-}
+// Nudge and NudgeRecommendResponse types removed - now using inline objects in apiJsonResponse
 
 /**
  * Empty state suggestion - matches RTK Query API schema
@@ -766,14 +739,11 @@ export const aiHandlers = [
     const body = (await request.json()) as InterpretCommandRequest;
 
     if (!body.query) {
-      return HttpResponse.json(
-        { error: "Missing required field: query" },
-        { status: 400 },
-      );
+      return apiErrorResponse("Missing required field: query", 400);
     }
 
     const interpretation = interpretQuery(body.query);
-    return HttpResponse.json(interpretation);
+    return apiJsonResponse(interpretation);
   }),
 
   /**
@@ -786,10 +756,7 @@ export const aiHandlers = [
     const artifactId = url.searchParams.get("artifactId");
 
     if (!artifactId) {
-      return HttpResponse.json(
-        { error: "Missing required query parameter: artifactId" },
-        { status: 400 },
-      );
+      return apiErrorResponse("Missing required query parameter: artifactId", 400);
     }
 
     // Return mock suggestions
@@ -797,7 +764,7 @@ export const aiHandlers = [
       suggestions: mockSuggestions,
     };
 
-    return HttpResponse.json(response);
+    return apiJsonResponse(response);
   }),
 
   /**
@@ -809,17 +776,11 @@ export const aiHandlers = [
     const body = (await request.json()) as FetchUrlRequest;
 
     if (!body.url) {
-      return HttpResponse.json(
-        { error: "Missing required field: url" },
-        { status: 400 },
-      );
+      return apiErrorResponse("Missing required field: url", 400);
     }
 
     if (!isValidUrl(body.url)) {
-      return HttpResponse.json(
-        { error: "Invalid URL format" },
-        { status: 422 },
-      );
+      return apiErrorResponse("Invalid URL format", 422);
     }
 
     // Return mock content
@@ -830,7 +791,7 @@ export const aiHandlers = [
       fetchedAt: new Date().toISOString(),
     };
 
-    return HttpResponse.json(response);
+    return apiJsonResponse(response);
   }),
 
   /**
@@ -847,7 +808,7 @@ export const aiHandlers = [
       suggestions,
     };
 
-    return HttpResponse.json(response);
+    return apiJsonResponse(response);
   }),
 
   /**
@@ -860,14 +821,11 @@ export const aiHandlers = [
     const body = (await request.json()) as ErrorAnalysisRequest;
 
     if (!body.error_message) {
-      return HttpResponse.json(
-        { error: "Missing required field: error_message" },
-        { status: 400 },
-      );
+      return apiErrorResponse("Missing required field: error_message", 400);
     }
 
     const analysis = analyzeError(body);
-    return HttpResponse.json(analysis);
+    return apiJsonResponse(analysis);
   }),
 
   /**
@@ -891,15 +849,13 @@ export const aiHandlers = [
     const currentLevel = levelMap[inputLevel.toLowerCase()] || "beginner";
     const recommendation = disclosureRecommendations[currentLevel];
 
-    const response: DisclosureAnalysisResponse = {
-      current_level: inputLevel, // Return the input level as-is for flexibility
-      recommended_level: recommendation.recommendedLevel,
+    return apiJsonResponse({
+      currentLevel: inputLevel, // Return the input level as-is for flexibility
+      recommendedLevel: recommendation.recommendedLevel,
       confidence: currentLevel === "expert" ? 0.95 : 0.85,
-      unlock_features: recommendation.features,
-      personalized_message: recommendation.message,
-    };
-
-    return HttpResponse.json(response);
+      unlockFeatures: recommendation.features,
+      personalizedMessage: recommendation.message,
+    });
   }),
 
   /**
@@ -921,21 +877,19 @@ export const aiHandlers = [
     // Use the matching nudge or default to first one
     const selectedNudge = matchingNudge || nudgeCatalog[0];
 
-    // Return response matching generated NudgeRecommendResponse schema
-    const response: NudgeRecommendResponse = {
-      should_show: true,
+    // Return response in camelCase (will be transformed to snake_case by apiJsonResponse)
+    return apiJsonResponse({
+      shouldShow: true,
       confidence: selectedNudge.confidence,
       nudge: {
         id: selectedNudge.id,
         type: selectedNudge.type,
         message: selectedNudge.message,
         priority: selectedNudge.priority,
-        show_after_ms: selectedNudge.show_after_ms,
-        target_element: selectedNudge.target_element,
+        showAfterMs: selectedNudge.show_after_ms,
+        targetElement: selectedNudge.target_element,
       },
-    };
-
-    return HttpResponse.json(response);
+    });
   }),
 
   /**
@@ -955,23 +909,6 @@ export const aiHandlers = [
       } | null;
     }
 
-    // OnboardingStep from generated-api.ts
-    interface OnboardingStep {
-      step: string;
-      guided: boolean;
-      focus?: string | null;
-      template?: string | null;
-    }
-
-    // OnboardingPersonalizeResponse from generated-api.ts
-    interface OnboardingResponse {
-      detected_intent: string;
-      confidence: number;
-      recommended_path: OnboardingStep[];
-      skip_steps?: string[];
-      persona_prediction?: string | null;
-    }
-
     const body = (await request.json()) as OnboardingRequest;
     const initialActions = body.initial_actions || [];
     const hasDevActions = initialActions.some(
@@ -983,52 +920,49 @@ export const aiHandlers = [
 
     // Personalize based on initial actions
     if (hasDevActions) {
-      const response: OnboardingResponse = {
-        detected_intent: "build_workflows",
+      return apiJsonResponse({
+        detectedIntent: "build_workflows",
         confidence: 0.88,
-        recommended_path: [
+        recommendedPath: [
           { step: "api_overview", guided: true, focus: "api" },
           { step: "workflow_builder_intro", guided: true, focus: "workflows" },
           { step: "advanced_configuration", guided: false },
           { step: "observability_setup", guided: true, focus: "traces" },
         ],
-        skip_steps: ["basic_intro", "what_is_ai", "simple_examples"],
-        persona_prediction: "alice-builder",
-      };
-      return HttpResponse.json(response);
+        skipSteps: ["basic_intro", "what_is_ai", "simple_examples"],
+        personaPrediction: "alice-builder",
+      });
     }
 
     if (hasAnalyticsActions) {
-      const response: OnboardingResponse = {
-        detected_intent: "analyze_data",
+      return apiJsonResponse({
+        detectedIntent: "analyze_data",
         confidence: 0.82,
-        recommended_path: [
+        recommendedPath: [
           { step: "welcome_tour", guided: true },
           { step: "trace_exploration", guided: true, focus: "traces" },
           { step: "metrics_dashboard", guided: true, focus: "metrics" },
           { step: "custom_reports", guided: false },
         ],
-        skip_steps: ["basic_intro"],
-        persona_prediction: "alice-analyst",
-      };
-      return HttpResponse.json(response);
+        skipSteps: ["basic_intro"],
+        personaPrediction: "alice-analyst",
+      });
     }
 
     // Default: beginner experience
-    const response: OnboardingResponse = {
-      detected_intent: "explore_features",
+    return apiJsonResponse({
+      detectedIntent: "explore_features",
       confidence: 0.75,
-      recommended_path: [
+      recommendedPath: [
         { step: "welcome_tour", guided: true },
         { step: "basic_intro", guided: true },
         { step: "first_chat", guided: true, focus: "chat" },
         { step: "explore_features", guided: false },
         { step: "help_resources", guided: false },
       ],
-      skip_steps: [],
-      persona_prediction: "bob",
-    };
-    return HttpResponse.json(response);
+      skipSteps: [],
+      personaPrediction: "bob",
+    });
   }),
 
   /**
@@ -1037,18 +971,18 @@ export const aiHandlers = [
   http.get("/api/v1/ai/metrics/insights", async () => {
     await delay(150);
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       insights: [
         {
           type: "anomaly",
           dimension: "retention",
           message: "D7 retention dropped 12% for alice-builder personas",
           severity: "warning",
-          suggested_actions: [
+          suggestedActions: [
             "Check workflow builder UX",
             "Review recent changes",
           ],
-          detected_at: new Date().toISOString(),
+          detectedAt: new Date().toISOString(),
         },
         {
           type: "trend",
@@ -1072,21 +1006,21 @@ export const aiHandlers = [
       ],
       predictions: [
         {
-          metric: "30_day_retention",
+          metric: "30DayRetention",
           current: 0.65,
           predicted: 0.72,
           confidence: 0.78,
           drivers: ["improved_onboarding", "nudge_system"],
         },
         {
-          metric: "weekly_active_users",
+          metric: "weeklyActiveUsers",
           current: 450,
           predicted: 520,
           confidence: 0.85,
           drivers: ["new_features", "marketing_campaign"],
         },
         {
-          metric: "task_success_rate",
+          metric: "taskSuccessRate",
           current: 0.82,
           predicted: 0.88,
           confidence: 0.72,
@@ -1124,18 +1058,18 @@ export const aiHandlers = [
 
     // Detect actual persona from behavior
     if (hasDevActions && highWorkflowUsage) {
-      return HttpResponse.json({
-        assigned_persona: assignedPersona,
-        detected_persona: "alice-builder",
+      return apiJsonResponse({
+        assignedPersona: assignedPersona,
+        detectedPersona: "alice-builder",
         confidence: 0.88,
-        behavior_signals: [
+        behaviorSignals: [
           "Frequent workflow editing",
           "Advanced trace analysis",
           "Long session durations",
         ],
         recommendation:
           "Consider upgrading to developer role for enhanced features",
-        ui_adaptations: [
+        uiAdaptations: [
           { feature: "workflow_builder", action: "unlock" },
           { feature: "advanced_traces", action: "promote" },
         ],
@@ -1143,27 +1077,27 @@ export const aiHandlers = [
     }
 
     if (hasDevActions || highTraceUsage) {
-      return HttpResponse.json({
-        assigned_persona: assignedPersona,
-        detected_persona: "alice-analyst",
+      return apiJsonResponse({
+        assignedPersona: assignedPersona,
+        detectedPersona: "alice-analyst",
         confidence: 0.75,
-        behavior_signals: [
+        behaviorSignals: [
           "Frequent trace exploration",
           "Advanced filter usage",
         ],
         recommendation: null,
-        ui_adaptations: [{ feature: "observability", action: "unlock" }],
+        uiAdaptations: [{ feature: "observability", action: "unlock" }],
       });
     }
 
     // Default: persona matches behavior
-    return HttpResponse.json({
-      assigned_persona: assignedPersona,
-      detected_persona: assignedPersona,
+    return apiJsonResponse({
+      assignedPersona: assignedPersona,
+      detectedPersona: assignedPersona,
       confidence: 0.95,
-      behavior_signals: ["Chat-focused usage", "Standard interaction patterns"],
+      behaviorSignals: ["Chat-focused usage", "Standard interaction patterns"],
       recommendation: null,
-      ui_adaptations: [],
+      uiAdaptations: [],
     });
   }),
 
@@ -1179,17 +1113,11 @@ export const aiHandlers = [
 
     // Validate required fields
     if (!body.user_id) {
-      return HttpResponse.json(
-        { error: "Missing required field: user_id" },
-        { status: 400 },
-      );
+      return apiErrorResponse("Missing required field: user_id", 400);
     }
 
     if (!body.session_id) {
-      return HttpResponse.json(
-        { error: "Missing required field: session_id" },
-        { status: 400 },
-      );
+      return apiErrorResponse("Missing required field: session_id", 400);
     }
 
     // Build response based on requested analyses
@@ -1283,17 +1211,15 @@ export const aiHandlers = [
         ? confidences.reduce((a, b) => a + b, 0) / confidences.length
         : 0.5;
 
-    const response: BatchCompositeResponse = {
-      user_id: body.user_id,
-      session_id: body.session_id,
-      persona_result: personaResult,
-      disclosure_result: disclosureResult,
-      error_result: errorResult,
-      cross_insights: crossInsights,
+    return apiJsonResponse({
+      userId: body.user_id,
+      sessionId: body.session_id,
+      personaResult: personaResult,
+      disclosureResult: disclosureResult,
+      errorResult: errorResult,
+      crossInsights: crossInsights,
       confidence: overallConfidence,
-    };
-
-    return HttpResponse.json(response);
+    });
   }),
 
   /**
@@ -1307,17 +1233,11 @@ export const aiHandlers = [
 
     // Validate required fields
     if (!body.user_id) {
-      return HttpResponse.json(
-        { error: "Missing required field: user_id" },
-        { status: 400 },
-      );
+      return apiErrorResponse("Missing required field: user_id", 400);
     }
 
     if (!body.session_id) {
-      return HttpResponse.json(
-        { error: "Missing required field: session_id" },
-        { status: 400 },
-      );
+      return apiErrorResponse("Missing required field: session_id", 400);
     }
 
     // Build response based on requested analyses
@@ -1412,16 +1332,14 @@ export const aiHandlers = [
         ? confidences.reduce((a, b) => a + b, 0) / confidences.length
         : 0.5;
 
-    const response: BatchCompositeResponse = {
-      user_id: body.user_id,
-      session_id: body.session_id,
-      persona_result: personaResult,
-      disclosure_result: disclosureResult,
-      error_result: errorResult,
-      cross_insights: crossInsights,
+    return apiJsonResponse({
+      userId: body.user_id,
+      sessionId: body.session_id,
+      personaResult: personaResult,
+      disclosureResult: disclosureResult,
+      errorResult: errorResult,
+      crossInsights: crossInsights,
       confidence: overallConfidence,
-    };
-
-    return HttpResponse.json(response);
+    });
   }),
 ];

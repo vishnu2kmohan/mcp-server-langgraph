@@ -136,23 +136,23 @@ export function ResourceViewer({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-neutral-a6"
         onClick={onClose}
         aria-hidden="true"
       />
       {/* Dialog content */}
-      <div className="relative z-10 flex h-[80vh] w-full max-w-4xl flex-col rounded-lg bg-white shadow-xl dark:bg-neutral-800">
+      <div className="relative z-10 flex h-[80vh] w-full max-w-4xl flex-col rounded-lg bg-neutral-1 shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700 p-4 dark:border-neutral-700">
+        <div className="flex items-center justify-between border-b border-neutral-5 p-4">
           <h2
             id="resource-viewer-title"
-            className="text-xl font-semibold text-neutral-900 dark:text-white"
+            className="text-xl font-semibold text-neutral-12"
           >
             Resource Viewer
           </h2>
           <Button
             variant="secondary"
-            className="rounded-md p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-200"
+            className="rounded-md p-2 text-neutral-10 hover:bg-neutral-2 hover:text-neutral-11"
             type="button"
             onClick={onClose}
             aria-label="Close"
@@ -176,7 +176,7 @@ export function ResourceViewer({
         {/* Loading state */}
         {isLoadingResources && (
           <div className="flex flex-1 items-center justify-center">
-            <span className="text-neutral-500 dark:text-neutral-400">
+            <span className="text-neutral-10">
               Loading resources...
             </span>
           </div>
@@ -185,7 +185,7 @@ export function ResourceViewer({
         {/* Error state */}
         {resourcesError && (
           <div className="flex flex-1 items-center justify-center">
-            <div className="rounded-md bg-error-50 p-4 text-error-700 dark:bg-error-900/20 dark:text-error-400">
+            <div className="rounded-md bg-error-1 p-4 text-error-11 dark:bg-error-a3 dark:text-error-7">
               Error loading resources. Please try again.
             </div>
           </div>
@@ -195,30 +195,30 @@ export function ResourceViewer({
         {!isLoadingResources && !resourcesError && (
           <div className="flex flex-1 overflow-hidden">
             {/* Resource list */}
-            <div className="w-1/3 overflow-y-auto border-r border-neutral-200 dark:border-neutral-700">
+            <div className="w-1/3 overflow-y-auto border-r border-neutral-5">
               {resourcesData?.resources.length === 0 ? (
-                <div className="p-4 text-center text-neutral-500 dark:text-neutral-400">
+                <div className="p-4 text-center text-neutral-10">
                   No resources available
                 </div>
               ) : (
-                <ul className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                <ul className="divide-y divide-neutral-5 dark:divide-neutral-6">
                   {resourcesData?.resources.map((resource) => (
                     <li key={resource.uri}>
                       <Button
                         variant="secondary"
-                        className="w-full p-3 text-left hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                        className="w-full p-3 text-left hover:bg-neutral-1"
                         type="button"
                         onClick={() => handleResourceSelect(resource.uri)}
                       >
-                        <div className="font-medium text-neutral-900 dark:text-white">
+                        <div className="font-medium text-neutral-12">
                           {resource.name}
                         </div>
                         {resource.title && (
-                          <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                          <div className="text-sm text-neutral-11">
                             {resource.title}
                           </div>
                         )}
-                        <div className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                        <div className="mt-1 text-xs text-neutral-10">
                           {resource.mimeType}
                         </div>
                       </Button>
@@ -232,12 +232,12 @@ export function ResourceViewer({
             <div className="flex w-2/3 flex-col overflow-hidden">
               {/* Resource details */}
               {selectedResource && (
-                <div className="border-b border-neutral-200 dark:border-neutral-700 p-4 dark:border-neutral-700">
-                  <h3 className="font-medium text-neutral-900 dark:text-white">
+                <div className="border-b border-neutral-5 p-4">
+                  <h3 className="font-medium text-neutral-12">
                     {selectedResource.name}
                   </h3>
                   {selectedResource.description && (
-                    <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+                    <p className="mt-1 text-sm text-neutral-11">
                       {selectedResource.description}
                     </p>
                   )}
@@ -247,19 +247,19 @@ export function ResourceViewer({
               {/* Content display */}
               <div className="flex-1 overflow-auto p-4">
                 {!selectedUri && (
-                  <div className="flex h-full items-center justify-center text-neutral-500 dark:text-neutral-400">
+                  <div className="flex h-full items-center justify-center text-neutral-10">
                     Select a resource to view its content
                   </div>
                 )}
 
                 {isReadingContent && (
-                  <div className="flex h-full items-center justify-center text-neutral-500 dark:text-neutral-400">
+                  <div className="flex h-full items-center justify-center text-neutral-10">
                     Loading content...
                   </div>
                 )}
 
                 {readError && (
-                  <div className="rounded-md bg-error-50 p-4 text-error-700 dark:bg-error-900/20 dark:text-error-400">
+                  <div className="rounded-md bg-error-1 p-4 text-error-11 dark:bg-error-a3 dark:text-error-7">
                     {readError}
                   </div>
                 )}
@@ -270,7 +270,7 @@ export function ResourceViewer({
                     {content.text && (
                       <Button
                         variant="secondary"
-                        className="absolute right-2 top-2 rounded-md bg-neutral-100 dark:bg-neutral-800 p-2 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600"
+                        className="absolute right-2 top-2 rounded-md bg-neutral-2 p-2 text-neutral-11 hover:bg-neutral-3"
                         type="button"
                         onClick={handleCopy}
                         aria-label="Copy"
@@ -293,7 +293,7 @@ export function ResourceViewer({
 
                     {/* Text content */}
                     {content.text && (
-                      <pre className="whitespace-pre-wrap rounded-md bg-neutral-50 p-4 text-sm text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200">
+                      <pre className="whitespace-pre-wrap rounded-md bg-neutral-1 p-4 text-sm text-neutral-12">
                         {content.text}
                       </pre>
                     )}
@@ -310,11 +310,11 @@ export function ResourceViewer({
                     {/* Binary content (other) */}
                     {content.blob &&
                       !content.mimeType?.startsWith("image/") && (
-                        <div className="rounded-md bg-neutral-50 p-4 dark:bg-neutral-900">
-                          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        <div className="rounded-md bg-neutral-1 p-4">
+                          <p className="text-sm text-neutral-11">
                             Binary content ({content.mimeType})
                           </p>
-                          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+                          <p className="mt-2 text-xs text-neutral-10">
                             {content.blob.length} characters (base64 encoded)
                           </p>
                         </div>

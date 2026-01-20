@@ -231,18 +231,18 @@ export function VersionDiff({
     <div
       data-testid="version-diff"
       className={cn(
-        "flex flex-col h-full bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700",
+        "flex flex-col h-full bg-neutral-1 rounded-lg border border-neutral-5",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-5">
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <span className="text-sm font-medium text-neutral-11">
             Comparing{" "}
-            <span className="text-primary-600">v{baseVersion.version}</span>
+            <span className="text-primary-11">v{baseVersion.version}</span>
             {" → "}
-            <span className="text-primary-600">v{comparedVersion.version}</span>
+            <span className="text-primary-11">v{comparedVersion.version}</span>
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -252,8 +252,8 @@ export function VersionDiff({
               onClick={() => onRestore(baseVersion)}
               className={cn(
                 "flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg",
-                "bg-primary-50 text-primary-700 hover:bg-primary-100",
-                "dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50",
+                "bg-primary-1 text-primary-11 hover:bg-primary-3",
+                "bg-primary-4 dark:text-primary-11 dark:hover:bg-primary-a6",
                 "transition-colors",
               )}
             >
@@ -262,14 +262,13 @@ export function VersionDiff({
             </Button>
           )}
           {onClose && (
-            <Button
+            <Button size="icon" variant="ghost"
               type="button"
               onClick={onClose}
               aria-label="Close diff view"
               className={cn(
                 "p-1.5 rounded-lg transition-colors",
-                "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800",
-                "dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-700",
+                "text-neutral-11 hover:text-neutral-11 hover:bg-neutral-2",
               )}
             >
               <X size={18} />
@@ -281,15 +280,15 @@ export function VersionDiff({
       {enableAI && userId && hasChanges && (
         <div
           data-testid="ai-diff-explanation"
-          className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50"
+          className="px-4 py-3 border-b border-neutral-5 bg-neutral-1"
         >
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles size={16} className="text-primary-500" />
-            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            <Sparkles size={16} className="text-primary-11" />
+            <span className="text-sm font-medium text-neutral-11">
               AI Analysis
             </span>
             {aiLoading && (
-              <Loader2 size={14} className="animate-spin text-primary-500" />
+              <Loader2 size={14} className="motion-safe:animate-spin text-primary-11" />
             )}
             {!hasTriggeredAnalysis && !aiLoading && (
               <Button
@@ -301,8 +300,8 @@ export function VersionDiff({
                 }}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 text-xs font-medium rounded",
-                  "bg-primary-100 text-primary-700 hover:bg-primary-200",
-                  "dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50",
+                  "bg-primary-3 text-primary-11 hover:bg-primary-4",
+                  "bg-primary-4 dark:text-primary-11 dark:hover:bg-primary-a6",
                   "transition-colors",
                 )}
               >
@@ -313,7 +312,7 @@ export function VersionDiff({
             {aiError && hasTriggeredAnalysis && (
               <Button
                 size="sm"
-                className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400"
+                className="text-xs text-primary-11 hover:text-primary-11 dark:text-primary-11"
                 type="button"
                 onClick={() => refetchAI()}
               >
@@ -323,26 +322,26 @@ export function VersionDiff({
           </div>
 
           {!hasTriggeredAnalysis && !aiLoading && (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-11">
               Click &quot;Analyze&quot; to get AI-powered diff explanation.
             </p>
           )}
 
           {aiLoading && (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-11">
               Analyzing changes...
             </p>
           )}
 
           {aiError && hasTriggeredAnalysis && (
-            <p className="text-sm text-error-600 dark:text-error-400">
+            <p className="text-sm text-error-11 dark:text-error-11">
               Failed to analyze diff. Click retry to try again.
             </p>
           )}
 
           {hasTriggeredAnalysis && !aiLoading && !aiError && aiSummary && (
             <div className="space-y-2">
-              <p className="text-sm text-neutral-700 dark:text-neutral-300">
+              <p className="text-sm text-neutral-11">
                 {aiSummary}
               </p>
 
@@ -354,10 +353,10 @@ export function VersionDiff({
                       className={cn(
                         "px-2 py-0.5 text-xs rounded-full",
                         change.impact === "high"
-                          ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-300"
+                          ? "bg-error-3 text-error-11 bg-error-4 dark:text-error-11"
                           : change.impact === "medium"
-                            ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-300"
-                            : "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300",
+                            ? "bg-warning-3 text-warning-11 dark:bg-warning-a4 dark:text-warning-11"
+                            : "bg-neutral-2 text-neutral-11",
                       )}
                     >
                       {change.type}: {change.description}
@@ -367,7 +366,7 @@ export function VersionDiff({
               )}
 
               {breakingChanges && (
-                <div className="flex items-center gap-1 text-xs text-error-600 dark:text-error-400">
+                <div className="flex items-center gap-1 text-xs text-error-11 dark:text-error-11">
                   <span className="font-medium">
                     ⚠ Breaking changes detected
                   </span>
@@ -375,12 +374,12 @@ export function VersionDiff({
               )}
 
               {affectedAreas && affectedAreas.length > 0 && (
-                <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                <div className="flex items-center gap-1 text-xs text-neutral-11">
                   <span>Affected areas:</span>
                   {affectedAreas.map((area, idx) => (
                     <span
                       key={idx}
-                      className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded"
+                      className="px-1.5 py-0.5 bg-neutral-2 rounded"
                     >
                       {area}
                     </span>
@@ -401,7 +400,7 @@ export function VersionDiff({
         )}
       >
         {!hasChanges ? (
-          <div className="flex items-center justify-center h-full text-neutral-500 dark:text-neutral-400">
+          <div className="flex items-center justify-center h-full text-neutral-11">
             No changes between these versions
           </div>
         ) : mode === "unified" ? (
@@ -412,17 +411,17 @@ export function VersionDiff({
                 className={cn(
                   "flex",
                   line.type === "added" &&
-                    "bg-success-50 dark:bg-success-900/20",
-                  line.type === "removed" && "bg-error-50 dark:bg-error-900/20",
+                    "bg-success-1 dark:bg-success-a3",
+                  line.type === "removed" && "bg-error-1 dark:bg-error-a3",
                 )}
               >
                 <span
                   className={cn(
-                    "w-12 text-right pr-3 text-neutral-400 dark:text-neutral-400 select-none border-r border-neutral-200 dark:border-neutral-700",
+                    "w-12 text-right pr-3 text-neutral-11 select-none border-r border-neutral-5",
                     line.type === "added" &&
-                      "text-success-600 dark:text-success-400",
+                      "text-success-11 dark:text-success-11",
                     line.type === "removed" &&
-                      "text-error-600 dark:text-error-400",
+                      "text-error-11 dark:text-error-11",
                   )}
                 >
                   {line.type === "added" && "+"}
@@ -433,11 +432,11 @@ export function VersionDiff({
                   className={cn(
                     "flex-1 pl-3 whitespace-pre",
                     line.type === "added" &&
-                      "text-success-700 dark:text-success-300",
+                      "text-success-11 dark:text-success-11",
                     line.type === "removed" &&
-                      "text-error-700 dark:text-error-300",
+                      "text-error-11 dark:text-error-11",
                     line.type === "unchanged" &&
-                      "text-neutral-700 dark:text-neutral-300",
+                      "text-neutral-11",
                   )}
                 >
                   {line.content}
@@ -448,8 +447,8 @@ export function VersionDiff({
         ) : (
           // Split view
           <>
-            <div className="border-r border-neutral-200 dark:border-neutral-700 pr-4">
-              <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
+            <div className="border-r border-neutral-5 pr-4">
+              <div className="text-xs text-neutral-11 mb-2">
                 v{baseVersion.version}
               </div>
               {diffLines
@@ -460,9 +459,9 @@ export function VersionDiff({
                     className={cn(
                       "whitespace-pre",
                       line.type === "removed" &&
-                        "bg-error-50 dark:bg-error-900/20 text-error-700 dark:text-error-300",
+                        "bg-error-1 dark:bg-error-a3 text-error-11 dark:text-error-11",
                       line.type === "unchanged" &&
-                        "text-neutral-700 dark:text-neutral-300",
+                        "text-neutral-11",
                     )}
                   >
                     {line.content}
@@ -470,7 +469,7 @@ export function VersionDiff({
                 ))}
             </div>
             <div className="pl-4">
-              <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
+              <div className="text-xs text-neutral-11 mb-2">
                 v{comparedVersion.version}
               </div>
               {diffLines
@@ -481,9 +480,9 @@ export function VersionDiff({
                     className={cn(
                       "whitespace-pre",
                       line.type === "added" &&
-                        "bg-success-50 dark:bg-success-900/20 text-success-700 dark:text-success-300",
+                        "bg-success-1 dark:bg-success-a3 text-success-11 dark:text-success-11",
                       line.type === "unchanged" &&
-                        "text-neutral-700 dark:text-neutral-300",
+                        "text-neutral-11",
                     )}
                   >
                     {line.content}

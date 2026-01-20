@@ -61,7 +61,7 @@ export function AgentMetricsCard() {
       <Card data-testid="agent-metrics-card">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Activity size={24} className="text-insight-500" />
+            <Activity size={24} className="text-insight-9" />
             <CardTitle>Agent Metrics</CardTitle>
           </div>
         </div>
@@ -70,8 +70,8 @@ export function AgentMetricsCard() {
             className="flex items-center justify-center py-8"
             data-testid="metrics-loading"
           >
-            <Loader2 className="w-6 h-6 animate-spin text-neutral-400 dark:text-neutral-400" />
-            <span className="ml-2 text-neutral-500 dark:text-neutral-400">
+            <Loader2 className="w-6 h-6 animate-spin text-neutral-9" />
+            <span className="ml-2 text-neutral-10">
               Loading metrics...
             </span>
           </div>
@@ -86,7 +86,7 @@ export function AgentMetricsCard() {
       <Card data-testid="agent-metrics-card">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Activity size={24} className="text-insight-500" />
+            <Activity size={24} className="text-insight-9" />
             <CardTitle>Agent Metrics</CardTitle>
           </div>
         </div>
@@ -95,13 +95,13 @@ export function AgentMetricsCard() {
             className="flex flex-col items-center justify-center py-8 text-center"
             data-testid="metrics-error"
           >
-            <AlertTriangle className="w-8 h-8 text-warning-500 mb-2" />
-            <p className="text-neutral-500 dark:text-neutral-400 mb-4">
+            <AlertTriangle className="w-8 h-8 text-warning-9 mb-2" />
+            <p className="text-neutral-10 mb-4">
               Metrics backend unavailable
             </p>
             <Button
               variant="primary"
-              className="flex px-4 py-2 text-sm text-white bg-primary-500 rounded hover:bg-primary-600"
+              className="flex px-4 py-2 text-sm text-neutral-12 bg-primary-9 rounded hover:bg-primary-10"
               onClick={() => refetch()}
             >
               <RefreshCw size={16} />
@@ -125,15 +125,15 @@ export function AgentMetricsCard() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Activity size={24} className="text-insight-500" />
+          <Activity size={24} className="text-insight-9" />
           <CardTitle>Agent Metrics</CardTitle>
         </div>
         <div className="flex items-center gap-2">
-          <span className="px-2 py-1 text-xs bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded-full">
+          <span className="px-2 py-1 text-xs bg-neutral-2 text-neutral-11 rounded-full">
             {data.timeRangeHours}h
           </span>
           <Button
-            className="p-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300 rounded"
+            className="p-1 text-neutral-10 hover:text-neutral-11 rounded"
             onClick={() => refetch()}
             aria-label="Refresh metrics"
           >
@@ -144,40 +144,40 @@ export function AgentMetricsCard() {
       <CardContent>
         {/* Orchestrator Metrics */}
         <div className="mb-6">
-          <h4 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-3 flex items-center gap-2">
+          <h4 className="text-sm font-medium text-neutral-10 mb-3 flex items-center gap-2">
             <Activity size={16} />
             Orchestrator
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded">
-              <div className="text-2xl font-bold text-neutral-900 dark:text-white">
+            <div className="p-3 bg-neutral-1 rounded">
+              <div className="text-2xl font-bold text-neutral-12">
                 {formatNumber(data.orchestrator.totalExecutions)}
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">
+              <div className="text-xs text-neutral-10">
                 Total Executions
               </div>
             </div>
-            <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded">
-              <div className="text-2xl font-bold text-success-600">
+            <div className="p-3 bg-neutral-1 rounded">
+              <div className="text-2xl font-bold text-success-10">
                 {formatPercent(successRate)}
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">
+              <div className="text-xs text-neutral-10">
                 Success Rate
               </div>
             </div>
-            <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded">
-              <div className="text-2xl font-bold text-neutral-900 dark:text-white">
+            <div className="p-3 bg-neutral-1 rounded">
+              <div className="text-2xl font-bold text-neutral-12">
                 {data.orchestrator.avgDurationMs.toFixed(1)}
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">
+              <div className="text-xs text-neutral-10">
                 Avg Duration (ms)
               </div>
             </div>
-            <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded">
-              <div className="text-2xl font-bold text-error-600">
+            <div className="p-3 bg-neutral-1 rounded">
+              <div className="text-2xl font-bold text-error-10">
                 {formatNumber(data.orchestrator.failedExecutions)}
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">
+              <div className="text-xs text-neutral-10">
                 Failed
               </div>
             </div>
@@ -186,48 +186,48 @@ export function AgentMetricsCard() {
 
         {/* HITL Metrics */}
         <div className="mb-6" data-testid="hitl-metrics">
-          <h4 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-3 flex items-center gap-2">
+          <h4 className="text-sm font-medium text-neutral-10 mb-3 flex items-center gap-2">
             <Users size={16} />
             Human-in-the-Loop
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded">
-              <div className="text-2xl font-bold text-neutral-900 dark:text-white">
+            <div className="p-3 bg-neutral-1 rounded">
+              <div className="text-2xl font-bold text-neutral-12">
                 {formatNumber(data.hitl.totalRequests)}
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">
+              <div className="text-xs text-neutral-10">
                 Total Requests
               </div>
             </div>
-            <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded flex items-center gap-2">
-              <CheckCircle size={20} className="text-success-500" />
+            <div className="p-3 bg-neutral-1 rounded flex items-center gap-2">
+              <CheckCircle size={20} className="text-success-9" />
               <div>
-                <div className="text-xl font-bold text-success-600">
+                <div className="text-xl font-bold text-success-10">
                   {formatNumber(data.hitl.approvedCount)}
                 </div>
-                <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                <div className="text-xs text-neutral-10">
                   Approved
                 </div>
               </div>
             </div>
-            <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded flex items-center gap-2">
-              <XCircle size={20} className="text-error-500" />
+            <div className="p-3 bg-neutral-1 rounded flex items-center gap-2">
+              <XCircle size={20} className="text-error-9" />
               <div>
-                <div className="text-xl font-bold text-error-600">
+                <div className="text-xl font-bold text-error-10">
                   {formatNumber(data.hitl.rejectedCount)}
                 </div>
-                <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                <div className="text-xs text-neutral-10">
                   Rejected
                 </div>
               </div>
             </div>
-            <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded flex items-center gap-2">
-              <Clock size={20} className="text-warning-500" />
+            <div className="p-3 bg-neutral-1 rounded flex items-center gap-2">
+              <Clock size={20} className="text-warning-9" />
               <div>
-                <div className="text-xl font-bold text-warning-600">
+                <div className="text-xl font-bold text-warning-9">
                   {formatNumber(data.hitl.pendingCount)}
                 </div>
-                <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                <div className="text-xs text-neutral-10">
                   Pending
                 </div>
               </div>
@@ -237,32 +237,32 @@ export function AgentMetricsCard() {
 
         {/* Cost Metrics */}
         <div data-testid="cost-metrics">
-          <h4 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-3 flex items-center gap-2">
+          <h4 className="text-sm font-medium text-neutral-10 mb-3 flex items-center gap-2">
             <DollarSign size={16} />
             Cost Tracking
           </h4>
           <div className="grid grid-cols-3 gap-4">
-            <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded">
-              <div className="text-2xl font-bold text-neutral-900 dark:text-white">
+            <div className="p-3 bg-neutral-1 rounded">
+              <div className="text-2xl font-bold text-neutral-12">
                 {formatCurrency(data.cost.totalCostUsd)}
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">
+              <div className="text-xs text-neutral-10">
                 Total Cost
               </div>
             </div>
-            <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded">
-              <div className="text-2xl font-bold text-neutral-900 dark:text-white">
+            <div className="p-3 bg-neutral-1 rounded">
+              <div className="text-2xl font-bold text-neutral-12">
                 {formatNumber(data.cost.totalTokens)}
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">
+              <div className="text-xs text-neutral-10">
                 Total Tokens
               </div>
             </div>
-            <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded">
-              <div className="text-2xl font-bold text-neutral-900 dark:text-white">
+            <div className="p-3 bg-neutral-1 rounded">
+              <div className="text-2xl font-bold text-neutral-12">
                 {formatCurrency(data.cost.avgCostPerRequestUsd)}
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">
+              <div className="text-xs text-neutral-10">
                 Avg/Request
               </div>
             </div>

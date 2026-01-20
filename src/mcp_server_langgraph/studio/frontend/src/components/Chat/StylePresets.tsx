@@ -113,7 +113,9 @@ export function StylePresets({
 
         return (
           <Button
-            className=".5 rounded-lg focus:ring-primary-500/50"
+            variant={isActive ? "primary" : "secondary"}
+            size={compact ? "sm" : "md"}
+            className="rounded-lg"
             key={presetName}
             data-testid={`preset-${presetName}`}
             type="button"

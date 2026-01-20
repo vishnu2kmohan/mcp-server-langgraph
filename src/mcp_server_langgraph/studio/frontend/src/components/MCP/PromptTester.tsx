@@ -158,23 +158,23 @@ export function PromptTester({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-neutral-a6"
         onClick={onClose}
         aria-hidden="true"
       />
       {/* Dialog content */}
-      <div className="relative z-10 flex h-[80vh] w-full max-w-3xl flex-col rounded-lg bg-white shadow-xl dark:bg-neutral-800">
+      <div className="relative z-10 flex h-[80vh] w-full max-w-3xl flex-col rounded-lg bg-neutral-1 shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700 p-4 dark:border-neutral-700">
+        <div className="flex items-center justify-between border-b border-neutral-5 p-4">
           <h2
             id="prompt-tester-title"
-            className="text-xl font-semibold text-neutral-900 dark:text-white"
+            className="text-xl font-semibold text-neutral-12"
           >
             Prompt Tester
           </h2>
           <Button
             variant="secondary"
-            className="rounded-md p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-200"
+            className="rounded-md p-2 text-neutral-10 hover:bg-neutral-2 hover:text-neutral-11"
             type="button"
             onClick={onClose}
             aria-label="Close"
@@ -198,7 +198,7 @@ export function PromptTester({
         {/* Loading state */}
         {isLoadingPrompts && (
           <div className="flex flex-1 items-center justify-center">
-            <span className="text-neutral-500 dark:text-neutral-400">
+            <span className="text-neutral-10">
               Loading prompts...
             </span>
           </div>
@@ -207,7 +207,7 @@ export function PromptTester({
         {/* Error state */}
         {promptsError && (
           <div className="flex flex-1 items-center justify-center">
-            <div className="rounded-md bg-error-50 p-4 text-error-700 dark:bg-error-900/20 dark:text-error-400">
+            <div className="rounded-md bg-error-1 p-4 text-error-11 dark:bg-error-a3 dark:text-error-7">
               Error loading prompts. Please try again.
             </div>
           </div>
@@ -217,7 +217,7 @@ export function PromptTester({
         {!isLoadingPrompts && !promptsError && (
           <div className="flex flex-1 flex-col overflow-hidden p-4">
             {promptsData?.prompts.length === 0 ? (
-              <div className="flex flex-1 items-center justify-center text-neutral-500 dark:text-neutral-400">
+              <div className="flex flex-1 items-center justify-center text-neutral-10">
                 No prompts available
               </div>
             ) : (
@@ -226,12 +226,12 @@ export function PromptTester({
                 <div>
                   <label
                     htmlFor="prompt-select"
-                    className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                    className="mb-1 block text-sm font-medium text-neutral-11"
                   >
                     Select Prompt
                   </label>
                   <Select
-                    className="px-3 py-2 text-neutral-900 -500 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
+                    className="px-3 py-2 text-neutral-12 -500 focus:ring-primary-7"
                     id="prompt-select"
                     value={selectedPromptName}
                     onChange={handlePromptSelect}
@@ -247,7 +247,7 @@ export function PromptTester({
 
                 {/* Prompt description */}
                 {selectedPrompt && (
-                  <div className="rounded-md bg-neutral-50 p-3 text-sm text-neutral-600 dark:text-neutral-300 dark:bg-neutral-700/50 dark:text-neutral-400">
+                  <div className="rounded-md bg-neutral-1 p-3 text-sm text-neutral-11">
                     {selectedPrompt.description}
                   </div>
                 )}
@@ -255,27 +255,27 @@ export function PromptTester({
                 {/* Prompt arguments */}
                 {selectedPrompt && promptArguments.length > 0 && (
                   <div className="space-y-3">
-                    <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    <h3 className="text-sm font-medium text-neutral-11">
                       Arguments
                     </h3>
                     {promptArguments.map((arg) => (
                       <div key={arg.name}>
                         <label
                           htmlFor={`arg-${arg.name}`}
-                          className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                          className="mb-1 block text-sm font-medium text-neutral-11"
                         >
                           {arg.name}
                           {arg.required && (
-                            <span className="text-error-500">*</span>
+                            <span className="text-error-9">*</span>
                           )}
                         </label>
                         {arg.description && (
-                          <p className="mb-1 text-xs text-neutral-500 dark:text-neutral-400">
+                          <p className="mb-1 text-xs text-neutral-10">
                             {arg.description}
                           </p>
                         )}
                         <Textarea
-                          className="px-3 py-2 text-neutral-900 -500 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
+                          className="px-3 py-2 text-neutral-12 -500 focus:ring-primary-7"
                           id={`arg-${arg.name}`}
                           value={argumentValues[arg.name] || ""}
                           onChange={(e) =>
@@ -294,7 +294,7 @@ export function PromptTester({
                   <div>
                     <Button
                       variant="primary"
-                      className="rounded-md bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700 focus:ring-primary-500 focus:ring-offset-2"
+                      className="rounded-md bg-primary-10 px-4 py-2 text-sm text-neutral-12 hover:bg-primary-11 focus:ring-primary-7 focus:ring-offset-2"
                       type="button"
                       onClick={handleExecute}
                       disabled={!isFormValid || isExecuting}
@@ -306,27 +306,27 @@ export function PromptTester({
 
                 {/* Error display */}
                 {error && (
-                  <div className="rounded-md bg-error-50 p-4 text-error-700 dark:bg-error-900/20 dark:text-error-400">
+                  <div className="rounded-md bg-error-1 p-4 text-error-11 dark:bg-error-a3 dark:text-error-7">
                     {error}
                   </div>
                 )}
 
                 {/* Result display */}
                 {result && (
-                  <div className="flex-1 overflow-auto rounded-md bg-neutral-50 p-4 dark:bg-neutral-900">
-                    <h3 className="mb-2 font-medium text-neutral-900 dark:text-white">
+                  <div className="flex-1 overflow-auto rounded-md bg-neutral-1 p-4">
+                    <h3 className="mb-2 font-medium text-neutral-12">
                       Generated Messages
                     </h3>
                     <div className="space-y-3">
                       {result.messages.map((message, index) => (
                         <div
                           key={index}
-                          className="rounded-md border border-neutral-200 dark:border-neutral-700 p-3 dark:border-neutral-700"
+                          className="rounded-md border border-neutral-5 p-3"
                         >
-                          <div className="mb-1 text-xs font-medium uppercase text-neutral-500 dark:text-neutral-400">
+                          <div className="mb-1 text-xs font-medium uppercase text-neutral-10">
                             {message.role}
                           </div>
-                          <div className="text-sm text-neutral-800 dark:text-neutral-200">
+                          <div className="text-sm text-neutral-12">
                             {message.content.text}
                           </div>
                         </div>

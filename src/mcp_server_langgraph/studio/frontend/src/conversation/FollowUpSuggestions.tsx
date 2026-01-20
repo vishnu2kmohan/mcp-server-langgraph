@@ -43,7 +43,7 @@ function SuggestionsSkeleton() {
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="h-8 w-32 bg-neutral-200 dark:bg-neutral-700 rounded-full animate-pulse"
+          className="h-8 w-32 bg-neutral-3 rounded-full animate-pulse"
         />
       ))}
     </div>
@@ -136,17 +136,17 @@ export function FollowUpSuggestions({
               suggestion.type === "action"
                 ? cn(
                     "action",
-                    "bg-primary-50 dark:bg-primary-900/20",
-                    "border-primary-200 dark:border-primary-700",
-                    "text-primary-700 dark:text-primary-300",
-                    "hover:bg-primary-100 dark:hover:bg-primary-900/30",
+                    "bg-primary-1 dark:bg-primary-a3",
+                    "border-primary-4 dark:border-primary-11",
+                    "text-primary-11 dark:text-primary-5",
+                    "hover:bg-primary-3 dark:hover:bg-primary-a4",
                   )
                 : cn(
                     "follow-up",
-                    "bg-neutral-50 dark:bg-neutral-800",
-                    "border-neutral-200 dark:border-neutral-700",
-                    "text-neutral-700 dark:text-neutral-300",
-                    "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+                    "bg-neutral-1",
+                    "border-neutral-5",
+                    "text-neutral-11",
+                    "hover:bg-neutral-2",
                   ),
             )}
           >

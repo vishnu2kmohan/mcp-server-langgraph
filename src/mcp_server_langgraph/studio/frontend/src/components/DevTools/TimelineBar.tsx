@@ -3,8 +3,16 @@
  *
  * Unified timeline scrubber for time-travel debugging across all DevTools tabs.
  * Provides playback controls, minimap visualization, and time navigation.
+ *
+ * Design System Compliance:
+ * - Uses CVA for button variants
+ * - Uses Motion.dev for playback button animation
+ * - Implements useReducedMotion() for accessibility
+ * - Uses semantic colors per STYLE.md
  */
 import React, { useState, useCallback, useMemo, useRef } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { cva } from "class-variance-authority";
 import {
   Play,
   Pause,
@@ -20,6 +28,7 @@ import {
 
 import { cn } from "../../utils/cn";
 import { useTimelineContext } from "./context/DevToolsTimelineProvider";
+import { buttonVariants as motionButtonVariants } from "@/design-system/micro-interactions";
 
 import { Button } from "@/components/UI";
 
@@ -114,14 +123,34 @@ function calculateDensity(
 }
 
 // =============================================================================
-// Styles
+// CVA Variants
 // =============================================================================
 
-const buttonStyles = {
-  base: "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800",
-  icon: "h-7 w-7",
-  sm: "h-7 px-2 text-xs",
-};
+/**
+ * Timeline button variants - matches ghost variant from Button component per STYLE.md
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const timelineButtonVariants = cva(
+  [
+    "inline-flex items-center justify-center rounded-md text-sm font-medium",
+    "bg-transparent text-neutral-11",
+    "transition-colors hover:text-neutral-12 hover:bg-neutral-2 active:bg-neutral-3",
+    "focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-6 focus-visible:ring-offset-2",
+    "disabled:opacity-50 disabled:pointer-events-none",
+  ],
+  {
+    variants: {
+      size: {
+        icon: "h-7 w-7",
+        sm: "h-7 px-2 text-xs",
+      },
+    },
+    defaultVariants: {
+      size: "icon",
+    },
+  },
+);
+
 
 // =============================================================================
 // Sub-Components
@@ -193,7 +222,7 @@ function TimelineMinimap({
     <div
       ref={minimapRef}
       data-testid="timeline-minimap"
-      className="relative h-8 bg-neutral-100 dark:bg-neutral-800 rounded cursor-pointer"
+      className="relative h-8 bg-neutral-2 rounded cursor-pointer"
       onClick={handleClick}
     >
       {/* Density bars */}
@@ -202,8 +231,8 @@ function TimelineMinimap({
           <div
             key={i}
             data-density-bar
-            className="flex-1 bg-primary-500/60 rounded-t"
-            style={{ height: `${Math.max(d * 100, 2)}%` }}
+            className="flex-1 bg-primary-a7 rounded-t dynamic-height"
+            style={{ "--height": `${Math.max(d * 100, 2)}%` } as React.CSSProperties}
           />
         ))}
       </div>
@@ -211,15 +240,15 @@ function TimelineMinimap({
       {windowOverlay && (
         <div
           data-testid="time-window-overlay"
-          className="absolute inset-y-0 bg-primary-500/20 border-x border-primary-500"
+          className="absolute inset-y-0 bg-primary-a3 border-x border-primary-9"
           style={{
             left: `${windowOverlay.left}%`,
             width: `${windowOverlay.width}%`,
           }}
         >
           <Button
-            variant="secondary"
-            className="absolute -right-3 -top-2 h-4 w-4 rounded bg-white dark:bg-neutral-900 border flex"
+            variant="ghost"
+            className="absolute -right-3 -top-2 h-4 w-4 rounded bg-neutral-1 border flex"
             type="button"
             onClick={(e) => {
               e.stopPropagation();
@@ -243,7 +272,7 @@ function TimelineMinimap({
           <div
             key={bookmark.id}
             data-testid="bookmark-indicator"
-            className="absolute top-0 bottom-0 w-0.5 bg-warning-500"
+            className="absolute top-0 bottom-0 w-0.5 bg-warning-9"
             style={{ left: `${position}%` }}
             title={bookmark.label}
           />
@@ -252,7 +281,7 @@ function TimelineMinimap({
       {/* Current time cursor */}
       <div
         data-testid="minimap-cursor"
-        className="absolute top-0 bottom-0 w-0.5 bg-neutral-900 dark:bg-white"
+        className="absolute top-0 bottom-0 w-0.5 bg-neutral-2"
         style={{ left: `${cursorPosition}%` }}
       />
     </div>
@@ -273,6 +302,7 @@ export function TimelineBar({
   className,
 }: TimelineBarProps): React.ReactElement {
   const timeline = useTimelineContext();
+  const prefersReducedMotion = useReducedMotion();
   const [speedMenuOpen, setSpeedMenuOpen] = useState(false);
   const [timeRangeMenuOpen, setTimeRangeMenuOpen] = useState(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState("15m");
@@ -364,18 +394,20 @@ export function TimelineBar({
     <div
       data-testid="timeline-bar"
       className={cn(
-        "flex flex-col gap-2 p-2 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700",
+        "flex flex-col gap-2 p-2 bg-neutral-1 border-b border-neutral-5",
         compact && "compact py-1",
         className,
       )}
     >
       {/* Main controls row */}
       <div className="flex items-center gap-2">
-        {/* Playback controls */}
+        {/* Playback controls - use ghost variant for minimal visual weight per STYLE.md */}
         <div className="flex items-center gap-1">
           <Button
             type="button"
-            className={cn(buttonStyles.base, buttonStyles.icon)}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
             onClick={timeline.jumpToStart}
             disabled={isDisabled}
             aria-label="Jump to start"
@@ -385,7 +417,9 @@ export function TimelineBar({
 
           <Button
             type="button"
-            className={cn(buttonStyles.base, buttonStyles.icon)}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
             onClick={timeline.stepBackward}
             disabled={isDisabled}
             aria-label="Step backward"
@@ -393,23 +427,29 @@ export function TimelineBar({
             <ChevronLeft className="h-4 w-4" />
           </Button>
 
-          <Button
+          <motion.button
             type="button"
-            className={cn(buttonStyles.base, buttonStyles.icon)}
+            className={timelineButtonVariants({ size: "icon" })}
             onClick={handlePlayPause}
             disabled={isDisabled}
             aria-label={timeline.isPlaying ? "Pause" : "Play"}
+            variants={prefersReducedMotion ? undefined : motionButtonVariants}
+            initial="rest"
+            whileHover={isDisabled ? undefined : "hover"}
+            whileTap={isDisabled ? undefined : "pressed"}
           >
             {timeline.isPlaying ? (
               <Pause className="h-4 w-4" />
             ) : (
               <Play className="h-4 w-4" />
             )}
-          </Button>
+          </motion.button>
 
           <Button
             type="button"
-            className={cn(buttonStyles.base, buttonStyles.icon)}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
             onClick={timeline.stepForward}
             disabled={isDisabled}
             aria-label="Step forward"
@@ -419,7 +459,9 @@ export function TimelineBar({
 
           <Button
             type="button"
-            className={cn(buttonStyles.base, buttonStyles.icon)}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
             onClick={timeline.jumpToEnd}
             disabled={isDisabled}
             aria-label="Jump to end"
@@ -432,19 +474,20 @@ export function TimelineBar({
         <div className="relative">
           <Button
             type="button"
-            className={cn(buttonStyles.base, buttonStyles.sm)}
+            variant="ghost"
+            size="sm"
             onClick={() => setSpeedMenuOpen(!speedMenuOpen)}
             aria-label={speedLabel}
           >
             {speedLabel}
           </Button>
           {speedMenuOpen && (
-            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-neutral-800 border rounded shadow-lg z-10">
+            <div className="absolute top-full left-0 mt-1 bg-neutral-1 border border-neutral-6 rounded shadow-lg z-dropdown">
               {SPEED_OPTIONS.map((option) => (
                 <Button
-                  variant="secondary"
+                  variant="ghost"
                   size="sm"
-                  className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                  className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-3"
                   key={option.value}
                   type="button"
                   role="option"
@@ -470,12 +513,12 @@ export function TimelineBar({
             onChange={handleSliderChange}
             disabled={isDisabled}
             aria-label="Timeline position"
-            className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
+            className="w-full h-2 bg-neutral-3 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
           />
         </div>
 
         {/* Time display */}
-        <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="flex items-center gap-1 text-xs text-neutral-10">
           <span data-testid="current-time-display">{currentTimeFormatted}</span>
           <span>/</span>
           <span data-testid="total-time-display">{totalTimeFormatted}</span>
@@ -484,12 +527,9 @@ export function TimelineBar({
         {/* Live mode toggle */}
         <Button
           type="button"
-          className={cn(
-            buttonStyles.base,
-            buttonStyles.sm,
-            "gap-1",
-            timeline.isLiveMode && "text-error-500",
-          )}
+          variant="ghost"
+          size="sm"
+          className={cn("gap-1", timeline.isLiveMode && "text-error-9")}
           onClick={handleLiveToggle}
           data-active={timeline.isLiveMode}
           aria-label="Live"
@@ -503,19 +543,20 @@ export function TimelineBar({
           <div className="relative">
             <Button
               type="button"
-              className={cn(buttonStyles.base, buttonStyles.sm)}
+              variant="ghost"
+              size="sm"
               onClick={() => setTimeRangeMenuOpen(!timeRangeMenuOpen)}
               aria-label={selectedTimeRange}
             >
               {selectedTimeRange}
             </Button>
             {timeRangeMenuOpen && (
-              <div className="absolute top-full right-0 mt-1 bg-white dark:bg-neutral-800 border rounded shadow-lg z-10">
+              <div className="absolute top-full right-0 mt-1 bg-neutral-1 border border-neutral-6 rounded shadow-lg z-dropdown">
                 {TIME_RANGE_OPTIONS.map((option) => (
                   <Button
-                    variant="secondary"
+                    variant="ghost"
                     size="sm"
-                    className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 whitespace-nowrap"
+                    className="block w-full px-3 py-1 text-left text-sm hover:bg-neutral-3 whitespace-nowrap"
                     key={option.value}
                     type="button"
                     role="option"
@@ -534,7 +575,9 @@ export function TimelineBar({
         {showBookmarkButton && (
           <Button
             type="button"
-            className={cn(buttonStyles.base, buttonStyles.icon)}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
             onClick={handleAddBookmark}
             disabled={isDisabled}
             aria-label="Add bookmark"
@@ -547,7 +590,9 @@ export function TimelineBar({
         {showExport && (
           <Button
             type="button"
-            className={cn(buttonStyles.base, buttonStyles.icon)}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
             onClick={onExport}
             aria-label="Export"
           >

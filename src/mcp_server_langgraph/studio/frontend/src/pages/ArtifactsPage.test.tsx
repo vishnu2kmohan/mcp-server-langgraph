@@ -543,10 +543,10 @@ describe("ArtifactsPage", () => {
       );
       fireEvent.click(deleteButton!);
 
-      // Find the confirm delete button in the modal (not the aria-label Delete button)
+      // Find the confirm delete button in the modal by text
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector("button.bg-error-500");
-      fireEvent.click(confirmButton!);
+      const confirmButton = within(modal).getByRole("button", { name: "Delete" });
+      fireEvent.click(confirmButton);
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
@@ -569,7 +569,7 @@ describe("ArtifactsPage", () => {
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector("button.bg-error-500");
+      const confirmButton = modal.querySelector("button.bg-error-9");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
@@ -592,7 +592,7 @@ describe("ArtifactsPage", () => {
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector("button.bg-error-500");
+      const confirmButton = modal.querySelector("button.bg-error-9");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
@@ -618,7 +618,7 @@ describe("ArtifactsPage", () => {
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector("button.bg-error-500");
+      const confirmButton = modal.querySelector("button.bg-error-9");
       fireEvent.click(confirmButton!);
 
       expect(screen.getByText("Deleting...")).toBeInTheDocument();
@@ -634,7 +634,7 @@ describe("ArtifactsPage", () => {
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector("button.bg-error-500");
+      const confirmButton = modal.querySelector("button.bg-error-9");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
@@ -656,7 +656,7 @@ describe("ArtifactsPage", () => {
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector("button.bg-error-500");
+      const confirmButton = modal.querySelector("button.bg-error-9");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {

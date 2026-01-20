@@ -357,7 +357,7 @@ describe("SkillsPage", () => {
       if (filterButton) {
         fireEvent.click(filterButton);
         // Tag should now be selected (has different styling)
-        expect(filterButton).toHaveClass("bg-accent-primary");
+        expect(filterButton).toHaveClass("bg-brand-primary");
       }
     });
   });

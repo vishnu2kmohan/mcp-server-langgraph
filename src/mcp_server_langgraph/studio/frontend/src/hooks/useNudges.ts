@@ -35,6 +35,7 @@ import { useNavigate } from "react-router";
 import { storage, STORAGE_KEYS } from "../utils/storage";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
+import { transformSnakeToCamel } from "../api/transforms";
 
 // =============================================================================
 // Types
@@ -168,13 +169,15 @@ export function useNudges(options: UseNudgesOptions = {}): UseNudgesResult {
         return;
       }
 
-      const data = await response.json();
+      const rawData = await response.json();
+      // Transform snake_case API response to camelCase (e.g., show_after_ms -> showAfterMs)
+      const data = transformSnakeToCamel(rawData);
 
       if (!isMounted.current) {
         return;
       }
 
-      if (data.should_show && data.nudge) {
+      if (data.shouldShow && data.nudge) {
         const nudge = data.nudge as Nudge;
         const showDelay = nudge.showAfterMs ?? 0;
 

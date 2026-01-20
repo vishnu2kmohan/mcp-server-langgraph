@@ -10,9 +10,15 @@
  * - Console with filter dropdown
  * - Collapse/expand/maximize actions
  * - Dark mode support
+ *
+ * Design System Compliance:
+ * - Uses CVA for tab button variants
+ * - Uses Motion.dev for button press feedback
+ * - Implements useReducedMotion() for accessibility
+ * - Uses semantic colors per STYLE.md
  */
 
-import { useCallback, Suspense, lazy, useMemo, useEffect } from "react";
+import { useCallback, Suspense, lazy, useMemo, useEffect, useState } from "react";
 import { useMetricsHistory } from "../../hooks/useMetricsHistory";
 import {
   ChevronDown,
@@ -67,6 +73,9 @@ import {
 import type { DevToolsPanelProps } from "./types";
 import type { TraceSpan, TraceListItem } from "./tabs/TracesTab";
 
+import { cva } from "class-variance-authority";
+import { motion, useReducedMotion } from "motion/react";
+import { buttonVariants as motionButtonVariants } from "@/design-system/micro-interactions";
 import { Button, Select } from "@/components/UI";
 
 // =============================================================================
@@ -76,6 +85,29 @@ import { Button, Select } from "@/components/UI";
 function cn(...classes: (string | undefined | boolean)[]): string {
   return classes.filter(Boolean).join(" ");
 }
+
+// =============================================================================
+// CVA Variants
+// =============================================================================
+
+/**
+ * DevTools tab button variants
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const devToolsTabVariants = cva(
+  "flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded transition-colors",
+  {
+    variants: {
+      active: {
+        true: "bg-neutral-1 text-neutral-12 shadow-sm",
+        false: "text-neutral-a8 hover:text-neutral-12 hover:bg-neutral-1",
+      },
+    },
+    defaultVariants: {
+      active: false,
+    },
+  },
+);
 
 // =============================================================================
 // Tab Icons
@@ -167,7 +199,7 @@ const WsMetricsTabContent = lazy(() =>
 function TabContentLoader() {
   return (
     <div className="flex items-center justify-center h-full">
-      <Loader2 className="w-6 h-6 animate-spin text-neutral-400 dark:text-neutral-400" />
+      <Loader2 className="w-6 h-6 animate-spin text-neutral-9" />
     </div>
   );
 }
@@ -189,10 +221,10 @@ function ConsoleFilter({ value, onChange }: ConsoleFilterProps) {
         onChange={(e) => onChange(e.target.value as ConsoleFilterLevel)}
         className={cn(
           "appearance-none pl-2 pr-6 py-1 text-xs rounded",
-          "bg-neutral-100 dark:bg-neutral-700",
-          "text-neutral-700 dark:text-neutral-200",
-          "border border-neutral-200 dark:border-neutral-700 dark:border-neutral-600",
-          "focus:outline-none focus:ring-1 focus:ring-primary-500",
+          "bg-neutral-2",
+          "text-neutral-11",
+          "border border-neutral-5",
+          "focus:outline-none focus:ring-1 focus:ring-primary-7",
         )}
       >
         <option value="all">All</option>
@@ -202,7 +234,7 @@ function ConsoleFilter({ value, onChange }: ConsoleFilterProps) {
       </Select>
       <ChevronDown
         size={12}
-        className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500 dark:text-neutral-400"
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-10"
       />
     </div>
   );
@@ -214,6 +246,7 @@ function ConsoleFilter({ value, onChange }: ConsoleFilterProps) {
 
 export function DevToolsPanel({ className }: DevToolsPanelProps) {
   const dispatch = useAppDispatch();
+  const prefersReducedMotion = useReducedMotion();
 
   // Redux state
   const collapsed = useAppSelector(selectDevToolsCollapsed);
@@ -224,6 +257,9 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
 
   // Context detection
   const { contextLabel, context, entityId } = useDevToolsContext();
+
+  // State for trace-log linking
+  const [selectedTraceId, setSelectedTraceId] = useState<string | null>(null);
 
   // Trace WebSocket - auto-connect when DevTools is open and traces tab available
   const { spans: rawSpans } = useTraceWebSocket({
@@ -327,7 +363,6 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
       // session_id is a raw OTEL attribute name, not a transformed API response field.
       const sessionAttr =
         (attributes["session.id"] as string | undefined) ??
-        // eslint-disable-next-line no-restricted-syntax -- raw OTEL attribute
         (attributes.session_id as string | undefined) ??
         (attributes.sessionId as string | undefined);
 
@@ -396,6 +431,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         | "error",
       service: log.service || "unknown",
       message: log.message,
+      // Include trace correlation for trace-log linking (when available from API)
+      traceId: (log as { traceId?: string }).traceId,
+      spanId: (log as { spanId?: string }).spanId,
+      attributes: (log as { attributes?: Record<string, unknown> }).attributes,
     }));
   }, [logsData]);
 
@@ -454,6 +493,26 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
   const handleClearConsole = useCallback(() => {
     dispatch(clearConsole());
   }, [dispatch]);
+
+  /**
+   * Handle jumping from logs to a related trace.
+   * Switches to the traces tab and selects the specified trace.
+   */
+  const handleJumpToTrace = useCallback(
+    (traceId: string) => {
+      setSelectedTraceId(traceId);
+      dispatch(setActiveTab("traces"));
+    },
+    [dispatch],
+  );
+
+  /**
+   * Handle trace selection in TracesTab.
+   * Clears selection when null.
+   */
+  const handleTraceSelect = useCallback((traceId: string | null) => {
+    setSelectedTraceId(traceId);
+  }, []);
 
   // Don't render if collapsed
   if (collapsed) {
@@ -567,6 +626,8 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
               <TracesTabContent
                 traces={traceList}
                 spans={traceSpans}
+                selectedTraceId={selectedTraceId ?? undefined}
+                onTraceSelect={handleTraceSelect}
                 // Trace list comes from the REST API; real-time spans are optional (WS permission-gated).
                 isLoading={isTracesLoading}
                 error={tracesError ? String(tracesError) : undefined}
@@ -618,6 +679,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
                 logs={logsList}
                 isLoading={isLogsLoading}
                 error={logsError ? String(logsError) : undefined}
+                onJumpToTrace={handleJumpToTrace}
               />
             </Suspense>
           </div>
@@ -646,8 +708,8 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         data-testid="devtools-panel"
         className={cn(
           "flex flex-col h-full",
-          "bg-white dark:bg-neutral-900",
-          "border-t border-neutral-200 dark:border-neutral-700",
+          "bg-neutral-1",
+          "border-t border-neutral-5",
           className,
         )}
       >
@@ -656,13 +718,13 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
           data-testid="devtools-header"
           className={cn(
             "flex items-center justify-between px-3 py-1.5",
-            "bg-neutral-50 dark:bg-neutral-800",
-            "border-b border-neutral-200 dark:border-neutral-700",
+            "bg-neutral-1",
+            "border-b border-neutral-5",
           )}
         >
           {/* Context Indicator + WebSocket Status */}
           <div className="flex items-center gap-3">
-            <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
+            <span className="text-xs font-medium text-neutral-11">
               {contextLabel}
             </span>
 
@@ -671,7 +733,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
               devToolsReconnectAttempts > 0 && (
                 <div
                   data-testid="devtools-reconnecting-indicator"
-                  className="flex items-center gap-1 text-warning-600 dark:text-warning-400 text-xs"
+                  className="flex items-center gap-1 text-warning-9 dark:text-warning-9 text-xs"
                 >
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span>Reconnecting ({devToolsReconnectAttempts})...</span>
@@ -680,7 +742,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             {devToolsWsStatus === "error" && (
               <div
                 data-testid="devtools-error-indicator"
-                className="flex items-center gap-1 text-error-600 dark:text-error-400 text-xs"
+                className="flex items-center gap-1 text-error-10 dark:text-error-7 text-xs"
               >
                 <AlertTriangle className="w-3 h-3" />
                 <span>Connection error</span>
@@ -689,7 +751,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             {devToolsWsStatus === "connected" && (
               <div
                 data-testid="devtools-connected-indicator"
-                className="flex items-center gap-1 text-success-600 dark:text-success-400 text-xs"
+                className="flex items-center gap-1 text-success-10 dark:text-success-7 text-xs"
               >
                 <Wifi className="w-3 h-3" />
               </div>
@@ -708,12 +770,9 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
 
             {/* Clear Console */}
             <Button
+              variant="ghost"
+              size="icon"
               onClick={handleClearConsole}
-              className={cn(
-                "p-1.5 rounded",
-                "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200",
-                "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
-              )}
               title="Clear Console"
               aria-label="Clear"
             >
@@ -722,12 +781,9 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
 
             {/* Maximize/Minimize */}
             <Button
+              variant="ghost"
+              size="icon"
               onClick={handleMaximize}
-              className={cn(
-                "p-1.5 rounded",
-                "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200",
-                "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
-              )}
               title={maximized ? "Minimize" : "Maximize"}
               aria-label={maximized ? "Minimize" : "Maximize"}
             >
@@ -736,12 +792,9 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
 
             {/* Collapse */}
             <Button
+              variant="ghost"
+              size="icon"
               onClick={handleCollapse}
-              className={cn(
-                "p-1.5 rounded",
-                "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200",
-                "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
-              )}
               title="Collapse"
               aria-label="Collapse"
             >
@@ -759,8 +812,8 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
           role="tablist"
           className={cn(
             "flex items-center gap-0.5 px-2 py-1",
-            "bg-neutral-100 dark:bg-neutral-800",
-            "border-b border-neutral-200 dark:border-neutral-700",
+            "bg-neutral-2",
+            "border-b border-neutral-5",
           )}
         >
           {availableTabs.map((tabId) => {
@@ -768,23 +821,23 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             const isActive = tabId === activeTab;
 
             return (
-              <Button
+              <motion.button
                 key={tabId}
                 data-testid={`devtools-tab-${tabId}`}
                 role="tab"
+                type="button"
                 aria-selected={isActive}
                 aria-controls={`tabpanel-${tabId}`}
                 onClick={() => handleTabSelect(tabId)}
-                className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded",
-                  isActive
-                    ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm"
-                    : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-700",
-                )}
+                className={devToolsTabVariants({ active: isActive })}
+                variants={prefersReducedMotion ? undefined : motionButtonVariants}
+                initial="rest"
+                whileHover="hover"
+                whileTap="pressed"
               >
                 <Icon size={14} />
                 {TAB_LABELS[tabId]}
-              </Button>
+              </motion.button>
             );
           })}
         </div>

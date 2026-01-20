@@ -63,19 +63,19 @@ describe("TierUsageBar", () => {
     it("should show 40% width for 2/5 usage", () => {
       render(<TierUsageBar current={2} max={5} label="Sessions" />);
       const progressBar = screen.getByTestId("tier-usage-fill");
-      expect(progressBar).toHaveStyle({ width: "40%" });
+      expect(progressBar).toHaveStyle({ "--progress": "40%" });
     });
 
-    it("should show 100% width when at max", () => {
+    it("should show 100% progress when at max", () => {
       render(<TierUsageBar current={5} max={5} label="Sessions" />);
       const progressBar = screen.getByTestId("tier-usage-fill");
-      expect(progressBar).toHaveStyle({ width: "100%" });
+      expect(progressBar).toHaveStyle({ "--progress": "100%" });
     });
 
-    it("should show 0% width when current is 0", () => {
+    it("should show 0% progress when current is 0", () => {
       render(<TierUsageBar current={0} max={5} label="Sessions" />);
       const progressBar = screen.getByTestId("tier-usage-fill");
-      expect(progressBar).toHaveStyle({ width: "0%" });
+      expect(progressBar).toHaveStyle({ "--progress": "0%" });
     });
   });
 
@@ -83,19 +83,19 @@ describe("TierUsageBar", () => {
     it("should show normal styling when usage is below 70%", () => {
       render(<TierUsageBar current={2} max={5} label="Sessions" />);
       const progressBar = screen.getByTestId("tier-usage-fill");
-      expect(progressBar).toHaveClass("bg-primary-500");
+      expect(progressBar).toHaveClass("bg-primary-9");
     });
 
     it("should show warning styling when usage is at 80%", () => {
       render(<TierUsageBar current={4} max={5} label="Sessions" />);
       const progressBar = screen.getByTestId("tier-usage-fill");
-      expect(progressBar).toHaveClass("bg-warning-500");
+      expect(progressBar).toHaveClass("bg-warning-9");
     });
 
     it("should show danger styling when at 100%", () => {
       render(<TierUsageBar current={5} max={5} label="Sessions" />);
       const progressBar = screen.getByTestId("tier-usage-fill");
-      expect(progressBar).toHaveClass("bg-error-500");
+      expect(progressBar).toHaveClass("bg-error-9");
     });
 
     it("should show warning icon when approaching limit", () => {
@@ -125,7 +125,7 @@ describe("TierUsageBar", () => {
     it("should show full progress bar for unlimited tier", () => {
       render(<TierUsageBar current={50} max={-1} label="Sessions" />);
       const progressBar = screen.getByTestId("tier-usage-fill");
-      expect(progressBar).toHaveClass("bg-success-500");
+      expect(progressBar).toHaveClass("bg-success-9");
     });
 
     it("should not show warning for unlimited tier", () => {

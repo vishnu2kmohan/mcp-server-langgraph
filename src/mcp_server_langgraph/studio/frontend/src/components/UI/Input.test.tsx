@@ -71,19 +71,19 @@ describe("Input", () => {
     it("renders default variant", () => {
       render(<Input variant="default" data-testid="input" />);
       const input = screen.getByTestId("input");
-      expect(input).toHaveClass("border-neutral-300");
+      expect(input).toHaveClass("border-neutral-5");
     });
 
     it("renders error variant", () => {
       render(<Input variant="error" data-testid="input" />);
       const input = screen.getByTestId("input");
-      expect(input).toHaveClass("border-error-500");
+      expect(input).toHaveClass("border-error-9");
     });
 
     it("renders success variant", () => {
       render(<Input variant="success" data-testid="input" />);
       const input = screen.getByTestId("input");
-      expect(input).toHaveClass("border-success-500");
+      expect(input).toHaveClass("border-success-9");
     });
   });
 

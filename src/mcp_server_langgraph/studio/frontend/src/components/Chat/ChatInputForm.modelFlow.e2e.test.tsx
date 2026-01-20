@@ -499,11 +499,11 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
         status: "current", // Production-ready, no badge shown
       },
       {
-        id: "gemini-3-flash",
-        name: "Gemini 3 Flash",
+        id: "gemini-3-flash-preview",
+        name: "Gemini 3 Flash Preview",
         provider: "google",
-        supportsThinking: false,
-        supportsVision: false,
+        supportsThinking: true,
+        supportsVision: true,
         supportsTools: true,
         status: "preview", // Experimental, cyan badge
       },
@@ -551,7 +551,9 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
       expect(currentModel).not.toHaveTextContent("Deprecated");
 
       // Preview model should show Preview badge
-      const previewModel = screen.getByTestId("model-option-gemini-3-flash");
+      const previewModel = screen.getByTestId(
+        "model-option-gemini-3-flash-preview",
+      );
       expect(previewModel).toHaveTextContent("Preview");
 
       // Legacy model should show Legacy badge
@@ -600,7 +602,7 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
           {...defaultProps}
           showModelSelector={true}
           availableModels={mockModelsWithLifecycleStatus}
-          selectedModel="gemini-3-flash"
+          selectedModel="gemini-3-flash-preview"
         />,
       );
 
@@ -729,7 +731,7 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
 
       // Verify status badges have correct data-testid for styling verification
       expect(
-        screen.getByTestId("status-badge-preview-gemini-3-flash"),
+        screen.getByTestId("status-badge-preview-gemini-3-flash-preview"),
       ).toBeInTheDocument();
       expect(
         screen.getByTestId("status-badge-legacy-gpt-4-turbo"),

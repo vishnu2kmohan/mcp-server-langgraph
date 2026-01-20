@@ -210,21 +210,21 @@ describe("ExecutionPanel", () => {
     it("should render icon for info level logs", () => {
       const { container } = renderWithProviders("running", [sampleLogs[0]]);
       // Info logs should have a blue icon (Info from lucide-react)
-      const svg = container.querySelector("svg.text-primary-500");
+      const svg = container.querySelector("svg.text-primary-9");
       expect(svg).toBeInTheDocument();
     });
 
     it("should render icon for warning level logs", () => {
       const { container } = renderWithProviders("running", [sampleLogs[2]]);
       // Warning logs should have a yellow icon (AlertTriangle from lucide-react)
-      const svg = container.querySelector("svg.text-warning-500");
+      const svg = container.querySelector("svg.text-warning-9");
       expect(svg).toBeInTheDocument();
     });
 
     it("should render icon for error level logs", () => {
       const { container } = renderWithProviders("running", [sampleLogs[3]]);
       // Error logs should have a red icon (XCircle from lucide-react)
-      const svg = container.querySelector("svg.text-error-500");
+      const svg = container.querySelector("svg.text-error-9");
       expect(svg).toBeInTheDocument();
     });
   });

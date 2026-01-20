@@ -76,36 +76,36 @@ export function UpgradePrompt({
   const getUrgencyStyle = () => {
     switch (urgency) {
       case "critical":
-        return "bg-error-50 dark:bg-error-900/20 border-error-200 dark:border-error-800";
+        return "bg-error-1 dark:bg-error-a3 border-error-4 dark:border-error-11";
       case "warning":
-        return "bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800";
+        return "bg-warning-3 bg-warning-3 border-warning-6 dark:border-warning-11";
       case "info":
       default:
-        return "bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800";
+        return "bg-primary-1 dark:bg-primary-a3 border-primary-4 dark:border-primary-11";
     }
   };
 
   const _getButtonStyle = () => {
     switch (urgency) {
       case "critical":
-        return "bg-error-600 hover:bg-error-700 text-white";
+        return "bg-error-10 hover:bg-error-11 text-neutral-12";
       case "warning":
-        return "bg-warning-600 hover:bg-warning-700 text-white";
+        return "bg-warning-9 hover:bg-warning-10 text-neutral-12";
       case "info":
       default:
-        return "bg-primary-600 hover:bg-primary-700 text-white";
+        return "bg-primary-10 hover:bg-primary-11 text-neutral-12";
     }
   };
 
   const getIconStyle = () => {
     switch (urgency) {
       case "critical":
-        return "text-error-500";
+        return "text-error-9";
       case "warning":
-        return "text-warning-500";
+        return "text-warning-9";
       case "info":
       default:
-        return "text-primary-500";
+        return "text-primary-9";
     }
   };
 
@@ -125,7 +125,7 @@ export function UpgradePrompt({
 
         {/* Message */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+          <p className="text-sm font-medium text-neutral-12">
             {isAtLimit ? (
               <>Limit reached!</>
             ) : (
@@ -135,7 +135,7 @@ export function UpgradePrompt({
             )}
           </p>
           {currentUsage !== undefined && maxUsage !== undefined && (
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5">
+            <p className="text-xs text-neutral-11 mt-0.5">
               {isAtLimit ? (
                 <>
                   You've used all {maxUsage} of your {feature}. Upgrade for
@@ -152,16 +152,14 @@ export function UpgradePrompt({
 
         {/* Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Button
+          <Button variant="primary"
             className="px-3 py-1.5 text-sm rounded-lg"
             type="button"
             onClick={onUpgrade}
-          >
-            Upgrade
-          </Button>
+          >Upgrade</Button>
           <Button
             variant="secondary"
-            className="p-1.5 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700"
+            className="p-1.5 text-neutral-9 hover:text-neutral-11 rounded-lg hover:bg-neutral-3"
             type="button"
             onClick={onDismiss}
             aria-label="Dismiss"

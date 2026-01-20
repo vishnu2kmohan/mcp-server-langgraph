@@ -30,6 +30,8 @@ import authReducer, { initialAuthState } from "../../store/slices/authSlice";
 import sessionReducer from "../../store/slices/sessionSlice";
 import backgroundAgentReducer from "../../store/slices/backgroundAgentSlice";
 import devToolsReducer from "../../store/slices/devToolsSlice";
+import alertReducer from "../../store/slices/alertSlice";
+import mcpReducer, { initialMCPState } from "../../store/slices/mcpSlice";
 import type { User } from "../../types/auth";
 
 // =============================================================================
@@ -299,6 +301,7 @@ export const createTestStore = (
     session?: Partial<ReturnType<typeof sessionReducer>>;
     backgroundAgent?: Partial<ReturnType<typeof backgroundAgentReducer>>;
     devTools?: Partial<ReturnType<typeof devToolsReducer>>;
+    mcp?: Partial<ReturnType<typeof mcpReducer>>;
   } = {},
 ) => {
   // Build the reducer map
@@ -309,6 +312,8 @@ export const createTestStore = (
     session: sessionReducer,
     backgroundAgent: backgroundAgentReducer,
     devTools: devToolsReducer,
+    alerts: alertReducer,
+    mcp: mcpReducer,
   };
 
   const store = configureStore({
@@ -321,6 +326,11 @@ export const createTestStore = (
         user: defaultTestUser,
         isInitializing: false,
         ...(preloadedState.auth ?? {}),
+      },
+      // Always provide a default MCP state
+      mcp: {
+        ...initialMCPState,
+        ...(preloadedState.mcp ?? {}),
       },
     } as Parameters<typeof configureStore>[0]["preloadedState"],
   });
@@ -557,6 +567,25 @@ export const mockImplementations = {
       isError: false,
       error: null,
       refetch: vi.fn(),
+    }),
+    useGetServerConfigQuery: () => ({
+      data: {
+        model_name: "gpt-4",
+        provider: "openai",
+        features: {},
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    }),
+    useGetAvailableModelsQuery: () => ({
+      data: [
+        { id: "gpt-4", name: "GPT-4", provider: "openai" },
+        { id: "claude-3", name: "Claude 3", provider: "anthropic" },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
     }),
     api: { reducerPath: "api", reducer: () => ({}), middleware: () => [] },
   },

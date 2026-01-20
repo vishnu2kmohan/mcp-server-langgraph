@@ -111,26 +111,26 @@ export function CostDocument({
       data-testid="cost-document"
       className={cn(
         "flex flex-col h-full",
-        "bg-neutral-50 dark:bg-neutral-900",
+        "bg-neutral-1",
         compact && "text-sm",
         className,
       )}
     >
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+      <header className="px-6 py-4 bg-neutral-1 border-b border-neutral-5">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+            <h2 className="text-xl font-bold text-neutral-12">
               Cost Dashboard
             </h2>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-10">
               Track and analyze LLM usage costs
             </p>
           </div>
           <div className="flex items-center gap-4">
             {/* Period Selector */}
             <Select
-              className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+              className="px-3 py-2 text-neutral-12"
               value={period}
               onChange={(e) => handlePeriodChange(e.target.value as Period)}
             >
@@ -152,7 +152,7 @@ export function CostDocument({
               <SkeletonCard />
             </div>
             {/* Skeleton for Model Breakdown */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
+            <div className="bg-neutral-1 rounded-lg border border-neutral-5 p-6">
               <Skeleton className="h-6 w-1/4 mb-4" />
               <div className="space-y-3">
                 <Skeleton className="h-12 w-full" />
@@ -176,62 +176,62 @@ export function CostDocument({
             {summary && (
               <div className="grid gap-4 md:grid-cols-3">
                 {/* Total Cost */}
-                <div className="p-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <div className="p-6 bg-neutral-1 rounded-lg border border-neutral-5">
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign size={20} className="text-primary-500" />
-                    <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                    <DollarSign size={20} className="text-primary-9" />
+                    <h3 className="text-sm font-medium text-neutral-10">
                       Total Cost
                     </h3>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                    <span className="text-3xl font-bold text-neutral-12">
                       {formatCurrency(summary.totalCost)}
                     </span>
                   </div>
-                  <div className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                  <div className="mt-2 text-sm text-neutral-10">
                     Past {period}
                   </div>
                 </div>
 
                 {/* Total Tokens */}
-                <div className="p-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <div className="p-6 bg-neutral-1 rounded-lg border border-neutral-5">
                   <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp size={20} className="text-success-500" />
-                    <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                    <TrendingUp size={20} className="text-success-9" />
+                    <h3 className="text-sm font-medium text-neutral-10">
                       Total Tokens
                     </h3>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                    <span className="text-3xl font-bold text-neutral-12">
                       {formatNumber(summary.totalTokens ?? 0)}
                     </span>
                   </div>
-                  <div className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                  <div className="mt-2 text-sm text-neutral-10">
                     Past {period}
                   </div>
                 </div>
 
                 {/* Average Cost per Token */}
-                <div className="p-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <div className="p-6 bg-neutral-1 rounded-lg border border-neutral-5">
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign size={20} className="text-insight-500" />
-                    <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                    <DollarSign size={20} className="text-insight-9" />
+                    <h3 className="text-sm font-medium text-neutral-10">
                       Avg Cost/Token
                     </h3>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                    <span className="text-3xl font-bold text-neutral-12">
                       {summary.totalTokens && summary.totalTokens > 0
                         ? formatCurrency(
                             (summary.totalCost / summary.totalTokens) * 1000,
                           )
                         : "$0.00"}
                     </span>
-                    <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                    <span className="text-sm text-neutral-10">
                       /1K
                     </span>
                   </div>
-                  <div className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                  <div className="mt-2 text-sm text-neutral-10">
                     Past {period}
                   </div>
                 </div>
@@ -239,36 +239,36 @@ export function CostDocument({
             )}
 
             {/* Cost by Model */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-                <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            <div className="bg-neutral-1 rounded-lg border border-neutral-5">
+              <div className="px-6 py-4 border-b border-neutral-5">
+                <h3 className="text-lg font-semibold text-neutral-12">
                   Cost by Model
                 </h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-neutral-50 dark:bg-neutral-700/50">
+                  <thead className="bg-neutral-1">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Model
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Cost
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Requests
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-10 uppercase tracking-wider">
                         Avg Cost/Req
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                  <tbody className="divide-y divide-neutral-5 dark:divide-neutral-6">
                     {modelCostsArray.length === 0 ? (
                       <tr>
                         <td
                           colSpan={4}
-                          className="px-6 py-8 text-center text-neutral-500 dark:text-neutral-400"
+                          className="px-6 py-8 text-center text-neutral-10"
                         >
                           No model cost data for this period
                         </td>
@@ -277,18 +277,18 @@ export function CostDocument({
                       modelCostsArray.map((modelCost) => (
                         <tr
                           key={modelCost.model}
-                          className="hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
+                          className="hover:bg-neutral-a6"
                         >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-12">
                             {modelCost.model}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-900 dark:text-neutral-100">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-12">
                             {formatCurrency(modelCost.cost)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-500 dark:text-neutral-400">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-10">
                             {formatNumber(modelCost.requests)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-500 dark:text-neutral-400">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-10">
                             {modelCost.requests > 0
                               ? formatCurrency(
                                   modelCost.cost / modelCost.requests,
@@ -304,15 +304,15 @@ export function CostDocument({
             </div>
 
             {/* Cost History Chart */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-                <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            <div className="bg-neutral-1 rounded-lg border border-neutral-5">
+              <div className="px-6 py-4 border-b border-neutral-5">
+                <h3 className="text-lg font-semibold text-neutral-12">
                   Cost Trend
                 </h3>
               </div>
               <div className="p-6">
                 {historyItems.length === 0 ? (
-                  <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+                  <div className="text-center py-8 text-neutral-10">
                     No cost data for this period
                   </div>
                 ) : (
@@ -332,7 +332,7 @@ export function CostDocument({
                           >
                             <div
                               data-cost-bar
-                              className="w-full bg-primary-500 rounded-t transition-all hover:bg-primary-600"
+                              className="w-full bg-primary-9 rounded-t transition-all hover:bg-primary-10"
                               style={{
                                 height: `${heightPercent}%`,
                                 minHeight: "4px",
@@ -348,7 +348,7 @@ export function CostDocument({
                       {historyItems.map((point, index) => (
                         <div
                           key={index}
-                          className="flex-1 text-center text-xs text-neutral-500 dark:text-neutral-400"
+                          className="flex-1 text-center text-xs text-neutral-10"
                         >
                           {formatDate(point.date)}
                         </div>

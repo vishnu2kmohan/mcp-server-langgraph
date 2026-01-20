@@ -40,7 +40,11 @@ import { AuditEventPanel } from "../components/Settings/AuditEventPanel";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
-import { Button, Input, Select } from "@/components/UI";
+// Direct imports to avoid Rollup circular dependency warnings
+// (page chunks end up separate from UI barrel)
+import { Button } from "@/components/UI/Button";
+import { Input } from "@/components/UI/Input";
+import { Select } from "@/components/UI/Select";
 
 type SettingsTab =
   | "profile"
@@ -213,21 +217,21 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
+    <div className="h-screen flex flex-col bg-neutral-1">
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+      <header className="px-6 py-4 bg-neutral-2 border-b border-neutral-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            <h1 className="text-2xl font-bold text-neutral-12">
               Settings
             </h1>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-11">
               Manage your account and preferences
             </p>
           </div>
           <Button
             variant="primary"
-            className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="gap-2"
             onClick={handleSave}
             disabled={isSaving}
           >
@@ -252,7 +256,7 @@ export function SettingsPage() {
       </header>
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-64 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 p-4">
+        <aside className="w-64 bg-neutral-2 border-r border-neutral-6 p-4">
           <nav className="space-y-1">
             {tabs.map((tab) => (
               <Button
@@ -274,35 +278,35 @@ export function SettingsPage() {
             {activeTab === "profile" && (
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-11 mb-2">
                     Display Name
                   </label>
                   <Input
                     size="lg"
-                    className="px-4 py-2 text-neutral-900 dark:text-neutral-100"
+                    className="px-4 py-2 text-neutral-12"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-11 mb-2">
                     Email
                   </label>
                   <Input
                     size="lg"
-                    className="px-4 py-2 text-neutral-900 dark:text-neutral-100"
+                    className="px-4 py-2 text-neutral-12"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-11 mb-2">
                     Default Persona
                   </label>
                   <Select
                     size="lg"
-                    className="px-4 py-2 text-neutral-900 dark:text-neutral-100"
+                    className="px-4 py-2 text-neutral-12"
                     value={persona}
                     onChange={(e) => {
                       dispatch(setPersona(e.target.value as Persona));
@@ -319,27 +323,27 @@ export function SettingsPage() {
             {/* API Keys Tab */}
             {activeTab === "api-keys" && (
               <div className="space-y-6">
-                <div className="p-4 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
-                  <p className="text-sm text-warning-800 dark:text-warning-200">
+                <div className="p-4 bg-warning-3 bg-warning-3 border border-warning-6 dark:border-warning-11 rounded-lg">
+                  <p className="text-sm text-warning-11 dark:text-warning-6">
                     API keys provide access to your account. Keep them secure
                     and never share them publicly.
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-11 mb-2">
                     Your API Key
                   </label>
                   <div className="flex gap-2">
                     <Input
                       size="lg"
-                      className="flex-1 px-4 py-2 bg-neutral-50 text-neutral-900 dark:text-neutral-100 font-mono"
+                      className="flex-1 px-4 py-2 bg-neutral-1 text-neutral-12 font-mono"
                       type={showApiKey ? "text" : "password"}
                       value="sk-mcp-xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                       readOnly
                     />
                     <Button
                       variant="secondary"
-                      className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                      className="px-4 py-2 border border-neutral-6 rounded-lg hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10"
                       onClick={() => setShowApiKey(!showApiKey)}
                     >
                       {showApiKey ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -348,7 +352,7 @@ export function SettingsPage() {
                 </div>
                 <Button
                   variant="danger"
-                  className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50"
+                  className="px-4 py-2 bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4 dark:hover:bg-error-12/50"
                 >
                   Regenerate API Key
                 </Button>
@@ -361,27 +365,27 @@ export function SettingsPage() {
                 {/* Push Notifications Section */}
                 <div
                   data-testid="push-notifications-section"
-                  className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
+                  className="p-4 bg-neutral-2 rounded-lg border border-neutral-6"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <BellRing className="h-5 w-5 text-primary-500" />
-                    <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+                    <BellRing className="h-5 w-5 text-primary-9" />
+                    <h3 className="font-medium text-neutral-12">
                       Push Notifications
                     </h3>
                   </div>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                  <p className="text-sm text-neutral-11 mb-4">
                     Receive real-time notifications even when the app is closed.
                   </p>
 
                   {!isPushSupported ? (
-                    <div className="flex items-center gap-2 text-warning-600 dark:text-warning-400">
+                    <div className="flex items-center gap-2 text-warning-9 dark:text-warning-9">
                       <BellOff className="h-4 w-4" />
                       <span className="text-sm">
                         Push notifications are not supported in this browser.
                       </span>
                     </div>
                   ) : pushPermission === "denied" ? (
-                    <div className="flex items-center gap-2 text-error-600 dark:text-error-400">
+                    <div className="flex items-center gap-2 text-error-10 dark:text-error-7">
                       <AlertCircle className="h-4 w-4" />
                       <span className="text-sm">
                         Notifications are blocked. Please enable them in your
@@ -391,7 +395,7 @@ export function SettingsPage() {
                   ) : isPushSubscribed ? (
                     <Button
                       variant="danger"
-                      className="flex px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50"
+                      className="flex px-4 py-2 bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4 dark:hover:bg-error-12/50"
                       data-testid="push-notifications-toggle"
                       onClick={unsubscribePush}
                       disabled={isPushLoading}
@@ -405,7 +409,7 @@ export function SettingsPage() {
                   ) : (
                     <Button
                       variant="primary"
-                      className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                      className="gap-2"
                       data-testid="push-notifications-toggle"
                       onClick={subscribePush}
                       disabled={isPushLoading}
@@ -428,7 +432,7 @@ export function SettingsPage() {
             {activeTab === "appearance" && (
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-4">
+                  <label className="block text-sm font-medium text-neutral-11 mb-4">
                     Theme
                   </label>
                   <div className="grid grid-cols-3 gap-4">
@@ -437,8 +441,8 @@ export function SettingsPage() {
                         variant="ghost"
                         className={`p-4 rounded-lg border-2 ${
                           theme === t
-                            ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30"
-                            : "border-neutral-200 dark:border-neutral-700"
+                            ? "border-primary-9 bg-primary-1 bg-primary-4"
+                            : "border-neutral-6"
                         }`}
                         key={t}
                         onClick={() => setTheme(t)}
@@ -453,24 +457,24 @@ export function SettingsPage() {
                 </div>
 
                 {/* Panel Layout Section (Sprint 1.2) */}
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <div className="p-4 bg-neutral-2 rounded-lg border border-neutral-6">
                   <div className="flex items-start gap-3">
                     <LayoutGrid
                       size={24}
-                      className="text-neutral-500 dark:text-neutral-400 flex-shrink-0 mt-0.5"
+                      className="text-neutral-11 flex-shrink-0 mt-0.5"
                     />
                     <div className="flex-1">
-                      <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-1">
+                      <h3 className="font-medium text-neutral-12 mb-1">
                         Panel Layout
                       </h3>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                      <p className="text-sm text-neutral-11 mb-4">
                         Restore your panel layout to the default configuration
                         for your current persona. This will reset session nav,
                         conversation, and canvas panel sizes.
                       </p>
                       <Button
                         variant="secondary"
-                        className="flex px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+                        className="flex px-4 py-2 bg-neutral-3 text-neutral-11 rounded-lg hover:bg-neutral-3 dark:bg-neutral-10 dark:hover:bg-neutral-9"
                         type="button"
                         onClick={() => dispatch(resetToDefaults())}
                       >
@@ -486,30 +490,29 @@ export function SettingsPage() {
             {/* Security Tab */}
             {activeTab === "security" && (
               <div className="space-y-6">
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+                <div className="p-4 bg-neutral-2 rounded-lg border border-neutral-6">
+                  <h3 className="font-medium text-neutral-12 mb-2">
                     Two-Factor Authentication
                   </h3>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                  <p className="text-sm text-neutral-11 mb-4">
                     Add an extra layer of security to your account
                   </p>
                   <Button
                     variant="success"
-                    className="px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700"
                   >
                     Enable 2FA
                   </Button>
                 </div>
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+                <div className="p-4 bg-neutral-2 rounded-lg border border-neutral-6">
+                  <h3 className="font-medium text-neutral-12 mb-2">
                     Active Sessions
                   </h3>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                  <p className="text-sm text-neutral-11 mb-4">
                     Manage devices that are logged in to your account
                   </p>
                   <Button
                     variant="danger"
-                    className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
+                    className="px-4 py-2 bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4"
                   >
                     Sign Out All Devices
                   </Button>
@@ -520,8 +523,8 @@ export function SettingsPage() {
             {/* Audit Log Tab (Admin Only) */}
             {activeTab === "audit-log" && isAdmin && (
               <div className="space-y-6">
-                <div className="p-4 bg-insight-50 dark:bg-insight-900/20 border border-insight-200 dark:border-insight-800 rounded-lg">
-                  <p className="text-sm text-insight-800 dark:text-insight-200">
+                <div className="p-4 bg-insight-1 dark:bg-insight-12/20 border border-insight-4 dark:border-insight-11 rounded-lg">
+                  <p className="text-sm text-insight-11 dark:text-insight-4">
                     Real-time audit event stream for compliance and security
                     monitoring.
                   </p>
@@ -533,19 +536,19 @@ export function SettingsPage() {
             {/* Manage User Keys Tab (Admin Only) */}
             {activeTab === "manage-keys" && isAdmin && (
               <div className="space-y-6">
-                <div className="p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg">
-                  <p className="text-sm text-primary-800 dark:text-primary-200">
+                <div className="p-4 bg-primary-1 dark:bg-primary-12/20 border border-primary-4 dark:border-primary-11 rounded-lg">
+                  <p className="text-sm text-primary-11 dark:text-primary-4">
                     As an administrator, you can manage API keys for all users
                     in the system.
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                  <h3 className="text-lg font-medium text-neutral-12">
                     User API Keys
                   </h3>
                   <Button
-                    className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+                    className="flex px-3 py-1.5 text-sm text-neutral-11 hover:text-neutral-12 dark:hover:text-neutral-2"
                     onClick={loadManagedUsers}
                   >
                     <RefreshCw
@@ -560,17 +563,17 @@ export function SettingsPage() {
                 {adminError && !isLoadingUsers && (
                   <div
                     role="alert"
-                    className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg"
+                    className="p-4 bg-error-1 dark:bg-error-12/20 border border-error-4 dark:border-error-11 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <AlertCircle size={20} className="text-error-500" />
-                      <p className="text-sm text-error-700 dark:text-error-400">
+                      <AlertCircle size={20} className="text-error-9" />
+                      <p className="text-sm text-error-11 dark:text-error-7">
                         {adminError}
                       </p>
                     </div>
                     <Button
                       variant="danger"
-                      className="mt-3 flex px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
+                      className="mt-3 flex px-3 py-1.5 text-sm bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4"
                       onClick={loadManagedUsers}
                     >
                       <RefreshCw size={14} />
@@ -584,10 +587,10 @@ export function SettingsPage() {
                   <div className="relative">
                     <Search
                       size={16}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-6 dark:text-neutral-6"
                     />
                     <Input
-                      className="pl-9 pr-4 py-2 text-neutral-900 dark:text-neutral-100"
+                      className="pl-9 pr-4 py-2 text-neutral-12"
                       value={userSearch}
                       onChange={(e) => setUserSearch(e.target.value)}
                       placeholder="Search users by email..."
@@ -599,18 +602,18 @@ export function SettingsPage() {
                   <div className="flex items-center justify-center py-8">
                     <RefreshCw
                       size={24}
-                      className="animate-spin text-primary-500"
+                      className="animate-spin text-primary-9"
                     />
                   </div>
                 ) : adminError &&
                   managedUsers.length ===
                     0 ? null /* Error banner is shown above */ : managedUsers.length ===
                   0 ? (
-                  <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+                  <div className="text-center py-8 text-neutral-11">
                     No users found
                   </div>
                 ) : filteredManagedUsers.length === 0 ? (
-                  <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+                  <div className="text-center py-8 text-neutral-11">
                     No users match your search
                   </div>
                 ) : (
@@ -618,20 +621,20 @@ export function SettingsPage() {
                     {filteredManagedUsers.map((managedUser) => (
                       <div
                         key={managedUser.id}
-                        className="flex items-center justify-between p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
+                        className="flex items-center justify-between p-4 bg-neutral-2 rounded-lg border border-neutral-6"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-neutral-200 dark:bg-neutral-700 rounded-full flex items-center justify-center">
+                          <div className="w-10 h-10 bg-neutral-3 dark:bg-neutral-10 rounded-full flex items-center justify-center">
                             <User
                               size={20}
-                              className="text-neutral-500 dark:text-neutral-400"
+                              className="text-neutral-11"
                             />
                           </div>
                           <div>
-                            <p className="font-medium text-neutral-900 dark:text-neutral-100">
+                            <p className="font-medium text-neutral-12">
                               {managedUser.email}
                             </p>
-                            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                            <p className="text-sm text-neutral-11">
                               {managedUser.hasApiKey
                                 ? "Has API Key"
                                 : "No API Key"}
@@ -642,7 +645,7 @@ export function SettingsPage() {
                           {managedUser.hasApiKey ? (
                             <Button
                               variant="danger"
-                              className="flex px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
+                              className="flex px-3 py-1.5 text-sm bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4"
                               onClick={() => handleRevokeKey(managedUser.id)}
                               aria-label="Revoke"
                             >
@@ -652,7 +655,7 @@ export function SettingsPage() {
                           ) : (
                             <Button
                               variant="success"
-                              className="flex px-3 py-1.5 text-sm bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400 rounded-lg hover:bg-success-200"
+                              className="flex px-3 py-1.5 text-sm bg-success-3 text-success-11 bg-success-4 dark:text-success-7 rounded-lg hover:bg-success-4"
                               onClick={() => handleGenerateKey(managedUser.id)}
                               aria-label="Generate"
                             >

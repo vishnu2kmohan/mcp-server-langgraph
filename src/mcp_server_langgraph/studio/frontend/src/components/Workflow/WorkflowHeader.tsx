@@ -30,15 +30,15 @@ export function WorkflowHeader({
     <header
       className={`px-6 py-4 border-b ${
         isDarkMode
-          ? "bg-neutral-800 border-neutral-700"
-          : "bg-white border-neutral-200 dark:border-neutral-700"
+          ? "bg-neutral-3 border-neutral-7"
+          : "bg-neutral-1 border-neutral-5"
       }`}
     >
       <div className="flex items-center justify-between">
         <div>
           <h1
             className={`text-2xl font-bold ${
-              isDarkMode ? "text-white" : "text-neutral-900"
+              isDarkMode ? "text-neutral-12" : "text-neutral-12"
             }`}
           >
             Visual Workflow Builder
@@ -46,8 +46,8 @@ export function WorkflowHeader({
           <p
             className={`text-sm ${
               isDarkMode
-                ? "text-neutral-400 dark:text-neutral-400"
-                : "text-neutral-500 dark:text-neutral-400"
+                ? "text-neutral-9"
+                : "text-neutral-10"
             }`}
           >
             MCP Server with LangGraph - Build agents visually, export to code
@@ -59,7 +59,7 @@ export function WorkflowHeader({
             value={workflowName}
             onChange={(e) => onNameChange(e.target.value)}
             className={`px-3 py-2 border rounded-md ${
-              isDarkMode ? "bg-neutral-800 border-neutral-600 text-white" : ""
+              isDarkMode ? "bg-neutral-3 border-neutral-6 text-neutral-12" : ""
             }`}
             placeholder="Workflow name"
           />
@@ -73,7 +73,7 @@ export function WorkflowHeader({
           >
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </Button>
-          <Button
+          <Button size="icon" variant="ghost"
             className="p-2 rounded-lg"
             onClick={onOpenSettings}
             title="Settings"
@@ -81,7 +81,7 @@ export function WorkflowHeader({
           >
             <Settings size={20} />
           </Button>
-          <Button
+          <Button size="icon" variant="ghost"
             className="p-2 rounded-lg"
             onClick={onOpenHelp}
             title="Help"

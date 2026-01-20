@@ -12,24 +12,44 @@
  *
  * This replaces the basic conversation/ChatInput.tsx and provides
  * a consistent, feature-rich chat experience throughout the app.
+ *
+ * Uses ChatInput (the consolidated pill-style component) which provides
+ * all features in a unified interface.
  */
 import { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import {
-  ChatInputForm,
+  ChatInput,
   type SlashCommand,
   type ModelOption,
-} from "../components/Chat/ChatInputForm";
+} from "../components/Chat/ChatInput";
 import type { KBFocusMode } from "../components/Chat/KnowledgeBaseFocus";
 import type { ReasoningEffortLevel } from "../components/Chat/ReasoningEffortSelector";
+import type { ToolOption } from "../components/Chat/ToolSelector";
+import type { ToolSelectionMode } from "../types/tools";
 import { useFileUpload } from "../hooks/useFileUpload";
 import { useVoiceInput } from "../hooks/useVoiceInput";
 import { useKBStatus } from "../hooks/useKBStatus";
 import { useUrlContentFetch } from "../hooks/useUrlContentFetch";
 import { useInlineSuggestions } from "../hooks/useInlineSuggestions";
 import { useAISuggestionsWebSocket } from "../hooks/useAISuggestionsWebSocket";
+import { useAvailableTools } from "../hooks/useAvailableTools";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
-import { useAppSelector } from "../store/hooks";
+import { useSessionTelemetry } from "../contexts/TelemetryContext";
+import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { selectSubmitOnEnter } from "../store/slices/uiSlice";
+import { useConnectorSuggestions } from "../hooks/useConnectorSuggestions";
+import { ConnectorSuggestionBar } from "../components/Chat/ConnectorSuggestionBar";
+import { startConnectionSetup } from "../store/slices/chatConnectionSlice";
+import {
+  selectExecutionMode,
+  selectCanBypass,
+  cycleExecutionMode,
+  setExecutionMode,
+  setHasBypassPermission,
+  type ExecutionMode,
+} from "../store/slices/executionModeSlice";
+import { useCheckBypassPermissionQuery } from "../api";
+import type { ConnectionTemplate } from "../types/connectionTemplate";
 
 // =============================================================================
 // Types
@@ -113,6 +133,19 @@ export interface ConnectedChatInputFormProps {
 
   /** Enable URL content fetching when #https://... detected */
   enableUrlFetch?: boolean;
+
+  // ==========================================================================
+  // Tool Selection Props (Manual Tool Selection)
+  // ==========================================================================
+
+  /** Controlled selected tools (for lifting state to parent) */
+  selectedTools?: string[];
+  /** Callback when selected tools change (for lifting state to parent) */
+  onSelectedToolsChange?: (tools: string[]) => void;
+  /** Controlled tool selection mode (for lifting state to parent) */
+  toolSelectionMode?: ToolSelectionMode;
+  /** Callback when tool selection mode changes (for lifting state to parent) */
+  onToolSelectionModeChange?: (mode: ToolSelectionMode) => void;
 }
 
 // =============================================================================
@@ -170,17 +203,131 @@ export function ConnectedChatInputForm({
   enableUrlFetch = false,
   // Models loading state (Sprint 1)
   isModelsLoading = false,
+  // Tool selection (Manual Tool Selection)
+  selectedTools: selectedToolsProp,
+  onSelectedToolsChange,
+  toolSelectionMode: toolSelectionModeProp,
+  onToolSelectionModeChange,
 }: ConnectedChatInputFormProps) {
   // =============================================================================
   // Feature Flags & UI State
   // =============================================================================
-  const enableRichTextMode = useFeatureFlag("rich_text_chat_input");
   const enableKBFocus = useFeatureFlag("kb_focus");
   const enableWebSocketSuggestions = useFeatureFlag("ai_suggestions_websocket");
+  const enableManualToolSelection = useFeatureFlag("manual_tool_selection");
+  const enableExecutionModeToggle = useFeatureFlag("execution_mode_toggle");
+  const enablePreferencesMenu = useFeatureFlag("preferences_menu");
   const submitOnEnter = useAppSelector(selectSubmitOnEnter);
+
+  // =============================================================================
+  // Execution Mode State (Ctrl/Cmd+Shift+M toggle)
+  // =============================================================================
+  const dispatch = useAppDispatch();
+  const executionMode = useAppSelector(selectExecutionMode);
+  const canBypass = useAppSelector(selectCanBypass);
+  const telemetry = useSessionTelemetry();
+
+  // Fetch bypass permission from OpenFGA (bypass_executor on system:global)
+  const { data: bypassPermission } = useCheckBypassPermissionQuery(undefined, {
+    // Skip if execution mode toggle is disabled
+    skip: !enableExecutionModeToggle,
+    // Refetch periodically in case permission changes
+    pollingInterval: 300000, // 5 minutes
+  });
+
+  // Sync bypass permission from API to Redux
+  useEffect(() => {
+    if (bypassPermission?.allowed !== undefined) {
+      dispatch(setHasBypassPermission(bypassPermission.allowed));
+    }
+  }, [bypassPermission?.allowed, dispatch]);
+
+  // Helper to get next mode in cycle (for telemetry before dispatch)
+  const getNextCycleMode = useCallback((currentMode: ExecutionMode): ExecutionMode => {
+    const modes: ExecutionMode[] = canBypass
+      ? ["default", "plan", "auto_accept", "bypass"]
+      : ["default", "plan", "auto_accept"];
+    const currentIndex = modes.indexOf(currentMode);
+    return modes[(currentIndex + 1) % modes.length];
+  }, [canBypass]);
+
+  const handleCycleExecutionMode = useCallback(() => {
+    const fromMode = executionMode;
+    const toMode = getNextCycleMode(fromMode);
+
+    // Track telemetry before dispatch (keyboard trigger)
+    telemetry.trackExecutionModeChange({
+      fromMode,
+      toMode,
+      sessionId,
+      trigger: "keyboard",
+    });
+
+    dispatch(cycleExecutionMode());
+  }, [dispatch, executionMode, getNextCycleMode, sessionId, telemetry]);
+
+  const handleExecutionModeChange = useCallback((mode: ExecutionMode) => {
+    const fromMode = executionMode;
+
+    // Track telemetry before dispatch (click trigger)
+    telemetry.trackExecutionModeChange({
+      fromMode,
+      toMode: mode,
+      sessionId,
+      trigger: "click",
+    });
+
+    dispatch(setExecutionMode(mode));
+  }, [dispatch, executionMode, sessionId, telemetry]);
 
   // Track previous sessionId for context updates
   const prevSessionIdRef = useRef<string | undefined>(undefined);
+
+  // =============================================================================
+  // Tool Selection State & Hook (Manual Tool Selection)
+  // =============================================================================
+  const [internalSelectedTools, setInternalSelectedTools] = useState<string[]>([]);
+  const [internalToolSelectionMode, setInternalToolSelectionMode] = useState<ToolSelectionMode>("auto");
+
+  // Use controlled values if provided, otherwise use internal state
+  const selectedTools = selectedToolsProp ?? internalSelectedTools;
+  const toolSelectionMode = toolSelectionModeProp ?? internalToolSelectionMode;
+
+  // Fetch available tools (only when feature is enabled)
+  const { tools: availableToolsData, isLoading: isToolsLoading } = useAvailableTools({
+    skip: !enableManualToolSelection,
+  });
+
+  // Transform tools to ToolOption format for ToolSelector
+  const availableTools: ToolOption[] = useMemo(() => {
+    if (!availableToolsData) return [];
+    return availableToolsData.map((tool) => ({
+      name: tool.name,
+      displayName: tool.displayName,
+      source: tool.source,
+      serverName: tool.serverName ?? undefined,
+      description: tool.description,
+      category: tool.category ?? undefined,
+    }));
+  }, [availableToolsData]);
+
+  // Handle tool selection change
+  const handleSelectedToolsChange = useCallback(
+    (tools: string[]) => {
+      setInternalSelectedTools(tools);
+      onSelectedToolsChange?.(tools);
+    },
+    [onSelectedToolsChange],
+  );
+
+  // Handle tool selection mode change
+  const handleToolSelectionModeChange = useCallback(
+    (mode: ToolSelectionMode) => {
+      setInternalToolSelectionMode(mode);
+      onToolSelectionModeChange?.(mode);
+    },
+    [onToolSelectionModeChange],
+  );
 
   // =============================================================================
   // Knowledge Base Status Hook
@@ -409,6 +556,40 @@ export function ConnectedChatInputForm({
   ]);
 
   // =============================================================================
+  // Connector Suggestions Hook (Phase 5 - Proactive Suggestions)
+  // Shows connection suggestions when user input matches tool keywords
+  // =============================================================================
+  const enableConnectorSuggestions = useFeatureFlag("connector_suggestions");
+
+  const {
+    suggestions: connectorSuggestions,
+    isLoading: isConnectorSuggestionsLoading,
+    isVisible: isConnectorSuggestionsVisible,
+    updateInput: updateConnectorSuggestionInput,
+    dismiss: dismissConnectorSuggestion,
+  } = useConnectorSuggestions({
+    enabled: enableConnectorSuggestions,
+    minInputLength: 5,
+    debounceMs: 300,
+  });
+
+  // Update connector suggestions when input changes
+  useEffect(() => {
+    if (enableConnectorSuggestions) {
+      updateConnectorSuggestionInput(value);
+    }
+  }, [value, enableConnectorSuggestions, updateConnectorSuggestionInput]);
+
+  // Handle connect action from suggestion bar
+  const handleConnectorSuggestionConnect = useCallback(
+    (template: ConnectionTemplate) => {
+      dispatch(startConnectionSetup({ templateId: template.id }));
+      dismissConnectorSuggestion();
+    },
+    [dispatch, dismissConnectorSuggestion],
+  );
+
+  // =============================================================================
   // Handlers
   // =============================================================================
 
@@ -470,75 +651,106 @@ export function ConnectedChatInputForm({
   const memoizedDragHandlers = useMemo(() => dragHandlers, [dragHandlers]);
 
   return (
-    <ChatInputForm
-      input={value}
-      onInputChange={handleInputChange}
-      onSubmit={handleSubmit}
-      isProcessing={isProcessing}
-      isStreaming={isStreaming}
-      onStopStreaming={onStopStreaming}
-      // Voice input
-      isListening={isListening}
-      isVoiceSupported={isVoiceSupported}
-      voiceError={voiceError}
-      onStartListening={handleStartListening}
-      onStopListening={handleStopListening}
-      // File upload
-      uploadFiles={uploadFiles}
-      isUploading={isUploading}
-      isDragging={isDragging}
-      fileError={fileError}
-      onSelectFiles={handleSelectFiles}
-      onRemoveFile={handleRemoveFile}
-      dragHandlers={memoizedDragHandlers}
-      // Slash commands
-      slashCommands={slashCommands}
-      onSlashCommandSelect={handleSlashCommandSelect}
-      // Inline suggestions
-      enableInlineSuggestions={enableInlineSuggestions}
-      inlineSuggestion={inlineSuggestion}
-      isSuggestionLoading={isSuggestionLoading}
-      onAcceptSuggestion={onAcceptSuggestion}
-      onDismissSuggestion={onDismissSuggestion}
-      // Auto-focus
-      autoFocus={autoFocus}
-      // RichText mode (feature flag + user preference)
-      enableRichTextMode={enableRichTextMode}
-      submitOnEnter={submitOnEnter}
-      // Knowledge Base Focus (feature flag controlled)
-      showKBFocus={enableKBFocus}
-      kbFocusValue={kbFocusMode}
-      onKBFocusChange={handleKBFocusModeChange}
-      kbStatus={kbStatusForUI}
-      kbStatusMessage={kbStatusMessage}
-      // Model selection (Sprint 1 - Chat Input Gap Fix)
-      showModelSelector={showModelSelector}
-      selectedModel={selectedModel}
-      availableModels={availableModels}
-      onModelChange={onModelChange}
-      isModelsLoading={isModelsLoading}
-      recentModels={recentModels}
-      enableModelSearch={enableModelSearch}
-      // Reasoning effort (Sprint 1 - Chat Input Gap Fix)
-      modelSupportsThinking={modelSupportsThinking}
-      reasoningEffort={reasoningEffort}
-      onReasoningEffortChange={onReasoningEffortChange}
-      enableThinking={enableThinking}
-      onEnableThinkingChange={onEnableThinkingChange}
-      // URL fetch (Sprint 1 - Chat Input Gap Fix)
-      enableUrlFetch={enableUrlFetch}
-      urlFetchLoading={loadingUrls}
-      fetchedUrls={fetchedContent.map((c) => ({
-        url: c.url,
-        title: c.title,
-        content: c.content || "",
-      }))}
-      onRemoveFetchedUrl={clearUrl}
-      // Cursor position tracking for WebSocket suggestions
-      onCursorPositionChange={(pos) => {
-        cursorPositionRef.current = pos;
-      }}
-    />
+    <>
+      {/* Connector Suggestion Bar (Phase 5 - Proactive Suggestions) */}
+      {isConnectorSuggestionsVisible && (
+        <div className="mb-3 max-w-4xl mx-auto px-4">
+          <ConnectorSuggestionBar
+            suggestions={connectorSuggestions}
+            onConnect={handleConnectorSuggestionConnect}
+            onDismiss={dismissConnectorSuggestion}
+            isLoading={isConnectorSuggestionsLoading}
+          />
+        </div>
+      )}
+      <ChatInput
+        value={value}
+        onChange={handleInputChange}
+        onSubmit={handleSubmit}
+        disabled={isProcessing}
+        isStreaming={isStreaming}
+        onStopStreaming={onStopStreaming}
+        // Voice input
+        isListening={isListening}
+        isVoiceSupported={isVoiceSupported}
+        voiceError={voiceError ?? undefined}
+        onStartListening={handleStartListening}
+        onStopListening={handleStopListening}
+        // File upload
+        uploadFiles={uploadFiles}
+        isUploading={isUploading}
+        isDragging={isDragging}
+        fileError={fileError ?? undefined}
+        onSelectFiles={handleSelectFiles}
+        onRemoveFile={handleRemoveFile}
+        dragHandlers={memoizedDragHandlers}
+        // Slash commands
+        slashCommands={slashCommands}
+        onSlashCommandSelect={handleSlashCommandSelect}
+        // Inline suggestions
+        enableInlineSuggestions={enableInlineSuggestions}
+        inlineSuggestion={inlineSuggestion}
+        isSuggestionLoading={isSuggestionLoading}
+        onAcceptSuggestion={onAcceptSuggestion}
+        onDismissSuggestion={onDismissSuggestion}
+        // Auto-focus
+        autoFocus={autoFocus}
+        // Submit behavior (Enter vs Ctrl+Enter)
+        submitOnEnter={submitOnEnter}
+        // Knowledge Base Focus (feature flag controlled)
+        showKBFocus={enableKBFocus}
+        kbFocusValue={kbFocusMode}
+        onKBFocusChange={handleKBFocusModeChange as (mode: string) => void}
+        kbStatus={
+          kbStatusForUI === "unavailable" ? "error" : kbStatusForUI
+        }
+        kbStatusMessage={kbStatusMessage}
+        // Model selection (Sprint 1 - Chat Input Gap Fix)
+        showModelSelector={showModelSelector}
+        selectedModel={selectedModel}
+        availableModels={availableModels}
+        onModelChange={onModelChange}
+        isModelsLoading={isModelsLoading}
+        recentModels={recentModels}
+        enableModelSearch={enableModelSearch}
+        // Reasoning effort (Sprint 1 - Chat Input Gap Fix)
+        modelSupportsThinking={modelSupportsThinking}
+        reasoningEffort={reasoningEffort}
+        onReasoningEffortChange={onReasoningEffortChange}
+        enableThinking={enableThinking}
+        onEnableThinkingChange={onEnableThinkingChange}
+        // URL fetch (Sprint 1 - Chat Input Gap Fix)
+        enableUrlFetch={enableUrlFetch}
+        urlFetchLoading={loadingUrls}
+        fetchedUrls={fetchedContent.map((c) => ({
+          url: c.url,
+          title: c.title || c.url,
+          content: c.content || "",
+        }))}
+        onRemoveFetchedUrl={clearUrl}
+        // Tool selection (Manual Tool Selection)
+        showToolSelector={enableManualToolSelection}
+        selectedTools={selectedTools}
+        onSelectedToolsChange={handleSelectedToolsChange}
+        toolSelectionMode={toolSelectionMode}
+        onToolSelectionModeChange={handleToolSelectionModeChange}
+        availableTools={availableTools}
+        isToolsLoading={isToolsLoading}
+        // Cursor position tracking for WebSocket suggestions
+        onCursorPositionChange={(pos) => {
+          cursorPositionRef.current = pos;
+        }}
+        // Execution mode (Ctrl/Cmd+Shift+M toggle)
+        executionMode={executionMode}
+        onCycleExecutionMode={enableExecutionModeToggle ? handleCycleExecutionMode : undefined}
+        onExecutionModeChange={enableExecutionModeToggle ? handleExecutionModeChange : undefined}
+        hasBypassPermission={canBypass}
+        // Preferences menu (consolidated settings)
+        showPreferencesMenu={enablePreferencesMenu}
+        kbFocusMode={kbFocusMode as "all" | "kb_only" | "web_only" | "none"}
+        onKBFocusModeChange={handleKBFocusModeChange}
+      />
+    </>
   );
 }
 

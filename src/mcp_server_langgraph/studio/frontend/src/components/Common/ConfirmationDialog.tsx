@@ -157,25 +157,25 @@ export function ConfirmationDialog({
   // Severity-based styles
   const severityStyles = {
     info: {
-      button: "bg-primary-600 hover:bg-primary-700 focus:ring-primary-500",
+      button: "bg-primary-10 hover:bg-primary-11 focus:ring-primary-7",
       icon: null,
     },
     warning: {
-      button: "bg-warning-600 hover:bg-warning-700 focus:ring-warning-500",
+      button: "bg-warning-9 hover:bg-warning-10 focus:ring-warning-7",
       icon: (
         <AlertTriangle
           data-testid="warning-icon"
-          className="h-6 w-6 text-warning-600"
+          className="h-6 w-6 text-warning-9"
           aria-hidden="true"
         />
       ),
     },
     danger: {
-      button: "bg-error-600 hover:bg-error-700 focus:ring-error-500",
+      button: "bg-error-10 hover:bg-error-11 focus:ring-error-7",
       icon: (
         <AlertCircle
           data-testid="danger-icon"
-          className="h-6 w-6 text-error-600"
+          className="h-6 w-6 text-error-10"
           aria-hidden="true"
         />
       ),
@@ -188,7 +188,7 @@ export function ConfirmationDialog({
     <div
       data-testid="dialog-backdrop"
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-a6"
     >
       <div
         ref={dialogRef}
@@ -199,7 +199,7 @@ export function ConfirmationDialog({
         data-severity={severity}
         onClick={handleDialogClick}
         onKeyDown={handleKeyDown}
-        className="w-full max-w-md rounded-lg bg-white dark:bg-neutral-900 shadow-xl"
+        className="w-full max-w-md rounded-lg bg-neutral-1 shadow-xl"
       >
         <div className="p-6">
           {/* Header */}
@@ -208,13 +208,13 @@ export function ConfirmationDialog({
             <div className="flex-1">
               <h2
                 id={titleId}
-                className="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
+                className="text-lg font-semibold text-neutral-12"
               >
                 {title}
               </h2>
               <p
                 id={descriptionId}
-                className="mt-2 text-sm text-neutral-600 dark:text-neutral-400"
+                className="mt-2 text-sm text-neutral-11"
               >
                 {message}
               </p>
@@ -224,13 +224,13 @@ export function ConfirmationDialog({
           {/* Type-to-confirm input */}
           {requiresConfirmText && (
             <div className="mt-4">
-              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+              <label className="block text-sm font-medium text-neutral-11">
                 Type <span className="font-mono font-bold">{confirmText}</span>{" "}
                 to confirm
               </label>
               <Input
                 variant="error"
-                className="mt-1 px-3 py-2 text-sm -500 focus:ring-error-500"
+                className="mt-1 px-3 py-2 text-sm -500 focus:ring-error-7"
                 value={typedText}
                 onChange={(e) => setTypedText(e.target.value)}
                 placeholder={`Type ${confirmText} to confirm`}
@@ -240,10 +240,10 @@ export function ConfirmationDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 border-t border-neutral-200 dark:border-neutral-700 px-6 py-4">
+        <div className="flex justify-end gap-3 border-t border-neutral-5 px-6 py-4">
           <Button
             variant="secondary"
-            className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded-md hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 focus:ring-neutral-500"
+            className="px-4 py-2 text-sm text-neutral-11 bg-neutral-2 rounded-md hover:bg-neutral-3 focus:ring-neutral-8"
             type="button"
             onClick={onCancel}
             disabled={isLoading}
@@ -251,7 +251,7 @@ export function ConfirmationDialog({
             {cancelLabel}
           </Button>
           <Button
-            className="px-4 py-2 text-sm text-white rounded-md focus:ring-offset-2 flex"
+            className="px-4 py-2 text-sm text-neutral-12 rounded-md focus:ring-offset-2 flex"
             ref={confirmButtonRef}
             type="button"
             onClick={handleConfirm}

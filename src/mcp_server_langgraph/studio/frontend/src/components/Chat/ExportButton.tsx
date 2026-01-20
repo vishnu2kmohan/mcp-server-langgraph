@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useExportSessionMutation } from "../../api";
+import { TOAST_ID_EXPORT } from "../../constants/toastIds";
 import type { ExportFormat } from "../../types/api";
 
 import { Button, Checkbox } from "@/components/UI";
@@ -104,10 +105,10 @@ export function ExportButton({
         // Download the file
         downloadBlob(result, filename);
 
-        toast.success(`Session exported as ${format.toUpperCase()}`);
+        toast.success(`Session exported as ${format.toUpperCase()}`, { id: TOAST_ID_EXPORT });
         setIsOpen(false);
       } catch {
-        toast.error("Failed to export session");
+        toast.error("Failed to export session", { id: TOAST_ID_EXPORT });
       }
     },
     [exportSession, sessionId, sessionTitle, includeMetadata],
@@ -130,8 +131,8 @@ export function ExportButton({
         disabled={isLoading}
         className={cn(
           "flex items-center gap-2 px-3 py-1.5 text-sm",
-          "text-neutral-700 dark:text-neutral-300",
-          "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded",
+          "text-neutral-11",
+          "hover:bg-neutral-2 rounded",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           className,
         )}
@@ -151,7 +152,7 @@ export function ExportButton({
         <>
           {/* Backdrop to close dropdown */}
           <div
-            className="fixed inset-0 z-10"
+            className="fixed inset-0 z-dropdown"
             onClick={() => setIsOpen(false)}
             aria-hidden="true"
           />
@@ -159,10 +160,10 @@ export function ExportButton({
           {/* Menu */}
           <div
             className={cn(
-              "absolute right-0 top-full mt-1 z-20",
+              "absolute right-0 top-full mt-1 z-dropdown",
               "w-56 rounded-md shadow-lg",
-              "bg-white dark:bg-neutral-800",
-              "border border-neutral-200 dark:border-neutral-700",
+              "bg-neutral-1",
+              "border border-neutral-5",
               "py-1",
             )}
             role="menu"
@@ -176,8 +177,8 @@ export function ExportButton({
                 disabled={isLoading}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-2 text-sm text-left",
-                  "text-neutral-700 dark:text-neutral-300",
-                  "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+                  "text-neutral-11",
+                  "hover:bg-neutral-2",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
                 )}
                 role="menuitem"
@@ -188,13 +189,13 @@ export function ExportButton({
             ))}
 
             {/* Divider */}
-            <div className="my-1 border-t border-neutral-200 dark:border-neutral-700" />
+            <div className="my-1 border-t border-neutral-5" />
 
             {/* Include Metadata Toggle */}
             <div
               className={cn(
                 "px-4 py-2",
-                "hover:bg-neutral-100 dark:hover:bg-neutral-700",
+                "hover:bg-neutral-2",
               )}
             >
               <Checkbox

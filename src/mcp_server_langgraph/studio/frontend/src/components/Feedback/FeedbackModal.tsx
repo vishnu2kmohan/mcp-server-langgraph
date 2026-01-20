@@ -48,21 +48,21 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         data-testid="feedback-modal"
         role="dialog"
         aria-labelledby="feedback-modal-title"
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-a6"
       >
-        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-md p-6 mx-4">
+        <div className="bg-neutral-1 rounded-lg shadow-xl w-full max-w-md p-6 mx-4">
           <div className="flex flex-col items-center text-center">
-            <CheckCircle className="w-16 h-16 text-success-500 mb-4" />
-            <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+            <CheckCircle className="w-16 h-16 text-success-9 mb-4" />
+            <h2 className="text-xl font-semibold text-neutral-12 mb-2">
               Thank You!
             </h2>
-            <p className="text-neutral-600 dark:text-neutral-300 mb-6">
+            <p className="text-neutral-11 mb-6">
               Your feedback helps us improve.
             </p>
             <Button
               variant="primary"
               size="lg"
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              className="px-6 py-2 bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11"
               onClick={onClose}
             >
               Done
@@ -78,30 +78,30 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
       data-testid="feedback-modal"
       role="dialog"
       aria-labelledby="feedback-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-a6"
     >
-      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-lg p-6 mx-4">
+      <div className="bg-neutral-1 rounded-lg shadow-xl w-full max-w-lg p-6 mx-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2
             id="feedback-modal-title"
-            className="text-xl font-semibold text-neutral-900 dark:text-white"
+            className="text-xl font-semibold text-neutral-12"
           >
             Share Your Feedback
           </h2>
-          <Button
+          <Button size="icon"
             variant="secondary"
-            className="p-1 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
+            className="p-1 hover:bg-neutral-2 rounded"
             data-testid="close-feedback-modal"
             onClick={onClose}
           >
-            <X size={20} className="text-neutral-500 dark:text-neutral-400" />
+            <X size={20} className="text-neutral-10" />
           </Button>
         </div>
 
         {/* NPS Section */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+          <label className="block text-sm font-medium text-neutral-11 mb-3">
             How likely are you to recommend this product to a colleague?
           </label>
           <div className="flex flex-wrap gap-2 justify-center">
@@ -116,7 +116,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               </Button>
             ))}
           </div>
-          <div className="flex justify-between mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+          <div className="flex justify-between mt-2 text-xs text-neutral-10">
             <span>Not likely</span>
             <span>Very likely</span>
           </div>
@@ -124,7 +124,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
         {/* CSAT Section */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+          <label className="block text-sm font-medium text-neutral-11 mb-3">
             How would you rate your overall satisfaction?
           </label>
           <div className="flex justify-center gap-2">
@@ -150,11 +150,11 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
         {/* Comment Section */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+          <label className="block text-sm font-medium text-neutral-11 mb-2">
             Additional comments (optional)
           </label>
           <Textarea
-            className="px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
+            className="px-3 py-2 text-neutral-12 focus:ring-primary-7"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Share any additional comments or suggestions..."
@@ -167,7 +167,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
           <Button
             variant="primary"
             size="lg"
-            className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex"
+            className="px-6 py-2 bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11 flex"
             onClick={handleSubmit}
             disabled={!canSubmit || isLoading}
           >

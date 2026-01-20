@@ -80,7 +80,7 @@ describe("StatusBar", () => {
 
       const indicator = screen.getByTestId("connection-indicator");
       expect(indicator).toBeInTheDocument();
-      expect(indicator).toHaveClass("bg-success-500");
+      expect(indicator).toHaveClass("bg-success-9");
     });
 
     it("should show disconnected indicator when disconnected", () => {
@@ -88,7 +88,7 @@ describe("StatusBar", () => {
 
       const indicator = screen.getByTestId("connection-indicator");
       expect(indicator).toBeInTheDocument();
-      expect(indicator).toHaveClass("bg-error-500");
+      expect(indicator).toHaveClass("bg-error-9");
     });
 
     it("should show connecting indicator when connecting", () => {
@@ -96,7 +96,7 @@ describe("StatusBar", () => {
 
       const indicator = screen.getByTestId("connection-indicator");
       expect(indicator).toBeInTheDocument();
-      expect(indicator).toHaveClass("bg-warning-500");
+      expect(indicator).toHaveClass("bg-warning-9");
     });
 
     it("should hide connection indicator when status is undefined", () => {
@@ -260,21 +260,24 @@ describe("StatusBar", () => {
       render(<StatusBar modelName="gpt-4" modelProvider="openai" />);
 
       const indicator = screen.getByTestId("model-indicator");
-      expect(indicator).toHaveClass("text-success-600");
+      // Radix step 11 for text per design system
+      expect(indicator).toHaveClass("text-success-11");
     });
 
     it("should apply provider color class for anthropic", () => {
       render(<StatusBar modelName="claude-3" modelProvider="anthropic" />);
 
       const indicator = screen.getByTestId("model-indicator");
-      expect(indicator).toHaveClass("text-grafana-600");
+      // Radix step 11 for text per design system
+      expect(indicator).toHaveClass("text-grafana-11");
     });
 
     it("should apply provider color class for google", () => {
       render(<StatusBar modelName="gemini-2.5" modelProvider="google" />);
 
       const indicator = screen.getByTestId("model-indicator");
-      expect(indicator).toHaveClass("text-primary-600");
+      // Radix step 11 for text per design system
+      expect(indicator).toHaveClass("text-primary-11");
     });
 
     it("should include provider in title", () => {
@@ -403,7 +406,8 @@ describe("StatusBar", () => {
       render(<StatusBar />);
 
       const statusBar = screen.getByTestId("status-bar");
-      expect(statusBar).toHaveClass("dark:bg-neutral-800");
+      // Uses semantic neutral classes that adapt to dark mode via CSS variables
+      expect(statusBar).toHaveClass("bg-neutral-2", "border-neutral-5");
     });
   });
 
@@ -413,7 +417,7 @@ describe("StatusBar", () => {
 
       const indicator = screen.getByTestId("connection-indicator");
       expect(indicator).toBeInTheDocument();
-      expect(indicator).toHaveClass("bg-error-500");
+      expect(indicator).toHaveClass("bg-error-9");
     });
 
     it("should display error message when provided", () => {
@@ -427,7 +431,8 @@ describe("StatusBar", () => {
       render(<StatusBar errorMessage="Something went wrong" />);
 
       const errorElement = screen.getByTestId("error-message");
-      expect(errorElement).toHaveClass("text-error-500");
+      // Radix step 11 for text per design system
+      expect(errorElement).toHaveClass("text-error-11");
     });
 
     it("should not display error message when not provided", () => {
@@ -445,7 +450,7 @@ describe("StatusBar", () => {
       );
 
       const indicator = screen.getByTestId("connection-indicator");
-      expect(indicator).toHaveClass("bg-error-500");
+      expect(indicator).toHaveClass("bg-error-9");
       expect(screen.getByText("Server unreachable")).toBeInTheDocument();
     });
   });
@@ -495,7 +500,7 @@ describe("StatusBar", () => {
       );
 
       const button = screen.getByTestId("agent-queue-toggle");
-      expect(button).toHaveClass("bg-primary-100");
+      expect(button).toHaveClass("bg-primary-3");
     });
 
     it("should have accessible label for agent queue button", () => {
@@ -559,7 +564,7 @@ describe("StatusBar", () => {
       );
 
       const button = screen.getByTestId("pending-approvals-indicator");
-      expect(button).toHaveClass("bg-warning-100");
+      expect(button).toHaveClass("bg-warning-3");
     });
 
     it("should show active state when approvalsPanelOpen is true", () => {
@@ -572,7 +577,7 @@ describe("StatusBar", () => {
       );
 
       const button = screen.getByTestId("pending-approvals-indicator");
-      expect(button).toHaveClass("bg-warning-200");
+      expect(button).toHaveClass("bg-warning-6");
     });
 
     it("should have accessible aria-label for pending approvals button", () => {
@@ -626,7 +631,7 @@ describe("StatusBar", () => {
       );
 
       const button = screen.getByTestId("devtools-toggle");
-      expect(button).toHaveClass("bg-primary-100");
+      expect(button).toHaveClass("bg-primary-3");
     });
 
     it("should not show active state when DevTools is collapsed", () => {
@@ -635,7 +640,7 @@ describe("StatusBar", () => {
       );
 
       const button = screen.getByTestId("devtools-toggle");
-      expect(button).not.toHaveClass("bg-primary-100");
+      expect(button).not.toHaveClass("bg-primary-3");
     });
 
     it("should have accessible aria-label for collapsed state", () => {
@@ -794,21 +799,21 @@ describe("StatusBar", () => {
       render(<StatusBar kbStatus="ready" />);
 
       const indicator = screen.getByTestId("kb-status-indicator");
-      expect(indicator).toHaveClass("bg-success-500");
+      expect(indicator).toHaveClass("bg-success-9");
     });
 
     it("should show yellow indicator when kbStatus is misconfigured", () => {
       render(<StatusBar kbStatus="misconfigured" />);
 
       const indicator = screen.getByTestId("kb-status-indicator");
-      expect(indicator).toHaveClass("bg-warning-500");
+      expect(indicator).toHaveClass("bg-warning-9");
     });
 
     it("should show gray indicator when kbStatus is unavailable", () => {
       render(<StatusBar kbStatus="unavailable" />);
 
       const indicator = screen.getByTestId("kb-status-indicator");
-      expect(indicator).toHaveClass("bg-neutral-400");
+      expect(indicator).toHaveClass("bg-neutral-4");
     });
 
     it("should display KB label text with status", () => {

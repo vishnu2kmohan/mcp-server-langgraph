@@ -18,8 +18,8 @@ export const toggleVariants = cva(
     "relative inline-flex shrink-0 cursor-pointer rounded-full",
     "border-2 border-transparent",
     "transition-colors duration-200 ease-in-out",
-    "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
-    "dark:focus:ring-offset-neutral-900",
+    "focus:outline-none focus:ring-2 focus:ring-primary-7 focus:ring-offset-2",
+    "dark:focus:ring-offset-neutral-12",
   ],
   {
     variants: {
@@ -29,8 +29,8 @@ export const toggleVariants = cva(
         lg: "h-7 w-14",
       },
       checked: {
-        true: "bg-primary-500 dark:bg-primary-600",
-        false: "bg-neutral-200 dark:bg-neutral-700",
+        true: "bg-primary-9 dark:bg-primary-10",
+        false: "bg-neutral-3",
       },
       disabled: {
         true: "cursor-not-allowed opacity-50",
@@ -50,7 +50,7 @@ export const toggleVariants = cva(
  */
 const thumbVariants = cva(
   [
-    "pointer-events-none inline-block rounded-full bg-white shadow-lg",
+    "pointer-events-none inline-block rounded-full bg-neutral-1 shadow-lg",
     "ring-0 transition-transform duration-200 ease-in-out",
   ],
   {
@@ -170,7 +170,7 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
             <label
               htmlFor={id}
               className={cn(
-                "text-sm font-medium text-neutral-900 dark:text-neutral-100",
+                "text-sm font-medium text-neutral-12",
                 disabled && "opacity-50",
               )}
             >
@@ -181,7 +181,7 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
             <span
               id={descriptionId}
               className={cn(
-                "text-xs text-neutral-500 dark:text-neutral-400",
+                "text-xs text-neutral-10",
                 disabled && "opacity-50",
               )}
             >

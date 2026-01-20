@@ -48,33 +48,33 @@ const STATUS_CONFIG: Record<
 > = {
   queued: {
     icon: <Clock className="h-3 w-3" />,
-    color: "text-warning-600",
-    bgColor: "bg-warning-500",
+    color: "text-warning-9",
+    bgColor: "bg-warning-9",
   },
   running: {
     icon: <Loader2 className="h-3 w-3 animate-spin" />,
-    color: "text-primary-600",
-    bgColor: "bg-primary-500",
+    color: "text-primary-10",
+    bgColor: "bg-primary-9",
   },
   completed: {
     icon: <CheckCircle className="h-3 w-3" />,
-    color: "text-success-600",
-    bgColor: "bg-success-500",
+    color: "text-success-10",
+    bgColor: "bg-success-9",
   },
   failed: {
     icon: <AlertCircle className="h-3 w-3" />,
-    color: "text-error-600",
-    bgColor: "bg-error-500",
+    color: "text-error-10",
+    bgColor: "bg-error-9",
   },
   awaiting_approval: {
     icon: <AlertCircle className="h-3 w-3" />,
-    color: "text-warning-600",
-    bgColor: "bg-warning-500",
+    color: "text-warning-9",
+    bgColor: "bg-warning-9",
   },
   awaiting_clarification: {
     icon: <Clock className="h-3 w-3" />,
-    color: "text-insight-600",
-    bgColor: "bg-insight-500",
+    color: "text-insight-10",
+    bgColor: "bg-insight-9",
   },
 };
 
@@ -97,8 +97,8 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
     <li
       className={cn(
         "p-3 rounded-lg border",
-        "bg-white dark:bg-neutral-800",
-        "border-neutral-200 dark:border-neutral-700",
+        "bg-neutral-1",
+        "border-neutral-5",
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -109,21 +109,21 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
               className={cn(
                 "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
                 config.bgColor,
-                "text-white",
+                "text-neutral-12",
               )}
             >
               {config.icon}
               {agent.status}
             </span>
-            <h4 className="text-sm font-medium text-neutral-900 dark:text-white truncate">
+            <h4 className="text-sm font-medium text-neutral-12 truncate">
               {agent.name}
             </h4>
           </div>
-          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 truncate">
+          <p className="mt-1 text-xs text-neutral-10 truncate">
             {agent.task}
           </p>
           {agent.error && (
-            <p className="mt-1 text-xs text-error-500">{agent.error}</p>
+            <p className="mt-1 text-xs text-error-9">{agent.error}</p>
           )}
         </div>
 
@@ -135,9 +135,8 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
               aria-label={`Cancel ${agent.name}`}
               className={cn(
                 "p-1 rounded",
-                "text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300",
-                "dark:hover:text-neutral-300",
-                "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+                "text-neutral-9 hover:text-neutral-11",
+                "hover:bg-neutral-2",
               )}
             >
               <X className="h-4 w-4" />
@@ -150,9 +149,8 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
               aria-label={`Dismiss ${agent.name}`}
               className={cn(
                 "p-1 rounded",
-                "text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300",
-                "dark:hover:text-neutral-300",
-                "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+                "text-neutral-9 hover:text-neutral-11",
+                "hover:bg-neutral-2",
               )}
             >
               <Trash2 className="h-4 w-4" />
@@ -163,7 +161,7 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
       {/* Progress bar for running tasks */}
       {agent.status === "running" && (
         <div className="mt-2">
-          <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+          <div className="flex items-center justify-between text-xs text-neutral-10 mb-1">
             <span>Progress</span>
             <span>{agent.progress}%</span>
           </div>
@@ -172,11 +170,11 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
             aria-valuenow={agent.progress}
             aria-valuemin={0}
             aria-valuemax={100}
-            className="h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden"
+            className="h-1.5 bg-neutral-3 rounded-full overflow-hidden"
           >
             <div
-              className="h-full bg-primary-500 transition-all duration-300"
-              style={{ width: `${agent.progress}%` }}
+              className="h-full bg-primary-9 transition-all duration-300"
+              style={{ '--progress': `${agent.progress}%` } as React.CSSProperties}
             />
           </div>
         </div>
@@ -214,7 +212,7 @@ export function AgentTaskQueue({ onCancel, className }: AgentTaskQueueProps) {
         data-testid="agent-task-queue"
         className={cn(
           "flex flex-col items-center justify-center p-8 text-center",
-          "text-neutral-500 dark:text-neutral-400",
+          "text-neutral-10",
           className,
         )}
       >
@@ -237,33 +235,30 @@ export function AgentTaskQueue({ onCancel, className }: AgentTaskQueueProps) {
       className={cn("flex flex-col h-full", className)}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-5">
         <div>
           <h3
-            className="text-sm font-semibold text-neutral-900 dark:text-white"
+            className="text-sm font-semibold text-neutral-12"
             role="heading"
           >
             Task Queue
           </h3>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+          <p className="text-xs text-neutral-10">
             {agents.length} {taskLabel}
             {runningCount > 0 && ` (${runningCount} running)`}
           </p>
         </div>
 
         {hasCompletedOrFailed && (
-          <Button
+          <Button variant="secondary"
             type="button"
             onClick={handleClearCompleted}
             className={cn(
               "text-xs px-2 py-1 rounded",
-              "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200",
-              "dark:text-neutral-400 dark:hover:text-neutral-200",
-              "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+              "text-neutral-10 hover:text-neutral-11",
+              "hover:bg-neutral-2",
             )}
-          >
-            Clear completed
-          </Button>
+          >Clear completed</Button>
         )}
       </div>
       {/* Task list */}

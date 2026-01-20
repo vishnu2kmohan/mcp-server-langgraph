@@ -166,6 +166,11 @@ export const DEFAULT_SHORTCUT_CATEGORIES: ShortcutCategory[] = [
         keys: ["/"],
         description: "Open slash command menu",
       },
+      {
+        id: "cycle-execution-mode",
+        keys: ["Cmd", "Shift", "M"],
+        description: "Cycle execution mode (Default → Plan → Auto → Bypass)",
+      },
     ],
   },
   {

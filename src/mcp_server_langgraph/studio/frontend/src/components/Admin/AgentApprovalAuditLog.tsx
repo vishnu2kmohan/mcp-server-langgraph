@@ -13,6 +13,8 @@
  */
 
 import React, { useState, useMemo } from "react";
+import { useReducedMotion } from "motion/react";
+import { cn } from "../../utils/cn";
 
 import { Button, Select } from "@/components/UI";
 
@@ -53,6 +55,9 @@ export function AgentApprovalAuditLog({
   onExport,
   className = "",
 }: AgentApprovalAuditLogProps): React.ReactElement {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   const [filter, setFilter] = useState<"all" | "approved" | "rejected">("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -87,14 +92,14 @@ export function AgentApprovalAuditLog({
   // Render loading state
   if (isLoading) {
     return (
-      <div className={`p-4 ${className}`}>
-        <div className="animate-pulse">
-          <div className="h-6 bg-neutral-200 dark:bg-neutral-700 rounded w-1/4 mb-4"></div>
-          <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-full mb-2"></div>
-          <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-full mb-2"></div>
-          <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4"></div>
+      <div className={cn("p-4", className)}>
+        <div className={cn(!prefersReducedMotion && "animate-pulse")}>
+          <div className="h-6 bg-neutral-3 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-neutral-3 rounded w-full mb-2"></div>
+          <div className="h-4 bg-neutral-3 rounded w-full mb-2"></div>
+          <div className="h-4 bg-neutral-3 rounded w-3/4"></div>
         </div>
-        <p className="text-neutral-500 dark:text-neutral-400 mt-2">
+        <p className="text-neutral-10 mt-2">
           Loading...
         </p>
       </div>
@@ -102,7 +107,7 @@ export function AgentApprovalAuditLog({
   }
 
   return (
-    <div className={`p-4 ${className}`}>
+    <div className={cn("p-4", className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Approval Audit Log</h2>
@@ -125,7 +130,7 @@ export function AgentApprovalAuditLog({
           {/* Export button */}
           <Button
             variant="primary"
-            className="px-3 py-1.5 bg-primary-600 text-white rounded-md text-sm hover:bg-primary-700"
+            className="px-3 py-1.5 bg-primary-10 text-neutral-12 rounded-md text-sm hover:bg-primary-11"
             onClick={handleExport}
             aria-label="Export"
           >
@@ -135,7 +140,7 @@ export function AgentApprovalAuditLog({
       </div>
       {/* Empty state */}
       {filteredEntries.length === 0 && (
-        <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+        <div className="text-center py-8 text-neutral-10">
           <p>No approval history available.</p>
         </div>
       )}
@@ -144,20 +149,20 @@ export function AgentApprovalAuditLog({
         <div className="overflow-x-auto">
           <table className="w-full border-collapse" role="table">
             <thead>
-              <tr className="border-b bg-neutral-50">
-                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-600 dark:text-neutral-300">
+              <tr className="border-b bg-neutral-1">
+                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-11">
                   Agent
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-600 dark:text-neutral-300">
+                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-11">
                   Decision
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-600 dark:text-neutral-300">
+                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-11">
                   Confidence
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-600 dark:text-neutral-300">
+                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-11">
                   Decided By
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-600 dark:text-neutral-300">
+                <th className="px-4 py-2 text-left text-sm font-medium text-neutral-11">
                   Date
                 </th>
               </tr>
@@ -167,69 +172,70 @@ export function AgentApprovalAuditLog({
                 <React.Fragment key={entry.id}>
                   {/* Main row */}
                   <tr
-                    className="border-b hover:bg-neutral-50 cursor-pointer"
+                    className="border-b hover:bg-neutral-1 cursor-pointer"
                     onClick={() => handleRowClick(entry.id)}
                     role="row"
                   >
                     <td className="px-4 py-3 text-sm">{entry.agentName}</td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                        className={cn(
+                          "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
                           entry.decision === "approved"
-                            ? "bg-success-100 text-success-800"
-                            : "bg-error-100 text-error-800"
-                        }`}
+                            ? "bg-success-3 text-success-11"
+                            : "bg-error-3 text-error-11",
+                        )}
                       >
                         {entry.decision}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
-                        className={`${
+                        className={cn(
                           entry.confidence >= entry.threshold
-                            ? "text-success-600"
-                            : "text-warning-600"
-                        }`}
+                            ? "text-success-10"
+                            : "text-warning-9",
+                        )}
                       >
                         {Math.round(entry.confidence * 100)}%
                       </span>
-                      <span className="text-neutral-400 dark:text-neutral-400 text-xs ml-1">
+                      <span className="text-neutral-9 text-xs ml-1">
                         / {Math.round(entry.threshold * 100)}%
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-neutral-600 dark:text-neutral-300">
+                    <td className="px-4 py-3 text-sm text-neutral-11">
                       {entry.decidedBy}
                     </td>
-                    <td className="px-4 py-3 text-sm text-neutral-500 dark:text-neutral-400">
+                    <td className="px-4 py-3 text-sm text-neutral-10">
                       {formatDate(entry.decidedAt)}
                     </td>
                   </tr>
 
                   {/* Expanded details row */}
                   {expandedId === entry.id && (
-                    <tr className="bg-neutral-50">
+                    <tr className="bg-neutral-1">
                       <td colSpan={5} className="px-4 py-3">
                         <div className="text-sm">
                           <div className="mb-2">
-                            <span className="font-medium text-neutral-700 dark:text-neutral-200">
+                            <span className="font-medium text-neutral-11">
                               Request ID:
                             </span>{" "}
-                            <span className="font-mono text-neutral-600 dark:text-neutral-300">
+                            <span className="font-mono text-neutral-11">
                               {entry.requestId}
                             </span>
                           </div>
                           {entry.reason && (
                             <div>
-                              <span className="font-medium text-neutral-700 dark:text-neutral-200">
+                              <span className="font-medium text-neutral-11">
                                 Reason:
                               </span>{" "}
-                              <span className="text-neutral-600 dark:text-neutral-300">
+                              <span className="text-neutral-11">
                                 {entry.reason}
                               </span>
                             </div>
                           )}
                           {!entry.reason && (
-                            <div className="text-neutral-400 dark:text-neutral-400 italic">
+                            <div className="text-neutral-9 italic">
                               No reason provided
                             </div>
                           )}
@@ -245,7 +251,7 @@ export function AgentApprovalAuditLog({
       )}
       {/* Summary */}
       {entries.length > 0 && (
-        <div className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">
+        <div className="mt-4 text-sm text-neutral-10">
           Showing {filteredEntries.length} of {entries.length} entries
           {filter !== "all" && ` (filtered by: ${filter})`}
         </div>

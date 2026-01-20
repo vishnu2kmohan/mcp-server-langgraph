@@ -568,13 +568,13 @@ describe("SettingsPage", () => {
 
       // System should be selected by default
       const systemButton = screen.getByText("system").closest("button");
-      expect(systemButton).toHaveClass("border-primary-500");
+      expect(systemButton).toHaveClass("border-primary-9");
 
       // Click dark
       const darkButton = screen.getByText("dark").closest("button")!;
       fireEvent.click(darkButton);
 
-      expect(darkButton).toHaveClass("border-primary-500");
+      expect(darkButton).toHaveClass("border-primary-9");
     });
   });
 
@@ -916,6 +916,36 @@ describe("SettingsPage", () => {
         const state = store.getState();
         expect(state.canvas.hasCustomLayout).toBe(false);
       });
+    });
+  });
+
+  // ===========================================================================
+  // ACCESSIBILITY TESTS
+  // ===========================================================================
+
+  describe("Accessibility", () => {
+    it("should have role=tablist on sidebar navigation", () => {
+      renderWithStore();
+
+      const tablist = screen.getByRole("tablist");
+      expect(tablist).toBeInTheDocument();
+    });
+
+    it("should have role=tab on each tab button", () => {
+      renderWithStore();
+
+      const tabs = screen.getAllByRole("tab");
+      expect(tabs.length).toBeGreaterThan(0);
+    });
+
+    it("should have aria-selected on active tab", () => {
+      renderWithStore();
+
+      const tabs = screen.getAllByRole("tab");
+      const selectedTab = tabs.find(
+        (tab) => tab.getAttribute("aria-selected") === "true",
+      );
+      expect(selectedTab).toBeInTheDocument();
     });
   });
 });

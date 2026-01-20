@@ -91,6 +91,23 @@ export interface CanvasActionEvent {
   error?: string;
 }
 
+export interface ExecutionModeChangeEvent {
+  fromMode: "default" | "plan" | "auto_accept" | "bypass";
+  toMode: "default" | "plan" | "auto_accept" | "bypass";
+  sessionId?: string;
+  trigger: "keyboard" | "click" | "api";
+}
+
+export interface BypassApprovalEvent {
+  planId: string;
+  sessionId?: string;
+  approvalType: "auto" | "user" | "rejected";
+  riskLevel: "low" | "medium" | "high";
+  complexity: "simple" | "complicated" | "complex";
+  toolsNeeded: string[];
+  durationMs?: number;
+}
+
 export interface TelemetryEvent {
   type:
     | "session_creation"
@@ -99,7 +116,9 @@ export interface TelemetryEvent {
     | "artifact_save"
     | "artifact_delete"
     | "suggestion_action"
-    | "canvas_action";
+    | "canvas_action"
+    | "execution_mode_change"
+    | "bypass_approval";
   timestamp: number;
   data:
     | SessionCreationEvent
@@ -108,7 +127,9 @@ export interface TelemetryEvent {
     | ArtifactSaveEvent
     | ArtifactDeleteEvent
     | SuggestionActionEvent
-    | CanvasActionEvent;
+    | CanvasActionEvent
+    | ExecutionModeChangeEvent
+    | BypassApprovalEvent;
 }
 
 export interface SessionTelemetryMetrics {
@@ -168,6 +189,21 @@ export interface SessionTelemetryMetrics {
     avgDurationMs: number;
     byAction: Record<string, number>;
     lastError?: string;
+  };
+  executionMode: {
+    modeChanges: {
+      total: number;
+      byMode: Record<string, number>;
+      byTrigger: Record<string, number>;
+    };
+    bypassApprovals: {
+      total: number;
+      autoApproved: number;
+      userApproved: number;
+      autoApprovalRate: number;
+      byRiskLevel: Record<string, number>;
+      byComplexity: Record<string, number>;
+    };
   };
 }
 
@@ -269,6 +305,18 @@ export class SessionTelemetry {
   private canvasActionDurations: number[] = [];
   private canvasActionByType: Record<string, number> = {};
   private canvasActionLastError?: string;
+
+  // Execution mode metrics
+  private modeChangeTotal = 0;
+  private modeChangeByMode: Record<string, number> = {};
+  private modeChangeByTrigger: Record<string, number> = {};
+
+  // Bypass approval metrics
+  private bypassApprovalTotal = 0;
+  private bypassApprovalAuto = 0;
+  private bypassApprovalUser = 0;
+  private bypassApprovalByRiskLevel: Record<string, number> = {};
+  private bypassApprovalByComplexity: Record<string, number> = {};
 
   constructor(options: SessionTelemetryOptions = {}) {
     this.options = {
@@ -426,6 +474,48 @@ export class SessionTelemetry {
   }
 
   /**
+   * Track execution mode change event
+   */
+  trackExecutionModeChange(event: ExecutionModeChangeEvent): void {
+    this.modeChangeTotal++;
+
+    // Track by destination mode
+    this.modeChangeByMode[event.toMode] =
+      (this.modeChangeByMode[event.toMode] || 0) + 1;
+
+    // Track by trigger
+    this.modeChangeByTrigger[event.trigger] =
+      (this.modeChangeByTrigger[event.trigger] || 0) + 1;
+
+    this.addToHistory("execution_mode_change", event);
+    this.log("Execution mode change tracked", event);
+  }
+
+  /**
+   * Track bypass approval event
+   */
+  trackBypassApproval(event: BypassApprovalEvent): void {
+    this.bypassApprovalTotal++;
+
+    if (event.approvalType === "auto") {
+      this.bypassApprovalAuto++;
+    } else {
+      this.bypassApprovalUser++;
+    }
+
+    // Track by risk level
+    this.bypassApprovalByRiskLevel[event.riskLevel] =
+      (this.bypassApprovalByRiskLevel[event.riskLevel] || 0) + 1;
+
+    // Track by complexity
+    this.bypassApprovalByComplexity[event.complexity] =
+      (this.bypassApprovalByComplexity[event.complexity] || 0) + 1;
+
+    this.addToHistory("bypass_approval", event);
+    this.log("Bypass approval tracked", event);
+  }
+
+  /**
    * Get current metrics
    */
   getMetrics(): SessionTelemetryMetrics {
@@ -502,6 +592,24 @@ export class SessionTelemetry {
         byAction: { ...this.canvasActionByType },
         lastError: this.canvasActionLastError,
       },
+      executionMode: {
+        modeChanges: {
+          total: this.modeChangeTotal,
+          byMode: { ...this.modeChangeByMode },
+          byTrigger: { ...this.modeChangeByTrigger },
+        },
+        bypassApprovals: {
+          total: this.bypassApprovalTotal,
+          autoApproved: this.bypassApprovalAuto,
+          userApproved: this.bypassApprovalUser,
+          autoApprovalRate:
+            this.bypassApprovalTotal > 0
+              ? this.bypassApprovalAuto / this.bypassApprovalTotal
+              : 0,
+          byRiskLevel: { ...this.bypassApprovalByRiskLevel },
+          byComplexity: { ...this.bypassApprovalByComplexity },
+        },
+      },
     };
   }
 
@@ -558,6 +666,16 @@ export class SessionTelemetry {
     this.canvasActionDurations = [];
     this.canvasActionByType = {};
     this.canvasActionLastError = undefined;
+
+    this.modeChangeTotal = 0;
+    this.modeChangeByMode = {};
+    this.modeChangeByTrigger = {};
+
+    this.bypassApprovalTotal = 0;
+    this.bypassApprovalAuto = 0;
+    this.bypassApprovalUser = 0;
+    this.bypassApprovalByRiskLevel = {};
+    this.bypassApprovalByComplexity = {};
 
     this.eventHistory = [];
   }
@@ -624,7 +742,9 @@ export class SessionTelemetry {
       | ArtifactSaveEvent
       | ArtifactDeleteEvent
       | SuggestionActionEvent
-      | CanvasActionEvent,
+      | CanvasActionEvent
+      | ExecutionModeChangeEvent
+      | BypassApprovalEvent,
   ): void {
     this.eventHistory.push({
       type,

@@ -1,12 +1,29 @@
 /**
  * StatusFilter Component
  *
- * Reusable component for filtering by status with a simple dropdown.
+ * Reusable component for filtering by status with a design system dropdown.
  * Features:
- * - Single select via dropdown
+ * - Single select via dropdown (uses design system Select)
  * - "All" option to clear filter
  * - Accessibility support
+ * - Consistent styling with design system
+ *
+ * @example
+ * ```tsx
+ * <StatusFilter
+ *   options={[
+ *     { value: "active", label: "Active" },
+ *     { value: "archived", label: "Archived" },
+ *   ]}
+ *   value={statusFilter}
+ *   onChange={setStatusFilter}
+ *   ariaLabel="Filter by status"
+ * />
+ * ```
  */
+
+import { Select, type SelectSize } from "./Select";
+import { cn } from "@/utils/cn";
 
 /**
  * Status option definition
@@ -32,6 +49,10 @@ export interface StatusFilterProps {
   allLabel?: string;
   /** Aria label for the select */
   ariaLabel?: string;
+  /** Size variant */
+  size?: SelectSize;
+  /** Whether the filter is disabled */
+  disabled?: boolean;
   /** Additional CSS classes */
   className?: string;
 }
@@ -45,6 +66,8 @@ export function StatusFilter({
   onChange,
   allLabel = "All",
   ariaLabel = "Status",
+  size = "sm",
+  disabled = false,
   className = "",
 }: StatusFilterProps) {
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -52,21 +75,28 @@ export function StatusFilter({
     onChange(newValue === "" ? null : newValue);
   };
 
+  // Convert StatusOptions to SelectOptions
+  const selectOptions = [
+    { value: "", label: allLabel },
+    ...options,
+  ];
+
   return (
-    <div data-testid="status-filter" className={`inline-block ${className}`}>
-      <select
+    <div data-testid="status-filter" className={cn("inline-block", className)}>
+      <Select
         value={value ?? ""}
         onChange={handleChange}
         aria-label={ariaLabel}
-        className="px-3 py-1.5 text-sm border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        size={size}
+        disabled={disabled}
+        fullWidth={false}
       >
-        <option value="">{allLabel}</option>
-        {options.map((option) => (
+        {selectOptions.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
-      </select>
+      </Select>
     </div>
   );
 }

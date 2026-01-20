@@ -64,8 +64,8 @@ function ProblemRow({ problem, onDismiss }: ProblemRowProps) {
       data-testid={`problem-${problem.id}`}
       className={cn(
         "flex items-start gap-2 px-3 py-2",
-        "border-b border-neutral-100 dark:border-neutral-800",
-        "hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
+        "border-b border-neutral-5",
+        "hover:bg-neutral-a6",
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -79,12 +79,12 @@ function ProblemRow({ problem, onDismiss }: ProblemRowProps) {
       />
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-neutral-900 dark:text-neutral-100 break-words">
+        <p className="text-sm text-neutral-12 break-words">
           {problem.message}
         </p>
 
-        <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-          <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded">
+        <div className="flex items-center gap-2 mt-1 text-xs text-neutral-10">
+          <span className="px-1.5 py-0.5 bg-neutral-2 rounded">
             {problem.source}
           </span>
 
@@ -101,9 +101,9 @@ function ProblemRow({ problem, onDismiss }: ProblemRowProps) {
       </div>
       {/* Dismiss button */}
       {isHovered && onDismiss && (
-        <Button
+        <Button size="icon"
           variant="secondary"
-          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
+          className="p-1 hover:bg-neutral-3 rounded"
           data-testid="dismiss-button"
           type="button"
           onClick={onDismiss}
@@ -201,12 +201,12 @@ export function ProblemsTab({
     <div
       data-testid="problems-tab"
       className={cn(
-        "flex flex-col h-full bg-white dark:bg-neutral-900",
+        "flex flex-col h-full bg-neutral-1",
         compact && "compact",
       )}
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
+      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-5 bg-neutral-1">
         {/* Filter buttons */}
         <div className="flex items-center gap-1">
           <Button
@@ -216,8 +216,8 @@ export function ProblemsTab({
             className={cn(
               "px-2 py-1 text-xs rounded",
               filter === "all"
-                ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
+                ? "bg-primary-3 bg-primary-4 text-primary-11 dark:text-primary-5"
+                : "hover:bg-neutral-3",
             )}
           >
             All
@@ -229,8 +229,8 @@ export function ProblemsTab({
             className={cn(
               "px-2 py-1 text-xs rounded flex items-center gap-1",
               filter === "errors"
-                ? "bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-300"
-                : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
+                ? "bg-error-3 bg-error-4 text-error-11 dark:text-error-9"
+                : "hover:bg-neutral-3",
             )}
           >
             <AlertCircle size={12} />
@@ -243,8 +243,8 @@ export function ProblemsTab({
             className={cn(
               "px-2 py-1 text-xs rounded flex items-center gap-1",
               filter === "warnings"
-                ? "bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300"
-                : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
+                ? "bg-warning-3 dark:bg-warning-a4 text-warning-10 dark:text-warning-6"
+                : "hover:bg-neutral-3",
             )}
           >
             <AlertTriangle size={12} />
@@ -267,7 +267,7 @@ export function ProblemsTab({
             </span>
             <span
               data-testid="warning-count"
-              className="flex items-center gap-1 text-xs text-warning-600 dark:text-warning-400"
+              className="flex items-center gap-1 text-xs text-warning-9 dark:text-warning-9"
             >
               <AlertTriangle size={12} />
               {warningCount}
@@ -279,9 +279,9 @@ export function ProblemsTab({
         <div className="flex-1" />
 
         {/* Clear all */}
-        <Button
+        <Button size="icon"
           variant="secondary"
-          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400 hover:text-error-500"
+          className="p-1 hover:bg-neutral-3 rounded text-neutral-10 hover:text-error-9"
           data-testid="clear-all-button"
           type="button"
           onClick={clearAll}
@@ -294,9 +294,9 @@ export function ProblemsTab({
       {filteredProblems.length === 0 ? (
         <div
           data-testid="problems-empty-state"
-          className="flex-1 flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-400"
+          className="flex-1 flex flex-col items-center justify-center text-neutral-9"
         >
-          <CheckCircle size={32} className="mb-2 opacity-50 text-success-500" />
+          <CheckCircle size={32} className="mb-2 opacity-50 text-success-9" />
           <p>No problems detected</p>
           <p className="text-xs mt-1">Your code looks good!</p>
         </div>

@@ -112,24 +112,22 @@ export function BulkActionBar({
     <div
       role="toolbar"
       aria-label="Bulk actions"
-      className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 px-4 py-3 flex items-center justify-between shadow-lg ${className}`}
+      className={`fixed bottom-0 left-0 right-0 bg-neutral-1 border-t border-neutral-5 px-4 py-3 flex items-center justify-between shadow-lg ${className}`}
     >
       {/* Selection count */}
       <div className="flex items-center gap-4">
         <span
           role="status"
-          className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+          className="text-sm font-medium text-neutral-11"
         >
           {selectedCount} selected
         </span>
-        <Button
-          className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
+        <Button variant="danger"
+          className="text-sm text-neutral-10 hover:text-neutral-11"
           type="button"
           aria-label="Clear selection"
           onClick={onClearSelection}
-        >
-          Clear
-        </Button>
+        >Clear</Button>
       </div>
       {/* Actions */}
       <div className="flex items-center gap-2">
@@ -137,7 +135,7 @@ export function BulkActionBar({
         {customActions.map((action) => (
           <Button
             variant="secondary"
-            className="px-3 py-1.5 text-sm rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300"
+            className="px-3 py-1.5 text-sm rounded-md bg-neutral-2 hover:bg-neutral-3 text-neutral-11"
             key={action.label}
             type="button"
             onClick={() => handleCustomActionClick(action)}
@@ -150,7 +148,7 @@ export function BulkActionBar({
         {/* Delete button */}
         <Button
           variant="danger"
-          className="px-3 py-1.5 text-sm rounded-md bg-error-100 hover:bg-error-200 dark:bg-error-900 dark:hover:bg-error-800 text-error-700 dark:text-error-300"
+          className="px-3 py-1.5 text-sm rounded-md bg-error-3 hover:bg-error-4 dark:bg-error-12 dark:hover:bg-error-11 text-error-11 dark:text-error-9"
           type="button"
           onClick={handleDeleteClick}
         >
@@ -159,19 +157,19 @@ export function BulkActionBar({
       </div>
       {/* Delete confirmation dialog */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+        <div className="fixed inset-0 bg-neutral-12 bg-opacity-50 flex items-center justify-center z-modal">
+          <div className="bg-neutral-1 rounded-lg p-6 max-w-sm mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-neutral-12 mb-2">
               Are you sure?
             </h3>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+            <p className="text-sm text-neutral-11 mb-4">
               This will delete {selectedCount} items. This action cannot be
               undone.
             </p>
             <div className="flex justify-end gap-2">
               <Button
                 variant="secondary"
-                className="px-3 py-1.5 text-sm rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300"
+                className="px-3 py-1.5 text-sm rounded-md bg-neutral-2 hover:bg-neutral-3 text-neutral-11"
                 type="button"
                 onClick={handleDeleteCancel}
                 disabled={isDeleting}
@@ -180,7 +178,7 @@ export function BulkActionBar({
               </Button>
               <Button
                 variant="danger"
-                className="px-3 py-1.5 text-sm rounded-md bg-error-600 hover:bg-error-700 text-white"
+                className="px-3 py-1.5 text-sm rounded-md bg-error-10 hover:bg-error-11 text-neutral-12"
                 type="button"
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
@@ -193,19 +191,19 @@ export function BulkActionBar({
       )}
       {/* Custom action confirmation dialog */}
       {pendingCustomAction && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+        <div className="fixed inset-0 bg-neutral-12 bg-opacity-50 flex items-center justify-center z-modal">
+          <div className="bg-neutral-1 rounded-lg p-6 max-w-sm mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-neutral-12 mb-2">
               Are you sure?
             </h3>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+            <p className="text-sm text-neutral-11 mb-4">
               {pendingCustomAction.confirmMessage ||
                 `This will affect ${selectedCount} items.`}
             </p>
             <div className="flex justify-end gap-2">
               <Button
                 variant="secondary"
-                className="px-3 py-1.5 text-sm rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300"
+                className="px-3 py-1.5 text-sm rounded-md bg-neutral-2 hover:bg-neutral-3 text-neutral-11"
                 type="button"
                 onClick={handleCustomActionCancel}
                 disabled={isCustomActionLoading}
@@ -214,7 +212,7 @@ export function BulkActionBar({
               </Button>
               <Button
                 variant="danger"
-                className="px-3 py-1.5 text-sm rounded-md bg-error-600 hover:bg-error-700 text-white"
+                className="px-3 py-1.5 text-sm rounded-md bg-error-10 hover:bg-error-11 text-neutral-12"
                 type="button"
                 onClick={handleCustomActionConfirm}
                 disabled={isCustomActionLoading}

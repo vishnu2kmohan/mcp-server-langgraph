@@ -71,30 +71,30 @@ function MetricCard({
   color = "blue",
 }: MetricCardProps) {
   const colorClasses = {
-    blue: "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30",
+    blue: "text-primary-10 dark:text-primary-7 bg-primary-1 bg-primary-4",
     green:
-      "text-success-600 dark:text-success-400 bg-success-50 dark:bg-success-900/30",
+      "text-success-10 dark:text-success-7 bg-success-1 bg-success-4",
     purple:
-      "text-insight-600 dark:text-insight-400 bg-insight-50 dark:bg-insight-900/30",
+      "text-insight-10 dark:text-insight-9 bg-insight-1 dark:bg-insight-a4",
     orange:
-      "text-grafana-600 dark:text-grafana-400 bg-grafana-50 dark:bg-grafana-900/30",
+      "text-grafana-10 dark:text-grafana-5 bg-grafana-1 dark:bg-grafana-12/30",
   };
 
   return (
-    <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+    <div className="p-4 rounded-lg bg-neutral-1 border border-neutral-5">
       <div className="flex items-center gap-2 mb-2">
         {icon && (
           <div className={`p-1.5 rounded ${colorClasses[color]}`}>{icon}</div>
         )}
-        <span className="text-sm text-neutral-500 dark:text-neutral-400">
+        <span className="text-sm text-neutral-10">
           {label}
         </span>
       </div>
-      <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+      <div className="text-2xl font-bold text-neutral-12">
         {value}
       </div>
       {subtext && (
-        <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+        <div className="text-xs text-neutral-10 mt-1">
           {subtext}
         </div>
       )}
@@ -116,16 +116,16 @@ interface ProgressBarProps {
 function ProgressBar({ value, max, label, showWarning }: ProgressBarProps) {
   const percentage = Math.min((value / max) * 100, 100);
   const barColor = showWarning
-    ? "bg-grafana-500"
+    ? "bg-grafana-9"
     : percentage > 90
-      ? "bg-error-500"
-      : "bg-primary-500";
+      ? "bg-error-9"
+      : "bg-primary-9";
 
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-sm">
-        <span className="text-neutral-600 dark:text-neutral-400">{label}</span>
-        <span className="text-neutral-900 dark:text-neutral-100">
+        <span className="text-neutral-11">{label}</span>
+        <span className="text-neutral-12">
           {formatPercentage(percentage)}
         </span>
       </div>
@@ -136,11 +136,11 @@ function ProgressBar({ value, max, label, showWarning }: ProgressBarProps) {
         aria-valuenow={percentage}
         aria-valuemin={0}
         aria-valuemax={100}
-        className="h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden"
+        className="h-2 bg-neutral-3 rounded-full overflow-hidden"
       >
         <div
           className={`h-full ${barColor} transition-all duration-300`}
-          style={{ width: `${percentage}%` }}
+          style={{ '--progress': `${percentage}%` } as React.CSSProperties}
         />
       </div>
     </div>
@@ -158,7 +158,7 @@ interface HistoryChartProps {
 function HistoryChart({ history }: HistoryChartProps) {
   if (!history || history.length === 0) {
     return (
-      <div className="text-center text-neutral-500 dark:text-neutral-400 py-8">
+      <div className="text-center text-neutral-10 py-8">
         No usage history available
       </div>
     );
@@ -168,7 +168,7 @@ function HistoryChart({ history }: HistoryChartProps) {
 
   return (
     <div data-testid="usage-history-chart" className="space-y-2">
-      <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+      <h4 className="text-sm font-medium text-neutral-11">
         Usage Over Time
       </h4>
       <div className="flex items-end gap-1 h-24">
@@ -177,14 +177,14 @@ function HistoryChart({ history }: HistoryChartProps) {
           return (
             <div
               key={index}
-              className="flex-1 bg-primary-500 dark:bg-primary-400 rounded-t transition-all hover:bg-primary-600 dark:hover:bg-primary-300"
-              style={{ height: `${height}%` }}
+              className="flex-1 bg-primary-9 dark:bg-primary-7 rounded-t transition-all hover:bg-primary-10 dark:hover:bg-primary-5 dynamic-height"
+              style={{ "--height": `${height}%` } as React.CSSProperties}
               title={`${formatNumber(entry.tokens)} tokens at ${new Date(entry.timestamp).toLocaleTimeString()}`}
             />
           );
         })}
       </div>
-      <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400">
+      <div className="flex justify-between text-xs text-neutral-10">
         <span>
           {history[0]
             ? new Date(history[0].timestamp).toLocaleTimeString([], {
@@ -240,12 +240,12 @@ export function TokenUsageDashboard({
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+        <h3 className="text-lg font-semibold text-neutral-12">
           Token Usage
         </h3>
-        <Button
+        <Button size="icon"
           variant="secondary"
-          className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg focus:ring-primary-500"
+          className="p-2 text-neutral-10 hover:text-neutral-11 hover:bg-neutral-2 rounded-lg focus:ring-primary-7"
           type="button"
           onClick={refresh}
           aria-label="Refresh token usage"
@@ -289,7 +289,7 @@ export function TokenUsageDashboard({
       </div>
       {/* Context Window Usage */}
       {contextWindowSize && (
-        <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+        <div className="p-4 rounded-lg bg-neutral-1 border border-neutral-5">
           <ProgressBar
             value={totalTokens}
             max={contextWindowSize}
@@ -297,7 +297,7 @@ export function TokenUsageDashboard({
             showWarning={isContextWindowNearLimit}
           />
           {isContextWindowNearLimit && (
-            <p className="text-sm text-grafana-600 dark:text-grafana-400 mt-2">
+            <p className="text-sm text-grafana-10 dark:text-grafana-5 mt-2">
               Warning: Context window usage is high. Consider starting a new
               session.
             </p>
@@ -306,14 +306,14 @@ export function TokenUsageDashboard({
       )}
       {/* History Chart */}
       {showHistory && history && (
-        <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+        <div className="p-4 rounded-lg bg-neutral-1 border border-neutral-5">
           <HistoryChart history={history} />
         </div>
       )}
       {/* Loading overlay */}
       {showLoading && (
-        <div className="absolute inset-0 bg-white/50 dark:bg-neutral-900/50 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
+        <div className="absolute inset-0 bg-neutral-a6 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-9" />
         </div>
       )}
     </div>

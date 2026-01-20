@@ -102,7 +102,7 @@ export const AllSizes: Story = {
 
 export const DarkMode: Story = {
   render: () => (
-    <div className="dark bg-neutral-900 p-6 rounded-lg">
+    <div className="dark bg-neutral-2 p-6 rounded-lg">
       <div className="flex flex-col gap-4 w-64">
         <Select options={defaultOptions} placeholder="Default" />
         <Select options={defaultOptions} variant="error" placeholder="Error" />

@@ -17,9 +17,9 @@ export const fileInputVariants = cva(
   // Base styles
   [
     "relative border-2 border-dashed rounded-lg transition-colors",
-    "border-neutral-300 dark:border-neutral-600",
-    "hover:border-primary-400 dark:hover:border-primary-500",
-    "focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/20",
+    "border-neutral-5",
+    "hover:border-primary-7 dark:hover:border-primary-9",
+    "focus-within:border-primary-9 focus-within:ring-2 focus-within:ring-primary-a3",
   ],
   {
     variants: {
@@ -29,11 +29,11 @@ export const fileInputVariants = cva(
         lg: "p-6",
       },
       disabled: {
-        true: "opacity-50 cursor-not-allowed hover:border-neutral-300 dark:hover:border-neutral-600",
+        true: "opacity-50 cursor-not-allowed hover:border-neutral-5 dark:hover:border-neutral-6",
         false: "cursor-pointer",
       },
       error: {
-        true: "border-error-500 dark:border-error-500 hover:border-error-500",
+        true: "border-error-9 dark:border-error-9 hover:border-error-9",
         false: "",
       },
     },
@@ -135,7 +135,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           <label
             htmlFor={id}
             className={cn(
-              "block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2",
+              "block text-sm font-medium text-neutral-11 mb-2",
               disabled && "opacity-50",
             )}
           >
@@ -172,26 +172,26 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
                 className={cn(
                   "w-8 h-8 mb-2",
                   error
-                    ? "text-error-500"
-                    : "text-neutral-400 dark:text-neutral-500",
+                    ? "text-error-9"
+                    : "text-neutral-9",
                 )}
               />
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                <span className="font-medium text-primary-600 dark:text-primary-400">
+              <p className="text-sm text-neutral-11">
+                <span className="font-medium text-primary-10 dark:text-primary-7">
                   Click to upload
                 </span>{" "}
                 or drag and drop
               </p>
               {accept && (
-                <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-1">
+                <p className="text-xs text-neutral-10 mt-1">
                   {accept}
                 </p>
               )}
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Upload className="w-4 h-4 text-neutral-500" />
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">
+              <Upload className="w-4 h-4 text-neutral-10" />
+              <span className="text-sm text-neutral-11">
                 Choose file{multiple ? "s" : ""}
               </span>
             </div>
@@ -204,15 +204,15 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
             {selectedFiles.map((file, index) => (
               <div
                 key={`${file.name}-${index}`}
-                className="flex items-center justify-between p-2 bg-neutral-50 dark:bg-neutral-800 rounded-md"
+                className="flex items-center justify-between p-2 bg-neutral-1 rounded-md"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <File className="w-4 h-4 text-neutral-500 flex-shrink-0" />
-                  <span className="text-sm text-neutral-700 dark:text-neutral-300 truncate">
+                  <File className="w-4 h-4 text-neutral-10 flex-shrink-0" />
+                  <span className="text-sm text-neutral-11 truncate">
                     {file.name}
                   </span>
                   {showFileSize && (
-                    <span className="text-xs text-neutral-500 flex-shrink-0">
+                    <span className="text-xs text-neutral-10 flex-shrink-0">
                       ({formatFileSize(file.size)})
                     </span>
                   )}
@@ -224,7 +224,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
                       e.stopPropagation();
                       onClear();
                     }}
-                    className="p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 rounded"
+                    className="p-1 text-neutral-9 hover:text-neutral-11 rounded"
                     aria-label="Remove file"
                   >
                     <X className="w-4 h-4" />
@@ -237,14 +237,14 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
 
         {/* Helper text */}
         {helperText && !error && (
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1 text-sm text-neutral-10">
             {helperText}
           </p>
         )}
 
         {/* Error message */}
         {error && (
-          <p className="mt-1 text-sm text-error-600 dark:text-error-400">
+          <p className="mt-1 text-sm text-error-10 dark:text-error-7">
             {error}
           </p>
         )}

@@ -2,6 +2,567 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =============================================================================
+ * RADIX COLORS CSS VARIABLES
+ * =============================================================================
+ * Defines the actual color values for the Radix 1-12 scale.
+ * These are referenced by Tailwind config via var(--color-name-step).
+ *
+ * @see https://www.radix-ui.com/colors
+ * @see src/design-system/radix-colors.ts for semantic mappings
+ * ============================================================================= */
+
+/* Light Mode (default) */
+:root {
+  /* Violet (Primary) - Light */
+  --violet-1: #fdfcfe;
+  --violet-2: #faf8ff;
+  --violet-3: #f4f0fe;
+  --violet-4: #ebe4ff;
+  --violet-5: #e1d9ff;
+  --violet-6: #d4cafe;
+  --violet-7: #c2b5f5;
+  --violet-8: #aa99ec;
+  --violet-9: #6e56cf;
+  --violet-10: #654dc4;
+  --violet-11: #5746af;
+  --violet-12: #20134b;
+
+  /* Teal (Alternate Primary) - Light */
+  --teal-1: #fafefd;
+  --teal-2: #f1fcfa;
+  --teal-3: #e7f9f5;
+  --teal-4: #d9f3ee;
+  --teal-5: #c7ebe5;
+  --teal-6: #afdfd7;
+  --teal-7: #8dcec3;
+  --teal-8: #53b9ab;
+  --teal-9: #12a594;
+  --teal-10: #0e9888;
+  --teal-11: #067a6f;
+  --teal-12: #10302b;
+
+  /* Slate (Neutral) - Light */
+  --slate-1: #fcfcfd;
+  --slate-2: #f9f9fb;
+  --slate-3: #f0f0f3;
+  --slate-4: #e8e8ec;
+  --slate-5: #e0e1e6;
+  --slate-6: #d9d9e0;
+  --slate-7: #cdced6;
+  --slate-8: #b9bbc6;
+  --slate-9: #8b8d98;
+  --slate-10: #80828d;
+  --slate-11: #60646c;
+  --slate-12: #1c2024;
+
+  /* Sage (Alternate Neutral) - Light */
+  --sage-1: #fbfdfc;
+  --sage-2: #f7f9f8;
+  --sage-3: #eef1f0;
+  --sage-4: #e6e9e8;
+  --sage-5: #dfe2e0;
+  --sage-6: #d7dad9;
+  --sage-7: #cbcfcd;
+  --sage-8: #b8bcba;
+  --sage-9: #868e8b;
+  --sage-10: #7c8481;
+  --sage-11: #5f6563;
+  --sage-12: #1a211e;
+
+  /* Olive (Alternate Neutral) - Light */
+  --olive-1: #fcfdfc;
+  --olive-2: #f8faf8;
+  --olive-3: #eff1ef;
+  --olive-4: #e7e9e7;
+  --olive-5: #dfe2df;
+  --olive-6: #d7dad7;
+  --olive-7: #cccfcc;
+  --olive-8: #b9bcb8;
+  --olive-9: #898e87;
+  --olive-10: #7f847d;
+  --olive-11: #60655f;
+  --olive-12: #1d211c;
+
+  /* Grass (Success) - Light */
+  --grass-1: #fbfefb;
+  --grass-2: #f3fcf3;
+  --grass-3: #ebf9eb;
+  --grass-4: #dff3df;
+  --grass-5: #ceebcf;
+  --grass-6: #b7dfba;
+  --grass-7: #97cf9c;
+  --grass-8: #65ba74;
+  --grass-9: #46a758;
+  --grass-10: #3d9a50;
+  --grass-11: #297c3b;
+  --grass-12: #1b311e;
+
+  /* Amber (Warning) - Light */
+  --amber-1: #fefdfb;
+  --amber-2: #fff9ed;
+  --amber-3: #fff4d5;
+  --amber-4: #ffecbc;
+  --amber-5: #ffe3a2;
+  --amber-6: #ffd386;
+  --amber-7: #f3ba63;
+  --amber-8: #ee9d2b;
+  --amber-9: #ffb224;
+  --amber-10: #ffa01c;
+  --amber-11: #ad5700;
+  --amber-12: #4e2009;
+
+  /* Ruby (Error) - Light */
+  --ruby-1: #fffcfd;
+  --ruby-2: #fff7f8;
+  --ruby-3: #feebef;
+  --ruby-4: #ffdce4;
+  --ruby-5: #ffccd7;
+  --ruby-6: #f9b9c7;
+  --ruby-7: #ef9caf;
+  --ruby-8: #e5748b;
+  --ruby-9: #e54666;
+  --ruby-10: #dc3b5d;
+  --ruby-11: #ca244d;
+  --ruby-12: #64172b;
+
+  /* Sky (Info) - Light */
+  --sky-1: #f9feff;
+  --sky-2: #f1fafd;
+  --sky-3: #e1f6fd;
+  --sky-4: #d1f0fa;
+  --sky-5: #bee7f5;
+  --sky-6: #a9daed;
+  --sky-7: #8dcae3;
+  --sky-8: #60b3d7;
+  --sky-9: #7ce2fe;
+  --sky-10: #74daf8;
+  --sky-11: #00749e;
+  --sky-12: #1d3e56;
+
+  /* Orange (Grafana) - Light */
+  --orange-1: #fefcfb;
+  --orange-2: #fff8f4;
+  --orange-3: #ffedd5;
+  --orange-4: #ffe0bb;
+  --orange-5: #ffd2a4;
+  --orange-6: #ffc291;
+  --orange-7: #f5a767;
+  --orange-8: #e78431;
+  --orange-9: #f76b15;
+  --orange-10: #ef5f00;
+  --orange-11: #cc4e00;
+  --orange-12: #582d1d;
+
+  /* Semantic mappings (default theme: violet-sage) */
+  --primary-1: var(--violet-1);
+  --primary-2: var(--violet-2);
+  --primary-3: var(--violet-3);
+  --primary-4: var(--violet-4);
+  --primary-5: var(--violet-5);
+  --primary-6: var(--violet-6);
+  --primary-7: var(--violet-7);
+  --primary-8: var(--violet-8);
+  --primary-9: var(--violet-9);
+  --primary-10: var(--violet-10);
+  --primary-11: var(--violet-11);
+  --primary-12: var(--violet-12);
+
+  --neutral-1: var(--slate-1);
+  --neutral-2: var(--slate-2);
+  --neutral-3: var(--slate-3);
+  --neutral-4: var(--slate-4);
+  --neutral-5: var(--slate-5);
+  --neutral-6: var(--slate-6);
+  --neutral-7: var(--slate-7);
+  --neutral-8: var(--slate-8);
+  --neutral-9: var(--slate-9);
+  --neutral-10: var(--slate-10);
+  --neutral-11: var(--slate-11);
+  --neutral-12: var(--slate-12);
+
+  /* Alpha variants (Radix slateA scale) for third-party components requiring inline color values */
+  --neutral-a1: hsla(206, 6%, 9%, 0.012);
+  --neutral-a2: hsla(206, 6%, 9%, 0.027);
+  --neutral-a3: hsla(206, 6%, 9%, 0.047);
+  --neutral-a4: hsla(206, 6%, 9%, 0.071);
+  --neutral-a5: hsla(206, 6%, 9%, 0.090);
+
+  --success-1: var(--grass-1);
+  --success-2: var(--grass-2);
+  --success-3: var(--grass-3);
+  --success-4: var(--grass-4);
+  --success-5: var(--grass-5);
+  --success-6: var(--grass-6);
+  --success-7: var(--grass-7);
+  --success-8: var(--grass-8);
+  --success-9: var(--grass-9);
+  --success-10: var(--grass-10);
+  --success-11: var(--grass-11);
+  --success-12: var(--grass-12);
+
+  --warning-1: var(--amber-1);
+  --warning-2: var(--amber-2);
+  --warning-3: var(--amber-3);
+  --warning-4: var(--amber-4);
+  --warning-5: var(--amber-5);
+  --warning-6: var(--amber-6);
+  --warning-7: var(--amber-7);
+  --warning-8: var(--amber-8);
+  --warning-9: var(--amber-9);
+  --warning-10: var(--amber-10);
+  --warning-11: var(--amber-11);
+  --warning-12: var(--amber-12);
+
+  --error-1: var(--ruby-1);
+  --error-2: var(--ruby-2);
+  --error-3: var(--ruby-3);
+  --error-4: var(--ruby-4);
+  --error-5: var(--ruby-5);
+  --error-6: var(--ruby-6);
+  --error-7: var(--ruby-7);
+  --error-8: var(--ruby-8);
+  --error-9: var(--ruby-9);
+  --error-10: var(--ruby-10);
+  --error-11: var(--ruby-11);
+  --error-12: var(--ruby-12);
+
+  --info-1: var(--sky-1);
+  --info-2: var(--sky-2);
+  --info-3: var(--sky-3);
+  --info-4: var(--sky-4);
+  --info-5: var(--sky-5);
+  --info-6: var(--sky-6);
+  --info-7: var(--sky-7);
+  --info-8: var(--sky-8);
+  --info-9: var(--sky-9);
+  --info-10: var(--sky-10);
+  --info-11: var(--sky-11);
+  --info-12: var(--sky-12);
+
+  --insight-1: var(--violet-1);
+  --insight-2: var(--violet-2);
+  --insight-3: var(--violet-3);
+  --insight-4: var(--violet-4);
+  --insight-5: var(--violet-5);
+  --insight-6: var(--violet-6);
+  --insight-7: var(--violet-7);
+  --insight-8: var(--violet-8);
+  --insight-9: var(--violet-9);
+  --insight-10: var(--violet-10);
+  --insight-11: var(--violet-11);
+  --insight-12: var(--violet-12);
+
+  --grafana-1: var(--orange-1);
+  --grafana-2: var(--orange-2);
+  --grafana-3: var(--orange-3);
+  --grafana-4: var(--orange-4);
+  --grafana-5: var(--orange-5);
+  --grafana-6: var(--orange-6);
+  --grafana-7: var(--orange-7);
+  --grafana-8: var(--orange-8);
+  --grafana-9: var(--orange-9);
+  --grafana-10: var(--orange-10);
+  --grafana-11: var(--orange-11);
+  --grafana-12: var(--orange-12);
+
+  /* ==========================================================================
+   * TYPOGRAPHY TOKENS
+   * Font sizes, weights, line heights, and letter spacing
+   * @see src/design-system/tokens.ts
+   * ========================================================================== */
+
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;      /* 12px */
+  --font-size-sm: 0.875rem;     /* 14px */
+  --font-size-base: 1rem;       /* 16px */
+  --font-size-lg: 1.125rem;     /* 18px */
+  --font-size-xl: 1.25rem;      /* 20px */
+  --font-size-2xl: 1.5rem;      /* 24px */
+  --font-size-3xl: 1.875rem;    /* 30px */
+  --font-size-4xl: 2.25rem;     /* 36px */
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Line Heights */
+  --line-height-none: 1;
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 2;
+
+  /* Letter Spacing */
+  --letter-spacing-tighter: -0.05em;
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+  --letter-spacing-wider: 0.05em;
+
+  /* ==========================================================================
+   * SPACING TOKENS
+   * Based on 0.25rem (4px) increments
+   * @see src/design-system/tokens.ts
+   * ========================================================================== */
+
+  --spacing-0: 0;
+  --spacing-px: 1px;
+  --spacing-0-5: 0.125rem;   /* 2px */
+  --spacing-1: 0.25rem;      /* 4px */
+  --spacing-1-5: 0.375rem;   /* 6px */
+  --spacing-2: 0.5rem;       /* 8px */
+  --spacing-2-5: 0.625rem;   /* 10px */
+  --spacing-3: 0.75rem;      /* 12px */
+  --spacing-3-5: 0.875rem;   /* 14px */
+  --spacing-4: 1rem;         /* 16px */
+  --spacing-5: 1.25rem;      /* 20px */
+  --spacing-6: 1.5rem;       /* 24px */
+  --spacing-7: 1.75rem;      /* 28px */
+  --spacing-8: 2rem;         /* 32px */
+  --spacing-9: 2.25rem;      /* 36px */
+  --spacing-10: 2.5rem;      /* 40px */
+  --spacing-12: 3rem;        /* 48px */
+  --spacing-14: 3.5rem;      /* 56px */
+  --spacing-16: 4rem;        /* 64px */
+  --spacing-20: 5rem;        /* 80px */
+  --spacing-24: 6rem;        /* 96px */
+
+  /* ==========================================================================
+   * SHADOW TOKENS
+   * @see src/design-system/tokens.ts
+   * ========================================================================== */
+
+  --shadow-none: none;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+  /* Semantic shadow aliases */
+  --shadow-soft: 0 2px 8px -2px rgba(0, 0, 0, 0.1);
+  --shadow-elevated: 0 4px 12px -4px rgba(0, 0, 0, 0.15);
+  --shadow-modal: 0 16px 48px -8px rgba(0, 0, 0, 0.25);
+
+  /* ==========================================================================
+   * BORDER RADIUS TOKENS
+   * @see src/design-system/tokens.ts
+   * ========================================================================== */
+
+  --radius-none: 0;
+  --radius-sm: 0.125rem;     /* 2px */
+  --radius-DEFAULT: 0.375rem; /* 6px */
+  --radius-md: 0.375rem;     /* 6px */
+  --radius-lg: 0.5rem;       /* 8px */
+  --radius-xl: 0.75rem;      /* 12px */
+  --radius-2xl: 1rem;        /* 16px */
+  --radius-3xl: 1.5rem;      /* 24px */
+  --radius-full: 9999px;
+
+  /* ==========================================================================
+   * ANIMATION/TRANSITION TOKENS
+   * @see src/design-system/animation-tokens.ts
+   * ========================================================================== */
+
+  /* Durations */
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+
+  /* Easing functions */
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-anticipate: cubic-bezier(0.36, 0, 0.66, -0.56);
+
+  /* ==========================================================================
+   * Z-INDEX TOKENS
+   * Semantic layering system
+   * @see src/design-system/tokens.ts
+   * ========================================================================== */
+
+  --z-base: 0;
+  --z-tooltip: 10;
+  --z-dropdown: 50;
+  --z-panel: 50;
+  --z-command-palette: 55;
+  --z-modal: 60;
+  --z-notification: 65;
+  --z-system-alert: 70;
+  --z-toast: 75;
+
+  /* ==========================================================================
+   * LAYOUT TOKENS
+   * Bar heights and safe-area insets for shell layout
+   * Updated dynamically by ResizeObserver
+   * ========================================================================== */
+
+  --topbar-height: 3.5rem;      /* 56px default */
+  --statusbar-height: 2rem;     /* 32px default */
+
+  /* Safe area support for mobile devices (notch, home indicator) */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+/* Dark Mode */
+.dark {
+  /* Violet (Primary) - Dark */
+  --violet-1: #14121f;
+  --violet-2: #1b1525;
+  --violet-3: #291f43;
+  --violet-4: #33255b;
+  --violet-5: #3c2e6f;
+  --violet-6: #473b81;
+  --violet-7: #56498f;
+  --violet-8: #6e5aad;
+  --violet-9: #6e56cf;
+  --violet-10: #7c66dc;
+  --violet-11: #baa7ff;
+  --violet-12: #e2ddfe;
+
+  /* Teal (Alternate Primary) - Dark */
+  --teal-1: #0d1514;
+  --teal-2: #111c1b;
+  --teal-3: #0d2d2a;
+  --teal-4: #023b37;
+  --teal-5: #084843;
+  --teal-6: #145750;
+  --teal-7: #1c6961;
+  --teal-8: #207e73;
+  --teal-9: #12a594;
+  --teal-10: #0eb39e;
+  --teal-11: #0bd8b6;
+  --teal-12: #adf0dd;
+
+  /* Slate (Neutral) - Dark */
+  --slate-1: #111113;
+  --slate-2: #18191b;
+  --slate-3: #212225;
+  --slate-4: #272a2d;
+  --slate-5: #2e3135;
+  --slate-6: #363a3f;
+  --slate-7: #43484e;
+  --slate-8: #5a6169;
+  --slate-9: #696e77;
+  --slate-10: #777b84;
+  --slate-11: #b0b4ba;
+  --slate-12: #edeef0;
+
+  /* Sage (Alternate Neutral) - Dark */
+  --sage-1: #101211;
+  --sage-2: #171918;
+  --sage-3: #202221;
+  --sage-4: #272a29;
+  --sage-5: #2e3130;
+  --sage-6: #373b39;
+  --sage-7: #444947;
+  --sage-8: #5b625f;
+  --sage-9: #63706b;
+  --sage-10: #717d79;
+  --sage-11: #adb5b2;
+  --sage-12: #eceeed;
+
+  /* Olive (Alternate Neutral) - Dark */
+  --olive-1: #111210;
+  --olive-2: #181917;
+  --olive-3: #212220;
+  --olive-4: #282a27;
+  --olive-5: #2f312e;
+  --olive-6: #383a36;
+  --olive-7: #454843;
+  --olive-8: #5c625b;
+  --olive-9: #687066;
+  --olive-10: #767d74;
+  --olive-11: #afb5ad;
+  --olive-12: #eceeec;
+
+  /* Grass (Success) - Dark */
+  --grass-1: #0e1511;
+  --grass-2: #141a15;
+  --grass-3: #1b2a1e;
+  --grass-4: #1d3a22;
+  --grass-5: #25482d;
+  --grass-6: #2d5736;
+  --grass-7: #366740;
+  --grass-8: #3e7949;
+  --grass-9: #46a758;
+  --grass-10: #53b365;
+  --grass-11: #71d083;
+  --grass-12: #c2f0c2;
+
+  /* Amber (Warning) - Dark */
+  --amber-1: #16120c;
+  --amber-2: #1d180f;
+  --amber-3: #302008;
+  --amber-4: #3f2700;
+  --amber-5: #4d3000;
+  --amber-6: #5c3d05;
+  --amber-7: #714f19;
+  --amber-8: #8f6424;
+  --amber-9: #ffb224;
+  --amber-10: #ffc940;
+  --amber-11: #f1a10d;
+  --amber-12: #fef3dd;
+
+  /* Ruby (Error) - Dark */
+  --ruby-1: #191113;
+  --ruby-2: #1e1517;
+  --ruby-3: #3a141e;
+  --ruby-4: #4e1325;
+  --ruby-5: #5e1a2e;
+  --ruby-6: #6f2539;
+  --ruby-7: #883447;
+  --ruby-8: #b3445a;
+  --ruby-9: #e54666;
+  --ruby-10: #ec5a72;
+  --ruby-11: #ff92a5;
+  --ruby-12: #fed2e1;
+
+  /* Sky (Info) - Dark */
+  --sky-1: #0d141f;
+  --sky-2: #111a27;
+  --sky-3: #112840;
+  --sky-4: #113555;
+  --sky-5: #154467;
+  --sky-6: #1b537b;
+  --sky-7: #1f6692;
+  --sky-8: #197cae;
+  --sky-9: #7ce2fe;
+  --sky-10: #a8eeff;
+  --sky-11: #75c7f0;
+  --sky-12: #c2f3ff;
+
+  /* Orange (Grafana) - Dark */
+  --orange-1: #17120e;
+  --orange-2: #1e160f;
+  --orange-3: #331e0b;
+  --orange-4: #462100;
+  --orange-5: #562800;
+  --orange-6: #66350c;
+  --orange-7: #7e451d;
+  --orange-8: #a35829;
+  --orange-9: #f76b15;
+  --orange-10: #ff801f;
+  --orange-11: #ffa057;
+  --orange-12: #ffe0c2;
+
+  /* Alpha variants (Radix slateDarkA scale) for dark mode */
+  --neutral-a1: hsla(206, 20%, 98%, 0.016);
+  --neutral-a2: hsla(206, 20%, 98%, 0.035);
+  --neutral-a3: hsla(206, 20%, 98%, 0.071);
+  --neutral-a4: hsla(206, 20%, 98%, 0.102);
+  --neutral-a5: hsla(206, 20%, 98%, 0.133);
+}
+
 /* Base styles */
 @layer base {
   html {
@@ -9,55 +570,13 @@
   }
 
   body {
-    @apply bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100;
+    @apply bg-neutral-1 text-neutral-12;
     @apply min-h-screen;
   }
 
   /* Focus styles for accessibility */
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-brand-primary;
-  }
-
-  /* CSS Custom Properties for programmatic/JS usage */
-  :root {
-    /* Primary color scale */
-    --color-primary-50: theme("colors.primary.50");
-    --color-primary-100: theme("colors.primary.100");
-    --color-primary-200: theme("colors.primary.200");
-    --color-primary-300: theme("colors.primary.300");
-    --color-primary-400: theme("colors.primary.400");
-    --color-primary-500: theme("colors.primary.500");
-    --color-primary-600: theme("colors.primary.600");
-    --color-primary-700: theme("colors.primary.700");
-    --color-primary-800: theme("colors.primary.800");
-    --color-primary-900: theme("colors.primary.900");
-
-    /* Success color scale */
-    --color-success-50: theme("colors.success.50");
-    --color-success-100: theme("colors.success.100");
-    --color-success-500: theme("colors.success.500");
-    --color-success-600: theme("colors.success.600");
-
-    /* Warning color scale */
-    --color-warning-50: theme("colors.warning.50");
-    --color-warning-100: theme("colors.warning.100");
-    --color-warning-500: theme("colors.warning.500");
-    --color-warning-600: theme("colors.warning.600");
-
-    /* Error color scale */
-    --color-error-50: theme("colors.error.50");
-    --color-error-100: theme("colors.error.100");
-    --color-error-500: theme("colors.error.500");
-    --color-error-600: theme("colors.error.600");
-
-    /* Grafana brand colors (for observability integration) */
-    --color-grafana-500: theme("colors.grafana.500");
-    --color-grafana-600: theme("colors.grafana.600");
-
-    /* AI/Insight semantic colors (purple theme) */
-    --color-insight-400: theme("colors.insight.400");
-    --color-insight-500: theme("colors.insight.500");
-    --color-insight-600: theme("colors.insight.600");
+    @apply outline-2 outline-offset-2 outline-primary-9;
   }
 }
 
@@ -66,27 +585,27 @@
   .btn {
     @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium;
     @apply transition-colors duration-200;
-    @apply focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-9 focus:ring-offset-2;
   }
 
   .btn-primary {
-    @apply btn bg-brand-primary text-white hover:bg-indigo-600;
+    @apply btn bg-primary-9 text-white hover:bg-primary-10;
   }
 
   .btn-secondary {
-    @apply btn bg-neutral-100 text-neutral-900 hover:bg-neutral-200;
-    @apply dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700;
+    @apply btn bg-neutral-2 text-neutral-12 hover:bg-neutral-3;
+    @apply dark:bg-neutral-3 dark:text-neutral-12 dark:hover:bg-neutral-4;
   }
 
   .card {
-    @apply rounded-lg border border-neutral-200 bg-white p-4 shadow-sm;
-    @apply dark:border-neutral-700 dark:bg-neutral-800;
+    @apply rounded-lg border border-neutral-6 bg-neutral-1 p-4 shadow-sm;
+    @apply dark:border-neutral-6 dark:bg-neutral-2;
   }
 
   .input {
-    @apply rounded-md border border-neutral-300 px-3 py-2 text-sm;
-    @apply focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary;
-    @apply dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100;
+    @apply rounded-md border border-neutral-6 bg-neutral-1 px-3 py-2 text-sm;
+    @apply focus:border-primary-9 focus:outline-none focus:ring-1 focus:ring-primary-9;
+    @apply dark:border-neutral-7 dark:bg-neutral-2 dark:text-neutral-12;
   }
 
   /* ==========================================================================
@@ -96,67 +615,70 @@
    * ========================================================================== */
 
   /* Status badges (global) - use for tags, indicators, and status chips */
+  /* Uses Radix 1-12 scale: 2-3 for bg, 11 for text (light), 3-4 for bg, 11 for text (dark) */
   .badge-success {
-    @apply bg-success-100 text-success-700;
-    @apply dark:bg-success-900/50 dark:text-success-300;
+    @apply bg-success-3 text-success-11;
+    @apply dark:bg-success-4 dark:text-success-11;
   }
 
   .badge-warning {
-    @apply bg-warning-100 text-warning-700;
-    @apply dark:bg-warning-900/50 dark:text-warning-300;
+    @apply bg-warning-3 text-warning-11;
+    @apply dark:bg-warning-4 dark:text-warning-11;
   }
 
   .badge-error {
-    @apply bg-error-100 text-error-700;
-    @apply dark:bg-error-900/50 dark:text-error-300;
+    @apply bg-error-3 text-error-11;
+    @apply dark:bg-error-4 dark:text-error-11;
   }
 
   .badge-info {
-    @apply bg-primary-100 text-primary-700;
-    @apply dark:bg-primary-900/50 dark:text-primary-300;
+    @apply bg-primary-3 text-primary-11;
+    @apply dark:bg-primary-4 dark:text-primary-11;
   }
 
   .badge-neutral {
-    @apply bg-neutral-100 text-neutral-700;
-    @apply dark:bg-neutral-700 dark:text-neutral-300;
+    @apply bg-neutral-3 text-neutral-11;
+    @apply dark:bg-neutral-4 dark:text-neutral-11;
   }
 
   /* Status text colors (global) - use for inline status indicators */
+  /* Uses Radix step 11 for high contrast text */
   .text-status-success {
-    @apply text-success-600 dark:text-success-400;
+    @apply text-success-11;
   }
 
   .text-status-warning {
-    @apply text-warning-600 dark:text-warning-400;
+    @apply text-warning-11;
   }
 
   .text-status-error {
-    @apply text-error-600 dark:text-error-400;
+    @apply text-error-11;
   }
 
   .text-status-info {
-    @apply text-primary-600 dark:text-primary-400;
+    @apply text-primary-11;
   }
 
   /* Interactive states (global) - use for hover effects on clickable elements */
+  /* Uses Radix steps 3-4 for hover backgrounds */
   .interactive-danger {
-    @apply hover:bg-error-100 dark:hover:bg-error-900/30;
-    @apply hover:text-error-600 dark:hover:text-error-400;
+    @apply hover:bg-error-3 dark:hover:bg-error-4;
+    @apply hover:text-error-11;
   }
 
   .interactive-primary {
-    @apply hover:bg-primary-100 dark:hover:bg-primary-900/30;
-    @apply hover:text-primary-600 dark:hover:text-primary-400;
+    @apply hover:bg-primary-3 dark:hover:bg-primary-4;
+    @apply hover:text-primary-11;
   }
 
   .interactive-success {
-    @apply hover:bg-success-100 dark:hover:bg-success-900/30;
-    @apply hover:text-success-600 dark:hover:text-success-400;
+    @apply hover:bg-success-3 dark:hover:bg-success-4;
+    @apply hover:text-success-11;
   }
 
   .interactive-warning {
-    @apply hover:bg-warning-100 dark:hover:bg-warning-900/30;
-    @apply hover:text-warning-600 dark:hover:text-warning-400;
+    @apply hover:bg-warning-3 dark:hover:bg-warning-4;
+    @apply hover:text-warning-11;
   }
 
   /* ==========================================================================
@@ -165,62 +687,63 @@
    * ========================================================================== */
 
   /* DevTools status badges - used in LogsTab, ConsoleTab */
+  /* Uses Radix 1-12 scale for consistent theming */
   .devtools-badge {
     @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded uppercase;
   }
 
   .devtools-badge-debug {
-    @apply devtools-badge bg-neutral-100 text-neutral-700;
-    @apply dark:bg-neutral-700 dark:text-neutral-300;
+    @apply devtools-badge bg-neutral-3 text-neutral-11;
+    @apply dark:bg-neutral-4 dark:text-neutral-11;
   }
 
   .devtools-badge-info {
-    @apply devtools-badge bg-primary-100 text-primary-700;
-    @apply dark:bg-primary-900/50 dark:text-primary-300;
+    @apply devtools-badge bg-primary-3 text-primary-11;
+    @apply dark:bg-primary-4 dark:text-primary-11;
   }
 
   .devtools-badge-warning {
-    @apply devtools-badge bg-warning-100 text-warning-700;
-    @apply dark:bg-warning-900/50 dark:text-warning-300;
+    @apply devtools-badge bg-warning-3 text-warning-11;
+    @apply dark:bg-warning-4 dark:text-warning-11;
   }
 
   .devtools-badge-error {
-    @apply devtools-badge bg-error-100 text-error-700;
-    @apply dark:bg-error-900/50 dark:text-error-300;
+    @apply devtools-badge bg-error-3 text-error-11;
+    @apply dark:bg-error-4 dark:text-error-11;
   }
 
   .devtools-badge-success {
-    @apply devtools-badge bg-success-100 text-success-700;
-    @apply dark:bg-success-900/50 dark:text-success-300;
+    @apply devtools-badge bg-success-3 text-success-11;
+    @apply dark:bg-success-4 dark:text-success-11;
   }
 
-  /* DevTools semantic text colors */
+  /* DevTools semantic text colors - Radix step 11 for high contrast */
   .devtools-text-success {
-    @apply text-success-600 dark:text-success-400;
+    @apply text-success-11;
   }
 
   .devtools-text-warning {
-    @apply text-warning-600 dark:text-warning-400;
+    @apply text-warning-11;
   }
 
   .devtools-text-error {
-    @apply text-error-600 dark:text-error-400;
+    @apply text-error-11;
   }
 
   .devtools-text-info {
-    @apply text-primary-600 dark:text-primary-400;
+    @apply text-primary-11;
   }
 
   .devtools-text-neutral {
-    @apply text-neutral-500 dark:text-neutral-400;
+    @apply text-neutral-11;
   }
 
   /* DevTools interactive button - ensures WCAG 2.5.8 touch target size on mobile */
   .devtools-btn {
     @apply inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm;
     @apply transition-colors duration-150;
-    @apply hover:bg-neutral-100 dark:hover:bg-neutral-800;
-    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1;
+    @apply hover:bg-neutral-3 dark:hover:bg-neutral-4;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-9 focus:ring-offset-1;
   }
 
   /* WCAG 2.5.8: Minimum 44x44px touch target on touch devices */
@@ -268,38 +791,177 @@
    * Brand Component Classes
    * ========================================================================== */
 
-  /* Grafana brand button */
+  /* Grafana brand button - uses Radix step 9 for solid backgrounds */
   .btn-grafana {
     @apply inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md;
-    @apply bg-grafana-500 text-white;
-    @apply hover:bg-grafana-600;
-    @apply dark:bg-grafana-600 dark:hover:bg-grafana-500;
+    @apply bg-grafana-9 text-white;
+    @apply hover:bg-grafana-10;
+    @apply dark:bg-grafana-9 dark:hover:bg-grafana-10;
     @apply transition-colors duration-150;
   }
 
   /* AI Insight indicator badge */
   .devtools-badge-insight {
-    @apply devtools-badge bg-insight-100 text-insight-700;
-    @apply dark:bg-insight-900/50 dark:text-insight-300;
+    @apply devtools-badge bg-insight-3 text-insight-11;
+    @apply dark:bg-insight-4 dark:text-insight-11;
   }
 
   /* AI Insight container */
   .devtools-insight-container {
-    @apply bg-insight-50 border border-insight-200 rounded-lg;
-    @apply dark:bg-insight-900/30 dark:border-insight-700;
+    @apply bg-insight-2 border border-insight-6 rounded-lg;
+    @apply dark:bg-insight-3 dark:border-insight-7;
   }
 
   /* AI Insight text */
   .devtools-text-insight {
-    @apply text-insight-600 dark:text-insight-400;
+    @apply text-insight-11;
   }
+
+  /* ==========================================================================
+   * Progress Bar Utilities
+   * Design-system compliant progress indicators using CSS custom properties
+   * Replaces inline style={{width: `${percent}%`}} patterns
+   * ========================================================================== */
+
+  /* Base progress bar fill - uses --progress CSS custom property */
+  .progress-bar-fill {
+    width: var(--progress, 0%);
+    @apply h-full transition-all duration-normal ease-out;
+  }
+
+  /* Progress bar container */
+  .progress-bar {
+    @apply relative w-full overflow-hidden rounded-full;
+  }
+
+  /* Progress bar variants */
+  .progress-bar-primary {
+    @apply progress-bar-fill bg-primary-9;
+  }
+
+  .progress-bar-success {
+    @apply progress-bar-fill bg-success-9;
+  }
+
+  .progress-bar-warning {
+    @apply progress-bar-fill bg-warning-9;
+  }
+
+  .progress-bar-error {
+    @apply progress-bar-fill bg-error-9;
+  }
+
+  .progress-bar-neutral {
+    @apply progress-bar-fill bg-neutral-9;
+  }
+
+  /* Animated progress bar (for indeterminate state) */
+  .progress-bar-indeterminate {
+    @apply progress-bar-fill;
+    width: 30%;
+    animation: progress-indeterminate 1.5s ease-in-out infinite;
+  }
+
+  @keyframes progress-indeterminate {
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(150%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .progress-bar-fill {
+      transition: none;
+    }
+    .progress-bar-indeterminate {
+      animation: none;
+      width: 100%;
+    }
+  }
+
+  /* ==========================================================================
+   * Dynamic Styling Utilities
+   * CSS custom property utilities for dynamic values that can't use Tailwind
+   * Replaces inline style={{height: `${value}%`}} patterns
+   * ========================================================================== */
+
+  /* Dynamic height - uses --height CSS custom property */
+  .dynamic-height {
+    height: var(--height, 100%);
+  }
+
+  /* Dynamic min-height - uses --min-height CSS custom property */
+  .dynamic-min-height {
+    min-height: var(--min-height, 0);
+  }
+
+  /* Dynamic grid columns - uses --cols CSS custom property */
+  .grid-dynamic-cols {
+    display: grid;
+    grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
+  }
+
+  /* Tree indentation - uses --indent CSS custom property */
+  .tree-indent {
+    padding-left: var(--indent, 0);
+  }
+
+  /* Dynamic left position - uses --left CSS custom property */
+  .position-left {
+    left: var(--left, 0);
+  }
+
+  /* Dynamic top position - uses --top CSS custom property */
+  .position-top {
+    top: var(--top, 0);
+  }
+}
+
+/* =============================================================================
+ * LAYOUT UTILITY CLASSES
+ * Shell-aware page layout and focus mode
+ * ============================================================================= */
+
+/* Shell-aware page layout - for pages inside StudioShellLayout */
+.page-shell {
+  min-height: 0;
+  height: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Legacy mode fallback - for standalone pages or when shell disabled */
+.page-legacy {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Mobile drawer safe area - avoids notch/home indicator overlap */
+.drawer-safe-area {
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
+}
+
+/* Focus mode: zero bar heights for distraction-free editing */
+.focus-mode {
+  --topbar-height: 0px;
+  --statusbar-height: 0px;
 }
 
 /* Utility styles */
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #9ca3af #e5e7eb;
+    /* Use CSS custom properties for theme-aware Firefox scrollbar colors */
+    scrollbar-color: var(--neutral-9) var(--neutral-2);
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -308,19 +970,20 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
-    @apply bg-neutral-100 dark:bg-neutral-800;
+    @apply bg-neutral-2;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-neutral-400 dark:bg-neutral-600;
+    @apply rounded-full bg-neutral-9;
   }
 
   /* Chat UI shimmer animation for streaming indicators (Sprint 1.2) */
+  /* Uses theme-aware shimmer effect */
   .animate-shimmer {
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(37, 99, 235, 0.1),
+      color-mix(in srgb, var(--primary-9) 15%, transparent),
       transparent
     );
     background-size: 200% 100%;

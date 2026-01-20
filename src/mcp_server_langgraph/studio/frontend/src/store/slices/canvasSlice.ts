@@ -48,7 +48,7 @@ export interface CanvasState {
   panelSizes: CanvasPanelSizes;
   /** Whether the session nav panel is collapsed */
   sessionNavCollapsed: boolean;
-  /** Whether the canvas panel is collapsed */
+  /** Whether the canvas panel is collapsed (default: true for on-demand launch) */
   canvasCollapsed: boolean;
   /** Active navigation item in ActivityBar */
   activeNavItem: string;
@@ -71,6 +71,11 @@ export interface CanvasState {
    * - "session-nav" | "conversation" | "canvas": That panel fills the main area
    */
   maximizedPanelId: MaximizablePanelId;
+  /**
+   * Tab order for artifacts in the canvas.
+   * Array of artifact IDs in display order (for drag-to-reorder).
+   */
+  tabOrder: string[];
 }
 
 // =============================================================================
@@ -81,10 +86,10 @@ export interface CanvasState {
 const CANVAS_STORAGE_KEY = "canvas-state";
 
 const defaultPanelSizes: CanvasPanelSizes = {
-  sessionNav: 20,
-  conversation: 40,
-  canvas: 40,
-};
+  sessionNav: 15,      // ~180px at 1200px - compact session list
+  conversation: 40,    // 40% - primary focus for chat
+  canvas: 45,          // 45% - larger for artifacts/code
+};  // Total: 100%
 
 const defaultPreferences: CanvasPreferences = {
   showTimestamps: true,
@@ -109,13 +114,14 @@ const loadFromStorage = (): Partial<CanvasState> => {
 const initialState: CanvasState = {
   panelSizes: defaultPanelSizes,
   sessionNavCollapsed: false,
-  canvasCollapsed: false,
+  canvasCollapsed: true, // Default to collapsed for on-demand canvas launch
   activeNavItem: "chat",
   selectedArtifactId: null,
   preferences: defaultPreferences,
   focusModeEnabled: false,
   hasCustomLayout: false,
   maximizedPanelId: null,
+  tabOrder: [], // Artifact IDs in display order
   ...loadFromStorage(),
 };
 
@@ -237,6 +243,47 @@ const canvasSlice = createSlice({
     },
 
     /**
+     * Set tab order for artifacts (for drag-to-reorder)
+     */
+    setTabOrder(state, action: PayloadAction<string[]>) {
+      state.tabOrder = action.payload;
+    },
+
+    /**
+     * Add an artifact ID to tab order (at the end)
+     */
+    addToTabOrder(state, action: PayloadAction<string>) {
+      if (!state.tabOrder.includes(action.payload)) {
+        state.tabOrder.push(action.payload);
+      }
+    },
+
+    /**
+     * Remove an artifact ID from tab order
+     */
+    removeFromTabOrder(state, action: PayloadAction<string>) {
+      state.tabOrder = state.tabOrder.filter((id) => id !== action.payload);
+      // If the removed artifact was selected, clear selection
+      if (state.selectedArtifactId === action.payload) {
+        // Select the next available artifact or null
+        const newSelected = state.tabOrder.length > 0 ? state.tabOrder[0] : null;
+        state.selectedArtifactId = newSelected;
+      }
+    },
+
+    /**
+     * Open canvas with a specific artifact selected
+     * Convenience action that combines uncollapse + select + add to tab order
+     */
+    openCanvasWithArtifact(state, action: PayloadAction<string>) {
+      state.canvasCollapsed = false;
+      state.selectedArtifactId = action.payload;
+      if (!state.tabOrder.includes(action.payload)) {
+        state.tabOrder.push(action.payload);
+      }
+    },
+
+    /**
      * Update user preferences
      */
     setPreferences(state, action: PayloadAction<Partial<CanvasPreferences>>) {
@@ -247,18 +294,19 @@ const canvasSlice = createSlice({
     /**
      * Reset to default state
      * Sprint 2.1: Also resets hasCustomLayout so persona presets can be applied again.
-     * Sprint 4.1: Also resets maximizedPanelId.
+     * Sprint 4.1: Also resets maximizedPanelId and tabOrder.
      */
     resetCanvas(state) {
       Object.assign(state, {
         panelSizes: defaultPanelSizes,
         sessionNavCollapsed: false,
-        canvasCollapsed: false,
+        canvasCollapsed: true, // Default to collapsed
         activeNavItem: "chat",
         selectedArtifactId: null,
         preferences: defaultPreferences,
         hasCustomLayout: false,
         maximizedPanelId: null,
+        tabOrder: [],
       });
       storage.remove(CANVAS_STORAGE_KEY);
     },
@@ -307,6 +355,8 @@ export const selectHasCustomLayout = (state: StateWithCanvas) =>
   state.canvas.hasCustomLayout;
 export const selectMaximizedPanelId = (state: StateWithCanvas) =>
   state.canvas.maximizedPanelId;
+export const selectTabOrder = (state: StateWithCanvas) =>
+  state.canvas.tabOrder;
 
 // =============================================================================
 // Exports
@@ -325,6 +375,10 @@ export const {
   togglePanelMaximize,
   setActiveNavItem,
   setSelectedArtifactId,
+  setTabOrder,
+  addToTabOrder,
+  removeFromTabOrder,
+  openCanvasWithArtifact,
   setPreferences,
   resetCanvas,
 } = canvasSlice.actions;

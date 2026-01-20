@@ -266,13 +266,13 @@ export const FormExample: Story = {
   render: () => (
     <div className="flex flex-col gap-4 w-80">
       <div>
-        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+        <label className="block text-sm font-medium text-neutral-11 mb-1">
           Username
         </label>
         <Input leftIcon={<User className="h-4 w-4" />} placeholder="johndoe" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+        <label className="block text-sm font-medium text-neutral-11 mb-1">
           Email
         </label>
         <Input
@@ -282,7 +282,7 @@ export const FormExample: Story = {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+        <label className="block text-sm font-medium text-neutral-11 mb-1">
           Password
         </label>
         <Input
@@ -312,9 +312,9 @@ export const ValidationStates: Story = {
         <Input
           variant="error"
           defaultValue="invalid@"
-          rightIcon={<AlertCircle className="h-4 w-4 text-error-500" />}
+          rightIcon={<AlertCircle className="h-4 w-4 text-error-9" />}
         />
-        <p className="text-xs text-error-500 mt-1">
+        <p className="text-xs text-error-9 mt-1">
           Please enter a valid email address
         </p>
       </div>
@@ -322,9 +322,9 @@ export const ValidationStates: Story = {
         <Input
           variant="success"
           defaultValue="valid@example.com"
-          rightIcon={<CheckCircle className="h-4 w-4 text-success-500" />}
+          rightIcon={<CheckCircle className="h-4 w-4 text-success-9" />}
         />
-        <p className="text-xs text-success-500 mt-1">Email is valid</p>
+        <p className="text-xs text-success-9 mt-1">Email is valid</p>
       </div>
     </div>
   ),
@@ -339,7 +339,7 @@ export const ValidationStates: Story = {
 
 export const DarkMode: Story = {
   render: () => (
-    <div className="dark bg-neutral-900 p-6 rounded-lg">
+    <div className="dark bg-neutral-2 p-6 rounded-lg">
       <div className="flex flex-col gap-4 w-80">
         <Input variant="default" placeholder="Default in dark mode" />
         <Input variant="error" placeholder="Error in dark mode" />

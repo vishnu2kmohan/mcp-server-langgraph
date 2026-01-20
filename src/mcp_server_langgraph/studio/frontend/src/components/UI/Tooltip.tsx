@@ -26,9 +26,8 @@ import { cn } from "../../utils/cn";
 export const tooltipVariants = cva(
   // Base styles
   [
-    "fixed z-50 px-2 py-1 text-sm rounded shadow-lg",
-    "bg-neutral-900 text-white",
-    "dark:bg-neutral-700",
+    "fixed z-tooltip px-2 py-1 text-sm rounded shadow-lg",
+    "bg-neutral-2 text-neutral-12",
     "animate-in fade-in-0 zoom-in-95 duration-150",
   ],
   {
@@ -50,7 +49,7 @@ export const tooltipVariants = cva(
  * Arrow position styles using CVA
  */
 export const tooltipArrowVariants = cva(
-  "absolute w-2 h-2 bg-neutral-900 dark:bg-neutral-700 rotate-45",
+  "absolute w-2 h-2 bg-neutral-2 rotate-45",
   {
     variants: {
       position: {

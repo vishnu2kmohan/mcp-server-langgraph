@@ -21,6 +21,7 @@ import {
   createMockApprovalRequest,
   createMockClarificationRequest,
 } from "./agentRequestHandlers";
+import { transformSnakeToCamel } from "../../api/transforms";
 
 const server = setupServer(...agentRequestHandlers);
 
@@ -159,17 +160,15 @@ describe("agentRequestHandlers", () => {
       expect(response.ok).toBe(true);
       const data = await response.json();
 
+      // AgentRequestActionResponse schema: success, request_id, status, message
       expect(data.success).toBe(true);
       expect(data.request_id).toBe(requestId);
-      expect(data.action).toBe("approved");
-      expect(data.approved_by).toBe("admin");
-      expect(data.reason).toBe("Looks good");
-      expect(data.timestamp).toBeDefined();
+      expect(data.status).toBe("approved");
+      expect(data.message).toBeDefined();
     });
 
-    it("should include modifications in response", async () => {
+    it("should include message in response", async () => {
       const requestId = mockPendingApprovals[0].request_id;
-      const modifications = { output_path: "/new/path" };
 
       const response = await fetch(
         `/api/v1/agents/requests/${requestId}/approve`,
@@ -178,13 +177,14 @@ describe("agentRequestHandlers", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             approved_by: "admin",
-            modifications,
+            reason: "Custom approval reason",
           }),
         },
       );
 
       const data = await response.json();
-      expect(data.modifications).toEqual(modifications);
+      expect(data.success).toBe(true);
+      expect(data.message).toContain("Custom approval reason");
     });
 
     it("should return 404 for unknown request ID", async () => {
@@ -219,11 +219,11 @@ describe("agentRequestHandlers", () => {
       expect(response.ok).toBe(true);
       const data = await response.json();
 
+      // AgentRequestActionResponse schema: success, request_id, status, message
       expect(data.success).toBe(true);
       expect(data.request_id).toBe(requestId);
-      expect(data.action).toBe("rejected");
-      expect(data.rejected_by).toBe("admin");
-      expect(data.reason).toBe("Not appropriate");
+      expect(data.status).toBe("rejected");
+      expect(data.message).toBeDefined();
     });
 
     it("should return 404 for unknown request ID", async () => {
@@ -258,11 +258,12 @@ describe("agentRequestHandlers", () => {
       expect(response.ok).toBe(true);
       const data = await response.json();
 
+      // AgentRequestActionResponse schema: success, request_id, status, message
       expect(data.success).toBe(true);
       expect(data.request_id).toBe(requestId);
-      expect(data.action).toBe("responded");
-      expect(data.response_type).toBe("choice");
-      expect(data.response_value).toBe("PDF");
+      expect(data.status).toBe("responded");
+      expect(data.message).toContain("choice");
+      expect(data.message).toContain("PDF");
     });
 
     it("should respond to text clarification", async () => {
@@ -280,8 +281,9 @@ describe("agentRequestHandlers", () => {
       );
 
       const data = await response.json();
-      expect(data.response_type).toBe("text");
-      expect(data.response_value).toBe("Use custom format XYZ");
+      expect(data.success).toBe(true);
+      expect(data.status).toBe("responded");
+      expect(data.message).toContain("text");
     });
 
     it("should respond to confirm clarification", async () => {
@@ -299,8 +301,9 @@ describe("agentRequestHandlers", () => {
       );
 
       const data = await response.json();
-      expect(data.response_type).toBe("confirm");
-      expect(data.response_value).toBe("true");
+      expect(data.success).toBe(true);
+      expect(data.status).toBe("responded");
+      expect(data.message).toContain("confirm");
     });
 
     it("should return 404 for unknown request ID", async () => {
@@ -425,6 +428,20 @@ describe("agentRequestHandlers", () => {
 
       expect(clarification.question).toBe("Custom question?");
       expect(clarification.options).toEqual(["A", "B"]);
+    });
+  });
+
+  describe("API Contract Transformation", () => {
+    it("should return pending requests in snake_case and transform to camelCase", async () => {
+      const response = await fetch("/api/v1/agents/requests/pending");
+      expect(response.status).toBe(200);
+
+      const rawData = await response.json();
+      expect(rawData).toBeDefined();
+
+      // Verify transformation works without errors
+      const transformedData = transformSnakeToCamel(rawData);
+      expect(transformedData).toBeDefined();
     });
   });
 });

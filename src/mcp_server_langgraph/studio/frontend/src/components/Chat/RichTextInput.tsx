@@ -1,6 +1,15 @@
 /**
  * RichTextInput Component
  *
+ * @deprecated Use ChatInput component instead for new development.
+ * ChatInput provides a consolidated interface with:
+ * - All formatting via keyboard shortcuts (Ctrl+B/I/`) - no toolbar UI
+ * - Model settings dropdown (brain icon) with model selector + thinking controls
+ * - Single bottom controls row layout
+ * - Cleaner, more maintainable codebase
+ *
+ * This component is kept for backwards compatibility.
+ *
  * Rich text input with formatting support.
  * Features:
  * - Basic formatting (bold, italic, code)
@@ -419,11 +428,11 @@ export function RichTextInput({
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Formatting toolbar toggle and toolbar (Sprint 2.4 - collapsible) */}
-      <div className="flex items-center gap-1 mb-2 p-1 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center gap-1 mb-2 p-1 border-b border-neutral-5">
         {/* Toggle button - always visible */}
         <Button
           variant="secondary"
-          className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+          className="p-1.5 rounded hover:bg-neutral-2"
           type="button"
           onClick={() => setToolbarExpanded((prev) => !prev)}
           aria-label="Toggle formatting toolbar"
@@ -457,11 +466,11 @@ export function RichTextInput({
             role="toolbar"
             aria-label="Text formatting"
           >
-            <div className="w-px h-4 bg-neutral-300 dark:bg-neutral-600 mx-1" />
+            <div className="w-px h-4 bg-neutral-3 mx-1" />
 
-            <Button
+            <Button size="icon"
               variant="secondary"
-              className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+              className="p-1.5 rounded hover:bg-neutral-2"
               type="button"
               onClick={handleBold}
               disabled={disabled}
@@ -471,9 +480,9 @@ export function RichTextInput({
               <Bold className="w-4 h-4" aria-hidden="true" />
             </Button>
 
-            <Button
+            <Button size="icon"
               variant="secondary"
-              className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+              className="p-1.5 rounded hover:bg-neutral-2"
               type="button"
               onClick={handleItalic}
               disabled={disabled}
@@ -483,9 +492,9 @@ export function RichTextInput({
               <Italic className="w-4 h-4" aria-hidden="true" />
             </Button>
 
-            <Button
+            <Button size="icon"
               variant="secondary"
-              className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+              className="p-1.5 rounded hover:bg-neutral-2"
               type="button"
               onClick={handleCode}
               disabled={disabled}
@@ -495,11 +504,11 @@ export function RichTextInput({
               <Code className="w-4 h-4" aria-hidden="true" />
             </Button>
 
-            <div className="w-px h-4 bg-neutral-300 dark:bg-neutral-600 mx-1" />
+            <div className="w-px h-4 bg-neutral-3 mx-1" />
 
             <Button
               variant="secondary"
-              className="p-1.5 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+              className="p-1.5 rounded hover:bg-neutral-2"
               type="button"
               onClick={applyCodeBlock}
               disabled={disabled}
@@ -514,7 +523,7 @@ export function RichTextInput({
       {/* Text input */}
       <div className="relative">
         <Textarea
-          className="min-h-[100px] p-3 resize-y text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-h-[100px] p-3 resize-y text-neutral-12 placeholder-neutral-9 focus:ring-primary-7 disabled:opacity-50 disabled:cursor-not-allowed"
           ref={textareaRef}
           value={value}
           onChange={handleChange}
@@ -538,8 +547,8 @@ export function RichTextInput({
             aria-label="Mention suggestions"
             className="
               absolute z-10 w-48 mt-1
-              bg-white dark:bg-neutral-800
-              border border-neutral-200 dark:border-neutral-700
+              bg-neutral-1
+              border border-neutral-5
               rounded-lg shadow-lg
               max-h-48 overflow-y-auto
             "
@@ -547,13 +556,13 @@ export function RichTextInput({
             {filteredMentions.map((option) => (
               <Button
                 variant="secondary"
-                className="w-full px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-700 text-sm text-neutral-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 text-left hover:bg-neutral-2 text-sm text-neutral-12"
                 key={`${option.type}-${option.value}`}
                 type="button"
                 role="option"
                 onClick={() => handleMentionSelect(option)}
               >
-                <span className="text-neutral-500 dark:text-neutral-400 mr-1">
+                <span className="text-neutral-10 mr-1">
                   @
                 </span>
                 {option.label || option.value}
@@ -566,11 +575,11 @@ export function RichTextInput({
         {enableInlineSuggestions && value && inlineSuggestion && (
           <div
             data-testid="inline-suggestion-overlay"
-            className="absolute left-0 top-0 pointer-events-none p-3 text-neutral-400 dark:text-neutral-400"
+            className="absolute left-0 top-0 pointer-events-none p-3 text-neutral-9"
             aria-hidden="true"
           >
             <span className="invisible">{value}</span>
-            <span className="text-neutral-400 dark:text-neutral-400 opacity-60">
+            <span className="text-neutral-9 opacity-60">
               {inlineSuggestion}
             </span>
           </div>
@@ -582,7 +591,7 @@ export function RichTextInput({
             data-testid="suggestion-loading"
             className="absolute right-3 top-3"
           >
-            <div className="w-4 h-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-blue-500 rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-neutral-5 border-t-blue-500 rounded-full animate-spin" />
           </div>
         )}
 
@@ -590,7 +599,7 @@ export function RichTextInput({
         {enableInlineSuggestions && value && inlineSuggestion && (
           <div
             data-testid="suggestion-hint"
-            className="absolute right-3 bottom-3 text-xs text-neutral-400 dark:text-neutral-400 bg-white dark:bg-neutral-800 px-1.5 py-0.5 rounded"
+            className="absolute right-3 bottom-3 text-xs text-neutral-9 bg-neutral-1 px-1.5 py-0.5 rounded"
           >
             <kbd className="font-mono text-xs">Tab</kbd> to accept
           </div>
@@ -600,7 +609,7 @@ export function RichTextInput({
       {maxLength && (
         <div
           id="character-count"
-          className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 text-right"
+          className="mt-1 text-xs text-neutral-10 text-right"
         >
           {value.length} / {maxLength}
         </div>

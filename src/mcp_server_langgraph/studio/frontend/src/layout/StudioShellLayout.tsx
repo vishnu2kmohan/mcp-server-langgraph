@@ -43,11 +43,21 @@ import {
   type CanvasPanelSizes,
 } from "../store/slices/canvasSlice";
 import { storage, STORAGE_KEYS } from "../utils/storage";
+import { cn } from "../utils/cn";
 import {
   selectCurrentSession,
+  selectSessionError,
   createSession,
   renameSession,
+  deleteSession,
 } from "../store/slices/sessionSlice";
+import {
+  selectMCPError,
+  selectPendingElicitations,
+  selectPendingSamplingRequests,
+  respondToElicitation,
+  respondToSampling,
+} from "../store/slices/mcpSlice";
 import {
   selectUsername,
   selectPersona,
@@ -72,6 +82,7 @@ import { useCanvasKeyboardNav } from "../hooks/useCanvasKeyboardNav";
 import { useKBStatus } from "../hooks/useKBStatus";
 import { useBreadcrumb } from "../hooks/useBreadcrumb";
 import type { ConnectionStatus } from "../types/connection";
+import type { SamplingResponse } from "../types/mcp";
 import type { TokenBreakdown, CostBreakdown } from "../types/session";
 import { NudgeTooltip } from "../components/Nudge";
 import { CrossInsightsPanel } from "../components/Analytics/CrossInsightsPanel";
@@ -83,6 +94,7 @@ import type {
 } from "../components/Onboarding/OnboardingWizard";
 import { AgentApprovalDialog } from "../components/Admin/AgentApprovalDialog";
 import { ClarificationDialog } from "../components/Admin/ClarificationDialog";
+import { ConfirmDialog } from "../components/UI/ConfirmDialog";
 // Use consolidated HITL types from types/hitl.ts (ADR-0091 Phase 10: dialogs use camelCase)
 import { convertUIResponseCamelCaseToAPIResponse } from "../types/hitl";
 
@@ -113,6 +125,14 @@ import { MobileDrawer } from "./MobileDrawer";
 import { HamburgerMenu } from "./HamburgerMenu";
 import { ConnectedCanvasPanel } from "../canvas/ConnectedCanvasPanel";
 import { TelemetryViewer } from "../devtools";
+import {
+  MCPConnectionProvider,
+  useMCPConnection,
+} from "../contexts/MCPConnectionContext";
+import {
+  LazyInboundElicitationModal,
+  LazyInboundSamplingModal,
+} from "../components/MCP";
 import { devLogger } from "../utils/devLogger";
 import { LazyDevToolsPanel } from "../components/DevTools";
 import {
@@ -123,6 +143,13 @@ import {
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { toast } from "sonner";
 import { useGetAvailableModelsQuery, useGetServerConfigQuery } from "../api";
+import {
+  getConnectionToastId,
+  TOAST_ID_CONNECTION_ERROR,
+  TOAST_ID_BUDGET_WARNING,
+  TOAST_ID_SESSION_DELETED,
+  TOAST_ID_MODELS_LOAD_FAILED,
+} from "../constants/toastIds";
 
 import { Button } from "@/components/UI";
 
@@ -231,6 +258,94 @@ function CommandPaletteWrapper({
 }
 
 // =============================================================================
+// Inbound MCP Modals (Server-Initiated JSON-RPC Requests)
+// =============================================================================
+
+/**
+ * InboundMCPModals - handles server-initiated elicitation and sampling requests.
+ * Must be rendered inside MCPConnectionProvider to access useMCPConnection.
+ */
+function InboundMCPModals() {
+  const dispatch = useAppDispatch();
+  const { sendResponse } = useMCPConnection();
+
+  // Get pending requests from Redux
+  const pendingElicitations = useAppSelector(selectPendingElicitations);
+  const pendingSamplingRequests = useAppSelector(selectPendingSamplingRequests);
+
+  // Handle elicitation response
+  const handleElicitationRespond = useCallback(
+    (result: Record<string, unknown>) => {
+      if (pendingElicitations.length > 0) {
+        const request = pendingElicitations[0];
+        sendResponse(request.id, result);
+        dispatch(respondToElicitation(request.id));
+      }
+    },
+    [pendingElicitations, sendResponse, dispatch],
+  );
+
+  // Handle elicitation cancel
+  const handleElicitationCancel = useCallback(() => {
+    if (pendingElicitations.length > 0) {
+      const request = pendingElicitations[0];
+      sendResponse(request.id, null, { code: -32000, message: "User cancelled" });
+      dispatch(respondToElicitation(request.id));
+    }
+  }, [pendingElicitations, sendResponse, dispatch]);
+
+  // Handle sampling approval
+  const handleSamplingApprove = useCallback(
+    (response: SamplingResponse) => {
+      if (pendingSamplingRequests.length > 0) {
+        const request = pendingSamplingRequests[0];
+        sendResponse(request.id, response);
+        dispatch(respondToSampling(request.id));
+      }
+    },
+    [pendingSamplingRequests, sendResponse, dispatch],
+  );
+
+  // Handle sampling rejection
+  const handleSamplingReject = useCallback(() => {
+    if (pendingSamplingRequests.length > 0) {
+      const request = pendingSamplingRequests[0];
+      sendResponse(request.id, null, {
+        code: -32000,
+        message: "User rejected sampling request",
+      });
+      dispatch(respondToSampling(request.id));
+    }
+  }, [pendingSamplingRequests, sendResponse, dispatch]);
+
+  return (
+    <>
+      {/* Inbound Elicitation Modal */}
+      {pendingElicitations.length > 0 && (
+        <Suspense fallback={null}>
+          <LazyInboundElicitationModal
+            request={pendingElicitations[0]}
+            onRespond={handleElicitationRespond}
+            onCancel={handleElicitationCancel}
+          />
+        </Suspense>
+      )}
+
+      {/* Inbound Sampling Modal */}
+      {pendingSamplingRequests.length > 0 && (
+        <Suspense fallback={null}>
+          <LazyInboundSamplingModal
+            request={pendingSamplingRequests[0]}
+            onApprove={handleSamplingApprove}
+            onReject={handleSamplingReject}
+          />
+        </Suspense>
+      )}
+    </>
+  );
+}
+
+// =============================================================================
 // StudioShellLayout Component
 // =============================================================================
 
@@ -260,14 +375,22 @@ export function StudioShellLayout() {
   const [selectedModel, setSelectedModel] = useState<string | undefined>(() => {
     return storage.get<string>(STORAGE_KEYS.SELECTED_MODEL);
   });
+  // Reasoning effort levels: none, low, medium, high, ultra
+  // Support varies by vendor - see ReasoningEffortSelector for details
   const [reasoningEffort, setReasoningEffort] = useState<
-    "low" | "medium" | "high"
+    "none" | "low" | "medium" | "high" | "ultra"
   >(() => {
     const stored = storage.get<string>(STORAGE_KEYS.REASONING_EFFORT);
-    if (stored === "low" || stored === "medium" || stored === "high") {
+    if (
+      stored === "none" ||
+      stored === "low" ||
+      stored === "medium" ||
+      stored === "high" ||
+      stored === "ultra"
+    ) {
       return stored;
     }
-    return "medium";
+    return "medium"; // Fallback default until server config loads
   });
   const [enableThinking, setEnableThinking] = useState(() => {
     const stored = storage.get<boolean>(STORAGE_KEYS.ENABLE_THINKING);
@@ -300,6 +423,7 @@ export function StudioShellLayout() {
         name: "Claude 3.5 Sonnet",
         provider: "anthropic",
         supportsThinking: true,
+        isDefault: true,
       },
       {
         id: "gpt-4o",
@@ -343,7 +467,7 @@ export function StudioShellLayout() {
     }
   }, [serverConfig?.modelName, selectedModel]);
 
-  // Fallback: if server config doesn't load, use first available model
+  // Fallback: if server config doesn't load, use model marked as default or first available
   useEffect(() => {
     if (
       !hasSetDefaultModel.current &&
@@ -352,11 +476,17 @@ export function StudioShellLayout() {
       effectiveModels.length > 0 &&
       !selectedModel
     ) {
-      const firstModel = effectiveModels[0];
-      if (firstModel) {
-        setSelectedModel(firstModel.id);
+      // Prefer model marked as isDefault, fall back to first available
+      const defaultModel =
+        effectiveModels.find((m) => m.isDefault) ?? effectiveModels[0];
+      if (defaultModel) {
+        setSelectedModel(defaultModel.id);
         hasSetDefaultModel.current = true;
-        logger.debug("Set default model from available models:", firstModel.id);
+        logger.debug(
+          "Set default model from available models:",
+          defaultModel.id,
+          defaultModel.isDefault ? "(marked as default)" : "(first available)",
+        );
       }
     }
   }, [
@@ -365,6 +495,35 @@ export function StudioShellLayout() {
     effectiveModels,
     selectedModel,
   ]);
+
+  // Sync default reasoning effort from server config when loaded
+  // Only set once if not already stored in localStorage - don't override user's selection
+  const hasSetDefaultReasoningEffort = useRef(false);
+  useEffect(() => {
+    const storedEffort = storage.get<string>(STORAGE_KEYS.REASONING_EFFORT);
+    if (
+      !hasSetDefaultReasoningEffort.current &&
+      serverConfig?.defaultReasoningEffort &&
+      !storedEffort // Only set if user hasn't chosen a preference
+    ) {
+      const effort = serverConfig.defaultReasoningEffort;
+      // Validate all 5 supported levels
+      if (
+        effort === "none" ||
+        effort === "low" ||
+        effort === "medium" ||
+        effort === "high" ||
+        effort === "ultra"
+      ) {
+        setReasoningEffort(effort);
+        hasSetDefaultReasoningEffort.current = true;
+        logger.debug(
+          "Set default reasoning effort from server config:",
+          effort,
+        );
+      }
+    }
+  }, [serverConfig?.defaultReasoningEffort]);
 
   // Available models from API, transformed to expected format
   const availableModels = useMemo(() => {
@@ -391,13 +550,14 @@ export function StudioShellLayout() {
     const modelExists = effectiveModels.some((m) => m.id === selectedModel);
 
     if (!modelExists) {
-      // Selected model is invalid, fall back to first available
-      const firstModel = effectiveModels[0];
-      if (firstModel) {
+      // Selected model is invalid, fall back to default or first available
+      const fallbackModel =
+        effectiveModels.find((m) => m.isDefault) ?? effectiveModels[0];
+      if (fallbackModel) {
         logger.warn(
-          `Selected model "${selectedModel}" not in available models. Falling back to "${firstModel.id}"`,
+          `Selected model "${selectedModel}" not in available models. Falling back to "${fallbackModel.id}"`,
         );
-        setSelectedModel(firstModel.id);
+        setSelectedModel(fallbackModel.id);
       }
     }
   }, [selectedModel, effectiveModels, isModelDataLoading]);
@@ -407,7 +567,9 @@ export function StudioShellLayout() {
   const prevModelsErrorRef = useRef(false);
   useEffect(() => {
     if (isModelsError && !prevModelsErrorRef.current) {
-      toast.error("Failed to load models. Using fallback models.");
+      toast.error("Failed to load models. Using fallback models.", {
+        id: TOAST_ID_MODELS_LOAD_FAILED,
+      });
       logger.warn("Models API failed, using fallback models");
     }
     prevModelsErrorRef.current = isModelsError;
@@ -451,6 +613,13 @@ export function StudioShellLayout() {
     if (!selectedModel) return false;
     const model = effectiveModels.find((m) => m.id === selectedModel);
     return model?.supportsThinking ?? false;
+  }, [selectedModel, effectiveModels]);
+
+  // Get the provider of the selected model for StatusBar display
+  const modelProvider = useMemo(() => {
+    if (!selectedModel) return undefined;
+    const model = effectiveModels.find((m) => m.id === selectedModel);
+    return model?.provider as "openai" | "anthropic" | "google" | undefined;
   }, [effectiveModels, selectedModel]);
 
   // Panel refs for keyboard navigation (Phase 5 - useCanvasKeyboardNav integration)
@@ -487,6 +656,10 @@ export function StudioShellLayout() {
   const enhancedModelSelectorEnabled = useFeatureFlag(
     "enhanced_model_selector",
   );
+  // Session AI feature flags (AI session intelligence)
+  const sessionAIEnabled = useFeatureFlag("session_ai");
+  const sessionSummaryEnabled = useFeatureFlag("session_summary");
+  const sessionTopicsEnabled = useFeatureFlag("session_topics");
 
   // KB Status for StatusBar indicator (DynamicContextLoader integration)
   const {
@@ -571,6 +744,10 @@ export function StudioShellLayout() {
   // Track whether the persona mismatch banner has been dismissed
   const [personaBannerDismissed, setPersonaBannerDismissed] = useState(false);
 
+  // Session delete confirmation dialog state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+
   // CrossInsightsPanel state management (extracted to hook for reusability)
   // Handles: dismissed state, localStorage persistence, keyboard shortcut (Cmd+I), batch analysis
   const {
@@ -609,9 +786,23 @@ export function StudioShellLayout() {
     hasAppliedInitialCollapse.current = true;
   }, [breakpoint, hasCustomLayout, dispatch]);
 
-  // Get real-time connection health status
+  // Get real-time connection health status with toast notifications
+  // Uses unique IDs per connection to deduplicate rapid status changes
   const { status: wsStatus, reconnectAttempts: wsReconnectAttempts } =
-    useConnectionHealthWebSocket();
+    useConnectionHealthWebSocket({
+      onConnectionUpdate: (conn) => {
+        // Use connection name as toast ID to deduplicate rapid status changes
+        const toastId = getConnectionToastId(conn.name);
+        if (conn.status === "disconnected") {
+          toast.warning(`Connection "${conn.name}" disconnected`, { id: toastId });
+        } else if (conn.status === "connected") {
+          toast.success(`Connection "${conn.name}" connected`, { id: toastId });
+        }
+      },
+      onError: (error) => {
+        toast.error(`Connection error: ${error}`, { id: TOAST_ID_CONNECTION_ERROR });
+      },
+    });
 
   // Get AI orchestrator status for StatusBar (context-aware display)
   const { statusForStatusBar: aiOrchestratorStatus } =
@@ -622,7 +813,22 @@ export function StudioShellLayout() {
     sessionCosts,
     subscribeSession: subscribeCostSession,
     unsubscribeSession: unsubscribeCostSession,
-  } = useCostTrackingWebSocket();
+  } = useCostTrackingWebSocket({
+    onBudgetWarning: (warning) => {
+      toast.warning(`Budget warning: ${warning.message}`, {
+        id: TOAST_ID_BUDGET_WARNING,
+        duration: 10000,
+      });
+    },
+    onCostEvent: (event) => {
+      // Log cost events for DevTools visibility (appears in console/network tabs)
+      logger.debug(
+        `Cost event: $${event.cost.toFixed(4)} for ${event.model} ` +
+          `(${event.tokens.input} in / ${event.tokens.output} out)`,
+        { sessionId: event.sessionId, cost: event.cost, model: event.model },
+      );
+    },
+  });
 
   // Map WebSocket status to StatusBar connection status
   const connectionStatus: ConnectionStatus = useMemo(() => {
@@ -650,6 +856,16 @@ export function StudioShellLayout() {
   // Get current session for model info
   const currentSession = useAppSelector(selectCurrentSession);
   const modelName = currentSession?.config?.modelName;
+
+  // Get aggregated errors for StatusBar problem count
+  const sessionError = useAppSelector(selectSessionError);
+  const mcpError = useAppSelector(selectMCPError);
+  const problemCount = useMemo(() => {
+    let count = 0;
+    if (sessionError) count++;
+    if (mcpError) count++;
+    return count > 0 ? count : undefined;
+  }, [sessionError, mcpError]);
 
   // Log cross-insights for debugging (dev mode only)
   useEffect(() => {
@@ -943,6 +1159,31 @@ export function StudioShellLayout() {
     [dispatch],
   );
 
+  // Handler for session delete (from SessionNav context menu)
+  // Shows confirmation dialog before deleting to prevent accidental data loss
+  const handleDeleteSession = useCallback((sessionId: string) => {
+    logger.debug("Delete session requested:", sessionId);
+    setSessionToDelete(sessionId);
+    setDeleteConfirmOpen(true);
+  }, []);
+
+  // Confirm session deletion after user confirms in dialog
+  const handleConfirmDelete = useCallback(() => {
+    if (sessionToDelete) {
+      logger.debug("Deleting session:", sessionToDelete);
+      dispatch(deleteSession(sessionToDelete));
+      toast.success("Session deleted", { id: TOAST_ID_SESSION_DELETED });
+      setDeleteConfirmOpen(false);
+      setSessionToDelete(null);
+    }
+  }, [dispatch, sessionToDelete]);
+
+  // Cancel session deletion
+  const handleCancelDelete = useCallback(() => {
+    setDeleteConfirmOpen(false);
+    setSessionToDelete(null);
+  }, []);
+
   // Handler for user menu click (dropdown is managed by TopBar component)
   const handleUserMenuClick = useCallback(() => {
     logger.debug("User menu clicked");
@@ -1048,15 +1289,20 @@ export function StudioShellLayout() {
 
   return (
     // Sprint 4: Wrap with CommandPaletteProvider for dynamic route commands
+    // MCPConnectionProvider: Single MCP WebSocket connection shared across app
     <CommandPaletteProvider staticCommands={PALETTE_COMMANDS}>
+      <MCPConnectionProvider>
       <div
         data-testid="studio-shell"
-        className="studio-shell flex flex-col h-screen bg-white dark:bg-neutral-900"
+        className={cn(
+          "studio-shell flex flex-col h-screen bg-neutral-1",
+          focusModeEnabled && "focus-mode",
+        )}
       >
         {/* Skip-to-content link (WCAG 2.1 AA - 2.4.1 Bypass Blocks) */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-primary-600 focus:ring-2 focus:ring-primary-500"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-notification focus:p-4 focus:bg-neutral-1 focus:text-primary-10 focus:ring-2 focus:ring-primary-7"
         >
           Skip to main content
         </a>
@@ -1065,7 +1311,7 @@ export function StudioShellLayout() {
         {/* Sprint 2.3 Phase 2: breadcrumbItems provides wayfinding via useBreadcrumb hook */}
         {/* Sprint 5.1: Add hamburger menu for mobile navigation */}
         {!focusModeEnabled && (
-          <div className="flex items-center">
+          <div className="flex items-center w-full">
             {/* Sprint 5.1: Hamburger menu for mobile breakpoints */}
             {showMobileNav && (
               <div className="flex-shrink-0 p-2">
@@ -1087,7 +1333,8 @@ export function StudioShellLayout() {
               onPendingApprovalsClick={
                 agentHitlEnabled ? handlePendingApprovalsClick : undefined
               }
-              className={showMobileNav ? "flex-1" : undefined}
+              onAlertClick={() => navigate("/admin/alerts")}
+              className="flex-1"
             />
           </div>
         )}
@@ -1097,7 +1344,7 @@ export function StudioShellLayout() {
           <Button
             variant="secondary"
             size="sm"
-            className="fixed top-2 right-2 z-50 p-2 rounded-lg bg-neutral-800/80 hover:bg-neutral-700 text-white text-xs -opacity opacity-30 hover:opacity-100"
+            className="fixed top-2 right-2 z-panel p-2 rounded-lg bg-neutral-a9 hover:bg-neutral-4 text-neutral-12 text-xs -opacity opacity-30 hover:opacity-100"
             data-testid="focus-mode-exit"
             onClick={() => dispatch(setFocusModeEnabled(false))}
             aria-label="Exit focus mode (Escape)"
@@ -1168,8 +1415,8 @@ export function StudioShellLayout() {
                             ? 100
                             : panelSizes.sessionNav
                         }
-                        minSize={maximizedPanelId ? undefined : 15}
-                        maxSize={maximizedPanelId ? undefined : 35}
+                        minSize={maximizedPanelId ? undefined : 5}
+                        maxSize={maximizedPanelId ? undefined : 25}
                       >
                         <SessionNav
                           ref={sessionNavRef}
@@ -1177,6 +1424,10 @@ export function StudioShellLayout() {
                           enableContextMenu
                           enableHover
                           onRenameSession={handleRenameSession}
+                          onDeleteSession={handleDeleteSession}
+                          enableAI={sessionAIEnabled}
+                          showSummary={sessionSummaryEnabled}
+                          showTopics={sessionTopicsEnabled}
                           enableSimilarSessions={aiSuggestionsEnabled}
                           userId={currentUserId}
                         />
@@ -1194,10 +1445,11 @@ export function StudioShellLayout() {
                         maximizedPanelId === "conversation"
                           ? 100
                           : canvasCollapsed
-                            ? 80
+                            ? 85
                             : panelSizes.conversation
                       }
-                      minSize={maximizedPanelId ? undefined : 30}
+                      minSize={maximizedPanelId ? undefined : 25}
+                      maxSize={maximizedPanelId ? undefined : 50}
                     >
                       <ConnectedConversationPanel
                         ref={conversationRef}
@@ -1248,7 +1500,7 @@ export function StudioShellLayout() {
                             ? 100
                             : panelSizes.canvas
                         }
-                        minSize={maximizedPanelId ? undefined : 25}
+                        minSize={maximizedPanelId ? undefined : 35}
                         maxSize={maximizedPanelId ? undefined : 60}
                       >
                         <ConnectedCanvasPanel
@@ -1266,7 +1518,7 @@ export function StudioShellLayout() {
                 <div
                   key="full-page-outlet"
                   data-testid="route-outlet"
-                  className="flex-1 h-full overflow-auto bg-white dark:bg-neutral-900"
+                  className="flex-1 h-full overflow-auto bg-neutral-1"
                 >
                   <Suspense
                     fallback={
@@ -1275,8 +1527,8 @@ export function StudioShellLayout() {
                         data-testid="route-loading"
                       >
                         <div className="flex flex-col items-center gap-2">
-                          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                          <div className="w-8 h-8 border-2 border-primary-9 border-t-transparent rounded-full motion-safe:animate-spin" />
+                          <span className="text-sm text-neutral-10">
                             Loading...
                           </span>
                         </div>
@@ -1303,8 +1555,8 @@ export function StudioShellLayout() {
               >
                 <Suspense
                   fallback={
-                    <div className="flex items-center justify-center h-full bg-white dark:bg-neutral-900">
-                      <span className="text-sm text-neutral-400 dark:text-neutral-400">
+                    <div className="flex items-center justify-center h-full bg-neutral-1">
+                      <span className="text-sm text-neutral-9">
                         Loading DevTools...
                       </span>
                     </div>
@@ -1324,6 +1576,7 @@ export function StudioShellLayout() {
             reconnectAttempts={wsReconnectAttempts}
             agentStatus={aiOrchestratorStatus}
             modelName={modelName ?? undefined}
+            modelProvider={modelProvider}
             tokenCount={tokenCount > 0 ? tokenCount : undefined}
             tokenBreakdown={tokenBreakdown}
             costBreakdown={costBreakdown}
@@ -1337,6 +1590,8 @@ export function StudioShellLayout() {
             onPendingApprovalsClick={
               agentHitlEnabled ? handlePendingApprovalsClick : undefined
             }
+            approvalsPanelOpen={showApprovalDialog}
+            problemCount={problemCount}
             devToolsCollapsed={devToolsCollapsed}
             onDevToolsToggle={() => dispatch(toggleDevTools())}
             kbStatus={kbFocusEnabled ? kbStatus : undefined}
@@ -1350,7 +1605,7 @@ export function StudioShellLayout() {
 
         {/* AI Nudges (Phase 1.3 + 6.3) - contextual hints and feature discovery */}
         {nudgesEnabled && activeNudge && (
-          <div className="fixed bottom-20 left-16 z-50 max-w-xs">
+          <div className="fixed bottom-20 left-16 z-notification max-w-xs">
             <NudgeTooltip
               nudge={activeNudge}
               onDismiss={() => dismiss(activeNudge.id)}
@@ -1365,15 +1620,15 @@ export function StudioShellLayout() {
           !personaBannerDismissed &&
           personaConfidence >= 0.75 && (
             <div
-              className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 max-w-lg"
+              className="fixed top-16 left-1/2 transform -translate-x-1/2 z-notification max-w-lg"
               role="alert"
               data-testid="persona-mismatch-banner"
             >
-              <div className="bg-insight-50 dark:bg-insight-900/30 border border-insight-200 dark:border-insight-700 rounded-lg shadow-lg p-4">
+              <div className="bg-insight-1 dark:bg-insight-a4 border border-insight-4 dark:border-insight-11 rounded-lg shadow-lg p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0">
                     <svg
-                      className="w-5 h-5 text-insight-600 dark:text-insight-400"
+                      className="w-5 h-5 text-insight-10 dark:text-insight-9"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1387,16 +1642,16 @@ export function StudioShellLayout() {
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-insight-800 dark:text-insight-200">
+                    <h4 className="text-sm font-semibold text-insight-11 dark:text-insight-4">
                       We noticed you&apos;re using advanced features
                     </h4>
-                    <p className="text-sm text-insight-700 dark:text-insight-300 mt-1">
+                    <p className="text-sm text-insight-11 dark:text-insight-5 mt-1">
                       Your usage pattern suggests you might benefit from{" "}
                       <strong>{detectedPersona?.replace(/-/g, " ")}</strong>{" "}
                       capabilities.
                     </p>
                     {recommendation && (
-                      <p className="text-sm text-insight-600 dark:text-insight-400 mt-2">
+                      <p className="text-sm text-insight-10 dark:text-insight-9 mt-2">
                         {recommendation}
                       </p>
                     )}
@@ -1405,7 +1660,7 @@ export function StudioShellLayout() {
                         {behaviorSignals.slice(0, 3).map((signal, idx) => (
                           <span
                             key={idx}
-                            className="inline-flex items-center px-2 py-0.5 text-xs bg-insight-100 dark:bg-insight-800/50 text-insight-700 dark:text-insight-300 rounded"
+                            className="inline-flex items-center px-2 py-0.5 text-xs bg-insight-2 dark:bg-insight-a6 text-insight-11 dark:text-insight-5 rounded"
                           >
                             {signal}
                           </span>
@@ -1414,7 +1669,7 @@ export function StudioShellLayout() {
                     )}
                   </div>
                   <Button
-                    className="flex-shrink-0 p-1 text-insight-400 hover:text-insight-600 dark:hover:text-insight-200"
+                    className="flex-shrink-0 p-1 text-insight-9 hover:text-insight-10 dark:hover:text-insight-4"
                     onClick={() => setPersonaBannerDismissed(true)}
                     aria-label="Dismiss persona suggestion"
                   >
@@ -1446,7 +1701,7 @@ export function StudioShellLayout() {
             batchPersonaResult ||
             batchDisclosureResult) && (
             <div
-              className="fixed bottom-16 left-16 z-40 w-80"
+              className="fixed bottom-16 left-16 z-panel w-80"
               data-testid="cross-insights-panel-container"
             >
               <CrossInsightsPanel
@@ -1485,7 +1740,7 @@ export function StudioShellLayout() {
         {/* Background Agent Panel (floating, bottom-right) - gated by ai_suggestions feature flag */}
         {/* Lazy-loaded to reduce initial bundle size */}
         {aiSuggestionsEnabled && backgroundAgents.length > 0 && (
-          <div className="fixed bottom-16 right-4 z-40 w-80">
+          <div className="fixed bottom-16 right-4 z-panel w-80">
             <Suspense fallback={null}>
               <LazyBackgroundAgentPanel
                 agents={backgroundAgents}
@@ -1498,8 +1753,15 @@ export function StudioShellLayout() {
 
         {/* Agent Task Queue (side panel, toggled via showAgentPanel) - gated by ai_suggestions feature flag */}
         {/* Lazy-loaded to reduce initial bundle size */}
+        {/* Uses CSS vars for dynamic bar heights (updated by ResizeObserver) */}
         {aiSuggestionsEnabled && showAgentPanel && (
-          <div className="fixed top-14 right-0 bottom-8 w-80 z-30 border-l border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg">
+          <div
+            className="fixed right-0 w-80 z-panel border-l border-neutral-5 bg-neutral-1 shadow-lg"
+            style={{
+              top: "calc(var(--topbar-height) + 0.5rem)",
+              bottom: "calc(var(--statusbar-height) + 0.5rem)",
+            }}
+          >
             <Suspense fallback={null}>
               <LazyAgentTaskQueue onCancel={handleAgentCancel} />
             </Suspense>
@@ -1540,6 +1802,18 @@ export function StudioShellLayout() {
           </div>
         )}
 
+        {/* Session Delete Confirmation Dialog */}
+        <ConfirmDialog
+          open={deleteConfirmOpen}
+          onClose={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
+          title="Delete Session"
+          message="Are you sure you want to delete this session? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          isDestructive
+        />
+
         {/* Sprint 5.1: Mobile Drawer Navigation - gated by mobile_drawer feature flag */}
         {/* Renders at narrow breakpoints (sm, md) for mobile navigation */}
         {showMobileNav && (
@@ -1557,7 +1831,11 @@ export function StudioShellLayout() {
           onSkip={handleOnboardingSkip}
           templates={onboardingTemplates}
         />
+
+        {/* Inbound MCP Modals - Server-initiated JSON-RPC requests (ADR-0069) */}
+        <InboundMCPModals />
       </div>
+      </MCPConnectionProvider>
     </CommandPaletteProvider>
   );
 }

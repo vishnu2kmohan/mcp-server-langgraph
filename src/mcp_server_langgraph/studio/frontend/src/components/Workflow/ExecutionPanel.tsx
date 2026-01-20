@@ -51,14 +51,14 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
   const getNodeStatusBadgeClass = (status: NodeStatus): string => {
     switch (status) {
       case "running":
-        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
+        return "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7";
       case "success":
-        return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
+        return "bg-success-3 text-success-11 bg-success-4 dark:text-success-7";
       case "error":
-        return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
+        return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
       case "idle":
       default:
-        return "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300";
+        return "bg-neutral-2 text-neutral-11";
     }
   };
 
@@ -78,11 +78,11 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
   const getLogIcon = (level: "info" | "warning" | "error") => {
     switch (level) {
       case "info":
-        return <Info size={16} className="text-primary-500" />;
+        return <Info size={16} className="text-primary-9" />;
       case "warning":
-        return <AlertTriangle size={16} className="text-warning-500" />;
+        return <AlertTriangle size={16} className="text-warning-9" />;
       case "error":
-        return <XCircle size={16} className="text-error-500" />;
+        return <XCircle size={16} className="text-error-9" />;
     }
   };
 
@@ -95,20 +95,20 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
   };
 
   return (
-    <div className="h-64 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 flex flex-col">
+    <div className="h-64 bg-neutral-1 border-t border-neutral-5 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between p-3 border-b border-neutral-5">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+          <h3 className="font-semibold text-neutral-12">
             Execution Logs
           </h3>
           <span
             className={`
               text-xs px-2 py-0.5 rounded
-              ${executionState === "idle" ? "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300" : ""}
-              ${executionState === "running" ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400" : ""}
-              ${executionState === "completed" ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400" : ""}
-              ${executionState === "error" ? "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400" : ""}
+              ${executionState === "idle" ? "bg-neutral-2 text-neutral-11" : ""}
+              ${executionState === "running" ? "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7" : ""}
+              ${executionState === "completed" ? "bg-success-3 text-success-11 bg-success-4 dark:text-success-7" : ""}
+              ${executionState === "error" ? "bg-error-3 text-error-11 bg-error-4 dark:text-error-7" : ""}
             `}
           >
             {executionState}
@@ -120,7 +120,7 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
             <Button
               variant="danger"
               size="sm"
-              className="flex text-xs px-2 py-1 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded hover:bg-error-200 dark:hover:bg-error-900/50"
+              className="flex text-xs px-2 py-1 bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded hover:bg-error-4 dark:hover:bg-error-a6"
               onClick={onStop}
             >
               <Square size={12} />
@@ -130,19 +130,19 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
           {executionLogs.length > 0 && (
             <Button
               size="sm"
-              className="text-xs px-2 py-1 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+              className="text-xs px-2 py-1 text-neutral-11 hover:text-neutral-12"
               onClick={() => dispatch(clearExecutionLogs())}
             >
               Clear
             </Button>
           )}
           {onClose && (
-            <Button
+            <Button size="icon"
               variant="secondary"
-              className="p-1 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
+              className="p-1 hover:bg-neutral-2 rounded"
               onClick={onClose}
             >
-              <X size={18} className="text-neutral-500 dark:text-neutral-400" />
+              <X size={18} className="text-neutral-10" />
             </Button>
           )}
         </div>
@@ -151,9 +151,9 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
       {Object.keys(nodeStatuses).length > 0 && (
         <div
           data-testid="node-statuses"
-          className="flex items-center gap-2 px-3 py-2 border-b border-neutral-200 dark:border-neutral-700 overflow-x-auto"
+          className="flex items-center gap-2 px-3 py-2 border-b border-neutral-5 overflow-x-auto"
         >
-          <span className="text-xs text-neutral-500 dark:text-neutral-400 shrink-0">
+          <span className="text-xs text-neutral-10 shrink-0">
             Nodes:
           </span>
           {Object.entries(nodeStatuses).map(([nodeId, status]) => (
@@ -174,7 +174,7 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
         className="flex-1 overflow-y-auto p-3 space-y-2"
       >
         {executionLogs.length === 0 ? (
-          <div className="text-center text-sm text-neutral-500 dark:text-neutral-400 py-8">
+          <div className="text-center text-sm text-neutral-10 py-8">
             No execution logs yet. Click "Run" to execute the workflow.
           </div>
         ) : (
@@ -186,21 +186,21 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
                 ref={isLast ? lastLogRef : undefined}
                 data-testid="log-item"
                 data-last={isLast ? "true" : undefined}
-                className="flex items-start gap-2 text-sm p-2 rounded bg-neutral-50 dark:bg-neutral-700/50"
+                className="flex items-start gap-2 text-sm p-2 rounded bg-neutral-1"
               >
                 {getLogIcon(log.level)}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                    <span className="text-xs text-neutral-10">
                       {formatTimestamp(log.timestamp)}
                     </span>
                     {log.nodeId && (
-                      <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                      <span className="text-xs text-neutral-10">
                         [{log.nodeId}]
                       </span>
                     )}
                   </div>
-                  <div className="text-neutral-900 dark:text-neutral-100 break-words">
+                  <div className="text-neutral-12 break-words">
                     {log.message}
                   </div>
                 </div>

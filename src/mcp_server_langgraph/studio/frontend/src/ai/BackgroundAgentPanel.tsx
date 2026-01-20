@@ -71,22 +71,22 @@ function formatElapsedTime(startedAt: number): string {
 function StatusIcon({ status }: { status: AgentStatus }) {
   switch (status) {
     case "running":
-      return <Loader2 size={14} className="animate-spin text-primary-500" />;
+      return <Loader2 size={14} className="animate-spin text-primary-9" />;
     case "queued":
       return (
-        <Clock size={14} className="text-neutral-400 dark:text-neutral-400" />
+        <Clock size={14} className="text-neutral-9" />
       );
     case "completed":
-      return <CheckCircle size={14} className="text-success-500" />;
+      return <CheckCircle size={14} className="text-success-9" />;
     case "failed":
-      return <XCircle size={14} className="text-error-500" />;
+      return <XCircle size={14} className="text-error-9" />;
     case "awaiting_approval":
-      return <AlertTriangle size={14} className="text-warning-500" />;
+      return <AlertTriangle size={14} className="text-warning-9" />;
     case "awaiting_clarification":
-      return <HelpCircle size={14} className="text-insight-500" />;
+      return <HelpCircle size={14} className="text-insight-9" />;
     default:
       return (
-        <Circle size={14} className="text-neutral-400 dark:text-neutral-400" />
+        <Circle size={14} className="text-neutral-9" />
       );
   }
 }
@@ -94,19 +94,19 @@ function StatusIcon({ status }: { status: AgentStatus }) {
 function getStatusColor(status: AgentStatus): string {
   switch (status) {
     case "running":
-      return "text-primary-600 dark:text-primary-400";
+      return "text-primary-10 dark:text-primary-7";
     case "queued":
-      return "text-neutral-500 dark:text-neutral-400";
+      return "text-neutral-10";
     case "completed":
-      return "text-success-600 dark:text-success-400";
+      return "text-success-10 dark:text-success-7";
     case "failed":
-      return "text-error-600 dark:text-error-400";
+      return "text-error-10 dark:text-error-7";
     case "awaiting_approval":
-      return "text-warning-600 dark:text-warning-400";
+      return "text-warning-9 dark:text-warning-9";
     case "awaiting_clarification":
-      return "text-insight-600 dark:text-insight-400";
+      return "text-insight-10 dark:text-insight-9";
     default:
-      return "text-neutral-500 dark:text-neutral-400";
+      return "text-neutral-10";
   }
 }
 
@@ -127,8 +127,8 @@ export function BackgroundAgentPanel({
     <div
       data-testid="background-agent-panel"
       className={cn(
-        "rounded-lg border border-neutral-200 dark:border-neutral-700",
-        "bg-white dark:bg-neutral-900",
+        "rounded-lg border border-neutral-5",
+        "bg-neutral-1",
         className,
       )}
     >
@@ -139,20 +139,20 @@ export function BackgroundAgentPanel({
         onClick={() => setCollapsed(!collapsed)}
         className={cn(
           "w-full flex items-center justify-between px-3 py-2",
-          "hover:bg-neutral-50 dark:hover:bg-neutral-800",
+          "hover:bg-neutral-1",
           "transition-colors",
         )}
       >
         <div className="flex items-center gap-2">
-          <Bot size={16} className="text-primary-500" />
-          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <Bot size={16} className="text-primary-9" />
+          <span className="text-sm font-medium text-neutral-11">
             Background Agents
           </span>
           <span
             className={cn(
               "px-1.5 py-0.5 rounded-full text-xs font-medium",
-              "bg-neutral-100 dark:bg-neutral-700",
-              "text-neutral-600 dark:text-neutral-300",
+              "bg-neutral-2",
+              "text-neutral-11",
             )}
           >
             {agents.length}
@@ -161,25 +161,25 @@ export function BackgroundAgentPanel({
         {collapsed ? (
           <ChevronDown
             size={16}
-            className="text-neutral-400 dark:text-neutral-400"
+            className="text-neutral-9"
           />
         ) : (
           <ChevronUp
             size={16}
-            className="text-neutral-400 dark:text-neutral-400"
+            className="text-neutral-9"
           />
         )}
       </Button>
       {/* Content */}
       {!collapsed && (
-        <div className="border-t border-neutral-200 dark:border-neutral-700">
+        <div className="border-t border-neutral-5">
           {agents.length === 0 ? (
-            <div className="flex items-center justify-center py-6 text-sm text-neutral-500 dark:text-neutral-400">
+            <div className="flex items-center justify-center py-6 text-sm text-neutral-10">
               <Bot size={20} className="mr-2 opacity-50" />
               No active agents
             </div>
           ) : (
-            <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+            <div className="divide-y divide-neutral-5">
               {agents.map((agent) => (
                 <div
                   key={agent.id}
@@ -193,7 +193,7 @@ export function BackgroundAgentPanel({
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                      <span className="text-sm font-medium text-neutral-11">
                         {agent.name}
                       </span>
                       <span
@@ -202,20 +202,20 @@ export function BackgroundAgentPanel({
                         {agent.status}
                       </span>
                     </div>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+                    <p className="text-xs text-neutral-10 truncate">
                       {agent.task}
                     </p>
 
                     {/* Progress bar for running */}
                     {agent.status === "running" && (
                       <div className="mt-1 flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                        <div className="flex-1 h-1.5 bg-neutral-3 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-primary-500 transition-all"
-                            style={{ width: `${agent.progress}%` }}
+                            className="h-full bg-primary-9 transition-all"
+                            style={{ '--progress': `${agent.progress}%` } as React.CSSProperties}
                           />
                         </div>
-                        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                        <span className="text-xs text-neutral-10">
                           {agent.progress}%
                         </span>
                       </div>
@@ -223,13 +223,13 @@ export function BackgroundAgentPanel({
 
                     {/* Error message for failed */}
                     {agent.status === "failed" && agent.error && (
-                      <p className="mt-1 text-xs text-error-500">
+                      <p className="mt-1 text-xs text-error-9">
                         {agent.error}
                       </p>
                     )}
 
                     {/* Elapsed time */}
-                    <span className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">
+                    <span className="text-xs text-neutral-9 mt-1">
                       {formatElapsedTime(agent.startedAt)}
                     </span>
                   </div>
@@ -244,8 +244,8 @@ export function BackgroundAgentPanel({
                         onClick={() => onCancel(agent.id)}
                         className={cn(
                           "p-1 rounded",
-                          "text-neutral-400 dark:text-neutral-400 hover:text-error-500",
-                          "hover:bg-error-100 dark:hover:bg-error-900/30",
+                          "text-neutral-9 hover:text-error-9",
+                          "hover:bg-error-3 dark:hover:bg-error-a4",
                           "transition-colors",
                         )}
                       >
@@ -259,8 +259,8 @@ export function BackgroundAgentPanel({
                         onClick={() => onRetry(agent.id)}
                         className={cn(
                           "p-1 rounded",
-                          "text-neutral-400 dark:text-neutral-400 hover:text-primary-500",
-                          "hover:bg-primary-100 dark:hover:bg-primary-900/30",
+                          "text-neutral-9 hover:text-primary-9",
+                          "hover:bg-primary-3 dark:hover:bg-primary-a4",
                           "transition-colors",
                         )}
                       >

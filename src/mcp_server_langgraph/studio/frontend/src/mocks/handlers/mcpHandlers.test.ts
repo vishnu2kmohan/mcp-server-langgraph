@@ -22,6 +22,7 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { http as _http, HttpResponse as _HttpResponse } from "msw";
 import { server } from "../server";
+import { transformSnakeToCamel } from "../../api/transforms";
 import {
   mcpHandlers as _mcpHandlers,
   createMockResource,
@@ -147,7 +148,9 @@ describe("MCP Handlers", () => {
     it("returns text content for text resources", async () => {
       const uri = encodeURIComponent("file:///project/README.md");
       const response = await fetch(`/api/v1/mcp/resources/content?uri=${uri}`);
-      const data = await response.json();
+      const rawData = await response.json();
+      // Transform snake_case API response to camelCase
+      const data = transformSnakeToCamel(rawData);
 
       expect(data.contents[0]).toHaveProperty("text");
       expect(data.contents[0].mimeType).toMatch(/^text\//);
@@ -166,7 +169,9 @@ describe("MCP Handlers", () => {
 
     it("returns tools with input schema", async () => {
       const response = await fetch("/api/v1/mcp/tools");
-      const data = await response.json();
+      const rawData = await response.json();
+      // Transform snake_case API response to camelCase
+      const data = transformSnakeToCamel(rawData);
 
       expect(data.tools.length).toBeGreaterThan(0);
       const tool = data.tools[0];

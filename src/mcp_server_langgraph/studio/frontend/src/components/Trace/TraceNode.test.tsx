@@ -86,7 +86,7 @@ describe("TraceNode", () => {
 
       const { container } = renderWithReactFlow(<TraceNode {...props} />);
 
-      const nodeDiv = container.querySelector(".bg-success-100");
+      const nodeDiv = container.querySelector(".bg-success-2");
       expect(nodeDiv).toBeInTheDocument();
     });
 
@@ -102,7 +102,7 @@ describe("TraceNode", () => {
 
       const { container } = renderWithReactFlow(<TraceNode {...props} />);
 
-      const nodeDiv = container.querySelector(".bg-error-100");
+      const nodeDiv = container.querySelector(".bg-error-2");
       expect(nodeDiv).toBeInTheDocument();
     });
 
@@ -118,7 +118,7 @@ describe("TraceNode", () => {
 
       const { container } = renderWithReactFlow(<TraceNode {...props} />);
 
-      const nodeDiv = container.querySelector(".bg-indigo-100");
+      const nodeDiv = container.querySelector(".bg-primary-3");
       expect(nodeDiv).toBeInTheDocument();
     });
   });
@@ -251,7 +251,7 @@ describe("TraceNode", () => {
         <TraceNode {...defaultProps} />,
       );
 
-      const nodeDiv = container.querySelector(".text-success-800");
+      const nodeDiv = container.querySelector(".text-success-11");
       expect(nodeDiv).toBeInTheDocument();
     });
   });

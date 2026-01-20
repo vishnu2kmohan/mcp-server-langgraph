@@ -26,11 +26,11 @@ export function HelpPage() {
   return (
     <div
       data-testid="help-page"
-      className="flex flex-col h-full bg-neutral-50 dark:bg-neutral-900 p-6"
+      className="flex flex-col h-full bg-neutral-1 p-6"
     >
       <div className="max-w-4xl mx-auto w-full space-y-6">
         {/* Page Header */}
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-neutral-12">
           Help Center
         </h1>
 
@@ -48,36 +48,36 @@ export function HelpPage() {
               <div
                 data-testid="help-topic-detail"
                 className={cn(
-                  "rounded-lg border border-neutral-200 dark:border-neutral-700",
-                  "bg-white dark:bg-neutral-800 p-6",
+                  "rounded-lg border border-neutral-5",
+                  "bg-neutral-1 p-6",
                 )}
               >
-                <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
+                <h2 className="text-lg font-semibold text-neutral-12 mb-2">
                   {selectedTopic.title}
                 </h2>
                 <span
                   className={cn(
                     "inline-block text-xs px-2 py-0.5 rounded mb-4",
                     selectedTopic.category === "basics" &&
-                      "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400",
+                      "bg-primary-3 text-primary-11 dark:text-primary-11",
                     selectedTopic.category === "productivity" &&
-                      "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400",
+                      "bg-success-3 text-success-11 dark:text-success-11",
                     selectedTopic.category === "compliance" &&
-                      "bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400",
+                      "bg-insight-2 text-insight-11 dark:bg-insight-a4 dark:text-insight-11",
                   )}
                 >
                   {selectedTopic.category}
                 </span>
-                <p className="text-neutral-600 dark:text-neutral-300">
+                <p className="text-neutral-11">
                   {selectedTopic.content}
                 </p>
               </div>
             ) : (
               <div
                 className={cn(
-                  "rounded-lg border border-neutral-200 dark:border-neutral-700",
-                  "bg-white dark:bg-neutral-800 p-6",
-                  "text-center text-neutral-500 dark:text-neutral-400",
+                  "rounded-lg border border-neutral-5",
+                  "bg-neutral-1 p-6",
+                  "text-center text-neutral-11",
                 )}
               >
                 <p>Select a topic to see details</p>

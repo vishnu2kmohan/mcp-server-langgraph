@@ -45,10 +45,10 @@ export function FeatureFlagsCard({ data }: FeatureFlagsCardProps) {
     <Card data-testid="feature-flags-card">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Flag size={24} className="text-primary-500" />
+          <Flag size={24} className="text-primary-9" />
           <CardTitle>Feature Flags</CardTitle>
         </div>
-        <span className="px-2 py-1 text-xs bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded-full">
+        <span className="px-2 py-1 text-xs bg-neutral-2 text-neutral-11 rounded-full">
           {entries.length} flags
         </span>
       </div>
@@ -57,14 +57,14 @@ export function FeatureFlagsCard({ data }: FeatureFlagsCardProps) {
         {/* Summary */}
         <div className="flex gap-4 mb-4">
           <div className="flex items-center gap-2">
-            <Check size={16} className="text-success-500" />
-            <span className="text-sm text-neutral-600 dark:text-neutral-400">
+            <Check size={16} className="text-success-9" />
+            <span className="text-sm text-neutral-11">
               {enabledCount} enabled
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <X size={16} className="text-neutral-400 dark:text-neutral-400" />
-            <span className="text-sm text-neutral-600 dark:text-neutral-400">
+            <X size={16} className="text-neutral-9" />
+            <span className="text-sm text-neutral-11">
               {disabledCount} disabled
             </span>
           </div>
@@ -75,16 +75,16 @@ export function FeatureFlagsCard({ data }: FeatureFlagsCardProps) {
           {entries.map(([flagName, enabled]) => (
             <div
               key={flagName}
-              className="flex items-center justify-between p-2 bg-neutral-50 dark:bg-neutral-800 rounded"
+              className="flex items-center justify-between p-2 bg-neutral-1 rounded"
             >
-              <span className="text-sm text-neutral-700 dark:text-neutral-300 font-mono">
+              <span className="text-sm text-neutral-11 font-mono">
                 {formatFlagName(flagName)}
               </span>
               <span
                 className={`px-2 py-0.5 text-xs font-medium rounded ${
                   enabled
-                    ? "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400"
-                    : "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
+                    ? "bg-success-3 text-success-11 bg-success-4 dark:text-success-7"
+                    : "bg-neutral-2 text-neutral-11"
                 }`}
               >
                 {enabled ? "Enabled" : "Disabled"}

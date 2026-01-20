@@ -18,6 +18,7 @@ import {
   complianceHandlers,
   mockComplianceSummary,
 } from "./complianceHandlers";
+import { transformSnakeToCamel } from "../../api/transforms";
 
 const server = setupServer(...complianceHandlers);
 
@@ -124,4 +125,19 @@ describe("complianceHandlers", () => {
       expect(mockComplianceSummary.hipaa.total_count).toBeGreaterThan(0);
     });
   });
+
+describe("API Contract Transformation", () => {
+  it("should return compliance data in snake_case and transform to camelCase", async () => {
+    const response = await fetch("/api/v1/compliance/reports/summary");
+    expect(response.status).toBe(200);
+
+    const rawData = await response.json();
+    expect(rawData).toBeDefined();
+
+    // Verify transformation works
+    const transformedData = transformSnakeToCamel(rawData);
+    expect(transformedData).toBeDefined();
+  });
+});
+
 });

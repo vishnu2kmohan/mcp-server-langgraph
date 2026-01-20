@@ -49,9 +49,9 @@ export function ContextualHelp({
       <div
         data-testid="contextual-help"
         className={cn(
-          "rounded-lg border border-neutral-200 dark:border-neutral-700",
-          "bg-neutral-50 dark:bg-neutral-800 p-4",
-          "text-sm text-neutral-500 dark:text-neutral-400",
+          "rounded-lg border border-neutral-5",
+          "bg-neutral-1 p-4",
+          "text-sm text-neutral-10",
           className,
         )}
       >
@@ -69,8 +69,8 @@ export function ContextualHelp({
         <div
           key={tip.id}
           className={cn(
-            "rounded-lg border border-warning-200 dark:border-warning-800/50",
-            "bg-warning-50 dark:bg-warning-900/20",
+            "rounded-lg border border-warning-6 dark:border-warning-a6",
+            "bg-warning-3 bg-warning-3",
             "p-3",
           )}
         >
@@ -79,18 +79,18 @@ export function ContextualHelp({
             <div className="flex-shrink-0 mt-0.5">
               <Lightbulb
                 size={16}
-                className="text-warning-600 dark:text-warning-400"
+                className="text-warning-9 dark:text-warning-9"
               />
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                <span className="text-sm font-medium text-neutral-11">
                   {tip.title}
                 </span>
                 <Button
-                  className="text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300"
+                  className="text-neutral-9 hover:text-neutral-11"
                   type="button"
                   aria-label="Dismiss tip"
                   onClick={() => onDismiss(tip)}
@@ -98,7 +98,7 @@ export function ContextualHelp({
                   <X size={14} />
                 </Button>
               </div>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              <p className="text-sm text-neutral-11">
                 {tip.content}
               </p>
               {tip.learnMoreUrl && (
@@ -107,7 +107,7 @@ export function ContextualHelp({
                   onClick={() => onLearnMore(tip)}
                   className={cn(
                     "mt-2 flex items-center gap-1 text-xs",
-                    "text-primary-600 dark:text-primary-400",
+                    "text-primary-10 dark:text-primary-7",
                     "hover:underline",
                   )}
                 >

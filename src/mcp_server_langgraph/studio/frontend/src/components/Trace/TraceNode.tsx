@@ -18,9 +18,9 @@ interface TraceNodeData {
 
 function TraceNode({ data, selected }: NodeProps<TraceNodeData>) {
   const statusClasses = {
-    OK: "bg-success-100 border-success-500 text-success-800",
-    ERROR: "bg-error-100 border-error-500 text-error-800",
-    UNSET: "bg-indigo-100 border-indigo-500 text-indigo-800",
+    OK: "bg-success-3 border-success-9 text-success-11",
+    ERROR: "bg-error-3 border-error-9 text-error-11",
+    UNSET: "bg-primary-3 border-primary-9 text-primary-12",
   };
 
   return (
@@ -30,7 +30,7 @@ function TraceNode({ data, selected }: NodeProps<TraceNodeData>) {
         className={`
           px-4 py-2 rounded-lg border-2 min-w-[180px]
           ${statusClasses[data.status]}
-          ${selected ? "ring-2 ring-offset-2 ring-primary-500" : ""}
+          ${selected ? "ring-2 ring-offset-2 ring-primary-7" : ""}
           transition-all duration-200 hover:shadow-lg
         `}
       >
@@ -46,8 +46,8 @@ function TraceNode({ data, selected }: NodeProps<TraceNodeData>) {
         {data.status === "UNSET" && (
           <div className="flex items-center gap-1 mt-1">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-7 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-9"></span>
             </span>
             <span className="text-xs">Running...</span>
           </div>

@@ -64,20 +64,20 @@ const SIZE_CLASSES: Record<ProgressSize, { bar: string; text: string }> = {
 
 const COLOR_CLASSES: Record<ProgressColor, { fill: string; track: string }> = {
   primary: {
-    fill: "bg-primary-600 dark:bg-primary-500",
-    track: "bg-primary-100 dark:bg-primary-900/30",
+    fill: "bg-primary-10 dark:bg-primary-9",
+    track: "bg-primary-3 bg-primary-4",
   },
   success: {
-    fill: "bg-success-600 dark:bg-success-500",
-    track: "bg-success-100 dark:bg-success-900/30",
+    fill: "bg-success-10 dark:bg-success-9",
+    track: "bg-success-3 bg-success-4",
   },
   warning: {
-    fill: "bg-warning-600 dark:bg-warning-500",
-    track: "bg-warning-100 dark:bg-warning-900/30",
+    fill: "bg-warning-9 dark:bg-warning-9",
+    track: "bg-warning-3 dark:bg-warning-a4",
   },
   error: {
-    fill: "bg-error-600 dark:bg-error-500",
-    track: "bg-error-100 dark:bg-error-900/30",
+    fill: "bg-error-10 dark:bg-error-9",
+    track: "bg-error-3 bg-error-4",
   },
 };
 
@@ -120,11 +120,11 @@ export function ProgressIndicator({
         <div
           role="status"
           aria-live="polite"
-          className={`flex items-center justify-between ${sizeClasses.text} text-neutral-600 dark:text-neutral-400`}
+          className={`flex items-center justify-between ${sizeClasses.text} text-neutral-11`}
         >
           {status && <span>{status}</span>}
           {eta && (
-            <span className="text-neutral-500 dark:text-neutral-400">
+            <span className="text-neutral-10">
               {eta}
             </span>
           )}
@@ -142,7 +142,7 @@ export function ProgressIndicator({
           >
             <Loader2
               data-testid="progress-spinner"
-              className="h-5 w-5 animate-spin text-primary-600 dark:text-primary-400"
+              className="h-5 w-5 animate-spin text-primary-10 dark:text-primary-7"
               aria-hidden="true"
             />
           </div>
@@ -159,14 +159,14 @@ export function ProgressIndicator({
             >
               <div
                 data-testid="progress-fill"
-                className={`h-full rounded-full transition-all duration-300 ease-out ${colorClasses.fill}`}
-                style={{ width: `${percentage}%` }}
+                className={`progress-bar-fill rounded-full ${colorClasses.fill}`}
+                style={{ '--progress': `${percentage}%` } as React.CSSProperties}
               />
             </div>
             {/* Percentage text */}
             {showPercentage && (
               <span
-                className={`min-w-[3rem] text-right font-medium ${sizeClasses.text} text-neutral-700 dark:text-neutral-300`}
+                className={`min-w-[3rem] text-right font-medium ${sizeClasses.text} text-neutral-11`}
               >
                 {percentage}%
               </span>
@@ -176,9 +176,9 @@ export function ProgressIndicator({
 
         {/* Cancel button */}
         {onCancel && (
-          <Button
+          <Button size="icon"
             variant="secondary"
-            className="p-1 rounded-md text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:ring-primary-500"
+            className="p-1 rounded-md text-neutral-10 hover:text-neutral-11 hover:bg-neutral-2 focus:ring-primary-7"
             type="button"
             onClick={onCancel}
             disabled={cancelling}

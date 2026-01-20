@@ -6,6 +6,7 @@
  * Uses RTK Query for data fetching.
  */
 
+import { PAGE_CLASSES } from "../constants/layout";
 import {
   AdminDashboard,
   SystemHealth,
@@ -151,7 +152,7 @@ export function AdminDashboardPage() {
   };
 
   return (
-    <div className="h-screen overflow-y-auto">
+    <div className={PAGE_CLASSES.shell}>
       <AdminDashboard
         systemHealth={systemHealth}
         heartMetrics={heartMetrics}

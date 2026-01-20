@@ -24,7 +24,7 @@ const mockVersions: ArtifactVersion[] = [
     createdAt: "2024-01-03T12:00:00Z",
     parentVersion: 2,
     metadata: {
-      editType: "user",
+      editedBy: "user",
     },
   },
   {
@@ -37,7 +37,7 @@ const mockVersions: ArtifactVersion[] = [
     createdAt: "2024-01-02T12:00:00Z",
     parentVersion: 1,
     metadata: {
-      editType: "ai-generation",
+      editedBy: "ai",
       aiConfidence: 0.88,
     },
   },
@@ -50,7 +50,7 @@ const mockVersions: ArtifactVersion[] = [
     createdBy: "user-1",
     createdAt: "2024-01-01T12:00:00Z",
     metadata: {
-      editType: "user",
+      editedBy: "user",
     },
   },
 ];

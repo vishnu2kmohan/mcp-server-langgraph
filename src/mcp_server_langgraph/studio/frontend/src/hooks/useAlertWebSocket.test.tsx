@@ -114,6 +114,10 @@ const createTestStore = (isAuthenticated = true) => {
               email: "test@example.com",
               roles: ["user"],
               persona: "user" as const,
+              // WebSocket permissions for alerts hook
+              websocketPermissions: {
+                alerts: true,
+              },
             }
           : null,
         tokens: null,

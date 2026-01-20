@@ -156,26 +156,26 @@ export function AIEditOverlay({
       aria-label="AI Edit"
       onKeyDown={handleKeyDown}
       className={cn(
-        "absolute z-50 w-96 bg-white dark:bg-neutral-800 rounded-lg shadow-xl border border-neutral-200 dark:border-neutral-700",
+        "absolute z-panel w-96 bg-neutral-1 rounded-lg shadow-xl border border-neutral-5",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/50 rounded-t-lg">
-        <Sparkles size={16} className="text-primary-500" />
-        <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-neutral-5 bg-neutral-1 rounded-t-lg">
+        <Sparkles size={16} className="text-primary-9" />
+        <span className="text-sm font-medium text-neutral-12">
           AI Edit
         </span>
       </div>
       {/* Selection Preview */}
       <div
         data-testid="selection-preview"
-        className="px-4 py-2 border-b border-neutral-200 dark:border-neutral-700"
+        className="px-4 py-2 border-b border-neutral-5"
       >
-        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+        <div className="text-xs text-neutral-10 mb-1">
           Selected code (lines {selection.start.line}-{selection.end.line})
         </div>
-        <pre className="text-xs bg-neutral-100 dark:bg-neutral-800 p-2 rounded max-h-20 overflow-auto text-neutral-700 dark:text-neutral-300 font-mono">
+        <pre className="text-xs bg-neutral-2 p-2 rounded max-h-20 overflow-auto text-neutral-11 font-mono">
           {selection.content.slice(0, 200)}
           {selection.content.length > 200 && "..."}
         </pre>
@@ -184,7 +184,7 @@ export function AIEditOverlay({
       {!editResult && !error && (
         <div className="p-4">
           <Input
-            className="px-3 py-2 text-sm bg-neutral-50 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:ring-primary-500"
+            className="px-3 py-2 text-sm bg-neutral-1 text-neutral-12 placeholder-neutral-9 focus:ring-primary-7"
             ref={inputRef}
             data-testid="instruction-input"
             value={instruction}
@@ -195,7 +195,7 @@ export function AIEditOverlay({
           <div className="flex justify-end gap-2 mt-3">
             <Button
               variant="secondary"
-              className="px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
+              className="px-3 py-1.5 text-sm text-neutral-11 hover:bg-neutral-2 rounded"
               data-testid="cancel-edit"
               type="button"
               onClick={onCancel}
@@ -204,7 +204,7 @@ export function AIEditOverlay({
             </Button>
             <Button
               variant="primary"
-              className="flex px-3 py-1.5 text-sm bg-primary-500 text-white rounded hover:bg-primary-600"
+              className="flex px-3 py-1.5 text-sm bg-primary-9 text-neutral-12 rounded hover:bg-primary-10"
               data-testid="submit-edit"
               type="button"
               onClick={handleSubmit}
@@ -225,14 +225,14 @@ export function AIEditOverlay({
       {/* Error State */}
       {error && (
         <div className="p-4">
-          <div className="flex items-center gap-2 text-error-500 mb-3">
+          <div className="flex items-center gap-2 text-error-9 mb-3">
             <AlertCircle size={16} />
             <span className="text-sm">{error}</span>
           </div>
           <div className="flex justify-end gap-2">
             <Button
               variant="secondary"
-              className="px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
+              className="px-3 py-1.5 text-sm text-neutral-11 hover:bg-neutral-2 rounded"
               data-testid="cancel-edit"
               type="button"
               onClick={onCancel}
@@ -241,7 +241,7 @@ export function AIEditOverlay({
             </Button>
             <Button
               variant="danger"
-              className="flex px-3 py-1.5 text-sm bg-error-500 text-white rounded hover:bg-error-600"
+              className="flex px-3 py-1.5 text-sm bg-error-9 text-neutral-12 rounded hover:bg-error-10"
               data-testid="retry-button"
               type="button"
               onClick={handleRetry}
@@ -257,7 +257,7 @@ export function AIEditOverlay({
         <div className="p-4">
           <div
             data-testid="diff-preview"
-            className="bg-neutral-900 rounded-lg overflow-hidden mb-3 max-h-48 overflow-y-auto"
+            className="bg-neutral-2 rounded-lg overflow-hidden mb-3 max-h-48 overflow-y-auto"
           >
             <pre className="text-xs font-mono p-2">
               {editResult.diff.map((line, index) => (
@@ -266,11 +266,11 @@ export function AIEditOverlay({
                   data-testid={`diff-${line.type}`}
                   className={cn(
                     "px-2 py-0.5",
-                    line.type === "add" && "bg-success-900/30 text-success-400",
+                    line.type === "add" && "bg-success-a4 text-success-7",
                     line.type === "remove" &&
-                      "bg-error-900/30 text-error-400 line-through",
+                      "bg-error-a4 text-error-7 line-through",
                     line.type === "same" &&
-                      "text-neutral-400 dark:text-neutral-400",
+                      "text-neutral-9",
                   )}
                 >
                   {line.type === "add" && "+ "}
@@ -285,7 +285,7 @@ export function AIEditOverlay({
           <div className="flex justify-between">
             <Button
               variant="secondary"
-              className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
+              className="flex px-3 py-1.5 text-sm text-neutral-11 hover:bg-neutral-2 rounded"
               data-testid="regenerate-button"
               type="button"
               onClick={handleRegenerate}
@@ -296,7 +296,7 @@ export function AIEditOverlay({
             <div className="flex gap-2">
               <Button
                 variant="secondary"
-                className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
+                className="flex px-3 py-1.5 text-sm text-neutral-11 hover:bg-neutral-2 rounded"
                 data-testid="cancel-edit"
                 type="button"
                 onClick={onCancel}
@@ -306,7 +306,7 @@ export function AIEditOverlay({
               </Button>
               <Button
                 variant="success"
-                className="flex px-3 py-1.5 text-sm bg-success-500 text-white rounded hover:bg-success-600"
+                className="flex px-3 py-1.5 text-sm bg-success-9 text-neutral-12 rounded hover:bg-success-10"
                 data-testid="apply-edit"
                 type="button"
                 onClick={() => onApply(editResult.newContent)}

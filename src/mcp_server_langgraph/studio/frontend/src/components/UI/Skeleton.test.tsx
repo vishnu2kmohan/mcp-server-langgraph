@@ -20,7 +20,7 @@ describe("Skeleton", () => {
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toBeInTheDocument();
       expect(skeleton).toHaveClass("animate-pulse");
-      expect(skeleton).toHaveClass("bg-neutral-200");
+      expect(skeleton).toHaveClass("bg-neutral-3");
     });
 
     it("should apply custom className", () => {
@@ -95,6 +95,39 @@ describe("Skeleton", () => {
     it("exports skeletonVariants function for external use", async () => {
       const { skeletonVariants } = await import("./Skeleton");
       expect(typeof skeletonVariants).toBe("function");
+    });
+  });
+
+  describe("Accessibility", () => {
+    it("should have aria-hidden on base Skeleton for screen readers", () => {
+      render(<Skeleton data-testid="skeleton" />);
+      const skeleton = screen.getByTestId("skeleton");
+      expect(skeleton).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("should have aria-hidden on SkeletonCard for screen readers", () => {
+      render(<SkeletonCard data-testid="skeleton-card" />);
+      const card = screen.getByTestId("skeleton-card");
+      expect(card).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("should have aria-hidden on SkeletonText for screen readers", () => {
+      render(<SkeletonText data-testid="skeleton-text" />);
+      const container = screen.getByTestId("skeleton-text");
+      expect(container).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("should have aria-hidden on SkeletonList for screen readers", () => {
+      render(<SkeletonList data-testid="skeleton-list" />);
+      const container = screen.getByTestId("skeleton-list");
+      expect(container).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("should allow overriding aria-hidden when needed", () => {
+      render(<Skeleton data-testid="skeleton" aria-hidden={false} />);
+      const skeleton = screen.getByTestId("skeleton");
+      // User-provided value should override default
+      expect(skeleton).toHaveAttribute("aria-hidden", "false");
     });
   });
 });

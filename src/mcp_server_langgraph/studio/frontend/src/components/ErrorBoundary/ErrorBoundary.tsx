@@ -151,24 +151,24 @@ export class ErrorBoundary extends Component<
       <div
         role="alert"
         aria-live="assertive"
-        className="flex min-h-[200px] flex-col items-center justify-center rounded-lg border border-error-200 bg-error-50 p-6 text-center dark:border-error-800 dark:bg-error-950"
+        className="flex min-h-52 flex-col items-center justify-center rounded-lg border border-error-4 bg-error-1 p-6 text-center dark:border-error-11 dark:bg-error-12"
       >
         <AlertTriangle
-          className="mb-4 h-12 w-12 text-error-500 dark:text-error-400"
+          className="mb-4 h-12 w-12 text-error-9 dark:text-error-7"
           aria-hidden="true"
         />
-        <h2 className="mb-2 text-lg font-semibold text-error-800 dark:text-error-200">
+        <h2 className="mb-2 text-lg font-semibold text-error-11 dark:text-error-4">
           Something went wrong
         </h2>
-        <p className="mb-4 max-w-md text-sm text-error-600 dark:text-error-300">
+        <p className="mb-4 max-w-md text-sm text-error-10 dark:text-error-9">
           {error?.message || "An unexpected error occurred"}
         </p>
         {showDetails && error && (
           <details className="mb-4 w-full max-w-lg text-left">
-            <summary className="cursor-pointer text-sm font-medium text-error-700 dark:text-error-300">
+            <summary className="cursor-pointer text-sm font-medium text-error-11 dark:text-error-9">
               Error Details
             </summary>
-            <pre className="mt-2 overflow-auto rounded bg-error-100 p-3 text-xs text-error-800 dark:bg-error-900 dark:text-error-200">
+            <pre className="mt-2 overflow-auto rounded bg-error-3 p-3 text-xs text-error-11 dark:bg-error-12 dark:text-error-4">
               Error: {error.name}: {error.message}
               {error.stack && `\n\n${error.stack}`}
             </pre>
@@ -176,7 +176,7 @@ export class ErrorBoundary extends Component<
         )}
         <Button
           variant="danger"
-          className="rounded-md bg-error-600 px-4 py-2 text-sm text-white hover:bg-error-700 focus:ring-error-500 focus:ring-offset-2 dark:bg-error-700 dark:hover:bg-error-600"
+          className="rounded-md bg-error-10 px-4 py-2 text-sm text-neutral-12 hover:bg-error-11 focus:ring-error-7 focus:ring-offset-2 dark:bg-error-11 dark:hover:bg-error-10"
           ref={this.retryButtonRef}
           type="button"
           onClick={this.resetErrorBoundary}

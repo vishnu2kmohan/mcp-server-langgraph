@@ -44,24 +44,24 @@ function StepStatusIcon({ status, stepId }: StepStatusIconProps) {
   return (
     <span data-testid={`step-status-${stepId}`}>
       {status === "completed" && (
-        <CheckCircle {...iconProps} className="text-success-500" />
+        <CheckCircle {...iconProps} className="text-success-9" />
       )}
       {status === "running" && (
-        <Play {...iconProps} className="text-primary-500 animate-pulse" />
+        <Play {...iconProps} className="text-primary-9 animate-pulse" />
       )}
       {status === "pending" && (
         <Clock
           {...iconProps}
-          className="text-neutral-400 dark:text-neutral-400"
+          className="text-neutral-9"
         />
       )}
       {status === "error" && (
-        <AlertCircle {...iconProps} className="text-error-500" />
+        <AlertCircle {...iconProps} className="text-error-9" />
       )}
       {status === "skipped" && (
         <SkipForward
           {...iconProps}
-          className="text-neutral-400 dark:text-neutral-400"
+          className="text-neutral-9"
         />
       )}
     </span>
@@ -91,18 +91,18 @@ function ExecutionStepRow({
       data-current={isCurrent}
       className={cn(
         "flex items-center gap-2 px-2 py-1.5 cursor-pointer",
-        "border-b border-neutral-100 dark:border-neutral-800",
-        "hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
-        isSelected && "bg-primary-50 dark:bg-primary-900/20",
+        "border-b border-neutral-5",
+        "hover:bg-neutral-a6",
+        isSelected && "bg-primary-1 dark:bg-primary-a3",
         isCurrent &&
-          "bg-warning-50 dark:bg-warning-900/20 border-l-2 border-l-warning-500",
+          "bg-warning-3 bg-warning-3 border-l-2 border-l-warning-500",
       )}
       onClick={onSelect}
     >
       {/* Expand button */}
       <Button
         variant="secondary"
-        className="p-0.5 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded"
+        className="p-0.5 hover:bg-neutral-3 rounded"
         data-testid={`expand-step-${step.id}`}
         type="button"
         onClick={(e) => {
@@ -117,24 +117,24 @@ function ExecutionStepRow({
         {isExpanded ? (
           <ChevronDown
             size={12}
-            className="text-neutral-500 dark:text-neutral-400"
+            className="text-neutral-10"
           />
         ) : (
           <ChevronRight
             size={12}
-            className="text-neutral-500 dark:text-neutral-400"
+            className="text-neutral-10"
           />
         )}
       </Button>
       {/* Status icon */}
       <StepStatusIcon status={step.status} stepId={step.id} />
       {/* Step name */}
-      <span className="flex-1 text-sm text-neutral-700 dark:text-neutral-300">
+      <span className="flex-1 text-sm text-neutral-11">
         {step.nodeName}
       </span>
       {/* Duration */}
       {step.duration > 0 && (
-        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+        <span className="text-xs text-neutral-10">
           {step.duration}ms
         </span>
       )}
@@ -150,16 +150,16 @@ function StepDetails({ step }: StepDetailsProps) {
   return (
     <div
       data-testid={`step-details-${step.id}`}
-      className="px-4 py-2 bg-neutral-50 dark:bg-neutral-800/50 text-xs"
+      className="px-4 py-2 bg-neutral-1 text-xs"
     >
       <div className="grid grid-cols-1 gap-3">
         {/* Input */}
         {step.input && (
           <div data-testid={`step-input-${step.id}`}>
-            <span className="text-neutral-500 dark:text-neutral-400 font-medium">
+            <span className="text-neutral-10 font-medium">
               Input:
             </span>
-            <pre className="mt-1 p-2 bg-neutral-100 dark:bg-neutral-800 rounded text-neutral-700 dark:text-neutral-300 overflow-x-auto">
+            <pre className="mt-1 p-2 bg-neutral-2 rounded text-neutral-11 overflow-x-auto">
               {JSON.stringify(step.input, null, 2)}
             </pre>
           </div>
@@ -168,10 +168,10 @@ function StepDetails({ step }: StepDetailsProps) {
         {/* Output */}
         {step.output && (
           <div data-testid={`step-output-${step.id}`}>
-            <span className="text-neutral-500 dark:text-neutral-400 font-medium">
+            <span className="text-neutral-10 font-medium">
               Output:
             </span>
-            <pre className="mt-1 p-2 bg-neutral-100 dark:bg-neutral-800 rounded text-neutral-700 dark:text-neutral-300 overflow-x-auto">
+            <pre className="mt-1 p-2 bg-neutral-2 rounded text-neutral-11 overflow-x-auto">
               {JSON.stringify(step.output, null, 2)}
             </pre>
           </div>
@@ -186,16 +186,16 @@ function StepDetails({ step }: StepDetailsProps) {
         )}
 
         {/* Metadata */}
-        <div className="grid grid-cols-2 gap-2 text-neutral-500 dark:text-neutral-400">
+        <div className="grid grid-cols-2 gap-2 text-neutral-10">
           <div>
             <span>Node ID:</span>
-            <span className="ml-2 text-neutral-700 dark:text-neutral-300">
+            <span className="ml-2 text-neutral-11">
               {step.nodeId}
             </span>
           </div>
           <div>
             <span>Status:</span>
-            <span className="ml-2 text-neutral-700 dark:text-neutral-300 capitalize">
+            <span className="ml-2 text-neutral-11 capitalize">
               {step.status}
             </span>
           </div>
@@ -268,13 +268,13 @@ export function ExecutionTraceTab({
     return (
       <div
         data-testid="execution-trace-tab"
-        className="flex flex-col h-full bg-white dark:bg-neutral-900"
+        className="flex flex-col h-full bg-neutral-1"
       >
         <div
           data-testid="execution-trace-loading"
           className="flex-1 flex items-center justify-center"
         >
-          <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary-9" />
         </div>
       </div>
     );
@@ -285,7 +285,7 @@ export function ExecutionTraceTab({
     return (
       <div
         data-testid="execution-trace-tab"
-        className="flex flex-col h-full bg-white dark:bg-neutral-900"
+        className="flex flex-col h-full bg-neutral-1"
       >
         <div
           data-testid="execution-trace-error"
@@ -306,11 +306,11 @@ export function ExecutionTraceTab({
     return (
       <div
         data-testid="execution-trace-tab"
-        className="flex flex-col h-full bg-white dark:bg-neutral-900"
+        className="flex flex-col h-full bg-neutral-1"
       >
         <div
           data-testid="execution-trace-empty"
-          className="flex-1 flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-400"
+          className="flex-1 flex flex-col items-center justify-center text-neutral-9"
         >
           <Workflow size={32} className="mb-2 opacity-50" />
           <p className="text-sm">No execution data available</p>
@@ -325,21 +325,21 @@ export function ExecutionTraceTab({
   return (
     <div
       data-testid="execution-trace-tab"
-      className="flex flex-col h-full bg-white dark:bg-neutral-900"
+      className="flex flex-col h-full bg-neutral-1"
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
+      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-5 bg-neutral-1">
         {/* Workflow indicator */}
         <div className="flex items-center gap-1.5">
           <Workflow
             size={14}
-            className="text-neutral-500 dark:text-neutral-400"
+            className="text-neutral-10"
             aria-hidden="true"
           />
-          <h3 className="text-xs text-neutral-600 dark:text-neutral-400">
+          <h3 className="text-xs text-neutral-11">
             Execution
           </h3>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded">
+          <span className="text-xs text-neutral-10 ml-1 px-1.5 py-0.5 bg-neutral-2 rounded">
             {workflowId}
           </span>
         </div>
@@ -348,20 +348,20 @@ export function ExecutionTraceTab({
         <div className="flex-1" />
 
         {/* Step count */}
-        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+        <span className="text-xs text-neutral-10">
           {filteredSteps.filter((s) => s.status === "completed").length}/
           {filteredSteps.length} steps
           {timeline.timeWindow && filteredSteps.length !== steps.length && (
-            <span className="ml-1 text-neutral-400 dark:text-neutral-400">
+            <span className="ml-1 text-neutral-9">
               ({steps.length} total)
             </span>
           )}
         </span>
 
         {/* Refresh button */}
-        <Button
+        <Button size="icon"
           variant="secondary"
-          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400"
+          className="p-1 hover:bg-neutral-3 rounded text-neutral-10"
           data-testid="refresh-execution-button"
           type="button"
           onClick={refetch}

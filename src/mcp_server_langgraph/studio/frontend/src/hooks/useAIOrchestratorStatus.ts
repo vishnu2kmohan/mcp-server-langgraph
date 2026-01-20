@@ -28,7 +28,11 @@ import {
   type WebSocketConnectionStatus,
 } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import {
+  logout,
+  selectIsAuthenticated,
+  selectWebSocketPermissions,
+} from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import {
@@ -200,6 +204,10 @@ export function useAIOrchestratorStatus(
   // Redux dispatch for token expiration handling
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
+
+  // Security: Fail-closed when permissions are null (OpenFGA unavailable)
+  const hasPermission = wsPermissions?.orchestrator_status ?? false;
 
   // State
   const [status, setStatus] = useState<OrchestratorStatus>("idle");
@@ -224,8 +232,8 @@ export function useAIOrchestratorStatus(
     [isAuthenticated],
   );
 
-  // Track effective enabled state
-  const effectiveEnabled = enabled && isAuthenticated;
+  // Track effective enabled state - requires both authentication AND authorization
+  const effectiveEnabled = enabled && isAuthenticated && hasPermission;
 
   // Handle incoming messages
   const handleMessage = useCallback((data: unknown) => {

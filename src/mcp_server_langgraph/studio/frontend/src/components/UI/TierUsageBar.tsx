@@ -40,11 +40,11 @@ export const tierBadgeVariants = cva(
     variants: {
       tier: {
         dedicated:
-          "bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-400",
+          "bg-insight-2 text-insight-11 dark:bg-insight-a4 dark:text-insight-9",
         hybrid:
-          "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400",
+          "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7",
         shared:
-          "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300",
+          "bg-neutral-2 text-neutral-11",
       },
     },
     defaultVariants: {
@@ -77,10 +77,10 @@ export interface TierUsageBarProps extends VariantProps<
  * Get progress bar color based on usage percentage
  */
 function getProgressColor(percentage: number, isUnlimited: boolean): string {
-  if (isUnlimited) return "bg-success-500";
-  if (percentage >= 100) return "bg-error-500";
-  if (percentage >= 80) return "bg-warning-500";
-  return "bg-primary-500";
+  if (isUnlimited) return "bg-success-9";
+  if (percentage >= 100) return "bg-error-9";
+  if (percentage >= 80) return "bg-warning-9";
+  return "bg-primary-9";
 }
 
 /**
@@ -121,7 +121,7 @@ export function TierUsageBar({
       {/* Label and Tier Badge */}
       {resolvedVariant !== "compact" && (
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate">
+          <span className="text-sm font-medium text-neutral-11 truncate">
             {label}
           </span>
           {tier && (
@@ -133,7 +133,7 @@ export function TierUsageBar({
       )}
 
       {/* Progress Bar Container */}
-      <div className="flex items-center gap-2 flex-1 min-w-[120px]">
+      <div className="flex items-center gap-2 flex-1 min-w-32">
         {/* Progress Bar */}
         <div
           role="progressbar"
@@ -141,7 +141,7 @@ export function TierUsageBar({
           aria-valuenow={current}
           aria-valuemin={0}
           aria-valuemax={isUnlimited ? current : max}
-          className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden"
+          className="flex-1 h-2 bg-neutral-3 rounded-full overflow-hidden"
         >
           <div
             data-testid="tier-usage-fill"
@@ -149,23 +149,23 @@ export function TierUsageBar({
               "h-full transition-all duration-300",
               getProgressColor(percentage, isUnlimited),
             )}
-            style={{ width: `${clampedPercentage}%` }}
+            style={{ '--progress': `${clampedPercentage}%` } as React.CSSProperties}
           />
         </div>
 
         {/* Usage Count */}
-        <div className="flex items-center gap-1 text-sm text-neutral-600 dark:text-neutral-400 whitespace-nowrap">
+        <div className="flex items-center gap-1 text-sm text-neutral-11 whitespace-nowrap">
           {shouldShowWarning && (
             <AlertTriangle
               size={14}
-              className="text-warning-500"
+              className="text-warning-9"
               data-testid="usage-warning-icon"
             />
           )}
           {isUnlimited ? (
             <>
               <span className="font-medium">{current}</span>
-              <span className="text-neutral-400 dark:text-neutral-400">
+              <span className="text-neutral-9">
                 / Unlimited
               </span>
             </>

@@ -297,7 +297,7 @@ describe("AlertDetailPanel", () => {
       renderWithStore(<AlertDetailPanel {...defaultProps} />);
 
       const riskBadge = screen.getByTestId("overall-risk");
-      expect(riskBadge).toHaveClass("bg-warning-500");
+      expect(riskBadge).toHaveClass("bg-warning-9");
     });
   });
 

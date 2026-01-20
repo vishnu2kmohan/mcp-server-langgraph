@@ -16,15 +16,15 @@
  * - GET /api/v1/artifacts/:id/similar - Find similar artifacts
  */
 
-import { http, HttpResponse, delay } from "msw";
+import { http, delay, HttpResponse } from "msw";
+import { apiJsonResponse, apiErrorResponse } from "../utils/apiResponse";
 import type {
   CanvasArtifact,
   ArtifactVersion,
   CreateArtifactResponse,
   UpdateArtifactResponse,
   ForkArtifactResponse,
-  ListArtifactsResponse,
-} from "../../types/artifacts";
+  ListArtifactsResponse} from "../../types/artifacts";
 
 // =============================================================================
 // Mock Data Factories
@@ -46,11 +46,11 @@ export const createMockCanvasArtifact = (
   updatedAt: new Date().toISOString(),
   title: "Untitled Artifact",
   editMetadata: {
-    editedBy: "user",
-    language: "javascript",
-  },
-  ...overrides,
-});
+    origin: "user",
+    modified: false,
+    lastEditedBy: "user",
+    language: "javascript"},
+  ...overrides});
 
 /**
  * Create a mock artifact version with optional overrides
@@ -66,10 +66,8 @@ export const createMockArtifactVersion = (
   createdBy: "user-123",
   createdAt: new Date().toISOString(),
   metadata: {
-    editType: "user",
-  },
-  ...overrides,
-});
+    editedBy: "user"},
+  ...overrides});
 
 // =============================================================================
 // Default Mock Data
@@ -94,10 +92,10 @@ export function MainComponent() {
   );
 }`,
     editMetadata: {
-      editedBy: "user",
-      language: "typescript",
-    },
-  }),
+      origin: "user",
+      modified: false,
+      lastEditedBy: "user",
+      language: "typescript"}}),
   createMockCanvasArtifact({
     id: "art-2",
     sessionId: "session-1",
@@ -114,10 +112,10 @@ This is a sample project demonstrating the Canvas feature.
 - AI-assisted editing
 `,
     editMetadata: {
-      editedBy: "ai-generation",
-      aiConfidence: 0.95,
-    },
-  }),
+      origin: "ai",
+      modified: false,
+      lastEditedBy: "ai",
+      aiConfidence: 0.95}}),
   createMockCanvasArtifact({
     id: "art-3",
     sessionId: "session-1",
@@ -129,13 +127,10 @@ This is a sample project demonstrating the Canvas feature.
         version: "1.0.0",
         features: {
           darkMode: true,
-          aiSuggestions: true,
-        },
-      },
+          aiSuggestions: true}},
       null,
       2,
-    ),
-  }),
+    )}),
   createMockCanvasArtifact({
     id: "art-4",
     sessionId: "session-2",
@@ -147,8 +142,7 @@ This is a sample project demonstrating the Canvas feature.
     B -->|No| D[Action 2]
     C --> E[End]
     D --> E
-`,
-  }),
+`}),
 ];
 
 /**
@@ -161,16 +155,14 @@ const mockArtifactVersions: Record<string, ArtifactVersion[]> = {
       artifactId: "art-1",
       version: 1,
       content: "// Initial version",
-      createdAt: new Date(Date.now() - 3600000).toISOString(),
-    }),
+      createdAt: new Date(Date.now() - 3600000).toISOString()}),
     createMockArtifactVersion({
       id: "ver-1-2",
       artifactId: "art-1",
       version: 2,
       content: "// Updated version",
       createdAt: new Date(Date.now() - 1800000).toISOString(),
-      parentVersion: 1,
-    }),
+      parentVersion: 1}),
   ],
   "art-2": [
     createMockArtifactVersion({
@@ -178,10 +170,8 @@ const mockArtifactVersions: Record<string, ArtifactVersion[]> = {
       artifactId: "art-2",
       version: 1,
       contentType: "markdown",
-      content: "# Initial README",
-    }),
-  ],
-};
+      content: "# Initial README"}),
+  ]};
 
 // =============================================================================
 // MSW Request Handlers
@@ -208,7 +198,7 @@ export const canvasHandlers = [
 
     // Validate query is not empty
     if (!query || query.trim() === "") {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { detail: "Query parameter is required" },
         { status: 400 },
       );
@@ -227,10 +217,9 @@ export const canvasHandlers = [
       .map((a, index) => ({
         artifact_id: a.id,
         score: 0.95 - index * 0.1, // Decreasing scores for mock
-        title: a.title || null,
-      }));
+        title: a.title || null}));
 
-    return HttpResponse.json({ results });
+    return apiJsonResponse({ results });
   }),
 
   /**
@@ -261,10 +250,9 @@ export const canvasHandlers = [
     const response: ListArtifactsResponse = {
       items,
       cursor: nextCursor,
-      hasMore,
-    };
+      hasMore};
 
-    return HttpResponse.json(response);
+    return apiJsonResponse(response);
   }),
 
   /**
@@ -275,13 +263,13 @@ export const canvasHandlers = [
     const artifact = mockCanvasArtifacts.find((a) => a.id === params.id);
 
     if (!artifact) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { detail: "Artifact not found" },
         { status: 404 },
       );
     }
 
-    return HttpResponse.json(artifact);
+    return apiJsonResponse(artifact);
   }),
 
   /**
@@ -295,10 +283,9 @@ export const canvasHandlers = [
     const response: CreateArtifactResponse = {
       id: `art-${crypto.randomUUID().slice(0, 8)}`,
       version: 1,
-      createdAt: new Date().toISOString(),
-    };
+      createdAt: new Date().toISOString()};
 
-    return HttpResponse.json(response, { status: 201 });
+    return apiJsonResponse(response, { status: 201 });
   }),
 
   /**
@@ -309,7 +296,7 @@ export const canvasHandlers = [
     const artifact = mockCanvasArtifacts.find((a) => a.id === params.id);
 
     if (!artifact) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { detail: "Artifact not found" },
         { status: 404 },
       );
@@ -321,10 +308,9 @@ export const canvasHandlers = [
     const response: UpdateArtifactResponse = {
       id: artifact.id,
       version: artifact.version + 1,
-      updatedAt: new Date().toISOString(),
-    };
+      updatedAt: new Date().toISOString()};
 
-    return HttpResponse.json(response);
+    return apiJsonResponse(response);
   }),
 
   /**
@@ -344,7 +330,7 @@ export const canvasHandlers = [
     const artifact = mockCanvasArtifacts.find((a) => a.id === artifactId);
 
     if (!artifact) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { detail: "Artifact not found" },
         { status: 404 },
       );
@@ -355,11 +341,10 @@ export const canvasHandlers = [
         artifactId,
         version: 1,
         content: artifact.content,
-        contentType: artifact.contentType,
-      }),
+        contentType: artifact.contentType}),
     ];
 
-    return HttpResponse.json(versions);
+    return apiJsonResponse(versions);
   }),
 
   /**
@@ -371,7 +356,7 @@ export const canvasHandlers = [
     const artifact = mockCanvasArtifacts.find((a) => a.id === artifactId);
 
     if (!artifact) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { detail: "Artifact not found" },
         { status: 404 },
       );
@@ -383,10 +368,9 @@ export const canvasHandlers = [
     const response: ForkArtifactResponse = {
       id: `art-${crypto.randomUUID().slice(0, 8)}`,
       parentId: artifactId,
-      version: 1,
-    };
+      version: 1};
 
-    return HttpResponse.json(response, { status: 201 });
+    return apiJsonResponse(response, { status: 201 });
   }),
 
   /**
@@ -398,7 +382,7 @@ export const canvasHandlers = [
     const artifact = mockCanvasArtifacts.find((a) => a.id === artifactId);
 
     if (!artifact) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { detail: "Artifact not found" },
         { status: 404 },
       );
@@ -418,10 +402,9 @@ export const canvasHandlers = [
       .map((a, index) => ({
         artifact_id: a.id,
         score: 0.85 - index * 0.1, // Decreasing scores for mock
-        title: a.title || null,
-      }));
+        title: a.title || null}));
 
-    return HttpResponse.json({ results });
+    return apiJsonResponse({ results });
   }),
 ];
 
@@ -434,7 +417,7 @@ export const canvasHandlers = [
  */
 export const createArtifactNotFoundHandler = (path: string) =>
   http.get(path, () =>
-    HttpResponse.json({ detail: "Artifact not found" }, { status: 404 }),
+    apiErrorResponse("Artifact not found", 404),
   );
 
 /**
@@ -445,7 +428,7 @@ export const createRateLimitHandler = (
   method: "get" | "post" | "put" | "delete" = "get",
 ) =>
   http[method](path, () =>
-    HttpResponse.json(
+    apiJsonResponse(
       { detail: "Rate limit exceeded. Please try again later." },
       { status: 429 },
     ),

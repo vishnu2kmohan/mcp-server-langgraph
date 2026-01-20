@@ -227,7 +227,7 @@ describe("SessionNav", () => {
       // The session button is inside a wrapper div that has the highlight class
       const sessionButton = screen.getByText("Today's Chat");
       const sessionWrapper = sessionButton.closest("div");
-      expect(sessionWrapper).toHaveClass("bg-primary-100");
+      expect(sessionWrapper).toHaveClass("bg-primary-2");
     });
   });
 

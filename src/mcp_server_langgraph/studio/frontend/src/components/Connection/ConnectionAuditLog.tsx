@@ -47,14 +47,14 @@ interface ConnectionAuditLogProps {
 // Action badge colors
 const actionColors: Record<string, string> = {
   create:
-    "bg-success-100 text-success-800 dark:bg-success-900/50 dark:text-success-300",
+    "bg-success-3 text-success-11 dark:bg-success-a6 dark:text-success-5",
   update:
-    "bg-primary-100 text-primary-800 dark:bg-primary-900/50 dark:text-primary-300",
+    "bg-primary-3 text-primary-11 dark:bg-primary-a6 dark:text-primary-5",
   delete:
-    "bg-error-100 text-error-800 dark:bg-error-900/50 dark:text-error-300",
-  test: "bg-insight-100 text-insight-800 dark:bg-insight-900/50 dark:text-insight-300",
+    "bg-error-3 text-error-11 dark:bg-error-a6 dark:text-error-9",
+  test: "bg-insight-2 text-insight-11 dark:bg-insight-a6 dark:text-insight-5",
   authorize:
-    "bg-warning-100 text-warning-800 dark:bg-warning-900/50 dark:text-warning-300",
+    "bg-warning-3 text-warning-11 dark:bg-warning-a6 dark:text-warning-6",
 };
 
 export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
@@ -117,7 +117,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
   const getActionColor = (action: string) => {
     return (
       actionColors[action] ||
-      "bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300"
+      "bg-neutral-2 text-neutral-12"
     );
   };
 
@@ -127,8 +127,8 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
         data-testid="loading-audit-logs"
         className="flex items-center justify-center gap-3 py-12"
       >
-        <Loader2 className="h-6 w-6 animate-spin text-primary-500" />
-        <span className="text-neutral-600 dark:text-neutral-400">
+        <Loader2 className="h-6 w-6 animate-spin text-primary-9" />
+        <span className="text-neutral-11">
           Loading audit logs...
         </span>
       </div>
@@ -141,13 +141,13 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
         className="flex flex-col items-center justify-center gap-4 py-12"
         role="alert"
       >
-        <AlertCircle className="h-12 w-12 text-error-500" />
-        <p className="text-error-600 dark:text-error-400">
+        <AlertCircle className="h-12 w-12 text-error-9" />
+        <p className="text-error-10 dark:text-error-7">
           Failed to load audit logs: {error}
         </p>
         <Button
           variant="primary"
-          className="flex rounded-md bg-primary-600 px-4 py-2 text-white hover:bg-primary-700"
+          className="flex rounded-md bg-primary-10 px-4 py-2 text-neutral-12 hover:bg-primary-11"
           onClick={fetchLogs}
         >
           <RefreshCw className="h-4 w-4" />
@@ -158,21 +158,22 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
   }
 
   return (
+    // eslint-disable-next-line no-restricted-syntax -- Large dialog panel requires specific min-width
     <div className="min-w-[500px]">
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-insight-600" />
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
+          <FileText className="h-5 w-5 text-insight-10" />
+          <h3 className="text-lg font-semibold text-neutral-12">
             Audit Log
           </h3>
         </div>
         <div className="flex items-center gap-3">
           {/* Event Type Filter */}
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-neutral-400 dark:text-neutral-400" />
+            <Filter className="h-4 w-4 text-neutral-9" />
             <Select
-              className="px-3 py-1.5 text-sm -500 focus:ring-primary-500 dark:border-neutral-600 dark:text-white"
+              className="px-3 py-1.5 text-sm -500 focus:ring-primary-7"
               data-testid="event-type-filter"
               value={eventTypeFilter}
               onChange={handleEventTypeChange}
@@ -191,7 +192,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
           {/* Refresh Button */}
           <Button
             variant="secondary"
-            className="flex .5 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600"
+            className="flex .5 rounded-md border border-neutral-5 bg-neutral-1 px-3 py-1.5 text-sm text-neutral-11 hover:bg-neutral-1"
             onClick={fetchLogs}
           >
             <RefreshCw className="h-4 w-4" />
@@ -202,8 +203,8 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
       {/* Empty State */}
       {logs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <FileText className="mb-4 h-12 w-12 text-neutral-300 dark:text-neutral-600 dark:text-neutral-300" />
-          <p className="text-neutral-500 dark:text-neutral-400">
+          <FileText className="mb-4 h-12 w-12 text-neutral-9" />
+          <p className="text-neutral-10">
             No audit logs found for this connection.
           </p>
         </div>
@@ -213,7 +214,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
           {logs.map((log) => (
             <div
               key={log.id}
-              className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white transition-shadow hover:shadow-sm dark:border-neutral-700 dark:bg-neutral-800"
+              className="rounded-lg border border-neutral-5 bg-neutral-1 transition-shadow hover:shadow-sm"
             >
               {/* Entry Header */}
               <div
@@ -221,7 +222,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
                 onClick={() => toggleExpand(log.id)}
               >
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-sm text-neutral-700 dark:text-neutral-300">
+                  <span className="font-mono text-sm text-neutral-11">
                     {log.eventType}
                   </span>
                   <span
@@ -232,15 +233,15 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                  <span className="text-sm text-neutral-10">
                     {log.actorId}
                   </span>
-                  <span className="text-sm text-neutral-400 dark:text-neutral-400">
+                  <span className="text-sm text-neutral-9">
                     {formatDate(log.timestamp)}
                   </span>
                   <Button
                     variant="secondary"
-                    className="rounded p-1 text-neutral-400 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 hover:text-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-300"
+                    className="rounded p-1 text-neutral-9 hover:bg-neutral-2 hover:text-neutral-11"
                     data-testid="expand-log"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -259,13 +260,13 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
 
               {/* Expanded Details */}
               {expandedId === log.id && (
-                <div className="border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900/50">
+                <div className="border-t border-neutral-5 bg-neutral-1 p-4">
                   {/* Details JSON */}
                   <div className="mb-4">
-                    <h4 className="mb-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    <h4 className="mb-2 text-sm font-medium text-neutral-11">
                       Details
                     </h4>
-                    <pre className="overflow-x-auto rounded-md bg-neutral-100 dark:bg-neutral-800 p-3 text-xs text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
+                    <pre className="overflow-x-auto rounded-md bg-neutral-2 p-3 text-xs text-neutral-12">
                       {JSON.stringify(log.details, null, 2)}
                     </pre>
                   </div>
@@ -274,20 +275,20 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     {log.ipAddress && (
                       <div>
-                        <span className="font-medium text-neutral-600 dark:text-neutral-400">
+                        <span className="font-medium text-neutral-11">
                           IP Address:
                         </span>
-                        <span className="ml-2 font-mono text-neutral-800 dark:text-neutral-200">
+                        <span className="ml-2 font-mono text-neutral-12">
                           {log.ipAddress}
                         </span>
                       </div>
                     )}
                     {log.userAgent && (
                       <div className="col-span-2">
-                        <span className="font-medium text-neutral-600 dark:text-neutral-400">
+                        <span className="font-medium text-neutral-11">
                           User Agent:
                         </span>
-                        <span className="ml-2 text-neutral-800 dark:text-neutral-200">
+                        <span className="ml-2 text-neutral-12">
                           {log.userAgent}
                         </span>
                       </div>

@@ -36,31 +36,31 @@ describe("ConfidenceIndicator", () => {
     it("renders high confidence (>= 0.9) with success colors", () => {
       render(<ConfidenceIndicator score={0.95} />);
       const indicator = screen.getByTestId("confidence-indicator");
-      expect(indicator).toHaveClass("text-success-600");
+      expect(indicator).toHaveClass("text-success-10");
     });
 
     it("renders medium confidence (>= 0.7, < 0.9) with warning colors", () => {
       render(<ConfidenceIndicator score={0.75} />);
       const indicator = screen.getByTestId("confidence-indicator");
-      expect(indicator).toHaveClass("text-warning-600");
+      expect(indicator).toHaveClass("text-warning-9");
     });
 
     it("renders low confidence (< 0.7) with error colors", () => {
       render(<ConfidenceIndicator score={0.5} />);
       const indicator = screen.getByTestId("confidence-indicator");
-      expect(indicator).toHaveClass("text-error-600");
+      expect(indicator).toHaveClass("text-error-10");
     });
 
     it("handles edge case at 0.9 boundary", () => {
       render(<ConfidenceIndicator score={0.9} />);
       const indicator = screen.getByTestId("confidence-indicator");
-      expect(indicator).toHaveClass("text-success-600");
+      expect(indicator).toHaveClass("text-success-10");
     });
 
     it("handles edge case at 0.7 boundary", () => {
       render(<ConfidenceIndicator score={0.7} />);
       const indicator = screen.getByTestId("confidence-indicator");
-      expect(indicator).toHaveClass("text-warning-600");
+      expect(indicator).toHaveClass("text-warning-9");
     });
   });
 
@@ -68,19 +68,19 @@ describe("ConfidenceIndicator", () => {
     it("includes dark mode classes for high confidence", () => {
       render(<ConfidenceIndicator score={0.95} />);
       const indicator = screen.getByTestId("confidence-indicator");
-      expect(indicator.className).toMatch(/dark:text-success-400/);
+      expect(indicator.className).toMatch(/dark:text-success-7/);
     });
 
     it("includes dark mode classes for medium confidence", () => {
       render(<ConfidenceIndicator score={0.75} />);
       const indicator = screen.getByTestId("confidence-indicator");
-      expect(indicator.className).toMatch(/dark:text-warning-400/);
+      expect(indicator.className).toMatch(/dark:text-warning-9/);
     });
 
     it("includes dark mode classes for low confidence", () => {
       render(<ConfidenceIndicator score={0.5} />);
       const indicator = screen.getByTestId("confidence-indicator");
-      expect(indicator.className).toMatch(/dark:text-error-400/);
+      expect(indicator.className).toMatch(/dark:text-error-7/);
     });
   });
 

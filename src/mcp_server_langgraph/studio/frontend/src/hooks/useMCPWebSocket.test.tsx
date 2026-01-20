@@ -37,6 +37,7 @@ vi.mock("./useRealtimeSync", () => ({
       reconnect: mockReconnect,
       reconnectAttempts: 0,
       lastMessageTime: null,
+      metrics: { totalAttempts: 0 },
     };
   },
 }));
@@ -55,6 +56,10 @@ function createTestStore(isAuthenticated = true) {
               email: "test@example.com",
               roles: ["user"],
               persona: "user" as const,
+              // WebSocket permissions for MCP hook
+              websocketPermissions: {
+                mcp_aggregated: true,
+              },
             }
           : null,
         tokens: null,

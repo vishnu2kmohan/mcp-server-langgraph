@@ -172,7 +172,8 @@ describe("TopBar", () => {
       render(<TopBar />, { wrapper: createWrapper(store) });
 
       const topBar = screen.getByTestId("top-bar");
-      expect(topBar).toHaveClass("dark:bg-neutral-800");
+      // Uses semantic neutral classes that adapt to dark mode via CSS variables
+      expect(topBar).toHaveClass("bg-neutral-1", "border-neutral-5");
     });
   });
 
@@ -242,7 +243,7 @@ describe("TopBar", () => {
       );
 
       const badge = screen.getByTestId("review-approval-button");
-      expect(badge).toHaveClass("bg-warning-100");
+      expect(badge).toHaveClass("bg-warning-2");
     });
 
     it("should have accessible aria-label for approvals badge", () => {

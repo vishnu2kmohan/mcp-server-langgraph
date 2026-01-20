@@ -17,7 +17,9 @@ import { setUserInfo } from "../store/slices/personaSlice";
 import { setAuthTokens } from "../utils/storage";
 import { getIntendedRoute, clearIntendedRoute } from "../utils/intendedRoute";
 
-import { Button } from "@/components/UI";
+// Direct imports to avoid Rollup circular dependency warnings
+// (page chunks end up separate from UI barrel)
+import { Button } from "@/components/UI/Button";
 
 // Parse URL fragment into key-value pairs
 function parseFragment(fragment: string): Record<string, string> {
@@ -160,16 +162,16 @@ export function AuthCallbackPage() {
   }, [dispatch, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-800 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-1 to-neutral-2 dark:from-neutral-12 dark:to-neutral-11 px-4">
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl p-8 border border-neutral-200 dark:border-neutral-700 text-center">
+        <div className="bg-white dark:bg-neutral-11 rounded-2xl shadow-xl p-8 border border-neutral-3 dark:border-neutral-10 text-center">
           {status === "processing" && (
             <>
-              <Loader2 className="w-12 h-12 text-primary-600 animate-spin mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+              <Loader2 className="w-12 h-12 text-primary-10 animate-spin mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-neutral-12 dark:text-white mb-2">
                 Completing sign in...
               </h2>
-              <p className="text-neutral-500 dark:text-neutral-400">
+              <p className="text-neutral-8 dark:text-neutral-6">
                 Please wait while we verify your credentials.
               </p>
             </>
@@ -177,11 +179,11 @@ export function AuthCallbackPage() {
 
           {status === "success" && (
             <>
-              <CheckCircle className="w-12 h-12 text-success-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+              <CheckCircle className="w-12 h-12 text-success-10 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-neutral-12 dark:text-white mb-2">
                 Sign in successful!
               </h2>
-              <p className="text-neutral-500 dark:text-neutral-400">
+              <p className="text-neutral-8 dark:text-neutral-6">
                 Redirecting to Agent Studio...
               </p>
             </>
@@ -189,16 +191,16 @@ export function AuthCallbackPage() {
 
           {status === "error" && (
             <>
-              <AlertCircle className="w-12 h-12 text-error-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+              <AlertCircle className="w-12 h-12 text-error-10 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-neutral-12 dark:text-white mb-2">
                 Sign in failed
               </h2>
-              <p className="text-error-600 dark:text-error-400 mb-4">
+              <p className="text-error-10 dark:text-error-7 mb-4">
                 {errorMessage}
               </p>
               <Button
                 variant="primary"
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                className="px-4 py-2 bg-primary-10 text-white rounded-lg hover:bg-primary-11"
                 onClick={() => navigate("/login", { replace: true })}
               >
                 Try again

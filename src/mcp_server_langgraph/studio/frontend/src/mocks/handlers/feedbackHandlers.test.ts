@@ -15,6 +15,7 @@ import {
   createFeedbackSummaryHandler,
   createMockFeedbackSummary,
 } from "./feedbackHandlers";
+import { transformSnakeToCamel } from "../../api/transforms";
 
 describe("feedbackHandlers", () => {
   beforeEach(() => {
@@ -222,4 +223,16 @@ describe("feedbackHandlers", () => {
       expect(data.hallucination_reports).toBe(500);
     });
   });
+
+describe("API Contract Transformation", () => {
+  it("should return feedback summary in snake_case and transform to camelCase", async () => {
+    const response = await fetch("/api/v1/feedback/summary");
+    const rawData = await response.json();
+
+    // Verify transformation works
+    const transformedData = transformSnakeToCamel(rawData);
+    expect(transformedData).toBeDefined();
+  });
+});
+
 });

@@ -25,18 +25,18 @@ export const radioVariants = cva(
     "shrink-0 rounded-full border cursor-pointer",
     "appearance-none",
     "transition-colors duration-fast",
-    "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
-    "dark:focus:ring-offset-neutral-900",
+    "focus:outline-none focus:ring-2 focus:ring-primary-7 focus:ring-offset-2",
+    "dark:focus:ring-offset-neutral-12",
     // Checked state - uses radial gradient for inner dot
-    "checked:bg-primary-500 checked:border-primary-500",
-    "checked:dark:bg-primary-600 checked:dark:border-primary-600",
+    "checked:bg-primary-9 checked:border-primary-9",
+    "checked:dark:bg-primary-10 checked:dark:border-primary-10",
     // Inner dot via background
     "checked:bg-[radial-gradient(circle,white_40%,transparent_40%)]",
     // Unchecked state
-    "bg-white dark:bg-neutral-800",
-    "border-neutral-300 dark:border-neutral-600",
+    "bg-neutral-1",
+    "border-neutral-5",
     // Hover
-    "hover:border-primary-400 dark:hover:border-primary-500",
+    "hover:border-primary-7 dark:hover:border-primary-9",
   ],
   {
     variants: {
@@ -144,7 +144,7 @@ export function RadioGroup({
         )}
       >
         {legend && (
-          <legend className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+          <legend className="text-sm font-medium text-neutral-12 mb-2">
             {legend}
           </legend>
         )}
@@ -217,8 +217,8 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
             disabledClasses,
             "flex items-start gap-3 p-3 border rounded-lg transition-colors",
             isChecked
-              ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-              : "border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600",
+              ? "border-primary-9 bg-primary-1 dark:bg-primary-a3"
+              : "border-neutral-5 hover:border-neutral-5 dark:hover:border-neutral-6",
             className,
           );
         case "rating":
@@ -256,7 +256,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
           />
           <span
             className={cn(
-              "text-xs text-neutral-500 dark:text-neutral-400 mt-1",
+              "text-xs text-neutral-10 mt-1",
               isDisabled && "opacity-50",
             )}
           >
@@ -287,7 +287,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
         <div className="flex flex-col">
           <span
             className={cn(
-              "text-sm font-medium text-neutral-900 dark:text-neutral-100",
+              "text-sm font-medium text-neutral-12",
               isDisabled && "opacity-50",
             )}
           >
@@ -297,7 +297,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
             <span
               id={descriptionId}
               className={cn(
-                "text-xs text-neutral-500 dark:text-neutral-400",
+                "text-xs text-neutral-10",
                 isDisabled && "opacity-50",
               )}
             >

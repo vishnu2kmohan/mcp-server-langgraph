@@ -144,8 +144,8 @@ describe("AlertGroupsPanel", () => {
       const criticalBadge = screen.getByTestId("severity-badge-api:Critical");
       const warningBadge = screen.getByTestId("severity-badge-api:Warning");
 
-      expect(criticalBadge).toHaveClass("bg-error-500");
-      expect(warningBadge).toHaveClass("bg-warning-500");
+      expect(criticalBadge).toHaveClass("bg-error-9");
+      expect(warningBadge).toHaveClass("bg-warning-9");
     });
 
     it("should show empty state when no groups", () => {
@@ -323,8 +323,8 @@ describe("AlertGroupsPanel", () => {
       const selectedItem = screen.getByTestId("alert-item-a1");
       const unselectedItem = screen.getByTestId("alert-item-a2");
 
-      expect(selectedItem).toHaveClass("border-primary-500");
-      expect(unselectedItem).not.toHaveClass("border-primary-500");
+      expect(selectedItem).toHaveClass("border-primary-9");
+      expect(unselectedItem).not.toHaveClass("border-primary-9");
     });
   });
 

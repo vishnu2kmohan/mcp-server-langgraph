@@ -5,7 +5,9 @@
  */
 
 import { useState, useMemo } from "react";
+import { useReducedMotion } from "motion/react";
 import { UserPlus, Search, Loader2 } from "lucide-react";
+import { cn } from "../../utils/cn";
 import { Dialog } from "../UI/Dialog";
 
 import { Button, Input, Checkbox } from "@/components/UI";
@@ -39,6 +41,9 @@ export function UserManager({
   onActivate,
   onInvite,
 }: UserManagerProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
@@ -122,7 +127,7 @@ export function UserManager({
         data-testid="user-loading"
         className="flex items-center justify-center h-full"
       >
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+        <Loader2 className={cn("w-8 h-8 text-primary-9", !prefersReducedMotion && "animate-spin")} />
       </div>
     );
   }
@@ -131,12 +136,12 @@ export function UserManager({
     <div className="p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
+        <h2 className="text-xl font-semibold text-neutral-12">
           User Management
         </h2>
         <Button
           variant="primary"
-          className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          className="flex px-4 py-2 bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11"
           onClick={() => setIsInviteModalOpen(true)}
         >
           <UserPlus className="w-4 h-4" />
@@ -145,9 +150,9 @@ export function UserManager({
       </div>
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-9" />
         <Input
-          className="pl-10 pr-4 py-2 text-neutral-900 dark:text-white focus:ring-primary-500"
+          className="pl-10 pr-4 py-2 text-neutral-12 focus:ring-primary-7"
           placeholder="Search users..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -158,43 +163,44 @@ export function UserManager({
         {filteredUsers.map((user) => (
           <div
             key={user.id}
-            className="flex items-center justify-between p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
+            className="flex items-center justify-between p-4 bg-neutral-1 rounded-lg border border-neutral-5"
           >
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <h3 className="font-medium text-neutral-900 dark:text-white">
+                <h3 className="font-medium text-neutral-12">
                   {user.name}
                 </h3>
                 <div
                   data-testid={
                     user.isActive ? "status-active" : "status-inactive"
                   }
-                  className={`w-2 h-2 rounded-full ${
-                    user.isActive ? "bg-success-500" : "bg-neutral-400"
-                  }`}
+                  className={cn(
+                    "w-2 h-2 rounded-full",
+                    user.isActive ? "bg-success-9" : "bg-neutral-4",
+                  )}
                 />
               </div>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              <p className="text-sm text-neutral-10">
                 {user.email}
               </p>
               <div className="flex items-center gap-2 mt-2">
                 {user.roles.map((role) => (
                   <span
                     key={role}
-                    className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded text-xs"
+                    className="px-2 py-0.5 bg-neutral-2 text-neutral-11 rounded text-xs"
                   >
                     {role}
                   </span>
                 ))}
               </div>
-              <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">
+              <p className="text-xs text-neutral-9 mt-1">
                 Last login: {formatDate(user.lastLogin)}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="primary"
-                className="px-3 py-1.5 text-sm text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900 rounded"
+                className="px-3 py-1.5 text-sm text-primary-10 hover:bg-primary-1 dark:hover:bg-primary-12 rounded"
                 onClick={() => handleManageRoles(user)}
                 aria-label="Manage roles"
               >
@@ -203,7 +209,7 @@ export function UserManager({
               {user.isActive ? (
                 <Button
                   variant="danger"
-                  className="px-3 py-1.5 text-sm text-error-600 hover:bg-error-50 dark:hover:bg-error-900 rounded"
+                  className="px-3 py-1.5 text-sm text-error-10 hover:bg-error-1 dark:hover:bg-error-12 rounded"
                   onClick={() => handleDeactivateClick(user.id)}
                   aria-label="Deactivate"
                 >
@@ -212,7 +218,7 @@ export function UserManager({
               ) : (
                 <Button
                   variant="success"
-                  className="px-3 py-1.5 text-sm text-success-600 hover:bg-success-50 dark:hover:bg-success-900 rounded"
+                  className="px-3 py-1.5 text-sm text-success-10 hover:bg-success-1 dark:hover:bg-success-12 rounded"
                   onClick={() => onActivate(user.id)}
                   aria-label="Activate"
                 >
@@ -232,14 +238,14 @@ export function UserManager({
           <>
             <Button
               variant="secondary"
-              className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
+              className="px-4 py-2 text-neutral-11 hover:bg-neutral-2 rounded-lg"
               onClick={() => setIsInviteModalOpen(false)}
             >
               Cancel
             </Button>
             <Button
               variant="primary"
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              className="px-4 py-2 bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11"
               onClick={handleInvite}
             >
               Send Invite
@@ -251,12 +257,12 @@ export function UserManager({
         <div>
           <label
             htmlFor="invite-email"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+            className="block text-sm font-medium text-neutral-11 mb-1"
           >
             Email
           </label>
           <Input
-            className="px-3 py-2 text-neutral-900 dark:text-white focus:ring-primary-500"
+            className="px-3 py-2 text-neutral-12 focus:ring-primary-7"
             id="invite-email"
             type="email"
             value={inviteEmail}
@@ -264,7 +270,7 @@ export function UserManager({
           />
         </div>
         <div>
-          <span className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+          <span className="block text-sm font-medium text-neutral-11 mb-2">
             Roles
           </span>
           <div className="space-y-2">
@@ -289,14 +295,14 @@ export function UserManager({
           <>
             <Button
               variant="secondary"
-              className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
+              className="px-4 py-2 text-neutral-11 hover:bg-neutral-2 rounded-lg"
               onClick={() => setIsRoleModalOpen(false)}
             >
               Cancel
             </Button>
             <Button
               variant="primary"
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              className="px-4 py-2 bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11"
               onClick={handleSaveRoles}
             >
               Save Roles
@@ -305,7 +311,7 @@ export function UserManager({
         }
         contentClassName="space-y-4"
       >
-        <p className="text-neutral-700 dark:text-neutral-300">
+        <p className="text-neutral-11">
           Managing roles for {editingUser?.name}
         </p>
         <div className="space-y-2">
@@ -329,14 +335,14 @@ export function UserManager({
           <>
             <Button
               variant="secondary"
-              className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
+              className="px-4 py-2 text-neutral-11 hover:bg-neutral-2 rounded-lg"
               onClick={() => setIsDeactivateConfirmOpen(false)}
             >
               Cancel
             </Button>
             <Button
               variant="danger"
-              className="px-4 py-2 bg-error-600 text-white rounded-lg hover:bg-error-700"
+              className="px-4 py-2 bg-error-10 text-neutral-12 rounded-lg hover:bg-error-11"
               onClick={handleDeactivateConfirm}
             >
               Confirm
@@ -344,7 +350,7 @@ export function UserManager({
           </>
         }
       >
-        <p className="text-neutral-700 dark:text-neutral-300">
+        <p className="text-neutral-11">
           Are you sure you want to deactivate this user? They will no longer be
           able to access the system.
         </p>

@@ -267,7 +267,7 @@ describe("AlertsTab WebSocket Integration", () => {
 
       const statusIndicator = screen.getByTitle(/websocket: connected/i);
       expect(statusIndicator).toBeInTheDocument();
-      expect(statusIndicator).toHaveClass("bg-success-500");
+      expect(statusIndicator).toHaveClass("bg-success-9");
     });
 
     it("should show connecting status with animation", () => {
@@ -277,7 +277,7 @@ describe("AlertsTab WebSocket Integration", () => {
 
       const statusIndicator = screen.getByTitle(/websocket: connecting/i);
       expect(statusIndicator).toBeInTheDocument();
-      expect(statusIndicator).toHaveClass("bg-warning-500");
+      expect(statusIndicator).toHaveClass("bg-warning-9");
       expect(statusIndicator).toHaveClass("animate-pulse");
     });
 
@@ -288,7 +288,7 @@ describe("AlertsTab WebSocket Integration", () => {
 
       const statusIndicator = screen.getByTitle(/websocket: disconnected/i);
       expect(statusIndicator).toBeInTheDocument();
-      expect(statusIndicator).toHaveClass("bg-neutral-400");
+      expect(statusIndicator).toHaveClass("bg-neutral-4");
     });
 
     it("should show error status", () => {
@@ -298,7 +298,7 @@ describe("AlertsTab WebSocket Integration", () => {
 
       const statusIndicator = screen.getByTitle(/websocket: error/i);
       expect(statusIndicator).toBeInTheDocument();
-      expect(statusIndicator).toHaveClass("bg-error-500");
+      expect(statusIndicator).toHaveClass("bg-error-9");
     });
 
     it("should not display status indicator when connectionStatus not provided", () => {

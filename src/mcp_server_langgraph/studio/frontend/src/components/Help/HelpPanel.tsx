@@ -110,18 +110,18 @@ export function HelpPanel({
     <aside
       role="complementary"
       aria-label="Contextual help panel"
-      className="fixed right-0 top-0 bottom-0 w-80 bg-white dark:bg-neutral-800 border-l border-neutral-200 dark:border-neutral-700 shadow-xl z-[50] flex flex-col"
+      className="fixed right-0 top-0 bottom-0 w-80 bg-neutral-1 border-l border-neutral-5 shadow-xl z-panel flex flex-col"
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-neutral-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <HelpCircle className="w-5 h-5 text-primary-500" />
-          <h2 className="font-semibold text-neutral-900 dark:text-neutral-100">
+          <HelpCircle className="w-5 h-5 text-primary-9" />
+          <h2 className="font-semibold text-neutral-12">
             {contextTitle || "Help"}
           </h2>
         </div>
-        <Button
-          className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded"
+        <Button size="icon" variant="ghost"
+          className="p-1 text-neutral-9 hover:text-neutral-11 rounded"
           onClick={onClose}
           aria-label="Close"
         >
@@ -129,11 +129,11 @@ export function HelpPanel({
         </Button>
       </div>
       {/* Search */}
-      <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="px-4 py-3 border-b border-neutral-5">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-9" />
           <Input
-            className="pl-9 pr-4 py-2 bg-neutral-100 border-0 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:ring-primary-500"
+            className="pl-9 pr-4 py-2 bg-neutral-2 border-0 text-sm text-neutral-12 placeholder-neutral-9 focus:ring-primary-7"
             type="search"
             role="searchbox"
             placeholder="Search help..."
@@ -146,7 +146,7 @@ export function HelpPanel({
       <div className="flex-1 overflow-y-auto">
         {/* No Results */}
         {hasNoResults && (
-          <div className="px-4 py-8 text-center text-neutral-500 dark:text-neutral-400">
+          <div className="px-4 py-8 text-center text-neutral-10">
             <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>No results found</p>
           </div>
@@ -155,24 +155,24 @@ export function HelpPanel({
         {/* Tips Section */}
         {filteredTips.length > 0 && (
           <div className="p-4">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3">
-              <Lightbulb className="w-4 h-4 text-warning-500" />
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-12 mb-3">
+              <Lightbulb className="w-4 h-4 text-warning-9" />
               Tips
             </h3>
             <div className="space-y-2">
               {filteredTips.map((tip) => (
                 <div
                   key={tip.id}
-                  className="p-3 bg-neutral-50 dark:bg-neutral-700/50 rounded-lg"
+                  className="p-3 bg-neutral-1 rounded-lg"
                 >
-                  <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                  <p className="text-sm text-neutral-11">
                     {tip.content}
                   </p>
                   {tip.details && (
                     <>
                       <Button
                         size="sm"
-                        className="flex mt-2 text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700"
+                        className="flex mt-2 text-xs text-primary-10 dark:text-primary-7 hover:text-primary-11"
                         onClick={() => toggleTipExpanded(tip.id)}
                         aria-label="More"
                       >
@@ -189,7 +189,7 @@ export function HelpPanel({
                         )}
                       </Button>
                       {expandedTips.has(tip.id) && (
-                        <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-400">
+                        <p className="mt-2 text-xs text-neutral-11">
                           {tip.details}
                         </p>
                       )}
@@ -203,9 +203,9 @@ export function HelpPanel({
 
         {/* Articles Section */}
         {filteredArticles.length > 0 && (
-          <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3">
-              <BookOpen className="w-4 h-4 text-primary-500" />
+          <div className="p-4 border-t border-neutral-5">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-12 mb-3">
+              <BookOpen className="w-4 h-4 text-primary-9" />
               Documentation
             </h3>
             <div className="space-y-2">
@@ -216,17 +216,17 @@ export function HelpPanel({
                   aria-label={article.title}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-start gap-3 p-3 bg-neutral-50 dark:bg-neutral-700/50 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors group"
+                  className="flex items-start gap-3 p-3 bg-neutral-1 rounded-lg hover:bg-neutral-2 transition-colors group"
                 >
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                    <h4 className="text-sm font-medium text-neutral-12 group-hover:text-primary-10 dark:group-hover:text-primary-7">
                       {article.title}
                     </h4>
-                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
+                    <p className="text-xs text-neutral-11 mt-1">
                       {article.description}
                     </p>
                   </div>
-                  <ExternalLink className="w-4 h-4 text-neutral-400 dark:text-neutral-400 group-hover:text-primary-500 flex-shrink-0 mt-0.5" />
+                  <ExternalLink className="w-4 h-4 text-neutral-9 group-hover:text-primary-9 flex-shrink-0 mt-0.5" />
                 </a>
               ))}
             </div>

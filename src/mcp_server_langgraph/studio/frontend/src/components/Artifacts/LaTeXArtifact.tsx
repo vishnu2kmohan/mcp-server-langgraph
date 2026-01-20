@@ -184,8 +184,8 @@ export function LaTeXArtifact({
   );
 
   const containerClasses = isFullscreen
-    ? "fixed inset-0 z-50 bg-white dark:bg-neutral-900 overflow-auto"
-    : `rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-hidden ${className}`;
+    ? "fixed inset-0 z-modal bg-neutral-1 overflow-auto"
+    : `rounded-lg border border-neutral-5 bg-neutral-1 overflow-hidden ${className}`;
 
   return (
     <div
@@ -198,16 +198,16 @@ export function LaTeXArtifact({
       tabIndex={0}
     >
       {/* Header with title and actions */}
-      <div className="flex items-center justify-between px-4 py-2 bg-neutral-50 dark:bg-neutral-700/50 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between px-4 py-2 bg-neutral-1 border-b border-neutral-5">
         {title ? (
           <span
             data-testid="latex-title"
-            className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            className="text-sm font-medium text-neutral-11"
           >
             {title}
           </span>
         ) : (
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+          <span className="text-sm text-neutral-10">
             LaTeX
           </span>
         )}
@@ -215,28 +215,28 @@ export function LaTeXArtifact({
         <div className="flex items-center gap-2">
           {/* Zoom controls */}
           <div className="flex items-center gap-1">
-            <Button
+            <Button size="icon"
               variant="secondary"
-              className="p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded"
+              className="p-1 text-neutral-11 hover:bg-neutral-3 rounded"
               onClick={handleZoomOut}
               aria-label="Zoom out"
             >
               <ZoomOut size={14} />
             </Button>
-            <span className="text-xs text-neutral-500 dark:text-neutral-400 w-10 text-center">
+            <span className="text-xs text-neutral-10 w-10 text-center">
               {Math.round(zoom * 100)}%
             </span>
-            <Button
+            <Button size="icon"
               variant="secondary"
-              className="p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded"
+              className="p-1 text-neutral-11 hover:bg-neutral-3 rounded"
               onClick={handleZoomIn}
               aria-label="Zoom in"
             >
               <ZoomIn size={14} />
             </Button>
-            <Button
+            <Button size="icon"
               variant="secondary"
-              className="p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded"
+              className="p-1 text-neutral-11 hover:bg-neutral-3 rounded"
               onClick={handleResetZoom}
               aria-label="Reset zoom"
             >
@@ -247,7 +247,7 @@ export function LaTeXArtifact({
           {/* Fullscreen toggle */}
           <Button
             variant="secondary"
-            className="p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded"
+            className="p-1 text-neutral-11 hover:bg-neutral-3 rounded"
             onClick={handleToggleFullscreen}
             aria-label="Toggle fullscreen"
           >
@@ -258,13 +258,13 @@ export function LaTeXArtifact({
           <Button
             variant="secondary"
             size="sm"
-            className="flex px-2 py-1 text-xs text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded"
+            className="flex px-2 py-1 text-xs text-neutral-11 hover:bg-neutral-3 rounded"
             onClick={handleCopy}
             aria-label={copied ? "Copied" : "Copy LaTeX"}
           >
             {copied ? (
               <>
-                <Check size={14} className="text-success-500" />
+                <Check size={14} className="text-success-9" />
                 <span>Copied!</span>
               </>
             ) : (
@@ -283,15 +283,15 @@ export function LaTeXArtifact({
         {error ? (
           <div className="flex flex-col gap-3">
             {/* Error message */}
-            <div className="flex items-center gap-2 p-3 bg-error-50 dark:bg-error-900/20 rounded border border-error-200 dark:border-error-800">
-              <AlertTriangle size={16} className="text-error-500" />
-              <span className="text-sm text-error-700 dark:text-error-400">
+            <div className="flex items-center gap-2 p-3 bg-error-1 dark:bg-error-a3 rounded border border-error-4 dark:border-error-11">
+              <AlertTriangle size={16} className="text-error-9" />
+              <span className="text-sm text-error-11 dark:text-error-7">
                 Error: {error}
               </span>
             </div>
 
             {/* Show raw LaTeX */}
-            <pre className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded text-sm text-neutral-700 dark:text-neutral-300 font-mono overflow-x-auto">
+            <pre className="p-3 bg-neutral-1 rounded text-sm text-neutral-11 font-mono overflow-x-auto">
               {content}
             </pre>
           </div>

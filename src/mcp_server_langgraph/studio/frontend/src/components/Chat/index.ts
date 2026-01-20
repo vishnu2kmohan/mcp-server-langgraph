@@ -105,6 +105,7 @@ export type {
 // Core Chat Components
 // =============================================================================
 
+// Legacy export for backward compatibility
 export { ChatInputForm } from "./ChatInputForm";
 export type { ChatInputFormProps } from "./ChatInputForm";
 
@@ -136,6 +137,12 @@ export type { LangGraphNodeVisualizationProps } from "./LangGraphNodeVisualizati
 
 export { ReasoningEffortSelector } from "./ReasoningEffortSelector";
 export type { ReasoningEffortSelectorProps } from "./ReasoningEffortSelector";
+
+export { PreferencesMenu } from "./PreferencesMenu";
+export type { PreferencesMenuProps } from "./PreferencesMenu";
+
+export { ExecutionModeIndicator } from "./ExecutionModeIndicator";
+export type { ExecutionModeIndicatorProps } from "./ExecutionModeIndicator";
 
 // =============================================================================
 // Command & Template Components

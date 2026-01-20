@@ -81,10 +81,10 @@ export function AgentExecutionTracePanel({
   if (!trace) {
     return (
       <div
-        className={`mt-2 p-3 bg-neutral-50 dark:bg-neutral-900 rounded border border-neutral-200 dark:border-neutral-700 text-xs ${className}`}
+        className={`mt-2 p-3 bg-neutral-1 rounded border border-neutral-5 text-xs ${className}`}
         data-testid="agent-trace-panel-empty"
       >
-        <p className="text-neutral-400 dark:text-neutral-400 italic font-sans">
+        <p className="text-neutral-9 italic font-sans">
           Processing... trace data will appear here.
         </p>
       </div>
@@ -95,10 +95,10 @@ export function AgentExecutionTracePanel({
   if (!hasUsableData(trace)) {
     return (
       <div
-        className={`mt-2 p-3 bg-neutral-50 dark:bg-neutral-900 rounded border border-neutral-200 dark:border-neutral-700 text-xs ${className}`}
+        className={`mt-2 p-3 bg-neutral-1 rounded border border-neutral-5 text-xs ${className}`}
         data-testid="agent-trace-panel"
       >
-        <p className="text-neutral-400 dark:text-neutral-400 italic font-sans">
+        <p className="text-neutral-9 italic font-sans">
           Processing... trace data will appear here.
         </p>
       </div>
@@ -110,13 +110,13 @@ export function AgentExecutionTracePanel({
 
   return (
     <div
-      className={`mt-2 p-3 bg-neutral-50 dark:bg-neutral-900 rounded border border-neutral-200 dark:border-neutral-700 text-xs font-mono ${className}`}
+      className={`mt-2 p-3 bg-neutral-1 rounded border border-neutral-5 text-xs font-mono ${className}`}
       data-testid="agent-trace-panel"
     >
       {/* LangGraph Node Visualization - when nodes are provided */}
       {hasNodes && (
         <div className="mb-3">
-          <p className="text-neutral-500 dark:text-neutral-400 mb-2 font-sans text-xs font-semibold">
+          <p className="text-neutral-10 mb-2 font-sans text-xs font-semibold">
             Workflow Execution:
           </p>
           <LangGraphNodeVisualization
@@ -130,7 +130,7 @@ export function AgentExecutionTracePanel({
       {/* Simple Steps visualization - fallback when no nodes */}
       {hasSteps && (
         <div className="mb-2">
-          <p className="text-neutral-500 dark:text-neutral-400 mb-1 font-sans text-xs font-semibold">
+          <p className="text-neutral-10 mb-1 font-sans text-xs font-semibold">
             Execution Steps:
           </p>
           <ul className="space-y-1">
@@ -139,17 +139,17 @@ export function AgentExecutionTracePanel({
                 <span
                   className={`w-2 h-2 rounded-full ${
                     step.status === "completed"
-                      ? "bg-success-500"
+                      ? "bg-success-9"
                       : step.status === "running"
-                        ? "bg-primary-500 animate-pulse"
-                        : "bg-neutral-400"
+                        ? "bg-primary-9 animate-pulse"
+                        : "bg-neutral-4"
                   }`}
                 />
-                <span className="text-neutral-700 dark:text-neutral-300">
+                <span className="text-neutral-11">
                   {step.name}
                 </span>
                 {step.duration !== undefined && (
-                  <span className="text-neutral-400 dark:text-neutral-400">
+                  <span className="text-neutral-9">
                     ({step.duration}ms)
                   </span>
                 )}
@@ -161,7 +161,7 @@ export function AgentExecutionTracePanel({
 
       {/* Token usage */}
       {trace.tokens && (
-        <div className="mb-2 flex gap-4 text-neutral-500 dark:text-neutral-400">
+        <div className="mb-2 flex gap-4 text-neutral-10">
           <span>Input: {trace.tokens.input} tokens</span>
           <span>Output: {trace.tokens.output} tokens</span>
         </div>
@@ -170,10 +170,10 @@ export function AgentExecutionTracePanel({
       {/* Raw output */}
       {trace.rawOutput && (
         <details className="mt-2">
-          <summary className="cursor-pointer text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200 font-sans">
+          <summary className="cursor-pointer text-neutral-10 hover:text-neutral-11 font-sans">
             Raw Output
           </summary>
-          <pre className="mt-1 p-2 bg-neutral-100 dark:bg-neutral-800 rounded overflow-x-auto max-h-48 overflow-y-auto text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap">
+          <pre className="mt-1 p-2 bg-neutral-2 rounded overflow-x-auto max-h-48 overflow-y-auto text-neutral-11 whitespace-pre-wrap">
             {trace.rawOutput}
           </pre>
         </details>
@@ -185,34 +185,34 @@ export function AgentExecutionTracePanel({
           {/* AI Summary Panel */}
           {aiSummary && (
             <div
-              className="mt-3 p-3 bg-primary-50 dark:bg-primary-900/20 rounded border border-primary-200 dark:border-primary-800"
+              className="mt-3 p-3 bg-primary-1 dark:bg-primary-a3 rounded border border-primary-4 dark:border-primary-11"
               data-testid="ai-trace-summary"
             >
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-primary-600 dark:text-primary-400 font-semibold font-sans text-xs">
+                <span className="text-primary-10 dark:text-primary-11 font-semibold font-sans text-xs">
                   AI Summary
                 </span>
                 {aiLoading && (
-                  <span className="w-3 h-3 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="w-3 h-3 border-2 border-primary-9 border-t-transparent rounded-full animate-spin" />
                 )}
               </div>
-              <p className="text-neutral-700 dark:text-neutral-300 font-sans text-xs">
+              <p className="text-neutral-11 font-sans text-xs">
                 {aiSummary}
               </p>
 
               {/* Key Actions */}
               {keyActions && keyActions.length > 0 && (
                 <div className="mt-2">
-                  <span className="text-neutral-500 dark:text-neutral-400 text-xs font-sans">
+                  <span className="text-neutral-10 text-xs font-sans">
                     Key actions:
                   </span>
                   <ul className="mt-1 space-y-0.5">
                     {keyActions.map((action, idx) => (
                       <li
                         key={idx}
-                        className="text-neutral-600 dark:text-neutral-300 text-xs font-sans flex items-center gap-1"
+                        className="text-neutral-11 text-xs font-sans flex items-center gap-1"
                       >
-                        <span className="text-primary-500">•</span>
+                        <span className="text-primary-9">•</span>
                         {action}
                       </li>
                     ))}
@@ -228,29 +228,29 @@ export function AgentExecutionTracePanel({
               className="mt-2 flex items-center gap-2"
               data-testid="ai-health-score"
             >
-              <span className="text-neutral-500 dark:text-neutral-400 text-xs font-sans">
+              <span className="text-neutral-10 text-xs font-sans">
                 Health:
               </span>
               <div className="flex items-center gap-1">
-                <div className="w-16 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                <div className="w-16 h-2 bg-neutral-3 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
                       healthScore >= 0.8
-                        ? "bg-success-500"
+                        ? "bg-success-9"
                         : healthScore >= 0.6
-                          ? "bg-warning-500"
-                          : "bg-error-500"
+                          ? "bg-warning-9"
+                          : "bg-error-9"
                     }`}
-                    style={{ width: `${healthScore * 100}%` }}
+                    style={{ '--progress': `${healthScore * 100}%` } as React.CSSProperties}
                   />
                 </div>
                 <span
                   className={`text-xs font-semibold ${
                     healthScore >= 0.8
-                      ? "text-success-600 dark:text-success-400"
+                      ? "text-success-10 dark:text-success-11"
                       : healthScore >= 0.6
-                        ? "text-warning-600 dark:text-warning-400"
-                        : "text-error-600 dark:text-error-400"
+                        ? "text-warning-9 dark:text-warning-9"
+                        : "text-error-10 dark:text-error-11"
                   }`}
                 >
                   {Math.round(healthScore * 100)}%
@@ -262,17 +262,17 @@ export function AgentExecutionTracePanel({
           {/* Bottleneck Indicators */}
           {bottlenecks && bottlenecks.length > 0 && (
             <div
-              className="mt-2 p-2 bg-warning-50 dark:bg-warning-900/20 rounded border border-warning-200 dark:border-warning-800"
+              className="mt-2 p-2 bg-warning-3 bg-warning-3 rounded border border-warning-6 dark:border-warning-11"
               data-testid="ai-bottleneck-indicator"
             >
-              <span className="text-warning-700 dark:text-warning-400 text-xs font-semibold font-sans">
+              <span className="text-warning-10 dark:text-warning-9 text-xs font-semibold font-sans">
                 Bottlenecks Detected:
               </span>
               <ul className="mt-1 space-y-1">
                 {bottlenecks.map((bottleneck, idx) => (
                   <li
                     key={idx}
-                    className="text-warning-600 dark:text-warning-300 text-xs font-sans flex items-center justify-between"
+                    className="text-warning-9 dark:text-warning-11 text-xs font-sans flex items-center justify-between"
                   >
                     <span>{bottleneck.stepName}</span>
                     <span className="font-mono">
@@ -293,20 +293,20 @@ export function AgentExecutionTracePanel({
                   key={idx}
                   className={`p-2 rounded text-xs font-sans flex items-start gap-2 ${
                     anomaly.severity === "error"
-                      ? "bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 text-error-700 dark:text-error-300"
+                      ? "bg-error-1 dark:bg-error-a3 border border-error-4 dark:border-error-11 text-error-11 dark:text-error-9"
                       : anomaly.severity === "warning"
-                        ? "bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 text-warning-700 dark:text-warning-300"
-                        : "bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 text-primary-700 dark:text-primary-300"
+                        ? "bg-warning-3 bg-warning-3 border border-warning-6 dark:border-warning-11 text-warning-10 dark:text-warning-11"
+                        : "bg-primary-1 dark:bg-primary-a3 border border-primary-4 dark:border-primary-11 text-primary-11 dark:text-primary-11"
                   }`}
                   data-testid="ai-anomaly-badge"
                 >
                   <span
                     className={`px-1.5 py-0.5 rounded text-xs font-semibold uppercase ${
                       anomaly.severity === "error"
-                        ? "bg-error-200 dark:bg-error-800 text-error-800 dark:text-error-200"
+                        ? "bg-error-4 dark:bg-error-11 text-error-11 dark:text-error-4"
                         : anomaly.severity === "warning"
-                          ? "bg-warning-200 dark:bg-warning-800 text-warning-800 dark:text-warning-200"
-                          : "bg-primary-200 dark:bg-primary-800 text-primary-800 dark:text-primary-200"
+                          ? "bg-warning-6 dark:bg-warning-11 text-warning-11 dark:text-warning-11"
+                          : "bg-primary-4 dark:bg-primary-11 text-primary-11 dark:text-primary-4"
                     }`}
                   >
                     {anomaly.severity}
@@ -315,7 +315,7 @@ export function AgentExecutionTracePanel({
                     <span className="font-semibold">{anomaly.stepName}:</span>{" "}
                     {anomaly.message}
                     {anomaly.suggestedFix && (
-                      <p className="mt-1 text-neutral-600 dark:text-neutral-400 italic">
+                      <p className="mt-1 text-neutral-11 italic">
                         Suggestion: {anomaly.suggestedFix}
                       </p>
                     )}
@@ -327,17 +327,17 @@ export function AgentExecutionTracePanel({
 
           {/* Optimization Suggestions */}
           {optimizationSuggestions && optimizationSuggestions.length > 0 && (
-            <div className="mt-2 p-2 bg-success-50 dark:bg-success-900/20 rounded border border-success-200 dark:border-success-800">
-              <span className="text-success-700 dark:text-success-400 text-xs font-semibold font-sans">
+            <div className="mt-2 p-2 bg-success-1 dark:bg-success-a3 rounded border border-success-4 dark:border-success-11">
+              <span className="text-success-11 dark:text-success-11 text-xs font-semibold font-sans">
                 Optimization Suggestions:
               </span>
               <ul className="mt-1 space-y-0.5">
                 {optimizationSuggestions.map((suggestion, idx) => (
                   <li
                     key={idx}
-                    className="text-success-600 dark:text-success-300 text-xs font-sans flex items-center gap-1"
+                    className="text-success-10 dark:text-success-11 text-xs font-sans flex items-center gap-1"
                   >
-                    <span className="text-success-500">💡</span>
+                    <span className="text-success-9">💡</span>
                     {suggestion}
                   </li>
                 ))}

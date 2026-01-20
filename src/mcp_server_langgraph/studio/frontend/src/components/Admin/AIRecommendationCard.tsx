@@ -14,6 +14,7 @@
  * Reference: ADR-0026 - Comprehensive Client Resilience Patterns
  */
 
+import { useReducedMotion } from "motion/react";
 import {
   RefreshCw,
   ExternalLink,
@@ -24,6 +25,7 @@ import {
   Terminal,
   AlertCircle,
 } from "lucide-react";
+import { cn } from "../../utils/cn";
 import type { AIRecommendation, RiskLevel } from "../../types/api";
 
 import { Button } from "@/components/UI";
@@ -63,13 +65,13 @@ const DEFAULT_STALE_THRESHOLD_MS = 60 * 60 * 1000; // 1 hour
 function getRiskBgColor(risk: RiskLevel): string {
   switch (risk) {
     case "low":
-      return "bg-success-500";
+      return "bg-success-9";
     case "medium":
-      return "bg-warning-500";
+      return "bg-warning-9";
     case "high":
-      return "bg-error-500";
+      return "bg-error-9";
     default:
-      return "bg-neutral-500";
+      return "bg-neutral-5";
   }
 }
 
@@ -103,18 +105,18 @@ function isStale(generatedAt: string, thresholdMs: number): boolean {
 // Sub-Components
 // =============================================================================
 
-function LoadingSkeleton() {
+function LoadingSkeleton({ prefersReducedMotion }: { prefersReducedMotion: boolean | null }) {
   return (
     <div
       data-testid="recommendation-skeleton"
-      className="animate-pulse space-y-4"
+      className={cn("space-y-4", !prefersReducedMotion && "animate-pulse")}
     >
-      <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-1/3" />
-      <div className="h-16 bg-neutral-200 dark:bg-neutral-700 rounded" />
-      <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-1/4" />
+      <div className="h-4 bg-neutral-3 rounded w-1/3" />
+      <div className="h-16 bg-neutral-3 rounded" />
+      <div className="h-4 bg-neutral-3 rounded w-1/4" />
       <div className="space-y-2">
-        <div className="h-12 bg-neutral-200 dark:bg-neutral-700 rounded" />
-        <div className="h-12 bg-neutral-200 dark:bg-neutral-700 rounded" />
+        <div className="h-12 bg-neutral-3 rounded" />
+        <div className="h-12 bg-neutral-3 rounded" />
       </div>
     </div>
   );
@@ -128,16 +130,16 @@ function StepCard({ step }: StepCardProps) {
   return (
     <div
       data-testid={`step-${step.stepNumber}`}
-      className="p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg"
+      className="p-3 border border-neutral-5 rounded-lg"
     >
       <div className="flex items-center gap-2 mb-2">
         {/* Step Number */}
-        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary-500 text-white text-xs font-medium">
+        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary-9 text-neutral-12 text-xs font-medium">
           {step.stepNumber}
         </span>
 
         {/* Action */}
-        <span className="font-medium text-neutral-900 dark:text-white text-sm">
+        <span className="font-medium text-neutral-12 text-sm">
           {step.action.charAt(0).toUpperCase() + step.action.slice(1)}
         </span>
 
@@ -146,7 +148,7 @@ function StepCard({ step }: StepCardProps) {
           data-testid={`step-${step.stepNumber}-risk`}
           className={`text-xs px-1.5 py-0.5 rounded ${getRiskBgColor(
             step.riskLevel,
-          )} text-white`}
+          )} text-neutral-12`}
         >
           {step.riskLevel}
         </span>
@@ -155,7 +157,7 @@ function StepCard({ step }: StepCardProps) {
         {step.requiresApproval && (
           <span
             data-testid={`requires-approval-${step.stepNumber}`}
-            className="flex items-center gap-1 text-xs text-grafana-600 dark:text-grafana-400"
+            className="flex items-center gap-1 text-xs text-grafana-10 dark:text-grafana-5"
           >
             <ShieldCheck className="w-3 h-3" />
             Approval required
@@ -164,20 +166,20 @@ function StepCard({ step }: StepCardProps) {
       </div>
 
       {/* Description */}
-      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+      <p className="text-sm text-neutral-11 mb-2">
         {step.description}
       </p>
 
       {/* Command */}
       {step.command ? (
         <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-neutral-400 dark:text-neutral-400" />
-          <code className="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded font-mono">
+          <Terminal className="w-4 h-4 text-neutral-9" />
+          <code className="text-xs bg-neutral-2 px-2 py-1 rounded font-mono">
             {step.command}
           </code>
         </div>
       ) : (
-        <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400 italic">
+        <div className="flex items-center gap-2 text-xs text-neutral-10 italic">
           <Terminal className="w-4 h-4" />
           Manual step - no command
         </div>
@@ -198,14 +200,17 @@ export function AIRecommendationCard({
   error = null,
   staleThresholdMs = DEFAULT_STALE_THRESHOLD_MS,
 }: AIRecommendationCardProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   // Loading state
   if (isLoading) {
     return (
       <div
         data-testid="ai-recommendation-card"
-        className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4"
+        className="bg-neutral-1 border border-neutral-5 rounded-lg p-4"
       >
-        <LoadingSkeleton />
+        <LoadingSkeleton prefersReducedMotion={prefersReducedMotion} />
       </div>
     );
   }
@@ -215,19 +220,17 @@ export function AIRecommendationCard({
     return (
       <div
         data-testid="ai-recommendation-card"
-        className="bg-white dark:bg-neutral-900 border border-error-200 dark:border-error-800 rounded-lg p-4"
+        className="bg-neutral-1 border border-error-4 dark:border-error-11 rounded-lg p-4"
       >
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-error-9 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-error-700 dark:text-error-400">{error}</p>
-            <Button
-              className="mt-2 text-sm text-error-600 dark:text-error-400 underline hover:no-underline"
+            <p className="text-error-11 dark:text-error-7">{error}</p>
+            <Button variant="primary"
+              className="mt-2 text-sm text-error-10 dark:text-error-7 underline hover:no-underline"
               data-testid="retry-button"
               onClick={onRegenerate}
-            >
-              Retry
-            </Button>
+            >Retry</Button>
           </div>
         </div>
       </div>
@@ -239,17 +242,15 @@ export function AIRecommendationCard({
     return (
       <div
         data-testid="ai-recommendation-card"
-        className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4"
+        className="bg-neutral-1 border border-neutral-5 rounded-lg p-4"
       >
-        <div className="flex flex-col items-center justify-center py-8 text-neutral-500 dark:text-neutral-400">
+        <div className="flex flex-col items-center justify-center py-8 text-neutral-10">
           <Bot className="w-10 h-10 mb-2 opacity-50" />
           <p>No recommendation available</p>
-          <Button
-            className="mt-2 text-sm text-primary-600 dark:text-primary-400 underline hover:no-underline"
+          <Button variant="primary"
+            className="mt-2 text-sm text-primary-10 dark:text-primary-7 underline hover:no-underline"
             onClick={onRegenerate}
-          >
-            Generate recommendation
-          </Button>
+          >Generate recommendation</Button>
         </div>
       </div>
     );
@@ -260,22 +261,23 @@ export function AIRecommendationCard({
   return (
     <div
       data-testid="ai-recommendation-card"
-      className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg"
+      className="bg-neutral-1 border border-neutral-5 rounded-lg"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-5">
         <div className="flex items-center gap-2">
-          <Bot className="w-5 h-5 text-insight-500" />
-          <h3 className="font-medium text-neutral-900 dark:text-white">
+          <Bot className="w-5 h-5 text-insight-9" />
+          <h3 className="font-medium text-neutral-12">
             AI Recommendation
           </h3>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400">
+          <span className="text-xs text-neutral-10">
             via {recommendation.modelUsed}
           </span>
         </div>
         <Button
+          variant="ghost"
           size="sm"
-          className="flex text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+          className="min-h-[44px] min-w-[44px] flex items-center gap-1 text-xs text-primary-10 dark:text-primary-7 hover:text-primary-11 dark:hover:text-primary-5"
           data-testid="regenerate-button"
           onClick={onRegenerate}
           disabled={isRegenerating}
@@ -283,7 +285,7 @@ export function AIRecommendationCard({
           {isRegenerating ? (
             <RefreshCw
               data-testid="regenerate-loading"
-              className="w-3 h-3 animate-spin"
+              className={cn("w-3 h-3", !prefersReducedMotion && "animate-spin")}
             />
           ) : (
             <RefreshCw className="w-3 h-3" />
@@ -295,17 +297,17 @@ export function AIRecommendationCard({
       <div className="p-4 space-y-4">
         {/* Root Cause Analysis */}
         <section>
-          <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
+          <h4 className="text-sm font-medium text-neutral-12 mb-2">
             Root Cause Analysis
           </h4>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-lg">
+          <p className="text-sm text-neutral-11 bg-neutral-1 p-3 rounded-lg">
             {recommendation.rootCauseAnalysis}
           </p>
         </section>
 
         {/* Remediation Steps */}
         <section>
-          <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
+          <h4 className="text-sm font-medium text-neutral-12 mb-2">
             Remediation Steps
           </h4>
           <div className="space-y-2">
@@ -317,17 +319,17 @@ export function AIRecommendationCard({
 
         {/* Risk Assessment */}
         <section>
-          <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
+          <h4 className="text-sm font-medium text-neutral-12 mb-2">
             Risk Assessment
           </h4>
-          <div className="bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-lg space-y-2">
+          <div className="bg-neutral-1 p-3 rounded-lg space-y-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">
+              <span className="text-sm text-neutral-11">
                 Overall Risk:
               </span>
               <span
                 data-testid="overall-risk-badge"
-                className={`text-xs px-2 py-0.5 rounded-full text-white ${getRiskBgColor(
+                className={`text-xs px-2 py-0.5 rounded-full text-neutral-12 ${getRiskBgColor(
                   recommendation.riskAssessment.overallRisk,
                 )}`}
               >
@@ -335,18 +337,18 @@ export function AIRecommendationCard({
               </span>
             </div>
             <div>
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">
+              <span className="text-sm text-neutral-11">
                 Impact:{" "}
               </span>
-              <span className="text-sm text-neutral-700 dark:text-neutral-300">
+              <span className="text-sm text-neutral-11">
                 {recommendation.riskAssessment.impactAnalysis}
               </span>
             </div>
             <div>
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">
+              <span className="text-sm text-neutral-11">
                 Rollback:{" "}
               </span>
-              <code className="text-xs bg-neutral-100 dark:bg-neutral-700 px-1 py-0.5 rounded">
+              <code className="text-xs bg-neutral-2 px-1 py-0.5 rounded">
                 {recommendation.riskAssessment.rollbackPlan}
               </code>
             </div>
@@ -360,7 +362,7 @@ export function AIRecommendationCard({
             href={recommendation.runbookReference}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-sm text-primary-600 dark:text-primary-400 hover:underline"
+            className="flex items-center gap-1 text-sm text-primary-10 dark:text-primary-7 hover:underline"
           >
             <ExternalLink className="w-4 h-4" />
             View Runbook
@@ -368,7 +370,7 @@ export function AIRecommendationCard({
         )}
       </div>
       {/* Footer */}
-      <div className="flex items-center gap-2 px-4 py-2 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/30 text-xs text-neutral-500 dark:text-neutral-400">
+      <div className="flex items-center gap-2 px-4 py-2 border-t border-neutral-5 bg-neutral-1 text-xs text-neutral-10">
         <Clock className="w-3 h-3" />
         <span data-testid="generated-at">
           Generated {formatRelativeTime(recommendation.generatedAt)}
@@ -376,7 +378,7 @@ export function AIRecommendationCard({
         {stale && (
           <span
             data-testid="stale-indicator"
-            className="flex items-center gap-1 text-grafana-500"
+            className="flex items-center gap-1 text-grafana-9"
           >
             <AlertTriangle className="w-3 h-3" />
             Stale - consider regenerating

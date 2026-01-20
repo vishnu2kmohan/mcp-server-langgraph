@@ -38,9 +38,9 @@ describe("canvasSlice", () => {
 
   const initialState: CanvasState = {
     panelSizes: {
-      sessionNav: 20,
+      sessionNav: 15,
       conversation: 40,
-      canvas: 40,
+      canvas: 45,
     },
     sessionNavCollapsed: false,
     canvasCollapsed: false,

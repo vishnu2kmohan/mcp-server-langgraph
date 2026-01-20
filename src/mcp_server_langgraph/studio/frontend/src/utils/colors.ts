@@ -62,13 +62,13 @@ export type ModelLifecycleStatus = ModelStatus;
  */
 export const STATUS_BADGE_STYLES = {
   success:
-    "bg-success-100 text-success-700 dark:bg-success-900/50 dark:text-success-300",
+    "bg-success-3 text-success-11 dark:bg-success-a6 dark:text-success-5",
   warning:
-    "bg-warning-100 text-warning-700 dark:bg-warning-900/50 dark:text-warning-300",
-  error: "bg-error-100 text-error-700 dark:bg-error-900/50 dark:text-error-300",
-  info: "bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300",
+    "bg-warning-3 text-warning-10 dark:bg-warning-a6 dark:text-warning-6",
+  error: "bg-error-3 text-error-11 dark:bg-error-a6 dark:text-error-9",
+  info: "bg-primary-3 text-primary-11 dark:bg-primary-a6 dark:text-primary-5",
   neutral:
-    "bg-neutral-100 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300",
+    "bg-neutral-2 text-neutral-11",
 } as const;
 
 // =============================================================================
@@ -84,13 +84,13 @@ export const STATUS_BADGE_STYLES = {
  */
 export const MODEL_LIFECYCLE_BADGE_STYLES = {
   /** Preview models (new/experimental) - cyan for "fresh/new" connotation */
-  preview: "bg-info-100 dark:bg-info-900/30 text-info-600 dark:text-info-400",
+  preview: "bg-info-3 bg-info-4 text-info-9 dark:text-info-11",
   /** Legacy models (older but supported) - amber for caution */
   legacy:
-    "bg-warning-100 dark:bg-warning-900/30 text-warning-600 dark:text-warning-400",
+    "bg-warning-3 dark:bg-warning-a4 text-warning-9 dark:text-warning-9",
   /** Deprecated models (will be removed) - red for warning */
   deprecated:
-    "bg-error-100 dark:bg-error-900/30 text-error-600 dark:text-error-400",
+    "bg-error-3 bg-error-4 text-error-10 dark:text-error-7",
 } as const;
 
 /**
@@ -115,13 +115,13 @@ export function getModelLifecycleBadgeStyle(
  */
 export const INTERACTIVE_COLORS = {
   danger:
-    "hover:bg-error-100 dark:hover:bg-error-900/30 hover:text-error-600 dark:hover:text-error-400",
+    "hover:bg-error-3 dark:hover:bg-error-a4 hover:text-error-10 dark:hover:text-error-7",
   primary:
-    "hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:text-primary-600 dark:hover:text-primary-400",
+    "hover:bg-primary-3 dark:hover:bg-primary-a4 hover:text-primary-10 dark:hover:text-primary-7",
   success:
-    "hover:bg-success-100 dark:hover:bg-success-900/30 hover:text-success-600 dark:hover:text-success-400",
+    "hover:bg-success-3 dark:hover:bg-success-a4 hover:text-success-10 dark:hover:text-success-7",
   warning:
-    "hover:bg-warning-100 dark:hover:bg-warning-900/30 hover:text-warning-600 dark:hover:text-warning-400",
+    "hover:bg-warning-3 dark:hover:bg-warning-a4 hover:text-warning-9 dark:hover:text-warning-9",
 } as const;
 
 // =============================================================================
@@ -135,9 +135,9 @@ export const INTERACTIVE_COLORS = {
  * - Low (< 0.7): error (red)
  */
 export const CONFIDENCE_COLORS = {
-  high: "text-success-600 dark:text-success-400",
-  medium: "text-warning-600 dark:text-warning-400",
-  low: "text-error-600 dark:text-error-400",
+  high: "text-success-10 dark:text-success-7",
+  medium: "text-warning-9 dark:text-warning-9",
+  low: "text-error-10 dark:text-error-7",
 } as const;
 
 // =============================================================================
@@ -172,15 +172,15 @@ export function getConfidenceColor(confidence: number): string {
 export function getRiskLevelColor(level: RiskLevel): string {
   switch (level) {
     case "low":
-      return "text-success-600 dark:text-success-400";
+      return "text-success-10 dark:text-success-7";
     case "medium":
-      return "text-warning-600 dark:text-warning-400";
+      return "text-warning-9 dark:text-warning-9";
     case "high":
-      return "text-error-600 dark:text-error-400";
+      return "text-error-10 dark:text-error-7";
     case "critical":
-      return "text-error-700 dark:text-error-300";
+      return "text-error-11 dark:text-error-9";
     default:
-      return "text-neutral-600 dark:text-neutral-400";
+      return "text-neutral-11";
   }
 }
 
@@ -192,13 +192,13 @@ export function getRiskLevelColor(level: RiskLevel): string {
 export function getComplianceStatusColor(status: ComplianceStatus): string {
   switch (status) {
     case "compliant":
-      return "text-success-600 dark:text-success-400";
+      return "text-success-10 dark:text-success-7";
     case "partial":
-      return "text-warning-600 dark:text-warning-400";
+      return "text-warning-9 dark:text-warning-9";
     case "non-compliant":
-      return "text-error-600 dark:text-error-400";
+      return "text-error-10 dark:text-error-7";
     default:
-      return "text-neutral-600 dark:text-neutral-400";
+      return "text-neutral-11";
   }
 }
 
@@ -215,13 +215,13 @@ export type InfoStyleVariant = "text" | "bg" | "badge" | "border";
  */
 export const INFO_COLORS = {
   /** Text styles for info labels */
-  text: "text-info-600 dark:text-info-400",
+  text: "text-info-9 dark:text-info-11",
   /** Background styles for info containers */
-  bg: "bg-info-50 dark:bg-info-900/30",
+  bg: "bg-info-1 bg-info-4",
   /** Badge styles for info indicators */
-  badge: "bg-info-100 text-info-700 dark:bg-info-900/50 dark:text-info-300",
+  badge: "bg-info-3 text-info-10 dark:bg-info-a6 dark:text-info-5",
   /** Border styles for info containers */
-  border: "border-info-200 dark:border-info-800",
+  border: "border-info-4 dark:border-info-11",
 } as const;
 
 /**
@@ -263,23 +263,23 @@ export type NeutralStyleVariant =
  */
 export const NEUTRAL_COLORS = {
   /** Primary text (highest contrast) */
-  text: "text-neutral-900 dark:text-neutral-100",
+  text: "text-neutral-12",
   /** Muted text (secondary information) */
-  textMuted: "text-neutral-600 dark:text-neutral-400",
+  textMuted: "text-neutral-11",
   /** Subtle text (tertiary, less important) */
-  textSubtle: "text-neutral-400 dark:text-neutral-500",
+  textSubtle: "text-neutral-9",
   /** Default background for cards/panels */
-  bg: "bg-neutral-50 dark:bg-neutral-900",
+  bg: "bg-neutral-1",
   /** Hover background state */
-  bgHover: "bg-neutral-100 dark:bg-neutral-800",
+  bgHover: "bg-neutral-2",
   /** Selected/active background state */
-  bgSelected: "bg-neutral-200 dark:bg-neutral-700",
+  bgSelected: "bg-neutral-3",
   /** Default border color */
-  border: "border-neutral-200 dark:border-neutral-700",
+  border: "border-neutral-5",
   /** Light/subtle border color */
-  borderLight: "border-neutral-100 dark:border-neutral-800",
+  borderLight: "border-neutral-5",
   /** Divider/separator lines */
-  divide: "divide-neutral-200 dark:divide-neutral-700",
+  divide: "divide-neutral-5 dark:divide-neutral-6",
 } as const;
 
 /**

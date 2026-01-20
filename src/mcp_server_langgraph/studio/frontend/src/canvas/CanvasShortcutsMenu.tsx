@@ -1,6 +1,18 @@
 /**
  * CanvasShortcutsMenu - Quick Actions for Canvas Artifacts
  *
+ * @deprecated Phase 4 Canvas UX Improvements
+ * This floating menu component is deprecated in favor of:
+ * 1. AI actions integrated into ArtifactActions.tsx toolbar
+ * 2. SuggestionsFooterBar.tsx for AI suggestions
+ *
+ * The component is still rendered when:
+ * - Feature flag `canvas_ai_palette` is enabled
+ * - AND feature flag `suggestions_footer_bar` is disabled
+ *
+ * Migration: Enable `suggestions_footer_bar` feature flag to use the new
+ * non-intrusive AI controls. This component will be removed in a future version.
+ *
  * Sprint 6: ChatGPT Canvas-inspired coding shortcuts menu.
  * Provides quick AI-powered actions for code artifacts.
  *
@@ -274,8 +286,8 @@ export function CanvasShortcutsMenu({
         disabled={isLoading}
         className={cn(
           "p-3 rounded-full shadow-lg transition-all duration-200",
-          "bg-primary-600 hover:bg-primary-700 text-white",
-          "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
+          "bg-primary-10 hover:bg-primary-11 text-neutral-12",
+          "focus:outline-none focus:ring-2 focus:ring-primary-7 focus:ring-offset-2",
           isLoading && "opacity-50 cursor-not-allowed",
           isOpen && "rotate-45",
         )}
@@ -283,7 +295,7 @@ export function CanvasShortcutsMenu({
         aria-expanded={isOpen}
       >
         {isLoading ? (
-          <span className="block w-5 h-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          <span className="block w-5 h-5 animate-spin rounded-full border-2 border-neutral-1 border-t-transparent" />
         ) : (
           <svg
             className="w-5 h-5"
@@ -305,20 +317,20 @@ export function CanvasShortcutsMenu({
         <div
           data-testid="canvas-shortcuts-panel"
           className={cn(
-            "absolute bottom-14 right-0 z-50 w-64",
-            "bg-white dark:bg-neutral-800 rounded-lg shadow-xl",
-            "border border-neutral-200 dark:border-neutral-700",
+            "absolute bottom-14 right-0 z-dropdown w-64",
+            "bg-neutral-1 rounded-lg shadow-xl",
+            "border border-neutral-5",
             "py-2 animate-in fade-in slide-in-from-bottom-2 duration-200",
           )}
           role="menu"
           aria-label="Canvas shortcuts"
         >
           {/* Header */}
-          <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-700">
-            <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+          <div className="px-3 py-2 border-b border-neutral-5">
+            <h3 className="text-sm font-semibold text-neutral-12">
               Quick Actions
             </h3>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            <p className="text-xs text-neutral-11">
               AI-powered code transformations
             </p>
           </div>
@@ -328,33 +340,34 @@ export function CanvasShortcutsMenu({
             {SHORTCUTS.map((shortcut) => (
               <Button
                 key={shortcut.id}
+                variant="ghost"
                 data-testid={`shortcut-${shortcut.id}`}
                 onClick={() => handleActionClick(shortcut.id)}
                 disabled={isLoading}
                 className={cn(
-                  "w-full flex items-start gap-3 px-3 py-2",
-                  "text-left hover:bg-neutral-50 dark:hover:bg-neutral-700/50",
+                  "w-full flex items-start gap-3 px-3 py-2 rounded-none",
+                  "text-left hover:bg-neutral-3",
                   "transition-colors duration-150",
-                  "focus:outline-none focus:bg-neutral-50 dark:focus:bg-neutral-700/50",
+                  "focus:outline-none focus:bg-neutral-3",
                   isLoading && "opacity-50 cursor-not-allowed",
                 )}
                 role="menuitem"
               >
-                <span className="flex-shrink-0 text-primary-600 dark:text-primary-400 mt-0.5">
+                <span className="flex-shrink-0 text-primary-11 dark:text-primary-11 mt-0.5">
                   {shortcut.icon}
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    <span className="text-sm font-medium text-neutral-12">
                       {shortcut.label}
                     </span>
                     {shortcut.shortcut && (
-                      <span className="text-xs text-neutral-400 dark:text-neutral-400 font-mono">
+                      <span className="text-xs text-neutral-11 font-mono">
                         {shortcut.shortcut}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+                  <p className="text-xs text-neutral-11 truncate">
                     {shortcut.id === "port" && language
                       ? `Convert from ${language}`
                       : shortcut.description}
@@ -365,8 +378,8 @@ export function CanvasShortcutsMenu({
           </div>
 
           {/* Footer Tip */}
-          <div className="px-3 py-2 border-t border-neutral-100 dark:border-neutral-700">
-            <p className="text-xs text-neutral-400 dark:text-neutral-400">
+          <div className="px-3 py-2 border-t border-neutral-5">
+            <p className="text-xs text-neutral-11">
               Actions apply to selected artifact
             </p>
           </div>

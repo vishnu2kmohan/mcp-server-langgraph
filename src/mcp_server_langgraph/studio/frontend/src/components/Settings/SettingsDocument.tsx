@@ -112,25 +112,25 @@ export function SettingsDocument({
       data-testid="settings-document"
       className={cn(
         "flex flex-col h-full",
-        "bg-neutral-50 dark:bg-neutral-900",
+        "bg-neutral-1",
         compact && "text-sm",
         className,
       )}
     >
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+      <header className="px-6 py-4 bg-neutral-1 border-b border-neutral-5">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+            <h2 className="text-xl font-bold text-neutral-12">
               Settings
             </h2>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-10">
               Manage your account and preferences
             </p>
           </div>
           <Button
             variant="primary"
-            className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="flex px-4 py-2 bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11"
             onClick={handleSave}
             disabled={isSaving}
           >
@@ -155,7 +155,7 @@ export function SettingsDocument({
       </header>
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-48 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 p-3">
+        <aside className="w-48 bg-neutral-1 border-r border-neutral-5 p-3">
           <nav className="space-y-1">
             {tabs.map((tab) => (
               <Button
@@ -177,35 +177,35 @@ export function SettingsDocument({
             {activeTab === "profile" && (
               <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-11 mb-2">
                     Display Name
                   </label>
                   <Input
                     size="lg"
-                    className="px-4 py-2 text-neutral-900 dark:text-neutral-100"
+                    className="px-4 py-2 text-neutral-12"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-11 mb-2">
                     Email
                   </label>
                   <Input
                     size="lg"
-                    className="px-4 py-2 text-neutral-900 dark:text-neutral-100"
+                    className="px-4 py-2 text-neutral-12"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-11 mb-2">
                     Default Persona
                   </label>
                   <Select
                     size="lg"
-                    className="px-4 py-2 text-neutral-900 dark:text-neutral-100"
+                    className="px-4 py-2 text-neutral-12"
                     value={persona}
                     onChange={(e) => {
                       dispatch(setPersona(e.target.value as Persona));
@@ -222,26 +222,26 @@ export function SettingsDocument({
             {/* API Keys Tab */}
             {activeTab === "api-keys" && (
               <div className="space-y-5">
-                <div className="p-4 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
-                  <p className="text-sm text-warning-800 dark:text-warning-200">
+                <div className="p-4 bg-warning-3 bg-warning-3 border border-warning-6 dark:border-warning-11 rounded-lg">
+                  <p className="text-sm text-warning-11 dark:text-warning-6">
                     API keys provide access to your account. Keep them secure.
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-11 mb-2">
                     Your API Key
                   </label>
                   <div className="flex gap-2">
                     <Input
                       size="lg"
-                      className="flex-1 px-4 py-2 bg-neutral-50 text-neutral-900 dark:text-neutral-100 font-mono text-sm"
+                      className="flex-1 px-4 py-2 bg-neutral-1 text-neutral-12 font-mono text-sm"
                       type={showApiKey ? "text" : "password"}
                       value="sk-mcp-xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                       readOnly
                     />
                     <Button
                       variant="secondary"
-                      className="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                      className="px-3 py-2 border border-neutral-5 rounded-lg hover:bg-neutral-2"
                       onClick={() => setShowApiKey(!showApiKey)}
                     >
                       {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -250,7 +250,7 @@ export function SettingsDocument({
                 </div>
                 <Button
                   variant="danger"
-                  className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50"
+                  className="px-4 py-2 bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4 dark:hover:bg-error-a6"
                 >
                   Regenerate API Key
                 </Button>
@@ -263,15 +263,15 @@ export function SettingsDocument({
                 {Object.entries(notifications).map(([key, enabled]) => (
                   <div
                     key={key}
-                    className="flex items-center justify-between p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
+                    className="flex items-center justify-between p-4 bg-neutral-1 rounded-lg border border-neutral-5"
                   >
                     <div>
-                      <p className="font-medium text-neutral-900 dark:text-neutral-100">
+                      <p className="font-medium text-neutral-12">
                         {key === "sessionComplete" && "Session Complete"}
                         {key === "errors" && "Error Alerts"}
                         {key === "updates" && "Product Updates"}
                       </p>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                      <p className="text-sm text-neutral-10">
                         {key === "sessionComplete" &&
                           "Get notified when sessions finish"}
                         {key === "errors" && "Receive alerts for errors"}
@@ -297,7 +297,7 @@ export function SettingsDocument({
             {/* Appearance Tab */}
             {activeTab === "appearance" && (
               <div className="space-y-4">
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-4">
+                <label className="block text-sm font-medium text-neutral-11 mb-4">
                   Theme
                 </label>
                 <div className="grid grid-cols-3 gap-4">
@@ -320,30 +320,30 @@ export function SettingsDocument({
             {/* Security Tab */}
             {activeTab === "security" && (
               <div className="space-y-5">
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+                <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5">
+                  <h3 className="font-medium text-neutral-12 mb-2">
                     Two-Factor Authentication
                   </h3>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                  <p className="text-sm text-neutral-10 mb-4">
                     Add an extra layer of security to your account
                   </p>
                   <Button
                     variant="success"
-                    className="px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700"
+                    className="px-4 py-2 bg-success-10 text-neutral-12 rounded-lg hover:bg-success-11"
                   >
                     Enable 2FA
                   </Button>
                 </div>
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+                <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5">
+                  <h3 className="font-medium text-neutral-12 mb-2">
                     Active Sessions
                   </h3>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                  <p className="text-sm text-neutral-10 mb-4">
                     Manage devices logged in to your account
                   </p>
                   <Button
                     variant="danger"
-                    className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
+                    className="px-4 py-2 bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4"
                   >
                     Sign Out All Devices
                   </Button>

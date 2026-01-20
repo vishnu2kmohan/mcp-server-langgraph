@@ -15,6 +15,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 
+// Mock react-router to avoid Router context errors
+const mockNavigate = vi.fn();
+vi.mock("react-router", () => ({
+  useNavigate: () => mockNavigate,
+}));
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -95,11 +101,11 @@ describe("useThresholdSettings", () => {
                   ok: true,
                   json: () =>
                     Promise.resolve({
-                      current_threshold: 0.7,
-                      recommended_threshold: 0.65,
+                      currentThreshold: 0.7,
+                      recommendedThreshold: 0.65,
                       reason: "High approval rate",
-                      confidence_level: 0.85,
-                      sample_size: 50,
+                      confidenceLevel: 0.85,
+                      sampleSize: 50,
                     }),
                 }),
               100,
@@ -127,11 +133,11 @@ describe("useThresholdSettings", () => {
       const { useThresholdSettings } = await import("./useThresholdSettings");
 
       const mockRecommendation = {
-        current_threshold: 0.7,
-        recommended_threshold: 0.65,
+        currentThreshold: 0.7,
+        recommendedThreshold: 0.65,
         reason: "High approval rate",
-        confidence_level: 0.85,
-        sample_size: 50,
+        confidenceLevel: 0.85,
+        sampleSize: 50,
       };
 
       const mockFetch = vi.fn().mockResolvedValue({
@@ -165,12 +171,12 @@ describe("useThresholdSettings", () => {
       const { useThresholdSettings } = await import("./useThresholdSettings");
 
       const mockSettings = {
-        user_id: "user-001",
-        base_threshold: 0.7,
-        adjusted_threshold: 0.65,
-        auto_adjust_enabled: true,
-        min_threshold: 0.5,
-        max_threshold: 0.9,
+        userId: "user-001",
+        baseThreshold: 0.7,
+        adjustedThreshold: 0.65,
+        autoAdjustEnabled: true,
+        minThreshold: 0.5,
+        maxThreshold: 0.9,
       };
 
       const mockFetch = vi.fn().mockResolvedValue({
@@ -207,12 +213,12 @@ describe("useThresholdSettings", () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            user_id: "user-001",
-            base_threshold: 0.8,
-            adjusted_threshold: 0.8,
-            auto_adjust_enabled: true,
-            min_threshold: 0.5,
-            max_threshold: 0.9,
+            userId: "user-001",
+            baseThreshold: 0.8,
+            adjustedThreshold: 0.8,
+            autoAdjustEnabled: true,
+            minThreshold: 0.5,
+            maxThreshold: 0.9,
           }),
       });
       vi.stubGlobal("fetch", mockFetch);
@@ -220,7 +226,7 @@ describe("useThresholdSettings", () => {
       const { result } = renderHook(() => useThresholdSettings());
 
       await act(async () => {
-        await result.current.updateSettings({ base_threshold: 0.8 });
+        await result.current.updateSettings({ baseThreshold: 0.8 });
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
@@ -238,12 +244,12 @@ describe("useThresholdSettings", () => {
       const { useThresholdSettings } = await import("./useThresholdSettings");
 
       const updatedSettings = {
-        user_id: "user-001",
-        base_threshold: 0.8,
-        adjusted_threshold: 0.8,
-        auto_adjust_enabled: true,
-        min_threshold: 0.5,
-        max_threshold: 0.9,
+        userId: "user-001",
+        baseThreshold: 0.8,
+        adjustedThreshold: 0.8,
+        autoAdjustEnabled: true,
+        minThreshold: 0.5,
+        maxThreshold: 0.9,
       };
 
       const mockFetch = vi.fn().mockResolvedValue({
@@ -255,7 +261,7 @@ describe("useThresholdSettings", () => {
       const { result } = renderHook(() => useThresholdSettings());
 
       await act(async () => {
-        await result.current.updateSettings({ base_threshold: 0.8 });
+        await result.current.updateSettings({ baseThreshold: 0.8 });
       });
 
       expect(result.current.settings).toEqual(updatedSettings);
@@ -300,11 +306,11 @@ describe("useThresholdSettings", () => {
           ok: true,
           json: () =>
             Promise.resolve({
-              current_threshold: 0.7,
-              recommended_threshold: 0.7,
+              currentThreshold: 0.7,
+              recommendedThreshold: 0.7,
               reason: "Insufficient data",
-              confidence_level: 0.25,
-              sample_size: 5,
+              confidenceLevel: 0.25,
+              sampleSize: 5,
             }),
         });
       vi.stubGlobal("fetch", mockFetch);
@@ -340,20 +346,20 @@ describe("useThresholdSettings", () => {
       const { useThresholdSettings } = await import("./useThresholdSettings");
 
       const mockRecommendation = {
-        current_threshold: 0.7,
-        recommended_threshold: 0.65,
+        currentThreshold: 0.7,
+        recommendedThreshold: 0.65,
         reason: "High approval rate",
-        confidence_level: 0.85,
-        sample_size: 50,
+        confidenceLevel: 0.85,
+        sampleSize: 50,
       };
 
       const updatedSettings = {
-        user_id: "user-001",
-        base_threshold: 0.65,
-        adjusted_threshold: 0.65,
-        auto_adjust_enabled: true,
-        min_threshold: 0.5,
-        max_threshold: 0.9,
+        userId: "user-001",
+        baseThreshold: 0.65,
+        adjustedThreshold: 0.65,
+        autoAdjustEnabled: true,
+        minThreshold: 0.5,
+        maxThreshold: 0.9,
       };
 
       const mockFetch = vi
@@ -380,7 +386,7 @@ describe("useThresholdSettings", () => {
         await result.current.applyRecommendation();
       });
 
-      expect(result.current.settings?.base_threshold).toBe(0.65);
+      expect(result.current.settings?.baseThreshold).toBe(0.65);
 
       vi.unstubAllGlobals();
     });

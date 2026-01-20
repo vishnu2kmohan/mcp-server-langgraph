@@ -683,4 +683,209 @@ describe("SessionTelemetry", () => {
       expect(payload.exportedAt).toBeTypeOf("number");
     });
   });
+
+  describe("Execution Mode Change Tracking", () => {
+    it("should track execution mode change", () => {
+      telemetry.trackExecutionModeChange({
+        fromMode: "default",
+        toMode: "bypass",
+        trigger: "click",
+      });
+
+      const metrics = telemetry.getMetrics();
+      expect(metrics.executionMode.modeChanges.total).toBe(1);
+      expect(metrics.executionMode.modeChanges.byMode.bypass).toBe(1);
+      expect(metrics.executionMode.modeChanges.byTrigger.click).toBe(1);
+    });
+
+    it("should track multiple mode changes by different triggers", () => {
+      telemetry.trackExecutionModeChange({
+        fromMode: "default",
+        toMode: "plan",
+        trigger: "keyboard",
+      });
+      telemetry.trackExecutionModeChange({
+        fromMode: "plan",
+        toMode: "auto_accept",
+        trigger: "keyboard",
+      });
+      telemetry.trackExecutionModeChange({
+        fromMode: "auto_accept",
+        toMode: "bypass",
+        trigger: "click",
+      });
+
+      const metrics = telemetry.getMetrics();
+      expect(metrics.executionMode.modeChanges.total).toBe(3);
+      expect(metrics.executionMode.modeChanges.byMode.plan).toBe(1);
+      expect(metrics.executionMode.modeChanges.byMode.auto_accept).toBe(1);
+      expect(metrics.executionMode.modeChanges.byMode.bypass).toBe(1);
+      expect(metrics.executionMode.modeChanges.byTrigger.keyboard).toBe(2);
+      expect(metrics.executionMode.modeChanges.byTrigger.click).toBe(1);
+    });
+
+    it("should add execution mode change to event history", () => {
+      telemetry.trackExecutionModeChange({
+        fromMode: "default",
+        toMode: "bypass",
+        sessionId: "session-123",
+        trigger: "api",
+      });
+
+      const history = telemetry.getEventHistory();
+      expect(history).toHaveLength(1);
+      expect(history[0].type).toBe("execution_mode_change");
+    });
+  });
+
+  describe("Bypass Approval Tracking", () => {
+    it("should track auto-approved bypass event", () => {
+      telemetry.trackBypassApproval({
+        planId: "plan-123",
+        approvalType: "auto",
+        riskLevel: "low",
+        complexity: "simple",
+        toolsNeeded: ["code_executor"],
+      });
+
+      const metrics = telemetry.getMetrics();
+      expect(metrics.executionMode.bypassApprovals.total).toBe(1);
+      expect(metrics.executionMode.bypassApprovals.autoApproved).toBe(1);
+      expect(metrics.executionMode.bypassApprovals.userApproved).toBe(0);
+      expect(metrics.executionMode.bypassApprovals.byRiskLevel.low).toBe(1);
+      expect(metrics.executionMode.bypassApprovals.byComplexity.simple).toBe(1);
+    });
+
+    it("should track user-approved bypass event", () => {
+      telemetry.trackBypassApproval({
+        planId: "plan-456",
+        approvalType: "user",
+        riskLevel: "high",
+        complexity: "complex",
+        toolsNeeded: ["execute_bash", "file_writer"],
+        durationMs: 2500,
+      });
+
+      const metrics = telemetry.getMetrics();
+      expect(metrics.executionMode.bypassApprovals.total).toBe(1);
+      expect(metrics.executionMode.bypassApprovals.autoApproved).toBe(0);
+      expect(metrics.executionMode.bypassApprovals.userApproved).toBe(1);
+      expect(metrics.executionMode.bypassApprovals.byRiskLevel.high).toBe(1);
+      expect(metrics.executionMode.bypassApprovals.byComplexity.complex).toBe(1);
+    });
+
+    it("should calculate auto-approval rate", () => {
+      // 3 auto, 1 user = 75% auto-approval rate
+      telemetry.trackBypassApproval({
+        planId: "p1",
+        approvalType: "auto",
+        riskLevel: "low",
+        complexity: "simple",
+        toolsNeeded: [],
+      });
+      telemetry.trackBypassApproval({
+        planId: "p2",
+        approvalType: "auto",
+        riskLevel: "low",
+        complexity: "complicated",
+        toolsNeeded: [],
+      });
+      telemetry.trackBypassApproval({
+        planId: "p3",
+        approvalType: "auto",
+        riskLevel: "medium",
+        complexity: "simple",
+        toolsNeeded: [],
+      });
+      telemetry.trackBypassApproval({
+        planId: "p4",
+        approvalType: "user",
+        riskLevel: "high",
+        complexity: "complex",
+        toolsNeeded: ["execute_bash"],
+      });
+
+      const metrics = telemetry.getMetrics();
+      expect(metrics.executionMode.bypassApprovals.total).toBe(4);
+      expect(metrics.executionMode.bypassApprovals.autoApproved).toBe(3);
+      expect(metrics.executionMode.bypassApprovals.userApproved).toBe(1);
+      expect(metrics.executionMode.bypassApprovals.autoApprovalRate).toBeCloseTo(0.75, 2);
+    });
+
+    it("should track risk level distribution", () => {
+      telemetry.trackBypassApproval({
+        planId: "p1",
+        approvalType: "auto",
+        riskLevel: "low",
+        complexity: "simple",
+        toolsNeeded: [],
+      });
+      telemetry.trackBypassApproval({
+        planId: "p2",
+        approvalType: "auto",
+        riskLevel: "low",
+        complexity: "simple",
+        toolsNeeded: [],
+      });
+      telemetry.trackBypassApproval({
+        planId: "p3",
+        approvalType: "user",
+        riskLevel: "medium",
+        complexity: "complicated",
+        toolsNeeded: [],
+      });
+      telemetry.trackBypassApproval({
+        planId: "p4",
+        approvalType: "user",
+        riskLevel: "high",
+        complexity: "complex",
+        toolsNeeded: [],
+      });
+
+      const metrics = telemetry.getMetrics();
+      expect(metrics.executionMode.bypassApprovals.byRiskLevel).toEqual({
+        low: 2,
+        medium: 1,
+        high: 1,
+      });
+    });
+
+    it("should add bypass approval to event history", () => {
+      telemetry.trackBypassApproval({
+        planId: "plan-789",
+        sessionId: "session-123",
+        approvalType: "auto",
+        riskLevel: "low",
+        complexity: "simple",
+        toolsNeeded: [],
+      });
+
+      const history = telemetry.getEventHistory();
+      expect(history).toHaveLength(1);
+      expect(history[0].type).toBe("bypass_approval");
+    });
+
+    it("should reset execution mode metrics", () => {
+      telemetry.trackExecutionModeChange({
+        fromMode: "default",
+        toMode: "bypass",
+        trigger: "click",
+      });
+      telemetry.trackBypassApproval({
+        planId: "p1",
+        approvalType: "auto",
+        riskLevel: "low",
+        complexity: "simple",
+        toolsNeeded: [],
+      });
+
+      telemetry.reset();
+
+      const metrics = telemetry.getMetrics();
+      expect(metrics.executionMode.modeChanges.total).toBe(0);
+      expect(metrics.executionMode.bypassApprovals.total).toBe(0);
+      expect(Object.keys(metrics.executionMode.modeChanges.byMode)).toHaveLength(0);
+      expect(Object.keys(metrics.executionMode.bypassApprovals.byRiskLevel)).toHaveLength(0);
+    });
+  });
 });

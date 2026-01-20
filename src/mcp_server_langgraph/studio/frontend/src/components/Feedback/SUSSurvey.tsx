@@ -111,30 +111,30 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-neutral-800 rounded-lg shadow-lg max-h-[90vh] flex flex-col">
+    <div className="max-w-2xl mx-auto p-6 bg-neutral-1 rounded-lg shadow-lg max-h-[90vh] flex flex-col">
       {/* Header */}
       <div className="text-center mb-4 flex-shrink-0">
-        <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
+        <h2 className="text-xl font-semibold text-neutral-12">
           System Usability Survey
         </h2>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+        <p className="text-sm text-neutral-11 mt-1">
           Help us improve by answering these 10 quick questions
         </p>
       </div>
       {/* Progress */}
       <div className="mb-4 flex-shrink-0">
-        <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-300 mb-1">
+        <div className="flex justify-between text-sm text-neutral-11 mb-1">
           <span>{answeredCount} of 10 questions answered</span>
         </div>
-        <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+        <div className="w-full bg-neutral-3 rounded-full h-2">
           <div
-            className="bg-primary-600 h-2 rounded-full transition-all"
-            style={{ width: `${(answeredCount / 10) * 100}%` }}
+            className="bg-primary-9 h-2 rounded-full transition-all"
+            style={{ '--progress': `${(answeredCount / 10) * 100}%` } as React.CSSProperties}
           />
         </div>
       </div>
       {/* Scale Labels */}
-      <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-2 px-8 flex-shrink-0">
+      <div className="flex justify-between text-xs text-neutral-11 mb-2 px-8 flex-shrink-0">
         <span>Strongly Disagree</span>
         <span>Strongly Agree</span>
       </div>
@@ -143,11 +143,11 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
         {SUS_QUESTIONS.map((question, index) => (
           <div
             key={index}
-            className="border-b border-neutral-100 dark:border-neutral-700 pb-4"
+            className="border-b border-neutral-5 pb-4"
           >
             <p
               id={`question-${index}`}
-              className="text-sm text-neutral-700 dark:text-neutral-200 mb-3"
+              className="text-sm text-neutral-11 mb-3"
             >
               {index + 1}. {question}
             </p>
@@ -170,21 +170,17 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
         ))}
       </div>
       {/* Actions */}
-      <div className="flex justify-between mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700 flex-shrink-0">
-        <Button
-          className="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-100"
+      <div className="flex justify-between mt-4 pt-4 border-t border-neutral-5 flex-shrink-0">
+        <Button variant="secondary"
+          className="px-4 py-2 text-sm text-neutral-11 hover:text-neutral-12"
           onClick={onDismiss}
-        >
-          Maybe Later
-        </Button>
-        <Button
+        >Maybe Later</Button>
+        <Button variant="primary"
           size="lg"
           className="px-6 py-2 text-sm rounded-md"
           onClick={handleSubmit}
           disabled={!allAnswered}
-        >
-          Submit
-        </Button>
+        >Submit</Button>
       </div>
     </div>
   );

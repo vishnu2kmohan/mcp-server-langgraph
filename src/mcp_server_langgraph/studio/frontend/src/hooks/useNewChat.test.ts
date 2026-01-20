@@ -21,10 +21,12 @@ import { TelemetryProvider } from "../contexts/TelemetryContext";
 // Mocks
 // =============================================================================
 
-// Mock react-router's useNavigate
+// Mock react-router's useNavigate and useRevalidator
 const mockNavigate = vi.fn();
+const mockRevalidate = vi.fn();
 vi.mock("react-router", () => ({
   useNavigate: () => mockNavigate,
+  useRevalidator: () => ({ revalidate: mockRevalidate }),
 }));
 
 // =============================================================================

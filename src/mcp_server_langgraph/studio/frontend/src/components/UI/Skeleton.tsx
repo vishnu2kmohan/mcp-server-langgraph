@@ -15,7 +15,7 @@ import { cn } from "../../utils/cn";
  */
 export const skeletonVariants = cva(
   // Base styles
-  "animate-pulse bg-neutral-200 dark:bg-neutral-700",
+  "animate-pulse bg-neutral-3",
   {
     variants: {
       rounded: {
@@ -36,10 +36,22 @@ export interface SkeletonProps
 
 /**
  * Base skeleton component with pulse animation
+ *
+ * Includes aria-hidden="true" by default since skeletons are decorative
+ * placeholders that should not be announced by screen readers.
  */
-export function Skeleton({ rounded, className, ...props }: SkeletonProps) {
+export function Skeleton({
+  rounded,
+  className,
+  "aria-hidden": ariaHidden = true,
+  ...props
+}: SkeletonProps) {
   return (
-    <div className={cn(skeletonVariants({ rounded }), className)} {...props} />
+    <div
+      className={cn(skeletonVariants({ rounded }), className)}
+      aria-hidden={ariaHidden}
+      {...props}
+    />
   );
 }
 
@@ -47,16 +59,23 @@ export type SkeletonCardProps = HTMLAttributes<HTMLDivElement>;
 
 /**
  * Card skeleton with header and content sections
+ *
+ * Includes aria-hidden="true" by default since skeletons are decorative.
  */
-export function SkeletonCard({ className, ...props }: SkeletonCardProps) {
+export function SkeletonCard({
+  className,
+  "aria-hidden": ariaHidden = true,
+  ...props
+}: SkeletonCardProps) {
   return (
     <div
       className={cn(
-        "bg-white dark:bg-neutral-800",
-        "border border-neutral-200 dark:border-neutral-700",
+        "bg-neutral-1",
+        "border border-neutral-5",
         "rounded-lg p-4",
         className,
       )}
+      aria-hidden={ariaHidden}
       {...props}
     >
       <Skeleton className="h-4 w-1/3 mb-3" />
@@ -73,16 +92,19 @@ export interface SkeletonTextProps extends HTMLAttributes<HTMLDivElement> {
 
 /**
  * Text skeleton with multiple lines of varying widths
+ *
+ * Includes aria-hidden="true" by default since skeletons are decorative.
  */
 export function SkeletonText({
   lines = 3,
   className,
+  "aria-hidden": ariaHidden = true,
   ...props
 }: SkeletonTextProps) {
   const lineWidths = ["w-full", "w-5/6", "w-3/4", "w-4/5", "w-2/3"];
 
   return (
-    <div className={cn("space-y-2", className)} {...props}>
+    <div className={cn("space-y-2", className)} aria-hidden={ariaHidden} {...props}>
       {Array.from({ length: lines }).map((_, i) => (
         <Skeleton
           key={i}
@@ -103,21 +125,24 @@ export interface SkeletonListProps extends HTMLAttributes<HTMLDivElement> {
 
 /**
  * List skeleton with multiple item placeholders
+ *
+ * Includes aria-hidden="true" by default since skeletons are decorative.
  */
 export function SkeletonList({
   items = 3,
   className,
+  "aria-hidden": ariaHidden = true,
   ...props
 }: SkeletonListProps) {
   return (
-    <div className={cn("space-y-3", className)} {...props}>
+    <div className={cn("space-y-3", className)} aria-hidden={ariaHidden} {...props}>
       {Array.from({ length: items }).map((_, i) => (
         <div
           key={i}
           className={cn(
             "flex items-center gap-3 p-3",
-            "bg-white dark:bg-neutral-800",
-            "border border-neutral-200 dark:border-neutral-700",
+            "bg-neutral-1",
+            "border border-neutral-5",
             "rounded-lg",
           )}
         >

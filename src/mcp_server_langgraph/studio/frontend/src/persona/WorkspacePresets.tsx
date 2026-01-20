@@ -70,25 +70,25 @@ function LayoutPreview({ layout }: { layout: WorkspaceLayout }) {
   return (
     <div
       data-testid="layout-preview"
-      className="flex h-20 rounded border border-neutral-200 dark:border-neutral-700 overflow-hidden text-xs"
+      className="flex h-20 rounded border border-neutral-5 overflow-hidden text-xs"
     >
       {layout.sessionNav > 0 && (
         <div
-          className="bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center border-r border-neutral-300 dark:border-neutral-600"
-          style={{ width: `${layout.sessionNav}%` }}
+          className="bg-neutral-3 flex items-center justify-center border-r border-neutral-5"
+          style={{ '--progress': `${layout.sessionNav}%` } as React.CSSProperties}
         >
           {layout.sessionNav}%
         </div>
       )}
       <div
-        className="bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center border-r border-neutral-300 dark:border-neutral-600"
-        style={{ width: `${layout.conversation}%` }}
+        className="bg-primary-3 bg-primary-4 flex items-center justify-center border-r border-neutral-5"
+        style={{ '--progress': `${layout.conversation}%` } as React.CSSProperties}
       >
         {layout.conversation}%
       </div>
       <div
-        className="bg-insight-100 dark:bg-insight-900/30 flex items-center justify-center"
-        style={{ width: `${layout.canvas}%` }}
+        className="bg-insight-2 dark:bg-insight-a4 flex items-center justify-center"
+        style={{ '--progress': `${layout.canvas}%` } as React.CSSProperties}
       >
         {layout.canvas}%
       </div>
@@ -203,9 +203,9 @@ export function WorkspacePresets({
               "flex flex-col p-3 rounded-lg cursor-pointer transition-all",
               "border-2",
               isSelected
-                ? "selected border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-                : "border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:border-neutral-600 dark:hover:border-neutral-600",
-              "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
+                ? "selected border-primary-9 bg-primary-1 dark:bg-primary-a3"
+                : "border-neutral-5 hover:border-neutral-5 dark:hover:border-neutral-6",
+              "focus:outline-none focus:ring-2 focus:ring-primary-7 focus:ring-offset-2",
             )}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -213,22 +213,22 @@ export function WorkspacePresets({
                 size={16}
                 className={cn(
                   isSelected
-                    ? "text-primary-500"
-                    : "text-neutral-400 dark:text-neutral-400",
+                    ? "text-primary-9"
+                    : "text-neutral-9",
                 )}
               />
               <span
                 className={cn(
                   "text-sm font-medium",
                   isSelected
-                    ? "text-primary-700 dark:text-primary-300"
-                    : "text-neutral-900 dark:text-neutral-100",
+                    ? "text-primary-11 dark:text-primary-5"
+                    : "text-neutral-12",
                 )}
               >
                 {preset.name}
               </span>
             </div>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
+            <p className="text-xs text-neutral-10 mb-2">
               {preset.description}
             </p>
 
@@ -247,9 +247,9 @@ export function WorkspacePresets({
           onClick={onSaveCustom}
           className={cn(
             "flex items-center justify-center gap-2 p-3 rounded-lg",
-            "border-2 border-dashed border-neutral-300 dark:border-neutral-600",
-            "text-neutral-500 dark:text-neutral-400",
-            "hover:border-primary-400 hover:text-primary-500",
+            "border-2 border-dashed border-neutral-5",
+            "text-neutral-10",
+            "hover:border-primary-7 hover:text-primary-9",
             "transition-colors",
           )}
         >

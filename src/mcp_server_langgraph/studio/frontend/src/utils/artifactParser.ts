@@ -61,6 +61,36 @@ type ExtendedArtifactType = ArtifactType | "mdx";
 
 const CHART_LANGUAGES = new Set(["chart", "recharts", "echarts"]);
 const VEGA_LITE_LANGUAGES = new Set(["vega-lite", "vega", "altair"]);
+
+/**
+ * Detect if JSON content is a Vega-Lite specification by checking for the $schema field.
+ * This allows JSON code blocks containing Vega-Lite specs to be rendered as charts
+ * even when not explicitly tagged with the vega-lite language.
+ *
+ * @param content - JSON string content to check
+ * @returns true if content appears to be a Vega-Lite specification
+ */
+export function isVegaLiteContent(content: string): boolean {
+  try {
+    // Quick string check before parsing (performance optimization)
+    if (
+      !content.includes("vega.github.io/schema/vega-lite") &&
+      !content.includes("vega.github.io/schema/vega/")
+    ) {
+      return false;
+    }
+    const parsed = JSON.parse(content);
+    const schema = parsed?.$schema;
+    if (typeof schema !== "string") return false;
+    // Match Vega-Lite or Vega schemas
+    return (
+      schema.includes("vega.github.io/schema/vega-lite") ||
+      schema.includes("vega.github.io/schema/vega/")
+    );
+  } catch {
+    return false;
+  }
+}
 const MERMAID_LANGUAGES = new Set(["mermaid"]);
 const TABLE_LANGUAGES = new Set(["table", "csv", "tsv"]);
 const JSON_LANGUAGES = new Set(["json", "jsonc"]);
@@ -1008,7 +1038,16 @@ export function parseArtifacts(content: string): ParsedSegment[] {
         break;
 
       case "json":
-        artifact = createJSONArtifact(block.code, block.meta);
+        // Auto-detect Vega-Lite specs in JSON blocks by checking $schema
+        if (isVegaLiteContent(block.code)) {
+          artifact = createVegaLiteArtifact(block.code, block.meta);
+          // Fall back to JSON if vega-lite parsing fails
+          if (!artifact) {
+            artifact = createJSONArtifact(block.code, block.meta);
+          }
+        } else {
+          artifact = createJSONArtifact(block.code, block.meta);
+        }
         break;
 
       case "svg":

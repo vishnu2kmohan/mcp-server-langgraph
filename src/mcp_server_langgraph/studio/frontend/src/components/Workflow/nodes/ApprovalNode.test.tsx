@@ -123,8 +123,8 @@ describe("ApprovalNode", () => {
       const node = document.querySelector('[data-status="success"]');
       expect(node).toBeInTheDocument();
 
-      // Check for green status icon (CheckCircle has text-green-500 class)
-      const checkIcon = document.querySelector(".text-success-500");
+      // Check for green status icon (CheckCircle has text-success-9 class)
+      const checkIcon = document.querySelector(".text-success-9");
       expect(checkIcon).toBeInTheDocument();
     });
 
@@ -141,8 +141,8 @@ describe("ApprovalNode", () => {
       const node = document.querySelector('[data-status="error"]');
       expect(node).toBeInTheDocument();
 
-      // Check for red status icon (XCircle has text-red-500 class)
-      const xIcon = document.querySelector(".text-error-500");
+      // Check for red status icon (XCircle has text-error-9 class)
+      const xIcon = document.querySelector(".text-error-9");
       expect(xIcon).toBeInTheDocument();
     });
 
@@ -156,8 +156,8 @@ describe("ApprovalNode", () => {
         },
       });
 
-      // No animate-spin (loader), no text-green-500 (success), no text-red-500 (error) status icons
-      // Note: text-blue-500 exists for the UserCheck icon, so we check specifically for status icons
+      // No animate-spin (loader), no text-success-9 (success), no text-error-9 (error) status icons
+      // Note: text-primary-9 exists for the UserCheck icon, so we check specifically for status icons
       expect(document.querySelector(".animate-spin")).not.toBeInTheDocument();
     });
   });
@@ -176,7 +176,7 @@ describe("ApprovalNode", () => {
 
       const node = document.querySelector('[data-selected="true"]');
       expect(node).toBeInTheDocument();
-      expect(node?.className).toContain("border-primary-500");
+      expect(node?.className).toContain("border-primary-9");
     });
 
     it("should have blue border with pulse when running", () => {
@@ -190,7 +190,7 @@ describe("ApprovalNode", () => {
       });
 
       const node = document.querySelector('[data-status="running"]');
-      expect(node?.className).toContain("border-primary-500");
+      expect(node?.className).toContain("border-primary-9");
       expect(node?.className).toContain("animate-pulse");
     });
 
@@ -205,7 +205,7 @@ describe("ApprovalNode", () => {
       });
 
       const node = document.querySelector('[data-status="success"]');
-      expect(node?.className).toContain("border-success-500");
+      expect(node?.className).toContain("border-success-9");
     });
 
     it("should have red border when error", () => {
@@ -219,7 +219,7 @@ describe("ApprovalNode", () => {
       });
 
       const node = document.querySelector('[data-status="error"]');
-      expect(node?.className).toContain("border-error-500");
+      expect(node?.className).toContain("border-error-9");
     });
 
     it("should have gray border when not selected and idle", () => {
@@ -234,7 +234,7 @@ describe("ApprovalNode", () => {
       });
 
       const node = document.querySelector('[data-selected="false"]');
-      expect(node?.className).toContain("border-neutral-300");
+      expect(node?.className).toContain("border-neutral-5");
     });
   });
 

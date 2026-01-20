@@ -36,25 +36,25 @@ describe("RiskBadge", () => {
     it("renders low risk with success colors", () => {
       render(<RiskBadge level="low" />);
       const badge = screen.getByTestId("risk-badge");
-      expect(badge).toHaveClass("text-success-600");
+      expect(badge).toHaveClass("text-success-10");
     });
 
     it("renders medium risk with warning colors", () => {
       render(<RiskBadge level="medium" />);
       const badge = screen.getByTestId("risk-badge");
-      expect(badge).toHaveClass("text-warning-600");
+      expect(badge).toHaveClass("text-warning-9");
     });
 
     it("renders high risk with error colors", () => {
       render(<RiskBadge level="high" />);
       const badge = screen.getByTestId("risk-badge");
-      expect(badge).toHaveClass("text-error-600");
+      expect(badge).toHaveClass("text-error-10");
     });
 
     it("renders critical risk with stronger error colors", () => {
       render(<RiskBadge level="critical" />);
       const badge = screen.getByTestId("risk-badge");
-      expect(badge).toHaveClass("text-error-700");
+      expect(badge).toHaveClass("text-error-11");
     });
   });
 
@@ -62,19 +62,19 @@ describe("RiskBadge", () => {
     it("includes dark mode classes for low risk", () => {
       render(<RiskBadge level="low" />);
       const badge = screen.getByTestId("risk-badge");
-      expect(badge.className).toMatch(/dark:text-success-400/);
+      expect(badge.className).toMatch(/dark:text-success-7/);
     });
 
     it("includes dark mode classes for high risk", () => {
       render(<RiskBadge level="high" />);
       const badge = screen.getByTestId("risk-badge");
-      expect(badge.className).toMatch(/dark:text-error-400/);
+      expect(badge.className).toMatch(/dark:text-error-7/);
     });
 
     it("includes dark mode classes for critical risk", () => {
       render(<RiskBadge level="critical" />);
       const badge = screen.getByTestId("risk-badge");
-      expect(badge.className).toMatch(/dark:text-error-300/);
+      expect(badge.className).toMatch(/dark:text-error-9/);
     });
   });
 

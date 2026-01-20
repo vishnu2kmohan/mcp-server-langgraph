@@ -14,6 +14,7 @@
 
 import { useCallback, useMemo } from "react";
 import { AlertTriangle } from "lucide-react";
+import { useReducedMotion } from "motion/react";
 import { useAppSelector } from "../store/hooks";
 import {
   selectCriticalAlertCount,
@@ -48,6 +49,9 @@ const MAX_DISPLAY_COUNT = 99;
 // =============================================================================
 
 export function AlertBadge({ onClick, className }: AlertBadgeProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   // Redux selectors
   const criticalCount = useAppSelector(selectCriticalAlertCount);
   const warningCount = useAppSelector(selectWarningAlertCount);
@@ -119,12 +123,13 @@ export function AlertBadge({ onClick, className }: AlertBadgeProps) {
       title={tooltipText}
       className={cn(
         "flex items-center gap-1.5 px-2 py-1 rounded-full cursor-pointer",
-        "text-white text-xs font-medium",
-        "transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2",
+        "text-neutral-12 text-xs font-medium",
+        !prefersReducedMotion && "transition-colors",
+        "focus:outline-none focus:ring-2 focus:ring-offset-2",
         hasCritical
-          ? "bg-error-500 hover:bg-error-600 focus:ring-error-500"
-          : "bg-warning-500 hover:bg-warning-600 focus:ring-warning-500",
-        shouldPulse && "animate-pulse",
+          ? "bg-error-9 hover:bg-error-10 focus:ring-error-7"
+          : "bg-warning-9 hover:bg-warning-9 focus:ring-warning-7",
+        shouldPulse && !prefersReducedMotion && "animate-pulse",
         className,
       )}
     >

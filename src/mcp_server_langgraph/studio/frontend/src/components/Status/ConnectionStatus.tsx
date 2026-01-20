@@ -58,23 +58,23 @@ const STATUS_CONFIG: Record<
 > = {
   connected: {
     label: "Connected",
-    color: "bg-success-500",
+    color: "bg-success-9",
     icon: Wifi,
   },
   connecting: {
     label: "Connecting",
-    color: "bg-warning-500",
+    color: "bg-warning-9",
     icon: Wifi,
     pulse: true,
   },
   disconnected: {
     label: "Disconnected",
-    color: "bg-error-500",
+    color: "bg-error-9",
     icon: WifiOff,
   },
   reconnecting: {
     label: "Reconnecting",
-    color: "bg-warning-500",
+    color: "bg-warning-9",
     icon: RefreshCw,
     pulse: true,
   },
@@ -100,11 +100,11 @@ export function ConnectionStatus({
   const latencyInfo = useMemo(() => {
     if (latencyMs === undefined) return null;
 
-    let colorClass = "text-success-600 dark:text-success-400";
+    let colorClass = "text-success-10 dark:text-success-7";
     if (latencyMs > LATENCY_THRESHOLDS.moderate) {
-      colorClass = "text-error-600 dark:text-error-400";
+      colorClass = "text-error-10 dark:text-error-7";
     } else if (latencyMs > LATENCY_THRESHOLDS.good) {
-      colorClass = "text-warning-600 dark:text-warning-400";
+      colorClass = "text-warning-9 dark:text-warning-9";
     }
 
     return { value: `${latencyMs}ms`, colorClass };
@@ -176,12 +176,12 @@ export function ConnectionStatus({
           <>
             <Icon
               size={14}
-              className="text-neutral-500 dark:text-neutral-400"
+              className="text-neutral-10"
             />
             <span
               role="status"
               aria-live="polite"
-              className="text-sm text-neutral-700 dark:text-neutral-300"
+              className="text-sm text-neutral-11"
             >
               {config.label}
             </span>
@@ -196,7 +196,7 @@ export function ConnectionStatus({
       )}
       {/* Last sync time */}
       {!compact && syncTimeDisplay && (
-        <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+        <span className="flex items-center gap-1 text-xs text-neutral-10">
           <Clock size={12} aria-hidden="true" />
           <span>Synced {syncTimeDisplay}</span>
         </span>
@@ -206,7 +206,7 @@ export function ConnectionStatus({
         <Button
           variant="primary"
           size="sm"
-          className="ml-2 px-2 py-1 text-xs text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 rounded hover:bg-primary-100 dark:hover:bg-primary-900/40 focus:ring-primary-500"
+          className="ml-2 px-2 py-1 text-xs text-primary-10 dark:text-primary-7 bg-primary-1 dark:bg-primary-a3 rounded hover:bg-primary-3 dark:hover:bg-primary-a5 focus:ring-primary-7"
           type="button"
           onClick={handleReconnect}
         >
@@ -217,7 +217,7 @@ export function ConnectionStatus({
       {compact && showTooltip && (
         <div
           role="tooltip"
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-neutral-900 dark:bg-neutral-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-50"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-neutral-2 text-neutral-12 text-xs rounded shadow-lg whitespace-nowrap z-50"
         >
           <div className="flex items-center gap-2">
             <span>{config.label}</span>
@@ -228,12 +228,12 @@ export function ConnectionStatus({
             )}
           </div>
           {syncTimeDisplay && (
-            <div className="mt-1 text-neutral-300">
+            <div className="mt-1 text-neutral-9">
               Synced {syncTimeDisplay}
             </div>
           )}
           {/* Tooltip arrow */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-900 dark:border-t-neutral-700" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-12 dark:border-t-neutral-11" />
         </div>
       )}
     </div>

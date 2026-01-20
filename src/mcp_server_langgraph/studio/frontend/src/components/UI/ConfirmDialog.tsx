@@ -56,14 +56,14 @@ export function ConfirmDialog({
         <>
           <Button
             variant="secondary"
-            className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:ring-offset-2 focus:ring-neutral-500"
+            className="px-4 py-2 text-sm text-neutral-11 bg-neutral-1 border border-neutral-5 rounded-lg hover:bg-neutral-1 focus:ring-offset-2 focus:ring-neutral-8"
             onClick={onClose}
             disabled={isLoading}
           >
             {cancelText}
           </Button>
           <Button
-            className="px-4 py-2 text-sm text-white rounded-lg focus:ring-offset-2"
+            className="px-4 py-2 text-sm text-neutral-12 rounded-lg focus:ring-offset-2"
             onClick={handleConfirm}
             disabled={isLoading}
           >
@@ -101,13 +101,13 @@ export function ConfirmDialog({
       <div className="flex gap-4">
         {isDestructive && (
           <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-error-100 dark:bg-error-900/30 rounded-full flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-error-600 dark:text-error-400" />
+            <div className="w-10 h-10 bg-error-3 bg-error-4 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-error-10 dark:text-error-7" />
             </div>
           </div>
         )}
         <div className="flex-1">
-          <p className="text-sm text-neutral-600 dark:text-neutral-300">
+          <p className="text-sm text-neutral-11">
             {message}
           </p>
         </div>

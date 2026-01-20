@@ -6,6 +6,27 @@
  */
 
 // ==============================================================================
+// JSON-RPC Types
+// ==============================================================================
+
+/**
+ * JSON-RPC 2.0 ID type
+ *
+ * Per JSON-RPC 2.0 spec, ids can be either numbers or strings.
+ * We widen from just `number` to support both.
+ */
+export type JSONRPCId = number | string;
+
+/**
+ * JSON-RPC 2.0 Error
+ */
+export interface JSONRPCError {
+  code: number;
+  message: string;
+  data?: unknown;
+}
+
+// ==============================================================================
 // Server Connection
 // ==============================================================================
 
@@ -67,6 +88,8 @@ export interface MCPTool {
   description: string;
   inputSchema: JSONSchema;
   serverId: string;
+  /** SEP-973: Optional tool icon URL */
+  icon?: string;
 }
 
 // ==============================================================================
@@ -110,7 +133,8 @@ export type ElicitationAction = "accept" | "decline" | "cancel";
 
 /** Pending elicitation request */
 export interface PendingElicitation {
-  id: string;
+  /** JSON-RPC request ID (number or string per spec) */
+  id: JSONRPCId;
   serverId: string;
   message: string;
   requestedSchema: JSONSchema;
@@ -123,10 +147,25 @@ export interface PendingElicitation {
 // Sampling
 // ==============================================================================
 
+/**
+ * Sampling content type
+ *
+ * Matches the backend SamplingContent enum with proper content fields.
+ */
+export interface SamplingContent {
+  type: "text" | "image" | "audio";
+  /** Text content (for type === 'text') */
+  text?: string;
+  /** Base64 encoded data (for binary content) */
+  data?: string;
+  /** MIME type for binary content */
+  mimeType?: string;
+}
+
 /** Sampling message */
 export interface SamplingMessage {
   role: "user" | "assistant";
-  content: string;
+  content: SamplingContent;
 }
 
 /** Model preferences for sampling */
@@ -137,15 +176,52 @@ export interface ModelPreferences {
   intelligencePriority?: number;
 }
 
+/**
+ * Sampling tool for SEP-1577 support
+ */
+export interface SamplingTool {
+  name: string;
+  description?: string;
+  inputSchema: JSONSchema;
+}
+
+/**
+ * Tool choice for SEP-1577 support
+ */
+export type ToolChoice =
+  | "auto"
+  | "none"
+  | "required"
+  | { type: "tool"; name: string };
+
 /** Pending sampling request */
 export interface PendingSamplingRequest {
-  id: string;
+  /** JSON-RPC request ID (number or string per spec) */
+  id: JSONRPCId;
   serverId: string;
   messages: SamplingMessage[];
   modelPreferences?: ModelPreferences;
   systemPrompt?: string;
+  includeContext?: "none" | "thisServer" | "allServers";
   maxTokens: number;
   createdAt: number;
+  /** SEP-1577: Tools for sampling */
+  tools?: SamplingTool[];
+  /** SEP-1577: Tool choice preference */
+  toolChoice?: ToolChoice;
+}
+
+/**
+ * Sampling response for approval result
+ *
+ * This is what we send back to the MCP server when the user
+ * approves a sampling request.
+ */
+export interface SamplingResponse {
+  role: "assistant";
+  content: SamplingContent;
+  model: string;
+  stopReason: "endTurn" | "stopSequence" | "maxTokens";
 }
 
 // ==============================================================================

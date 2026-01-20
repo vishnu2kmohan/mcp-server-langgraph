@@ -17,6 +17,28 @@ interface TestWsHandlers {
 // Module-scoped handler storage for tests
 let testWsHandlers: TestWsHandlers | null = null;
 
+// Mock Redux hooks to avoid needing Provider wrapper
+const mockDispatch = vi.fn();
+vi.mock("../store/hooks", () => ({
+  useAppDispatch: () => mockDispatch,
+  // Return values for selectors: isAuthenticated=true, wsPermissions={cost_tracking: true}
+  useAppSelector: vi.fn((selector) => {
+    if (selector.name?.includes("Authenticated")) return true;
+    if (selector.name?.includes("WebSocketPermissions"))
+      return { cost_tracking: true };
+    return true;
+  }),
+}));
+
+// Mock getAuthToken to return test token
+vi.mock("../utils/storage", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../utils/storage")>();
+  return {
+    ...actual,
+    getAuthToken: vi.fn(() => "mock-test-token"),
+  };
+});
+
 // Mock useRealtimeSync
 const mockSend = vi.fn();
 const mockDisconnect = vi.fn();
@@ -31,6 +53,7 @@ vi.mock("./useRealtimeSync", () => ({
       send: mockSend,
       disconnect: mockDisconnect,
       reconnect: mockReconnect,
+      metrics: { totalAttempts: 0 },
     };
   }),
 }));
@@ -99,6 +122,7 @@ describe("useCostTrackingWebSocket", () => {
       const { result } = renderHook(() => useCostTrackingWebSocket());
       const handlers = testWsHandlers;
 
+      // Backend sends snake_case format
       act(() => {
         handlers.onMessage({
           type: "session_total",
@@ -110,10 +134,11 @@ describe("useCostTrackingWebSocket", () => {
         });
       });
 
+      // Hook transforms to camelCase
       expect(result.current.sessionCosts["session-123"]).toEqual({
-        session_id: "session-123",
-        total_cost: 0.25,
-        token_count: 5000,
+        sessionId: "session-123",
+        totalCost: 0.25,
+        tokenCount: 5000,
       });
     });
 
@@ -157,6 +182,7 @@ describe("useCostTrackingWebSocket", () => {
       const { result } = renderHook(() => useCostTrackingWebSocket());
       const handlers = testWsHandlers;
 
+      // Backend sends snake_case format
       act(() => {
         handlers.onMessage({
           type: "user_budget",
@@ -169,10 +195,11 @@ describe("useCostTrackingWebSocket", () => {
         });
       });
 
+      // Hook transforms to camelCase
       expect(result.current.userBudget).toEqual({
-        user_id: "user-456",
-        budget_limit: 100.0,
-        current_usage: 45.0,
+        userId: "user-456",
+        budgetLimit: 100.0,
+        currentUsage: 45.0,
         remaining: 55.0,
       });
     });
@@ -260,6 +287,7 @@ describe("useCostTrackingWebSocket", () => {
       const { result } = renderHook(() => useCostTrackingWebSocket());
       const handlers = testWsHandlers;
 
+      // Backend sends snake_case format
       act(() => {
         handlers.onMessage({
           type: "session_total",
@@ -271,8 +299,9 @@ describe("useCostTrackingWebSocket", () => {
         });
       });
 
+      // Hook transforms to camelCase
       const cost = result.current.getSessionCost("session-123");
-      expect(cost?.total_cost).toBe(0.5);
+      expect(cost?.totalCost).toBe(0.5);
     });
 
     it("should return undefined for unknown session", () => {

@@ -26,14 +26,33 @@
 import React from "react";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
 import { vi } from "vitest";
+import personaReducer from "../../store/slices/personaSlice";
+import sessionReducer from "../../store/slices/sessionSlice";
 
 // =============================================================================
 // Render Helper
 // =============================================================================
 
+/**
+ * Render helper that includes MemoryRouter and Redux Provider.
+ * Redux is required for AIEmptyState component which reads persona state.
+ */
 export const renderWithRouter = (component: React.ReactNode) => {
-  return render(<MemoryRouter>{component}</MemoryRouter>);
+  const store = configureStore({
+    reducer: {
+      persona: personaReducer,
+      session: sessionReducer,
+    },
+  });
+
+  return render(
+    <Provider store={store}>
+      <MemoryRouter>{component}</MemoryRouter>
+    </Provider>
+  );
 };
 
 // Shared mock data - using snake_case to match API/component expectations

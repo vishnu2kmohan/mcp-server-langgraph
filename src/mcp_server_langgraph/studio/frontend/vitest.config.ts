@@ -173,6 +173,15 @@ export default defineConfig({
     // Vitest 4 removed tinypool, eliminating the orphan process issue.
     pool: "forks",
 
+    // Vitest 4: forks options are now top-level under test.forks
+    // singleFork: true ensures only one fork runs at a time
+    // This prevents OOM when running multiple test files together
+    // Trade-off: slower execution but guaranteed memory safety
+    // Override with VITEST_SINGLE_FORK=false to enable parallel forks
+    forks: {
+      singleFork: process.env.VITEST_SINGLE_FORK !== "false",
+    },
+
     // Vitest 4: execArgv is a top-level option that applies to all worker processes
     // Per-worker heap limits to prevent OOM in individual workers
     // Heap size is environment-aware:

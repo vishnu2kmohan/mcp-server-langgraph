@@ -12,6 +12,7 @@ import {
   waitFor,
   cleanup,
 } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ConnectionsPage } from "./ConnectionsPage";
@@ -136,6 +137,7 @@ vi.mock("../api", () => ({
     mockCreateConnection,
     { isLoading: false },
   ],
+  useListConnectionTemplatesQuery: () => ({ data: { templates: [] }, isLoading: false, error: null }),
   useUpdateConnectionMutation: () => [
     mockUpdateConnection,
     { isLoading: false },
@@ -191,6 +193,9 @@ vi.mock("../components/Connection", () => ({
       <p>Connection: {connectionId}</p>
     </div>
   ),
+  // ADR-0102: Three-Tab Layout components
+  ConnectorDirectory: () => <div data-testid="connector-directory" />,
+  CapabilitiesTab: () => <div data-testid="capabilities-tab" />,
 }));
 
 vi.mock("../components/MCP", () => ({
@@ -272,6 +277,23 @@ vi.mock("../components/MCP", () => ({
     ) : null,
 }));
 
+// Mock AIEmptyState hook
+vi.mock("../hooks/useAIEmptyState", () => ({
+  useAIEmptyState: () => ({
+    suggestions: [],
+    primarySuggestion: null,
+    fallbackConfig: {
+      title: "No connections",
+      description: "Add a connection to get started",
+      icon: "server",
+      actionText: "Add Connection",
+      actionTarget: "/add-connection",
+    },
+    isLoading: false,
+    isAIAvailable: false,
+  }),
+}));
+
 const mockedUseListConnectionsQuery = vi.mocked(
   apiModule.useListConnectionsQuery,
 );
@@ -296,7 +318,7 @@ const createTestStore = (persona: "admin" | "developer" | "user" = "admin") =>
 
 const renderWithProviders = (component: React.ReactElement) => {
   const store = createTestStore();
-  return render(<Provider store={store}>{component}</Provider>);
+  return render(<Provider store={store}><MemoryRouter>{component}</MemoryRouter></Provider>);
 };
 
 describe("ConnectionsPage States", () => {

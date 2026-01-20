@@ -18,7 +18,7 @@ import { ConnectedChatInputForm } from "./ConnectedChatInputForm";
 import {
   type SlashCommand,
   type ModelOption,
-} from "../components/Chat/ChatInputForm";
+} from "../components/Chat/ChatInput";
 import type { ReasoningEffortLevel } from "../components/Chat/ReasoningEffortSelector";
 import { FollowUpSuggestions, type Suggestion } from "./FollowUpSuggestions";
 import { GenerateWorkflowButton } from "./GenerateWorkflowButton";
@@ -147,10 +147,10 @@ function SessionHeader({
       data-testid="session-header"
       className={cn(
         "flex items-center justify-between px-4 py-2",
-        "border-b border-neutral-200 dark:border-neutral-700",
+        "border-b border-neutral-5",
       )}
     >
-      <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
+      <h2 className="text-sm font-medium text-neutral-12 truncate">
         {title}
       </h2>
       <div className="flex items-center gap-1">
@@ -158,15 +158,12 @@ function SessionHeader({
         {sessionId && <GenerateWorkflowButton sessionId={sessionId} />}
         {onRename && (
           <Button
+            variant="ghost"
+            size="icon"
             data-testid="session-rename-button"
             type="button"
             onClick={onRename}
-            className={cn(
-              "p-1.5 rounded-md",
-              "text-neutral-500 dark:text-neutral-400",
-              "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
-              "transition-colors",
-            )}
+            className="text-neutral-10"
             aria-label="Rename session"
           >
             <Pencil size={14} />
@@ -174,16 +171,12 @@ function SessionHeader({
         )}
         {onDelete && (
           <Button
+            variant="ghost"
+            size="icon"
             data-testid="session-delete-button"
             type="button"
             onClick={onDelete}
-            className={cn(
-              "p-1.5 rounded-md",
-              "text-neutral-500 dark:text-neutral-400",
-              "hover:bg-error-100 dark:hover:bg-error-900/30",
-              "hover:text-error-600 dark:hover:text-error-400",
-              "transition-colors",
-            )}
+            className="text-neutral-10 hover:bg-error-3 dark:hover:bg-error-a4 hover:text-error-10 dark:hover:text-error-7"
             aria-label="Delete session"
           >
             <Trash2 size={14} />
@@ -298,7 +291,7 @@ export function ConversationPanel({
     <div
       data-testid="conversation-panel"
       className={cn(
-        "flex flex-col h-full bg-white dark:bg-neutral-900",
+        "flex flex-col h-full bg-neutral-1",
         className,
       )}
     >
@@ -327,12 +320,12 @@ export function ConversationPanel({
         <FollowUpSuggestions
           suggestions={suggestions}
           onSelect={handleSelectSuggestion}
-          className="px-4 py-2 border-t border-neutral-200 dark:border-neutral-700"
+          className="px-4 py-2 border-t border-neutral-5"
         />
       )}
 
       {/* Chat Input with File Upload, Voice, and Slash Command Menu */}
-      <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
+      <div className="p-4 border-t border-neutral-5">
         <ConnectedChatInputForm
           value={inputValue}
           onChange={handleInputChange}

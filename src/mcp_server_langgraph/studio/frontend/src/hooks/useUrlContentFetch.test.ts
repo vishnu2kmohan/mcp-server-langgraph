@@ -9,6 +9,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useUrlContentFetch } from "./useUrlContentFetch";
 
+// Mock react-router to avoid Router context errors
+const mockNavigate = vi.fn();
+vi.mock("react-router", () => ({
+  useNavigate: () => mockNavigate,
+}));
+
 // Mock the fetch function
 const mockFetch = vi.fn();
 

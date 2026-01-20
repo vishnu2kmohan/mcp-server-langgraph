@@ -12,6 +12,7 @@ import {
   createHeartEventHandler,
   createHeartBatchHandler,
 } from "./heartHandlers";
+import { transformSnakeToCamel } from "../../api/transforms";
 
 describe("heartHandlers", () => {
   beforeEach(() => {
@@ -328,4 +329,28 @@ describe("heartHandlers", () => {
       expect(data.duration).toBe(5000);
     });
   });
+
+describe("API Contract Transformation", () => {
+  it("should return heart event response in snake_case and transform to camelCase", async () => {
+    const response = await fetch("/api/v1/metrics/heart/event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event_type: "interaction", timestamp: Date.now() }),
+    });
+    expect(response.status).toBe(200);
+
+    const rawData = await response.json();
+    expect(rawData).toBeDefined();
+
+    // Verify snake_case in raw response
+    expect(rawData).toHaveProperty("event_id");
+    expect(rawData).toHaveProperty("event_type");
+
+    // Verify transformation works
+    const transformedData = transformSnakeToCamel(rawData);
+    expect(transformedData).toHaveProperty("eventId");
+    expect(transformedData).toHaveProperty("eventType");
+  });
+});
+
 });

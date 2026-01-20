@@ -188,7 +188,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
         className={`settings-panel loading ${className}`}
       >
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-9" />
         </div>
       </div>
     );
@@ -205,12 +205,12 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
       <div className="space-y-2">
         <label
           htmlFor="theme-select"
-          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+          className="block text-sm font-medium text-neutral-11"
         >
           Theme
         </label>
         <Select
-          className="px-3 py-2 text-sm -500 focus:ring-primary-500"
+          className="px-3 py-2 text-sm -500 focus:ring-primary-7"
           id="theme-select"
           value={preferences.general.theme}
           onChange={(e) =>
@@ -227,12 +227,12 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
       <div className="space-y-2">
         <label
           htmlFor="language-select"
-          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+          className="block text-sm font-medium text-neutral-11"
         >
           Language
         </label>
         <Select
-          className="px-3 py-2 text-sm -500 focus:ring-primary-500"
+          className="px-3 py-2 text-sm -500 focus:ring-primary-7"
           id="language-select"
           value={preferences.general.language}
           onChange={(e) =>
@@ -321,12 +321,12 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
       <div className="space-y-2">
         <label
           htmlFor="font-size-select"
-          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+          className="block text-sm font-medium text-neutral-11"
         >
           Font size
         </label>
         <Select
-          className="px-3 py-2 text-sm -500 focus:ring-primary-500"
+          className="px-3 py-2 text-sm -500 focus:ring-primary-7"
           id="font-size-select"
           value={preferences.accessibility.fontSize}
           onChange={(e) =>
@@ -362,7 +362,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           showValue
           formatValue={(v) => v.toFixed(1)}
         />
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="text-xs text-neutral-10">
           Higher values make output more random, lower values more focused
         </p>
       </div>
@@ -371,12 +371,12 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
       <div className="space-y-2">
         <label
           htmlFor="max-tokens-input"
-          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+          className="block text-sm font-medium text-neutral-11"
         >
           Max tokens
         </label>
         <Input
-          className="px-3 py-2 text-sm -500 focus:ring-primary-500"
+          className="px-3 py-2 text-sm -500 focus:ring-primary-7"
           id="max-tokens-input"
           type="number"
           min="100"
@@ -389,7 +389,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
             })
           }
         />
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="text-xs text-neutral-10">
           Maximum number of tokens in the response
         </p>
       </div>
@@ -398,12 +398,12 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
       <div className="space-y-2">
         <label
           htmlFor="reasoning-effort-select"
-          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+          className="block text-sm font-medium text-neutral-11"
         >
           Reasoning effort
         </label>
         <Select
-          className="px-3 py-2 text-sm -500 focus:ring-primary-500"
+          className="px-3 py-2 text-sm -500 focus:ring-primary-7"
           id="reasoning-effort-select"
           value={preferences.modelDefaults.defaultReasoningEffort}
           onChange={(e) =>
@@ -419,7 +419,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           <option value="medium">Medium</option>
           <option value="high">High</option>
         </Select>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="text-xs text-neutral-10">
           Amount of thinking for models with extended thinking capabilities
         </p>
       </div>
@@ -434,19 +434,19 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
         {DEFAULT_KEYBOARD_SHORTCUTS.map((shortcut) => (
           <div
             key={shortcut.action}
-            className="flex items-center justify-between py-2 border-b border-neutral-200 dark:border-neutral-700"
+            className="flex items-center justify-between py-2 border-b border-neutral-5"
           >
-            <span className="text-sm text-neutral-700 dark:text-neutral-300">
+            <span className="text-sm text-neutral-11">
               {shortcut.label}
             </span>
-            <kbd className="px-2 py-1 text-xs font-mono bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-300 dark:border-neutral-600">
+            <kbd className="px-2 py-1 text-xs font-mono bg-neutral-2 rounded border border-neutral-5">
               {preferences.keyboardShortcuts[shortcut.action] || shortcut.keys}
             </kbd>
           </div>
         ))}
       </div>
 
-      <p className="text-xs text-neutral-500 dark:text-neutral-400">
+      <p className="text-xs text-neutral-10">
         Keyboard shortcut customization coming soon
       </p>
     </div>
@@ -494,7 +494,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
   const renderHITLTab = () => (
     <div className="space-y-6">
       <h3 className="text-lg font-medium">Agent Approval Settings</h3>
-      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="text-sm text-neutral-11">
         Configure when AI agents pause for your approval before taking actions.
       </p>
 
@@ -523,7 +523,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           formatValue={(v) => `${Math.round(v)}%`}
           disabled={!preferences.hitl.enabled}
         />
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="text-xs text-neutral-10">
           Require approval when agent confidence is below this threshold
         </p>
       </div>
@@ -544,7 +544,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           formatValue={(v) => `${Math.round(v)}%`}
           disabled={!preferences.hitl.enabled}
         />
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="text-xs text-neutral-10">
           Skip approval when agent confidence exceeds this threshold
         </p>
       </div>
@@ -572,11 +572,11 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
       />
 
       {/* Threshold Recommendation Section */}
-      <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700">
-        <h4 className="text-md font-medium text-neutral-800 dark:text-neutral-200 mb-2">
+      <div className="mt-6 pt-6 border-t border-neutral-5">
+        <h4 className="text-md font-medium text-neutral-12 mb-2">
           Threshold Recommendation
         </h4>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4">
+        <p className="text-xs text-neutral-10 mb-4">
           Get AI-powered recommendations based on your approval history
           patterns.
         </p>
@@ -599,18 +599,18 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
         {/* Recommendation display and actions */}
         <div className="flex flex-col gap-3">
           {recommendation && (
-            <div className="bg-primary-50 dark:bg-primary-900/20 p-3 rounded-lg border border-primary-200 dark:border-primary-700">
+            <div className="bg-primary-1 dark:bg-primary-a3 p-3 rounded-lg border border-primary-4 dark:border-primary-11">
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles size={16} className="text-primary-500" />
-                <span className="text-sm font-medium text-primary-800 dark:text-primary-200">
+                <Sparkles size={16} className="text-primary-9" />
+                <span className="text-sm font-medium text-primary-11 dark:text-primary-4">
                   Recommended:{" "}
                   {Math.round(recommendation.recommendedThreshold * 100)}%
                 </span>
               </div>
-              <p className="text-xs text-primary-700 dark:text-primary-300 mb-2">
+              <p className="text-xs text-primary-11 dark:text-primary-5 mb-2">
                 {recommendation.reason}
               </p>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              <p className="text-xs text-neutral-10">
                 Based on {recommendation.sampleSize} approval decisions
                 (confidence: {Math.round(recommendation.confidenceLevel * 100)}
                 %)
@@ -619,8 +619,8 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           )}
 
           {thresholdError && (
-            <div className="bg-error-50 dark:bg-error-900/20 p-3 rounded-lg border border-error-200 dark:border-error-700">
-              <p className="text-xs text-error-600 dark:text-error-400">
+            <div className="bg-error-1 dark:bg-error-a3 p-3 rounded-lg border border-error-4 dark:border-error-11">
+              <p className="text-xs text-error-10 dark:text-error-7">
                 {thresholdError}
               </p>
             </div>
@@ -629,7 +629,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           <div className="flex gap-2">
             <Button
               variant="secondary"
-              className="flex px-3 py-2 text-sm bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded-md"
+              className="flex px-3 py-2 text-sm bg-neutral-2 hover:bg-neutral-3 rounded-md"
               onClick={fetchRecommendation}
               disabled={!preferences.hitl.enabled || thresholdLoading}
             >
@@ -643,7 +643,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
 
             <Button
               variant="primary"
-              className="flex px-3 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-md"
+              className="flex px-3 py-2 text-sm bg-primary-10 hover:bg-primary-11 text-neutral-12 rounded-md"
               onClick={async () => {
                 const result = await applyRecommendation();
                 if (result) {
@@ -690,14 +690,14 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
   return (
     <div
       data-testid="settings-panel"
-      className={`settings-panel bg-white dark:bg-neutral-900 rounded-lg shadow-lg ${className}`}
+      className={`settings-panel bg-neutral-1 rounded-lg shadow-lg ${className}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-5">
         <h2 className="text-lg font-semibold">Settings</h2>
-        <Button
+        <Button size="icon"
           variant="secondary"
-          className="p-1 rounded-md hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 focus:ring-primary-500"
+          className="p-1 rounded-md hover:bg-neutral-2 focus:ring-primary-7"
           onClick={onClose}
           aria-label="Close settings"
         >
@@ -709,11 +709,11 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
         ref={tabListRef}
         role="tablist"
         aria-label="Settings tabs"
-        className="flex border-b border-neutral-200 dark:border-neutral-700 px-2"
+        className="flex border-b border-neutral-5 px-2"
       >
         {TABS.map((tab, index) => (
           <Button
-            className="flex .5 px-3 py-2 text-sm border-b-2 -mb-px focus:ring-inset focus:ring-primary-500"
+            className="flex .5 px-3 py-2 text-sm border-b-2 -mb-px focus:ring-inset focus:ring-primary-7"
             key={tab.id}
             id={`tab-${tab.id}`}
             role="tab"
@@ -738,10 +738,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
         {renderTabContent()}
       </div>
       {/* Footer */}
-      <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 rounded-b-lg">
+      <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-5 bg-neutral-1 rounded-b-lg">
         <Button
           variant="danger"
-          className="flex .5 px-3 py-1.5 text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 rounded-md focus:ring-error-500"
+          className="flex .5 px-3 py-1.5 text-sm text-error-10 dark:text-error-7 hover:bg-error-1 dark:hover:bg-error-a3 rounded-md focus:ring-error-7"
           onClick={() => setShowResetConfirm(true)}
         >
           <RotateCcw size={14} />
@@ -750,7 +750,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
 
         <Button
           variant="primary"
-          className="px-4 py-1.5 text-sm text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:ring-primary-500 focus:ring-offset-2"
+          className="px-4 py-1.5 text-sm text-neutral-12 bg-primary-10 rounded-md hover:bg-primary-11 focus:ring-primary-7 focus:ring-offset-2"
           onClick={onClose}
         >
           Done
@@ -758,19 +758,19 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
       </div>
       {/* Reset Confirmation Modal */}
       {showResetConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-modal flex items-center justify-center bg-neutral-a6">
           <div
             role="alertdialog"
             aria-labelledby="reset-dialog-title"
             aria-describedby="reset-dialog-description"
-            className="bg-white dark:bg-neutral-900 rounded-lg shadow-xl p-6 max-w-sm mx-4"
+            className="bg-neutral-1 rounded-lg shadow-xl p-6 max-w-sm mx-4"
           >
             <h3 id="reset-dialog-title" className="text-lg font-semibold mb-2">
               Reset Settings
             </h3>
             <p
               id="reset-dialog-description"
-              className="text-sm text-neutral-600 dark:text-neutral-400 mb-4"
+              className="text-sm text-neutral-11 mb-4"
             >
               Are you sure you want to reset all settings to their default
               values? This action cannot be undone.
@@ -778,14 +778,14 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
             <div className="flex justify-end gap-2">
               <Button
                 variant="secondary"
-                className="px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 rounded-md focus:ring-neutral-500"
+                className="px-3 py-1.5 text-sm text-neutral-11 hover:bg-neutral-2 rounded-md focus:ring-neutral-8"
                 onClick={() => setShowResetConfirm(false)}
               >
                 Cancel
               </Button>
               <Button
                 variant="danger"
-                className="px-3 py-1.5 text-sm text-white bg-error-600 rounded-md hover:bg-error-700 focus:ring-error-500"
+                className="px-3 py-1.5 text-sm text-neutral-12 bg-error-10 rounded-md hover:bg-error-11 focus:ring-error-7"
                 onClick={handleReset}
               >
                 Reset

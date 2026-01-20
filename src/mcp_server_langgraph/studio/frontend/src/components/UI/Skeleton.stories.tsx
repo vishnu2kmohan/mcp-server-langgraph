@@ -70,23 +70,23 @@ export const Sizes: Story = {
   render: () => (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
-        <span className="text-sm text-neutral-500 w-24">Extra Small:</span>
+        <span className="text-sm text-neutral-10 w-24">Extra Small:</span>
         <Skeleton className="h-2 w-24" />
       </div>
       <div className="flex items-center gap-4">
-        <span className="text-sm text-neutral-500 w-24">Small:</span>
+        <span className="text-sm text-neutral-10 w-24">Small:</span>
         <Skeleton className="h-3 w-32" />
       </div>
       <div className="flex items-center gap-4">
-        <span className="text-sm text-neutral-500 w-24">Medium:</span>
+        <span className="text-sm text-neutral-10 w-24">Medium:</span>
         <Skeleton className="h-4 w-48" />
       </div>
       <div className="flex items-center gap-4">
-        <span className="text-sm text-neutral-500 w-24">Large:</span>
+        <span className="text-sm text-neutral-10 w-24">Large:</span>
         <Skeleton className="h-6 w-64" />
       </div>
       <div className="flex items-center gap-4">
-        <span className="text-sm text-neutral-500 w-24">Extra Large:</span>
+        <span className="text-sm text-neutral-10 w-24">Extra Large:</span>
         <Skeleton className="h-8 w-80" />
       </div>
     </div>
@@ -108,19 +108,19 @@ export const AvatarSizes: Story = {
     <div className="flex items-end gap-4">
       <div className="text-center">
         <Skeleton rounded className="h-8 w-8" />
-        <span className="text-xs text-neutral-500 mt-1 block">SM</span>
+        <span className="text-xs text-neutral-10 mt-1 block">SM</span>
       </div>
       <div className="text-center">
         <Skeleton rounded className="h-10 w-10" />
-        <span className="text-xs text-neutral-500 mt-1 block">MD</span>
+        <span className="text-xs text-neutral-10 mt-1 block">MD</span>
       </div>
       <div className="text-center">
         <Skeleton rounded className="h-12 w-12" />
-        <span className="text-xs text-neutral-500 mt-1 block">LG</span>
+        <span className="text-xs text-neutral-10 mt-1 block">LG</span>
       </div>
       <div className="text-center">
         <Skeleton rounded className="h-16 w-16" />
-        <span className="text-xs text-neutral-500 mt-1 block">XL</span>
+        <span className="text-xs text-neutral-10 mt-1 block">XL</span>
       </div>
     </div>
   ),
@@ -159,17 +159,17 @@ export const TextSkeleton: Story = {
   render: () => (
     <div className="max-w-md space-y-6">
       <div>
-        <h3 className="text-sm font-medium text-neutral-500 mb-2">
+        <h3 className="text-sm font-medium text-neutral-10 mb-2">
           3 lines (default)
         </h3>
         <SkeletonText />
       </div>
       <div>
-        <h3 className="text-sm font-medium text-neutral-500 mb-2">5 lines</h3>
+        <h3 className="text-sm font-medium text-neutral-10 mb-2">5 lines</h3>
         <SkeletonText lines={5} />
       </div>
       <div>
-        <h3 className="text-sm font-medium text-neutral-500 mb-2">1 line</h3>
+        <h3 className="text-sm font-medium text-neutral-10 mb-2">1 line</h3>
         <SkeletonText lines={1} />
       </div>
     </div>
@@ -191,13 +191,13 @@ export const ListSkeleton: Story = {
   render: () => (
     <div className="max-w-md space-y-6">
       <div>
-        <h3 className="text-sm font-medium text-neutral-500 mb-2">
+        <h3 className="text-sm font-medium text-neutral-10 mb-2">
           3 items (default)
         </h3>
         <SkeletonList />
       </div>
       <div>
-        <h3 className="text-sm font-medium text-neutral-500 mb-2">5 items</h3>
+        <h3 className="text-sm font-medium text-neutral-10 mb-2">5 items</h3>
         <SkeletonList items={5} />
       </div>
     </div>
@@ -217,7 +217,7 @@ export const ListSkeleton: Story = {
  */
 export const ProfileCardLoading: Story = {
   render: () => (
-    <div className="max-w-sm p-4 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+    <div className="max-w-sm p-4 bg-neutral-1 border border-neutral-5 rounded-lg">
       <div className="flex items-center gap-4 mb-4">
         <Skeleton rounded className="h-16 w-16" />
         <div className="flex-1 space-y-2">
@@ -247,9 +247,9 @@ export const ProfileCardLoading: Story = {
  */
 export const TableLoading: Story = {
   render: () => (
-    <div className="border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
+    <div className="border border-neutral-5 rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="flex gap-4 p-3 bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex gap-4 p-3 bg-neutral-1 border-b border-neutral-5">
         <Skeleton className="h-4 w-32" />
         <Skeleton className="h-4 w-48" />
         <Skeleton className="h-4 w-24" />
@@ -259,7 +259,7 @@ export const TableLoading: Story = {
       {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
-          className="flex gap-4 p-3 border-b border-neutral-100 dark:border-neutral-700 last:border-b-0"
+          className="flex gap-4 p-3 border-b border-neutral-5 last:border-b-0"
         >
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-48" />
@@ -283,7 +283,7 @@ export const TableLoading: Story = {
  */
 export const DarkMode: Story = {
   render: () => (
-    <div className="dark bg-neutral-900 p-6 rounded-lg">
+    <div className="dark bg-neutral-2 p-6 rounded-lg">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Skeleton rounded className="h-12 w-12" />

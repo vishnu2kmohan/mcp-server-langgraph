@@ -62,13 +62,13 @@ describe("Button", () => {
     it("applies danger variant classes", () => {
       render(<Button variant="danger">Danger</Button>);
       const button = screen.getByRole("button");
-      expect(button.className).toContain("bg-error-500");
+      expect(button.className).toContain("bg-error-9");
     });
 
     it("applies success variant classes", () => {
       render(<Button variant="success">Success</Button>);
       const button = screen.getByRole("button");
-      expect(button.className).toContain("bg-success-500");
+      expect(button.className).toContain("bg-success-9");
     });
 
     it("applies outline variant classes", () => {

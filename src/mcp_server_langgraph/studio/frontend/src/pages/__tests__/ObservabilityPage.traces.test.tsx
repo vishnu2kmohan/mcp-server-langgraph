@@ -518,7 +518,7 @@ describe("ObservabilityPage - Traces", () => {
       await waitFor(() => {
         const errorBadge = screen.getByText("error");
         expect(errorBadge).toBeInTheDocument();
-        expect(errorBadge).toHaveClass("bg-error-100");
+        expect(errorBadge).toHaveClass("bg-error-2");
       });
     });
 
@@ -553,7 +553,7 @@ describe("ObservabilityPage - Traces", () => {
       await waitFor(() => {
         const runningBadge = screen.getByText("running");
         expect(runningBadge).toBeInTheDocument();
-        expect(runningBadge).toHaveClass("bg-primary-100");
+        expect(runningBadge).toHaveClass("bg-primary-2");
       });
     });
 
@@ -806,7 +806,7 @@ describe("ObservabilityPage - Traces", () => {
         const traceCard = screen
           .getByText("chat/completion")
           .closest("[class*='cursor-pointer']");
-        expect(traceCard).toHaveClass("border-primary-500");
+        expect(traceCard).toHaveClass("border-primary-9");
       });
     });
 

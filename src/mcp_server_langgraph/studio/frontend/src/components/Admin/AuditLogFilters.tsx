@@ -118,18 +118,18 @@ export function AuditLogFilters({
   }, [onReset]);
 
   return (
-    <div className="flex flex-wrap gap-4 items-end p-4 bg-white dark:bg-neutral-800 rounded-lg shadow">
+    <div className="flex flex-wrap gap-4 items-end p-4 bg-neutral-1 rounded-lg shadow">
       {/* Date Range */}
       <div className="flex gap-2">
         <div>
           <label
             htmlFor="start-date"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+            className="block text-sm font-medium text-neutral-11 mb-1"
           >
             Start Date
           </label>
           <Input
-            className="px-3 py-2 text-neutral-900 dark:text-white text-sm"
+            className="px-3 py-2 text-neutral-12 text-sm"
             type="date"
             id="start-date"
             value={startDate}
@@ -139,12 +139,12 @@ export function AuditLogFilters({
         <div>
           <label
             htmlFor="end-date"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+            className="block text-sm font-medium text-neutral-11 mb-1"
           >
             End Date
           </label>
           <Input
-            className="px-3 py-2 text-neutral-900 dark:text-white text-sm"
+            className="px-3 py-2 text-neutral-12 text-sm"
             type="date"
             id="end-date"
             value={endDate}
@@ -156,12 +156,12 @@ export function AuditLogFilters({
       <div>
         <label
           htmlFor="action-type"
-          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+          className="block text-sm font-medium text-neutral-11 mb-1"
         >
           Action Type
         </label>
         <Select
-          className="px-3 py-2 text-neutral-900 dark:text-white text-sm min-w-[150px]"
+          className="px-3 py-2 text-neutral-12 text-sm min-w-[150px]"
           id="action-type"
           value={actionType}
           onChange={handleActionTypeChange}
@@ -177,14 +177,14 @@ export function AuditLogFilters({
       <div className="flex-1 min-w-[200px]">
         <label
           htmlFor="user-search"
-          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+          className="block text-sm font-medium text-neutral-11 mb-1"
         >
           User
         </label>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-9" />
           <Input
-            className="pl-9 pr-3 py-2 text-neutral-900 dark:text-white text-sm"
+            className="pl-9 pr-3 py-2 text-neutral-12 text-sm"
             id="user-search"
             value={userQuery}
             onChange={handleUserSearchChange}
@@ -196,7 +196,7 @@ export function AuditLogFilters({
       <div className="flex gap-2">
         <Button
           variant="secondary"
-          className="flex px-3 py-2 text-sm text-neutral-600 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-700 rounded-md hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+          className="flex px-3 py-2 text-sm text-neutral-11 bg-neutral-2 rounded-md hover:bg-neutral-3"
           onClick={handleReset}
           aria-label="Reset filters"
         >
@@ -205,7 +205,7 @@ export function AuditLogFilters({
         </Button>
         <Button
           variant="primary"
-          className="flex px-3 py-2 text-sm text-white bg-primary-600 rounded-md hover:bg-primary-700"
+          className="flex px-3 py-2 text-sm text-neutral-12 bg-primary-10 rounded-md hover:bg-primary-11"
           onClick={onExport}
           aria-label="Export CSV"
         >

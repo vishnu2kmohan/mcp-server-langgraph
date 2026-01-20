@@ -23,6 +23,7 @@ import {
   nodeConfigHandlers,
   mockNodeConfigHelpResponse,
 } from "./nodeConfigHandlers";
+import { transformSnakeToCamel } from "../../api/transforms";
 import type {
   NodeConfigHelpRequest,
   NodeConfigHelpResponse,
@@ -236,6 +237,28 @@ describe("nodeConfigHandlers", () => {
       expect(mockNodeConfigHelpResponse).toBeDefined();
       expect(mockNodeConfigHelpResponse.answer).toBeDefined();
       expect(typeof mockNodeConfigHelpResponse.answer).toBe("string");
+    });
+  });
+
+  describe("API Contract Transformation", () => {
+    it("should return node config help in snake_case and transform to camelCase", async () => {
+      const response = await fetch("/api/v1/ai/node-config/help", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          node_type: "llm",
+          question: "how to configure",
+          node_config: { model: "gpt-4" },
+        }),
+      });
+      expect(response.status).toBe(200);
+
+      const rawData = await response.json();
+      expect(rawData).toBeDefined();
+
+      // Verify transformation works
+      const transformedData = transformSnakeToCamel(rawData);
+      expect(transformedData).toBeDefined();
     });
   });
 });

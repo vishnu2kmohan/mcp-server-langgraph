@@ -96,6 +96,7 @@ import authReducer, { initialAuthState } from "../../store/slices/authSlice";
 import sessionReducer from "../../store/slices/sessionSlice";
 import backgroundAgentReducer from "../../store/slices/backgroundAgentSlice";
 import devToolsReducer from "../../store/slices/devToolsSlice";
+import mcpReducer, { initialMCPState } from "../../store/slices/mcpSlice";
 
 // Import component AFTER all mocks
 import { StudioShellLayout } from "../StudioShellLayout";
@@ -207,6 +208,7 @@ describe("StudioShellLayout - Panels", () => {
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
           devTools: devToolsReducer,
+          mcp: mcpReducer,
         },
         preloadedState: {
           canvas: {
@@ -220,6 +222,7 @@ describe("StudioShellLayout - Panels", () => {
             user: defaultTestUser,
             isInitializing: false,
           },
+          mcp: { ...initialMCPState },
         } as Record<string, unknown>,
       });
 
@@ -250,6 +253,7 @@ describe("StudioShellLayout - Panels", () => {
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
           devTools: devToolsReducer,
+          mcp: mcpReducer,
         },
         preloadedState: {
           canvas: {
@@ -263,6 +267,7 @@ describe("StudioShellLayout - Panels", () => {
             user: defaultTestUser,
             isInitializing: false,
           },
+          mcp: { ...initialMCPState },
         } as Record<string, unknown>,
       });
 
@@ -293,6 +298,7 @@ describe("StudioShellLayout - Panels", () => {
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
           devTools: devToolsReducer,
+          mcp: mcpReducer,
         },
         preloadedState: {
           canvas: {
@@ -306,6 +312,7 @@ describe("StudioShellLayout - Panels", () => {
             user: defaultTestUser,
             isInitializing: false,
           },
+          mcp: { ...initialMCPState },
         } as Record<string, unknown>,
       });
 
@@ -509,6 +516,7 @@ describe("StudioShellLayout - Panels", () => {
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
           devTools: devToolsReducer,
+          mcp: mcpReducer,
         },
         preloadedState: {
           canvas: {
@@ -527,6 +535,7 @@ describe("StudioShellLayout - Panels", () => {
             user: defaultTestUser,
             isInitializing: false,
           },
+          mcp: { ...initialMCPState },
         } as Record<string, unknown>,
       });
 
@@ -557,6 +566,7 @@ describe("StudioShellLayout - Panels", () => {
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
           devTools: devToolsReducer,
+          mcp: mcpReducer,
         },
         preloadedState: {
           canvas: {
@@ -575,6 +585,7 @@ describe("StudioShellLayout - Panels", () => {
             user: defaultTestUser,
             isInitializing: false,
           },
+          mcp: { ...initialMCPState },
         } as Record<string, unknown>,
       });
 
@@ -607,6 +618,7 @@ describe("StudioShellLayout - Panels", () => {
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
           devTools: devToolsReducer,
+          mcp: mcpReducer,
         },
         preloadedState: {
           canvas: {
@@ -625,6 +637,7 @@ describe("StudioShellLayout - Panels", () => {
             user: defaultTestUser,
             isInitializing: false,
           },
+          mcp: { ...initialMCPState },
         } as Record<string, unknown>,
       });
 
@@ -657,6 +670,7 @@ describe("StudioShellLayout - Panels", () => {
           session: sessionReducer,
           backgroundAgent: backgroundAgentReducer,
           devTools: devToolsReducer,
+          mcp: mcpReducer,
         },
         preloadedState: {
           canvas: {
@@ -680,6 +694,7 @@ describe("StudioShellLayout - Panels", () => {
             user: defaultTestUser,
             isInitializing: false,
           },
+          mcp: { ...initialMCPState },
         } as Record<string, unknown>,
       });
 

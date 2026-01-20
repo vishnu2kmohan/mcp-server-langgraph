@@ -51,7 +51,7 @@ export function UpdatePrompt({
     <div
       role="alert"
       aria-live="polite"
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[70] bg-primary-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 max-w-md"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-70 bg-primary-10 text-neutral-12 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 max-w-md"
     >
       <RefreshCw
         className={`h-5 w-5 flex-shrink-0 ${isUpdating ? "animate-spin" : ""}`}
@@ -62,7 +62,7 @@ export function UpdatePrompt({
           {isUpdating ? "Updating application..." : "New version available"}
         </p>
         {!isUpdating && (
-          <p className="text-xs text-primary-100 mt-0.5">
+          <p className="text-xs text-primary-3 mt-0.5">
             Click update to get the latest features
           </p>
         )}
@@ -70,7 +70,7 @@ export function UpdatePrompt({
       <div className="flex items-center gap-2 flex-shrink-0">
         <Button
           variant="primary"
-          className="px-3 py-1.5 text-sm bg-white text-primary-600 rounded hover:bg-primary-50"
+          className="px-3 py-1.5 text-sm bg-neutral-1 text-primary-10 rounded hover:bg-primary-1"
           type="button"
           onClick={onUpdate}
           disabled={isUpdating}
@@ -80,7 +80,7 @@ export function UpdatePrompt({
         </Button>
         <Button
           variant="primary"
-          className="p-1.5 text-primary-100 hover:text-white hover:bg-primary-700 rounded"
+          className="p-1.5 text-primary-3 hover:text-neutral-12 hover:bg-primary-11 rounded"
           type="button"
           onClick={onDismiss}
           disabled={isUpdating}

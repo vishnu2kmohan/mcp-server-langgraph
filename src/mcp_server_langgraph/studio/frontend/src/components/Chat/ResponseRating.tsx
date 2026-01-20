@@ -9,12 +9,70 @@
  * - Optional feedback text input for negative ratings
  * - Loading state during submission
  * - Thank you message after rating
+ *
+ * Design System Compliance:
+ * - Uses CVA for rating button variants
+ * - Uses Motion.dev for button press feedback
+ * - Implements useReducedMotion() for accessibility
+ * - Uses semantic colors per STYLE.md
  */
 
 import { useState, useCallback } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { cva } from "class-variance-authority";
 import { ThumbsUp, ThumbsDown, Loader2, Send } from "lucide-react";
+import { buttonVariants as motionButtonVariants } from "@/design-system/micro-interactions";
 
-import { Button, Input } from "@/components/UI";
+import { Input } from "@/components/UI";
+
+// =============================================================================
+// CVA Variants
+// =============================================================================
+
+/**
+ * Rating button variants for thumbs up/down
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const ratingButtonVariants = cva(
+  "p-1.5 rounded-lg focus:ring-primary-a6 transition-colors",
+  {
+    variants: {
+      state: {
+        default: "text-neutral-9 hover:text-neutral-11 hover:bg-neutral-3",
+        selected_up: "text-success-9 bg-success-3 hover:bg-success-4",
+        selected_down: "text-error-9 bg-error-3 hover:bg-error-4",
+        disabled: "text-neutral-7 cursor-not-allowed",
+      },
+      size: {
+        compact: "p-1",
+        normal: "p-1.5",
+      },
+    },
+    defaultVariants: {
+      state: "default",
+      size: "normal",
+    },
+  },
+);
+
+/**
+ * Feedback submit button variant
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const feedbackButtonVariants = cva(
+  "p-1.5 rounded-lg transition-colors",
+  {
+    variants: {
+      variant: {
+        default: "text-primary-10 dark:text-primary-11 hover:bg-primary-1 dark:hover:bg-primary-a3",
+        disabled: "text-neutral-7 cursor-not-allowed",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
 
 // =============================================================================
 // Types
@@ -58,7 +116,14 @@ export function ResponseRating({
   compact = false,
   className = "",
 }: ResponseRatingProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [feedbackText, setFeedbackText] = useState("");
+
+  const getButtonState = (rating: "up" | "down") => {
+    if (isSubmitting) return "disabled" as const;
+    if (currentRating === rating) return rating === "up" ? "selected_up" as const : "selected_down" as const;
+    return "default" as const;
+  };
 
   const handleRate = useCallback(
     (rating: "up" | "down") => {
@@ -105,8 +170,11 @@ export function ResponseRating({
     >
       <div className={`flex items-center ${compact ? "gap-1" : "gap-2"}`}>
         {/* Thumbs Up */}
-        <Button
-          className="p-1.5 rounded-lg focus:ring-primary-500/50"
+        <motion.button
+          className={ratingButtonVariants({
+            state: getButtonState("up"),
+            size: compact ? "compact" : "normal",
+          })}
           data-testid="rating-thumbs-up"
           type="button"
           onClick={() => handleRate("up")}
@@ -114,13 +182,20 @@ export function ResponseRating({
           disabled={isSubmitting}
           aria-label="Rate as helpful"
           aria-pressed={currentRating === "up"}
+          variants={prefersReducedMotion ? undefined : motionButtonVariants}
+          initial="rest"
+          whileHover={isSubmitting ? undefined : "hover"}
+          whileTap={isSubmitting ? undefined : "pressed"}
         >
           <ThumbsUp size={iconSize} />
-        </Button>
+        </motion.button>
 
         {/* Thumbs Down */}
-        <Button
-          className="p-1.5 rounded-lg focus:ring-primary-500/50"
+        <motion.button
+          className={ratingButtonVariants({
+            state: getButtonState("down"),
+            size: compact ? "compact" : "normal",
+          })}
           data-testid="rating-thumbs-down"
           type="button"
           onClick={() => handleRate("down")}
@@ -128,23 +203,27 @@ export function ResponseRating({
           disabled={isSubmitting}
           aria-label="Rate as not helpful"
           aria-pressed={currentRating === "down"}
+          variants={prefersReducedMotion ? undefined : motionButtonVariants}
+          initial="rest"
+          whileHover={isSubmitting ? undefined : "hover"}
+          whileTap={isSubmitting ? undefined : "pressed"}
         >
           <ThumbsDown size={iconSize} />
-        </Button>
+        </motion.button>
 
         {/* Loading indicator */}
         {isSubmitting && (
           <span data-testid="rating-loading" className="ml-1">
             <Loader2
               size={iconSize}
-              className="animate-spin text-neutral-400 dark:text-neutral-400"
+              className="animate-spin text-neutral-9"
             />
           </span>
         )}
 
         {/* Thank you message */}
         {showThankYou && currentRating && !isSubmitting && (
-          <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1">
+          <span className="text-xs text-neutral-10 ml-1">
             Thank you for your feedback!
           </span>
         )}
@@ -153,23 +232,28 @@ export function ResponseRating({
       {showFeedbackInput && currentRating === "down" && onFeedback && (
         <div className="flex items-center gap-2">
           <Input
-            className="flex-1 px-3 py-1.5 text-sm focus:ring-primary-500/50 text-neutral-700 dark:text-neutral-300 text-neutral-400 dark:text-neutral-400 dark:placeholder:text-neutral-500"
+            className="flex-1 px-3 py-1.5 text-sm focus:ring-primary-a6 text-neutral-11 text-neutral-9 dark:placeholder:text-neutral-10"
             data-testid="feedback-input"
             value={feedbackText}
             onChange={(e) => setFeedbackText(e.target.value)}
             onKeyDown={handleFeedbackKeyDown}
             placeholder="What went wrong?"
           />
-          <Button
-            variant="primary"
-            className="p-1.5 rounded-lg text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+          <motion.button
+            className={feedbackButtonVariants({
+              variant: feedbackText.trim() ? "default" : "disabled",
+            })}
             data-testid="submit-feedback"
             type="button"
             onClick={handleSubmitFeedback}
             disabled={!feedbackText.trim()}
+            variants={prefersReducedMotion ? undefined : motionButtonVariants}
+            initial="rest"
+            whileHover={feedbackText.trim() ? "hover" : undefined}
+            whileTap={feedbackText.trim() ? "pressed" : undefined}
           >
             <Send size={16} />
-          </Button>
+          </motion.button>
         </div>
       )}
     </div>

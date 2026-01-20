@@ -71,7 +71,7 @@ export function CursorPagination({
     >
       <div className="flex items-center gap-2">
         {itemCount !== undefined && (
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+          <span className="text-sm text-neutral-10">
             {itemCount} items
           </span>
         )}
@@ -81,7 +81,7 @@ export function CursorPagination({
           <div className="flex items-center gap-2">
             <label
               htmlFor="limit-select"
-              className="text-sm text-neutral-500 dark:text-neutral-400"
+              className="text-sm text-neutral-10"
             >
               Show:
             </label>
@@ -89,7 +89,7 @@ export function CursorPagination({
               id="limit-select"
               value={limit}
               onChange={handleLimitChange}
-              className="px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+              className="px-2 py-1 text-sm border border-neutral-5 rounded bg-neutral-1 text-neutral-12"
               disabled={isLoading}
             >
               {limitOptions.map((option) => (
@@ -104,7 +104,7 @@ export function CursorPagination({
         <div className="flex items-center gap-1">
           <Button
             variant="secondary"
-            className="flex px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:hover:bg-white dark:disabled:hover:bg-neutral-800"
+            className="flex px-3 py-1.5 text-sm text-neutral-11 bg-neutral-1 border border-neutral-5 rounded-md hover:bg-neutral-1 disabled:hover:bg-neutral-1 dark:disabled:hover:bg-neutral-3"
             onClick={onPrev}
             disabled={!hasPrev || isLoading}
             aria-label="Previous page"
@@ -115,7 +115,7 @@ export function CursorPagination({
 
           <Button
             variant="secondary"
-            className="flex px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:hover:bg-white dark:disabled:hover:bg-neutral-800"
+            className="flex px-3 py-1.5 text-sm text-neutral-11 bg-neutral-1 border border-neutral-5 rounded-md hover:bg-neutral-1 disabled:hover:bg-neutral-1 dark:disabled:hover:bg-neutral-3"
             onClick={onNext}
             disabled={!hasNext || isLoading}
             aria-label="Next page"
@@ -240,7 +240,7 @@ export function PagePagination({
     >
       <div className="flex items-center gap-4">
         {totalItems !== undefined && (
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+          <span className="text-sm text-neutral-10">
             {totalItems} items
           </span>
         )}
@@ -249,7 +249,7 @@ export function PagePagination({
           <div className="flex items-center gap-2">
             <label
               htmlFor="perpage-select"
-              className="text-sm text-neutral-500 dark:text-neutral-400"
+              className="text-sm text-neutral-10"
             >
               Show:
             </label>
@@ -257,7 +257,7 @@ export function PagePagination({
               id="perpage-select"
               value={perPage}
               onChange={handlePerPageChange}
-              className="px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+              className="px-2 py-1 text-sm border border-neutral-5 rounded bg-neutral-1 text-neutral-12"
               disabled={isLoading}
             >
               {perPageOptions.map((option) => (
@@ -274,7 +274,7 @@ export function PagePagination({
         <Button
           variant="secondary"
           size="sm"
-          className="flex px-2 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:hover:bg-white dark:disabled:hover:bg-neutral-800"
+          className="flex px-2 py-1.5 text-sm text-neutral-11 bg-neutral-1 border border-neutral-5 rounded-md hover:bg-neutral-1 disabled:hover:bg-neutral-1 dark:disabled:hover:bg-neutral-3"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1 || isLoading}
           aria-label="Previous page"
@@ -289,7 +289,7 @@ export function PagePagination({
             page === "ellipsis" ? (
               <span
                 key={`ellipsis-${index}`}
-                className="px-2 py-1 text-neutral-500 dark:text-neutral-400"
+                className="px-2 py-1 text-neutral-10"
               >
                 <MoreHorizontal size={16} aria-label="..." />
                 <span className="sr-only">...</span>
@@ -310,7 +310,7 @@ export function PagePagination({
         </div>
 
         {/* Mobile: just show current page */}
-        <span className="sm:hidden px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300">
+        <span className="sm:hidden px-3 py-1.5 text-sm text-neutral-11">
           {currentPage} / {totalPages}
         </span>
 
@@ -318,7 +318,7 @@ export function PagePagination({
         <Button
           variant="secondary"
           size="sm"
-          className="flex px-2 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:hover:bg-white dark:disabled:hover:bg-neutral-800"
+          className="flex px-2 py-1.5 text-sm text-neutral-11 bg-neutral-1 border border-neutral-5 rounded-md hover:bg-neutral-1 disabled:hover:bg-neutral-1 dark:disabled:hover:bg-neutral-3"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages || isLoading}
           aria-label="Next page"

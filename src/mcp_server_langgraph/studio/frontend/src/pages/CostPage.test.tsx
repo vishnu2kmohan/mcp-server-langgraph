@@ -443,17 +443,24 @@ describe("CostPage", () => {
       expect(screen.getByTestId("cost-history-chart")).toBeInTheDocument();
     });
 
-    it("should display date labels on chart", () => {
+    it("should display chart with proper accessibility label", () => {
       renderWithProviders(<CostPage />);
-      expect(screen.getByText(/Jan 1/i)).toBeInTheDocument();
+      const chart = screen.getByTestId("cost-history-chart");
+      // Chart should have accessible description of data points
+      expect(chart).toHaveAttribute(
+        "aria-label",
+        expect.stringMatching(/7 data points/i)
+      );
     });
 
-    it("should display cost values in chart", () => {
+    it("should render chart container with proper accessibility", () => {
       renderWithProviders(<CostPage />);
       const chart = screen.getByTestId("cost-history-chart");
       expect(chart).toBeInTheDocument();
-      const bars = chart.querySelectorAll("[data-cost-bar]");
-      expect(bars.length).toBeGreaterThan(0);
+      // Verify chart container has proper role for accessibility
+      expect(chart).toHaveAttribute("role", "img");
+      // Verify screen reader description is present
+      expect(chart.querySelector(".sr-only")).toBeInTheDocument();
     });
 
     it("should show empty state when no history data", () => {
@@ -529,6 +536,100 @@ describe("CostPage", () => {
         const hasSkeleton = screen.queryByTestId("budget-status-skeleton");
         expect(hasCard || hasSkeleton).toBeTruthy();
       });
+    });
+  });
+
+  // ===========================================================================
+  // ACCESSIBILITY TESTS
+  // ===========================================================================
+
+  describe("Accessibility", () => {
+    it("should have aria-busy on loading container when loading", () => {
+      mockedUseGetCostSummaryQuery.mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        isFetching: true,
+        isError: false,
+        error: null,
+        refetch: mockRefetch,
+      } as ReturnType<typeof apiModule.useGetCostSummaryQuery>);
+      mockedUseGetCostByModelQuery.mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        isFetching: true,
+        isError: false,
+        error: null,
+        refetch: mockRefetch,
+      } as ReturnType<typeof apiModule.useGetCostByModelQuery>);
+      mockedUseGetCostHistoryQuery.mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        isFetching: true,
+        isError: false,
+        error: null,
+        refetch: mockRefetch,
+      } as ReturnType<typeof apiModule.useGetCostHistoryQuery>);
+
+      renderWithProviders(<CostPage />);
+      const loadingContainer = screen.getByTestId("cost-loading-container");
+      expect(loadingContainer).toHaveAttribute("aria-busy", "true");
+    });
+
+    it("should have aria-label on loading container", () => {
+      mockedUseGetCostSummaryQuery.mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        isFetching: true,
+        isError: false,
+        error: null,
+        refetch: mockRefetch,
+      } as ReturnType<typeof apiModule.useGetCostSummaryQuery>);
+      mockedUseGetCostByModelQuery.mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        isFetching: true,
+        isError: false,
+        error: null,
+        refetch: mockRefetch,
+      } as ReturnType<typeof apiModule.useGetCostByModelQuery>);
+      mockedUseGetCostHistoryQuery.mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        isFetching: true,
+        isError: false,
+        error: null,
+        refetch: mockRefetch,
+      } as ReturnType<typeof apiModule.useGetCostHistoryQuery>);
+
+      renderWithProviders(<CostPage />);
+      const loadingContainer = screen.getByTestId("cost-loading-container");
+      expect(loadingContainer).toHaveAttribute("aria-label", "Loading cost data");
+    });
+
+    it("should have role=group on admin view toggle container", () => {
+      renderWithProviders(<CostPage />, { persona: "admin" });
+      const toggleGroup = screen.getByRole("group", { name: /dashboard view/i });
+      expect(toggleGroup).toBeInTheDocument();
+    });
+
+    it("should have aria-pressed on active admin toggle button", () => {
+      renderWithProviders(<CostPage />, { persona: "admin" });
+      const personalButton = screen.getByRole("button", { name: /personal costs/i });
+      expect(personalButton).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("should update aria-pressed when switching views", () => {
+      renderWithProviders(<CostPage />, { persona: "admin" });
+      const orgButton = screen.getByRole("button", { name: /organizational view/i });
+
+      // Initially personal is pressed
+      expect(orgButton).toHaveAttribute("aria-pressed", "false");
+
+      // Click organizational
+      fireEvent.click(orgButton);
+
+      // Now organizational should be pressed
+      expect(orgButton).toHaveAttribute("aria-pressed", "true");
     });
   });
 });

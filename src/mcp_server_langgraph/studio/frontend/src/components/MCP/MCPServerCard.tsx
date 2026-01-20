@@ -120,8 +120,8 @@ function CapabilityStat({
 }) {
   return (
     <div className="flex items-center gap-1.5 text-sm">
-      <span className="text-neutral-500 dark:text-neutral-400">{icon}</span>
-      <span className="font-medium text-neutral-900 dark:text-neutral-100">
+      <span className="text-neutral-10">{icon}</span>
+      <span className="font-medium text-neutral-12">
         {count}
       </span>
       <span className="sr-only">{label}</span>
@@ -158,7 +158,7 @@ export function MCPServerCard({
       >
         {/* Server name */}
         <div className="mb-3">
-          <h4 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 truncate">
+          <h4 className="text-base font-semibold text-neutral-12 truncate">
             {serverName}
           </h4>
         </div>

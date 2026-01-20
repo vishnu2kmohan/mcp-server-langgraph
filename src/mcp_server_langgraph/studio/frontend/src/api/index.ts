@@ -219,6 +219,13 @@ import type {
   KBStatusResponseCamelCase,
 } from "../types/api";
 
+// Import unified tools types (Manual Tool Selection)
+import type {
+  UnifiedToolCamelCase,
+  UnifiedToolsListResponse,
+  ListToolsParams,
+} from "../types/tools";
+
 // Import generated API types for type safety (prevents type drift)
 import type { components } from "../types/generated-api";
 type UserInfoResponse = components["schemas"]["UserInfoResponse"];
@@ -541,6 +548,7 @@ export const api = createApi({
     "Marketplace",
     "DecisionTrace",
     "SessionTraces",
+    "BypassPermission",
   ],
   endpoints: (builder) => ({
     // Feature Flags
@@ -582,6 +590,7 @@ export const api = createApi({
         supportsVision?: boolean;
         supportsTools?: boolean;
         status?: "current" | "preview" | "legacy" | "deprecated";
+        isDefault?: boolean;
       }>,
       void
     >({
@@ -595,6 +604,7 @@ export const api = createApi({
           supports_vision?: boolean;
           supports_tools?: boolean;
           status?: "current" | "preview" | "legacy" | "deprecated";
+          is_default?: boolean;
         }>,
       ) =>
         response.map((model) => ({
@@ -605,6 +615,7 @@ export const api = createApi({
           supportsVision: model.supports_vision,
           supportsTools: model.supports_tools,
           status: model.status,
+          isDefault: model.is_default,
         })),
       // Keep cached for 30 minutes - model list rarely changes at runtime
       keepUnusedDataFor: 1800,
@@ -1556,6 +1567,39 @@ export const api = createApi({
     }),
 
     // =========================================================================
+    // Unified Tools API (Manual Tool Selection)
+    // =========================================================================
+
+    /** List all available tools (built-in + MCP) for manual selection */
+    listUnifiedTools: builder.query<
+      {
+        tools: UnifiedToolCamelCase[];
+        builtinCount: number;
+        mcpCount: number;
+        totalCount: number;
+      },
+      ListToolsParams | void
+    >({
+      query: (params) => {
+        const searchParams = new URLSearchParams();
+        if (params?.source) searchParams.set("source", params.source);
+        if (params?.category) searchParams.set("category", params.category);
+        if (params?.search) searchParams.set("search", params.search);
+        const queryString = searchParams.toString();
+        return queryString ? `/tools?${queryString}` : "/tools";
+      },
+      transformResponse: (response: UnifiedToolsListResponse) =>
+        transformSnakeToCamel(response) as unknown as {
+          tools: UnifiedToolCamelCase[];
+          builtinCount: number;
+          mcpCount: number;
+          totalCount: number;
+        },
+      providesTags: ["Connection"], // Invalidate when connections change (MCP tools)
+      keepUnusedDataFor: 300, // 5 minutes - tools don't change often
+    }),
+
+    // =========================================================================
     // MCP Aggregated Capabilities (MCP 2025-11-25)
     // =========================================================================
 
@@ -2100,6 +2144,17 @@ export const api = createApi({
       keepUnusedDataFor: 3600, // 1 hour - identity providers are very stable
     }),
 
+    /**
+     * Check Bypass Permission (OpenFGA bypass_executor on system:global)
+     * Used to determine if user can access bypass execution mode.
+     * Returns { allowed: boolean } from OpenFGA permission check.
+     */
+    checkBypassPermission: builder.query<{ allowed: boolean }, void>({
+      query: () => "/auth/bypass-permission",
+      providesTags: ["BypassPermission"],
+      keepUnusedDataFor: 300, // 5 minutes - permission may change
+    }),
+
     // Feedback Submission (NPS/CSAT)
     submitFeedback: builder.mutation<FeedbackResponse, FeedbackRequest>({
       query: (body) => ({
@@ -2472,6 +2527,7 @@ export const api = createApi({
           default_url: string;
           category: string;
           oauth2_scopes: string[];
+          documentation_url?: string | null;
           config_fields: Array<{
             name: string;
             label: string;
@@ -2503,6 +2559,7 @@ export const api = createApi({
         default_url: string;
         category: string;
         oauth2_scopes: string[];
+        documentation_url?: string | null;
         config_fields: Array<{
           name: string;
           label: string;
@@ -2549,6 +2606,43 @@ export const api = createApi({
         method: "POST",
         body,
       }),
+    }),
+
+    /** Get template suggestions based on user query/keywords */
+    getTemplateSuggestions: builder.query<
+      {
+        templates: Array<{
+          id: string;
+          name: string;
+          description: string;
+          icon: string;
+          auth_type: "none" | "api_key" | "oauth2";
+          default_url: string;
+          category: string;
+          oauth2_scopes: string[];
+          keywords: string[];
+          popularity: number;
+          documentation_url: string | null;
+          config_fields: Array<{
+            name: string;
+            label: string;
+            type: "text" | "password" | "url" | "textarea";
+            required: boolean;
+            placeholder?: string;
+            description?: string;
+            default?: string;
+          }>;
+        }>;
+        total: number;
+      },
+      { query: string }
+    >({
+      query: ({ query }) => ({
+        url: "/connection-templates/suggestions",
+        params: { q: query },
+      }),
+      providesTags: ["ConnectionTemplate"],
+      keepUnusedDataFor: 300, // 5 minutes - suggestions can be cached briefly
     }),
 
     // =========================================================================
@@ -3815,6 +3909,141 @@ export const api = createApi({
       query: () => "/admin/marketplaces",
       providesTags: ["Marketplace"],
     }),
+
+    // ==========================================================================
+    // Semantic Search
+    // ==========================================================================
+
+    /**
+     * Semantic search for tools using natural language query.
+     * Requires enable_semantic_tool_search feature flag.
+     */
+    semanticSearchTools: builder.mutation<
+      {
+        query: string;
+        results: Array<{
+          toolId: string;
+          name: string;
+          description: string;
+          score: number;
+          category?: string;
+        }>;
+        totalResults: number;
+      },
+      {
+        query: string;
+        limit?: number;
+        minScore?: number;
+      }
+    >({
+      query: (body) => ({
+        url: "/tools/semantic-search",
+        method: "POST",
+        body: transformCamelToSnake(body),
+      }),
+      transformResponse: (response: unknown) =>
+        transformSnakeToCamel(response) as {
+          query: string;
+          results: Array<{
+            toolId: string;
+            name: string;
+            description: string;
+            score: number;
+            category?: string;
+          }>;
+          totalResults: number;
+        },
+    }),
+
+    /**
+     * Semantic search for skills using natural language query.
+     * Requires enable_semantic_skill_search feature flag.
+     */
+    semanticSearchSkills: builder.mutation<
+      {
+        query: string;
+        results: Array<{
+          skillId: string;
+          name: string;
+          description: string;
+          score: number;
+          tags?: string[];
+        }>;
+        totalResults: number;
+      },
+      {
+        query: string;
+        limit?: number;
+        minScore?: number;
+      }
+    >({
+      query: (body) => ({
+        url: "/admin/skills/semantic-search",
+        method: "POST",
+        body: transformCamelToSnake(body),
+      }),
+      transformResponse: (response: unknown) =>
+        transformSnakeToCamel(response) as {
+          query: string;
+          results: Array<{
+            skillId: string;
+            name: string;
+            description: string;
+            score: number;
+            tags?: string[];
+          }>;
+          totalResults: number;
+        },
+    }),
+
+    // ==========================================================================
+    // Markdown References Resolution
+    // ==========================================================================
+
+    /**
+     * Batch resolve [[type:qualifier:id]] markdown references.
+     *
+     * Resolves tool, skill, artifact, memory, and plan references with OpenFGA authorization.
+     * Returns display names, descriptions, and status for rendering chips.
+     */
+    resolveReferences: builder.mutation<
+      {
+        resolved: Array<{
+          type: string;
+          qualifier: string;
+          id: string;
+          displayName: string;
+          description?: string;
+          status: "valid" | "not_found" | "unauthorized";
+          metadata?: Record<string, unknown>;
+        }>;
+      },
+      {
+        references: Array<{
+          type: "tool" | "skill" | "artifact" | "memory" | "plan";
+          qualifier: string;
+          id: string;
+        }>;
+      }
+    >({
+      query: (body) => ({
+        url: "/references/resolve",
+        method: "POST",
+        body: transformCamelToSnake(body),
+      }),
+      transformResponse: (response: unknown) =>
+        transformSnakeToCamel(response) as {
+          resolved: Array<{
+            type: string;
+            qualifier: string;
+            id: string;
+            displayName: string;
+            description?: string;
+            status: "valid" | "not_found" | "unauthorized";
+            metadata?: Record<string, unknown>;
+          }>;
+        },
+    }),
   }),
 });
 
@@ -3957,6 +4186,8 @@ export const {
   useLoginMutation,
   useLogoutMutation,
   useGetIdentityProvidersQuery,
+  // Auth (Bypass Permission - OpenFGA)
+  useCheckBypassPermissionQuery,
   // Feedback
   useSubmitFeedbackMutation,
   // Message Rating
@@ -3991,6 +4222,7 @@ export const {
   useListConnectionTemplatesQuery,
   useGetConnectionTemplateQuery,
   useApplyConnectionTemplateMutation,
+  useGetTemplateSuggestionsQuery,
   // Connection Audit
   useLogConnectionAuditEventMutation,
   useQueryConnectionAuditLogsQuery,
@@ -4043,6 +4275,8 @@ export const {
   useBatchCompositeAnalysisMutation,
   // Studio AI Endpoints (StudioShell)
   useStudioAnalyzeMutation,
+  // Unified Tools API (Manual Tool Selection)
+  useListUnifiedToolsQuery,
   // MCP Protocol Endpoints
   useListMcpResourcesQuery,
   useReadMcpResourceMutation,
@@ -4063,4 +4297,9 @@ export const {
   useCheckSkillUpdatesQuery,
   useApplySkillUpdatesMutation,
   useListMarketplacesQuery,
+  // Semantic Search
+  useSemanticSearchToolsMutation,
+  useSemanticSearchSkillsMutation,
+  // Markdown References Resolution
+  useResolveReferencesMutation,
 } = api;

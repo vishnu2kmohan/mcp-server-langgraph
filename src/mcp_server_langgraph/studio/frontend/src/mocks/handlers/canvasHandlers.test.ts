@@ -28,6 +28,21 @@ import type {
   ForkArtifactRequest,
   ArtifactVersion,
 } from "../../types/artifacts";
+import { transformSnakeToCamel } from "../../api/transforms";
+
+/**
+ * Fetch from MSW endpoint and transform response to camelCase.
+ * Simulates what hooks do when consuming API data.
+ */
+async function fetchApi<T>(
+  url: string,
+  options?: RequestInit,
+): Promise<{ response: Response; data: T }> {
+  const response = await fetch(url, options);
+  const rawData = await response.json();
+  const data = transformSnakeToCamel(rawData) as T;
+  return { response, data };
+}
 
 // Setup MSW server with canvas handlers
 const server = setupServer(...canvasHandlers);
@@ -83,12 +98,10 @@ describe("canvasHandlers", () => {
 
   describe("GET /api/v1/artifacts", () => {
     it("returns a list of artifacts for a session", async () => {
-      const response = await fetch(
+      const { response, data } = await fetchApi<ListArtifactsResponse>(
         "/api/v1/artifacts?session_id=session-1&limit=10",
       );
       expect(response.status).toBe(200);
-
-      const data: ListArtifactsResponse = await response.json();
       expect(data.items).toBeDefined();
       expect(Array.isArray(data.items)).toBe(true);
       expect(data.cursor).toBeDefined();
@@ -96,10 +109,9 @@ describe("canvasHandlers", () => {
     });
 
     it("filters artifacts by session_id", async () => {
-      const response = await fetch(
+      const { data } = await fetchApi<ListArtifactsResponse>(
         "/api/v1/artifacts?session_id=session-1&limit=10",
       );
-      const data: ListArtifactsResponse = await response.json();
 
       data.items.forEach((artifact) => {
         expect(artifact.sessionId).toBe("session-1");
@@ -107,10 +119,9 @@ describe("canvasHandlers", () => {
     });
 
     it("returns empty list for unknown session", async () => {
-      const response = await fetch(
+      const { data } = await fetchApi<ListArtifactsResponse>(
         "/api/v1/artifacts?session_id=unknown-session&limit=10",
       );
-      const data: ListArtifactsResponse = await response.json();
 
       expect(data.items).toHaveLength(0);
       expect(data.hasMore).toBe(false);
@@ -119,10 +130,10 @@ describe("canvasHandlers", () => {
 
   describe("GET /api/v1/artifacts/:id", () => {
     it("returns a specific artifact by id", async () => {
-      const response = await fetch("/api/v1/artifacts/art-1");
+      const { response, data: artifact } = await fetchApi<CanvasArtifact>(
+        "/api/v1/artifacts/art-1",
+      );
       expect(response.status).toBe(200);
-
-      const artifact: CanvasArtifact = await response.json();
       expect(artifact.id).toBe("art-1");
       expect(artifact.sessionId).toBeDefined();
       expect(artifact.content).toBeDefined();
@@ -155,7 +166,8 @@ describe("canvasHandlers", () => {
 
       expect(response.status).toBe(201);
 
-      const data = await response.json();
+      const rawData = await response.json();
+      const data = transformSnakeToCamel(rawData);
       expect(data.id).toBeDefined();
       expect(data.version).toBe(1);
       expect(data.createdAt).toBeDefined();
@@ -177,7 +189,8 @@ describe("canvasHandlers", () => {
 
       expect(response.status).toBe(200);
 
-      const data = await response.json();
+      const rawData = await response.json();
+      const data = transformSnakeToCamel(rawData);
       expect(data.id).toBe("art-1");
       expect(data.version).toBeGreaterThan(0);
       expect(data.updatedAt).toBeDefined();
@@ -213,7 +226,8 @@ describe("canvasHandlers", () => {
       const response = await fetch("/api/v1/artifacts/art-1/versions");
       expect(response.status).toBe(200);
 
-      const versions: ArtifactVersion[] = await response.json();
+      const rawVersions = await response.json();
+      const versions = transformSnakeToCamel(rawVersions) as ArtifactVersion[];
       expect(Array.isArray(versions)).toBe(true);
       versions.forEach((v) => {
         expect(v.artifactId).toBe("art-1");
@@ -242,7 +256,8 @@ describe("canvasHandlers", () => {
 
       expect(response.status).toBe(201);
 
-      const data = await response.json();
+      const rawData = await response.json();
+      const data = transformSnakeToCamel(rawData);
       expect(data.id).toBeDefined();
       expect(data.parentId).toBe("art-1");
       expect(data.version).toBe(1);

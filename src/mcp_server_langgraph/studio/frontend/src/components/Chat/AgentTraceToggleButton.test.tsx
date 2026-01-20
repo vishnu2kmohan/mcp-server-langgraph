@@ -67,16 +67,16 @@ describe("AgentTraceToggleButton", () => {
       render(<AgentTraceToggleButton isExpanded={true} onToggle={() => {}} />);
 
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("bg-primary-100");
-      expect(button).toHaveClass("text-primary-600");
+      expect(button).toHaveClass("bg-primary-2");
+      expect(button).toHaveClass("text-primary-10");
     });
 
     it("applies inactive styling when collapsed", () => {
       render(<AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />);
 
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("text-neutral-400");
-      expect(button).not.toHaveClass("bg-primary-100");
+      expect(button).toHaveClass("text-neutral-9");
+      expect(button).not.toHaveClass("bg-primary-2");
     });
   });
 

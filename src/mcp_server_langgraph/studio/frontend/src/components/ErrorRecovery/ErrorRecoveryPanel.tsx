@@ -263,13 +263,11 @@ export function ErrorRecoveryPanel({
           </div>
         )}
       {/* Dismiss Button */}
-      <Button
+      <Button variant="secondary"
         className="dismiss-button"
         onClick={onDismiss}
         aria-label="Dismiss"
-      >
-        Dismiss
-      </Button>
+      >Dismiss</Button>
       {/* Analysis Error Notice */}
       {analysisError && (
         <p className="analysis-error">

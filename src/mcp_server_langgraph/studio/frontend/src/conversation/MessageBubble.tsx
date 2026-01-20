@@ -3,14 +3,97 @@
  *
  * Individual chat message bubble with user/assistant styling,
  * code block support, and action buttons.
+ *
+ * Design System Compliance:
+ * - Uses CVA for role-based variants (user/assistant)
+ * - Uses Motion.dev for message entrance animation
+ * - Implements useReducedMotion() for accessibility
+ * - Uses semantic colors per STYLE.md
  */
 import { useState, useCallback, useMemo, memo } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { cva } from "class-variance-authority";
 import { User, Bot, Copy, Check } from "lucide-react";
 import type { ChatMessage } from "../types";
 import { cn } from "../utils/cn";
+import { listItemVariants } from "@/design-system/micro-interactions";
 
 import { Button } from "@/components/UI";
 import { LLMThinkingTrace } from "@/components/Chat/LLMThinkingTrace";
+
+// =============================================================================
+// CVA Variants
+// =============================================================================
+
+/**
+ * Message container variants based on role
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const messageContainerVariants = cva("flex gap-3 px-4 py-2", {
+  variants: {
+    role: {
+      user: "justify-end",
+      assistant: "justify-start",
+    },
+  },
+  defaultVariants: {
+    role: "assistant",
+  },
+});
+
+/**
+ * Avatar variants based on role
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const avatarVariants = cva(
+  "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
+  {
+    variants: {
+      role: {
+        user: "bg-primary-3 bg-primary-4 text-primary-10 dark:text-primary-7",
+        assistant: "bg-insight-2 dark:bg-insight-a4 text-insight-10 dark:text-insight-9",
+      },
+    },
+    defaultVariants: {
+      role: "assistant",
+    },
+  },
+);
+
+/**
+ * Message bubble variants based on role
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const bubbleVariants = cva(
+  "message-bubble relative max-w-[80%] rounded-2xl px-4 py-2",
+  {
+    variants: {
+      role: {
+        user: "user bg-primary-9 text-neutral-12",
+        assistant: "assistant bg-neutral-2 text-neutral-12",
+      },
+    },
+    defaultVariants: {
+      role: "assistant",
+    },
+  },
+);
+
+/**
+ * Timestamp variants based on role
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const timestampVariants = cva("text-xs mt-1", {
+  variants: {
+    role: {
+      user: "text-primary-4",
+      assistant: "text-neutral-9",
+    },
+  },
+  defaultVariants: {
+    role: "assistant",
+  },
+});
 
 // Re-export ChatMessage for backwards compatibility
 export type { ChatMessage };
@@ -97,11 +180,11 @@ function CodeBlock({
 
   return (
     <div data-testid="code-block" className="relative my-2">
-      <div className="flex items-center justify-between px-3 py-1 bg-neutral-700 dark:bg-neutral-900 rounded-t-lg text-xs text-neutral-400 dark:text-neutral-400">
+      <div className="flex items-center justify-between px-3 py-1 bg-neutral-4 rounded-t-lg text-xs text-neutral-9">
         <span>{language}</span>
         <Button
           variant="secondary"
-          className="p-1 hover:bg-neutral-600 rounded"
+          className="p-1 hover:bg-neutral-5 rounded"
           data-testid="copy-code-button"
           type="button"
           onClick={handleCopy}
@@ -109,7 +192,7 @@ function CodeBlock({
           {copied ? <Check size={12} /> : <Copy size={12} />}
         </Button>
       </div>
-      <pre className="p-3 bg-neutral-800 dark:bg-neutral-950 rounded-b-lg overflow-x-auto text-sm text-neutral-100">
+      <pre className="p-3 bg-neutral-3 rounded-b-lg overflow-x-auto text-sm text-neutral-9">
         <code>{content}</code>
       </pre>
     </div>
@@ -123,18 +206,9 @@ function CodeBlock({
 function TypingIndicator() {
   return (
     <div data-testid="typing-indicator" className="flex gap-1 py-2">
-      <div
-        className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
-        style={{ animationDelay: "0ms" }}
-      />
-      <div
-        className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
-        style={{ animationDelay: "150ms" }}
-      />
-      <div
-        className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
-        style={{ animationDelay: "300ms" }}
-      />
+      <div className="w-2 h-2 bg-neutral-4 rounded-full animate-bounce motion-reduce:animate-none animation-delay-0" />
+      <div className="w-2 h-2 bg-neutral-4 rounded-full animate-bounce motion-reduce:animate-none animation-delay-150" />
+      <div className="w-2 h-2 bg-neutral-4 rounded-full animate-bounce motion-reduce:animate-none animation-delay-300" />
     </div>
   );
 }
@@ -150,11 +224,13 @@ function MessageBubbleImpl({
   onCopy,
   className,
 }: MessageBubbleProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [isHovered, setIsHovered] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isThinkingExpanded, setIsThinkingExpanded] = useState(false);
 
   const isUser = message.role === "user";
+  const role = isUser ? "user" : "assistant";
   const hasThinkingContent = !isUser && !!message.thinkingContent?.trim();
   const parsedContent = useMemo(
     () => parseCodeBlocks(message.content),
@@ -174,22 +250,18 @@ function MessageBubbleImpl({
   }, [message, onCopy]);
 
   return (
-    <div
+    <motion.div
       data-testid="message-container"
-      className={cn(
-        "flex gap-3 px-4 py-2",
-        isUser ? "justify-end" : "justify-start",
-        className,
-      )}
+      className={cn(messageContainerVariants({ role }), className)}
+      variants={prefersReducedMotion ? undefined : listItemVariants}
+      initial="hidden"
+      animate="visible"
     >
       {/* Avatar */}
       {!isUser && (
         <div
           data-testid="ai-avatar"
-          className={cn(
-            "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-            "bg-insight-100 dark:bg-insight-900/30 text-insight-600 dark:text-insight-400",
-          )}
+          className={avatarVariants({ role: "assistant" })}
         >
           <Bot size={16} />
         </div>
@@ -201,12 +273,7 @@ function MessageBubbleImpl({
         aria-label={`${message.role} message`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={cn(
-          "message-bubble relative max-w-[80%] rounded-2xl px-4 py-2",
-          isUser && "user bg-primary-500 text-white",
-          !isUser &&
-            "assistant bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100",
-        )}
+        className={bubbleVariants({ role })}
       >
         {isTyping ? (
           <TypingIndicator />
@@ -243,12 +310,7 @@ function MessageBubbleImpl({
             {showTimestamp && (
               <div
                 data-testid="message-timestamp"
-                className={cn(
-                  "text-xs mt-1",
-                  isUser
-                    ? "text-primary-200"
-                    : "text-neutral-400 dark:text-neutral-400",
-                )}
+                className={timestampVariants({ role })}
               >
                 {formatTime(message.timestamp)}
               </div>
@@ -262,8 +324,8 @@ function MessageBubbleImpl({
                 onClick={handleCopy}
                 className={cn(
                   "absolute -top-2 -right-2 p-1.5 rounded-full",
-                  "bg-white dark:bg-neutral-700 shadow-md",
-                  "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200",
+                  "bg-neutral-1 shadow-md",
+                  "text-neutral-10 hover:text-neutral-11",
                   "transition-all",
                 )}
               >
@@ -277,15 +339,12 @@ function MessageBubbleImpl({
       {isUser && (
         <div
           data-testid="user-avatar"
-          className={cn(
-            "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-            "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400",
-          )}
+          className={avatarVariants({ role: "user" })}
         >
           <User size={16} />
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 

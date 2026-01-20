@@ -119,7 +119,7 @@ describe("WorkflowHeader", () => {
       );
 
       const header = container.querySelector("header");
-      expect(header).toHaveClass("bg-neutral-800");
+      expect(header).toHaveClass("bg-neutral-3");
     });
 
     it("should apply light mode styles when isDarkMode is false", () => {
@@ -128,7 +128,7 @@ describe("WorkflowHeader", () => {
       );
 
       const header = container.querySelector("header");
-      expect(header).toHaveClass("bg-white");
+      expect(header).toHaveClass("bg-neutral-1");
     });
   });
 });

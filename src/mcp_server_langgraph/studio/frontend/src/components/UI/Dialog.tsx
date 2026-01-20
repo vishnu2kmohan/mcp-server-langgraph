@@ -25,7 +25,7 @@ import { Button } from "@/components/UI";
 export const dialogVariants = cva(
   // Base styles
   [
-    "relative bg-white dark:bg-neutral-800 rounded-lg shadow-xl",
+    "relative bg-neutral-1 rounded-lg shadow-xl",
     "w-full mx-4 max-h-[90vh] overflow-y-auto",
   ],
   {
@@ -99,21 +99,21 @@ export function Dialog({
       role="dialog"
       aria-modal="true"
       aria-labelledby="dialog-title"
-      className="fixed inset-0 z-[60] flex items-center justify-center"
+      className="fixed inset-0 z-60 flex items-center justify-center"
     >
       {/* Backdrop */}
       <div
         data-testid="dialog-backdrop"
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-neutral-a6"
         onClick={onClose}
       />
       {/* Dialog Panel */}
       <div className={cn(dialogVariants({ size }))}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-5">
           <h2
             id="dialog-title"
-            className="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
+            className="text-lg font-semibold text-neutral-12"
           >
             {title}
           </h2>
@@ -121,10 +121,11 @@ export function Dialog({
             onClick={onClose}
             aria-label="Close"
             className={cn(
-              "p-1 rounded-full",
-              "text-neutral-500 dark:text-neutral-400",
-              "hover:text-neutral-700 dark:hover:text-neutral-200",
-              "hover:bg-neutral-100 dark:hover:bg-neutral-700",
+              "h-8 w-8 min-h-8 min-w-8 p-1 rounded-full",
+              "text-neutral-10",
+              "hover:text-neutral-11",
+              "hover:bg-neutral-2",
+              "transition-colors",
             )}
           >
             <X size={20} />
@@ -143,7 +144,7 @@ export function Dialog({
         {footer && (
           <div
             data-testid="dialog-footer"
-            className="flex justify-end gap-2 p-4 border-t border-neutral-200 dark:border-neutral-700"
+            className="flex justify-end gap-2 p-4 border-t border-neutral-5"
           >
             {footer}
           </div>

@@ -88,16 +88,16 @@ function AISuggestionTrigger({
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-2 px-4 py-2 rounded-lg",
-        "bg-indigo-600 hover:bg-indigo-700 text-white",
+        "bg-primary-10 hover:bg-primary-11 text-neutral-12",
         "transition-colors duration-150",
-        "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2",
+        "focus:outline-none focus:ring-2 focus:ring-primary-9 focus:ring-offset-2",
       )}
     >
       {showConfidence && suggestion.confidence >= 0.85 && (
         <Sparkles
           size={16}
           data-testid="ai-suggestion-indicator"
-          className="text-warning-300"
+          className="text-warning-6"
         />
       )}
       <span>{suggestion.text}</span>
@@ -124,9 +124,9 @@ function FallbackTrigger({
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-2 px-4 py-2 rounded-lg",
-        "bg-neutral-600 hover:bg-neutral-700 text-white",
+        "bg-neutral-5 hover:bg-neutral-4 text-neutral-12",
         "transition-colors duration-150",
-        "focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2",
+        "focus:outline-none focus:ring-2 focus:ring-neutral-8 focus:ring-offset-2",
       )}
       data-target={target}
     >
@@ -234,9 +234,9 @@ export function AIEmptyState({
         onClick={() => handleSuggestionClick(secondSuggestion)}
         className={cn(
           "inline-flex items-center gap-2 px-4 py-2 rounded-lg",
-          "border border-neutral-300 dark:border-neutral-600",
-          "text-neutral-700 dark:text-neutral-300",
-          "hover:bg-neutral-50 dark:hover:bg-neutral-800",
+          "border border-neutral-5",
+          "text-neutral-11",
+          "hover:bg-neutral-1",
           "transition-colors duration-150",
         )}
       >

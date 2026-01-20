@@ -37,6 +37,8 @@ import disclosureReducer from "./slices/disclosureSlice";
 import nudgeReducer from "./slices/nudgeSlice";
 import devToolsReducer from "./slices/devToolsSlice";
 import langGraphReducer from "./slices/langGraphSlice";
+import chatConnectionReducer from "./slices/chatConnectionSlice";
+import executionModeReducer from "./slices/executionModeSlice";
 
 // =============================================================================
 // Listener Middleware for Cross-Slice Side Effects
@@ -100,6 +102,10 @@ export const store = configureStore({
     devTools: devToolsReducer,
     // LangGraph execution events (for DevTools time-travel debugging)
     langGraph: langGraphReducer,
+    // Chat connection awareness (auth requirements, setup, suggestions)
+    chatConnection: chatConnectionReducer,
+    // Execution mode toggle and plan approval workflow
+    executionMode: executionModeReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()

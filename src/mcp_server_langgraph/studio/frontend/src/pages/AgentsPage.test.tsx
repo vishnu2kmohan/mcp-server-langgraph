@@ -228,10 +228,11 @@ describe("AgentsPage", () => {
       );
 
       await waitFor(() => {
-        const checkbox = screen.getByRole("checkbox", {
-          name: /verification/i,
+        // Toggle uses role="switch" with aria-checked, not checkbox
+        const toggle = screen.getByRole("switch", {
+          name: /enable verification/i,
         });
-        expect(checkbox).toBeChecked();
+        expect(toggle).toHaveAttribute("aria-checked", "true");
       });
     });
   });
@@ -315,15 +316,16 @@ describe("AgentsPage", () => {
   });
 
   describe("Verification Toggle", () => {
-    it("should have verification checkbox", () => {
+    it("should have verification toggle", () => {
       render(
         <AgentsPageTestWrapper>
           <AgentsPage />
         </AgentsPageTestWrapper>,
       );
 
+      // Toggle uses role="switch", not checkbox
       expect(
-        screen.getByRole("checkbox", { name: /verification/i }),
+        screen.getByRole("switch", { name: /enable verification/i }),
       ).toBeInTheDocument();
     });
 
@@ -335,12 +337,13 @@ describe("AgentsPage", () => {
       );
 
       await waitFor(() => {
-        const checkbox = screen.getByRole("checkbox", {
-          name: /verification/i,
+        // Toggle uses role="switch" with aria-checked
+        const toggle = screen.getByRole("switch", {
+          name: /enable verification/i,
         });
-        expect(checkbox).toBeChecked();
-        fireEvent.click(checkbox);
-        expect(checkbox).not.toBeChecked();
+        expect(toggle).toHaveAttribute("aria-checked", "true");
+        fireEvent.click(toggle);
+        expect(toggle).toHaveAttribute("aria-checked", "false");
       });
     });
   });

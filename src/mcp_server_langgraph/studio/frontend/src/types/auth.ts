@@ -51,6 +51,10 @@ export interface WebSocketPermissions {
   ai_suggestions: boolean;
   /** Orchestrator status (/ws/orchestrator/status) */
   orchestrator_status: boolean;
+  /** LLM response streaming (/ws/llm/streaming) */
+  llm_streaming: boolean;
+  /** Session metrics streaming (/ws/metrics/session) */
+  session_metrics: boolean;
 }
 
 /**

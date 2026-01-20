@@ -74,7 +74,7 @@ function InteractiveDialog({
           ) : undefined
         }
       >
-        <p className="text-neutral-700 dark:text-neutral-300">
+        <p className="text-neutral-11">
           This is the dialog content. Click the backdrop or press Escape to
           close.
         </p>
@@ -150,7 +150,7 @@ export const LongContent: Story = {
             </>
           }
         >
-          <div className="space-y-4 text-neutral-700 dark:text-neutral-300">
+          <div className="space-y-4 text-neutral-11">
             {Array.from({ length: 10 }).map((_, i) => (
               <p key={i}>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
@@ -201,7 +201,7 @@ export const ConfirmationPattern: Story = {
             </>
           }
         >
-          <p className="text-neutral-700 dark:text-neutral-300">
+          <p className="text-neutral-11">
             Are you sure you want to delete this item? This action cannot be
             undone.
           </p>
@@ -244,22 +244,22 @@ export const FormPattern: Story = {
         >
           <form className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              <label className="block text-sm font-medium text-neutral-11 mb-1">
                 Name
               </label>
               <input
                 type="text"
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-neutral-5 rounded-lg bg-neutral-1 text-neutral-12"
                 placeholder="Enter name..."
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              <label className="block text-sm font-medium text-neutral-11 mb-1">
                 Description
               </label>
               <textarea
                 rows={3}
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-neutral-5 rounded-lg bg-neutral-1 text-neutral-12"
                 placeholder="Enter description..."
               />
             </div>

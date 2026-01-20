@@ -15,6 +15,7 @@
  */
 import { useState, useCallback, useRef } from "react";
 import { UserCheck } from "lucide-react";
+import { useReducedMotion } from "motion/react";
 import { useAppSelector } from "../store/hooks";
 import { selectPersona, selectUsername } from "../store/slices/personaSlice";
 import { cn } from "../utils/cn";
@@ -23,7 +24,7 @@ import { AlertBadge } from "./AlertBadge";
 import { Breadcrumb } from "./Breadcrumb";
 import type { BreadcrumbItem } from "../hooks/useBreadcrumb";
 
-import { Button } from "@/components/UI";
+import { Button, Badge } from "@/components/UI";
 
 // =============================================================================
 // Types
@@ -59,17 +60,19 @@ export interface TopBarProps {
 // =============================================================================
 
 /**
- * Get color class for persona badge
+ * Get Badge variant for persona
  */
-function getPersonaBadgeColor(persona: string): string {
+function getPersonaBadgeVariant(
+  persona: string,
+): "error" | "primary" | "default" {
   switch (persona) {
     case "admin":
-      return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-300";
+      return "error";
     case "developer":
-      return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300";
+      return "primary";
     case "user":
     default:
-      return "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300";
+      return "default";
   }
 }
 
@@ -88,6 +91,9 @@ export function TopBar({
   onPendingApprovalsClick,
   className,
 }: TopBarProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   const username = useAppSelector(selectUsername);
   const persona = useAppSelector(selectPersona);
 
@@ -113,8 +119,8 @@ export function TopBar({
       role="banner"
       className={cn(
         "flex items-center gap-4 px-4 py-2",
-        "bg-white dark:bg-neutral-800",
-        "border-b border-neutral-200 dark:border-neutral-700",
+        "bg-neutral-1",
+        "border-b border-neutral-5",
         className,
       )}
     >
@@ -123,7 +129,7 @@ export function TopBar({
         data-testid="app-branding"
         className="flex-1 min-w-0 flex items-center gap-3"
       >
-        <span className="font-semibold text-neutral-900 dark:text-white whitespace-nowrap">
+        <span className="font-semibold text-neutral-12 whitespace-nowrap">
           {title}
         </span>
 
@@ -132,7 +138,7 @@ export function TopBar({
           <>
             <span
               data-testid="section-separator"
-              className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300"
+              className="text-neutral-9"
               aria-hidden="true"
             >
               /
@@ -147,14 +153,14 @@ export function TopBar({
           >
             <span
               data-testid="section-separator"
-              className="text-neutral-300 dark:text-neutral-600 dark:text-neutral-300"
+              className="text-neutral-9"
               aria-hidden="true"
             >
               /
             </span>
             <span
               data-testid="section-title"
-              className="text-sm font-medium text-neutral-600 dark:text-neutral-300 truncate"
+              className="text-sm font-medium text-neutral-11 truncate"
             >
               {sectionTitle}
             </span>
@@ -162,36 +168,35 @@ export function TopBar({
         ) : null}
 
         {subPersonaBadge && (
-          <span
+          <Badge
             data-testid="sub-persona-badge"
-            className={cn(
-              "ml-1 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap",
-              "bg-insight-100 text-insight-700 dark:bg-insight-900/30 dark:text-insight-300",
-            )}
+            size="sm"
+            pill
+            className="ml-1 whitespace-nowrap bg-insight-2 text-insight-11"
           >
             {subPersonaBadge}
-          </span>
+          </Badge>
         )}
       </div>
       {/* Right: User info and menu - flex-shrink-0 to prevent compression */}
       <div className="flex-shrink-0 flex items-center gap-3">
-        {/* Username */}
+        {/* Username - hidden on small screens */}
         {username && (
-          <span className="text-sm text-neutral-600 dark:text-neutral-400">
+          <span className="hidden sm:inline truncate max-w-24 text-sm text-neutral-11">
             {username}
           </span>
         )}
 
         {/* Persona badge */}
-        <span
+        <Badge
           data-testid="persona-badge"
-          className={cn(
-            "px-2 py-0.5 rounded-full text-xs font-medium capitalize",
-            getPersonaBadgeColor(persona),
-          )}
+          variant={getPersonaBadgeVariant(persona)}
+          size="sm"
+          pill
+          className="capitalize"
         >
           {persona}
-        </span>
+        </Badge>
 
         {/* Alert badge (Admin only) */}
         {persona === "admin" && onAlertClick && (
@@ -205,21 +210,22 @@ export function TopBar({
             <Button
               data-testid="review-approval-button"
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={onPendingApprovalsClick}
               aria-label={`${pendingApprovals} pending agent approval${pendingApprovals === 1 ? "" : "s"}`}
               className={cn(
-                "relative flex items-center gap-1 px-2 py-1 rounded",
-                "bg-warning-100 dark:bg-warning-900/30",
-                "hover:bg-warning-200 dark:hover:bg-warning-800/50",
-                "transition-colors",
+                "relative flex items-center gap-1",
+                "bg-warning-3 hover:bg-warning-4",
+                !prefersReducedMotion && "transition-colors",
               )}
             >
               <UserCheck
                 size={14}
-                className="text-warning-600 dark:text-warning-400"
+                className="text-warning-11"
                 aria-hidden="true"
               />
-              <span className="font-medium text-xs text-warning-700 dark:text-warning-300">
+              <span className="font-medium text-xs text-warning-11">
                 {pendingApprovals}
               </span>
             </Button>
@@ -230,6 +236,7 @@ export function TopBar({
           <Button
             ref={avatarRef}
             type="button"
+            variant="primary"
             data-testid="user-avatar"
             aria-label={`User menu for ${username ?? "unknown user"}`}
             aria-expanded={isDropdownOpen}
@@ -237,9 +244,8 @@ export function TopBar({
             onClick={handleAvatarClick}
             className={cn(
               "w-8 h-8 rounded-full flex items-center justify-center",
-              "bg-primary-500 text-white font-medium text-sm",
-              "hover:bg-primary-600 transition-colors",
-              "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
+              "font-medium text-sm",
+              !prefersReducedMotion && "transition-colors",
             )}
           >
             {avatarLetter}

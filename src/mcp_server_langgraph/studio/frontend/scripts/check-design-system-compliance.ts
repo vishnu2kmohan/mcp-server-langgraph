@@ -42,6 +42,29 @@ interface ComplianceMetrics {
     Select: number;
     Textarea: number;
   };
+  componentVariants: {
+    buttonWithVariant: number;
+    buttonWithoutVariant: number;
+    buttonVariantCompliancePercent: number;
+    cancelButtonsWithSecondary: number;
+    cancelButtonsWithoutSecondary: number;
+    destructiveButtonsWithDanger: number;
+    destructiveButtonsWithoutDanger: number;
+    iconButtonWithSizeIcon: number;
+    iconButtonWithoutSizeIcon: number;
+    iconButtonSizeCompliancePercent: number;
+    buttonWithColorOverride: number;
+    colorOverrideCompliancePercent: number;
+  };
+  fieldSizing: {
+    inputWithSizeProp: number;
+    inputWithSizingOverride: number;
+    selectWithSizeProp: number;
+    selectWithSizingOverride: number;
+    textareaWithSizeProp: number;
+    textareaWithSizingOverride: number;
+    fieldSizingCompliancePercent: number;
+  };
   colors: {
     grayUsage: number;
     neutralUsage: number;
@@ -56,6 +79,7 @@ interface ComplianceMetrics {
     formAdoptionPercent: number;
     colorAdoptionPercent: number;
     storybookCoveragePercent: number;
+    buttonVariantCompliancePercent: number;
     overallScore: number;
   };
 }
@@ -127,6 +151,111 @@ function calculateMetrics(): ComplianceMetrics {
   const grayUsage = countRgMatches("gray-\\d+", "*.tsx");
   const neutralUsage = countRgMatches("neutral-\\d+", "*.tsx");
 
+  // Count Button variant compliance
+  const buttonWithVariant = countRgMatches("<Button[^>]*\\bvariant=", "*.tsx", PROD_EXCLUSIONS);
+  const buttonWithoutVariant = buttonComponent - buttonWithVariant;
+  const buttonVariantCompliancePercent = Math.round(
+    (buttonWithVariant / Math.max(buttonComponent, 1)) * 100
+  );
+
+  // Count Cancel/Close buttons with/without secondary variant
+  const cancelButtonsWithSecondary = countRgMatches(
+    '<Button[^>]*variant=["\']secondary["\'][^>]*>\\s*(Cancel|Close|Back|Dismiss|No)',
+    "*.tsx",
+    PROD_EXCLUSIONS
+  );
+  const cancelButtonsWithoutSecondary = countRgMatches(
+    '<Button\\b(?![^>]*variant=)[^>]*>\\s*(Cancel|Close|Back|Dismiss|No)',
+    "*.tsx",
+    PROD_EXCLUSIONS
+  );
+
+  // Count destructive buttons with/without danger variant
+  const destructiveButtonsWithDanger = countRgMatches(
+    '<Button[^>]*variant=["\']danger["\'][^>]*>\\s*(Delete|Remove|Clear|Destroy|Discard)',
+    "*.tsx",
+    PROD_EXCLUSIONS
+  );
+  const destructiveButtonsWithoutDanger = countRgMatches(
+    '<Button\\b(?![^>]*variant=)[^>]*>\\s*(Delete|Remove|Clear|Destroy|Discard)',
+    "*.tsx",
+    PROD_EXCLUSIONS
+  );
+
+  // Count icon-only buttons with/without size="icon"
+  // Icon buttons should use size="icon" for proper touch target sizing (WCAG 2.2)
+  // Using simpler pattern that works with shell escaping
+  const iconButtonWithSizeIcon = countRgMatches(
+    'size="icon"',
+    "*.tsx",
+    PROD_EXCLUSIONS
+  );
+  // Count all potential icon buttons (Button followed by icon-like component)
+  // Then subtract those with size="icon" to estimate violations
+  const allPotentialIconButtons = countRgMatches(
+    '<Button[^>]*>\\s*<[A-Z]',
+    "*.tsx",
+    PROD_EXCLUSIONS
+  );
+  // Estimate: icon buttons without size="icon" = potential icon buttons - properly sized ones
+  // This is an approximation since pattern matching is imperfect
+  const iconButtonWithoutSizeIcon = Math.max(0, allPotentialIconButtons - iconButtonWithSizeIcon);
+  const totalIconButtons = Math.max(iconButtonWithSizeIcon + iconButtonWithoutSizeIcon, 1);
+  const iconButtonSizeCompliancePercent = Math.round(
+    (iconButtonWithSizeIcon / totalIconButtons) * 100
+  );
+
+  // Count Button components with inline color className overrides
+  // These bypass the variant system and should be avoided
+  // Pattern matches Button with className containing color utilities: bg-*, text-*, border-* with color names
+  const buttonWithColorOverride = countRgMatches(
+    '<Button[^>]*className=[^>]*(bg-(primary|error|success|warning|insight|neutral)-|text-(primary|error|success|warning|insight|neutral)-|border-(primary|error|success|warning|insight|neutral)-)',
+    "*.tsx",
+    PROD_EXCLUSIONS
+  );
+  const colorOverrideCompliancePercent = buttonComponent > 0
+    ? Math.round(((buttonComponent - buttonWithColorOverride) / buttonComponent) * 100)
+    : 100;
+
+  // Count field sizing compliance
+  // Fields using size prop (proper) vs className overrides (violation)
+  const inputWithSizeProp = countRgMatches(
+    '<Input[^>]*\\bsize=',
+    "*.tsx",
+    PROD_EXCLUSIONS
+  );
+  const inputWithSizingOverride = countRgMatches(
+    '<Input[^>]*className=[^>]*(py-\\d|px-\\d|h-\\d|text-(xs|sm|base|lg))',
+    "*.tsx",
+    PROD_EXCLUSIONS
+  );
+  const selectWithSizeProp = countRgMatches(
+    '<Select[^>]*\\bsize=',
+    "*.tsx",
+    PROD_EXCLUSIONS
+  );
+  const selectWithSizingOverride = countRgMatches(
+    '<Select[^>]*className=[^>]*(py-\\d|px-\\d|h-\\d|text-(xs|sm|base|lg))',
+    "*.tsx",
+    PROD_EXCLUSIONS
+  );
+  const textareaWithSizeProp = countRgMatches(
+    '<Textarea[^>]*\\bsize=',
+    "*.tsx",
+    PROD_EXCLUSIONS
+  );
+  const textareaWithSizingOverride = countRgMatches(
+    '<Textarea[^>]*className=[^>]*(py-\\d|px-\\d|h-\\d|text-(xs|sm|base|lg))',
+    "*.tsx",
+    PROD_EXCLUSIONS
+  );
+  // Calculate field sizing compliance (fields with size prop and no override vs total)
+  const totalFieldsWithSizing = inputWithSizeProp + selectWithSizeProp + textareaWithSizeProp;
+  const totalFieldsWithOverrides = inputWithSizingOverride + selectWithSizingOverride + textareaWithSizingOverride;
+  const fieldSizingCompliancePercent = totalFieldsWithOverrides === 0
+    ? 100
+    : Math.round((totalFieldsWithSizing / Math.max(totalFieldsWithSizing + totalFieldsWithOverrides, 1)) * 100);
+
   // Count Storybook coverage
   const storybookStats = countStorybookCoverage();
 
@@ -157,12 +286,13 @@ function calculateMetrics(): ComplianceMetrics {
     ? Math.round((storybookStats.covered / storybookStats.total) * 100)
     : 0;
 
-  // Overall score (weighted average)
+  // Overall score (weighted average - updated to include variant compliance)
   const overallScore = Math.round(
-    buttonAdoptionPercent * 0.3 +
-      formAdoptionPercent * 0.3 +
+    buttonAdoptionPercent * 0.25 +
+      formAdoptionPercent * 0.25 +
       colorAdoptionPercent * 0.2 +
-      storybookCoveragePercent * 0.2
+      storybookCoveragePercent * 0.15 +
+      buttonVariantCompliancePercent * 0.15
   );
 
   return {
@@ -183,6 +313,29 @@ function calculateMetrics(): ComplianceMetrics {
       Select: selectComponent,
       Textarea: textareaComponent,
     },
+    componentVariants: {
+      buttonWithVariant,
+      buttonWithoutVariant,
+      buttonVariantCompliancePercent,
+      cancelButtonsWithSecondary,
+      cancelButtonsWithoutSecondary,
+      destructiveButtonsWithDanger,
+      destructiveButtonsWithoutDanger,
+      iconButtonWithSizeIcon,
+      iconButtonWithoutSizeIcon,
+      iconButtonSizeCompliancePercent,
+      buttonWithColorOverride,
+      colorOverrideCompliancePercent,
+    },
+    fieldSizing: {
+      inputWithSizeProp,
+      inputWithSizingOverride,
+      selectWithSizeProp,
+      selectWithSizingOverride,
+      textareaWithSizeProp,
+      textareaWithSizingOverride,
+      fieldSizingCompliancePercent,
+    },
     colors: {
       grayUsage,
       neutralUsage,
@@ -197,6 +350,7 @@ function calculateMetrics(): ComplianceMetrics {
       formAdoptionPercent,
       colorAdoptionPercent,
       storybookCoveragePercent,
+      buttonVariantCompliancePercent,
       overallScore,
     },
   };
@@ -223,6 +377,29 @@ function printReport(metrics: ComplianceMetrics): void {
   console.log(`  <Select>:      ${metrics.designSystemComponents.Select}`);
   console.log(`  <Textarea>:    ${metrics.designSystemComponents.Textarea}`);
 
+  console.log("\nButton Variant Compliance:");
+  console.log(`  With explicit variant:    ${metrics.componentVariants.buttonWithVariant}`);
+  console.log(`  Without variant:          ${metrics.componentVariants.buttonWithoutVariant}`);
+  console.log(`  Variant compliance:       ${metrics.componentVariants.buttonVariantCompliancePercent}%`);
+  console.log(`  Cancel w/ secondary:      ${metrics.componentVariants.cancelButtonsWithSecondary}`);
+  console.log(`  Cancel w/o secondary:     ${metrics.componentVariants.cancelButtonsWithoutSecondary}`);
+  console.log(`  Destructive w/ danger:    ${metrics.componentVariants.destructiveButtonsWithDanger}`);
+  console.log(`  Destructive w/o danger:   ${metrics.componentVariants.destructiveButtonsWithoutDanger}`);
+  console.log(`  Icon w/ size="icon":      ${metrics.componentVariants.iconButtonWithSizeIcon}`);
+  console.log(`  Icon w/o size="icon":     ${metrics.componentVariants.iconButtonWithoutSizeIcon}`);
+  console.log(`  Icon size compliance:     ${metrics.componentVariants.iconButtonSizeCompliancePercent}%`);
+  console.log(`  w/ color overrides:       ${metrics.componentVariants.buttonWithColorOverride}`);
+  console.log(`  Color override compliance:${metrics.componentVariants.colorOverrideCompliancePercent}%`);
+
+  console.log("\nField Sizing Compliance:");
+  console.log(`  Input w/ size prop:       ${metrics.fieldSizing.inputWithSizeProp}`);
+  console.log(`  Input w/ sizing override: ${metrics.fieldSizing.inputWithSizingOverride}`);
+  console.log(`  Select w/ size prop:      ${metrics.fieldSizing.selectWithSizeProp}`);
+  console.log(`  Select w/ sizing override:${metrics.fieldSizing.selectWithSizingOverride}`);
+  console.log(`  Textarea w/ size prop:    ${metrics.fieldSizing.textareaWithSizeProp}`);
+  console.log(`  Textarea w/ sizing override:${metrics.fieldSizing.textareaWithSizingOverride}`);
+  console.log(`  Field sizing compliance:  ${metrics.fieldSizing.fieldSizingCompliancePercent}%`);
+
   console.log("\nColor Usage:");
   console.log(`  gray-*:    ${metrics.colors.grayUsage}`);
   console.log(`  neutral-*: ${metrics.colors.neutralUsage}`);
@@ -237,6 +414,7 @@ function printReport(metrics: ComplianceMetrics): void {
   console.log(`  Form adoption:       ${metrics.adoption.formAdoptionPercent}%`);
   console.log(`  Color adoption:      ${metrics.adoption.colorAdoptionPercent}%`);
   console.log(`  Storybook coverage:  ${metrics.adoption.storybookCoveragePercent}%`);
+  console.log(`  Button variants:     ${metrics.adoption.buttonVariantCompliancePercent}%`);
   console.log(`  Overall score:       ${metrics.adoption.overallScore}%`);
   console.log("----------------------------------------\n");
 

@@ -120,11 +120,6 @@ export default defineConfig({
         target: 'http://localhost:8001',
         changeOrigin: true,
       },
-      // Legacy: Proxy Playground REST API requests
-      '/api/playground': {
-        target: 'http://localhost:8002',
-        changeOrigin: true,
-      },
       // Legacy: Proxy Builder REST API requests
       '/api/builder': {
         target: 'http://localhost:8000',

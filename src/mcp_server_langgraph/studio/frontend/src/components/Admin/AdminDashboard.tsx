@@ -8,7 +8,9 @@
  */
 
 import { useState, useMemo, useCallback } from "react";
+import { useReducedMotion } from "motion/react";
 import { RefreshCw, Loader2, AlertTriangle, UserCheck } from "lucide-react";
+import { cn } from "../../utils/cn";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { UserManager, type User } from "./UserManager";
 import { AlertsPanel } from "./AlertsPanel";
@@ -104,6 +106,9 @@ export function AdminDashboard({
     useState<string | null>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
+
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
 
   // Alert selectors
   const selectedAlert = useAppSelector(selectSelectedAlert);
@@ -317,7 +322,12 @@ export function AdminDashboard({
         data-testid="dashboard-loading"
         className="flex items-center justify-center h-full"
       >
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+        <Loader2
+          className={cn(
+            "w-8 h-8 text-primary-9",
+            !prefersReducedMotion && "animate-spin",
+          )}
+        />
       </div>
     );
   }
@@ -325,11 +335,11 @@ export function AdminDashboard({
   const getHealthColor = (status: SystemHealth["status"]) => {
     switch (status) {
       case "healthy":
-        return "bg-success-500";
+        return "bg-success-9";
       case "degraded":
-        return "bg-warning-500";
+        return "bg-warning-9";
       case "unhealthy":
-        return "bg-error-500";
+        return "bg-error-9";
     }
   };
 
@@ -362,12 +372,12 @@ export function AdminDashboard({
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-neutral-12">
           Admin Dashboard
         </h1>
         <Button
           variant="primary"
-          className="flex px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          className="min-h-[44px] min-w-[44px] flex items-center gap-2"
           onClick={onRefresh}
           aria-label="Refresh dashboard"
         >
@@ -378,11 +388,17 @@ export function AdminDashboard({
       {/* Tabs */}
       <div
         role="tablist"
-        className="flex border-b border-neutral-200 dark:border-neutral-700"
+        className="flex border-b border-neutral-5"
       >
         {tabs.map((tab) => (
           <Button
-            className="flex px-4 py-2 text-sm border-b-2"
+            variant="ghost"
+            className={cn(
+              "min-h-[44px] min-w-[44px] flex items-center gap-2 px-4 text-sm border-b-2",
+              activeTab === tab.id
+                ? "border-primary-9 text-primary-11"
+                : "border-transparent text-neutral-11 hover:text-neutral-12",
+            )}
             key={tab.id}
             role="tab"
             aria-selected={activeTab === tab.id}
@@ -394,7 +410,7 @@ export function AdminDashboard({
             {tab.badge !== undefined && tab.badge > 0 && (
               <span
                 data-testid="alert-badge"
-                className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-white bg-error-500 rounded-full"
+                className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-neutral-12 bg-error-9 rounded-full"
               >
                 {tab.badge}
               </span>
@@ -406,54 +422,54 @@ export function AdminDashboard({
       {activeTab === "overview" && (
         <>
           {/* System Health Section */}
-          <section className="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
-            <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
+          <section className="bg-neutral-1 rounded-lg p-6 shadow">
+            <h2 className="text-lg font-semibold text-neutral-12 mb-4">
               System Health
             </h2>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* Status */}
-              <div className="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-4">
+              <div className="bg-neutral-1 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div
                     data-testid="health-status"
                     className={`w-3 h-3 rounded-full ${getHealthColor(systemHealth.status)}`}
                   />
-                  <span className="text-sm text-neutral-600 dark:text-neutral-300">
+                  <span className="text-sm text-neutral-11">
                     Status
                   </span>
                 </div>
-                <span className="text-lg font-semibold text-neutral-900 dark:text-white capitalize">
+                <span className="text-lg font-semibold text-neutral-12 capitalize">
                   {systemHealth.status}
                 </span>
               </div>
 
               {/* Uptime */}
-              <div className="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-4">
-                <span className="text-sm text-neutral-600 dark:text-neutral-300 block mb-2">
+              <div className="bg-neutral-1 rounded-lg p-4">
+                <span className="text-sm text-neutral-11 block mb-2">
                   Uptime
                 </span>
-                <span className="text-lg font-semibold text-neutral-900 dark:text-white">
+                <span className="text-lg font-semibold text-neutral-12">
                   {systemHealth.uptime}%
                 </span>
               </div>
 
               {/* Active Users */}
-              <div className="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-4">
-                <span className="text-sm text-neutral-600 dark:text-neutral-300 block mb-2">
+              <div className="bg-neutral-1 rounded-lg p-4">
+                <span className="text-sm text-neutral-11 block mb-2">
                   Active Users
                 </span>
-                <span className="text-lg font-semibold text-neutral-900 dark:text-white">
+                <span className="text-lg font-semibold text-neutral-12">
                   {systemHealth.activeUsers}
                 </span>
               </div>
 
               {/* Error Rate */}
-              <div className="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-4">
-                <span className="text-sm text-neutral-600 dark:text-neutral-300 block mb-2">
+              <div className="bg-neutral-1 rounded-lg p-4">
+                <span className="text-sm text-neutral-11 block mb-2">
                   Error Rate
                 </span>
-                <span className="text-lg font-semibold text-neutral-900 dark:text-white">
+                <span className="text-lg font-semibold text-neutral-12">
                   {systemHealth.errorRate}%
                 </span>
               </div>
@@ -461,8 +477,8 @@ export function AdminDashboard({
           </section>
 
           {/* HEART Metrics Section */}
-          <section className="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
-            <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
+          <section className="bg-neutral-1 rounded-lg p-6 shadow">
+            <h2 className="text-lg font-semibold text-neutral-12 mb-4">
               HEART Metrics
             </h2>
 
@@ -500,7 +516,7 @@ export function AdminDashboard({
           className="grid grid-cols-1 lg:grid-cols-2 gap-6"
         >
           {/* Alerts Panel */}
-          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden">
+          <div className="bg-neutral-1 rounded-lg shadow overflow-hidden">
             <AlertsPanel
               onSelectAlert={handleSelectAlert}
               onSoundToggle={handleSoundToggle}
@@ -510,7 +526,7 @@ export function AdminDashboard({
           </div>
 
           {/* Alert Detail Panel */}
-          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden">
+          <div className="bg-neutral-1 rounded-lg shadow overflow-hidden">
             <AlertDetailPanel
               alert={selectedAlert ?? null}
               recommendation={recommendation ?? null}
@@ -528,7 +544,7 @@ export function AdminDashboard({
       {activeTab === "agent-requests" && (
         <div data-testid="agent-requests-container" className="space-y-6">
           {/* Batch Approval Panel */}
-          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden">
+          <div className="bg-neutral-1 rounded-lg shadow overflow-hidden">
             <BatchApprovalPanel
               approvals={pendingAgentRequests?.approvals ?? []}
               onBatchApprove={handleBatchApproveAgents}
@@ -540,7 +556,7 @@ export function AdminDashboard({
           </div>
 
           {/* Audit Log */}
-          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden">
+          <div className="bg-neutral-1 rounded-lg shadow overflow-hidden">
             <AgentApprovalAuditLog
               entries={mockAuditEntries}
               isLoading={agentRequestsLoading}
@@ -575,17 +591,17 @@ interface MetricCardProps {
 
 function MetricCard({ label, value }: MetricCardProps) {
   const getColor = (value: number) => {
-    if (value >= 80) return "text-success-600";
-    if (value >= 60) return "text-warning-600";
-    return "text-error-600";
+    if (value >= 80) return "text-success-10";
+    if (value >= 60) return "text-warning-9";
+    return "text-error-10";
   };
 
   return (
-    <div className="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-4">
-      <span className="text-sm text-neutral-600 dark:text-neutral-300 block mb-2">
+    <div className="bg-neutral-1 rounded-lg p-4">
+      <span className="text-sm text-neutral-11 block mb-2">
         {label}
       </span>
-      <span className={`text-lg font-semibold ${getColor(value)}`}>
+      <span className={cn("text-lg font-semibold", getColor(value))}>
         {value}%
       </span>
     </div>

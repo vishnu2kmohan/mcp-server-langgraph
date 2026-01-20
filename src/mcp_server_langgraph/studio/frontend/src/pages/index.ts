@@ -6,10 +6,11 @@
  */
 
 export { WorkflowsPage } from "./WorkflowsPage";
+export { WorkflowsListPage } from "./WorkflowsListPage";
 export { SharedWorkflowsPage } from "./SharedWorkflowsPage";
 // ChatPage REMOVED - deprecated, replaced by StudioShellLayout 3-panel canvas layout
 // SessionsPage REMOVED - functionality now in StudioShellLayout SessionNav panel
-export { MCPPage } from "./MCPPage";
+// MCPPage REMOVED - deprecated, functionality consolidated into ConnectionsPage Capabilities tab (ADR-0102)
 export { ObservabilityPage } from "./ObservabilityPage";
 export { SettingsPage } from "./SettingsPage";
 export { AdminDashboardPage } from "./AdminDashboardPage";

@@ -176,21 +176,21 @@ export function AICommandPalette({
       aria-modal="true"
       aria-label="Command palette"
       className={cn(
-        "fixed inset-0 z-50 flex items-start justify-center pt-[20vh]",
-        "bg-black/50",
+        "fixed inset-0 z-modal flex items-start justify-center pt-[20vh]",
+        "bg-neutral-a6",
         className,
       )}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-xl bg-white dark:bg-neutral-800 rounded-xl shadow-2xl overflow-hidden">
+      <div className="w-full max-w-xl bg-neutral-1 rounded-xl shadow-2xl overflow-hidden">
         {/* Search Input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-5">
           <Search
             size={18}
-            className="text-neutral-400 dark:text-neutral-400"
+            className="text-neutral-9"
           />
           <Input
-            className="flex-1 bg-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-400"
+            className="flex-1 bg-transparent text-neutral-12 placeholder-neutral-9"
             ref={inputRef}
             data-testid="command-search"
             role="combobox"
@@ -203,7 +203,7 @@ export function AICommandPalette({
             aria-controls="command-listbox"
           />
           {isLoadingAI && (
-            <Sparkles size={18} className="text-primary-500 animate-pulse" />
+            <Sparkles size={18} className="text-primary-9 animate-pulse" />
           )}
         </div>
 
@@ -216,7 +216,7 @@ export function AICommandPalette({
           {filteredCommands.length === 0 && !aiSuggestion && !isLoadingAI && (
             <div
               data-testid="no-results"
-              className="p-4 text-center text-neutral-500 dark:text-neutral-400"
+              className="p-4 text-center text-neutral-10"
             >
               No commands found
             </div>
@@ -225,7 +225,7 @@ export function AICommandPalette({
           {groupByCategory && groupedCommands
             ? Object.entries(groupedCommands).map(([category, cmds]) => (
                 <div key={category} data-testid={`category-${category}`}>
-                  <div className="px-4 py-1 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase bg-neutral-50 dark:bg-neutral-900/50">
+                  <div className="px-4 py-1 text-xs font-semibold text-neutral-10 uppercase bg-neutral-1">
                     {category}
                   </div>
                   {cmds.map((cmd, _index) => {
@@ -239,27 +239,27 @@ export function AICommandPalette({
                         onClick={() => handleExecute(cmd)}
                         className={cn(
                           "flex items-center justify-between px-4 py-2 cursor-pointer",
-                          "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+                          "hover:bg-neutral-2",
                           globalIndex === selectedIndex &&
-                            "selected bg-neutral-100 dark:bg-neutral-700",
+                            "selected bg-neutral-2",
                         )}
                       >
                         <div className="flex items-center gap-3">
                           <CommandIcon
                             size={16}
-                            className="text-neutral-400 dark:text-neutral-400"
+                            className="text-neutral-9"
                           />
                           <div>
-                            <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                            <div className="text-sm font-medium text-neutral-12">
                               {cmd.name}
                             </div>
-                            <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                            <div className="text-xs text-neutral-10">
                               {cmd.description}
                             </div>
                           </div>
                         </div>
                         {cmd.shortcut && (
-                          <kbd className="px-2 py-0.5 text-xs bg-neutral-100 dark:bg-neutral-700 rounded">
+                          <kbd className="px-2 py-0.5 text-xs bg-neutral-2 rounded">
                             {cmd.shortcut}
                           </kbd>
                         )}
@@ -277,27 +277,27 @@ export function AICommandPalette({
                   onClick={() => handleExecute(cmd)}
                   className={cn(
                     "flex items-center justify-between px-4 py-2 cursor-pointer",
-                    "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+                    "hover:bg-neutral-2",
                     index === selectedIndex &&
-                      "selected bg-neutral-100 dark:bg-neutral-700",
+                      "selected bg-neutral-2",
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <CommandIcon
                       size={16}
-                      className="text-neutral-400 dark:text-neutral-400"
+                      className="text-neutral-9"
                     />
                     <div>
-                      <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      <div className="text-sm font-medium text-neutral-12">
                         {cmd.name}
                       </div>
-                      <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                      <div className="text-xs text-neutral-10">
                         {cmd.description}
                       </div>
                     </div>
                   </div>
                   {cmd.shortcut && (
-                    <kbd className="px-2 py-0.5 text-xs bg-neutral-100 dark:bg-neutral-700 rounded">
+                    <kbd className="px-2 py-0.5 text-xs bg-neutral-2 rounded">
                       {cmd.shortcut}
                     </kbd>
                   )}
@@ -313,26 +313,26 @@ export function AICommandPalette({
               onClick={() => handleExecute(aiSuggestion)}
               className={cn(
                 "flex items-center gap-3 px-4 py-2 cursor-pointer",
-                "hover:bg-primary-50 dark:hover:bg-primary-900/20",
-                "border-t border-neutral-200 dark:border-neutral-700",
+                "hover:bg-primary-1 dark:hover:bg-primary-a3",
+                "border-t border-neutral-5",
                 selectedIndex >= filteredCommands.length &&
-                  "bg-primary-50 dark:bg-primary-900/20",
+                  "bg-primary-1 dark:bg-primary-a3",
               )}
             >
-              <Sparkles size={16} className="text-primary-500" />
+              <Sparkles size={16} className="text-primary-9" />
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                  <span className="text-sm font-medium text-neutral-12">
                     {aiSuggestion.action}
                   </span>
                   <span
                     data-testid="ai-badge"
-                    className="px-1.5 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded"
+                    className="px-1.5 py-0.5 text-xs bg-primary-3 bg-primary-4 text-primary-10 dark:text-primary-7 rounded"
                   >
                     AI
                   </span>
                 </div>
-                <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                <div className="text-xs text-neutral-10">
                   Confidence: {Math.round(aiSuggestion.confidence * 100)}%
                 </div>
               </div>

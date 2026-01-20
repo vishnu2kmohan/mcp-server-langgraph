@@ -56,7 +56,20 @@ describe("SimilarSessionsPanel", () => {
   // ===========================================================================
 
   describe("rendering", () => {
-    it("should render the panel with title", () => {
+    it("should render the panel with title when sessions exist", () => {
+      mockUseSessionSimilarity.mockReturnValue({
+        similarSessions: [
+          {
+            sessionId: "similar-1",
+            similarityScore: 0.85,
+            commonTopics: ["React"],
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
       render(
         <SimilarSessionsPanel sessionId="session-123" userId="user-123" />,
       );
@@ -119,7 +132,7 @@ describe("SimilarSessionsPanel", () => {
       expect(screen.getByText("72%")).toBeInTheDocument();
     });
 
-    it("should show empty state when no similar sessions found", () => {
+    it("should render nothing when no similar sessions found", () => {
       mockUseSessionSimilarity.mockReturnValue({
         similarSessions: [],
         isLoading: false,
@@ -127,11 +140,12 @@ describe("SimilarSessionsPanel", () => {
         refetch: vi.fn(),
       });
 
-      render(
+      const { container } = render(
         <SimilarSessionsPanel sessionId="session-123" userId="user-123" />,
       );
 
-      expect(screen.getByText(/no similar sessions/i)).toBeInTheDocument();
+      // Component returns null when no similar sessions
+      expect(container.firstChild).toBeNull();
     });
   });
 
@@ -278,7 +292,20 @@ describe("SimilarSessionsPanel", () => {
       expect(results).toHaveNoViolations();
     });
 
-    it("should have proper heading structure", () => {
+    it("should have proper heading structure when sessions exist", () => {
+      mockUseSessionSimilarity.mockReturnValue({
+        similarSessions: [
+          {
+            sessionId: "similar-1",
+            similarityScore: 0.85,
+            commonTopics: ["React"],
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
       render(
         <SimilarSessionsPanel sessionId="session-123" userId="user-123" />,
       );

@@ -3,6 +3,18 @@
  *
  * Displays API requests, WebSocket messages, and MCP tool calls.
  * Chrome DevTools Network panel-like interface.
+ *
+ * Uses shared OTEL components:
+ * - OTELStatusBadge for HTTP method and status code badges
+ * - HumanTimestamp for relative time display
+ * - OTELDetailsPanel for request/response body display
+ * - SmartValue for bytes formatting
+ *
+ * Design System Compliance:
+ * - Uses CVA for toolbar button variants
+ * - Uses Motion.dev for button press feedback
+ * - Implements useReducedMotion() for accessibility
+ * - Uses semantic colors per STYLE.md
  */
 import { useState, useMemo, useCallback, useRef } from "react";
 import {
@@ -17,8 +29,6 @@ import {
   Trash2,
   Search,
   Circle,
-  ChevronRight as _ChevronRight,
-  ChevronDown as _ChevronDown,
   Globe,
   Loader2,
   Download,
@@ -26,18 +36,19 @@ import {
   ArrowUpDown,
 } from "lucide-react";
 
+import { motion, useReducedMotion } from "motion/react";
+import { cva } from "class-variance-authority";
+import { buttonVariants as motionButtonVariants } from "@/design-system/micro-interactions";
 import { cn } from "../../../utils/cn";
-import HumanTimestamp from "../components/HumanTimestamp";
 import { useAutoTail } from "../hooks/useAutoTail";
 import { useNetworkEntries } from "../hooks/useNetworkEntries";
 import { exportNetworkToJSON, exportNetworkToCSV } from "../utils/export";
 import { useDebouncedValue, useStableCallback } from "../utils/performance";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type { NetworkTabProps, NetworkEntry } from "../types";
-import {
-  getStatusCodeColor,
-  getHttpMethodColor,
-} from "../utils/devToolsColors";
+
+// Shared OTEL components
+import { HumanTimestamp, OTELStatusBadge, SmartValue, OTELDetailsPanel } from "../components";
 
 import { Button, Input } from "@/components/UI";
 
@@ -49,24 +60,52 @@ import { Button, Input } from "@/components/UI";
 const SEARCH_DEBOUNCE_MS = 150;
 
 // =============================================================================
+// CVA Variants
+// =============================================================================
+
+/**
+ * Network filter button variants
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const networkFilterButtonVariants = cva(
+  "px-2 py-1 text-xs rounded transition-colors",
+  {
+    variants: {
+      active: {
+        true: "bg-primary-3 dark:bg-primary-4 text-primary-10",
+        false: "hover:bg-neutral-3 text-neutral-10",
+      },
+    },
+    defaultVariants: {
+      active: false,
+    },
+  },
+);
+
+/**
+ * Network auto-tail button variants
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const networkAutoTailButtonVariants = cva(
+  "p-1 rounded transition-colors",
+  {
+    variants: {
+      active: {
+        true: "bg-primary-3 dark:bg-primary-4 text-primary-11",
+        false: "hover:bg-neutral-3 text-neutral-10",
+      },
+    },
+    defaultVariants: {
+      active: false,
+    },
+  },
+);
+
+// =============================================================================
 // Types
 // =============================================================================
 
 type FilterType = "all" | "api" | "mcp";
-// =============================================================================
-// Utility Functions
-// =============================================================================
-
-function formatSize(bytes: number | undefined): string {
-  if (bytes === undefined || bytes === 0) return "0 B";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-// Use semantic colors from design system (imported from devToolsColors)
-const getStatusColor = getStatusCodeColor;
-const getMethodColor = getHttpMethodColor;
 
 // =============================================================================
 // Subcomponents
@@ -97,56 +136,53 @@ function NetworkEntryRow({
     <tr
       data-testid={`network-entry-${entry.id}`}
       className={cn(
-        "cursor-pointer border-b border-neutral-100 dark:border-neutral-800",
-        "hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
-        isSelected && "bg-primary-50 dark:bg-primary-900/20",
-        isError === true && "bg-error-50 dark:bg-error-900/10",
+        "cursor-pointer border-b border-neutral-5",
+        "hover:bg-neutral-a6",
+        isSelected && "bg-primary-1 dark:bg-primary-a3",
+        isError === true && "bg-error-1 dark:bg-error-a2",
       )}
       onClick={onSelect}
     >
       {/* Method */}
       <td className="px-2 py-1.5 whitespace-nowrap">
-        <span
+        <OTELStatusBadge
+          type="http-method"
+          value={entry.method}
+          size="sm"
           data-testid={`method-${entry.id}`}
-          className={cn("text-xs font-medium", getMethodColor(entry.method))}
-        >
-          {entry.method}
-        </span>
+        />
       </td>
 
       {/* Status */}
       <td className="px-2 py-1.5 whitespace-nowrap">
         {isPending ? (
           <span data-testid={`pending-${entry.id}`}>
-            <Loader2 size={12} className="animate-spin text-primary-500" />
+            <Loader2 size={12} className="animate-spin text-primary-9" />
           </span>
         ) : (
-          <span
+          <OTELStatusBadge
+            type="http-status"
+            value={entry.statusCode ?? 0}
+            size="sm"
             data-testid={`status-${entry.id}`}
-            className={cn(
-              "text-xs font-medium",
-              getStatusColor(entry.statusCode),
-            )}
-          >
-            {entry.statusCode}
-          </span>
+          />
         )}
       </td>
 
       {/* Start time */}
       <td className="px-2 py-1.5 whitespace-nowrap">
-        <HumanTimestamp timestamp={entry.startTime ?? 0} />
+        <HumanTimestamp timestamp={entry.startTime ?? 0} format="relative" />
       </td>
 
       {/* URL */}
-      <td className="px-2 py-1.5 max-w-xs truncate text-xs text-neutral-700 dark:text-neutral-300">
+      <td className="px-2 py-1.5 max-w-xs truncate text-xs text-neutral-11">
         {urlPath}
       </td>
 
       {/* Source */}
       <td className="px-2 py-1.5 whitespace-nowrap">
         {entry.source && (
-          <span className="text-xs px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded text-neutral-600 dark:text-neutral-400">
+          <span className="text-xs px-1.5 py-0.5 bg-neutral-2 rounded text-neutral-11">
             {entry.source}
           </span>
         )}
@@ -154,25 +190,23 @@ function NetworkEntryRow({
 
       {/* Size */}
       <td className="px-2 py-1.5 whitespace-nowrap text-right">
-        <span
+        <SmartValue
+          value={entry.responseSize}
+          type="bytes"
           data-testid={`size-${entry.id}`}
-          className="text-xs text-neutral-500 dark:text-neutral-400"
-        >
-          {formatSize(entry.responseSize)}
-        </span>
+        />
       </td>
 
       {/* Duration */}
       <td className="px-2 py-1.5 whitespace-nowrap text-right">
         {entry.duration !== undefined ? (
-          <span
+          <SmartValue
+            value={entry.duration}
+            type="duration"
             data-testid={`duration-${entry.id}`}
-            className="text-xs text-neutral-500 dark:text-neutral-400"
-          >
-            {entry.duration}ms
-          </span>
+          />
         ) : (
-          <span className="text-xs text-neutral-400 dark:text-neutral-400">
+          <span className="text-xs text-neutral-9">
             -
           </span>
         )}
@@ -190,13 +224,27 @@ function RequestDetails({ entry }: RequestDetailsProps) {
     "headers" | "payload" | "response"
   >("headers");
 
+  // Combine request and response headers for header tab
+  const headersData = useMemo(() => {
+    const data: Record<string, unknown> = {};
+    if (entry.requestHeaders && Object.keys(entry.requestHeaders).length > 0) {
+      data.requestHeaders = entry.requestHeaders;
+    }
+    if (entry.responseHeaders && Object.keys(entry.responseHeaders).length > 0) {
+      data.responseHeaders = entry.responseHeaders;
+    }
+    return data;
+  }, [entry.requestHeaders, entry.responseHeaders]);
+
+  const hasHeaders = Object.keys(headersData).length > 0;
+
   return (
     <div
       data-testid={`request-details-${entry.id}`}
-      className="border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50"
+      className="border-t border-neutral-5 bg-neutral-1"
     >
       {/* Tabs */}
-      <div className="flex border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex border-b border-neutral-5">
         {["headers", "payload", "response"].map((tab) => (
           <Button
             key={tab}
@@ -205,8 +253,8 @@ function RequestDetails({ entry }: RequestDetailsProps) {
             className={cn(
               "px-3 py-1.5 text-xs font-medium capitalize",
               activeTab === tab
-                ? "border-b-2 border-primary-500 text-primary-600"
-                : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200",
+                ? "border-b-2 border-primary-9 text-primary-10"
+                : "text-neutral-10 hover:text-neutral-11",
             )}
           >
             {tab}
@@ -216,57 +264,15 @@ function RequestDetails({ entry }: RequestDetailsProps) {
       {/* Content */}
       <div className="p-3 text-xs max-h-48 overflow-y-auto">
         {activeTab === "headers" && (
-          <div className="space-y-4">
-            {/* Request Headers */}
-            {entry.requestHeaders &&
-              Object.keys(entry.requestHeaders).length > 0 && (
-                <div>
-                  <h4 className="font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Request Headers
-                  </h4>
-                  <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-                    {Object.entries(entry.requestHeaders).map(
-                      ([key, value]) => (
-                        <div key={key} className="contents">
-                          <dt className="text-neutral-500 dark:text-neutral-400">
-                            {key}:
-                          </dt>
-                          <dd className="text-neutral-700 dark:text-neutral-300">
-                            {value}
-                          </dd>
-                        </div>
-                      ),
-                    )}
-                  </dl>
-                </div>
-              )}
-
-            {/* Response Headers */}
-            {entry.responseHeaders &&
-              Object.keys(entry.responseHeaders).length > 0 && (
-                <div>
-                  <h4 className="font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Response Headers
-                  </h4>
-                  <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-                    {Object.entries(entry.responseHeaders).map(
-                      ([key, value]) => (
-                        <div key={key} className="contents">
-                          <dt className="text-neutral-500 dark:text-neutral-400">
-                            {key}:
-                          </dt>
-                          <dd className="text-neutral-700 dark:text-neutral-300">
-                            {value}
-                          </dd>
-                        </div>
-                      ),
-                    )}
-                  </dl>
-                </div>
-              )}
-
-            {!entry.requestHeaders && !entry.responseHeaders && (
-              <p className="text-neutral-400 dark:text-neutral-400">
+          <div>
+            {hasHeaders ? (
+              <OTELDetailsPanel
+                data={headersData}
+                title="Headers"
+                defaultView="summary"
+              />
+            ) : (
+              <p className="text-neutral-9">
                 No headers available
               </p>
             )}
@@ -276,13 +282,17 @@ function RequestDetails({ entry }: RequestDetailsProps) {
         {activeTab === "payload" && (
           <div>
             {entry.requestBody ? (
-              <pre className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded overflow-x-auto">
-                {typeof entry.requestBody === "string"
-                  ? entry.requestBody
-                  : JSON.stringify(entry.requestBody, null, 2)}
-              </pre>
+              <OTELDetailsPanel
+                data={
+                  typeof entry.requestBody === "string"
+                    ? { body: entry.requestBody }
+                    : (entry.requestBody as Record<string, unknown>)
+                }
+                title="Request Payload"
+                defaultView="raw"
+              />
             ) : (
-              <p className="text-neutral-400 dark:text-neutral-400">
+              <p className="text-neutral-9">
                 No request payload
               </p>
             )}
@@ -292,13 +302,17 @@ function RequestDetails({ entry }: RequestDetailsProps) {
         {activeTab === "response" && (
           <div>
             {entry.responseBody ? (
-              <pre className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded overflow-x-auto">
-                {typeof entry.responseBody === "string"
-                  ? entry.responseBody
-                  : JSON.stringify(entry.responseBody, null, 2)}
-              </pre>
+              <OTELDetailsPanel
+                data={
+                  typeof entry.responseBody === "string"
+                    ? { body: entry.responseBody }
+                    : (entry.responseBody as Record<string, unknown>)
+                }
+                title="Response Body"
+                defaultView="raw"
+              />
             ) : (
-              <p className="text-neutral-400 dark:text-neutral-400">
+              <p className="text-neutral-9">
                 No response body
               </p>
             )}
@@ -319,6 +333,7 @@ export function NetworkTab({
   externalEntries = [],
   onClearExternal,
 }: NetworkTabProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
@@ -473,11 +488,11 @@ export function NetworkTab({
     return (
       <div
         data-testid="network-tab"
-        className="flex flex-col h-full bg-white dark:bg-neutral-900"
+        className="flex flex-col h-full bg-neutral-1"
       >
         <div
           data-testid="network-empty"
-          className="flex-1 flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-400"
+          className="flex-1 flex flex-col items-center justify-center text-neutral-9"
         >
           <Globe size={32} className="mb-2 opacity-50" />
           <p className="text-sm">No network activity</p>
@@ -490,15 +505,15 @@ export function NetworkTab({
   return (
     <div
       data-testid="network-tab"
-      className="flex flex-col h-full bg-white dark:bg-neutral-900"
+      className="flex flex-col h-full bg-neutral-1"
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
+      <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-5 bg-neutral-1">
         {/* Recording indicator */}
         <Button
           variant="secondary"
-          size="sm"
-          className="flex .5 px-2 py-1 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700"
+          size="icon"
+          className="flex .5 px-2 py-1 rounded hover:bg-neutral-3"
           data-testid="recording-toggle"
           type="button"
           onClick={toggleRecording}
@@ -510,16 +525,16 @@ export function NetworkTab({
             size={10}
             className={cn(
               isRecording
-                ? "fill-error-500 text-error-500"
-                : "fill-neutral-400 text-neutral-400 dark:text-neutral-400",
+                ? "fill-error-9 text-error-9"
+                : "fill-neutral-9 text-neutral-9",
             )}
           />
         </Button>
 
         {/* Clear button */}
-        <Button
+        <Button size="icon"
           variant="secondary"
-          className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400"
+          className="p-1 hover:bg-neutral-3 rounded text-neutral-10"
           data-testid="clear-network-button"
           type="button"
           onClick={handleClearEntries}
@@ -530,46 +545,43 @@ export function NetworkTab({
 
         {/* Filter buttons */}
         <div className="flex items-center gap-1 ml-2">
-          <Button
+          <motion.button
             data-testid="filter-all"
             type="button"
             onClick={() => setFilter("all")}
-            className={cn(
-              "px-2 py-1 text-xs rounded",
-              filter === "all"
-                ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
-            )}
+            className={networkFilterButtonVariants({ active: filter === "all" })}
+            variants={prefersReducedMotion ? undefined : motionButtonVariants}
+            initial="rest"
+            whileHover="hover"
+            whileTap="pressed"
           >
             All
-          </Button>
-          <Button
+          </motion.button>
+          <motion.button
             data-testid="filter-api"
             type="button"
             onClick={() => setFilter("api")}
-            className={cn(
-              "px-2 py-1 text-xs rounded",
-              filter === "api"
-                ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
-            )}
+            className={networkFilterButtonVariants({ active: filter === "api" })}
+            variants={prefersReducedMotion ? undefined : motionButtonVariants}
+            initial="rest"
+            whileHover="hover"
+            whileTap="pressed"
           >
             API
-          </Button>
+          </motion.button>
           {showMCPCalls && (
-            <Button
+            <motion.button
               data-testid="filter-mcp"
               type="button"
               onClick={() => setFilter("mcp")}
-              className={cn(
-                "px-2 py-1 text-xs rounded",
-                filter === "mcp"
-                  ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                  : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
-              )}
+              className={networkFilterButtonVariants({ active: filter === "mcp" })}
+              variants={prefersReducedMotion ? undefined : motionButtonVariants}
+              initial="rest"
+              whileHover="hover"
+              whileTap="pressed"
             >
               MCP
-            </Button>
+            </motion.button>
           )}
         </div>
 
@@ -578,9 +590,9 @@ export function NetworkTab({
 
         {/* Export dropdown */}
         <div className="relative group">
-          <Button
+          <Button size="icon"
             variant="secondary"
-            className="p-1 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded text-neutral-500 dark:text-neutral-400"
+            className="p-1 hover:bg-neutral-3 rounded text-neutral-10"
             data-testid="export-network-button"
             type="button"
             aria-label="Export network log"
@@ -588,11 +600,11 @@ export function NetworkTab({
           >
             <Download size={14} />
           </Button>
-          <div className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded shadow-lg z-10 hidden group-hover:block">
+          <div className="absolute right-0 top-full mt-1 bg-neutral-1 border border-neutral-5 rounded shadow-lg z-dropdown hidden group-hover:block">
             <Button
               variant="secondary"
               size="sm"
-              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 whitespace-nowrap"
+              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-neutral-2 whitespace-nowrap"
               data-testid="export-network-json-button"
               type="button"
               onClick={() => exportNetworkToJSON(filteredEntries)}
@@ -602,7 +614,7 @@ export function NetworkTab({
             <Button
               variant="secondary"
               size="sm"
-              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 whitespace-nowrap"
+              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-neutral-2 whitespace-nowrap"
               data-testid="export-network-csv-button"
               type="button"
               onClick={() => exportNetworkToCSV(filteredEntries)}
@@ -613,7 +625,7 @@ export function NetworkTab({
         </div>
 
         {/* Auto-tail toggle */}
-        <Button
+        <motion.button
           data-testid="network-auto-tail"
           type="button"
           onClick={toggleAutoTail}
@@ -623,21 +635,19 @@ export function NetworkTab({
               ? "Pause auto-tail to newest request"
               : "Resume auto-tail"
           }
-          className={cn(
-            "p-1 rounded",
-            isAutoTailing
-              ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30"
-              : "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400",
-          )}
+          className={networkAutoTailButtonVariants({ active: isAutoTailing })}
+          variants={prefersReducedMotion ? undefined : motionButtonVariants}
+          initial="rest"
+          whileHover="hover"
+          whileTap="pressed"
         >
           <ArrowDown size={14} />
-        </Button>
+        </motion.button>
 
         {/* Search */}
         <div className="relative">
           <Search
-            size={12}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
+            className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-9"
             aria-hidden="true"
           />
           <Input
@@ -646,25 +656,25 @@ export function NetworkTab({
             value={searchTerm}
             onChange={handleSearchChange}
             className={cn(
-              "pl-6 pr-2 py-1 text-xs",
-              "bg-white dark:bg-neutral-900",
-              "border border-neutral-200 dark:border-neutral-700 rounded",
-              "focus:outline-none focus:ring-1 focus:ring-primary-500",
-              "w-32",
+              "h-8 pl-8 pr-2 py-1.5 text-sm",
+              "bg-neutral-1",
+              "border border-neutral-5 rounded",
+              "focus:outline-none focus:ring-1 focus:ring-primary-7",
+              "w-40",
             )}
             aria-label="Filter network requests"
           />
         </div>
 
         {/* Entry count */}
-        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+        <span className="text-xs text-neutral-10">
           {sortedEntries.length} requests
         </span>
       </div>
       {/* Table */}
       <div className="flex-1 overflow-y-auto" ref={listRef}>
         <table role="table" className="w-full text-left">
-          <thead className="sticky top-0 bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-500 dark:text-neutral-400">
+          <thead className="sticky top-0 bg-neutral-2 text-xs text-neutral-10">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -685,8 +695,8 @@ export function NetworkTab({
                             size={12}
                             className={cn(
                               sorted
-                                ? "text-primary-600"
-                                : "text-neutral-400 dark:text-neutral-400",
+                                ? "text-primary-10"
+                                : "text-neutral-9",
                               sorted === "desc" && "rotate-180",
                             )}
                           />

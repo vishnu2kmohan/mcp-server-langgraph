@@ -186,20 +186,50 @@ describe("SuggestionsPanel", () => {
   });
 
   describe("confidence colors", () => {
-    it("uses green color for high confidence (>=90%)", () => {
+    it("uses success color for high confidence (>=90%)", () => {
       render(<SuggestionsPanel {...defaultProps} />);
 
-      // 95% confidence should have green styling
+      // 95% confidence should have success styling (semantic token)
       const highConfidence = screen.getByText("95%");
-      expect(highConfidence.className).toContain("green");
+      expect(highConfidence.className).toContain("text-success");
     });
 
-    it("uses yellow color for medium confidence (70-89%)", () => {
+    it("uses warning color for medium confidence (70-89%)", () => {
       render(<SuggestionsPanel {...defaultProps} />);
 
-      // 85% and 70% should have yellow styling
+      // 85% and 70% should have warning styling (semantic token)
       const medConfidence = screen.getByText("85%");
-      expect(medConfidence.className).toContain("yellow");
+      expect(medConfidence.className).toContain("text-warning");
+    });
+  });
+
+  describe("Accessibility - Touch Targets (WCAG 2.5.8)", () => {
+    it("accept button meets minimum 24x24px touch target", () => {
+      render(<SuggestionsPanel {...defaultProps} />);
+
+      const acceptButtons = screen.getAllByLabelText("Accept suggestion");
+      acceptButtons.forEach((button) => {
+        expect(button.className).toMatch(/min-h-6|h-6/);
+        expect(button.className).toMatch(/min-w-6|w-6/);
+      });
+    });
+
+    it("dismiss button meets minimum 24x24px touch target", () => {
+      render(<SuggestionsPanel {...defaultProps} />);
+
+      const dismissButtons = screen.getAllByLabelText("Dismiss suggestion");
+      dismissButtons.forEach((button) => {
+        expect(button.className).toMatch(/min-h-6|h-6/);
+        expect(button.className).toMatch(/min-w-6|w-6/);
+      });
+    });
+
+    it("refresh button meets minimum 24x24px touch target", () => {
+      render(<SuggestionsPanel {...defaultProps} />);
+
+      const refreshButton = screen.getByLabelText("Refresh suggestions");
+      expect(refreshButton.className).toMatch(/min-h-6|h-6/);
+      expect(refreshButton.className).toMatch(/min-w-6|w-6/);
     });
   });
 });

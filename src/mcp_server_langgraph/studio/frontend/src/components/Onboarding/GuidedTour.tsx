@@ -93,13 +93,13 @@ export function GuidedTour({
       {/* Backdrop */}
       <div
         data-testid="tour-backdrop"
-        className="fixed inset-0 z-[65] bg-black/30 pointer-events-none"
+        className="fixed inset-0 z-65 bg-neutral-a4 pointer-events-none"
       />
       {/* Tooltip */}
       <div
         role="tooltip"
         aria-live="polite"
-        className="fixed z-[70] max-w-sm bg-white dark:bg-neutral-800 rounded-xl shadow-2xl border border-neutral-200 dark:border-neutral-700"
+        className="fixed z-70 max-w-sm bg-neutral-1 rounded-xl shadow-2xl border border-neutral-5"
         style={{
           top: "50%",
           left: "50%",
@@ -107,12 +107,12 @@ export function GuidedTour({
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-5">
+          <h3 className="font-semibold text-neutral-12">
             {currentStep.title}
           </h3>
-          <Button
-            className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded"
+          <Button size="icon" variant="ghost"
+            className="p-1 text-neutral-9 hover:text-neutral-11 rounded"
             onClick={handleSkip}
             aria-label="Skip"
           >
@@ -122,7 +122,7 @@ export function GuidedTour({
 
         {/* Content */}
         <div className="px-4 py-3">
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="text-sm text-neutral-11">
             {currentStep.content}
           </p>
         </div>
@@ -135,26 +135,26 @@ export function GuidedTour({
               data-testid="tour-progress-dot"
               className={`w-2 h-2 rounded-full transition-colors ${
                 index === currentStepIndex
-                  ? "bg-primary-500"
+                  ? "bg-primary-9"
                   : index < currentStepIndex
-                    ? "bg-primary-300"
-                    : "bg-neutral-300 dark:bg-neutral-600"
+                    ? "bg-primary-5"
+                    : "bg-neutral-3"
               }`}
             />
           ))}
         </div>
 
         {/* Step Counter */}
-        <div className="text-center text-xs text-neutral-500 dark:text-neutral-400 pb-2">
+        <div className="text-center text-xs text-neutral-10 pb-2">
           {currentStepIndex + 1} of {steps.length}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 rounded-b-xl">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-5 bg-neutral-1 rounded-b-xl">
           <div>
             {!isFirstStep && (
               <Button
-                className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
+                className="flex px-3 py-1.5 text-sm text-neutral-11 hover:text-neutral-12"
                 onClick={handlePrevious}
                 aria-label="Previous"
               >
@@ -167,7 +167,7 @@ export function GuidedTour({
             {isLastStep ? (
               <Button
                 variant="success"
-                className="flex px-4 py-1.5 text-sm bg-success-600 text-white rounded-lg hover:bg-success-700"
+                className="flex px-4 py-1.5 text-sm bg-success-10 text-neutral-12 rounded-lg hover:bg-success-11"
                 onClick={handleNext}
                 aria-label="Finish"
               >
@@ -177,7 +177,7 @@ export function GuidedTour({
             ) : (
               <Button
                 variant="primary"
-                className="flex px-4 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                className="flex px-4 py-1.5 text-sm bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11"
                 onClick={handleNext}
                 aria-label="Next"
               >

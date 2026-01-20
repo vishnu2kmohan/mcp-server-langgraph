@@ -200,22 +200,22 @@ export function AddConnectionDialog({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-neutral-a6"
         onClick={handleClose}
         aria-hidden="true"
       />
       {/* Dialog */}
-      <div className="relative bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-neutral-1 rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-5">
           <h2
             id="dialog-title"
-            className="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
+            className="text-lg font-semibold text-neutral-12"
           >
             Add MCP Connection
           </h2>
-          <Button
-            className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300"
+          <Button size="icon" variant="ghost"
+            className="p-1 text-neutral-9 hover:text-neutral-11"
             onClick={handleClose}
             aria-label="Close"
           >
@@ -229,7 +229,7 @@ export function AddConnectionDialog({
           <div>
             <label
               htmlFor="connection-name"
-              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+              className="block text-sm font-medium text-neutral-11 mb-1"
             >
               Name
             </label>
@@ -238,16 +238,16 @@ export function AddConnectionDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Zapier MCP"
-              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 ${
+              className={`w-full px-3 py-2 border rounded-lg bg-neutral-1 text-neutral-12 ${
                 errors.name
-                  ? "border-error-500"
-                  : "border-neutral-300 dark:border-neutral-600"
+                  ? "border-error-9"
+                  : "border-neutral-5"
               }`}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? "name-error" : undefined}
             />
             {errors.name && (
-              <p id="name-error" className="mt-1 text-sm text-error-600">
+              <p id="name-error" className="mt-1 text-sm text-error-10">
                 {errors.name}
               </p>
             )}
@@ -257,12 +257,12 @@ export function AddConnectionDialog({
           <div>
             <label
               htmlFor="connection-description"
-              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+              className="block text-sm font-medium text-neutral-11 mb-1"
             >
               Description
             </label>
             <Textarea
-              className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+              className="px-3 py-2 text-neutral-12"
               id="connection-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -275,7 +275,7 @@ export function AddConnectionDialog({
           <div>
             <label
               htmlFor="connection-url"
-              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+              className="block text-sm font-medium text-neutral-11 mb-1"
             >
               URL
             </label>
@@ -284,16 +284,16 @@ export function AddConnectionDialog({
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://mcp.example.com"
-              className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 ${
+              className={`w-full px-3 py-2 border rounded-lg bg-neutral-1 text-neutral-12 ${
                 errors.url
-                  ? "border-error-500"
-                  : "border-neutral-300 dark:border-neutral-600"
+                  ? "border-error-9"
+                  : "border-neutral-5"
               }`}
               aria-invalid={!!errors.url}
               aria-describedby={errors.url ? "url-error" : undefined}
             />
             {errors.url && (
-              <p id="url-error" className="mt-1 text-sm text-error-600">
+              <p id="url-error" className="mt-1 text-sm text-error-10">
                 {errors.url}
               </p>
             )}
@@ -303,12 +303,12 @@ export function AddConnectionDialog({
           <div>
             <label
               htmlFor="connection-transport"
-              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+              className="block text-sm font-medium text-neutral-11 mb-1"
             >
               Transport Protocol
             </label>
             <Select
-              className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+              className="px-3 py-2 text-neutral-12"
               id="connection-transport"
               value={transport}
               onChange={(e) =>
@@ -326,7 +326,7 @@ export function AddConnectionDialog({
               <div>
                 <label
                   htmlFor="connection-command"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+                  className="block text-sm font-medium text-neutral-11 mb-1"
                 >
                   Command
                 </label>
@@ -335,10 +335,10 @@ export function AddConnectionDialog({
                   value={command}
                   onChange={(e) => setCommand(e.target.value)}
                   placeholder="e.g., python or npx"
-                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 ${
+                  className={`w-full px-3 py-2 border rounded-lg bg-neutral-1 text-neutral-12 ${
                     errors.command
-                      ? "border-error-500"
-                      : "border-neutral-300 dark:border-neutral-600"
+                      ? "border-error-9"
+                      : "border-neutral-5"
                   }`}
                   aria-invalid={!!errors.command}
                   aria-describedby={
@@ -346,7 +346,7 @@ export function AddConnectionDialog({
                   }
                 />
                 {errors.command && (
-                  <p id="command-error" className="mt-1 text-sm text-error-600">
+                  <p id="command-error" className="mt-1 text-sm text-error-10">
                     {errors.command}
                   </p>
                 )}
@@ -355,18 +355,18 @@ export function AddConnectionDialog({
               <div>
                 <label
                   htmlFor="connection-args"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+                  className="block text-sm font-medium text-neutral-11 mb-1"
                 >
                   Arguments
                 </label>
                 <Input
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                  className="px-3 py-2 text-neutral-12"
                   id="connection-args"
                   value={args}
                   onChange={(e) => setArgs(e.target.value)}
                   placeholder="e.g., -m mcp_server --port 3000"
                 />
-                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                <p className="mt-1 text-xs text-neutral-10">
                   Space-separated arguments
                 </p>
               </div>
@@ -377,12 +377,12 @@ export function AddConnectionDialog({
           <div>
             <label
               htmlFor="connection-auth"
-              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+              className="block text-sm font-medium text-neutral-11 mb-1"
             >
               Authentication
             </label>
             <Select
-              className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+              className="px-3 py-2 text-neutral-12"
               id="connection-auth"
               value={authType}
               onChange={(e) => setAuthType(e.target.value as AuthType)}
@@ -398,12 +398,12 @@ export function AddConnectionDialog({
             <div>
               <label
                 htmlFor="connection-api-key"
-                className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+                className="block text-sm font-medium text-neutral-11 mb-1"
               >
                 API Key
               </label>
               <Input
-                className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                className="px-3 py-2 text-neutral-12"
                 id="connection-api-key"
                 type="password"
                 value={apiKey}
@@ -419,12 +419,12 @@ export function AddConnectionDialog({
               <div>
                 <label
                   htmlFor="connection-oauth-client-id"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+                  className="block text-sm font-medium text-neutral-11 mb-1"
                 >
                   Client ID
                 </label>
                 <Input
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                  className="px-3 py-2 text-neutral-12"
                   id="connection-oauth-client-id"
                   value={oauth2ClientId}
                   onChange={(e) => setOauth2ClientId(e.target.value)}
@@ -435,18 +435,18 @@ export function AddConnectionDialog({
               <div>
                 <label
                   htmlFor="connection-oauth-scopes"
-                  className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+                  className="block text-sm font-medium text-neutral-11 mb-1"
                 >
                   Scopes
                 </label>
                 <Input
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                  className="px-3 py-2 text-neutral-12"
                   id="connection-oauth-scopes"
                   value={oauth2Scopes}
                   onChange={(e) => setOauth2Scopes(e.target.value)}
                   placeholder="e.g., read write"
                 />
-                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                <p className="mt-1 text-xs text-neutral-10">
                   Space-separated scopes
                 </p>
               </div>
@@ -454,10 +454,10 @@ export function AddConnectionDialog({
           )}
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+          <div className="flex justify-end gap-3 pt-4 border-t border-neutral-5">
             <Button
               variant="secondary"
-              className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg"
+              className="px-4 py-2 text-neutral-11 hover:bg-neutral-2 rounded-lg"
               type="button"
               onClick={handleClose}
             >
@@ -465,7 +465,7 @@ export function AddConnectionDialog({
             </Button>
             <Button
               variant="primary"
-              className="flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              className="flex px-4 py-2 bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11"
               type="submit"
               disabled={isLoading}
             >

@@ -17,7 +17,7 @@ import { cn } from "../../utils/cn";
 export const selectVariants = cva(
   // Base styles
   [
-    "block rounded-lg border bg-white transition-colors duration-fast",
+    "block rounded-lg border bg-neutral-1 transition-colors duration-fast",
     "appearance-none cursor-pointer",
     "bg-no-repeat bg-right",
     // Chevron icon as background
@@ -25,28 +25,27 @@ export const selectVariants = cva(
     "bg-[length:1.5rem_1.5rem]",
     "bg-[position:right_0.5rem_center]",
     "focus:outline-none focus:ring-2 focus:ring-offset-0",
-    "dark:bg-neutral-800",
   ],
   {
     variants: {
       variant: {
         default: [
-          "border-neutral-300 dark:border-neutral-600",
-          "text-neutral-900 dark:text-neutral-100",
-          "focus:border-primary-500 focus:ring-primary-500/20",
-          "dark:focus:border-primary-400 dark:focus:ring-primary-400/20",
+          "border-neutral-5",
+          "text-neutral-12",
+          "focus:border-primary-9 focus:ring-primary-a3",
+          "dark:focus:border-primary-7 dark:focus:ring-primary-a3",
         ],
         error: [
-          "border-error-500 dark:border-error-400",
-          "text-neutral-900 dark:text-neutral-100",
-          "focus:border-error-500 focus:ring-error-500/20",
-          "dark:focus:border-error-400 dark:focus:ring-error-400/20",
+          "border-error-9 dark:border-error-7",
+          "text-neutral-12",
+          "focus:border-error-9 focus:ring-error-a3",
+          "dark:focus:border-error-7 dark:focus:ring-error-a3",
         ],
         success: [
-          "border-success-500 dark:border-success-400",
-          "text-neutral-900 dark:text-neutral-100",
-          "focus:border-success-500 focus:ring-success-500/20",
-          "dark:focus:border-success-400 dark:focus:ring-success-400/20",
+          "border-success-9 dark:border-success-7",
+          "text-neutral-12",
+          "focus:border-success-9 focus:ring-success-a3",
+          "dark:focus:border-success-7 dark:focus:ring-success-a3",
         ],
       },
       size: {
@@ -55,7 +54,7 @@ export const selectVariants = cva(
         lg: "px-4 py-2.5 pr-10 text-base",
       },
       disabled: {
-        true: "cursor-not-allowed opacity-50 bg-neutral-100 dark:bg-neutral-900",
+        true: "cursor-not-allowed opacity-50 bg-neutral-2",
         false: "",
       },
       fullWidth: {

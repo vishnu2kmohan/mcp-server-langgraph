@@ -84,9 +84,9 @@ function getIcon(icon: ChipIcon, size: number) {
 // =============================================================================
 
 function getConfidenceClass(confidence: number): string {
-  if (confidence >= 0.9) return "text-success-600 dark:text-success-400";
-  if (confidence >= 0.7) return "text-warning-600 dark:text-warning-400";
-  return "text-neutral-500 dark:text-neutral-400";
+  if (confidence >= 0.9) return "text-success-10 dark:text-success-7";
+  if (confidence >= 0.7) return "text-warning-9 dark:text-warning-9";
+  return "text-neutral-10";
 }
 
 function getConfidenceTestClass(confidence: number): string {
@@ -103,23 +103,23 @@ function getVariantClasses(variant: ChipVariant): string {
   switch (variant) {
     case "default":
       return cn(
-        "bg-primary-100 dark:bg-primary-900/30",
-        "text-primary-700 dark:text-primary-300",
-        "hover:bg-primary-200 dark:hover:bg-primary-800/50",
+        "bg-primary-3 bg-primary-4",
+        "text-primary-11 dark:text-primary-5",
+        "hover:bg-primary-4 dark:hover:bg-primary-a6",
       );
     case "outline":
       return cn(
         "bg-transparent",
-        "border border-neutral-300 dark:border-neutral-600",
-        "text-neutral-700 dark:text-neutral-300",
-        "hover:border-primary-400 dark:hover:border-primary-500",
-        "hover:bg-primary-50 dark:hover:bg-primary-900/20",
+        "border border-neutral-5",
+        "text-neutral-11",
+        "hover:border-primary-7 dark:hover:border-primary-9",
+        "hover:bg-primary-1 dark:hover:bg-primary-a3",
       );
     case "subtle":
       return cn(
-        "bg-neutral-100 dark:bg-neutral-800",
-        "text-neutral-700 dark:text-neutral-300",
-        "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700",
+        "bg-neutral-2",
+        "text-neutral-11",
+        "hover:bg-neutral-3",
       );
     default:
       return "";
@@ -199,14 +199,14 @@ export function SuggestionChip({
         "rounded-full",
         "font-medium",
         "transition-all duration-150",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-7 focus-visible:ring-offset-2",
         "cursor-pointer",
         // Size styles
         sizeStyles.container,
         // Variant styles
         variant === "default" && "bg-primary",
         variant === "outline" && "border bg-transparent",
-        variant === "subtle" && "bg-neutral-100 dark:bg-neutral-800",
+        variant === "subtle" && "bg-neutral-2",
         getVariantClasses(variant),
         // Disabled styles
         isDisabled && "opacity-50 cursor-not-allowed",

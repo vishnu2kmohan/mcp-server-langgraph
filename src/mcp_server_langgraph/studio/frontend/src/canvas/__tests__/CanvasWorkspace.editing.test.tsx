@@ -212,14 +212,13 @@ describe("CanvasWorkspace - Editing", () => {
       renderWithProviders(
         <CanvasWorkspace
           artifacts={mockArtifacts}
-          enableArtifactEdit
           onRenameArtifact={onRenameArtifact}
         />,
       );
 
       const tab = screen.getByTestId("artifact-tab-artifact-1");
-      const editableTitle = within(tab).getByText("Hello World");
-      fireEvent.click(editableTitle);
+      // Double-click to enter rename mode
+      fireEvent.dblClick(tab);
 
       const input = within(tab).getByRole("textbox");
       fireEvent.change(input, { target: { value: "New Title" } });
@@ -239,8 +238,8 @@ describe("CanvasWorkspace - Editing", () => {
       );
 
       const tab = screen.getByTestId("artifact-tab-artifact-1");
-      const editableTitle = within(tab).getByText("Hello World");
-      fireEvent.click(editableTitle);
+      // Double-click to enter rename mode
+      fireEvent.dblClick(tab);
 
       const input = within(tab).getByRole("textbox");
       fireEvent.change(input, { target: { value: "Changed Title" } });
@@ -306,10 +305,11 @@ describe("CanvasWorkspace - Editing", () => {
   });
 
   describe("Artifact Display Edge Cases", () => {
-    it("should display truncated artifact ID when no title provided", () => {
+    it("should display Untitled when no title provided", () => {
       renderWithProviders(<CanvasWorkspace artifacts={artifactWithoutTitle} />);
 
-      expect(screen.getByText(/Artifact abcdef/)).toBeInTheDocument();
+      const tab = screen.getByTestId("artifact-tab-abcdef123456");
+      expect(within(tab).getByText("Untitled")).toBeInTheDocument();
     });
 
     it("should show ai-suggestion badge for ai-suggestion editedBy", () => {

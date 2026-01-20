@@ -32,36 +32,36 @@ describe("StatusBadge", () => {
     it("renders success status with semantic colors", () => {
       render(<StatusBadge status="success">Success</StatusBadge>);
       const badge = screen.getByTestId("status-badge");
-      expect(badge).toHaveClass("bg-success-100");
-      expect(badge).toHaveClass("text-success-700");
+      expect(badge).toHaveClass("bg-success-3");
+      expect(badge).toHaveClass("text-success-11");
     });
 
     it("renders warning status with semantic colors", () => {
       render(<StatusBadge status="warning">Warning</StatusBadge>);
       const badge = screen.getByTestId("status-badge");
-      expect(badge).toHaveClass("bg-warning-100");
-      expect(badge).toHaveClass("text-warning-700");
+      expect(badge).toHaveClass("bg-warning-3");
+      expect(badge).toHaveClass("text-warning-10");
     });
 
     it("renders error status with semantic colors", () => {
       render(<StatusBadge status="error">Error</StatusBadge>);
       const badge = screen.getByTestId("status-badge");
-      expect(badge).toHaveClass("bg-error-100");
-      expect(badge).toHaveClass("text-error-700");
+      expect(badge).toHaveClass("bg-error-3");
+      expect(badge).toHaveClass("text-error-11");
     });
 
     it("renders info status with semantic colors", () => {
       render(<StatusBadge status="info">Info</StatusBadge>);
       const badge = screen.getByTestId("status-badge");
-      expect(badge).toHaveClass("bg-primary-100");
-      expect(badge).toHaveClass("text-primary-700");
+      expect(badge).toHaveClass("bg-primary-3");
+      expect(badge).toHaveClass("text-primary-11");
     });
 
     it("renders neutral status with semantic colors", () => {
       render(<StatusBadge status="neutral">Neutral</StatusBadge>);
       const badge = screen.getByTestId("status-badge");
-      expect(badge).toHaveClass("bg-neutral-100");
-      expect(badge).toHaveClass("text-neutral-700");
+      expect(badge).toHaveClass("bg-neutral-2");
+      expect(badge).toHaveClass("text-neutral-11");
     });
   });
 
@@ -69,15 +69,17 @@ describe("StatusBadge", () => {
     it("includes dark mode classes for success", () => {
       render(<StatusBadge status="success">Success</StatusBadge>);
       const badge = screen.getByTestId("status-badge");
-      expect(badge.className).toMatch(/dark:bg-success-900/);
-      expect(badge.className).toMatch(/dark:text-success-300/);
+      // Uses Radix alpha colors for dark mode backgrounds
+      expect(badge.className).toMatch(/dark:bg-success-a6/);
+      expect(badge.className).toMatch(/dark:text-success-5/);
     });
 
     it("includes dark mode classes for error", () => {
       render(<StatusBadge status="error">Error</StatusBadge>);
       const badge = screen.getByTestId("status-badge");
-      expect(badge.className).toMatch(/dark:bg-error-900/);
-      expect(badge.className).toMatch(/dark:text-error-300/);
+      // Uses Radix alpha colors for dark mode backgrounds
+      expect(badge.className).toMatch(/dark:bg-error-a6/);
+      expect(badge.className).toMatch(/dark:text-error-9/);
     });
   });
 

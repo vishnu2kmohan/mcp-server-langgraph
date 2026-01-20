@@ -34,6 +34,15 @@ export type ConnectionStatus =
   | "error"
   | "auth_required";
 
+/**
+ * Connection scope - determines access control (ADR-0102 Phase 6)
+ *
+ * - user: Personal connection, only accessible by owner
+ * - project: Shared connection, accessible by all project members
+ * - session: Ephemeral connection, only valid for current session
+ */
+export type ConnectionScope = "user" | "project" | "session";
+
 // ==============================================================================
 // OAuth2 Configuration
 // ==============================================================================
@@ -77,6 +86,8 @@ export interface MCPConnection {
   owner_id: string;
   organization_id: string | null;
   project_id: string | null;
+  /** Connection scope - determines access control (ADR-0102 Phase 6) */
+  scope: ConnectionScope;
   created_at: string;
   updated_at: string;
 }
@@ -89,6 +100,8 @@ export interface MCPConnectionSummary {
   transport: TransportProtocol;
   auth_type: AuthType;
   status: ConnectionStatus;
+  /** Connection scope - determines access control (ADR-0102 Phase 6) */
+  scope: ConnectionScope;
   server_name: string | null;
   tool_count: number;
   resource_count: number;
@@ -117,6 +130,8 @@ export interface MCPConnectionCreate {
   oauth2ClientSecret?: string | null;
   oauth2Scopes?: string[] | null;
   projectId?: string | null;
+  /** Connection scope - defaults to "user" (ADR-0102 Phase 6) */
+  scope?: ConnectionScope;
   /** For stdio transport: command to execute */
   command?: string | null;
   /** For stdio transport: command arguments */
@@ -175,6 +190,8 @@ export type ConnectionSortField =
 export interface ConnectionFilterOptions {
   status?: ConnectionStatus;
   auth_type?: AuthType;
+  /** Filter by connection scope (ADR-0102 Phase 6) */
+  scope?: ConnectionScope;
   project_id?: string;
   search?: string;
   cursor?: string;

@@ -64,4 +64,29 @@ describe("NudgeTooltip", () => {
 
     expect(screen.getByRole("tooltip")).toBeInTheDocument();
   });
+
+  describe("Accessibility - Touch Targets (WCAG 2.5.8)", () => {
+    it("dismiss button meets minimum 24x24px touch target", () => {
+      render(<NudgeTooltip nudge={mockNudge} onDismiss={() => {}} />);
+
+      const dismissButton = screen.getByRole("button", { name: /dismiss/i });
+      // Check for min-h-6 min-w-6 (24px) classes
+      expect(dismissButton.className).toMatch(/min-h-6|h-6/);
+      expect(dismissButton.className).toMatch(/min-w-6|w-6/);
+    });
+
+    it("action button meets minimum 24x24px touch target when present", () => {
+      render(
+        <NudgeTooltip
+          nudge={mockNudge}
+          onDismiss={() => {}}
+          onAccept={() => {}}
+        />,
+      );
+
+      const actionButton = screen.getByRole("button", { name: /got it/i });
+      // Button component uses size="sm" which has min-h-6 (24px)
+      expect(actionButton.className).toMatch(/min-h-6|min-h-\[24px\]/);
+    });
+  });
 });

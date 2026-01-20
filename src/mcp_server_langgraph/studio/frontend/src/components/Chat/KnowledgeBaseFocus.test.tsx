@@ -252,7 +252,7 @@ describe("KnowledgeBaseFocus", () => {
 
     const indicator = screen.getByTestId("kb-status-indicator");
     expect(indicator).toBeInTheDocument();
-    expect(indicator).toHaveClass("bg-success-500");
+    expect(indicator).toHaveClass("bg-success-9");
   });
 
   it("shows yellow indicator when kbStatus is misconfigured", () => {
@@ -265,7 +265,7 @@ describe("KnowledgeBaseFocus", () => {
     );
 
     const indicator = screen.getByTestId("kb-status-indicator");
-    expect(indicator).toHaveClass("bg-warning-500");
+    expect(indicator).toHaveClass("bg-warning-9");
   });
 
   it("shows gray indicator when kbStatus is unavailable", () => {
@@ -278,7 +278,7 @@ describe("KnowledgeBaseFocus", () => {
     );
 
     const indicator = screen.getByTestId("kb-status-indicator");
-    expect(indicator).toHaveClass("bg-neutral-400");
+    expect(indicator).toHaveClass("bg-neutral-4");
   });
 
   it("shows tooltip with config guidance when misconfigured", async () => {

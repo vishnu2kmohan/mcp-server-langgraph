@@ -113,7 +113,7 @@ export const AllPaddings: Story = {
   render: () => (
     <div className="flex flex-col gap-4">
       <Card padding="none" className="w-80">
-        <div className="p-2 bg-neutral-100">No padding (content adds own)</div>
+        <div className="p-2 bg-neutral-2">No padding (content adds own)</div>
       </Card>
       <Card padding="sm" className="w-80">
         Small padding
@@ -130,7 +130,7 @@ export const AllPaddings: Story = {
 
 export const DarkMode: Story = {
   render: () => (
-    <div className="dark bg-neutral-900 p-6 rounded-lg">
+    <div className="dark bg-neutral-2 p-6 rounded-lg">
       <div className="flex flex-col gap-4">
         <Card variant="default" className="w-80">
           <CardHeader>

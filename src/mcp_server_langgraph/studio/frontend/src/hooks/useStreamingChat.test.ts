@@ -949,4 +949,141 @@ describe("useStreamingChat", () => {
       expect(setSessionCalls[0][0].payload).toBe("session-456");
     });
   });
+
+  describe("Auth Required Events (ADR-0102)", () => {
+    it("should parse auth_required event from SSE stream", async () => {
+      const authRequiredEvent = {
+        type: "auth_required",
+        connection_id: "conn-123",
+        template_id: "github",
+        tool_name: "github.list_pull_requests",
+        message: "Authentication required to access GitHub",
+        retry_message_id: "msg-456",
+      };
+
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"I need to access GitHub..."}\n\n',
+          `data: ${JSON.stringify(authRequiredEvent)}\n\n`,
+          'data: {"content":" Please authenticate."}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "List my GitHub PRs");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      // Should capture auth_required event
+      expect(result.current.authRequired).toEqual({
+        connectionId: "conn-123",
+        templateId: "github",
+        toolName: "github.list_pull_requests",
+        message: "Authentication required to access GitHub",
+        retryMessageId: "msg-456",
+      });
+
+      // Content should still accumulate
+      expect(result.current.streamingContent).toContain("I need to access GitHub");
+    });
+
+    it("should handle auth_required event with null connection_id (new connection needed)", async () => {
+      const authRequiredEvent = {
+        type: "auth_required",
+        connection_id: null,
+        template_id: "slack",
+        tool_name: "slack.send_message",
+        message: "Slack connection required",
+        retry_message_id: null,
+      };
+
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          `data: ${JSON.stringify(authRequiredEvent)}\n\n`,
+          'data: {"content":"Please connect to Slack first."}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Send a Slack message");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.authRequired).toEqual({
+        connectionId: null,
+        templateId: "slack",
+        toolName: "slack.send_message",
+        message: "Slack connection required",
+        retryMessageId: null,
+      });
+    });
+
+    it("should not set authRequired for non-auth_required events", async () => {
+      mockFetch.mockResolvedValue(
+        createMockSSEResponse([
+          'data: {"content":"Hello!"}\n\n',
+          'data: {"usage":{"prompt_tokens":10,"completion_tokens":5,"total_tokens":15}}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.authRequired).toBeNull();
+    });
+
+    it("should clear authRequired when starting new stream", async () => {
+      // First stream with auth_required
+      const authRequiredEvent = {
+        type: "auth_required",
+        connection_id: "conn-123",
+        template_id: "github",
+        tool_name: "github.list_repos",
+        message: "Auth needed",
+        retry_message_id: "msg-1",
+      };
+
+      mockFetch.mockResolvedValueOnce(
+        createMockSSEResponse([
+          `data: ${JSON.stringify(authRequiredEvent)}\n\n`,
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      const { result } = renderHook(() => useStreamingChat());
+
+      await act(async () => {
+        result.current.startStream("session-123", "List repos");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.authRequired).not.toBeNull();
+
+      // Second stream without auth_required should clear it
+      mockFetch.mockResolvedValueOnce(
+        createMockSSEResponse([
+          'data: {"content":"Hello again"}\n\n',
+          "data: [DONE]\n\n",
+        ]),
+      );
+
+      await act(async () => {
+        result.current.startStream("session-123", "Hello");
+        await vi.waitFor(() => !result.current.isStreaming);
+      });
+
+      expect(result.current.authRequired).toBeNull();
+    });
+  });
 });

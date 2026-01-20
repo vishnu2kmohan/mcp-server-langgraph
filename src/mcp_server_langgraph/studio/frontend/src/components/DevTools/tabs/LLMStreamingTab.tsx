@@ -111,7 +111,7 @@ function ConnectionStatus({
   onReconnect,
 }: ConnectionStatusProps): React.ReactElement {
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-md text-sm">
+    <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-2 rounded-md text-sm">
       {status === "connected" && (
         <>
           <Wifi className={cn("w-4 h-4", STATUS_TEXT_COLORS.success)} />
@@ -141,7 +141,7 @@ function ConnectionStatus({
           <Button
             variant="primary"
             size="sm"
-            className="ml-2 px-2 py-0.5 text-xs bg-primary-500 text-white rounded hover:bg-primary-600"
+            className="ml-2 px-2 py-0.5 text-xs bg-primary-9 text-neutral-12 rounded hover:bg-primary-10"
             onClick={onReconnect}
           >
             Reconnect
@@ -182,14 +182,14 @@ function StreamCard({ stream }: StreamCardProps): React.ReactElement {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {getStatusIcon(stream.status)}
-          <span className="font-medium text-neutral-900 dark:text-white">
+          <span className="font-medium text-neutral-12">
             {stream.model}
           </span>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400 px-1.5 py-0.5 bg-neutral-200 dark:bg-neutral-700 rounded">
+          <span className="text-xs text-neutral-10 px-1.5 py-0.5 bg-neutral-3 rounded">
             {stream.provider}
           </span>
         </div>
-        <span className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
+        <span className="text-xs text-neutral-10 font-mono">
           {stream.streamId.slice(0, 8)}...
         </span>
       </div>
@@ -197,34 +197,34 @@ function StreamCard({ stream }: StreamCardProps): React.ReactElement {
       {/* Metrics Grid */}
       <div className="grid grid-cols-3 gap-3">
         {/* TTFC */}
-        <div className="flex flex-col items-center p-2 bg-white dark:bg-neutral-900 rounded">
-          <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+        <div className="flex flex-col items-center p-2 bg-neutral-1 rounded">
+          <div className="flex items-center gap-1 text-xs text-neutral-10 mb-1">
             <Clock className="w-3 h-3" />
             <span>TTFC</span>
           </div>
-          <span className="font-mono text-sm font-medium text-neutral-900 dark:text-white">
+          <span className="font-mono text-sm font-medium text-neutral-12">
             {formatDuration(stream.ttfcMs)}
           </span>
         </div>
 
         {/* Chunks */}
-        <div className="flex flex-col items-center p-2 bg-white dark:bg-neutral-900 rounded">
-          <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+        <div className="flex flex-col items-center p-2 bg-neutral-1 rounded">
+          <div className="flex items-center gap-1 text-xs text-neutral-10 mb-1">
             <Layers className="w-3 h-3" />
             <span>Chunks</span>
           </div>
-          <span className="font-mono text-sm font-medium text-neutral-900 dark:text-white">
+          <span className="font-mono text-sm font-medium text-neutral-12">
             {stream.chunksReceived}
           </span>
         </div>
 
         {/* Size */}
-        <div className="flex flex-col items-center p-2 bg-white dark:bg-neutral-900 rounded">
-          <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+        <div className="flex flex-col items-center p-2 bg-neutral-1 rounded">
+          <div className="flex items-center gap-1 text-xs text-neutral-10 mb-1">
             <Activity className="w-3 h-3" />
             <span>Size</span>
           </div>
-          <span className="font-mono text-sm font-medium text-neutral-900 dark:text-white">
+          <span className="font-mono text-sm font-medium text-neutral-12">
             {stream.totalChunkSize} B
           </span>
         </div>
@@ -263,13 +263,13 @@ export function LLMStreamingTab({
       data-testid="llm-streaming-tab"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-5">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-medium text-neutral-900 dark:text-white">
+          <h3 className="text-sm font-medium text-neutral-12">
             LLM Streaming
           </h3>
           {sessionId && (
-            <span className="text-xs text-neutral-500 dark:text-neutral-400 px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded">
+            <span className="text-xs text-neutral-10 px-2 py-0.5 bg-neutral-2 rounded">
               {sessionId}
             </span>
           )}
@@ -284,7 +284,7 @@ export function LLMStreamingTab({
       {/* Content */}
       <div className="flex-1 overflow-auto p-4">
         {streamsList.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-neutral-500 dark:text-neutral-400">
+          <div className="flex flex-col items-center justify-center h-full text-neutral-10">
             <Activity className="w-12 h-12 mb-3 opacity-50" />
             <p className="text-sm">No active streams</p>
             <p className="text-xs mt-1">

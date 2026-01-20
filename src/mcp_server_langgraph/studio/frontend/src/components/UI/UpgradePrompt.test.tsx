@@ -181,7 +181,7 @@ describe("UpgradePrompt", () => {
           urgency="warning"
         />,
       );
-      expect(container.querySelector(".bg-warning-50")).toBeInTheDocument();
+      expect(container.querySelector(".bg-warning-3")).toBeInTheDocument();
     });
 
     it("should display critical style for critical urgency", () => {
@@ -193,14 +193,14 @@ describe("UpgradePrompt", () => {
           urgency="critical"
         />,
       );
-      expect(container.querySelector(".bg-error-50")).toBeInTheDocument();
+      expect(container.querySelector(".bg-error-1")).toBeInTheDocument();
     });
 
     it("should display info style by default", () => {
       const { container } = render(
         <UpgradePrompt show={true} feature="sessions" targetTier="hybrid" />,
       );
-      expect(container.querySelector(".bg-primary-50")).toBeInTheDocument();
+      expect(container.querySelector(".bg-primary-1")).toBeInTheDocument();
     });
   });
 

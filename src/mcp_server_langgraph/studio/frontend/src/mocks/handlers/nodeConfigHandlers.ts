@@ -8,7 +8,8 @@
  * - POST /api/v1/ai/node-config/help - Get help for node configuration
  */
 
-import { http, HttpResponse, delay } from "msw";
+import { http, delay } from "msw";
+import { apiJsonResponse } from "../utils/apiResponse";
 import type {
   NodeConfigHelpRequest,
   NodeConfigHelpResponse,
@@ -201,21 +202,21 @@ export const nodeConfigHandlers = [
 
     // Validate required fields
     if (!body.node_type) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { error: "Missing required field: node_type" },
         { status: 400 },
       );
     }
 
     if (!body.question) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { error: "Missing required field: question" },
         { status: 400 },
       );
     }
 
     if (!body.node_config) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { error: "Missing required field: node_config" },
         { status: 400 },
       );
@@ -229,6 +230,6 @@ export const nodeConfigHandlers = [
       body.context,
     );
 
-    return HttpResponse.json(response);
+    return apiJsonResponse(response);
   }),
 ];

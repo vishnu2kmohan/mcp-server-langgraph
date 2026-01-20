@@ -9,6 +9,8 @@ import { Copy, Check, ChevronDown, ChevronRight, Download } from "lucide-react";
 import type { JSONArtifact as JSONArtifactType } from "../../types/artifacts";
 
 import { Button } from "@/components/UI";
+import { cn } from "@/utils/cn";
+import { getIndentClass } from "@/utils/indent";
 
 export interface JSONArtifactProps {
   artifact: JSONArtifactType;
@@ -68,28 +70,27 @@ function JSONTreeNode({
 
   const indentSize = depth * 20;
 
-  const keyColor = theme === "dark" ? "text-primary-400" : "text-primary-600";
+  const keyColor = theme === "dark" ? "text-primary-7" : "text-primary-10";
   const stringColor =
-    theme === "dark" ? "text-success-400" : "text-success-600";
+    theme === "dark" ? "text-success-7" : "text-success-10";
   const numberColor =
-    theme === "dark" ? "text-grafana-400" : "text-grafana-600";
+    theme === "dark" ? "text-grafana-5" : "text-grafana-10";
   const booleanColor =
-    theme === "dark" ? "text-insight-400" : "text-insight-600";
+    theme === "dark" ? "text-insight-9" : "text-insight-10";
   const nullColor =
     theme === "dark"
-      ? "text-neutral-400 dark:text-neutral-400"
-      : "text-neutral-500 dark:text-neutral-400";
+      ? "text-neutral-9"
+      : "text-neutral-10";
   const bracketColor =
     theme === "dark"
-      ? "text-neutral-300"
-      : "text-neutral-700 dark:text-neutral-200";
+      ? "text-neutral-9"
+      : "text-neutral-11";
 
   // Primitive values
   if (!isObject(value) && !isArray(value)) {
     return (
       <div
-        className="font-mono text-sm"
-        style={{ paddingLeft: `${indentSize}px` }}
+        className={cn("font-mono text-sm", getIndentClass(indentSize))}
       >
         {keyName && (
           <>
@@ -127,8 +128,7 @@ function JSONTreeNode({
   return (
     <div className="font-mono text-sm">
       <div
-        className="flex items-start hover:bg-opacity-10"
-        style={{ paddingLeft: `${indentSize}px` }}
+        className={cn("flex items-start hover:bg-opacity-10", getIndentClass(indentSize))}
       >
         {!isEmpty && (
           <Button
@@ -172,8 +172,7 @@ function JSONTreeNode({
             />
           ))}
           <div
-            className={`${bracketColor} font-mono text-sm`}
-            style={{ paddingLeft: `${indentSize}px` }}
+            className={cn(`${bracketColor} font-mono text-sm`, getIndentClass(indentSize))}
           >
             {closeBracket}
             {!isLast && <span>,</span>}
@@ -230,8 +229,8 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
 
   const themeClasses =
     theme === "dark"
-      ? "bg-neutral-900 text-neutral-100 border-neutral-700"
-      : "bg-neutral-50 text-neutral-900 border-neutral-200 dark:border-neutral-700";
+      ? "bg-neutral-2 text-neutral-9 border-neutral-7"
+      : "bg-neutral-1 text-neutral-12 border-neutral-5";
 
   return (
     <div
@@ -244,8 +243,8 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
       <div
         className={`flex items-center justify-between px-4 py-2 border-b ${
           theme === "dark"
-            ? "border-neutral-700 bg-neutral-800"
-            : "border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800"
+            ? "border-neutral-7 bg-neutral-3"
+            : "border-neutral-5 bg-neutral-2"
         }`}
       >
         <div className="flex items-center gap-3">
@@ -253,8 +252,8 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
           <span
             className={`text-xs font-mono px-2 py-1 rounded ${
               theme === "dark"
-                ? "bg-neutral-700 text-neutral-300"
-                : "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200"
+                ? "bg-neutral-4 text-neutral-9"
+                : "bg-neutral-3 text-neutral-11"
             }`}
           >
             JSON
@@ -269,8 +268,8 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
           >
             {copied ? (
               <>
-                <Check className="w-4 h-4 text-success-500" />
-                <span className="text-success-500">Copied!</span>
+                <Check className="w-4 h-4 text-success-9" />
+                <span className="text-success-9">Copied!</span>
               </>
             ) : (
               <>
@@ -279,7 +278,7 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
               </>
             )}
           </Button>
-          <Button
+          <Button size="icon" variant="ghost"
             className="p-1.5 rounded"
             onClick={handleDownload}
             aria-label="Download JSON"

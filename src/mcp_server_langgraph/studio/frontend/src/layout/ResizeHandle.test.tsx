@@ -10,6 +10,12 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import { PanelGroup, Panel } from "react-resizable-panels";
 
 expect.extend(toHaveNoViolations);
+
+// Mock useReducedMotion to return false (allow motion) by default
+vi.mock("motion/react", () => ({
+  useReducedMotion: vi.fn(() => false),
+}));
+
 import { ResizeHandle } from "./ResizeHandle";
 
 // Wrapper to render ResizeHandle in valid context
@@ -69,11 +75,12 @@ describe("ResizeHandle", () => {
       expect(handle).toHaveClass("custom-class");
     });
 
-    it("should have hover transition classes", () => {
+    it("should have hover transition classes when motion is allowed", () => {
       render(<TestWrapper />);
 
       const handle = document.querySelector("[data-panel-resize-handle-id]");
-      expect(handle).toHaveClass("transition-all");
+      // WCAG 2.2 AA: transition-colors applied when reduced motion is not preferred
+      expect(handle).toHaveClass("transition-colors");
     });
 
     it("should have transparent background by default", () => {

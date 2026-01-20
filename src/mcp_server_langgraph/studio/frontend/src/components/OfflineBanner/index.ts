@@ -5,3 +5,7 @@
  */
 
 export { OfflineBanner, type OfflineBannerProps } from "./OfflineBanner";
+export {
+  ConflictResolutionDialog,
+  type ConflictResolutionDialogProps,
+} from "./ConflictResolutionDialog";

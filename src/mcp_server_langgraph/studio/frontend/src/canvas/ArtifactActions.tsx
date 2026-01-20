@@ -4,7 +4,7 @@
  * Artifact action buttons component for Copy, Fork, Export,
  * Share, and Delete operations.
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   Copy,
   GitFork,
@@ -13,6 +13,11 @@ import {
   Trash2,
   Check,
   ChevronDown,
+  Wand2,
+  Zap,
+  MessageSquare,
+  Bug,
+  Sparkles,
 } from "lucide-react";
 import type { CanvasArtifact } from "../types/artifacts";
 import { cn } from "../utils/cn";
@@ -24,6 +29,46 @@ import { Button } from "@/components/UI";
 // =============================================================================
 
 export type ExportFormat = "json" | "markdown" | "text";
+
+/** AI action types for canvas artifacts */
+export type AIActionType = "refactor" | "optimize" | "explain" | "fix";
+
+/** AI action configuration */
+interface AIAction {
+  id: AIActionType;
+  label: string;
+  icon: typeof Wand2;
+  /** Content types this action applies to */
+  types: CanvasArtifact["contentType"][];
+}
+
+/** Available AI actions with type filtering */
+const AI_ACTIONS: AIAction[] = [
+  {
+    id: "refactor",
+    label: "Refactor",
+    icon: Wand2,
+    types: ["code", "jsx"],
+  },
+  {
+    id: "optimize",
+    label: "Optimize",
+    icon: Zap,
+    types: ["code", "jsx"],
+  },
+  {
+    id: "explain",
+    label: "Explain",
+    icon: MessageSquare,
+    types: ["code", "jsx", "markdown", "json"],
+  },
+  {
+    id: "fix",
+    label: "Fix Issues",
+    icon: Bug,
+    types: ["code", "jsx"],
+  },
+];
 
 export interface ArtifactActionsProps {
   /** The artifact to act upon */
@@ -50,6 +95,12 @@ export interface ArtifactActionsProps {
   onDelete?: (artifact: CanvasArtifact) => void;
   /** Additional class name */
   className?: string;
+  /** Enable AI actions in toolbar (Phase 4) */
+  enableAI?: boolean;
+  /** Callback when AI action is triggered */
+  onAIAction?: (artifact: CanvasArtifact, action: AIActionType) => void;
+  /** Whether an AI action is currently loading */
+  aiActionLoading?: boolean;
 }
 
 // =============================================================================
@@ -66,51 +117,47 @@ function DeleteConfirmDialog({ onConfirm, onCancel }: DeleteDialogProps) {
     <div
       data-testid="delete-confirm-dialog"
       className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center",
-        "bg-black/50",
+        "fixed inset-0 z-modal flex items-center justify-center",
+        "bg-neutral-a6",
       )}
       onClick={onCancel}
     >
       <div
         className={cn(
-          "bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 max-w-sm mx-4",
+          "bg-neutral-1 rounded-lg shadow-xl p-6 max-w-sm mx-4",
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+        <h3 className="text-lg font-medium text-neutral-12 mb-2">
           Delete Artifact?
         </h3>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+        <p className="text-sm text-neutral-11 mb-4">
           This action cannot be undone. The artifact and all its versions will
           be permanently deleted.
         </p>
         <div className="flex justify-end gap-2">
-          <Button
+          <Button variant="secondary"
             data-testid="cancel-delete-button"
             type="button"
             onClick={onCancel}
             className={cn(
               "px-4 py-2 rounded-lg text-sm font-medium",
-              "text-neutral-700 dark:text-neutral-300",
-              "bg-neutral-100 dark:bg-neutral-700",
-              "hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600",
+              "text-neutral-11",
+              "bg-neutral-2",
+              "hover:bg-neutral-3",
               "transition-colors",
             )}
-          >
-            Cancel
-          </Button>
-          <Button
+          >Cancel</Button>
+          <Button variant="danger"
             data-testid="confirm-delete-button"
             type="button"
             onClick={onConfirm}
             className={cn(
               "px-4 py-2 rounded-lg text-sm font-medium",
-              "text-white bg-error-600 hover:bg-error-700",
+              "text-neutral-12 bg-error-10 hover:bg-error-11",
               "transition-colors",
             )}
-          >
-            Delete
-          </Button>
+          >Delete</Button>
         </div>
       </div>
     </div>
@@ -137,9 +184,9 @@ function ExportMenu({ onExport, onClose }: ExportMenuProps) {
     <div
       data-testid="export-menu"
       className={cn(
-        "absolute top-full right-0 mt-1 z-10",
-        "bg-white dark:bg-neutral-800 rounded-lg shadow-lg",
-        "border border-neutral-200 dark:border-neutral-700",
+        "absolute top-full right-0 mt-1 z-dropdown",
+        "bg-neutral-1 rounded-lg shadow-lg",
+        "border border-neutral-5",
         "py-1 min-w-32",
       )}
     >
@@ -153,8 +200,8 @@ function ExportMenu({ onExport, onClose }: ExportMenuProps) {
           }}
           className={cn(
             "w-full px-4 py-2 text-left text-sm",
-            "text-neutral-700 dark:text-neutral-300",
-            "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+            "text-neutral-11",
+            "hover:bg-neutral-2",
             "transition-colors",
           )}
         >
@@ -198,11 +245,11 @@ function ActionButton({
       aria-label={label}
       className={cn(
         "flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium",
-        "transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500",
+        "transition-colors focus:outline-none focus:ring-2 focus:ring-primary-7",
         variant === "default" &&
-          "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+          "text-neutral-11 hover:bg-neutral-2",
         variant === "danger" &&
-          "text-error-600 dark:text-error-400 hover:bg-error-100 dark:hover:bg-error-900/30",
+          "text-error-11 dark:text-error-11 hover:bg-error-3 dark:hover:bg-error-a4",
         disabled && "opacity-50 cursor-not-allowed",
       )}
     >
@@ -229,10 +276,28 @@ export function ArtifactActions({
   onShare,
   onDelete,
   className,
+  enableAI = false,
+  onAIAction,
+  aiActionLoading = false,
 }: ArtifactActionsProps) {
   const [showCopySuccess, setShowCopySuccess] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Filter AI actions based on artifact content type
+  const relevantAIActions = useMemo(() => {
+    if (!enableAI) return [];
+    return AI_ACTIONS.filter((action) =>
+      action.types.includes(artifact.contentType),
+    );
+  }, [enableAI, artifact.contentType]);
+
+  const handleAIAction = useCallback(
+    (actionId: AIActionType) => {
+      onAIAction?.(artifact, actionId);
+    },
+    [artifact, onAIAction],
+  );
 
   const handleCopy = useCallback(async () => {
     try {
@@ -274,7 +339,7 @@ export function ArtifactActions({
       {showCopySuccess ? (
         <div
           data-testid="copy-success"
-          className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-success-600 dark:text-success-400"
+          className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-success-11 dark:text-success-11"
         >
           <Check size={14} />
           {!compact && <span>Copied!</span>}
@@ -308,8 +373,8 @@ export function ArtifactActions({
           aria-label="Export"
           className={cn(
             "flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium",
-            "transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500",
-            "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+            "transition-colors focus:outline-none focus:ring-2 focus:ring-primary-7",
+            "text-neutral-11 hover:bg-neutral-2",
             disabled && "opacity-50 cursor-not-allowed",
           )}
         >
@@ -346,6 +411,48 @@ export function ArtifactActions({
           variant="danger"
           testId="delete-button"
         />
+      )}
+      {/* AI Actions Section (Phase 4) - separated by divider */}
+      {relevantAIActions.length > 0 && (
+        <>
+          <div
+            data-testid="ai-actions-divider"
+            className="w-px h-5 bg-neutral-6 mx-1"
+          />
+          <div
+            data-testid="ai-actions-toolbar"
+            className="flex items-center gap-1"
+          >
+            <Sparkles
+              size={14}
+              className="text-insight-11 mr-0.5"
+              data-testid="ai-sparkles-icon"
+            />
+            {relevantAIActions.map((action) => (
+              <Button
+                key={action.id}
+                type="button"
+                data-testid={`ai-action-${action.id}`}
+                disabled={disabled || aiActionLoading}
+                onClick={() => handleAIAction(action.id)}
+                title={action.label}
+                aria-label={action.label}
+                className={cn(
+                  "flex items-center justify-center",
+                  "w-8 h-8 p-0 rounded-lg",
+                  "text-neutral-11 hover:text-insight-11",
+                  "hover:bg-insight-3",
+                  "transition-colors duration-150",
+                  "focus:outline-none focus:ring-2 focus:ring-primary-7",
+                  (disabled || aiActionLoading) &&
+                    "opacity-50 cursor-not-allowed",
+                )}
+              >
+                <action.icon size={16} />
+              </Button>
+            ))}
+          </div>
+        </>
       )}
       {/* Delete confirmation dialog */}
       {showDeleteDialog && (

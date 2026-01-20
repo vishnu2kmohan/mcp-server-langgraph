@@ -28,14 +28,13 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import {
-  Skeleton,
-  SkeletonCard,
-  ErrorState,
-  Button,
-  Input,
-  Select,
-} from "../components/UI";
+// Direct imports to avoid Rollup circular dependency warnings
+// (page chunks end up separate from UI barrel)
+import { Skeleton, SkeletonCard } from "../components/UI/Skeleton";
+import { ErrorState } from "../components/UI/ErrorState";
+import { Button } from "../components/UI/Button";
+import { Input } from "../components/UI/Input";
+import { Select } from "../components/UI/Select";
 import {
   LazyOrganizationCostDashboard,
   LazyBudgetStatusCard,
@@ -322,27 +321,27 @@ export function CostPage({
   const getWsStatusDisplay = () => {
     switch (wsStatus) {
       case "connected":
-        return { text: "Live", color: "text-success-500", Icon: Wifi };
+        return { text: "Live", color: "text-success-9", Icon: Wifi };
       case "connecting":
-        return { text: "Connecting...", color: "text-warning-500", Icon: Wifi };
+        return { text: "Connecting...", color: "text-warning-9", Icon: Wifi };
       case "reconnecting":
         return {
           text: "Reconnecting...",
-          color: "text-warning-500",
+          color: "text-warning-9",
           Icon: Wifi,
         };
       case "disconnected":
         return {
           text: "Offline",
-          color: "text-neutral-500 dark:text-neutral-400",
+          color: "text-neutral-11",
           Icon: WifiOff,
         };
       case "error":
-        return { text: "Error", color: "text-error-500", Icon: WifiOff };
+        return { text: "Error", color: "text-error-9", Icon: WifiOff };
       default:
         return {
           text: "Unknown",
-          color: "text-neutral-500 dark:text-neutral-400",
+          color: "text-neutral-11",
           Icon: WifiOff,
         };
     }
@@ -351,15 +350,15 @@ export function CostPage({
   const wsStatusDisplay = enableRealtime ? getWsStatusDisplay() : null;
 
   return (
-    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
+    <div className="h-screen flex flex-col bg-neutral-1">
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+      <header className="px-6 py-4 bg-neutral-2 border-b border-neutral-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            <h1 className="text-2xl font-bold text-neutral-12">
               Cost Dashboard
             </h1>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-11">
               Track and analyze LLM usage costs
             </p>
           </div>
@@ -370,10 +369,10 @@ export function CostPage({
                 data-testid="ws-status-indicator"
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
                   wsStatus === "connected"
-                    ? "bg-success-100 dark:bg-success-900/30"
+                    ? "bg-success-3 bg-success-4"
                     : wsStatus === "error"
-                      ? "bg-error-100 dark:bg-error-900/30"
-                      : "bg-warning-100 dark:bg-warning-900/30"
+                      ? "bg-error-3 bg-error-4"
+                      : "bg-warning-3 dark:bg-warning-12/30"
                 }`}
               >
                 <wsStatusDisplay.Icon
@@ -390,7 +389,7 @@ export function CostPage({
               {/* Period Selector (preset ranges) */}
               {!useCustomDateRange && (
                 <Select
-                  className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                  className="px-3 py-2 text-neutral-12"
                   value={period}
                   onChange={(e) => handlePeriodChange(e.target.value as Period)}
                 >
@@ -404,17 +403,17 @@ export function CostPage({
               {useCustomDateRange && (
                 <div className="flex items-center gap-2">
                   <Input
-                    className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                    className="px-3 py-2 text-neutral-12"
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     aria-label="Start date"
                   />
-                  <span className="text-neutral-500 dark:text-neutral-400">
+                  <span className="text-neutral-11">
                     to
                   </span>
                   <Input
-                    className="px-3 py-2 text-neutral-900 dark:text-neutral-100"
+                    className="px-3 py-2 text-neutral-12"
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
@@ -450,7 +449,7 @@ export function CostPage({
       </header>
       {/* Admin View Toggle */}
       {isAdmin && (
-        <div className="px-6 py-2 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="px-6 py-2 bg-neutral-2 border-b border-neutral-6">
           <div className="flex items-center gap-2">
             <Button
               className="flex px-4 py-2 rounded-lg text-sm"
@@ -473,23 +472,23 @@ export function CostPage({
       {enableRealtime && budgetWarnings.length > 0 && (
         <div
           data-testid="budget-warning-banner"
-          className="mx-6 mt-4 p-4 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg"
+          className="mx-6 mt-4 p-4 bg-warning-3 bg-warning-3 border border-warning-6 dark:border-warning-11 rounded-lg"
         >
           <div className="flex items-start gap-3">
             <AlertTriangle
               size={20}
-              className="text-warning-500 flex-shrink-0 mt-0.5"
+              className="text-warning-9 flex-shrink-0 mt-0.5"
             />
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-warning-800 dark:text-warning-200">
+              <h3 className="text-sm font-medium text-warning-11 dark:text-warning-6">
                 Budget Warning
               </h3>
-              <p className="text-sm text-warning-700 dark:text-warning-300 mt-1">
+              <p className="text-sm text-warning-10 dark:text-warning-6 mt-1">
                 {budgetWarnings[budgetWarnings.length - 1].message}
               </p>
             </div>
             <Button
-              className="text-warning-500 hover:text-warning-700 dark:hover:text-warning-300"
+              className="text-warning-9 hover:text-warning-10 dark:hover:text-warning-6"
               onClick={clearBudgetWarnings}
               aria-label="Dismiss warning"
             >
@@ -504,10 +503,10 @@ export function CostPage({
           data-testid="budget-alerts-banner"
           className={`mx-6 mt-4 p-4 rounded-lg border ${
             budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-              ? "bg-error-50 dark:bg-error-900/20 border-error-200 dark:border-error-800"
+              ? "bg-error-1 dark:bg-error-12/20 border-error-4 dark:border-error-11"
               : budgetAlerts[budgetAlerts.length - 1].status === "critical"
-                ? "bg-grafana-50 dark:bg-grafana-900/20 border-grafana-200 dark:border-grafana-800"
-                : "bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800"
+                ? "bg-grafana-1 dark:bg-grafana-12/20 border-grafana-4 dark:border-grafana-11"
+                : "bg-warning-3 bg-warning-3 border-warning-6 dark:border-warning-11"
           }`}
         >
           <div className="flex items-start gap-3">
@@ -515,21 +514,21 @@ export function CostPage({
               size={20}
               className={`flex-shrink-0 mt-0.5 ${
                 budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-                  ? "text-error-500"
+                  ? "text-error-9"
                   : budgetAlerts[budgetAlerts.length - 1].status === "critical"
-                    ? "text-grafana-500"
-                    : "text-warning-500"
+                    ? "text-grafana-9"
+                    : "text-warning-9"
               }`}
             />
             <div className="flex-1">
               <h3
                 className={`text-sm font-medium ${
                   budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-                    ? "text-error-800 dark:text-error-200"
+                    ? "text-error-11 dark:text-error-4"
                     : budgetAlerts[budgetAlerts.length - 1].status ===
                         "critical"
-                      ? "text-grafana-800 dark:text-grafana-200"
-                      : "text-warning-800 dark:text-warning-200"
+                      ? "text-grafana-11 dark:text-grafana-4"
+                      : "text-warning-11 dark:text-warning-6"
                 }`}
               >
                 Budget Alert (
@@ -538,11 +537,11 @@ export function CostPage({
               <p
                 className={`text-sm mt-1 ${
                   budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-                    ? "text-error-700 dark:text-error-300"
+                    ? "text-error-11 dark:text-error-9"
                     : budgetAlerts[budgetAlerts.length - 1].status ===
                         "critical"
-                      ? "text-grafana-700 dark:text-grafana-300"
-                      : "text-warning-700 dark:text-warning-300"
+                      ? "text-grafana-10 dark:text-grafana-5"
+                      : "text-warning-10 dark:text-warning-6"
                 }`}
               >
                 {budgetAlerts[budgetAlerts.length - 1].message}
@@ -550,11 +549,11 @@ export function CostPage({
               <p
                 className={`text-xs mt-1 ${
                   budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-                    ? "text-error-600 dark:text-error-400"
+                    ? "text-error-10 dark:text-error-7"
                     : budgetAlerts[budgetAlerts.length - 1].status ===
                         "critical"
-                      ? "text-grafana-600 dark:text-grafana-400"
-                      : "text-warning-600 dark:text-warning-400"
+                      ? "text-grafana-9 dark:text-grafana-7"
+                      : "text-warning-9 dark:text-warning-9"
                 }`}
               >
                 {budgetAlerts[budgetAlerts.length - 1].entityType}:{" "}
@@ -571,32 +570,32 @@ export function CostPage({
       {enableRealtime && userBudget && (
         <div
           data-testid="budget-progress-bar"
-          className="mx-6 mt-4 p-4 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg"
+          className="mx-6 mt-4 p-4 bg-neutral-2 border border-neutral-6 rounded-lg"
         >
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            <h3 className="text-sm font-medium text-neutral-11">
               Your Budget
             </h3>
-            <span className="text-sm text-neutral-500 dark:text-neutral-400">
+            <span className="text-sm text-neutral-11">
               ${userBudget.remaining.toFixed(2)} remaining
             </span>
           </div>
-          <div className="relative h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+          <div className="relative h-2 bg-neutral-3 dark:bg-neutral-10 rounded-full overflow-hidden">
             <div
               className={`absolute left-0 top-0 h-full rounded-full transition-all ${
                 (userBudget.currentUsage / userBudget.budgetLimit) * 100 >= 90
-                  ? "bg-error-500"
+                  ? "bg-error-9"
                   : (userBudget.currentUsage / userBudget.budgetLimit) * 100 >=
                       75
-                    ? "bg-warning-500"
-                    : "bg-primary-500"
+                    ? "bg-warning-9"
+                    : "bg-primary-9"
               }`}
               style={{
                 width: `${Math.min(100, (userBudget.currentUsage / userBudget.budgetLimit) * 100)}%`,
               }}
             />
           </div>
-          <div className="flex items-center justify-between mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+          <div className="flex items-center justify-between mt-2 text-xs text-neutral-11">
             <span>${userBudget.currentUsage.toFixed(2)} used</span>
             <span>${userBudget.budgetLimit.toFixed(2)} limit</span>
           </div>
@@ -613,7 +612,7 @@ export function CostPage({
                 fallback={
                   <div
                     data-testid="budget-status-skeleton"
-                    className="p-4 rounded-lg border border-neutral-200 dark:border-neutral-700"
+                    className="p-4 rounded-lg border border-neutral-6"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <Skeleton className="w-5 h-5 rounded" />
@@ -657,7 +656,7 @@ export function CostPage({
               <SkeletonCard />
             </div>
             {/* Skeleton for Model Breakdown */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
+            <div className="bg-neutral-2 rounded-lg border border-neutral-6 p-6">
               <Skeleton className="h-6 w-1/4 mb-4" />
               <div className="space-y-3">
                 <Skeleton className="h-12 w-full" />
@@ -681,62 +680,62 @@ export function CostPage({
             {summary && (
               <div className="grid gap-4 md:grid-cols-3">
                 {/* Total Cost */}
-                <div className="p-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <div className="p-6 bg-neutral-2 rounded-lg border border-neutral-6">
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign size={20} className="text-primary-500" />
-                    <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                    <DollarSign size={20} className="text-primary-9" />
+                    <h3 className="text-sm font-medium text-neutral-11">
                       Total Cost
                     </h3>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                    <span className="text-3xl font-bold text-neutral-12">
                       {formatCurrency(summary.totalCost)}
                     </span>
                   </div>
-                  <div className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                  <div className="mt-2 text-sm text-neutral-11">
                     Past {period}
                   </div>
                 </div>
 
                 {/* Total Tokens */}
-                <div className="p-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <div className="p-6 bg-neutral-2 rounded-lg border border-neutral-6">
                   <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp size={20} className="text-success-500" />
-                    <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                    <TrendingUp size={20} className="text-success-9" />
+                    <h3 className="text-sm font-medium text-neutral-11">
                       Total Tokens
                     </h3>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                    <span className="text-3xl font-bold text-neutral-12">
                       {formatNumber(summary.totalTokens ?? 0)}
                     </span>
                   </div>
-                  <div className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                  <div className="mt-2 text-sm text-neutral-11">
                     Past {period}
                   </div>
                 </div>
 
                 {/* Average Cost per Token */}
-                <div className="p-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <div className="p-6 bg-neutral-2 rounded-lg border border-neutral-6">
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign size={20} className="text-insight-500" />
-                    <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                    <DollarSign size={20} className="text-insight-9" />
+                    <h3 className="text-sm font-medium text-neutral-11">
                       Avg Cost/Token
                     </h3>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                    <span className="text-3xl font-bold text-neutral-12">
                       {summary.totalTokens && summary.totalTokens > 0
                         ? formatCurrency(
                             (summary.totalCost / summary.totalTokens) * 1000,
                           )
                         : "$0.00"}
                     </span>
-                    <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                    <span className="text-sm text-neutral-11">
                       /1K
                     </span>
                   </div>
-                  <div className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                  <div className="mt-2 text-sm text-neutral-11">
                     Past {period}
                   </div>
                 </div>
@@ -749,7 +748,7 @@ export function CostPage({
                 fallback={
                   <div
                     data-testid="budget-status-skeleton"
-                    className="p-4 rounded-lg border border-neutral-200 dark:border-neutral-700"
+                    className="p-4 rounded-lg border border-neutral-6"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <Skeleton className="w-5 h-5 rounded" />
@@ -776,7 +775,7 @@ export function CostPage({
                 fallback={
                   <div
                     data-testid="budget-forecast-skeleton"
-                    className="p-6 rounded-lg border border-neutral-200 dark:border-neutral-700"
+                    className="p-6 rounded-lg border border-neutral-6"
                   >
                     <div className="space-y-4">
                       <Skeleton className="w-32 h-6" />
@@ -802,35 +801,35 @@ export function CostPage({
             {enableRealtime && liveSessionCostsList.length > 0 && (
               <div
                 data-testid="live-session-costs"
-                className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
+                className="bg-neutral-2 rounded-lg border border-neutral-6"
               >
-                <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse" />
-                  <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                <div className="px-6 py-4 border-b border-neutral-6 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-success-9 rounded-full animate-pulse" />
+                  <h2 className="text-lg font-semibold text-neutral-12">
                     Live Session Costs
                   </h2>
                 </div>
-                <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                <div className="divide-y divide-neutral-3 dark:divide-neutral-10">
                   {liveSessionCostsList.map((session) => (
                     <div
                       key={session.sessionId}
                       className="px-6 py-4 flex items-center justify-between"
                     >
                       <div>
-                        <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                        <span className="text-sm font-medium text-neutral-12">
                           {session.sessionId.slice(0, 8)}...
                         </span>
                         {session.model && (
-                          <span className="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
+                          <span className="ml-2 text-xs text-neutral-11">
                             {session.model}
                           </span>
                         )}
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                        <div className="text-lg font-semibold text-neutral-12">
                           {formatCurrency(session.totalCost)}
                         </div>
-                        <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                        <div className="text-xs text-neutral-11">
                           {formatNumber(session.tokenCount)} tokens
                         </div>
                       </div>
@@ -841,46 +840,46 @@ export function CostPage({
             )}
 
             {/* Cost by Model */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-                <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            <div className="bg-neutral-2 rounded-lg border border-neutral-6">
+              <div className="px-6 py-4 border-b border-neutral-6">
+                <h2 className="text-lg font-semibold text-neutral-12">
                   Cost by Model
                 </h2>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-neutral-50 dark:bg-neutral-700/50">
+                  <thead className="bg-neutral-1 dark:bg-neutral-10/50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-11 uppercase tracking-wider">
                         Model
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-11 uppercase tracking-wider">
                         Cost
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-11 uppercase tracking-wider">
                         Requests
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-neutral-11 uppercase tracking-wider">
                         Avg Cost/Req
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                  <tbody className="divide-y divide-neutral-3 dark:divide-neutral-10">
                     {modelCostsArray.map((modelCost) => (
                       <tr
                         key={modelCost.model}
-                        className="hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
+                        className="hover:bg-neutral-1 dark:hover:bg-neutral-10/50"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-12">
                           {modelCost.model}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-900 dark:text-neutral-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-12">
                           {formatCurrency(modelCost.cost)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-500 dark:text-neutral-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-11">
                           {formatNumber(modelCost.requests)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-500 dark:text-neutral-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-11">
                           {modelCost.requests > 0
                             ? formatCurrency(
                                 modelCost.cost / modelCost.requests,
@@ -895,15 +894,15 @@ export function CostPage({
             </div>
 
             {/* Cost History Chart */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-                <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            <div className="bg-neutral-2 rounded-lg border border-neutral-6">
+              <div className="px-6 py-4 border-b border-neutral-6">
+                <h2 className="text-lg font-semibold text-neutral-12">
                   Cost Trend
                 </h2>
               </div>
               <div className="p-6">
                 {historyItems.length === 0 ? (
-                  <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+                  <div className="text-center py-8 text-neutral-11">
                     No cost data for this period
                   </div>
                 ) : (
@@ -930,17 +929,17 @@ export function CostPage({
                       >
                         <CartesianGrid
                           strokeDasharray="3 3"
-                          className="stroke-neutral-200 dark:stroke-neutral-700"
+                          className="stroke-neutral-3 dark:stroke-neutral-10"
                         />
                         <XAxis
                           dataKey="date"
                           tick={{ fontSize: 12 }}
-                          className="text-neutral-500 dark:text-neutral-400"
+                          className="text-neutral-11"
                         />
                         <YAxis
                           tick={{ fontSize: 12 }}
                           tickFormatter={(value) => `$${value}`}
-                          className="text-neutral-500 dark:text-neutral-400"
+                          className="text-neutral-11"
                         />
                         <Tooltip
                           formatter={(value) => [
@@ -949,8 +948,8 @@ export function CostPage({
                           ]}
                           labelFormatter={(label) => `Date: ${label}`}
                           contentStyle={{
-                            backgroundColor: "var(--color-neutral-50)",
-                            border: "1px solid var(--color-neutral-200)",
+                            backgroundColor: "var(--color-neutral-1)",
+                            border: "1px solid var(--color-neutral-3)",
                             borderRadius: "8px",
                           }}
                         />

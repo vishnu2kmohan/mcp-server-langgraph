@@ -264,9 +264,9 @@ describe("App - Core", () => {
         </MemoryRouter>,
       );
 
-      const rootDiv = container.querySelector(".bg-white");
+      const rootDiv = container.querySelector(".bg-neutral-1");
       expect(rootDiv).toBeInTheDocument();
-      expect(rootDiv).toHaveClass("dark:bg-neutral-900");
+      expect(rootDiv).toHaveClass("min-h-screen", "bg-neutral-1");
     });
   });
 

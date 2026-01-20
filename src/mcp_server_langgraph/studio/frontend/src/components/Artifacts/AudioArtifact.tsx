@@ -23,10 +23,10 @@ export function AudioArtifact({
   if (!data || data.trim() === "") {
     return (
       <div
-        className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg"
+        className="p-4 bg-error-1 dark:bg-error-a3 border border-error-4 dark:border-error-11 rounded-lg"
         role="alert"
       >
-        <p className="text-sm text-error-600 dark:text-error-400">
+        <p className="text-sm text-error-10 dark:text-error-7">
           No audio source provided
         </p>
       </div>
@@ -40,10 +40,10 @@ export function AudioArtifact({
   const preload = config?.preload ?? "metadata";
 
   return (
-    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg overflow-hidden">
+    <div className="bg-neutral-1 rounded-lg overflow-hidden">
       {title && (
-        <div className="px-4 py-2 border-b border-neutral-200 dark:border-neutral-700">
-          <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <div className="px-4 py-2 border-b border-neutral-5">
+          <h4 className="text-sm font-medium text-neutral-11">
             {title}
           </h4>
         </div>

@@ -21,7 +21,9 @@ import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 import { transformSnakeToCamel } from "../api/transforms";
 
-import { Button } from "@/components/UI";
+// Direct imports to avoid Rollup circular dependency warnings
+// (page chunks end up separate from UI barrel)
+import { Button } from "@/components/UI/Button";
 
 type CallbackState = "processing" | "success" | "error";
 
@@ -157,13 +159,13 @@ export function OAuth2CallbackPage() {
   // Render processing state
   if (state === "processing") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-1 dark:bg-neutral-12">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-primary-500 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+          <Loader2 className="w-12 h-12 animate-spin text-primary-9 mx-auto mb-4" />
+          <h1 className="text-xl font-semibold text-neutral-12 dark:text-white mb-2">
             Processing Authorization
           </h1>
-          <p className="text-neutral-500 dark:text-neutral-400">
+          <p className="text-neutral-8 dark:text-neutral-6">
             Please wait while we complete the OAuth2 flow...
           </p>
         </div>
@@ -174,13 +176,13 @@ export function OAuth2CallbackPage() {
   // Render success state
   if (state === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-1 dark:bg-neutral-12">
         <div className="text-center">
-          <CheckCircle className="w-16 h-16 text-success-500 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+          <CheckCircle className="w-16 h-16 text-success-9 mx-auto mb-4" />
+          <h1 className="text-xl font-semibold text-neutral-12 dark:text-white mb-2">
             Authorization Successful
           </h1>
-          <p className="text-neutral-500 dark:text-neutral-400 mb-4">
+          <p className="text-neutral-8 dark:text-neutral-6 mb-4">
             Your MCP connection has been authorized.
             {connectionId && (
               <span className="block text-sm mt-1">
@@ -188,7 +190,7 @@ export function OAuth2CallbackPage() {
               </span>
             )}
           </p>
-          <p className="text-sm text-neutral-400 dark:text-neutral-400">
+          <p className="text-sm text-neutral-6 dark:text-neutral-6">
             Redirecting to connections...
           </p>
         </div>
@@ -198,19 +200,19 @@ export function OAuth2CallbackPage() {
 
   // Render error state
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-1 dark:bg-neutral-12">
       <div className="text-center max-w-md mx-4">
-        <XCircle className="w-16 h-16 text-error-500 mx-auto mb-4" />
-        <h1 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+        <XCircle className="w-16 h-16 text-error-9 mx-auto mb-4" />
+        <h1 className="text-xl font-semibold text-neutral-12 dark:text-white mb-2">
           Authorization Failed
         </h1>
         {error && (
           <>
-            <p className="text-error-600 dark:text-error-400 mb-2">
+            <p className="text-error-10 dark:text-error-7 mb-2">
               {error.message}
             </p>
             {error.detail && (
-              <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">
+              <p className="text-neutral-8 dark:text-neutral-6 text-sm mb-4">
                 {error.detail}
               </p>
             )}
@@ -219,7 +221,7 @@ export function OAuth2CallbackPage() {
         <div className="flex items-center justify-center gap-4 mt-6">
           <Button
             variant="primary"
-            className="flex px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+            className="flex px-4 py-2 bg-primary-10 text-white rounded-md hover:bg-primary-11"
             onClick={() => processCallback()}
           >
             <RefreshCw className="w-4 h-4" />
@@ -227,7 +229,7 @@ export function OAuth2CallbackPage() {
           </Button>
           <Link
             to="/studio/connections"
-            className="flex items-center gap-2 px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-800 rounded-md"
+            className="flex items-center gap-2 px-4 py-2 text-neutral-10 dark:text-neutral-5 hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-11 rounded-md"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Connections

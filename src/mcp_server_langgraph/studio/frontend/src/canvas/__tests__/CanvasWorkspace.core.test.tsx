@@ -124,8 +124,9 @@ describe("CanvasWorkspace - Core", () => {
         store,
       });
 
-      expect(screen.getByTestId("artifact-tab-artifact-1")).toHaveClass(
-        "active",
+      expect(screen.getByTestId("artifact-tab-artifact-1")).toHaveAttribute(
+        "aria-selected",
+        "true",
       );
     });
 

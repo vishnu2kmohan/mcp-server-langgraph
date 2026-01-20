@@ -10,6 +10,7 @@
  * - Quick access to individual framework details
  */
 
+import { useReducedMotion } from "motion/react";
 import {
   LayoutDashboard,
   Shield,
@@ -21,6 +22,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "../utils/cn";
+import { Badge } from "@/components/UI";
 
 // =============================================================================
 // Types
@@ -60,7 +62,7 @@ function getStatusIcon(status: ComplianceStatus) {
       return (
         <CheckCircle
           size={16}
-          className="text-success-500"
+          className="text-success-9"
           role="img"
           aria-hidden="true"
         />
@@ -69,7 +71,7 @@ function getStatusIcon(status: ComplianceStatus) {
       return (
         <AlertCircle
           size={16}
-          className="text-warning-500"
+          className="text-warning-9"
           role="img"
           aria-hidden="true"
         />
@@ -78,7 +80,7 @@ function getStatusIcon(status: ComplianceStatus) {
       return (
         <AlertCircle
           size={16}
-          className="text-error-500"
+          className="text-error-9"
           role="img"
           aria-hidden="true"
         />
@@ -98,9 +100,9 @@ function getStatusLabel(status: ComplianceStatus): string {
 }
 
 function getPercentageColor(percentage: number): string {
-  if (percentage >= 90) return "text-success-600 dark:text-success-400";
-  if (percentage >= 70) return "text-warning-600 dark:text-warning-400";
-  return "text-error-600 dark:text-error-400";
+  if (percentage >= 90) return "text-success-10 dark:text-success-7";
+  if (percentage >= 70) return "text-warning-9 dark:text-warning-9";
+  return "text-error-10 dark:text-error-7";
 }
 
 // =============================================================================
@@ -117,16 +119,16 @@ function FrameworkCard({ name, icon, summary }: FrameworkCardProps) {
   return (
     <div
       className={cn(
-        "rounded-lg border border-neutral-200 dark:border-neutral-700",
-        "bg-white dark:bg-neutral-900 p-4",
-        "hover:border-primary-300 dark:hover:border-primary-700",
+        "rounded-lg border border-neutral-5",
+        "bg-neutral-1 p-4",
+        "hover:border-primary-5 dark:hover:border-primary-11",
         "transition-colors cursor-pointer",
       )}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {icon}
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+          <h3 className="font-semibold text-neutral-12">
             {name}
           </h3>
         </div>
@@ -145,27 +147,30 @@ function FrameworkCard({ name, icon, summary }: FrameworkCardProps) {
       </div>
 
       <div className="flex items-center justify-between text-sm">
-        <span className="text-neutral-500 dark:text-neutral-400">
+        <span className="text-neutral-10">
           {summary.compliantCount}/{summary.totalCount} controls
         </span>
         {summary.status === "partial" && (
-          <span className="text-warning-600 dark:text-warning-400">
+          <span className="text-warning-9 dark:text-warning-9">
             {getStatusLabel(summary.status)}
           </span>
         )}
       </div>
 
       {summary.pendingActions !== undefined && summary.pendingActions > 0 && (
-        <div className="mt-2 text-xs text-grafana-600 dark:text-grafana-400">
+        <div className="mt-2 text-xs text-grafana-10 dark:text-grafana-5">
           {summary.pendingActions} actions pending
         </div>
       )}
 
       {summary.authLevel && (
         <div className="mt-2">
-          <span className="text-xs px-2 py-0.5 rounded bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">
+          <Badge
+            size="sm"
+            className="bg-primary-3 text-primary-11 dark:bg-primary-4 dark:text-primary-7"
+          >
             {summary.authLevel}
-          </span>
+          </Badge>
         </div>
       )}
     </div>
@@ -181,12 +186,15 @@ export function ComplianceDashboard({
   isLoading = false,
   className,
 }: ComplianceDashboardProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   // Loading state
   if (isLoading) {
     return (
       <div data-testid="compliance-dashboard" className={cn("p-6", className)}>
-        <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
-          <Loader2 size={16} className="animate-spin" />
+        <div className="flex items-center gap-2 text-neutral-10">
+          <Loader2 size={16} className={cn(!prefersReducedMotion && "animate-spin")} />
           <span>Loading compliance data...</span>
         </div>
       </div>
@@ -199,16 +207,16 @@ export function ComplianceDashboard({
       <div
         data-testid="compliance-dashboard"
         className={cn(
-          "rounded-lg border border-neutral-200 dark:border-neutral-700",
-          "bg-white dark:bg-neutral-900 p-8 text-center",
+          "rounded-lg border border-neutral-5",
+          "bg-neutral-1 p-8 text-center",
           className,
         )}
       >
         <LayoutDashboard
           size={32}
-          className="mx-auto mb-3 text-neutral-400 dark:text-neutral-400"
+          className="mx-auto mb-3 text-neutral-9"
         />
-        <p className="text-neutral-500 dark:text-neutral-400">
+        <p className="text-neutral-10">
           No compliance data available
         </p>
       </div>
@@ -223,8 +231,8 @@ export function ComplianceDashboard({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <LayoutDashboard size={20} className="text-primary-500" />
-          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <LayoutDashboard size={20} className="text-primary-9" />
+          <h2 className="text-xl font-semibold text-neutral-12">
             Compliance Overview
           </h2>
         </div>
@@ -234,22 +242,22 @@ export function ComplianceDashboard({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <FrameworkCard
           name="SOC-2"
-          icon={<Shield size={18} className="text-primary-500" />}
+          icon={<Shield size={18} className="text-primary-9" />}
           summary={summary.soc2}
         />
         <FrameworkCard
           name="HIPAA"
-          icon={<HeartPulse size={18} className="text-error-500" />}
+          icon={<HeartPulse size={18} className="text-error-9" />}
           summary={summary.hipaa}
         />
         <FrameworkCard
           name="GDPR"
-          icon={<Flag size={18} className="text-primary-600" />}
+          icon={<Flag size={18} className="text-primary-10" />}
           summary={summary.gdpr}
         />
         <FrameworkCard
           name="FedRAMP"
-          icon={<BadgeCheck size={18} className="text-insight-600" />}
+          icon={<BadgeCheck size={18} className="text-insight-10" />}
           summary={summary.fedramp}
         />
       </div>

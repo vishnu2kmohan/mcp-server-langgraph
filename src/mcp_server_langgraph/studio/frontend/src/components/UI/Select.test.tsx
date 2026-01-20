@@ -88,7 +88,7 @@ describe("Select", () => {
         />,
       );
       const select = screen.getByTestId("select");
-      expect(select).toHaveClass("border-neutral-300");
+      expect(select).toHaveClass("border-neutral-5");
     });
 
     it("renders error variant", () => {
@@ -100,7 +100,7 @@ describe("Select", () => {
         />,
       );
       const select = screen.getByTestId("select");
-      expect(select).toHaveClass("border-error-500");
+      expect(select).toHaveClass("border-error-9");
     });
 
     it("renders success variant", () => {
@@ -112,7 +112,7 @@ describe("Select", () => {
         />,
       );
       const select = screen.getByTestId("select");
-      expect(select).toHaveClass("border-success-500");
+      expect(select).toHaveClass("border-success-9");
     });
   });
 

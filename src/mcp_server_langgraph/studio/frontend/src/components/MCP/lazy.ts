@@ -126,6 +126,30 @@ export const LazyPromptLibrary = lazy(() =>
   })),
 );
 
+// =============================================================================
+// Inbound JSON-RPC Components (MCP 2025-11-25 Server-Initiated Requests)
+// =============================================================================
+
+/**
+ * Lazy-loaded InboundElicitationModal component.
+ * Only loaded when MCP server sends an elicitation/create request.
+ */
+export const LazyInboundElicitationModal = lazy(() =>
+  import("./InboundElicitationModal").then((module) => ({
+    default: module.InboundElicitationModal,
+  })),
+);
+
+/**
+ * Lazy-loaded InboundSamplingModal component.
+ * Only loaded when MCP server sends a sampling/createMessage request.
+ */
+export const LazyInboundSamplingModal = lazy(() =>
+  import("./InboundSamplingModal").then((module) => ({
+    default: module.InboundSamplingModal,
+  })),
+);
+
 // Re-export types that consumers need (types don't affect bundle size)
 export type { AddConnectionDialogProps } from "./AddConnectionDialog";
 export type { ToolInvocationDialogProps } from "./ToolInvocationDialog";
@@ -137,3 +161,5 @@ export type { MCPServerCardProps } from "./MCPServerCard";
 export type { ToolExplorerProps } from "./ToolExplorer";
 export type { ResourceBrowserProps } from "./ResourceBrowser";
 export type { PromptLibraryProps } from "./PromptLibrary";
+export type { InboundElicitationModalProps } from "./InboundElicitationModal";
+export type { InboundSamplingModalProps } from "./InboundSamplingModal";

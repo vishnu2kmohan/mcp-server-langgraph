@@ -31,7 +31,10 @@ import type { ArtifactsLoaderData } from "../router/loaders";
 import type { CanvasArtifact } from "../types/artifacts";
 import { AIEmptyState } from "../components/EmptyState/AIEmptyState";
 
-import { Button, Input } from "@/components/UI";
+// Direct imports to avoid Rollup circular dependency warnings
+// (page chunks end up separate from UI barrel)
+import { Button } from "@/components/UI/Button";
+import { Input } from "@/components/UI/Input";
 
 const logger = devLogger.withPrefix("[ArtifactsPage]");
 
@@ -127,14 +130,14 @@ function getMimeType(
 function getFileIcon(type: FileItem["type"]) {
   switch (type) {
     case "code":
-      return <FileCode size={24} className="text-primary-500" />;
+      return <FileCode size={24} className="text-primary-9" />;
     case "document":
-      return <FileText size={24} className="text-success-500" />;
+      return <FileText size={24} className="text-success-9" />;
     case "image":
-      return <FileImage size={24} className="text-insight-500" />;
+      return <FileImage size={24} className="text-insight-9" />;
     default:
       return (
-        <File size={24} className="text-neutral-500 dark:text-neutral-400" />
+        <File size={24} className="text-neutral-11" />
       );
   }
 }
@@ -180,25 +183,25 @@ function FileCard({
         data-testid={`file-card-${file.id}`}
         className={cn(
           "flex flex-col items-center p-4 rounded-lg",
-          "bg-white dark:bg-neutral-800",
-          "border border-neutral-200 dark:border-neutral-700",
-          "hover:border-primary-300 dark:hover:border-primary-600",
+          "bg-neutral-2",
+          "border border-neutral-6",
+          "hover:border-primary-5 dark:hover:border-primary-10",
           "transition-colors cursor-pointer",
           "group",
         )}
         onClick={() => onPreview(file)}
       >
         <div className="mb-3">{getFileIcon(file.type)}</div>
-        <p className="text-sm font-medium text-neutral-900 dark:text-white truncate w-full text-center">
+        <p className="text-sm font-medium text-neutral-12 dark:text-white truncate w-full text-center">
           {file.name}
         </p>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+        <p className="text-xs text-neutral-11 mt-1">
           {formatFileSize(file.size)}
         </p>
         <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button
             variant="secondary"
-            className="p-1 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+            className="p-1 rounded hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10"
             type="button"
             onClick={(e) => {
               e.stopPropagation();
@@ -210,7 +213,7 @@ function FileCard({
           </Button>
           <Button
             variant="danger"
-            className="p-1 rounded hover:bg-error-100 dark:hover:bg-error-900/30 text-error-500"
+            className="p-1 rounded hover:bg-error-3 dark:hover:bg-error-12/30 text-error-9"
             type="button"
             onClick={(e) => {
               e.stopPropagation();
@@ -231,9 +234,9 @@ function FileCard({
       data-testid={`file-row-${file.id}`}
       className={cn(
         "flex items-center gap-4 px-4 py-3",
-        "bg-white dark:bg-neutral-800",
-        "border-b border-neutral-200 dark:border-neutral-700",
-        "hover:bg-neutral-50 dark:hover:bg-neutral-700/50",
+        "bg-neutral-2",
+        "border-b border-neutral-6",
+        "hover:bg-neutral-1 dark:hover:bg-neutral-10/50",
         "transition-colors cursor-pointer",
         "group",
       )}
@@ -241,17 +244,17 @@ function FileCard({
     >
       {getFileIcon(file.type)}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
+        <p className="text-sm font-medium text-neutral-12 dark:text-white truncate">
           {file.name}
         </p>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="text-xs text-neutral-11">
           {formatFileSize(file.size)} • {formatDate(file.updatedAt)}
         </p>
       </div>
       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <Button
           variant="secondary"
-          className="p-2 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+          className="p-2 rounded hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10"
           type="button"
           onClick={(e) => {
             e.stopPropagation();
@@ -263,7 +266,7 @@ function FileCard({
         </Button>
         <Button
           variant="secondary"
-          className="p-2 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+          className="p-2 rounded hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10"
           type="button"
           onClick={(e) => {
             e.stopPropagation();
@@ -275,7 +278,7 @@ function FileCard({
         </Button>
         <Button
           variant="danger"
-          className="p-2 rounded hover:bg-error-100 dark:hover:bg-error-900/30 text-error-500"
+          className="p-2 rounded hover:bg-error-3 dark:hover:bg-error-12/30 text-error-9"
           type="button"
           onClick={(e) => {
             e.stopPropagation();
@@ -518,10 +521,10 @@ export function ArtifactsPage() {
     return (
       <div
         data-testid="artifacts-page-error"
-        className="flex flex-col items-center justify-center h-full bg-neutral-50 dark:bg-neutral-900 text-neutral-500 dark:text-neutral-400"
+        className="flex flex-col items-center justify-center h-full bg-neutral-1 text-neutral-11"
       >
-        <AlertCircle size={48} className="mb-4 text-error-500" />
-        <p className="text-lg font-medium text-neutral-900 dark:text-white">
+        <AlertCircle size={48} className="mb-4 text-error-9" />
+        <p className="text-lg font-medium text-neutral-12 dark:text-white">
           Failed to load artifacts
         </p>
         <p className="text-sm mt-1">{loaderData.error}</p>
@@ -532,7 +535,7 @@ export function ArtifactsPage() {
   return (
     <div
       data-testid="artifacts-page"
-      className="flex flex-col h-full bg-neutral-50 dark:bg-neutral-900 relative"
+      className="flex flex-col h-full bg-neutral-1 relative"
     >
       {/* Delete status indicator - optimistic feedback */}
       {deleteStatus !== "idle" && (
@@ -542,11 +545,11 @@ export function ArtifactsPage() {
             "absolute top-2 right-2 z-20 px-3 py-1.5 rounded-lg text-sm font-medium",
             "transition-all duration-200 shadow-lg",
             deleteStatus === "pending" &&
-              "bg-warning-100 dark:bg-warning-900/50 text-warning-700 dark:text-warning-300",
+              "bg-warning-3 dark:bg-warning-12/50 text-warning-10 dark:text-warning-6",
             deleteStatus === "success" &&
-              "bg-success-100 dark:bg-success-900/50 text-success-700 dark:text-success-300",
+              "bg-success-3 dark:bg-success-12/50 text-success-11 dark:text-success-5",
             deleteStatus === "error" &&
-              "bg-error-100 dark:bg-error-900/50 text-error-700 dark:text-error-300",
+              "bg-error-3 dark:bg-error-12/50 text-error-11 dark:text-error-9",
           )}
         >
           {deleteStatus === "pending" && (
@@ -560,13 +563,13 @@ export function ArtifactsPage() {
         </div>
       )}
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-6 bg-neutral-2">
         <div className="flex items-center gap-3">
-          <FolderOpen size={24} className="text-primary-500" />
-          <h1 className="text-lg font-semibold text-neutral-900 dark:text-white">
+          <FolderOpen size={24} className="text-primary-9" />
+          <h1 className="text-lg font-semibold text-neutral-12 dark:text-white">
             Artifacts
           </h1>
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+          <span className="text-sm text-neutral-11">
             {filteredFiles.length} artifacts
           </span>
         </div>
@@ -576,7 +579,7 @@ export function ArtifactsPage() {
           <div className="relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-6 dark:text-neutral-6"
             />
             <Input
               data-testid="file-search"
@@ -585,16 +588,16 @@ export function ArtifactsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
                 "pl-9 pr-4 py-2 rounded-lg text-sm w-64",
-                "bg-neutral-100 dark:bg-neutral-700",
-                "border border-neutral-200 dark:border-neutral-700 dark:border-neutral-600",
-                "focus:outline-none focus:ring-2 focus:ring-primary-500",
-                "placeholder-neutral-400",
+                "bg-neutral-3",
+                "border border-neutral-6 dark:border-neutral-9",
+                "focus:outline-none focus:ring-2 focus:ring-primary-7",
+                "placeholder-neutral-6",
               )}
             />
           </div>
 
           {/* View toggle */}
-          <div className="flex items-center gap-1 p-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
+          <div className="flex items-center gap-1 p-1 bg-neutral-3 rounded-lg">
             <Button
               type="button"
               data-testid="view-grid"
@@ -602,8 +605,8 @@ export function ArtifactsPage() {
               className={cn(
                 "p-1.5 rounded",
                 viewMode === "grid"
-                  ? "bg-white dark:bg-neutral-600 shadow-sm"
-                  : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300",
+                  ? "bg-white dark:bg-neutral-9 shadow-sm"
+                  : "text-neutral-11 hover:text-neutral-10 dark:text-neutral-3 dark:hover:text-neutral-5",
               )}
               aria-label="Grid view"
             >
@@ -616,8 +619,8 @@ export function ArtifactsPage() {
               className={cn(
                 "p-1.5 rounded",
                 viewMode === "list"
-                  ? "bg-white dark:bg-neutral-600 shadow-sm"
-                  : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300",
+                  ? "bg-white dark:bg-neutral-9 shadow-sm"
+                  : "text-neutral-11 hover:text-neutral-10 dark:text-neutral-3 dark:hover:text-neutral-5",
               )}
               aria-label="List view"
             >
@@ -651,7 +654,7 @@ export function ArtifactsPage() {
             ))}
           </div>
         ) : (
-          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+          <div className="bg-neutral-2 rounded-lg border border-neutral-6 overflow-hidden">
             {filteredFiles.map((file) => (
               <FileCard
                 key={file.id}
@@ -673,17 +676,17 @@ export function ArtifactsPage() {
           onClick={handleClosePreview}
         >
           <div
-            className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden m-4"
+            className="bg-neutral-2 rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden m-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+            <div className="flex items-center justify-between p-4 border-b border-neutral-6">
               <div className="flex items-center gap-3">
                 {getFileIcon(selectedFile.type)}
                 <div>
-                  <h3 className="font-medium text-neutral-900 dark:text-white">
+                  <h3 className="font-medium text-neutral-12 dark:text-white">
                     {selectedFile.name}
                   </h3>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                  <p className="text-xs text-neutral-11">
                     {formatFileSize(selectedFile.size)} •{" "}
                     {formatDate(selectedFile.updatedAt)}
                   </p>
@@ -691,7 +694,7 @@ export function ArtifactsPage() {
               </div>
               <Button
                 variant="secondary"
-                className="p-2 rounded hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                className="p-2 rounded hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10"
                 type="button"
                 onClick={handleClosePreview}
                 aria-label="Close preview"
@@ -700,14 +703,15 @@ export function ArtifactsPage() {
               </Button>
             </div>
             <div className="p-4 overflow-auto max-h-[60vh]">
-              <pre className="text-sm font-mono whitespace-pre-wrap text-neutral-800 dark:text-neutral-200 bg-neutral-50 dark:bg-neutral-900 p-4 rounded">
+              <pre className="text-sm font-mono whitespace-pre-wrap text-neutral-11 dark:text-neutral-3 bg-neutral-1 p-4 rounded">
                 {previewArtifact.content}
               </pre>
             </div>
-            <div className="flex justify-end gap-2 p-4 border-t border-neutral-200 dark:border-neutral-700">
+            <div className="flex justify-end gap-2 p-4 border-t border-neutral-6">
               <Button
                 variant="primary"
-                className="flex px-4 py-2 text-sm rounded-lg bg-primary-500 text-white hover:bg-primary-600"
+                size="sm"
+                className="gap-2"
                 type="button"
                 onClick={() => handleDownload(selectedFile)}
               >
@@ -726,13 +730,13 @@ export function ArtifactsPage() {
           onClick={handleCancelDelete}
         >
           <div
-            className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-md w-full m-4 p-6"
+            className="bg-neutral-2 rounded-lg shadow-xl max-w-md w-full m-4 p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-2">
+            <h3 className="text-lg font-medium text-neutral-12 dark:text-white mb-2">
               Delete File
             </h3>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
+            <p className="text-sm text-neutral-11 mb-6">
               Are you sure you want to delete{" "}
               <span className="font-medium">{deleteConfirmFile.name}</span>?
               This action cannot be undone.
@@ -740,7 +744,7 @@ export function ArtifactsPage() {
             <div className="flex justify-end gap-3">
               <Button
                 variant="secondary"
-                className="px-4 py-2 text-sm rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                size="sm"
                 type="button"
                 onClick={handleCancelDelete}
                 disabled={isDeleting}
@@ -749,7 +753,7 @@ export function ArtifactsPage() {
               </Button>
               <Button
                 variant="danger"
-                className="px-4 py-2 text-sm rounded-lg bg-error-500 text-white hover:bg-error-600"
+                size="sm"
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}

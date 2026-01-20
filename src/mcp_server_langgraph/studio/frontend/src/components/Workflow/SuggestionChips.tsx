@@ -68,11 +68,11 @@ function SuggestionIcon({ type }: { type: string }) {
 function getConfidenceColorClass(level: "high" | "medium" | "low"): string {
   switch (level) {
     case "high":
-      return "border-success-500 bg-success-50 dark:bg-success-900/20";
+      return "border-success-9 bg-success-1 dark:bg-success-a3";
     case "medium":
-      return "border-warning-500 bg-warning-50 dark:bg-warning-900/20";
+      return "border-warning-9 bg-warning-3 bg-warning-3";
     case "low":
-      return "border-neutral-400 dark:border-neutral-500 bg-neutral-50 dark:bg-neutral-800/50";
+      return "border-neutral-6 bg-neutral-1";
   }
 }
 
@@ -97,8 +97,8 @@ export function SuggestionChips({
   // Loading state
   if (isLoading && suggestions.length === 0) {
     return (
-      <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-        <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
+      <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5">
+        <div className="flex items-center gap-2 text-neutral-10">
           <RefreshCw className="w-4 h-4 animate-spin" />
           <span>Analyzing workflow...</span>
         </div>
@@ -109,16 +109,14 @@ export function SuggestionChips({
   // Error state
   if (error) {
     return (
-      <div className="p-4 bg-error-50 dark:bg-error-900/20 rounded-lg border border-error-200 dark:border-error-800">
+      <div className="p-4 bg-error-1 dark:bg-error-a3 rounded-lg border border-error-4 dark:border-error-11">
         <div className="flex items-center justify-between">
-          <span className="text-error-600 dark:text-error-400">{error}</span>
-          <Button
-            className="text-sm text-error-600 dark:text-error-400 hover:underline"
+          <span className="text-error-10 dark:text-error-7">{error}</span>
+          <Button variant="primary"
+            className="text-sm text-error-10 dark:text-error-7 hover:underline"
             onClick={onRefresh}
             aria-label="Retry"
-          >
-            Retry
-          </Button>
+          >Retry</Button>
         </div>
       </div>
     );
@@ -127,13 +125,13 @@ export function SuggestionChips({
   // Empty state
   if (suggestions.length === 0) {
     return (
-      <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+      <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5">
         <div className="flex items-center justify-between">
-          <span className="text-neutral-500 dark:text-neutral-400">
+          <span className="text-neutral-10">
             No suggestions available
           </span>
-          <Button
-            className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+          <Button size="icon" variant="ghost"
+            className="text-sm text-primary-10 dark:text-primary-7 hover:underline"
             onClick={onRefresh}
             aria-label="Refresh suggestions"
           >
@@ -148,31 +146,31 @@ export function SuggestionChips({
     <div
       data-testid="suggestions-container"
       data-expanded={isExpanded.toString()}
-      className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
+      className="bg-neutral-1 rounded-lg border border-neutral-5"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between p-3 border-b border-neutral-5">
         <div className="flex items-center gap-2">
-          <Lightbulb className="w-4 h-4 text-warning-500" />
-          <span className="font-medium text-sm text-neutral-700 dark:text-neutral-300">
+          <Lightbulb className="w-4 h-4 text-warning-9" />
+          <span className="font-medium text-sm text-neutral-11">
             AI Suggestions
           </span>
           {!isExpanded && (
-            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400">
+            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary-3 text-primary-10 dark:bg-primary-a6 dark:text-primary-7">
               {suggestions.length}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            className="p-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
+          <Button size="icon" variant="ghost"
+            className="p-1 text-neutral-10 hover:text-neutral-11"
             onClick={onRefresh}
             aria-label="Refresh suggestions"
           >
             <RefreshCw className="w-4 h-4" />
           </Button>
           <Button
-            className="p-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
+            className="p-1 text-neutral-10 hover:text-neutral-11"
             onClick={() => setIsExpanded(!isExpanded)}
             aria-label={
               isExpanded ? "Collapse suggestions" : "Expand suggestions"
@@ -203,17 +201,17 @@ export function SuggestionChips({
                   <SuggestionIcon type={suggestion.type} />
                 </div>
                 <div className="flex-grow min-w-0">
-                  <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                  <p className="text-sm text-neutral-11">
                     {suggestion.description}
                   </p>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                  <p className="text-xs text-neutral-10 mt-1">
                     {Math.round(suggestion.confidence * 100)}% confidence
                   </p>
                 </div>
                 <div className="flex-shrink-0 flex items-center gap-1">
                   <Button
                     variant="success"
-                    className="p-1.5 text-success-600 hover:bg-success-100 dark:hover:bg-success-900/30 rounded"
+                    className="p-1.5 text-success-10 hover:bg-success-3 dark:hover:bg-success-a4 rounded"
                     onClick={() => onApply(suggestion)}
                     aria-label="Apply suggestion"
                   >
@@ -221,7 +219,7 @@ export function SuggestionChips({
                   </Button>
                   <Button
                     variant="secondary"
-                    className="p-1.5 text-neutral-400 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded"
+                    className="p-1.5 text-neutral-9 hover:bg-neutral-2 rounded"
                     onClick={() => onDismiss(suggestion)}
                     aria-label="Dismiss suggestion"
                   >
@@ -236,7 +234,7 @@ export function SuggestionChips({
           {hiddenCount > 0 && !showAll && (
             <li className="text-center">
               <Button
-                className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+                className="text-sm text-primary-10 dark:text-primary-7 hover:underline"
                 onClick={() => setShowAll(true)}
               >
                 Show {hiddenCount} more

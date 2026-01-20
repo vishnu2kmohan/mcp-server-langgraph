@@ -288,7 +288,7 @@ describe("AgentApprovalDialog", () => {
 
       const gauge = screen.getByTestId("confidence-gauge");
       // Gauge should have amber styling for 65% confidence
-      expect(gauge).toHaveClass("bg-warning-500");
+      expect(gauge).toHaveClass("bg-warning-9");
     });
 
     it("should show red color for critical confidence (<50%)", () => {
@@ -304,7 +304,7 @@ describe("AgentApprovalDialog", () => {
       );
 
       const gauge = screen.getByTestId("confidence-gauge");
-      expect(gauge).toHaveClass("bg-error-500");
+      expect(gauge).toHaveClass("bg-error-9");
     });
 
     it("should show blue color for medium confidence (70-89%)", () => {
@@ -320,7 +320,7 @@ describe("AgentApprovalDialog", () => {
       );
 
       const gauge = screen.getByTestId("confidence-gauge");
-      expect(gauge).toHaveClass("bg-primary-500");
+      expect(gauge).toHaveClass("bg-primary-9");
     });
   });
 

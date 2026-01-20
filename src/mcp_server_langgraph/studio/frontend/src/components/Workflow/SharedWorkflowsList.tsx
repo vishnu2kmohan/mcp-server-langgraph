@@ -95,12 +95,12 @@ export function SharedWorkflowsList({
   const getPermissionBadgeStyle = (permission: string) => {
     switch (permission) {
       case "editor":
-        return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
+        return "bg-success-3 text-success-11 bg-success-4 dark:text-success-7";
       case "executor":
-        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
+        return "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7";
       case "viewer":
       default:
-        return "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300";
+        return "bg-neutral-2 text-neutral-11";
     }
   };
 
@@ -172,24 +172,24 @@ export function SharedWorkflowsList({
   };
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+    <div className="bg-neutral-1 rounded-lg border border-neutral-5">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="px-6 py-4 border-b border-neutral-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Share2 className="text-primary-500" size={24} />
+            <Share2 className="text-primary-9" size={24} />
             <div>
-              <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              <h2 className="text-lg font-semibold text-neutral-12">
                 Shared With Me
               </h2>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              <p className="text-sm text-neutral-10">
                 Workflows shared by other users
               </p>
             </div>
           </div>
           <Button
             variant="secondary"
-            className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 rounded-lg hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+            className="flex px-3 py-1.5 text-sm text-neutral-11 hover:text-neutral-12 rounded-lg hover:bg-neutral-2"
             onClick={fetchSharedWorkflows}
             aria-label="Refresh"
           >
@@ -200,16 +200,16 @@ export function SharedWorkflowsList({
       </div>
       {/* Filters - only show when we have workflows */}
       {!isLoading && !error && workflows.length > 0 && (
-        <div className="px-6 py-3 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
+        <div className="px-6 py-3 border-b border-neutral-5 bg-neutral-1">
           <div className="flex flex-wrap items-center gap-3">
             {/* Search Input */}
             <div className="relative flex-1 min-w-[200px]">
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-9"
                 size={16}
               />
               <Input
-                className="pl-9 pr-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
+                className="pl-9 pr-3 py-2 text-sm text-neutral-12 focus:ring-primary-7"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Search workflows..."
@@ -218,7 +218,7 @@ export function SharedWorkflowsList({
 
             {/* Permission Filter */}
             <Select
-              className="px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100"
+              className="px-3 py-2 text-sm text-neutral-12"
               value={permissionFilter}
               onChange={(e) => setPermissionFilter(e.target.value)}
               aria-label="Filter by permission"
@@ -231,7 +231,7 @@ export function SharedWorkflowsList({
 
             {/* Shared By Filter */}
             <Select
-              className="px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100"
+              className="px-3 py-2 text-sm text-neutral-12"
               value={sharedByFilter}
               onChange={(e) => setSharedByFilter(e.target.value)}
               aria-label="Filter by shared by"
@@ -248,7 +248,7 @@ export function SharedWorkflowsList({
             {hasActiveFilters && (
               <Button
                 variant="secondary"
-                className="flex .5 px-3 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 rounded-lg"
+                className="flex .5 px-3 py-2 text-sm text-neutral-11 hover:text-neutral-12 hover:bg-neutral-3 rounded-lg"
                 onClick={clearFilters}
                 aria-label="Clear filters"
               >
@@ -267,7 +267,7 @@ export function SharedWorkflowsList({
             <Loader2
               data-testid="loading-spinner"
               size={32}
-              className="animate-spin text-primary-500"
+              className="animate-spin text-primary-9"
             />
           </div>
         )}
@@ -275,11 +275,11 @@ export function SharedWorkflowsList({
         {/* Error State */}
         {!isLoading && error && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <AlertCircle size={48} className="text-error-500 mb-4" />
-            <p className="text-error-600 dark:text-error-400 mb-4">{error}</p>
+            <AlertCircle size={48} className="text-error-9 mb-4" />
+            <p className="text-error-10 dark:text-error-7 mb-4">{error}</p>
             <Button
               variant="danger"
-              className="px-4 py-2 bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
+              className="px-4 py-2 bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4"
               onClick={fetchSharedWorkflows}
               aria-label="Retry"
             >
@@ -293,12 +293,12 @@ export function SharedWorkflowsList({
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Inbox
               size={48}
-              className="text-neutral-400 dark:text-neutral-400 mb-4"
+              className="text-neutral-9 mb-4"
             />
-            <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+            <h3 className="text-lg font-medium text-neutral-12 mb-2">
               No workflows shared with you
             </h3>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-10">
               Ask a colleague to share a workflow with you to collaborate.
             </p>
           </div>
@@ -312,17 +312,17 @@ export function SharedWorkflowsList({
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Search
                 size={48}
-                className="text-neutral-400 dark:text-neutral-400 mb-4"
+                className="text-neutral-9 mb-4"
               />
-              <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+              <h3 className="text-lg font-medium text-neutral-12 mb-2">
                 No workflows match your filters
               </h3>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+              <p className="text-sm text-neutral-10 mb-4">
                 Try adjusting your search or filter criteria.
               </p>
               <Button
                 variant="primary"
-                className="px-4 py-2 text-sm bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 rounded-lg hover:bg-primary-200"
+                className="px-4 py-2 text-sm bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7 rounded-lg hover:bg-primary-4"
                 onClick={clearFilters}
               >
                 Clear filters
@@ -336,10 +336,10 @@ export function SharedWorkflowsList({
             {filteredWorkflows.map((workflow) => (
               <div
                 key={workflow.id}
-                className={`flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg border ${
+                className={`flex items-center justify-between p-4 bg-neutral-1 rounded-lg border ${
                   isViewOnly(workflow.permission)
-                    ? "border-warning-200 dark:border-warning-800"
-                    : "border-neutral-200 dark:border-neutral-700"
+                    ? "border-warning-6 dark:border-warning-11"
+                    : "border-neutral-5"
                 }`}
               >
                 <div className="flex-1 min-w-0">
@@ -348,16 +348,16 @@ export function SharedWorkflowsList({
                     {isViewOnly(workflow.permission) && (
                       <Lock
                         size={14}
-                        className="text-warning-600 dark:text-warning-400 flex-shrink-0"
+                        className="text-warning-9 dark:text-warning-9 flex-shrink-0"
                         data-testid={`lock-icon-${workflow.id}`}
                       />
                     )}
-                    <h3 className="font-medium text-neutral-900 dark:text-neutral-100 truncate">
+                    <h3 className="font-medium text-neutral-12 truncate">
                       {workflow.name}
                     </h3>
                     {/* Show "View Only" badge for viewer permission, otherwise show permission level */}
                     {isViewOnly(workflow.permission) ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400 flex items-center gap-1">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-warning-3 text-warning-10 dark:bg-warning-a4 dark:text-warning-9 flex items-center gap-1">
                         View Only
                       </span>
                     ) : (
@@ -369,10 +369,10 @@ export function SharedWorkflowsList({
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400 truncate mb-1">
+                  <p className="text-sm text-neutral-11 truncate mb-1">
                     {workflow.description}
                   </p>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                  <p className="text-xs text-neutral-10">
                     Shared by {workflow.shared_by} on{" "}
                     {formatDate(workflow.shared_at)}
                   </p>
@@ -381,7 +381,7 @@ export function SharedWorkflowsList({
                 <div className="flex items-center gap-2 ml-4">
                   <Button
                     variant="secondary"
-                    className="flex .5 px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+                    className="flex .5 px-3 py-1.5 text-sm bg-neutral-2 text-neutral-11 rounded-lg hover:bg-neutral-3"
                     onClick={() => onView?.(workflow.id)}
                     aria-label="View"
                   >
@@ -408,7 +408,7 @@ export function SharedWorkflowsList({
                   {canExecute(workflow.permission) && (
                     <Button
                       variant="success"
-                      className="flex .5 px-3 py-1.5 text-sm bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400 rounded-lg hover:bg-success-200 dark:hover:bg-success-900/50"
+                      className="flex .5 px-3 py-1.5 text-sm bg-success-3 text-success-11 bg-success-4 dark:text-success-7 rounded-lg hover:bg-success-4 dark:hover:bg-success-a6"
                       onClick={() => onExecute?.(workflow.id)}
                       aria-label="Execute"
                     >

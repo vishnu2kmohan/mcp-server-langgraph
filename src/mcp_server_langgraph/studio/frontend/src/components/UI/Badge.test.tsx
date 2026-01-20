@@ -30,7 +30,7 @@ describe("Badge", () => {
     it("renders default variant", () => {
       render(<Badge variant="default">Default</Badge>);
       const badge = screen.getByText("Default");
-      expect(badge).toHaveClass("bg-neutral-100");
+      expect(badge).toHaveClass("bg-neutral-2");
     });
 
     it("renders primary variant", () => {
@@ -42,19 +42,19 @@ describe("Badge", () => {
     it("renders success variant", () => {
       render(<Badge variant="success">Success</Badge>);
       const badge = screen.getByText("Success");
-      expect(badge).toHaveClass("bg-success-500");
+      expect(badge).toHaveClass("bg-success-9");
     });
 
     it("renders warning variant", () => {
       render(<Badge variant="warning">Warning</Badge>);
       const badge = screen.getByText("Warning");
-      expect(badge).toHaveClass("bg-warning-500");
+      expect(badge).toHaveClass("bg-warning-9");
     });
 
     it("renders error variant", () => {
       render(<Badge variant="error">Error</Badge>);
       const badge = screen.getByText("Error");
-      expect(badge).toHaveClass("bg-error-500");
+      expect(badge).toHaveClass("bg-error-9");
     });
 
     it("renders outline variant", () => {

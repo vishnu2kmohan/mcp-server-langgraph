@@ -81,21 +81,21 @@ const SEVERITY_CONFIG: Record<
 > = {
   error: {
     icon: AlertCircle,
-    bgColor: "bg-error-50 dark:bg-error-900/20",
-    borderColor: "border-error-200 dark:border-error-800",
-    textColor: "text-error-700 dark:text-error-400",
+    bgColor: "bg-error-1 dark:bg-error-a3",
+    borderColor: "border-error-4 dark:border-error-11",
+    textColor: "text-error-11 dark:text-error-7",
   },
   warning: {
     icon: AlertTriangle,
-    bgColor: "bg-warning-50 dark:bg-warning-900/20",
-    borderColor: "border-warning-200 dark:border-warning-800",
-    textColor: "text-warning-700 dark:text-warning-400",
+    bgColor: "bg-warning-3 bg-warning-3",
+    borderColor: "border-warning-6 dark:border-warning-11",
+    textColor: "text-warning-10 dark:text-warning-9",
   },
   info: {
     icon: Info,
-    bgColor: "bg-primary-50 dark:bg-primary-900/20",
-    borderColor: "border-primary-200 dark:border-primary-800",
-    textColor: "text-primary-700 dark:text-primary-400",
+    bgColor: "bg-primary-1 dark:bg-primary-a3",
+    borderColor: "border-primary-4 dark:border-primary-11",
+    textColor: "text-primary-11 dark:text-primary-7",
   },
 };
 
@@ -160,11 +160,11 @@ export function ErrorRecovery({
             aria-level={3}
             className={`text-sm font-medium ${config.textColor}`}
           >
-            <code className="font-mono bg-white/50 dark:bg-black/20 px-1.5 py-0.5 rounded">
+            <code className="font-mono bg-neutral-a6/20 px-1.5 py-0.5 rounded">
               {error.code}
             </code>
           </h3>
-          <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+          <p className="mt-1 text-sm text-neutral-11">
             {error.message}
           </p>
         </div>
@@ -172,10 +172,10 @@ export function ErrorRecovery({
       {/* Suggestions */}
       {suggestions && suggestions.length > 0 && (
         <div className="mt-3 ml-8">
-          <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+          <p className="text-xs font-medium text-neutral-10 mb-1">
             Try:
           </p>
-          <ul className="list-disc list-inside text-sm text-neutral-600 dark:text-neutral-400 space-y-0.5">
+          <ul className="list-disc list-inside text-sm text-neutral-11 space-y-0.5">
             {suggestions.map((suggestion, index) => (
               <li key={index}>{suggestion}</li>
             ))}
@@ -187,7 +187,7 @@ export function ErrorRecovery({
         {onRetry && (
           <Button
             variant="primary"
-            className=".5 px-3 py-1.5 text-sm text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:ring-primary-500"
+            className=".5 px-3 py-1.5 text-sm text-neutral-12 bg-primary-10 rounded-md hover:bg-primary-11 focus:ring-primary-7"
             type="button"
             onClick={onRetry}
           >
@@ -198,7 +198,7 @@ export function ErrorRecovery({
         {onReport && (
           <Button
             variant="secondary"
-            className=".5 px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:ring-primary-500"
+            className=".5 px-3 py-1.5 text-sm text-neutral-11 bg-neutral-1 border border-neutral-5 rounded-md hover:bg-neutral-1 focus:ring-primary-7"
             type="button"
             onClick={onReport}
           >
@@ -208,7 +208,7 @@ export function ErrorRecovery({
         )}
         {onDismiss && (
           <Button
-            className=".5 px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 focus:ring-primary-500"
+            className=".5 px-3 py-1.5 text-sm text-neutral-11 hover:text-neutral-12 focus:ring-primary-7"
             type="button"
             onClick={onDismiss}
           >
@@ -218,7 +218,7 @@ export function ErrorRecovery({
         )}
         <Button
           size="sm"
-          className="px-2 py-1 text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-200 focus:ring-primary-500"
+          className="px-2 py-1 text-xs text-neutral-10 hover:text-neutral-11 focus:ring-primary-7"
           type="button"
           onClick={() => setShowDetails(!showDetails)}
           aria-label={showDetails ? "Hide details" : "Show details"}
@@ -229,15 +229,15 @@ export function ErrorRecovery({
       </div>
       {/* Details */}
       {showDetails && (
-        <div className="mt-3 ml-8 p-3 bg-white/50 dark:bg-black/20 rounded-md">
+        <div className="mt-3 ml-8 p-3 bg-neutral-a6/20 rounded-md">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+            <span className="text-xs font-medium text-neutral-10">
               Error Details
             </span>
             <Button
               variant="secondary"
               size="sm"
-              className="px-2 py-0.5 text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-200 bg-neutral-100 dark:bg-neutral-800 rounded focus:ring-primary-500"
+              className="px-2 py-0.5 text-xs text-neutral-10 hover:text-neutral-11 bg-neutral-2 rounded focus:ring-primary-7"
               type="button"
               onClick={handleCopy}
               aria-label="Copy error details"
@@ -257,29 +257,29 @@ export function ErrorRecovery({
           </div>
           <dl className="text-xs space-y-1">
             <div className="flex">
-              <dt className="font-medium text-neutral-500 dark:text-neutral-400 w-20">
+              <dt className="font-medium text-neutral-10 w-20">
                 Code:
               </dt>
-              <dd className="font-mono text-neutral-700 dark:text-neutral-300">
+              <dd className="font-mono text-neutral-11">
                 {error.code}
               </dd>
             </div>
             {error.traceId && (
               <div className="flex">
-                <dt className="font-medium text-neutral-500 dark:text-neutral-400 w-20">
+                <dt className="font-medium text-neutral-10 w-20">
                   Trace ID:
                 </dt>
-                <dd className="font-mono text-neutral-700 dark:text-neutral-300">
+                <dd className="font-mono text-neutral-11">
                   {error.traceId}
                 </dd>
               </div>
             )}
             {error.timestamp && (
               <div className="flex">
-                <dt className="font-medium text-neutral-500 dark:text-neutral-400 w-20">
+                <dt className="font-medium text-neutral-10 w-20">
                   Time:
                 </dt>
-                <dd className="font-mono text-neutral-700 dark:text-neutral-300">
+                <dd className="font-mono text-neutral-11">
                   {new Date(error.timestamp).toLocaleString()}
                 </dd>
               </div>

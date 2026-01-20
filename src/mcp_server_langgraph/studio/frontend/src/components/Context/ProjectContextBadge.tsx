@@ -76,7 +76,7 @@ export function ProjectContextBadge({
     <div className="relative inline-flex">
       <Button
         variant="primary"
-        className=".5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-900/50 focus:ring-primary-500"
+        className=".5 rounded-full bg-primary-3 bg-primary-4 text-primary-11 dark:text-primary-5 hover:bg-primary-4 dark:hover:bg-primary-a6 focus:ring-primary-7"
         type="button"
         data-testid="project-context-badge"
         data-size={size}
@@ -104,10 +104,10 @@ export function ProjectContextBadge({
       {showTooltip && (
         <div
           role="tooltip"
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-900 dark:bg-neutral-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-50"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-2 text-neutral-12 text-xs rounded shadow-lg whitespace-nowrap z-tooltip"
         >
           Project context active
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-900 dark:border-t-neutral-700" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-12 dark:border-t-neutral-11" />
         </div>
       )}
     </div>

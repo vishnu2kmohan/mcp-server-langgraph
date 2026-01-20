@@ -82,7 +82,7 @@ export function getNodeStatusIndicator(status: LangGraphNodeStatus) {
       return (
         <CheckCircle
           size={12}
-          className="text-success-500"
+          className="text-success-9"
           data-testid="node-status-completed"
         />
       );
@@ -90,7 +90,7 @@ export function getNodeStatusIndicator(status: LangGraphNodeStatus) {
       return (
         <Loader2
           size={12}
-          className="text-primary-500 animate-spin"
+          className="text-primary-9 animate-spin"
           data-testid="node-status-running"
         />
       );
@@ -98,7 +98,7 @@ export function getNodeStatusIndicator(status: LangGraphNodeStatus) {
       return (
         <XCircle
           size={12}
-          className="text-error-500"
+          className="text-error-9"
           data-testid="node-status-error"
         />
       );
@@ -106,7 +106,7 @@ export function getNodeStatusIndicator(status: LangGraphNodeStatus) {
       return (
         <Circle
           size={12}
-          className="text-neutral-400 dark:text-neutral-400"
+          className="text-neutral-9"
           data-testid="node-status-pending"
         />
       );
@@ -114,7 +114,7 @@ export function getNodeStatusIndicator(status: LangGraphNodeStatus) {
       return (
         <Circle
           size={12}
-          className="text-neutral-300 opacity-50"
+          className="text-neutral-9 opacity-50"
           data-testid="node-status-skipped"
         />
       );
@@ -130,25 +130,25 @@ export function getNodeColor(
   status: LangGraphNodeStatus,
 ): string {
   if (status === "error")
-    return "bg-error-50 dark:bg-error-900/20 border-error-300 dark:border-error-700";
+    return "bg-error-3 border-error-7";
   if (status === "running")
-    return "bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700";
+    return "bg-primary-3 border-primary-7";
   if (status === "completed")
-    return "bg-success-50 dark:bg-success-900/20 border-success-300 dark:border-success-700";
+    return "bg-success-3 border-success-7";
 
   switch (type) {
     case "start":
-      return "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700";
+      return "bg-success-3 border-success-6";
     case "end":
-      return "bg-slate-50 dark:bg-slate-900/20 border-slate-300 dark:border-slate-700";
+      return "bg-neutral-3 border-neutral-6";
     case "conditional":
-      return "bg-warning-50 dark:bg-warning-900/20 border-warning-300 dark:border-warning-700";
+      return "bg-warning-3 border-warning-6";
     case "tool":
-      return "bg-insight-50 dark:bg-insight-900/20 border-insight-300 dark:border-insight-700";
+      return "bg-insight-3 border-insight-6";
     case "agent":
-      return "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700";
+      return "bg-primary-3 border-primary-6";
     default:
-      return "bg-neutral-50 dark:bg-neutral-900/20 border-neutral-300 dark:border-neutral-600 dark:border-neutral-700";
+      return "bg-neutral-2 border-neutral-6";
   }
 }
 
@@ -179,23 +179,23 @@ export function LangGraphNodeVisualization({
               className={`
                 flex items-center gap-2 px-3 py-2 rounded-lg border
                 ${getNodeColor(node.type, node.status)}
-                ${isActive ? "ring-2 ring-primary-500 ring-offset-1 dark:ring-offset-neutral-900" : ""}
+                ${isActive ? "ring-2 ring-primary-7 ring-offset-1 dark:ring-offset-neutral-12" : ""}
                 transition-all duration-200
               `}
             >
               {/* Type icon */}
-              <span className="text-neutral-600 dark:text-neutral-400">
+              <span className="text-neutral-11">
                 {getNodeTypeIcon(node.type)}
               </span>
 
               {/* Name */}
-              <span className="flex-1 text-sm font-medium text-neutral-800 dark:text-neutral-200">
+              <span className="flex-1 text-sm font-medium text-neutral-12">
                 {node.name}
               </span>
 
               {/* Duration */}
               {node.duration !== undefined && (
-                <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                <span className="text-xs text-neutral-10">
                   {node.duration}ms
                 </span>
               )}
@@ -211,11 +211,11 @@ export function LangGraphNodeVisualization({
                   <div
                     key={`${edge.from}-${edge.to}`}
                     data-testid={`edge-${edge.from}-to-${edge.to}`}
-                    className="flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-400"
+                    className="flex items-center gap-1 text-xs text-neutral-9"
                   >
                     <ArrowRight size={10} />
                     {edge.condition && (
-                      <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-700 rounded text-neutral-600 dark:text-neutral-300">
+                      <span className="px-1.5 py-0.5 bg-neutral-2 rounded text-neutral-11">
                         {edge.condition}
                       </span>
                     )}

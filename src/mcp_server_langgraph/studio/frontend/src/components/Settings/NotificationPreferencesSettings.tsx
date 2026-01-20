@@ -36,12 +36,12 @@ function NotificationTypeToggle({
   disabled,
 }: NotificationTypeToggleProps) {
   return (
-    <div className="flex items-center justify-between p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+    <div className="flex items-center justify-between p-4 bg-neutral-1 rounded-lg border border-neutral-5">
       <div>
-        <p className="font-medium text-neutral-900 dark:text-neutral-100">
+        <p className="font-medium text-neutral-12">
           {label}
         </p>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="text-sm text-neutral-10">
           {description}
         </p>
       </div>
@@ -99,7 +99,7 @@ export function NotificationPreferencesSettings() {
         data-testid="preferences-loading"
         className="flex items-center justify-center py-8"
       >
-        <RefreshCw size={24} className="animate-spin text-primary-500" />
+        <RefreshCw size={24} className="animate-spin text-primary-9" />
       </div>
     );
   }
@@ -107,16 +107,16 @@ export function NotificationPreferencesSettings() {
   // Error state
   if (isError) {
     return (
-      <div className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg">
+      <div className="p-4 bg-error-1 dark:bg-error-a3 border border-error-4 dark:border-error-11 rounded-lg">
         <div className="flex items-center gap-3">
-          <AlertCircle size={20} className="text-error-500" />
-          <p className="text-sm text-error-700 dark:text-error-400">
+          <AlertCircle size={20} className="text-error-9" />
+          <p className="text-sm text-error-11 dark:text-error-7">
             Failed to load notification preferences
           </p>
         </div>
         <Button
           variant="danger"
-          className="mt-3 flex px-3 py-1.5 text-sm bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400 rounded-lg hover:bg-error-200"
+          className="mt-3 flex px-3 py-1.5 text-sm bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4"
           onClick={() => refetch()}
         >
           <RefreshCw size={14} />
@@ -131,11 +131,11 @@ export function NotificationPreferencesSettings() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <h3 className="text-sm font-medium text-neutral-11">
           Real-Time Notification Types
         </h3>
         <Button
-          className="flex px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+          className="flex px-3 py-1.5 text-sm text-neutral-11 hover:text-neutral-12"
           onClick={handleReset}
           disabled={isDisabled}
           aria-label="Reset to defaults"

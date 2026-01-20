@@ -39,13 +39,13 @@ import {
   useListWorkflowsQuery,
   type TraceSpanCamelCase as ApiTraceSpan,
 } from "../api";
-import {
-  SkeletonList,
-  ErrorState,
-  Button,
-  Input,
-  Select,
-} from "../components/UI";
+// Direct imports to avoid Rollup circular dependency warnings
+// (page chunks end up separate from UI barrel)
+import { SkeletonList } from "../components/UI/Skeleton";
+import { ErrorState } from "../components/UI/ErrorState";
+import { Button } from "../components/UI/Button";
+import { Input } from "../components/UI/Input";
+import { Select } from "../components/UI/Select";
 import { TraceViewer } from "../components/Observability/TraceViewer";
 import {
   WebSocketMetricsPanel,
@@ -382,24 +382,24 @@ export function ObservabilityPage() {
   const getLogLevelColor = (level: "info" | "warn" | "error" | "debug") => {
     switch (level) {
       case "error":
-        return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
+        return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
       case "warn":
-        return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400";
+        return "bg-warning-3 text-warning-10 dark:bg-warning-12/30 dark:text-warning-9";
       case "info":
-        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
+        return "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7";
       case "debug":
-        return "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 dark:bg-neutral-900/30 dark:text-neutral-400";
+        return "bg-neutral-2 dark:bg-neutral-11 text-neutral-10 dark:text-neutral-3 dark:bg-neutral-12/30 dark:text-neutral-6";
     }
   };
 
   const getStatusColor = (status: "success" | "error" | "running") => {
     switch (status) {
       case "success":
-        return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
+        return "bg-success-3 text-success-11 bg-success-4 dark:text-success-7";
       case "error":
-        return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
+        return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
       case "running":
-        return "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400";
+        return "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7";
     }
   };
 
@@ -408,13 +408,13 @@ export function ObservabilityPage() {
   ) => {
     switch (severity) {
       case "critical":
-        return "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-400";
+        return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
       case "error":
-        return "bg-grafana-100 text-grafana-800 dark:bg-grafana-900/30 dark:text-grafana-400";
+        return "bg-grafana-2 text-grafana-11 dark:bg-grafana-12/30 dark:text-grafana-7";
       case "warning":
-        return "bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-400";
+        return "bg-warning-3 text-warning-11 dark:bg-warning-12/30 dark:text-warning-9";
       case "info":
-        return "bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-400";
+        return "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7";
     }
   };
 
@@ -423,13 +423,13 @@ export function ObservabilityPage() {
   ) => {
     switch (state) {
       case "firing":
-        return "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-400";
+        return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
       case "pending":
-        return "bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-400";
+        return "bg-warning-3 text-warning-11 dark:bg-warning-12/30 dark:text-warning-9";
       case "resolved":
-        return "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400";
+        return "bg-success-3 text-success-11 bg-success-4 dark:text-success-7";
       case "silenced":
-        return "bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:bg-neutral-900/30 dark:text-neutral-400";
+        return "bg-neutral-2 dark:bg-neutral-11 text-neutral-11 dark:bg-neutral-12/30 dark:text-neutral-6";
     }
   };
 
@@ -473,15 +473,15 @@ export function ObservabilityPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
+    <div className="h-screen flex flex-col bg-neutral-1">
       {/* Header */}
-      <header className="px-6 py-4 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+      <header className="px-6 py-4 bg-neutral-2 border-b border-neutral-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            <h1 className="text-2xl font-bold text-neutral-12">
               Observability
             </h1>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-11">
               Monitor traces, logs, and metrics for your AI agents
             </p>
           </div>
@@ -493,7 +493,7 @@ export function ObservabilityPage() {
             />
             <Button
               variant="secondary"
-              className="flex px-4 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+              className="flex px-4 py-2 bg-neutral-3 rounded-lg hover:bg-neutral-3 dark:bg-neutral-10 dark:hover:bg-neutral-9"
               onClick={handleRefresh}
             >
               <RefreshCw size={16} />
@@ -503,7 +503,7 @@ export function ObservabilityPage() {
         </div>
       </header>
       {/* Tabs */}
-      <div className="px-6 py-2 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="px-6 py-2 bg-neutral-2 border-b border-neutral-6">
         <div className="flex gap-1">
           {tabs.map((tab) => (
             <Button
@@ -519,7 +519,7 @@ export function ObservabilityPage() {
       </div>
       {/* Traces Filters - only show on traces tab */}
       {activeTab === "traces" && (
-        <div className="px-6 py-3 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="px-6 py-3 bg-neutral-2 border-b border-neutral-6">
           <div className="flex items-center gap-4 flex-wrap">
             {/* Status filter */}
             <div className="flex items-center gap-1">
@@ -561,7 +561,7 @@ export function ObservabilityPage() {
             <div className="flex items-center gap-2">
               <Input
                 size="sm"
-                className="w-32 px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
+                className="w-32 px-2 py-1 text-sm text-neutral-12 focus:ring-primary-7"
                 value={sessionIdFilter}
                 onChange={(e) => setSessionIdFilter(e.target.value)}
                 placeholder="Session ID"
@@ -569,7 +569,7 @@ export function ObservabilityPage() {
               />
               <Input
                 size="sm"
-                className="w-32 px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
+                className="w-32 px-2 py-1 text-sm text-neutral-12 focus:ring-primary-7"
                 value={userIdFilter}
                 onChange={(e) => setUserIdFilter(e.target.value)}
                 placeholder="User ID"
@@ -577,7 +577,7 @@ export function ObservabilityPage() {
               />
               <Input
                 size="sm"
-                className="w-32 px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
+                className="w-32 px-2 py-1 text-sm text-neutral-12 focus:ring-primary-7"
                 value={workflowIdFilter}
                 onChange={(e) => setWorkflowIdFilter(e.target.value)}
                 placeholder="Workflow ID"
@@ -585,7 +585,7 @@ export function ObservabilityPage() {
               />
               <Input
                 size="sm"
-                className="w-32 px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
+                className="w-32 px-2 py-1 text-sm text-neutral-12 focus:ring-primary-7"
                 value={projectIdFilter}
                 onChange={(e) => setProjectIdFilter(e.target.value)}
                 placeholder="Project ID"
@@ -596,7 +596,7 @@ export function ObservabilityPage() {
             {/* Time range filter */}
             <Select
               size="sm"
-              className="px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
+              className="px-2 py-1 text-sm text-neutral-12 focus:ring-primary-7"
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
               aria-label="Time range"
@@ -610,7 +610,7 @@ export function ObservabilityPage() {
 
             {/* Trace count */}
             {tracesData && (
-              <span className="text-sm text-neutral-500 dark:text-neutral-400 ml-auto">
+              <span className="text-sm text-neutral-11 ml-auto">
                 Showing {traces.length} traces
                 {tracesData.hasNext ? " (more available)" : ""}
               </span>
@@ -634,7 +634,7 @@ export function ObservabilityPage() {
             {activeTab === "agent-sessions" && (
               <div className="space-y-4">
                 {!sessionsData?.items || sessionsData.items.length === 0 ? (
-                  <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
+                  <div className="text-center py-12 text-neutral-11">
                     <Bot size={48} className="mx-auto mb-4 opacity-50" />
                     <p>No agent sessions found</p>
                     <p className="text-sm mt-2">
@@ -646,19 +646,19 @@ export function ObservabilityPage() {
                   sessionsData.items.map((session) => (
                     <div
                       key={session.id}
-                      className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-primary-500 transition-colors cursor-pointer"
+                      className="p-4 bg-neutral-2 rounded-lg border border-neutral-6 hover:border-primary-9 transition-colors cursor-pointer"
                       onClick={() =>
                         window.open(`/studio/chat/${session.id}`, "_blank")
                       }
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Bot size={20} className="text-insight-500" />
+                          <Bot size={20} className="text-insight-9" />
                           <div>
-                            <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+                            <h3 className="font-medium text-neutral-12">
                               {session.name || "Untitled Session"}
                             </h3>
-                            <div className="flex items-center gap-3 mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                            <div className="flex items-center gap-3 mt-1 text-sm text-neutral-11">
                               <span className="flex items-center gap-1">
                                 <Clock size={14} />
                                 {new Date(session.createdAt).toLocaleString()}
@@ -671,24 +671,24 @@ export function ObservabilityPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           {session.status === "active" ? (
-                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400">
+                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-success-3 text-success-11 bg-success-4 dark:text-success-7">
                               <CheckCircle size={12} />
                               Active
                             </span>
                           ) : session.status === "archived" ? (
-                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400">
+                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-warning-3 text-warning-10 dark:bg-warning-12/30 dark:text-warning-9">
                               <Clock size={12} />
                               Archived
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 dark:bg-neutral-900/30 dark:text-neutral-400">
+                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-neutral-2 dark:bg-neutral-11 text-neutral-10 dark:text-neutral-3 dark:bg-neutral-12/30 dark:text-neutral-6">
                               <XCircle size={12} />
                               {session.status}
                             </span>
                           )}
                           <ExternalLink
                             size={16}
-                            className="text-neutral-400 dark:text-neutral-400"
+                            className="text-neutral-6 dark:text-neutral-6"
                           />
                         </div>
                       </div>
@@ -702,7 +702,7 @@ export function ObservabilityPage() {
             {activeTab === "workflow-runs" && (
               <div className="space-y-4">
                 {!workflowsData?.items || workflowsData.items.length === 0 ? (
-                  <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
+                  <div className="text-center py-12 text-neutral-11">
                     <GitBranch size={48} className="mx-auto mb-4 opacity-50" />
                     <p>No workflow runs found</p>
                     <p className="text-sm mt-2">
@@ -714,7 +714,7 @@ export function ObservabilityPage() {
                   workflowsData.items.map((workflow) => (
                     <div
                       key={workflow.id}
-                      className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-primary-500 transition-colors cursor-pointer"
+                      className="p-4 bg-neutral-2 rounded-lg border border-neutral-6 hover:border-primary-9 transition-colors cursor-pointer"
                       onClick={() =>
                         window.open(
                           `/studio/workflows/${workflow.id}`,
@@ -724,12 +724,12 @@ export function ObservabilityPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <GitBranch size={20} className="text-emerald-500" />
+                          <GitBranch size={20} className="text-success-11" />
                           <div>
-                            <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+                            <h3 className="font-medium text-neutral-12">
                               {workflow.name}
                             </h3>
-                            <div className="flex items-center gap-3 mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                            <div className="flex items-center gap-3 mt-1 text-sm text-neutral-11">
                               <span className="flex items-center gap-1">
                                 <Clock size={14} />
                                 {new Date(workflow.createdAt).toLocaleString()}
@@ -743,16 +743,16 @@ export function ObservabilityPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7">
                             <Activity size={12} />
                             {workflow.nodeCount} nodes
                           </span>
-                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 dark:bg-neutral-900/30 dark:text-neutral-400">
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-neutral-2 dark:bg-neutral-11 text-neutral-10 dark:text-neutral-3 dark:bg-neutral-12/30 dark:text-neutral-6">
                             {workflow.edgeCount} edges
                           </span>
                           <ExternalLink
                             size={16}
-                            className="text-neutral-400 dark:text-neutral-400"
+                            className="text-neutral-6 dark:text-neutral-6"
                           />
                         </div>
                       </div>
@@ -766,14 +766,14 @@ export function ObservabilityPage() {
             {activeTab === "traces" && (
               <div className="space-y-4">
                 {/* Real-time Trace Canvas Toggle */}
-                <div className="flex items-center justify-between p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <div className="flex items-center justify-between p-4 bg-neutral-2 rounded-lg border border-neutral-6">
                   <div className="flex items-center gap-3">
-                    <Activity size={20} className="text-indigo-500" />
+                    <Activity size={20} className="text-insight-11" />
                     <div>
-                      <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+                      <h3 className="font-medium text-neutral-12">
                         Real-time Trace Canvas
                       </h3>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                      <p className="text-sm text-neutral-11">
                         Live visualization of trace spans via WebSocket
                       </p>
                     </div>
@@ -788,7 +788,7 @@ export function ObservabilityPage() {
 
                 {/* TraceCanvas - Real-time ReactFlow visualization */}
                 {showTraceCanvas && (
-                  <div className="h-[400px] bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+                  <div className="h-[400px] bg-neutral-2 rounded-lg border border-neutral-6 overflow-hidden">
                     <TraceCanvas
                       sessionId={sessionIdFilter || undefined}
                       autoConnect={true}
@@ -798,7 +798,7 @@ export function ObservabilityPage() {
                 )}
 
                 {traces.length === 0 ? (
-                  <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
+                  <div className="text-center py-12 text-neutral-11">
                     No traces found
                   </div>
                 ) : (
@@ -807,20 +807,20 @@ export function ObservabilityPage() {
                       <div
                         key={trace.id}
                         onClick={() => setSelectedTraceId(trace.id)}
-                        className={`p-4 bg-white dark:bg-neutral-800 rounded-lg border transition-colors cursor-pointer ${
+                        className={`p-4 bg-neutral-2 rounded-lg border transition-colors cursor-pointer ${
                           selectedTraceId === trace.id
-                            ? "border-primary-500 ring-2 ring-primary-200 dark:ring-primary-800"
-                            : "border-neutral-200 dark:border-neutral-700 hover:border-primary-500"
+                            ? "border-primary-9 ring-2 ring-primary-4 dark:ring-primary-11"
+                            : "border-neutral-6 hover:border-primary-9"
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <Activity size={20} className="text-primary-500" />
+                            <Activity size={20} className="text-primary-9" />
                             <div>
-                              <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+                              <h3 className="font-medium text-neutral-12">
                                 {trace.name}
                               </h3>
-                              <div className="flex items-center gap-3 mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                              <div className="flex items-center gap-3 mt-1 text-sm text-neutral-11">
                                 <span className="flex items-center gap-1">
                                   <Clock size={14} />
                                   {trace.duration}ms
@@ -847,7 +847,7 @@ export function ObservabilityPage() {
                       <div className="flex justify-center pt-4">
                         <Button
                           variant="secondary"
-                          className="flex px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+                          className="flex px-4 py-2 bg-neutral-3 text-neutral-11 rounded-lg hover:bg-neutral-3 dark:bg-neutral-10 dark:hover:bg-neutral-9"
                           onClick={() => setCursor(tracesData.nextCursor)}
                           disabled={isTracesFetching}
                         >
@@ -865,13 +865,13 @@ export function ObservabilityPage() {
 
                     {/* TraceViewer Panel (Developer journey - trace debugging) */}
                     {selectedTraceId && (
-                      <div className="mt-6 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
-                        <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
-                          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                      <div className="mt-6 bg-neutral-2 rounded-lg border border-neutral-6 overflow-hidden">
+                        <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-6 bg-neutral-1">
+                          <span className="text-sm font-medium text-neutral-11">
                             Trace Details
                           </span>
                           <Button
-                            className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200"
+                            className="text-sm text-neutral-11 hover:text-neutral-10 dark:text-neutral-3 dark:text-neutral-6 dark:hover:text-neutral-3"
                             onClick={() => setSelectedTraceId(null)}
                           >
                             Close
@@ -891,15 +891,15 @@ export function ObservabilityPage() {
                         {aiTraceIntelligenceEnabled && (
                           <div
                             data-testid="trace-intelligence-panel"
-                            className="border-t border-neutral-200 dark:border-neutral-700"
+                            className="border-t border-neutral-6"
                           >
-                            <div className="px-4 py-2 bg-gradient-to-r from-insight-50 to-blue-50 dark:from-insight-900/20 dark:to-blue-900/20 border-b border-neutral-200 dark:border-neutral-700">
+                            <div className="px-4 py-2 bg-gradient-to-r from-insight-50 to-blue-50 dark:from-insight-900/20 dark:to-blue-900/20 border-b border-neutral-6">
                               <div className="flex items-center gap-2">
                                 <Sparkles
                                   size={16}
-                                  className="text-insight-500"
+                                  className="text-insight-9"
                                 />
-                                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                <span className="text-sm font-medium text-neutral-11">
                                   AI Insights
                                 </span>
                               </div>
@@ -908,11 +908,11 @@ export function ObservabilityPage() {
                             <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
                               {/* Trace Summary */}
                               <div className="space-y-2">
-                                <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                <h4 className="text-xs font-medium text-neutral-11 uppercase tracking-wider">
                                   Summary
                                 </h4>
                                 {traceSummary.isLoading ? (
-                                  <div className="flex items-center gap-2 text-sm text-neutral-400 dark:text-neutral-400">
+                                  <div className="flex items-center gap-2 text-sm text-neutral-6 dark:text-neutral-6">
                                     <Loader2
                                       size={14}
                                       className="animate-spin"
@@ -921,7 +921,7 @@ export function ObservabilityPage() {
                                   </div>
                                 ) : traceSummary.summary ? (
                                   <div className="space-y-2">
-                                    <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                                    <p className="text-sm text-neutral-11">
                                       {traceSummary.summary}
                                     </p>
                                     {traceSummary.keyActions.length > 0 && (
@@ -930,7 +930,7 @@ export function ObservabilityPage() {
                                           (action, idx) => (
                                             <span
                                               key={idx}
-                                              className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded"
+                                              className="px-2 py-0.5 text-xs bg-primary-3 bg-primary-4 text-primary-11 dark:text-primary-5 rounded"
                                             >
                                               {action}
                                             </span>
@@ -938,7 +938,7 @@ export function ObservabilityPage() {
                                         )}
                                       </div>
                                     )}
-                                    <div className="flex items-center gap-4 text-xs text-neutral-500 dark:text-neutral-400">
+                                    <div className="flex items-center gap-4 text-xs text-neutral-11">
                                       {traceSummary.stepCount !== null && (
                                         <span>
                                           {traceSummary.stepCount} steps
@@ -959,7 +959,7 @@ export function ObservabilityPage() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <p className="text-sm text-neutral-400 dark:text-neutral-400">
+                                  <p className="text-sm text-neutral-6 dark:text-neutral-6">
                                     No summary available
                                   </p>
                                 )}
@@ -967,11 +967,11 @@ export function ObservabilityPage() {
 
                               {/* Anomaly Detection */}
                               <div className="space-y-2">
-                                <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                <h4 className="text-xs font-medium text-neutral-11 uppercase tracking-wider">
                                   Health & Anomalies
                                 </h4>
                                 {traceAnomaly.isLoading ? (
-                                  <div className="flex items-center gap-2 text-sm text-neutral-400 dark:text-neutral-400">
+                                  <div className="flex items-center gap-2 text-sm text-neutral-6 dark:text-neutral-6">
                                     <Loader2
                                       size={14}
                                       className="animate-spin"
@@ -983,16 +983,16 @@ export function ObservabilityPage() {
                                     {/* Health Score */}
                                     {traceAnomaly.healthScore !== null && (
                                       <div className="flex items-center gap-2">
-                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                                        <span className="text-sm text-neutral-11">
                                           Health:
                                         </span>
                                         <span
                                           className={`text-sm font-medium ${
                                             traceAnomaly.healthScore >= 80
-                                              ? "text-success-600 dark:text-success-400"
+                                              ? "text-success-10 dark:text-success-7"
                                               : traceAnomaly.healthScore >= 60
-                                                ? "text-warning-600 dark:text-warning-400"
-                                                : "text-error-600 dark:text-error-400"
+                                                ? "text-warning-9 dark:text-warning-9"
+                                                : "text-error-10 dark:text-error-7"
                                           }`}
                                         >
                                           {traceAnomaly.healthScore}/100
@@ -1003,7 +1003,7 @@ export function ObservabilityPage() {
                                     {/* Bottlenecks */}
                                     {traceAnomaly.bottlenecks.length > 0 && (
                                       <div className="space-y-1">
-                                        <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+                                        <span className="text-xs text-neutral-11 flex items-center gap-1">
                                           <Zap size={12} />
                                           Bottlenecks:
                                         </span>
@@ -1015,7 +1015,7 @@ export function ObservabilityPage() {
                                               content={`${bottleneck.durationMs}ms (${bottleneck.percentageOfTotal}% of total)`}
                                               position="top"
                                             >
-                                              <span className="inline-block px-2 py-0.5 text-xs bg-grafana-100 dark:bg-grafana-900/30 text-grafana-700 dark:text-grafana-300 rounded cursor-help">
+                                              <span className="inline-block px-2 py-0.5 text-xs bg-grafana-2 dark:bg-grafana-12/30 text-grafana-10 dark:text-grafana-5 rounded cursor-help">
                                                 {bottleneck.stepName}
                                               </span>
                                             </Tooltip>
@@ -1026,7 +1026,7 @@ export function ObservabilityPage() {
                                     {/* Anomalies */}
                                     {traceAnomaly.anomalies.length > 0 && (
                                       <div className="space-y-1">
-                                        <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+                                        <span className="text-xs text-neutral-11 flex items-center gap-1">
                                           <AlertTriangle size={12} />
                                           Issues:
                                         </span>
@@ -1044,11 +1044,11 @@ export function ObservabilityPage() {
                                               <div
                                                 className={`text-xs px-2 py-1 rounded cursor-help ${
                                                   anomaly.severity === "error"
-                                                    ? "bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-300"
+                                                    ? "bg-error-3 bg-error-4 text-error-11 dark:text-error-9"
                                                     : anomaly.severity ===
                                                         "warning"
-                                                      ? "bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300"
-                                                      : "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                                                      ? "bg-warning-3 dark:bg-warning-12/30 text-warning-10 dark:text-warning-6"
+                                                      : "bg-primary-3 bg-primary-4 text-primary-11 dark:text-primary-5"
                                                 }`}
                                               >
                                                 {anomaly.stepName}:{" "}
@@ -1063,11 +1063,11 @@ export function ObservabilityPage() {
                                     {traceAnomaly.optimizationSuggestions
                                       .length > 0 && (
                                       <div className="space-y-1">
-                                        <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+                                        <span className="text-xs text-neutral-11 flex items-center gap-1">
                                           <TrendingUp size={12} />
                                           Suggestions:
                                         </span>
-                                        <ul className="text-xs text-neutral-600 dark:text-neutral-400 list-disc list-inside">
+                                        <ul className="text-xs text-neutral-11 list-disc list-inside">
                                           {traceAnomaly.optimizationSuggestions
                                             .slice(0, 3)
                                             .map((suggestion, idx) => (
@@ -1079,7 +1079,7 @@ export function ObservabilityPage() {
 
                                     {traceAnomaly.anomalies.length === 0 &&
                                       traceAnomaly.bottlenecks.length === 0 && (
-                                        <p className="text-sm text-success-600 dark:text-success-400 flex items-center gap-1">
+                                        <p className="text-sm text-success-10 dark:text-success-7 flex items-center gap-1">
                                           <TrendingUp size={14} />
                                           No issues detected
                                         </p>
@@ -1101,14 +1101,14 @@ export function ObservabilityPage() {
             {activeTab === "logs" && (
               <div className="space-y-2">
                 {logs.length === 0 ? (
-                  <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
+                  <div className="text-center py-12 text-neutral-11">
                     No logs found
                   </div>
                 ) : (
                   logs.map((log) => (
                     <div
                       key={log.id}
-                      className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700"
+                      className="p-4 bg-neutral-2 rounded-lg border border-neutral-6"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -1117,11 +1117,11 @@ export function ObservabilityPage() {
                           >
                             {log.level}
                           </span>
-                          <span className="text-neutral-900 dark:text-neutral-100">
+                          <span className="text-neutral-12">
                             {log.message}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm text-neutral-500 dark:text-neutral-400">
+                        <div className="flex items-center gap-3 text-sm text-neutral-11">
                           {log.service && (
                             <span className="flex items-center gap-1">
                               <Server size={14} />
@@ -1143,51 +1143,51 @@ export function ObservabilityPage() {
             {/* Metrics Tab */}
             {activeTab === "metrics" && metrics && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                <div className="p-4 bg-neutral-2 rounded-lg border border-neutral-6">
+                  <h3 className="text-sm font-medium text-neutral-11 mb-1">
                     Total Requests
                   </h3>
-                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                  <div className="text-2xl font-semibold text-neutral-12">
                     {(metrics.requestsTotal ?? 0).toLocaleString()}
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                <div className="p-4 bg-neutral-2 rounded-lg border border-neutral-6">
+                  <h3 className="text-sm font-medium text-neutral-11 mb-1">
                     Total Errors
                   </h3>
-                  <div className="text-2xl font-semibold text-error-600 dark:text-error-400">
+                  <div className="text-2xl font-semibold text-error-10 dark:text-error-7">
                     {(metrics.errorsTotal ?? 0).toLocaleString()}
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                <div className="p-4 bg-neutral-2 rounded-lg border border-neutral-6">
+                  <h3 className="text-sm font-medium text-neutral-11 mb-1">
                     Avg Latency
                   </h3>
-                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                  <div className="text-2xl font-semibold text-neutral-12">
                     {metrics.avgLatencyMs ?? 0}ms
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                <div className="p-4 bg-neutral-2 rounded-lg border border-neutral-6">
+                  <h3 className="text-sm font-medium text-neutral-11 mb-1">
                     P99 Latency
                   </h3>
-                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                  <div className="text-2xl font-semibold text-neutral-12">
                     {metrics.p99LatencyMs ?? 0}ms
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                <div className="p-4 bg-neutral-2 rounded-lg border border-neutral-6">
+                  <h3 className="text-sm font-medium text-neutral-11 mb-1">
                     Tokens Used
                   </h3>
-                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                  <div className="text-2xl font-semibold text-neutral-12">
                     {(metrics.tokensUsed ?? 0).toLocaleString()}
                   </div>
                 </div>
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                  <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                <div className="p-4 bg-neutral-2 rounded-lg border border-neutral-6">
+                  <h3 className="text-sm font-medium text-neutral-11 mb-1">
                     Active Sessions
                   </h3>
-                  <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                  <div className="text-2xl font-semibold text-neutral-12">
                     {metrics.activeSessions ?? 0}
                   </div>
                 </div>
@@ -1196,7 +1196,7 @@ export function ObservabilityPage() {
 
             {/* Empty metrics state */}
             {activeTab === "metrics" && !metrics && !isMetricsLoading && (
-              <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
+              <div className="text-center py-12 text-neutral-11">
                 No metrics data available
               </div>
             )}
@@ -1212,10 +1212,10 @@ export function ObservabilityPage() {
             {activeTab === "alerts" && (
               <div className="space-y-4">
                 {/* Alerts Filters */}
-                <div className="flex items-center gap-4 flex-wrap p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <div className="flex items-center gap-4 flex-wrap p-4 bg-neutral-2 rounded-lg border border-neutral-6">
                   {/* State filter */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                    <span className="text-sm text-neutral-11">
                       State:
                     </span>
                     <div className="flex items-center gap-1">
@@ -1252,12 +1252,12 @@ export function ObservabilityPage() {
 
                   {/* Severity filter */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                    <span className="text-sm text-neutral-11">
                       Severity:
                     </span>
                     <Select
                       size="sm"
-                      className="px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-primary-500"
+                      className="px-2 py-1 text-sm text-neutral-12 focus:ring-primary-7"
                       value={alertSeverityFilter}
                       onChange={(e) => setAlertSeverityFilter(e.target.value)}
                     >
@@ -1271,7 +1271,7 @@ export function ObservabilityPage() {
 
                   {/* Alert count */}
                   {alertsData && (
-                    <span className="text-sm text-neutral-500 dark:text-neutral-400 ml-auto">
+                    <span className="text-sm text-neutral-11 ml-auto">
                       {alerts.length} alerts
                     </span>
                   )}
@@ -1279,7 +1279,7 @@ export function ObservabilityPage() {
 
                 {/* Alerts List */}
                 {alerts.length === 0 ? (
-                  <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
+                  <div className="text-center py-12 text-neutral-11">
                     <AlertTriangle
                       size={48}
                       className="mx-auto mb-4 opacity-50"
@@ -1293,7 +1293,7 @@ export function ObservabilityPage() {
                   alerts.map((alert) => (
                     <div
                       key={alert.alertId}
-                      className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-primary-500 transition-colors"
+                      className="p-4 bg-neutral-2 rounded-lg border border-neutral-6 hover:border-primary-9 transition-colors"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
@@ -1301,24 +1301,24 @@ export function ObservabilityPage() {
                             size={20}
                             className={
                               alert.severity === "critical"
-                                ? "text-error-500"
+                                ? "text-error-9"
                                 : alert.severity === "error"
-                                  ? "text-grafana-500"
+                                  ? "text-grafana-9"
                                   : alert.severity === "warning"
-                                    ? "text-warning-500"
-                                    : "text-primary-500"
+                                    ? "text-warning-9"
+                                    : "text-primary-9"
                             }
                           />
                           <div>
-                            <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
+                            <h3 className="font-medium text-neutral-12">
                               {alert.name}
                             </h3>
-                            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                            <p className="text-sm text-neutral-11 mt-1">
                               {alert.message ||
                                 alert.annotations?.summary ||
                                 "No description"}
                             </p>
-                            <div className="flex items-center gap-3 mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                            <div className="flex items-center gap-3 mt-2 text-sm text-neutral-11">
                               {alert.startedAt && (
                                 <span className="flex items-center gap-1">
                                   <Clock size={14} />
@@ -1351,7 +1351,7 @@ export function ObservabilityPage() {
                               href={alert.generatorUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-primary-500 transition-colors"
+                              className="p-1 text-neutral-6 dark:text-neutral-6 hover:text-primary-9 transition-colors"
                               title="View in Grafana"
                             >
                               <ExternalLink size={16} />
@@ -1372,7 +1372,7 @@ export function ObservabilityPage() {
                             .map(([key, value]) => (
                               <span
                                 key={key}
-                                className="px-2 py-0.5 text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 rounded"
+                                className="px-2 py-0.5 text-xs bg-neutral-3 text-neutral-11 rounded"
                               >
                                 {key}={value}
                               </span>

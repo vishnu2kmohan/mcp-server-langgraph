@@ -63,7 +63,7 @@ function generateAlert(index: number): Alert {
   const state = STATES[index % STATES.length];
 
   return {
-    alert_id: `alert-${index.toString().padStart(6, "0")}`,
+    alertId: `alert-${index.toString().padStart(6, "0")}`,
     name: alertName,
     severity,
     state,
@@ -77,8 +77,8 @@ function generateAlert(index: number): Alert {
       summary: `${alertName} on ${service}`,
       runbook_url: `https://runbooks.example.com/${alertName.toLowerCase()}`,
     },
-    started_at: new Date(Date.now() - Math.random() * 86400000).toISOString(),
-    ended_at: state === "resolved" ? new Date().toISOString() : null,
+    startedAt: new Date(Date.now() - Math.random() * 86400000).toISOString(),
+    endedAt: state === "resolved" ? new Date().toISOString() : null,
     fingerprint: `fp-${index}-${service}-${alertName}`,
   };
 }
@@ -420,15 +420,15 @@ describe("Alert Grouping Scalability", () => {
     for (let i = 0; i < 100; i++) {
       for (let j = 0; j < 10; j++) {
         alerts.push({
-          alert_id: `alert-${i}-${j}`,
+          alertId: `alert-${i}-${j}`,
           name: `Alert${j}`,
           severity: "critical",
           state: "firing",
           message: `Test alert ${i}-${j}`,
           labels: { service: `service-${i}` },
           annotations: {},
-          started_at: new Date().toISOString(),
-          ended_at: null,
+          startedAt: new Date().toISOString(),
+          endedAt: null,
           fingerprint: `fp-${i}-${j}`,
         });
       }

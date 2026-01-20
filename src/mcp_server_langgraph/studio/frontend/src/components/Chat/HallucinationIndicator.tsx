@@ -132,7 +132,7 @@ export function HallucinationIndicator({
   if (isReported) {
     return (
       <span
-        className="inline-flex items-center gap-1 text-xs text-warning-600 dark:text-warning-400"
+        className="inline-flex items-center gap-1 text-xs text-warning-9 dark:text-warning-9"
         role="status"
         aria-label="This message has been reported as inaccurate"
       >
@@ -145,7 +145,7 @@ export function HallucinationIndicator({
   if (showThankYou) {
     return (
       <span
-        className="inline-flex items-center gap-1 text-xs text-success-600 dark:text-success-400"
+        className="inline-flex items-center gap-1 text-xs text-success-10 dark:text-success-11"
         role="status"
         aria-live="polite"
       >
@@ -160,7 +160,7 @@ export function HallucinationIndicator({
       <Button
         variant="warning"
         size="sm"
-        className="px-2 py-1 text-xs text-neutral-500 dark:text-neutral-400 hover:text-warning-600 dark:text-neutral-400 dark:hover:text-warning-400 rounded hover:bg-warning-50 dark:hover:bg-warning-900/20"
+        className="px-2 py-1 text-xs text-neutral-10 hover:text-warning-9 dark:hover:text-warning-9 rounded hover:bg-warning-3 dark:hover:bg-warning-a3"
         onClick={handleOpenDialog}
         disabled={isReported}
         aria-label="Report inaccuracy in this AI response"
@@ -169,32 +169,32 @@ export function HallucinationIndicator({
         Flag
       </Button>
       {isDialogOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-70 flex items-center justify-center bg-neutral-a6">
           <div
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="hallucination-dialog-title"
             aria-describedby="hallucination-dialog-description"
-            className="bg-white dark:bg-neutral-800 rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+            className="bg-neutral-1 rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
           >
             {/* Header */}
-            <div className="px-5 py-4 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+            <div className="px-5 py-4 border-b border-neutral-5 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <AlertTriangle
-                  className="w-5 h-5 text-warning-500"
+                  className="w-5 h-5 text-warning-9"
                   aria-hidden="true"
                 />
                 <h2
                   id="hallucination-dialog-title"
-                  className="font-semibold text-neutral-900 dark:text-neutral-100"
+                  className="font-semibold text-neutral-12"
                 >
                   Report Inaccuracy
                 </h2>
               </div>
-              <Button
+              <Button size="icon" variant="ghost"
                 ref={closeButtonRef}
-                className="p-1 text-neutral-400 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-300 rounded"
+                className="p-1 text-neutral-9 hover:text-neutral-11 rounded"
                 onClick={handleCancel}
                 aria-label="Close dialog"
               >
@@ -206,14 +206,14 @@ export function HallucinationIndicator({
             <div className="px-5 py-4">
               <p
                 id="hallucination-dialog-description"
-                className="text-sm text-neutral-600 dark:text-neutral-400 mb-4"
+                className="text-sm text-neutral-11 mb-4"
               >
                 Help us improve by reporting inaccurate AI responses.
               </p>
 
               {/* Category Selection - radiogroup pattern for single selection */}
               <fieldset className="space-y-2 mb-4">
-                <legend className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                <legend className="text-sm font-medium text-neutral-11">
                   What type of issue is this?
                 </legend>
                 <div role="radiogroup" aria-required="true">
@@ -225,10 +225,10 @@ export function HallucinationIndicator({
                       role="radio"
                       aria-checked={selectedCategory === option.id}
                     >
-                      <div className="font-medium text-sm text-neutral-900 dark:text-neutral-100">
+                      <div className="font-medium text-sm text-neutral-12">
                         {option.label}
                       </div>
-                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                      <div className="text-xs text-neutral-11">
                         {option.description}
                       </div>
                     </Button>
@@ -240,13 +240,13 @@ export function HallucinationIndicator({
               <div>
                 <label
                   htmlFor="hallucination-details"
-                  className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                  className="text-sm font-medium text-neutral-11"
                 >
                   Additional details (optional)
                 </label>
                 <Textarea
                   id="hallucination-details"
-                  className="mt-1 px-3 py-2 bg-neutral-100 border-0 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 resize-none h-20 focus:ring-warning-500"
+                  className="mt-1 px-3 py-2 bg-neutral-2 border-0 text-sm text-neutral-12 placeholder-neutral-9 resize-none h-20 focus:ring-warning-7"
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
                   placeholder="Provide additional details about the inaccuracy..."
@@ -255,22 +255,18 @@ export function HallucinationIndicator({
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-4 border-t border-neutral-200 dark:border-neutral-700 flex justify-end gap-3">
-              <Button
-                className="px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
+            <div className="px-5 py-4 border-t border-neutral-5 flex justify-end gap-3">
+              <Button variant="secondary"
+                className="px-4 py-2 text-sm text-neutral-11 hover:text-neutral-12"
                 onClick={handleCancel}
                 aria-label="Cancel"
-              >
-                Cancel
-              </Button>
-              <Button
+              >Cancel</Button>
+              <Button variant="primary"
                 className="px-4 py-2 text-sm rounded-lg"
                 onClick={handleSubmit}
                 disabled={!selectedCategory}
                 aria-label="Submit"
-              >
-                Submit
-              </Button>
+              >Submit</Button>
             </div>
           </div>
         </div>

@@ -46,36 +46,36 @@ function getChipClasses(
   isSelected: boolean,
 ): string {
   const baseClasses =
-    "px-3 py-1.5 text-sm font-medium rounded-full transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-neutral-900";
+    "px-3 py-1.5 text-sm font-medium rounded-full transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-neutral-12";
 
   if (isSelected) {
     switch (color) {
       case "green":
-        return `${baseClasses} bg-success-100 text-success-800 ring-2 ring-success-500 dark:bg-success-900/40 dark:text-success-300 focus:ring-success-500`;
+        return `${baseClasses} bg-success-3 text-success-11 ring-2 ring-success-7 dark:bg-success-a5 dark:text-success-5 focus:ring-success-7`;
       case "red":
-        return `${baseClasses} bg-error-100 text-error-800 ring-2 ring-error-500 dark:bg-error-900/40 dark:text-error-300 focus:ring-error-500`;
+        return `${baseClasses} bg-error-3 text-error-11 ring-2 ring-error-7 dark:bg-error-a5 dark:text-error-9 focus:ring-error-7`;
       case "yellow":
-        return `${baseClasses} bg-warning-100 text-warning-800 ring-2 ring-warning-500 dark:bg-warning-900/40 dark:text-warning-300 focus:ring-warning-500`;
+        return `${baseClasses} bg-warning-3 text-warning-11 ring-2 ring-warning-7 dark:bg-warning-a5 dark:text-warning-6 focus:ring-warning-7`;
       case "blue":
-        return `${baseClasses} bg-primary-100 text-primary-800 ring-2 ring-primary-500 dark:bg-primary-900/40 dark:text-primary-300 focus:ring-primary-500`;
+        return `${baseClasses} bg-primary-3 text-primary-11 ring-2 ring-primary-7 dark:bg-primary-a5 dark:text-primary-5 focus:ring-primary-7`;
       case "gray":
       default:
-        return `${baseClasses} bg-neutral-200 text-neutral-900 ring-2 ring-neutral-500 dark:bg-neutral-700 dark:text-neutral-100 focus:ring-neutral-500`;
+        return `${baseClasses} bg-neutral-3 text-neutral-12 ring-2 ring-neutral-8 focus:ring-neutral-8`;
     }
   } else {
     // Unselected state - subtle coloring based on the color
     switch (color) {
       case "green":
-        return `${baseClasses} bg-neutral-100 text-neutral-700 hover:bg-success-50 hover:text-success-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-success-900/20 dark:hover:text-success-400 focus:ring-success-500`;
+        return `${baseClasses} bg-neutral-2 text-neutral-11 hover:bg-success-1 hover:text-success-11 dark:hover:bg-success-a3 dark:hover:text-success-7 focus:ring-success-7`;
       case "red":
-        return `${baseClasses} bg-neutral-100 text-neutral-700 hover:bg-error-50 hover:text-error-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-error-900/20 dark:hover:text-error-400 focus:ring-error-500`;
+        return `${baseClasses} bg-neutral-2 text-neutral-11 hover:bg-error-1 hover:text-error-11 dark:hover:bg-error-a3 dark:hover:text-error-7 focus:ring-error-7`;
       case "yellow":
-        return `${baseClasses} bg-neutral-100 text-neutral-700 hover:bg-warning-50 hover:text-warning-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-warning-900/20 dark:hover:text-warning-400 focus:ring-warning-500`;
+        return `${baseClasses} bg-neutral-2 text-neutral-11 hover:bg-warning-3 hover:text-warning-10 dark:hover:bg-warning-a3 dark:hover:text-warning-9 focus:ring-warning-7`;
       case "blue":
-        return `${baseClasses} bg-neutral-100 text-neutral-700 hover:bg-primary-50 hover:text-primary-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-primary-900/20 dark:hover:text-primary-400 focus:ring-primary-500`;
+        return `${baseClasses} bg-neutral-2 text-neutral-11 hover:bg-primary-1 hover:text-primary-11 dark:hover:bg-primary-a3 dark:hover:text-primary-7 focus:ring-primary-7`;
       case "gray":
       default:
-        return `${baseClasses} bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 focus:ring-neutral-500`;
+        return `${baseClasses} bg-neutral-2 text-neutral-11 hover:bg-neutral-3 focus:ring-neutral-8`;
     }
   }
 }

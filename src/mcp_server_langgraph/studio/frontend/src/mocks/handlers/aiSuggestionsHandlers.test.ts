@@ -7,9 +7,14 @@
  * - POST /api/v1/ai/suggestions/request - Request new suggestions
  * - GET /api/v1/ai/suggestions - Poll for current suggestions
  * - POST /api/v1/ai/suggestions/dismiss - Dismiss a suggestion
+ *
+ * API Contract Testing:
+ * - Handlers return snake_case responses (via apiJsonResponse)
+ * - Tests use transformSnakeToCamel to validate transformation
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { transformSnakeToCamel } from "../../api/transforms";
 import { server } from "../server";
 
 import {
@@ -227,17 +232,87 @@ describe("AI Suggestions MSW Handlers", () => {
   });
 
   describe("GET /api/v1/ai/suggestions/health", () => {
-    it("should return health status", async () => {
+    it("should return health status in snake_case", async () => {
       const response = await fetch("/api/v1/ai/suggestions/health");
       const data = await response.json();
 
       expect(response.status).toBe(200);
+      // Verify raw response is in snake_case (backend format)
       expect(data).toEqual({
         status: "healthy",
         websocket_available: false,
         fallback_active: true,
         timestamp: expect.any(Number),
       });
+    });
+
+    it("should transform to camelCase when using transformSnakeToCamel", async () => {
+      const response = await fetch("/api/v1/ai/suggestions/health");
+      const rawData = await response.json();
+
+      // Transform using the same utility the frontend API layer uses
+      const transformedData = transformSnakeToCamel(rawData);
+
+      // Verify transformed response is in camelCase (frontend format)
+      expect(transformedData).toEqual({
+        status: "healthy",
+        websocketAvailable: false,
+        fallbackActive: true,
+        timestamp: expect.any(Number),
+      });
+    });
+  });
+
+  describe("API Contract Transformation", () => {
+    it("should transform suggestion with snake_case fields to camelCase", async () => {
+      // Request suggestions for chat page to get generated suggestions
+      const response = await fetch("/api/v1/ai/suggestions/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ context: { page: "chat" } }),
+      });
+
+      const rawData = await response.json();
+      const transformedData = transformSnakeToCamel(rawData);
+
+      // Verify the suggestion structure transforms correctly
+      expect(transformedData.data).toBeDefined();
+      expect(transformedData.data.length).toBeGreaterThanOrEqual(1);
+
+      // Check snake_case fields are transformed to camelCase
+      const suggestion = transformedData.data[0];
+      expect(suggestion.id).toBeDefined();
+      expect(suggestion.type).toBeDefined();
+      // target_element should become targetElement
+      if ("targetElement" in suggestion) {
+        expect(typeof suggestion.targetElement).toBe("string");
+      }
+      // show_after_ms should become showAfterMs
+      if ("showAfterMs" in suggestion) {
+        expect(typeof suggestion.showAfterMs).toBe("number");
+      }
+    });
+
+    it("should validate raw response contains snake_case fields", async () => {
+      // Request suggestions for chat page to get generated suggestions
+      const response = await fetch("/api/v1/ai/suggestions/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ context: { page: "chat" } }),
+      });
+
+      const rawData = await response.json();
+
+      // Verify raw response has snake_case fields
+      const suggestion = rawData.data[0];
+      // target_element (snake_case) should be in raw response
+      if ("target_element" in suggestion) {
+        expect(typeof suggestion.target_element).toBe("string");
+      }
+      // show_after_ms (snake_case) should be in raw response
+      if ("show_after_ms" in suggestion) {
+        expect(typeof suggestion.show_after_ms).toBe("number");
+      }
     });
   });
 

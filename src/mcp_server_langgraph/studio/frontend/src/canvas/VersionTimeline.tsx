@@ -75,9 +75,8 @@ function VersionItem({
   onHover,
   showDiffPreview,
 }: VersionItemProps) {
-  const isAI =
-    version.metadata.editType === "ai-generation" ||
-    version.metadata.editType === "ai-suggestion";
+  // Check if this version was edited by AI
+  const isAI = version.metadata.editedBy === "ai";
 
   return (
     <li
@@ -85,8 +84,8 @@ function VersionItem({
       className={cn(
         "relative flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer",
         "transition-colors",
-        isCurrent && "current bg-primary-50 dark:bg-primary-900/20",
-        !isCurrent && "hover:bg-neutral-50 dark:hover:bg-neutral-700",
+        isCurrent && "current bg-primary-1 dark:bg-primary-a3",
+        !isCurrent && "hover:bg-neutral-1",
       )}
       onClick={() => !isCurrent && onSelect()}
       onMouseEnter={() => onHover(true)}
@@ -96,7 +95,7 @@ function VersionItem({
       <div
         className={cn(
           "w-2 h-2 rounded-full flex-shrink-0",
-          isCurrent ? "bg-primary-500" : "bg-neutral-300 dark:bg-neutral-600",
+          isCurrent ? "bg-primary-9" : "bg-neutral-3",
         )}
       />
       {/* Version info */}
@@ -106,8 +105,8 @@ function VersionItem({
             className={cn(
               "font-medium text-sm",
               isCurrent
-                ? "text-primary-700 dark:text-primary-300"
-                : "text-neutral-700 dark:text-neutral-300",
+                ? "text-primary-11 dark:text-primary-11"
+                : "text-neutral-11",
             )}
           >
             v{version.version}
@@ -116,19 +115,19 @@ function VersionItem({
             <span data-testid="ai-indicator">
               <Sparkles
                 size={12}
-                className="text-insight-500 dark:text-insight-400"
+                className="text-insight-11 dark:text-insight-11"
               />
             </span>
           ) : (
             <span data-testid="user-indicator">
               <User
                 size={12}
-                className="text-neutral-400 dark:text-neutral-400"
+                className="text-neutral-11"
               />
             </span>
           )}
         </div>
-        <div className="text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="text-xs text-neutral-11">
           {formatDate(version.createdAt)}
         </div>
       </div>
@@ -144,8 +143,8 @@ function VersionItem({
           aria-label={`Restore version ${version.version}`}
           className={cn(
             "p-1.5 rounded transition-colors",
-            "text-neutral-500 dark:text-neutral-400 hover:text-primary-600",
-            "hover:bg-primary-100 dark:hover:bg-primary-900/30",
+            "text-neutral-11 hover:text-primary-11",
+            "hover:bg-primary-3 dark:hover:bg-primary-a4",
           )}
         >
           <RotateCcw size={14} />
@@ -156,16 +155,16 @@ function VersionItem({
         <div
           data-testid="diff-preview"
           className={cn(
-            "absolute left-full ml-2 top-0 z-10",
+            "absolute left-full ml-2 top-0 z-tooltip",
             "w-64 p-3 rounded-lg shadow-lg",
-            "bg-white dark:bg-neutral-800",
-            "border border-neutral-200 dark:border-neutral-700",
+            "bg-neutral-1",
+            "border border-neutral-5",
           )}
         >
-          <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
+          <div className="text-xs text-neutral-11 mb-2">
             Content preview:
           </div>
-          <pre className="text-xs text-neutral-700 dark:text-neutral-300 overflow-hidden truncate">
+          <pre className="text-xs text-neutral-11 overflow-hidden truncate">
             {version.content.slice(0, 100)}...
           </pre>
         </div>
@@ -225,7 +224,7 @@ export function VersionTimeline({
       <div
         data-testid="version-timeline"
         className={cn(
-          "flex items-center justify-center p-4 text-neutral-500 dark:text-neutral-400",
+          "flex items-center justify-center p-4 text-neutral-11",
           className,
         )}
       >
@@ -261,7 +260,7 @@ export function VersionTimeline({
           onClick={() => setIsExpanded(!isExpanded)}
           className={cn(
             "flex items-center justify-center gap-1 mt-2 py-1.5 text-sm",
-            "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:text-neutral-400 dark:hover:text-neutral-200",
+            "text-neutral-11 hover:text-neutral-11",
             "transition-colors",
           )}
         >

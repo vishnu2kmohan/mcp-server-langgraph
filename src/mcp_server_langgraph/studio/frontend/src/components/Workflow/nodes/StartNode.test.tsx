@@ -76,7 +76,7 @@ describe("StartNode", () => {
       );
       const node = container.querySelector('[data-status="idle"]');
       expect(node).toBeInTheDocument();
-      expect(node).toHaveClass("border-neutral-300");
+      expect(node).toHaveClass("border-neutral-5");
     });
 
     it("should show running state with blue border and spinner", () => {
@@ -85,7 +85,7 @@ describe("StartNode", () => {
       );
       const node = container.querySelector('[data-status="running"]');
       expect(node).toBeInTheDocument();
-      expect(node).toHaveClass("border-primary-500");
+      expect(node).toHaveClass("border-primary-9");
       expect(node).toHaveClass("animate-pulse");
     });
 
@@ -95,7 +95,7 @@ describe("StartNode", () => {
       );
       const node = container.querySelector('[data-status="success"]');
       expect(node).toBeInTheDocument();
-      expect(node).toHaveClass("border-success-500");
+      expect(node).toHaveClass("border-success-9");
     });
 
     it("should show error state with red border and error icon", () => {
@@ -104,7 +104,7 @@ describe("StartNode", () => {
       );
       const node = container.querySelector('[data-status="error"]');
       expect(node).toBeInTheDocument();
-      expect(node).toHaveClass("border-error-500");
+      expect(node).toHaveClass("border-error-9");
     });
   });
 
@@ -115,7 +115,7 @@ describe("StartNode", () => {
       );
       const node = container.querySelector('[data-selected="true"]');
       expect(node).toBeInTheDocument();
-      expect(node).toHaveClass("border-primary-500");
+      expect(node).toHaveClass("border-primary-9");
     });
 
     it("should not highlight when not selected", () => {

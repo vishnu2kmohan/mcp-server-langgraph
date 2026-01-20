@@ -169,41 +169,47 @@ export function ConnectionTemplateSelector({
     fetchData();
   };
 
-  // Get auth type badge color
-  const getAuthTypeBadgeClass = (authType: string): string => {
+  // Get auth type badge Tailwind classes
+  const getAuthTypeBadgeClasses = (authType: string): string => {
     switch (authType) {
       case "oauth2":
-        return "badge-oauth2";
+        return "bg-primary-3 text-primary-11";
       case "api_key":
-        return "badge-apikey";
+        return "bg-warning-3 text-warning-11";
       default:
-        return "badge-none";
+        return "bg-success-3 text-success-11";
     }
   };
 
   return (
-    <div className="template-selector">
-      <h2 className="template-selector-title">Choose a Template</h2>
+    <div className="p-4">
+      <h2 className="text-2xl font-semibold mb-4 text-neutral-12">
+        Choose a Template
+      </h2>
       {/* Search */}
-      <div className="template-search">
+      <div className="mb-4">
         <Input
-          className="template-search-input"
+          className="w-full"
           placeholder="Search templates..."
           value={searchQuery}
           onChange={handleSearchChange}
         />
       </div>
       {/* Category Filters */}
-      <div className="template-category-filters">
+      <div className="flex flex-wrap gap-2 mb-4">
         <Button
-          className="category-filter-btn"
+          variant={selectedCategory === null ? "primary" : "outline"}
+          size="sm"
+          className="rounded-full"
           onClick={() => handleCategoryChange(null)}
         >
           All
         </Button>
         {categories.map((category) => (
           <Button
-            className="category-filter-btn"
+            variant={selectedCategory === category.id ? "primary" : "outline"}
+            size="sm"
+            className="rounded-full"
             key={category.id}
             onClick={() => handleCategoryChange(category.id)}
           >
@@ -213,34 +219,41 @@ export function ConnectionTemplateSelector({
       </div>
       {/* Loading State */}
       {isLoading && (
-        <div className="template-loading" data-testid="loading-templates">
-          <div className="loading-spinner" />
+        <div
+          className="flex flex-col items-center justify-center p-12 text-neutral-10"
+          data-testid="loading-templates"
+        >
+          <div className="w-8 h-8 border-[3px] border-neutral-5 border-t-primary-9 rounded-full animate-spin mb-4" />
           <span>Loading templates...</span>
         </div>
       )}
       {/* Error State */}
       {error && (
-        <div className="template-error">
+        <div className="text-center p-8 text-error-11">
           <p>{error}</p>
-          <Button className="retry-btn" onClick={handleRetry}>
+          <Button variant="primary" className="mt-4" onClick={handleRetry}>
             Retry
           </Button>
         </div>
       )}
       {/* Empty State */}
       {!isLoading && !error && templates.length === 0 && (
-        <div className="template-empty">
+        <div className="text-center p-12 text-neutral-10">
           <p>No templates found matching your criteria.</p>
         </div>
       )}
       {/* Template Grid */}
       {!isLoading && !error && templates.length > 0 && (
-        <div className="template-grid">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
           {templates.map((template) => (
             <div
               key={template.id}
               data-testid={`template-card-${template.id}`}
-              className={`template-card ${selectedTemplateId === template.id ? "selected" : ""}`}
+              className={`flex gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all bg-neutral-1 hover:border-primary-9 hover:shadow-lg ${
+                selectedTemplateId === template.id
+                  ? "border-primary-9 bg-primary-1"
+                  : "border-neutral-5"
+              }`}
               onClick={() => handleSelectTemplate(template)}
               role="button"
               tabIndex={0}
@@ -250,17 +263,25 @@ export function ConnectionTemplateSelector({
                 }
               }}
             >
-              <div className="template-icon">{getIconEmoji(template.icon)}</div>
-              <div className="template-info">
-                <h3 className="template-name">{template.name}</h3>
-                <p className="template-description">{template.description}</p>
-                <div className="template-meta">
+              <div className="text-4xl shrink-0">
+                {getIconEmoji(template.icon)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold mb-1 text-neutral-12">
+                  {template.name}
+                </h3>
+                <p className="text-sm text-neutral-10 mb-2 leading-snug">
+                  {template.description}
+                </p>
+                <div className="flex gap-2 flex-wrap">
                   <span
-                    className={`auth-badge ${getAuthTypeBadgeClass(template.authType)}`}
+                    className={`py-0.5 px-2 rounded text-xs font-medium ${getAuthTypeBadgeClasses(template.authType)}`}
                   >
                     {template.authType}
                   </span>
-                  <span className="category-badge">{template.category}</span>
+                  <span className="py-0.5 px-2 rounded text-xs font-medium bg-neutral-3 text-neutral-11 capitalize">
+                    {template.category}
+                  </span>
                 </div>
               </div>
             </div>
@@ -270,7 +291,7 @@ export function ConnectionTemplateSelector({
           {showCustomOption && (
             <div
               data-testid="custom-connection-card"
-              className="template-card template-card-custom"
+              className="flex gap-4 p-4 border-2 border-dashed border-neutral-5 rounded-xl cursor-pointer transition-all bg-neutral-1 hover:border-primary-9 hover:shadow-lg"
               onClick={onCustom}
               role="button"
               tabIndex={0}
@@ -280,10 +301,12 @@ export function ConnectionTemplateSelector({
                 }
               }}
             >
-              <div className="template-icon">{getIconEmoji("custom")}</div>
-              <div className="template-info">
-                <h3 className="template-name">Custom Connection</h3>
-                <p className="template-description">
+              <div className="text-4xl shrink-0">{getIconEmoji("custom")}</div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold mb-1 text-neutral-12">
+                  Custom Connection
+                </h3>
+                <p className="text-sm text-neutral-10 mb-2 leading-snug">
                   Create a custom connection with your own settings
                 </p>
               </div>
@@ -291,206 +314,6 @@ export function ConnectionTemplateSelector({
           )}
         </div>
       )}
-      <style>{`
-        .template-selector {
-          padding: 1rem;
-        }
-
-        .template-selector-title {
-          font-size: 1.5rem;
-          font-weight: 600;
-          margin-bottom: 1rem;
-          color: var(--text-primary, #1f2937);
-        }
-
-        .template-search {
-          margin-bottom: 1rem;
-        }
-
-        .template-search-input {
-          width: 100%;
-          padding: 0.75rem 1rem;
-          border: 1px solid var(--border-color, #e5e7eb);
-          border-radius: 0.5rem;
-          font-size: 1rem;
-          transition: border-color 0.2s;
-        }
-
-        .template-search-input:focus {
-          outline: none;
-          border-color: var(--primary-color, #3b82f6);
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .template-category-filters {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-        }
-
-        .category-filter-btn {
-          padding: 0.5rem 1rem;
-          border: 1px solid var(--border-color, #e5e7eb);
-          border-radius: 2rem;
-          background: white;
-          font-size: 0.875rem;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .category-filter-btn:hover {
-          background: var(--hover-bg, #f3f4f6);
-        }
-
-        .category-filter-btn.active {
-          background: var(--primary-color, #3b82f6);
-          border-color: var(--primary-color, #3b82f6);
-          color: white;
-        }
-
-        .template-loading {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 3rem;
-          color: var(--text-secondary, #6b7280);
-        }
-
-        .loading-spinner {
-          width: 2rem;
-          height: 2rem;
-          border: 3px solid var(--border-color, #e5e7eb);
-          border-top-color: var(--primary-color, #3b82f6);
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin-bottom: 1rem;
-        }
-
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        .template-error {
-          text-align: center;
-          padding: 2rem;
-          color: var(--error-color, #ef4444);
-        }
-
-        .retry-btn {
-          margin-top: 1rem;
-          padding: 0.5rem 1rem;
-          background: var(--primary-color, #3b82f6);
-          color: white;
-          border: none;
-          border-radius: 0.375rem;
-          cursor: pointer;
-        }
-
-        .template-empty {
-          text-align: center;
-          padding: 3rem;
-          color: var(--text-secondary, #6b7280);
-        }
-
-        .template-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 1rem;
-        }
-
-        .template-card {
-          display: flex;
-          gap: 1rem;
-          padding: 1rem;
-          border: 2px solid var(--border-color, #e5e7eb);
-          border-radius: 0.75rem;
-          cursor: pointer;
-          transition: all 0.2s;
-          background: white;
-        }
-
-        .template-card:hover {
-          border-color: var(--primary-color, #3b82f6);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .template-card.selected {
-          border-color: var(--primary-color, #3b82f6);
-          background: rgba(59, 130, 246, 0.05);
-        }
-
-        .template-card-custom {
-          border-style: dashed;
-        }
-
-        .template-icon {
-          font-size: 2rem;
-          flex-shrink: 0;
-        }
-
-        .template-info {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .template-name {
-          font-size: 1rem;
-          font-weight: 600;
-          margin: 0 0 0.25rem;
-          color: var(--text-primary, #1f2937);
-        }
-
-        .template-description {
-          font-size: 0.875rem;
-          color: var(--text-secondary, #6b7280);
-          margin: 0 0 0.5rem;
-          line-height: 1.4;
-        }
-
-        .template-meta {
-          display: flex;
-          gap: 0.5rem;
-          flex-wrap: wrap;
-        }
-
-        .auth-badge,
-        .category-badge {
-          padding: 0.125rem 0.5rem;
-          border-radius: 0.25rem;
-          font-size: 0.75rem;
-          font-weight: 500;
-        }
-
-        .auth-badge {
-          background: var(--badge-bg, #f3f4f6);
-          color: var(--badge-color, #6b7280);
-        }
-
-        .badge-oauth2 {
-          background: #dbeafe;
-          color: #1d4ed8;
-        }
-
-        .badge-apikey {
-          background: #fef3c7;
-          color: #b45309;
-        }
-
-        .badge-none {
-          background: #d1fae5;
-          color: #047857;
-        }
-
-        .category-badge {
-          background: var(--category-bg, #f3f4f6);
-          color: var(--category-color, #6b7280);
-          text-transform: capitalize;
-        }
-      `}</style>
     </div>
   );
 }

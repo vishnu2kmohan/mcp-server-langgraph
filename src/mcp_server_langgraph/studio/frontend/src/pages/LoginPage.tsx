@@ -20,6 +20,10 @@ import { useGetIdentityProvidersQuery } from "../api";
 import { useAppSelector } from "../store/hooks";
 import { selectIsAuthenticated } from "../store/slices/authSlice";
 import { setIntendedRoute } from "../utils/intendedRoute";
+import { getDisplayVersion } from "../config/version";
+
+// Import icon as module for proper Vite path resolution with base: '/studio/'
+import iconSvg from "/icons/icon.svg";
 
 // Provider icon mapping - returns appropriate Lucide icon or SVG for known providers
 function getProviderIcon(icon: string) {
@@ -110,48 +114,56 @@ export function LoginPage() {
   }, [location.state]);
 
   // Redirect to studio if already authenticated
-  // Note: Dark mode is now handled globally by useTheme hook in App.tsx
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/studio", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
+  // Force dark mode on login page
+  // This ensures consistent branding regardless of user's theme preference
+  useEffect(() => {
+    const htmlElement = document.documentElement;
+    const wasDark = htmlElement.classList.contains("dark");
+
+    // Force dark mode
+    htmlElement.classList.add("dark");
+
+    // Restore original theme on unmount
+    return () => {
+      if (!wasDark) {
+        htmlElement.classList.remove("dark");
+      }
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-800 px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-neutral-1 to-neutral-2">
       <div className="w-full max-w-md">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl shadow-lg mb-4">
-            <svg
-              className="w-10 h-10 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-lg mb-4 overflow-hidden">
+            <img
+              src={iconSvg}
+              alt="Agent Studio"
+              className="w-16 h-16"
+            />
           </div>
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-neutral-12 leading-tight">
             Agent Studio
           </h1>
-          <p className="text-neutral-500 dark:text-neutral-400 mt-1">
+          <p className="mt-2 text-sm text-neutral-11">
             Sign in to continue
           </p>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl p-8 border border-neutral-200 dark:border-neutral-700">
+        {/* Login Card - Minimal/borderless design */}
+        <div className="rounded-2xl shadow-xl p-8 backdrop-blur-sm bg-neutral-2">
           {/* Loading state */}
           {idpLoading && (
             <div className="flex items-center justify-center py-8">
               <Loader2
-                className="h-8 w-8 animate-spin text-primary-600"
+                className="h-8 w-8 animate-spin text-primary-9"
                 role="status"
                 aria-label="Loading identity providers"
               />
@@ -161,15 +173,22 @@ export function LoginPage() {
           {/* Main SSO Login Button (OAuth2 + PKCE) */}
           {!idpLoading && (
             <>
-              <div className="mb-6">
+              {/* Only add bottom margin if IdP providers follow */}
+              <div
+                className={
+                  idpData && (idpData.identity_providers?.length ?? 0) > 0
+                    ? "mb-6"
+                    : ""
+                }
+              >
                 <a
                   href="/api/v1/auth/login"
-                  className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                  className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-primary-9 text-white font-semibold rounded-lg hover:bg-primary-10 focus:outline-none focus:ring-2 focus:ring-primary-7 focus:ring-offset-2 transition-colors"
                 >
                   <LogIn className="h-5 w-5" />
                   Sign in with SSO
                 </a>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center mt-2">
+                <p className="text-xs text-center mt-2 text-neutral-11">
                   Secure OAuth2 + PKCE authentication
                 </p>
               </div>
@@ -180,10 +199,10 @@ export function LoginPage() {
                   {/* Divider */}
                   <div className="relative mb-6">
                     <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-neutral-300 dark:border-neutral-600" />
+                      <div className="w-full border-t border-neutral-5" />
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400">
+                      <span className="px-2 bg-neutral-2 text-neutral-11">
                         or continue with
                       </span>
                     </div>
@@ -195,7 +214,7 @@ export function LoginPage() {
                       <a
                         key={provider.alias}
                         href={provider.login_url}
-                        className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 font-medium hover:bg-neutral-50 dark:hover:bg-neutral-600 transition-colors"
+                        className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg text-neutral-12 font-medium transition-colors bg-neutral-3 hover:bg-neutral-4"
                       >
                         {getProviderIcon(provider.icon)}
                         <span>{provider.display_name}</span>
@@ -209,8 +228,8 @@ export function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-neutral-500 dark:text-neutral-400 mt-6">
-          Agent Studio v0.1.0
+        <p className="text-center text-xs mt-6 text-neutral-11 opacity-60">
+          Agent Studio {getDisplayVersion()}
         </p>
       </div>
     </div>

@@ -38,9 +38,11 @@ import {
   CanvasShortcutsMenu,
   type CanvasShortcutAction,
 } from "./CanvasShortcutsMenu";
+import { SuggestionsFooterBar } from "./SuggestionsFooterBar";
 
 // AI Components (Phase 4) - lazy-loaded for reduced bundle size
 import { LazySuggestionsPanel, type Suggestion } from "../ai/lazy";
+import type { AISuggestion } from "../types/artifacts";
 
 import { Button } from "@/components/UI";
 
@@ -92,6 +94,8 @@ export const ConnectedCanvasPanel = forwardRef<
   // Feature flags for AI features
   const aiSuggestionsEnabled = useFeatureFlag("ai_suggestions");
   const canvasAIPaletteEnabled = useFeatureFlag("canvas_ai_palette");
+  // Phase 4: New footer bar for suggestions (replaces floating panel)
+  const suggestionsFooterEnabled = useFeatureFlag("suggestions_footer_bar");
 
   // Track loading state for canvas shortcut actions
   const [shortcutActionLoading, setShortcutActionLoading] = useState(false);
@@ -383,6 +387,42 @@ export const ConnectedCanvasPanel = forwardRef<
     refreshSuggestions();
   }, [refreshSuggestions]);
 
+  // Convert hook suggestions to AISuggestion format for footer bar
+  // Suggestion type has: id, type, content, confidence
+  // AISuggestion needs: id, type, label, description, confidence
+  const footerSuggestions: AISuggestion[] = useMemo(
+    () =>
+      suggestions.map((s) => ({
+        id: s.id,
+        type: s.type,
+        label: s.type.charAt(0).toUpperCase() + s.type.slice(1), // Capitalize type as label
+        description: s.content?.slice(0, 100) ?? "", // Use content preview as description
+        confidence: s.confidence ?? 0.8,
+      })),
+    [suggestions],
+  );
+
+  // Footer bar handlers
+  const handleFooterAccept = useCallback(
+    (suggestion: AISuggestion) => {
+      const original = suggestions.find((s) => s.id === suggestion.id);
+      if (original) {
+        handleAcceptSuggestion(original);
+      }
+    },
+    [suggestions, handleAcceptSuggestion],
+  );
+
+  const handleFooterDismiss = useCallback(
+    (suggestion: AISuggestion) => {
+      const original = suggestions.find((s) => s.id === suggestion.id);
+      if (original) {
+        handleDismissSuggestion(original);
+      }
+    },
+    [suggestions, handleDismissSuggestion],
+  );
+
   // Track shortcut action error state for user feedback
   const [shortcutError, setShortcutError] = useState<string | null>(null);
 
@@ -531,8 +571,8 @@ export const ConnectedCanvasPanel = forwardRef<
       data-testid="canvas-panel"
       className={cn(
         "flex flex-col h-full relative",
-        "bg-neutral-50 dark:bg-neutral-800",
-        "border-l border-neutral-200 dark:border-neutral-700",
+        "bg-neutral-1",
+        "border-l border-neutral-5",
         className,
       )}
     >
@@ -544,11 +584,11 @@ export const ConnectedCanvasPanel = forwardRef<
             "absolute top-2 right-2 z-10 px-3 py-1.5 rounded-lg text-sm font-medium",
             "transition-all duration-200 shadow-lg",
             saveStatus === "saving" &&
-              "bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300",
+              "bg-primary-3 dark:bg-primary-a6 text-primary-11 dark:text-primary-11",
             saveStatus === "saved" &&
-              "bg-success-100 dark:bg-success-900/50 text-success-700 dark:text-success-300",
+              "bg-success-3 dark:bg-success-a6 text-success-11 dark:text-success-11",
             saveStatus === "error" &&
-              "bg-error-100 dark:bg-error-900/50 text-error-700 dark:text-error-300",
+              "bg-error-3 dark:bg-error-a6 text-error-11 dark:text-error-11",
           )}
         >
           {saveStatus === "saving" && (
@@ -563,7 +603,9 @@ export const ConnectedCanvasPanel = forwardRef<
       )}
       {/* AI Suggestions Sparkles Trigger (Phase 4) - opt-in mode */}
       {/* Shows a sparkles button that users click to fetch and view suggestions */}
-      {aiSuggestionsEnabled &&
+      {/* Hidden when footer bar is enabled (Phase 4 cleanup) */}
+      {!suggestionsFooterEnabled &&
+        aiSuggestionsEnabled &&
         selectedArtifactId &&
         !suggestionsPanelVisible && (
           <Button
@@ -574,10 +616,10 @@ export const ConnectedCanvasPanel = forwardRef<
             className={cn(
               "absolute top-12 right-2 z-10",
               "p-2 rounded-lg shadow-md",
-              "bg-white dark:bg-neutral-800",
-              "border border-neutral-200 dark:border-neutral-700",
-              "text-primary-500 hover:text-primary-600 dark:hover:text-primary-400",
-              "hover:bg-primary-50 dark:hover:bg-primary-900/20",
+              "bg-neutral-1",
+              "border border-neutral-5",
+              "text-primary-11 hover:text-primary-11 dark:hover:text-primary-7",
+              "hover:bg-primary-1 dark:hover:bg-primary-a3",
               "transition-colors",
             )}
           >
@@ -603,7 +645,9 @@ export const ConnectedCanvasPanel = forwardRef<
         )}
       {/* AI Suggestions Panel (Phase 4) - table view for reviewing suggestions */}
       {/* Lazy-loaded to reduce initial bundle size */}
-      {aiSuggestionsEnabled &&
+      {/* Hidden when footer bar is enabled (Phase 4 cleanup) */}
+      {!suggestionsFooterEnabled &&
+        aiSuggestionsEnabled &&
         selectedArtifactId &&
         suggestionsPanelVisible && (
           <div className="absolute top-12 right-2 z-10 w-96">
@@ -621,34 +665,37 @@ export const ConnectedCanvasPanel = forwardRef<
           </div>
         )}
       {/* Canvas Shortcuts Menu (Sprint 6) - gated by canvas_ai_palette feature flag */}
-      {canvasAIPaletteEnabled && selectedArtifactId && (
-        <div className="absolute bottom-4 right-4 z-10">
-          <CanvasShortcutsMenu
-            onAction={handleShortcutAction}
-            isLoading={shortcutActionLoading}
-            language={
-              selectedArtifact?.editMetadata?.language ??
-              selectedArtifact?.contentType
-            }
-          />
-        </div>
-      )}
+      {/* @deprecated: Hidden when suggestions_footer_bar is enabled (Phase 4) */}
+      {!suggestionsFooterEnabled &&
+        canvasAIPaletteEnabled &&
+        selectedArtifactId && (
+          <div className="absolute bottom-4 right-4 z-10">
+            <CanvasShortcutsMenu
+              onAction={handleShortcutAction}
+              isLoading={shortcutActionLoading}
+              language={
+                selectedArtifact?.editMetadata?.language ??
+                selectedArtifact?.contentType
+              }
+            />
+          </div>
+        )}
       {/* Shortcut action error toast */}
       {shortcutError && (
         <div
           data-testid="shortcut-error-toast"
           role="alert"
           className={cn(
-            "absolute bottom-16 right-4 z-20",
+            "absolute bottom-16 right-4 z-notification",
             "max-w-sm px-4 py-3 rounded-lg shadow-lg",
-            "bg-error-50 dark:bg-error-900/80 border border-error-200 dark:border-error-700",
-            "text-error-800 dark:text-error-200 text-sm",
+            "bg-error-1 dark:bg-error-a9 border border-error-4 dark:border-error-7",
+            "text-error-11 dark:text-error-11 text-sm",
             "animate-in fade-in slide-in-from-bottom-4 duration-200",
           )}
         >
           <div className="flex items-start gap-2">
             <svg
-              className="w-5 h-5 flex-shrink-0 mt-0.5 text-error-500"
+              className="w-5 h-5 flex-shrink-0 mt-0.5 text-error-11"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -662,13 +709,13 @@ export const ConnectedCanvasPanel = forwardRef<
             </svg>
             <div>
               <p className="font-medium">Action Failed</p>
-              <p className="mt-1 text-error-600 dark:text-error-300">
+              <p className="mt-1 text-error-11 dark:text-error-11">
                 {shortcutError}
               </p>
             </div>
             <Button
               variant="danger"
-              className="ml-auto -mr-1 p-1 rounded hover:bg-error-100 dark:hover:bg-error-800"
+              className="ml-auto -mr-1 p-1 rounded hover:bg-error-3 dark:hover:bg-error-11"
               type="button"
               onClick={() => setShortcutError(null)}
               aria-label="Dismiss error"
@@ -696,12 +743,24 @@ export const ConnectedCanvasPanel = forwardRef<
         onContentChange={handleContentChange}
         onSave={handleSave}
         enableArtifactHover
-        className="h-full"
+        className="flex-1 min-h-0"
         userId={userId}
         sessionId={sessionId}
         persona={persona}
         enableAI={aiSuggestionsEnabled}
       />
+      {/* Suggestions Footer Bar (Phase 4) - replaces floating panel when enabled */}
+      {suggestionsFooterEnabled && aiSuggestionsEnabled && selectedArtifactId && (
+        <SuggestionsFooterBar
+          suggestions={footerSuggestions}
+          onAccept={handleFooterAccept}
+          onDismiss={handleFooterDismiss}
+          onRefresh={handleSuggestionsPanelRefresh}
+          isLoading={suggestionsLoading}
+          isExpanded={suggestionsPanelExpanded}
+          onToggle={handleSuggestionsPanelToggle}
+        />
+      )}
       {/* Note: No <Outlet /> needed - chat routes don't render components.
           StudioShellLayout provides the full 3-panel UI for chat routes.
           The chatLoader provides data, but UI comes from SessionNav + ConversationPanel + CanvasPanel. */}

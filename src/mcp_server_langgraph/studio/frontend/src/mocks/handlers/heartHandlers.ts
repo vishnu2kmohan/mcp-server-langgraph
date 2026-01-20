@@ -10,7 +10,8 @@
  * - POST /api/v1/metrics/heart/batch - Batch HEART events
  */
 
-import { http, HttpResponse } from "msw";
+import { http } from "msw";
+import { apiJsonResponse } from "../utils/apiResponse";
 
 /**
  * HEART event request body
@@ -53,14 +54,14 @@ export function createHeartEventHandler(
 
     if (callback) {
       const customResponse = callback(body);
-      return HttpResponse.json({
+      return apiJsonResponse({
         success: true,
         event_id: generateId(),
         ...customResponse,
       });
     }
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       success: true,
       event_id: generateId(),
       event_type: body.event_type,
@@ -84,14 +85,14 @@ export function createHeartBatchHandler(
 
     if (callback) {
       const customResponse = callback(body.events, body.session_duration);
-      return HttpResponse.json({
+      return apiJsonResponse({
         success: true,
         batch_id: generateId(),
         ...customResponse,
       });
     }
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       success: true,
       batch_id: generateId(),
       events_received: body.events.length,

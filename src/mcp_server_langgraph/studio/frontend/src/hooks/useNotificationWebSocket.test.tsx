@@ -75,6 +75,10 @@ const createTestStore = (options: TestStoreOptions = {}) => {
               email: "test@example.com",
               roles: ["user"],
               persona: "user" as const,
+              // WebSocket permissions for notifications hook
+              websocketPermissions: {
+                notifications: true,
+              },
             }
           : null,
         tokens: null,
@@ -102,9 +106,9 @@ describe("useNotificationWebSocket", () => {
     vi.clearAllMocks();
     mockStatus = "connecting";
     mockOnMessage = undefined;
-    mockOnConnect = undefined;
-    mockOnDisconnect = undefined;
-    mockOnError = undefined;
+    _mockOnConnect = undefined;
+    _mockOnDisconnect = undefined;
+    _mockOnError = undefined;
     store = createTestStore();
   });
 

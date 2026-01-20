@@ -11,6 +11,7 @@
  */
 import { PanelResizeHandle } from "react-resizable-panels";
 import type { ComponentProps } from "react";
+import { useReducedMotion } from "motion/react";
 import { cn } from "../utils/cn";
 
 // =============================================================================
@@ -36,14 +37,20 @@ export function ResizeHandle({
   vertical,
   ...props
 }: ResizeHandleProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <PanelResizeHandle
       className={cn(
-        "transition-all",
-        "bg-transparent hover:bg-primary-500/30",
+        !prefersReducedMotion && "transition-colors",
+        "bg-transparent hover:bg-primary-a4",
+        "relative z-10",
+        // Invisible hit target via before: pseudo-element
+        "before:absolute before:inset-0 before:z-10",
         vertical
-          ? "h-1 hover:h-2 cursor-row-resize"
-          : "w-1 hover:w-2 cursor-col-resize",
+          ? "h-1 cursor-row-resize before:-top-2 before:-bottom-2"
+          : "w-1 cursor-col-resize before:-left-2 before:-right-2",
         className,
       )}
       {...props}

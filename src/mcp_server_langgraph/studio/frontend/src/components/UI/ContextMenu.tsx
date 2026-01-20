@@ -194,9 +194,8 @@ export function ContextMenu({
             role="menu"
             aria-label={ariaLabel}
             className={cn(
-              "fixed z-50 min-w-[160px] py-1 rounded-lg shadow-lg",
-              "bg-white border border-neutral-200 dark:border-neutral-700",
-              "dark:bg-neutral-800 dark:border-neutral-700",
+              "fixed z-dropdown min-w-40 py-1 rounded-lg shadow-lg",
+              "bg-neutral-1 border border-neutral-5",
               "animate-in fade-in-0 zoom-in-95 duration-100",
             )}
             style={{
@@ -211,7 +210,7 @@ export function ContextMenu({
                   <div
                     key={item.id}
                     role="separator"
-                    className="my-1 border-t border-neutral-200 dark:border-neutral-700"
+                    className="my-1 border-t border-neutral-5"
                   />
                 );
               }
@@ -232,11 +231,11 @@ export function ContextMenu({
                   onClick={() => handleItemClick(item)}
                   className={cn(
                     "w-full px-3 py-2 text-left text-sm flex items-center gap-2",
-                    "focus:outline-none focus:bg-neutral-100 dark:bg-neutral-800 dark:focus:bg-neutral-700",
-                    "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+                    "focus:outline-none focus:bg-neutral-2",
+                    "hover:bg-neutral-2",
                     item.disabled
-                      ? "text-neutral-400 dark:text-neutral-400 cursor-not-allowed"
-                      : "text-neutral-700 dark:text-neutral-200",
+                      ? "text-neutral-9 cursor-not-allowed"
+                      : "text-neutral-11",
                   )}
                 >
                   {item.icon && (

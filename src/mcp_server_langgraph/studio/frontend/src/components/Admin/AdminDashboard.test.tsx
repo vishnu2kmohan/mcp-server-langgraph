@@ -52,6 +52,7 @@ import { http, HttpResponse } from "msw";
 import { AdminDashboard } from "./AdminDashboard";
 import alertReducer from "../../store/slices/alertSlice";
 import personaReducer from "../../store/slices/personaSlice";
+import sessionReducer from "../../store/slices/sessionSlice";
 import { api } from "../../api";
 import { server } from "../../mocks/server";
 import { mockFeatureFlags } from "../../mocks/handlers";
@@ -62,6 +63,7 @@ const createTestStore = (username = "testuser@example.com") =>
     reducer: {
       alerts: alertReducer,
       persona: personaReducer,
+      session: sessionReducer,
       [api.reducerPath]: api.reducer,
     },
     middleware: (getDefaultMiddleware) =>
@@ -81,6 +83,12 @@ const createTestStore = (username = "testuser@example.com") =>
         isAuthenticated: true,
         permissions: ["admin:alerts:read", "admin:alerts:approve"],
         loading: false,
+        error: null,
+      },
+      session: {
+        sessions: [],
+        currentSession: null,
+        isLoading: false,
         error: null,
       },
     },
@@ -149,7 +157,7 @@ describe("AdminDashboard", () => {
       renderWithStore(<AdminDashboard {...defaultProps} />);
 
       const healthIndicator = screen.getByTestId("health-status");
-      expect(healthIndicator).toHaveClass("bg-success-500");
+      expect(healthIndicator).toHaveClass("bg-success-9");
     });
   });
 
@@ -158,7 +166,7 @@ describe("AdminDashboard", () => {
       renderWithStore(<AdminDashboard {...defaultProps} />);
 
       const indicator = screen.getByTestId("health-status");
-      expect(indicator).toHaveClass("bg-success-500");
+      expect(indicator).toHaveClass("bg-success-9");
     });
 
     it("should show yellow indicator for degraded status", () => {
@@ -173,7 +181,7 @@ describe("AdminDashboard", () => {
       renderWithStore(<AdminDashboard {...props} />);
 
       const indicator = screen.getByTestId("health-status");
-      expect(indicator).toHaveClass("bg-warning-500");
+      expect(indicator).toHaveClass("bg-warning-9");
     });
 
     it("should show red indicator for unhealthy status", () => {
@@ -188,7 +196,7 @@ describe("AdminDashboard", () => {
       renderWithStore(<AdminDashboard {...props} />);
 
       const indicator = screen.getByTestId("health-status");
-      expect(indicator).toHaveClass("bg-error-500");
+      expect(indicator).toHaveClass("bg-error-9");
     });
   });
 
@@ -466,7 +474,7 @@ describe("AdminDashboard", () => {
 
       // All metrics are >= 80, so all should be green
       const happinessValue = screen.getByText("85%");
-      expect(happinessValue).toHaveClass("text-success-600");
+      expect(happinessValue).toHaveClass("text-success-10");
     });
 
     it("should show yellow color for metrics >= 60 and < 80", () => {
@@ -484,7 +492,7 @@ describe("AdminDashboard", () => {
 
       // All metrics are between 60-79, so all should be yellow
       const happinessValue = screen.getByText("60%");
-      expect(happinessValue).toHaveClass("text-warning-600");
+      expect(happinessValue).toHaveClass("text-warning-9");
     });
 
     it("should show red color for metrics < 60", () => {
@@ -502,7 +510,7 @@ describe("AdminDashboard", () => {
 
       // All metrics are < 60, so all should be red
       const happinessValue = screen.getByText("10%");
-      expect(happinessValue).toHaveClass("text-error-600");
+      expect(happinessValue).toHaveClass("text-error-10");
     });
 
     it("should show exactly boundary value 80 as green", () => {
@@ -519,7 +527,7 @@ describe("AdminDashboard", () => {
       renderWithStore(<AdminDashboard {...propsWithBoundary} />);
 
       const happinessValue = screen.getByText("80%");
-      expect(happinessValue).toHaveClass("text-success-600");
+      expect(happinessValue).toHaveClass("text-success-10");
     });
 
     it("should show exactly boundary value 60 as yellow", () => {
@@ -536,7 +544,7 @@ describe("AdminDashboard", () => {
       renderWithStore(<AdminDashboard {...propsWithBoundary} />);
 
       const happinessValue = screen.getByText("60%");
-      expect(happinessValue).toHaveClass("text-warning-600");
+      expect(happinessValue).toHaveClass("text-warning-9");
     });
   });
 
@@ -732,7 +740,7 @@ describe("AdminDashboard", () => {
       });
 
       // The Agent Requests tab should contain both BatchApprovalPanel and AgentApprovalAuditLog
-      // Both components are wrapped in bg-white containers
+      // Both components are wrapped in bg-neutral-1 containers
       const container = screen.getByTestId("agent-requests-container");
       expect(container.children.length).toBe(2);
     });

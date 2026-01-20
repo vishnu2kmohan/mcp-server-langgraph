@@ -41,7 +41,9 @@ export const createMockArtifact = (
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   editMetadata: {
-    editedBy: "user",
+    origin: "user",
+    modified: false,
+    lastEditedBy: "user",
     language: "javascript",
   },
   ...overrides,

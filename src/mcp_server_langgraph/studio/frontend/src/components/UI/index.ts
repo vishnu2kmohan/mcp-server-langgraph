@@ -102,6 +102,10 @@ export type {
   CardFooterProps,
 } from "./Card";
 
+// SelectionCard - Consistent selection card for wizards and option lists
+export { SelectionCard } from "./SelectionCard";
+export type { SelectionCardProps } from "./SelectionCard";
+
 // =============================================================================
 // Composite Components
 // =============================================================================
@@ -155,8 +159,8 @@ export type { DialogProps, DialogSize } from "./Dialog";
 export { ConfirmDialog } from "./ConfirmDialog";
 export type { ConfirmDialogProps } from "./ConfirmDialog";
 
-// Offline Banner - PWA offline indicator
-export { OfflineBanner } from "./OfflineBanner";
+// NOTE: OfflineBanner moved to components/OfflineBanner for feature-rich version
+// Legacy simple banner in UI/OfflineBanner.tsx is deprecated
 
 // Tier Usage Bar - Tier-based usage indicator
 export { TierUsageBar } from "./TierUsageBar";
@@ -165,3 +169,45 @@ export type { TierUsageBarProps } from "./TierUsageBar";
 // Upgrade Prompt - Tier upgrade CTA
 export { UpgradePrompt } from "./UpgradePrompt";
 export type { UpgradePromptProps } from "./UpgradePrompt";
+
+// ContextMenu - Right-click context menu
+export { ContextMenu } from "./ContextMenu";
+export type { ContextMenuProps, ContextMenuItem } from "./ContextMenu";
+
+// Tooltip - Hover tooltip
+export { Tooltip } from "./Tooltip";
+export type { TooltipProps } from "./Tooltip";
+
+// InlineEdit - Inline text editing
+export { InlineEdit } from "./InlineEdit";
+export type { InlineEditProps } from "./InlineEdit";
+
+// =============================================================================
+// Data Display Components
+// =============================================================================
+
+// Table - Data table with compound component pattern
+export {
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableHeaderCell,
+  TableCell,
+} from "./Table";
+export type {
+  TableProps,
+  TableHeadProps,
+  TableBodyProps,
+  TableRowProps,
+  TableHeaderCellProps,
+  TableCellProps,
+} from "./Table";
+
+// SegmentedControl - Toggle group for view modes and mutually exclusive options
+export { SegmentedControl, SegmentedControlItem } from "./SegmentedControl";
+export type {
+  SegmentedControlProps,
+  SegmentedControlItemProps,
+  SegmentedControlSize,
+} from "./SegmentedControl";

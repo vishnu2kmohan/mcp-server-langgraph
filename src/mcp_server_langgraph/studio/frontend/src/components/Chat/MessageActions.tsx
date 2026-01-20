@@ -242,9 +242,9 @@ export function MessageActions({
       className={`relative inline-flex ${className}`}
     >
       {/* Trigger Button */}
-      <Button
+      <Button size="icon"
         variant="secondary"
-        className="p-1 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400"
+        className="p-1 rounded hover:bg-neutral-3 text-neutral-10"
         data-testid="message-actions-trigger"
         onClick={toggleMenu}
         aria-label="Message actions"
@@ -258,18 +258,18 @@ export function MessageActions({
         <div
           data-testid="message-actions-menu"
           role="menu"
-          className="absolute right-0 top-full mt-1 z-50 min-w-[160px] bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 py-1"
+          className="absolute right-0 top-full mt-1 z-dropdown min-w-[160px] bg-neutral-1 rounded-lg shadow-lg border border-neutral-5 py-1"
         >
           {/* Delete Confirmation Dialog */}
           {showDeleteConfirm ? (
             <div data-testid="delete-confirmation" className="p-3 space-y-3">
-              <p className="text-sm text-neutral-700 dark:text-neutral-300">
+              <p className="text-sm text-neutral-11">
                 Delete this message?
               </p>
               <div className="flex gap-2">
                 <Button
                   variant="danger"
-                  className="flex-1 px-3 py-1.5 text-sm bg-error-600 hover:bg-error-700 text-white rounded"
+                  className="flex-1 px-3 py-1.5 text-sm bg-error-10 hover:bg-error-11 text-neutral-12 rounded"
                   data-testid="confirm-delete"
                   onClick={handleConfirmDelete}
                 >
@@ -277,7 +277,7 @@ export function MessageActions({
                 </Button>
                 <Button
                   variant="secondary"
-                  className="flex-1 px-3 py-1.5 text-sm bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:bg-neutral-600 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300 rounded"
+                  className="flex-1 px-3 py-1.5 text-sm bg-neutral-3 hover:bg-neutral-3 text-neutral-11 rounded"
                   data-testid="cancel-delete"
                   onClick={handleCancelDelete}
                 >
@@ -290,14 +290,14 @@ export function MessageActions({
               {/* Copy Action - always available */}
               <Button
                 variant="secondary"
-                className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                className="w-full flex px-3 py-2 text-sm text-neutral-11 hover:bg-neutral-2"
                 data-testid="action-copy"
                 onClick={handleCopy}
                 role="menuitem"
               >
                 {copied ? (
                   <>
-                    <Check size={16} className="text-success-500" />
+                    <Check size={16} className="text-success-9" />
                     <span data-testid="copy-success">Copied!</span>
                   </>
                 ) : (
@@ -312,7 +312,7 @@ export function MessageActions({
               {hasCodeBlocks && (
                 <Button
                   variant="secondary"
-                  className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                  className="w-full flex px-3 py-2 text-sm text-neutral-11 hover:bg-neutral-2"
                   data-testid="action-copy-code"
                   onClick={handleCopyCode}
                   role="menuitem"
@@ -324,7 +324,7 @@ export function MessageActions({
 
               {/* Feedback Actions */}
               {onFeedback && (
-                <div className="flex items-center px-3 py-2 gap-2 border-t border-neutral-100 dark:border-neutral-700">
+                <div className="flex items-center px-3 py-2 gap-2 border-t border-neutral-5">
                   <Button
                     className="p-1.5 rounded"
                     data-testid="action-thumbs-up"
@@ -369,7 +369,7 @@ export function MessageActions({
               {onShare && (
                 <Button
                   variant="secondary"
-                  className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                  className="w-full flex px-3 py-2 text-sm text-neutral-11 hover:bg-neutral-2"
                   data-testid="action-share"
                   onClick={handleShare}
                   role="menuitem"
@@ -383,7 +383,7 @@ export function MessageActions({
               {onBranch && (
                 <Button
                   variant="secondary"
-                  className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                  className="w-full flex px-3 py-2 text-sm text-neutral-11 hover:bg-neutral-2"
                   data-testid="action-branch"
                   onClick={handleBranch}
                   role="menuitem"
@@ -397,7 +397,7 @@ export function MessageActions({
               {isUser && onEdit && (
                 <Button
                   variant="secondary"
-                  className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                  className="w-full flex px-3 py-2 text-sm text-neutral-11 hover:bg-neutral-2"
                   data-testid="action-edit"
                   onClick={handleEdit}
                   role="menuitem"
@@ -411,7 +411,7 @@ export function MessageActions({
               {isAssistant && onRegenerate && (
                 <Button
                   variant="secondary"
-                  className="w-full flex px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                  className="w-full flex px-3 py-2 text-sm text-neutral-11 hover:bg-neutral-2"
                   data-testid="action-regenerate"
                   onClick={handleRegenerate}
                   disabled={isRegenerating}
@@ -430,7 +430,7 @@ export function MessageActions({
               {onDelete && (
                 <Button
                   variant="secondary"
-                  className="w-full flex px-3 py-2 text-sm text-error-600 dark:text-error-400 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                  className="w-full flex px-3 py-2 text-sm text-error-10 dark:text-error-11 hover:bg-neutral-2"
                   data-testid="action-delete"
                   onClick={handleDeleteClick}
                   role="menuitem"

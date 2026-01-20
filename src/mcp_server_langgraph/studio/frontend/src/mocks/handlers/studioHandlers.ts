@@ -10,7 +10,8 @@
  * - POST /api/v1/studio/suggestions - Studio suggestions
  */
 
-import { http, HttpResponse, delay } from "msw";
+import { http, delay } from "msw";
+import { apiJsonResponse } from "../utils/apiResponse";
 
 // =============================================================================
 // Types
@@ -439,27 +440,27 @@ export const studioHandlers = [
 
     // Validation
     if (!body.user_id) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { detail: "user_id is required" },
         { status: 400 },
       );
     }
 
     if (!body.tasks || body.tasks.length === 0) {
-      return HttpResponse.json(
+      return apiJsonResponse(
         { detail: "tasks array is required and cannot be empty" },
         { status: 400 },
       );
     }
 
     const response = createStudioAnalyzeResponse(body);
-    return HttpResponse.json(response);
+    return apiJsonResponse(response);
   }),
 
   // GET /api/v1/studio/templates - List templates
   http.get("/api/v1/studio/templates", async () => {
     await delay(50);
-    return HttpResponse.json({ templates: mockTemplates });
+    return apiJsonResponse({ templates: mockTemplates });
   }),
 
   // POST /api/v1/studio/suggestions - Studio suggestions
@@ -489,7 +490,7 @@ export const studioHandlers = [
       },
     ];
 
-    return HttpResponse.json({
+    return apiJsonResponse({
       suggestions,
       context: body.context || "general",
     });

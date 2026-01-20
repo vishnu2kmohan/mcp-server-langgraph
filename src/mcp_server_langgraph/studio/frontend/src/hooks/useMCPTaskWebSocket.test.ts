@@ -9,6 +9,29 @@ import { renderHook, act, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useMCPTaskWebSocket, type MCPTask } from "./useMCPTaskWebSocket";
 
+// Mock Redux hooks to avoid needing Provider wrapper
+const mockDispatch = vi.fn();
+vi.mock("../store/hooks", () => ({
+  useAppDispatch: () => mockDispatch,
+  // Return values for selectors: isAuthenticated=true, wsPermissions={mcp_tasks: true}
+  useAppSelector: vi.fn((selector) => {
+    // Simple heuristic: selectIsAuthenticated returns boolean, selectWebSocketPermissions returns object
+    if (selector.name?.includes("Authenticated")) return true;
+    if (selector.name?.includes("WebSocketPermissions"))
+      return { mcp_tasks: true };
+    return true;
+  }),
+}));
+
+// Mock getAuthToken to return test token
+vi.mock("../utils/storage", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../utils/storage")>();
+  return {
+    ...actual,
+    getAuthToken: vi.fn(() => "mock-test-token"),
+  };
+});
+
 // Mock useRealtimeSync
 const mockSend = vi.fn();
 const mockDisconnect = vi.fn();
@@ -28,6 +51,7 @@ vi.mock("./useRealtimeSync", () => ({
       send: mockSend,
       disconnect: mockDisconnect,
       reconnect: mockReconnect,
+      metrics: { totalAttempts: 0 },
     };
   }),
 }));
@@ -301,7 +325,7 @@ describe("useMCPTaskWebSocket", () => {
       const { useRealtimeSync } = await import("./useRealtimeSync");
       expect(useRealtimeSync).toHaveBeenCalledWith(
         expect.objectContaining({
-          url: expect.stringContaining("/mcp/tasks/ws"),
+          url: expect.stringContaining("/api/v1/ws/mcp/tasks"),
         }),
       );
     });

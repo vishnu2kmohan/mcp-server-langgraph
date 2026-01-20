@@ -3,11 +3,115 @@
  *
  * Displays a single chat message with role-based styling.
  * Supports interactive artifact rendering for code blocks.
+ *
+ * Design System Compliance:
+ * - Uses CVA for role-based variants (user/assistant/system)
+ * - Uses Motion.dev for message entrance animations
+ * - Implements useReducedMotion() for accessibility
+ * - Uses semantic colors per STYLE.md
  */
 
 import { Loader2, ExternalLink, Bot, User } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
+import { cva } from "class-variance-authority";
+import { listItemVariants } from "@/design-system/micro-interactions";
+
+// =============================================================================
+// CVA Variants
+// =============================================================================
+
+/**
+ * Message container variants based on role
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const messageContainerVariants = cva("flex gap-3 mb-2", {
+  variants: {
+    role: {
+      user: "flex-row-reverse",
+      assistant: "flex-row",
+      system: "flex-row",
+    },
+  },
+  defaultVariants: {
+    role: "assistant",
+  },
+});
+
+/**
+ * Avatar variants based on role
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const messageAvatarVariants = cva(
+  "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
+  {
+    variants: {
+      role: {
+        user: "bg-gradient-to-br from-chat-accent to-primary-10",
+        assistant: "bg-gradient-to-br from-neutral-10 to-neutral-11",
+        system: "bg-gradient-to-br from-warning-8 to-warning-10",
+      },
+    },
+    defaultVariants: {
+      role: "assistant",
+    },
+  },
+);
+
+/**
+ * Message bubble variants based on role
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const messageBubbleVariants = cva("flex-1 p-4 rounded-2xl", {
+  variants: {
+    role: {
+      user: "bg-chat-user-bubble dark:bg-chat-user-bubble-dark text-neutral-12 rounded-br-md ml-8",
+      assistant:
+        "bg-chat-ai-bubble dark:bg-chat-ai-bubble-dark text-neutral-12 rounded-bl-md mr-8",
+      system:
+        "bg-warning-3 dark:bg-warning-3 text-warning-11 rounded-bl-md mr-8 border border-warning-6",
+    },
+  },
+  defaultVariants: {
+    role: "assistant",
+  },
+});
+
+/**
+ * Role label variants
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const roleLabelVariants = cva("text-sm font-medium", {
+  variants: {
+    role: {
+      user: "text-neutral-12",
+      assistant: "text-neutral-11",
+      system: "text-warning-11",
+    },
+  },
+  defaultVariants: {
+    role: "assistant",
+  },
+});
+
+/**
+ * Timestamp variants
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const timestampVariants = cva("text-xs", {
+  variants: {
+    role: {
+      user: "text-neutral-a8",
+      assistant: "text-neutral-10",
+      system: "text-warning-9",
+    },
+  },
+  defaultVariants: {
+    role: "assistant",
+  },
+});
 import { parseArtifacts } from "../../utils/artifactParser";
 import { ArtifactRenderer } from "../Artifacts/ArtifactRenderer";
+import { ArtifactInteractionWrapper } from "../../canvas/ArtifactInteractionWrapper";
 import { AIFollowUpSuggestions } from "./AIFollowUpSuggestions";
 import type { FollowUpSuggestion } from "./AIFollowUpSuggestions";
 import { ResponseRating, type RatingValue } from "./ResponseRating";
@@ -92,6 +196,7 @@ export function ChatMessage({
   selectionScores,
   totalAvailableTools,
 }: ChatMessageProps) {
+  const prefersReducedMotion = useReducedMotion();
   const isUser = role === "user";
   const isAssistant = role === "assistant";
 
@@ -109,7 +214,7 @@ export function ChatMessage({
           className="flex items-center gap-2"
         >
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-neutral-500 dark:text-neutral-400">
+          <span className="text-neutral-10">
             Thinking...
           </span>
         </div>
@@ -142,13 +247,15 @@ export function ChatMessage({
                 </p>
               );
             } else if (segment.type === "artifact" && segment.artifact) {
-              // Render artifact using ArtifactRenderer
+              // Render artifact with interaction wrapper for on-demand canvas launch
               return (
-                <ArtifactRenderer
+                <ArtifactInteractionWrapper
                   key={segment.artifact.id || index}
                   artifact={segment.artifact}
                   className="my-2"
-                />
+                >
+                  <ArtifactRenderer artifact={segment.artifact} />
+                </ArtifactInteractionWrapper>
               );
             }
             return null;
@@ -174,30 +281,29 @@ export function ChatMessage({
   };
 
   return (
-    <div
+    <motion.div
       data-role={role}
-      className={`flex gap-3 mb-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}
+      className={messageContainerVariants({ role })}
+      variants={prefersReducedMotion ? undefined : listItemVariants}
+      initial="hidden"
+      animate="visible"
     >
       {/* Avatar - gated behind showAvatar prop (Sprint 3.1) */}
       {showAvatar && (
         <div
           data-testid={isUser ? "user-avatar" : "assistant-avatar"}
-          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-            isUser
-              ? "bg-gradient-to-br from-chat-accent to-indigo-600"
-              : "bg-gradient-to-br from-neutral-500 to-neutral-600"
-          }`}
+          className={messageAvatarVariants({ role })}
         >
           {isUser ? (
             userInitials ? (
-              <span className="text-white text-xs font-medium">
+              <span className="text-neutral-12 text-xs font-medium">
                 {userInitials}
               </span>
             ) : (
-              <User className="w-4 h-4 text-white" />
+              <User className="w-4 h-4 text-neutral-12" />
             )
           ) : (
-            <Bot className="w-4 h-4 text-white" />
+            <Bot className="w-4 h-4 text-neutral-12" />
           )}
         </div>
       )}
@@ -205,40 +311,22 @@ export function ChatMessage({
       {/* Message bubble - updated styling (Sprint 3.2) */}
       <div
         data-testid="message-bubble"
-        className={`flex-1 p-4 rounded-2xl ${
-          isUser
-            ? "bg-chat-user-bubble dark:bg-chat-user-bubble-dark text-white rounded-br-md ml-8"
-            : "bg-chat-ai-bubble dark:bg-chat-ai-bubble-dark text-neutral-900 dark:text-neutral-100 rounded-bl-md mr-8"
-        }`}
+        className={messageBubbleVariants({ role })}
       >
         <div className="flex items-center justify-between mb-1">
-          <span
-            className={`text-sm font-medium ${
-              isUser
-                ? "text-white/90"
-                : "text-neutral-700 dark:text-neutral-300"
-            }`}
-          >
+          <span className={roleLabelVariants({ role })}>
             {roleLabel}
           </span>
           {showTimestamp && (
             <span
               data-testid="timestamp"
-              className={`text-xs ${
-                isUser
-                  ? "text-white/70"
-                  : "text-neutral-500 dark:text-neutral-400"
-              }`}
+              className={timestampVariants({ role })}
             >
               {formatTime(timestamp)}
             </span>
           )}
         </div>
-        <div
-          className={
-            isUser ? "text-white" : "text-neutral-900 dark:text-neutral-100"
-          }
-        >
+        <div className="text-neutral-12">
           {renderContent()}
         </div>
 
@@ -249,7 +337,7 @@ export function ChatMessage({
           selectedTools.length > 0 && (
             <div
               data-testid="selected-tools-display"
-              className="mt-2 pt-2 border-t border-neutral-200/50 dark:border-neutral-700/30"
+              className="mt-2 pt-2 border-t border-neutral-a6/30"
             >
               <SelectedToolsDisplay
                 selectedTools={selectedTools}
@@ -264,13 +352,13 @@ export function ChatMessage({
         {isAssistant && sources && sources.length > 0 && (
           <div
             data-testid="sources-section"
-            className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700/50 dark:border-neutral-600/50"
+            className="mt-3 pt-3 border-t border-neutral-a6/50"
           >
-            <div className="flex items-center gap-1 text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-2">
+            <div className="flex items-center gap-1 text-xs font-medium text-neutral-10 mb-2">
               <ExternalLink
                 data-testid="sources-icon"
                 size={12}
-                className="text-neutral-400 dark:text-neutral-400"
+                className="text-neutral-9"
               />
               <span>Sources:</span>
             </div>
@@ -281,7 +369,7 @@ export function ChatMessage({
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-1"
+                    className="text-sm text-primary-10 dark:text-primary-11 hover:underline inline-flex items-center gap-1"
                   >
                     {source.title}
                   </a>
@@ -306,7 +394,7 @@ export function ChatMessage({
 
         {/* Response Rating - only for assistant messages when not loading */}
         {isAssistant && !isLoading && messageId && onRate && (
-          <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700/50 dark:border-neutral-600/50 flex items-center justify-between">
+          <div className="mt-3 pt-3 border-t border-neutral-a6/50 flex items-center justify-between">
             <ResponseRating
               messageId={messageId}
               onRate={onRate}
@@ -322,7 +410,7 @@ export function ChatMessage({
 
         {/* AI Follow-Up Suggestions - only for assistant messages when not loading */}
         {isAssistant && !isLoading && onSuggestionSelect && (
-          <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700/50 dark:border-neutral-600/50">
+          <div className="mt-3 pt-3 border-t border-neutral-a6/50">
             <AIFollowUpSuggestions
               suggestions={suggestions || []}
               onSelect={onSuggestionSelect}
@@ -331,6 +419,6 @@ export function ChatMessage({
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

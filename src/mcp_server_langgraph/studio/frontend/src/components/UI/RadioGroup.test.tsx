@@ -347,8 +347,8 @@ describe("RadioGroup variants", () => {
       const selectedLabel = screen.getByText("Option 1").closest("label");
       const unselectedLabel = screen.getByText("Option 2").closest("label");
 
-      expect(selectedLabel).toHaveClass("border-primary-500");
-      expect(unselectedLabel).not.toHaveClass("border-primary-500");
+      expect(selectedLabel).toHaveClass("border-primary-9");
+      expect(unselectedLabel).not.toHaveClass("border-primary-9");
     });
 
     it("updates highlighting when selection changes", async () => {
@@ -383,7 +383,7 @@ describe("RadioGroup variants", () => {
       );
 
       const option2Label = screen.getByText("Option 2").closest("label");
-      expect(option2Label).toHaveClass("border-primary-500");
+      expect(option2Label).toHaveClass("border-primary-9");
     });
   });
 

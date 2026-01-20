@@ -118,10 +118,10 @@ export function OrchestratorControls({
   };
 
   return (
-    <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700 p-4">
+    <div className="bg-neutral-1 rounded-lg shadow-sm border border-neutral-5 p-4">
       {/* Header */}
-      <h3 className="text-sm font-medium text-neutral-900 dark:text-white flex items-center gap-2 mb-4">
-        <Settings className="w-4 h-4 text-primary-500" />
+      <h3 className="text-sm font-medium text-neutral-12 flex items-center gap-2 mb-4">
+        <Settings className="w-4 h-4 text-primary-9" />
         Orchestrator Configuration
       </h3>
       <div className="space-y-4">
@@ -129,12 +129,12 @@ export function OrchestratorControls({
         <div>
           <label
             htmlFor="orchestrator-mode"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+            className="block text-sm font-medium text-neutral-11 mb-1"
           >
             Orchestrator Mode
           </label>
           <Select
-            className="px-3 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-2 text-sm text-neutral-12 focus:ring-primary-7 disabled:opacity-50 disabled:cursor-not-allowed"
             id="orchestrator-mode"
             data-testid="orchestrator-selector"
             value={config.orchestrator}
@@ -153,13 +153,13 @@ export function OrchestratorControls({
         <div>
           <label
             htmlFor="thinking-budget"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1 flex items-center gap-1"
+            className="block text-sm font-medium text-neutral-11 mb-1 flex items-center gap-1"
           >
             <Brain className="w-3 h-3" />
             Thinking Budget
           </label>
           <Select
-            className="px-3 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-2 text-sm text-neutral-12 focus:ring-primary-7 disabled:opacity-50 disabled:cursor-not-allowed"
             id="thinking-budget"
             value={config.thinkingBudget}
             onChange={handleThinkingBudgetChange}
@@ -177,13 +177,13 @@ export function OrchestratorControls({
         <div>
           <label
             htmlFor="critique-rounds"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1 flex items-center gap-1"
+            className="block text-sm font-medium text-neutral-11 mb-1 flex items-center gap-1"
           >
             <MessageSquare className="w-3 h-3" />
             Critique Rounds
           </label>
           <Input
-            className="px-3 py-2 text-sm text-neutral-900 dark:text-white focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-2 text-sm text-neutral-12 focus:ring-primary-7 disabled:opacity-50 disabled:cursor-not-allowed"
             type="number"
             id="critique-rounds"
             value={config.critiqueRounds}
@@ -192,7 +192,7 @@ export function OrchestratorControls({
             min={0}
             max={3}
           />
-          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1 text-xs text-neutral-10">
             Number of critique iterations (0-3)
           </p>
         </div>
@@ -201,7 +201,7 @@ export function OrchestratorControls({
         <div className="flex items-center justify-between">
           <label
             htmlFor="auto-approve"
-            className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1"
+            className="text-sm font-medium text-neutral-11 flex items-center gap-1"
           >
             <CheckCircle className="w-3 h-3" />
             Auto-Approve Low Risk

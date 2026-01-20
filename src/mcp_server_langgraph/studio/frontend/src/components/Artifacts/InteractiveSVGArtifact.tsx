@@ -360,17 +360,17 @@ export function InteractiveSVGArtifact({
   if (error) {
     return (
       <div
-        className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg"
+        className="p-4 bg-error-1 dark:bg-error-a3 border border-error-4 dark:border-error-11 rounded-lg"
         role="alert"
       >
-        <p className="text-sm text-error-600 dark:text-error-400">{error}</p>
+        <p className="text-sm text-error-10 dark:text-error-7">{error}</p>
       </div>
     );
   }
 
   const containerClasses = isFullscreen
-    ? "fixed inset-0 z-50 bg-neutral-900"
-    : `bg-neutral-50 dark:bg-neutral-800 rounded-lg overflow-hidden ${className}`;
+    ? "fixed inset-0 z-modal bg-neutral-2"
+    : `bg-neutral-1 rounded-lg overflow-hidden ${className}`;
 
   return (
     <div
@@ -380,10 +380,10 @@ export function InteractiveSVGArtifact({
       tabIndex={0}
     >
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-2 p-2 bg-neutral-100 dark:bg-neutral-700 border-b border-neutral-200 dark:border-neutral-700 dark:border-neutral-600">
+      <div className="flex items-center justify-between gap-2 p-2 bg-neutral-2 border-b border-neutral-5">
         {/* Title */}
         {title && (
-          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex-1">
+          <span className="text-sm font-medium text-neutral-11 flex-1">
             {title}
           </span>
         )}
@@ -392,7 +392,7 @@ export function InteractiveSVGArtifact({
         <div className="flex items-center gap-1">
           <Button
             variant="secondary"
-            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
+            className="p-1.5 rounded hover:bg-neutral-3 text-neutral-11"
             type="button"
             onClick={handleZoomOut}
             aria-label="Zoom out"
@@ -413,12 +413,12 @@ export function InteractiveSVGArtifact({
               <line x1="8" y1="11" x2="14" y2="11" />
             </svg>
           </Button>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400 w-12 text-center">
+          <span className="text-xs text-neutral-10 w-12 text-center">
             {Math.round(zoom * 100)}%
           </span>
           <Button
             variant="secondary"
-            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
+            className="p-1.5 rounded hover:bg-neutral-3 text-neutral-11"
             type="button"
             onClick={handleZoomIn}
             aria-label="Zoom in"
@@ -442,7 +442,7 @@ export function InteractiveSVGArtifact({
           </Button>
           <Button
             variant="secondary"
-            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
+            className="p-1.5 rounded hover:bg-neutral-3 text-neutral-11"
             type="button"
             onClick={handleResetZoom}
             aria-label="Reset zoom"
@@ -468,20 +468,20 @@ export function InteractiveSVGArtifact({
         <div className="flex items-center gap-1">
           <Button
             variant="secondary"
-            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
+            className="p-1.5 rounded hover:bg-neutral-3 text-neutral-11"
             type="button"
             onClick={handleCopy}
             aria-label="Copy SVG"
           >
             {copied ? (
-              <Check size={16} className="text-success-500" />
+              <Check size={16} className="text-success-9" />
             ) : (
               <Copy size={16} />
             )}
           </Button>
           <Button
             variant="secondary"
-            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
+            className="p-1.5 rounded hover:bg-neutral-3 text-neutral-11"
             type="button"
             onClick={handleDownloadSVG}
             aria-label="Download SVG"
@@ -504,7 +504,7 @@ export function InteractiveSVGArtifact({
           </Button>
           <Button
             variant="secondary"
-            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
+            className="p-1.5 rounded hover:bg-neutral-3 text-neutral-11"
             type="button"
             onClick={handleDownloadPNG}
             aria-label="Download PNG"
@@ -527,7 +527,7 @@ export function InteractiveSVGArtifact({
           </Button>
           <Button
             variant="secondary"
-            className="p-1.5 rounded hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300"
+            className="p-1.5 rounded hover:bg-neutral-3 text-neutral-11"
             type="button"
             onClick={handleToggleFullscreen}
             aria-label="Toggle fullscreen"

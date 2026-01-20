@@ -269,6 +269,8 @@ export const initializeAuth = createAsyncThunk<
         ai_suggestions: data.websocket_permissions.ai_suggestions ?? false,
         orchestrator_status:
           data.websocket_permissions.orchestrator_status ?? false,
+        llm_streaming: data.websocket_permissions.llm_streaming ?? false,
+        session_metrics: data.websocket_permissions.session_metrics ?? false,
       };
     }
 

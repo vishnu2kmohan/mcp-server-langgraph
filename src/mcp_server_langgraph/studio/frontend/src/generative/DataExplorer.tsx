@@ -125,13 +125,13 @@ export function DataExplorer({
     <div
       data-testid="data-explorer"
       className={cn(
-        "bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700",
+        "bg-neutral-1 rounded-lg border border-neutral-5",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
-        <h2 className="font-semibold text-neutral-900 dark:text-neutral-100">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-5">
+        <h2 className="font-semibold text-neutral-12">
           {config.title}
         </h2>
 
@@ -140,10 +140,10 @@ export function DataExplorer({
           <div className="relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-9"
             />
             <Input
-              className="pl-9 pr-3 py-1.5 text-sm bg-neutral-50 text-neutral-900 dark:text-neutral-100"
+              className="pl-9 pr-3 py-1.5 text-sm bg-neutral-1 text-neutral-12"
               data-testid="search-input"
               value={searchQuery}
               onChange={handleSearch}
@@ -152,8 +152,8 @@ export function DataExplorer({
           </div>
 
           {/* Export */}
-          <Button
-            className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300"
+          <Button size="icon" variant="ghost"
+            className="p-2 text-neutral-10 hover:text-neutral-11"
             data-testid="export-button"
             type="button"
             onClick={onExport}
@@ -165,11 +165,11 @@ export function DataExplorer({
       </div>
       {/* Filters */}
       {filterableColumns.length > 0 && (
-        <div className="flex gap-3 p-3 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/50">
+        <div className="flex gap-3 p-3 border-b border-neutral-5 bg-neutral-1">
           {filterableColumns.map((column) => (
             <Input
               size="sm"
-              className="px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100"
+              className="px-2 py-1 text-sm text-neutral-12"
               key={column.id}
               data-testid={`filter-${column.id}`}
               value={filters[column.id] || ""}
@@ -184,20 +184,20 @@ export function DataExplorer({
         {isLoading && (
           <div
             data-testid="loading-overlay"
-            className="absolute inset-0 bg-white/50 dark:bg-neutral-900/50 flex items-center justify-center z-10"
+            className="absolute inset-0 bg-neutral-a6 flex items-center justify-center z-10"
           >
-            <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
+            <Loader2 className="w-6 h-6 text-primary-9 animate-spin" />
           </div>
         )}
 
         {config.data.length === 0 ? (
-          <div className="p-8 text-center text-neutral-500 dark:text-neutral-400">
+          <div className="p-8 text-center text-neutral-10">
             No data available
           </div>
         ) : (
           <table role="table" className="w-full text-sm">
             <thead>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+              <tr className="border-b border-neutral-5">
                 {config.columns.map((column) => (
                   <th
                     key={column.id}
@@ -206,9 +206,9 @@ export function DataExplorer({
                     data-sortable={column.sortable ? "true" : "false"}
                     onClick={() => handleSort(column.id)}
                     className={cn(
-                      "px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400",
+                      "px-4 py-3 text-left font-medium text-neutral-11",
                       column.sortable &&
-                        "cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-900/50",
+                        "cursor-pointer hover:bg-neutral-a6",
                     )}
                   >
                     <div className="flex items-center gap-1">
@@ -229,12 +229,12 @@ export function DataExplorer({
               {paginatedData.map((row, rowIndex) => (
                 <tr
                   key={rowIndex}
-                  className="border-b border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900/30"
+                  className="border-b border-neutral-5 hover:bg-neutral-a4"
                 >
                   {config.columns.map((column) => (
                     <td
                       key={column.id}
-                      className="px-4 py-3 text-neutral-900 dark:text-neutral-100"
+                      className="px-4 py-3 text-neutral-12"
                     >
                       {String(row[column.id] ?? "")}
                     </td>
@@ -249,15 +249,15 @@ export function DataExplorer({
       {config.pageSize && totalPages > 1 && (
         <div
           data-testid="pagination"
-          className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 dark:border-neutral-700"
+          className="flex items-center justify-between px-4 py-3 border-t border-neutral-5"
         >
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+          <span className="text-sm text-neutral-10">
             Page {currentPage} of {totalPages}
           </span>
 
           <div className="flex items-center gap-2">
             <Button
-              className="p-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300"
+              className="p-1 text-neutral-10 hover:text-neutral-11"
               data-testid="prev-page"
               type="button"
               onClick={() => handlePageChange(currentPage - 1)}
@@ -266,7 +266,7 @@ export function DataExplorer({
               <ChevronLeft size={18} />
             </Button>
             <Button
-              className="p-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 dark:hover:text-neutral-300"
+              className="p-1 text-neutral-10 hover:text-neutral-11"
               data-testid="next-page"
               type="button"
               onClick={() => handlePageChange(currentPage + 1)}

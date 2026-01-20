@@ -49,19 +49,34 @@ describe("ReasoningEffortSelector", () => {
       expect(screen.getByText(/thinking/i)).toBeInTheDocument();
     });
 
-    it("should render three effort level options", () => {
+    it("should render all five effort level options", () => {
       render(<ReasoningEffortSelector {...defaultProps} />);
-      expect(screen.getByRole("button", { name: /low/i })).toBeInTheDocument();
+      // All 5 levels: none, low, medium, high, ultra
+      expect(
+        screen.getByRole("button", { name: /^none$/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /^low$/i }),
+      ).toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: /medium/i }),
       ).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /high/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /^high$/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /ultra/i }),
+      ).toBeInTheDocument();
     });
 
     it("should highlight the selected option", () => {
       render(<ReasoningEffortSelector {...defaultProps} value="high" />);
       const highButton = screen.getByRole("button", { name: /high/i });
-      expect(highButton).toHaveClass("bg-violet-600");
+      // Selected state is indicated by aria-pressed attribute
+      expect(highButton).toHaveAttribute("aria-pressed", "true");
+      // Other buttons should not be pressed
+      const lowButton = screen.getByRole("button", { name: /^low$/i });
+      expect(lowButton).toHaveAttribute("aria-pressed", "false");
     });
 
     it("should show brain icon", () => {

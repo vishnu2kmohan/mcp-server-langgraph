@@ -210,10 +210,11 @@ describe("Config API Contract Tests", () => {
       expect(claudeOpus?.status).toBe("current");
 
       // Preview models (not yet GA)
-      const gemini3Flash = data.find(
-        (m: { id: string }) => m.id === "gemini-3-flash",
+      // NOTE: gemini-3-flash-preview is the default model per .env.test MODEL_NAME
+      const gemini3FlashPreview = data.find(
+        (m: { id: string }) => m.id === "gemini-3-flash-preview",
       );
-      expect(gemini3Flash?.status).toBe("preview");
+      expect(gemini3FlashPreview?.status).toBe("preview");
 
       // Legacy models (still supported but superseded)
       const gpt4o = data.find((m: { id: string }) => m.id === "gpt-4o");
@@ -353,6 +354,90 @@ describe("Config API Contract Tests", () => {
         "unknown",
       ];
       expect(knownProviders).toContain(data.model_provider);
+    });
+
+    it("should return default_reasoning_effort matching .env.test FF_MAX_THINKING_BUDGET", async () => {
+      const response = await fetch("/api/v1/config/defaults");
+      expect(response.ok).toBe(true);
+
+      const data = await response.json();
+
+      // default_reasoning_effort should match FF_MAX_THINKING_BUDGET from .env.test
+      expect(data).toHaveProperty("default_reasoning_effort");
+      expect(typeof data.default_reasoning_effort).toBe("string");
+
+      // Valid reasoning effort levels
+      const validLevels = ["none", "low", "medium", "high", "ultra"];
+      expect(validLevels).toContain(data.default_reasoning_effort);
+
+      // Per .env.test: FF_MAX_THINKING_BUDGET=medium
+      expect(data.default_reasoning_effort).toBe("medium");
+    });
+
+    it("should return model_name matching .env.test MODEL_NAME", async () => {
+      const response = await fetch("/api/v1/config/defaults");
+      expect(response.ok).toBe(true);
+
+      const data = await response.json();
+
+      // Per .env.test: MODEL_NAME=vertex_ai/gemini-3-flash-preview
+      // The model_name should be the model ID (without provider prefix)
+      expect(data.model_name).toBe("gemini-3-flash-preview");
+      expect(data.model_provider).toBe("google");
+    });
+
+    it("should have default model_name present in /api/v1/config/models", async () => {
+      // Fetch defaults to get the default model
+      const defaultsResponse = await fetch("/api/v1/config/defaults");
+      expect(defaultsResponse.ok).toBe(true);
+      const defaults = await defaultsResponse.json();
+
+      // Fetch available models
+      const modelsResponse = await fetch("/api/v1/config/models");
+      expect(modelsResponse.ok).toBe(true);
+      const models = await modelsResponse.json();
+
+      // The default model should exist in the models list
+      const defaultModel = models.find(
+        (m: { id: string }) => m.id === defaults.model_name,
+      );
+      expect(defaultModel).toBeDefined();
+      expect(defaultModel.provider).toBe(defaults.model_provider);
+    });
+  });
+
+  describe("Model-Defaults Consistency", () => {
+    it("should mark exactly one model as is_default in /api/v1/config/models", async () => {
+      const response = await fetch("/api/v1/config/models");
+      expect(response.ok).toBe(true);
+
+      const models = await response.json();
+
+      const defaultModels = models.filter(
+        (m: { is_default?: boolean }) => m.is_default === true,
+      );
+      expect(defaultModels.length).toBe(1);
+    });
+
+    it("should have is_default model matching /api/v1/config/defaults model_name", async () => {
+      // Fetch defaults
+      const defaultsResponse = await fetch("/api/v1/config/defaults");
+      expect(defaultsResponse.ok).toBe(true);
+      const defaults = await defaultsResponse.json();
+
+      // Fetch models
+      const modelsResponse = await fetch("/api/v1/config/models");
+      expect(modelsResponse.ok).toBe(true);
+      const models = await modelsResponse.json();
+
+      // Find the model marked as default
+      const isDefaultModel = models.find(
+        (m: { is_default?: boolean }) => m.is_default === true,
+      );
+      expect(isDefaultModel).toBeDefined();
+
+      // The is_default model ID should match defaults.model_name
+      expect(isDefaultModel.id).toBe(defaults.model_name);
     });
   });
 });

@@ -51,11 +51,13 @@ describe("ProgressIndicator", () => {
       expect(screen.getByText("75%")).toBeInTheDocument();
     });
 
-    it("should update progress bar width", () => {
+    it("should update progress bar width via CSS custom property", () => {
       render(<ProgressIndicator value={60} max={100} />);
 
       const progressFill = screen.getByTestId("progress-fill");
-      expect(progressFill).toHaveStyle({ width: "60%" });
+      // Uses CSS custom property for width (applied via progress-bar-fill class)
+      expect(progressFill).toHaveClass("progress-bar-fill");
+      expect(progressFill.style.getPropertyValue("--progress")).toBe("60%");
     });
 
     it("should handle custom max value", () => {

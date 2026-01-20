@@ -128,6 +128,57 @@ vi.mock("../hooks/useKBStatus", () => ({
   }),
 }));
 
+vi.mock("../hooks/useAvailableTools", () => ({
+  useAvailableTools: () => ({
+    tools: [],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
+}));
+
+vi.mock("../hooks/useAISuggestionsWebSocket", () => ({
+  useAISuggestionsWebSocket: () => ({
+    isConnected: false,
+    suggestions: [],
+    contextStats: null,
+    error: null,
+  }),
+}));
+
+vi.mock("../hooks/useConnectorSuggestions", () => ({
+  useConnectorSuggestions: () => ({
+    suggestions: [],
+    visible: false,
+    dismiss: vi.fn(),
+    isLoading: false,
+    inputValue: "",
+    setInputValue: vi.fn(),
+    enabled: false,
+  }),
+}));
+
+// Mock RTK Query hooks for InlineConnectionCard
+vi.mock("../api", () => ({
+  useListConnectionTemplatesQuery: () => ({
+    data: { templates: [] },
+    isLoading: false,
+    error: null,
+  }),
+  useCreateConnectionMutation: () => [
+    vi.fn(),
+    { isLoading: false },
+  ],
+  useTestConnectionMutation: () => [
+    vi.fn(),
+    { isLoading: false },
+  ],
+  useStartOAuth2FlowMutation: () => [
+    vi.fn(),
+    { isLoading: false },
+  ],
+}));
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -261,5 +312,94 @@ describe("ConnectedConversationPanel - Redux Integration", () => {
     expect(
       screen.getByText("Optimistic message only in Redux"),
     ).toBeInTheDocument();
+  });
+
+  describe("InlineConnectionCard Integration (ADR-0102)", () => {
+    it("should render InlineConnectionCard when pendingAuthRequirements exist", () => {
+      const store = createTestStore({
+        session: {
+          currentSession: {
+            id: "session-123",
+            name: "Test Session",
+            messages: [],
+            config: {},
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          sessions: [],
+          isLoading: false,
+          error: null,
+          hasPendingMutation: false,
+        },
+        chatConnection: {
+          pendingAuthRequirements: [
+            {
+              id: "auth-req-1",
+              connectionId: null,
+              templateId: "github",
+              toolName: "github.list_pull_requests",
+              message: "Authentication required to use GitHub",
+              retryMessageId: null,
+              timestamp: Date.now(),
+            },
+          ],
+          activeConnectionSetup: null,
+          connectorSuggestions: {
+            visible: false,
+            templates: [],
+            query: "",
+          },
+          configuredTemplateIds: [],
+        },
+      });
+
+      mockSessionLoaderData.messages = [];
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      // InlineConnectionCard should be rendered
+      expect(screen.getByTestId("inline-connection-card")).toBeInTheDocument();
+      expect(
+        screen.getByText(/authentication required/i),
+      ).toBeInTheDocument();
+    });
+
+    it("should not render InlineConnectionCard when no pendingAuthRequirements", () => {
+      const store = createTestStore({
+        session: {
+          currentSession: {
+            id: "session-123",
+            name: "Test Session",
+            messages: [],
+            config: {},
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          sessions: [],
+          isLoading: false,
+          error: null,
+          hasPendingMutation: false,
+        },
+        chatConnection: {
+          pendingAuthRequirements: [],
+          activeConnectionSetup: null,
+          connectorSuggestions: {
+            visible: false,
+            templates: [],
+            query: "",
+          },
+          configuredTemplateIds: [],
+        },
+      });
+
+      mockSessionLoaderData.messages = [];
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      // InlineConnectionCard should NOT be rendered
+      expect(
+        screen.queryByTestId("inline-connection-card"),
+      ).not.toBeInTheDocument();
+    });
   });
 });

@@ -205,17 +205,18 @@ describe("ConnectedCanvasPanel - Core", () => {
       ];
       render(<ConnectedCanvasPanel />, { wrapper: createWrapper(store) });
       const tab = screen.getByTestId("artifact-tab-a11y-art");
-      expect(tab.tagName).toBe("BUTTON");
+      // Tab uses role="tab" for proper tab list semantics
+      expect(tab).toHaveAttribute("role", "tab");
     });
 
-    it("should have accessible artifact tab buttons", () => {
+    it("should have accessible artifact tab elements", () => {
       const store = createTestStore();
       mockSessionLoaderData.artifacts = [
         createMockArtifact({ id: "access-1", title: "Accessible" }),
       ];
       render(<ConnectedCanvasPanel />, { wrapper: createWrapper(store) });
-      const button = screen.getByTestId("artifact-tab-access-1");
-      expect(button).toHaveAttribute("type", "button");
+      const tab = screen.getByTestId("artifact-tab-access-1");
+      expect(tab).toHaveAttribute("role", "tab");
     });
   });
 
@@ -227,7 +228,9 @@ describe("ConnectedCanvasPanel - Core", () => {
           id: "ai-art-1",
           title: "AI Generated",
           editMetadata: {
-            editedBy: "ai-generation",
+            origin: "ai",
+            modified: false,
+            lastEditedBy: "ai",
             aiConfidence: 0.95,
           },
         }),
@@ -244,7 +247,9 @@ describe("ConnectedCanvasPanel - Core", () => {
           id: "ai-art-2",
           title: "AI Suggested",
           editMetadata: {
-            editedBy: "ai-suggestion",
+            origin: "ai",
+            modified: false,
+            lastEditedBy: "ai",
             aiConfidence: 0.85,
           },
         }),
@@ -261,7 +266,9 @@ describe("ConnectedCanvasPanel - Core", () => {
           id: "user-art",
           title: "User Created",
           editMetadata: {
-            editedBy: "user",
+            origin: "user",
+            modified: false,
+            lastEditedBy: "user",
           },
         }),
       ];

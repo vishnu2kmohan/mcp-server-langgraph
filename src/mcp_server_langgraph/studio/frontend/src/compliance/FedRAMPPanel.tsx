@@ -11,6 +11,7 @@
  * - Compliance percentage summary
  */
 
+import { useReducedMotion } from "motion/react";
 import {
   BadgeCheck,
   CheckCircle,
@@ -20,6 +21,7 @@ import {
   FileWarning,
 } from "lucide-react";
 import { cn } from "../utils/cn";
+import { Badge } from "@/components/UI";
 
 // =============================================================================
 // Types
@@ -63,16 +65,16 @@ export interface FedRAMPPanelProps {
 function getStatusIcon(status: ControlStatus) {
   switch (status) {
     case "compliant":
-      return <CheckCircle size={14} className="text-success-500" />;
+      return <CheckCircle size={14} className="text-success-9" />;
     case "partial":
-      return <AlertCircle size={14} className="text-warning-500" />;
+      return <AlertCircle size={14} className="text-warning-9" />;
     case "non-compliant":
-      return <XCircle size={14} className="text-error-500" />;
+      return <XCircle size={14} className="text-error-9" />;
     default:
       return (
         <AlertCircle
           size={14}
-          className="text-neutral-400 dark:text-neutral-400"
+          className="text-neutral-9"
         />
       );
   }
@@ -81,24 +83,24 @@ function getStatusIcon(status: ControlStatus) {
 function getStatusColor(status: ControlStatus): string {
   switch (status) {
     case "compliant":
-      return "text-success-600 dark:text-success-400";
+      return "text-success-10 dark:text-success-7";
     case "partial":
-      return "text-warning-600 dark:text-warning-400";
+      return "text-warning-9 dark:text-warning-9";
     case "non-compliant":
-      return "text-error-600 dark:text-error-400";
+      return "text-error-10 dark:text-error-7";
     default:
-      return "text-neutral-500 dark:text-neutral-400";
+      return "text-neutral-10";
   }
 }
 
 function getImpactColor(impact: ImpactLevel): string {
   switch (impact) {
     case "high":
-      return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400";
+      return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
     case "moderate":
-      return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400";
+      return "bg-warning-3 text-warning-10 dark:bg-warning-a4 dark:text-warning-9";
     case "low":
-      return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400";
+      return "bg-success-3 text-success-11 bg-success-4 dark:text-success-7";
   }
 }
 
@@ -114,11 +116,11 @@ function formatDate(dateString: string): string {
 function getAuthLevelColor(level: AuthLevel): string {
   switch (level) {
     case "ATO":
-      return "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400";
+      return "bg-success-3 text-success-11 bg-success-4 dark:text-success-7";
     case "P-ATO":
-      return "bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-400";
+      return "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7";
     default:
-      return "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400";
+      return "bg-neutral-2 text-neutral-11";
   }
 }
 
@@ -132,6 +134,9 @@ export function FedRAMPPanel({
   isLoading = false,
   className,
 }: FedRAMPPanelProps) {
+  // WCAG 2.2 AA: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
   // Calculate compliance stats
   const compliantCount = controls.filter(
     (c) => c.status === "compliant",
@@ -147,13 +152,13 @@ export function FedRAMPPanel({
       <div
         data-testid="fedramp-panel"
         className={cn(
-          "rounded-lg border border-neutral-200 dark:border-neutral-700",
-          "bg-white dark:bg-neutral-900 p-4",
+          "rounded-lg border border-neutral-5",
+          "bg-neutral-1 p-4",
           className,
         )}
       >
-        <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
-          <Loader2 size={16} className="animate-spin" />
+        <div className="flex items-center gap-2 text-neutral-10">
+          <Loader2 size={16} className={cn(!prefersReducedMotion && "animate-spin")} />
           <span>Loading FedRAMP controls...</span>
         </div>
       </div>
@@ -164,32 +169,30 @@ export function FedRAMPPanel({
     <div
       data-testid="fedramp-panel"
       className={cn(
-        "rounded-lg border border-neutral-200 dark:border-neutral-700",
-        "bg-white dark:bg-neutral-900",
+        "rounded-lg border border-neutral-5",
+        "bg-neutral-1",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-5">
         <div className="flex items-center gap-2">
-          <BadgeCheck size={18} className="text-insight-600" />
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+          <BadgeCheck size={18} className="text-insight-10" />
+          <h3 className="font-semibold text-neutral-12">
             FedRAMP
           </h3>
-          <span
-            className={cn(
-              "text-xs px-2 py-0.5 rounded font-medium",
-              getAuthLevelColor(authStatus.level),
-            )}
+          <Badge
+            size="sm"
+            className={getAuthLevelColor(authStatus.level)}
           >
             {authStatus.level}
-          </span>
+          </Badge>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+          <span className="text-2xl font-bold text-neutral-12">
             {percentage}%
           </span>
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+          <span className="text-sm text-neutral-10">
             {compliantCount}/{controls.length} controls
           </span>
         </div>
@@ -197,8 +200,8 @@ export function FedRAMPPanel({
 
       {/* Authorization info */}
       {authStatus.expiresDate && (
-        <div className="px-4 py-2 bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
-          <span className="text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="px-4 py-2 bg-neutral-1 border-b border-neutral-5">
+          <span className="text-xs text-neutral-10">
             Authorization expires: {formatDate(authStatus.expiresDate)} (2028)
           </span>
         </div>
@@ -207,7 +210,7 @@ export function FedRAMPPanel({
       {/* Content */}
       <div className="p-4">
         {controls.length === 0 ? (
-          <div className="flex items-center justify-center py-8 text-sm text-neutral-500 dark:text-neutral-400">
+          <div className="flex items-center justify-center py-8 text-sm text-neutral-10">
             <BadgeCheck size={20} className="mr-2 opacity-50" />
             No controls configured
           </div>
@@ -218,8 +221,8 @@ export function FedRAMPPanel({
                 key={control.id}
                 className={cn(
                   "flex items-start gap-3 p-3 rounded-lg",
-                  "bg-neutral-50 dark:bg-neutral-800",
-                  "border border-neutral-100 dark:border-neutral-700",
+                  "bg-neutral-1",
+                  "border border-neutral-5",
                 )}
               >
                 {/* Status icon */}
@@ -230,17 +233,15 @@ export function FedRAMPPanel({
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    <span className="text-sm font-medium text-neutral-11">
                       {control.id}
                     </span>
-                    <span
-                      className={cn(
-                        "text-xs px-1.5 py-0.5 rounded",
-                        getImpactColor(control.impact),
-                      )}
+                    <Badge
+                      size="sm"
+                      className={getImpactColor(control.impact)}
                     >
                       {control.impact}
-                    </span>
+                    </Badge>
                     <span
                       className={cn(
                         "text-xs font-medium",
@@ -250,14 +251,14 @@ export function FedRAMPPanel({
                       {control.status}
                     </span>
                   </div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  <p className="text-sm text-neutral-11">
                     {control.name}
                   </p>
-                  <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">
+                  <p className="text-xs text-neutral-9 mt-1">
                     {control.family}
                   </p>
                   {control.poamId && (
-                    <div className="flex items-center gap-1 mt-2 text-xs text-grafana-600 dark:text-grafana-400">
+                    <div className="flex items-center gap-1 mt-2 text-xs text-grafana-10 dark:text-grafana-5">
                       <FileWarning size={12} />
                       <span>POA&M: {control.poamId}</span>
                     </div>

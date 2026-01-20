@@ -93,11 +93,11 @@ export function GenerateWorkflowButton({
       disabled={isDisabled}
       className={cn(
         "p-1.5 rounded-md",
-        "text-neutral-500 dark:text-neutral-400",
-        "hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700",
+        "text-neutral-10",
+        "hover:bg-neutral-2",
         "transition-colors",
         "disabled:opacity-50 disabled:cursor-not-allowed",
-        error && "text-error-500 dark:text-error-400",
+        error && "text-error-9 dark:text-error-7",
         className,
       )}
       aria-label="Generate workflow from this chat"

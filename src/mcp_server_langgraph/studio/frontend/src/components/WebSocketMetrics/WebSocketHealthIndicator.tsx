@@ -54,14 +54,14 @@ function getHealthStatus(avgSuccessRate: number | null): HealthStatus {
 function getStatusColorClass(status: HealthStatus): string {
   switch (status) {
     case "healthy":
-      return "bg-success-500";
+      return "bg-success-9";
     case "warning":
-      return "bg-warning-500";
+      return "bg-warning-9";
     case "critical":
-      return "bg-error-500";
+      return "bg-error-9";
     case "unknown":
     default:
-      return "bg-neutral-400";
+      return "bg-neutral-4";
   }
 }
 
@@ -129,9 +129,9 @@ export function WebSocketHealthIndicator({
       >
         <div
           data-testid="ws-health-status"
-          className="w-2.5 h-2.5 rounded-full bg-neutral-400"
+          className="w-2.5 h-2.5 rounded-full bg-neutral-4"
         />
-        <span className="text-sm text-neutral-500 dark:text-neutral-400">
+        <span className="text-sm text-neutral-10">
           No connections
         </span>
       </div>
@@ -155,12 +155,12 @@ export function WebSocketHealthIndicator({
         <span
           className={`text-sm font-medium ${
             healthStatus === "healthy"
-              ? "text-success-600"
+              ? "text-success-10"
               : healthStatus === "warning"
-                ? "text-warning-600"
+                ? "text-warning-9"
                 : healthStatus === "critical"
-                  ? "text-error-600"
-                  : "text-neutral-500 dark:text-neutral-400"
+                  ? "text-error-10"
+                  : "text-neutral-10"
           }`}
         >
           {statusLabel}
@@ -169,7 +169,7 @@ export function WebSocketHealthIndicator({
 
       {/* Connection count */}
       {!compact && (
-        <span className="text-sm text-neutral-500 dark:text-neutral-400">
+        <span className="text-sm text-neutral-10">
           {metrics.totalConnections} connection
           {metrics.totalConnections !== 1 ? "s" : ""}
         </span>
@@ -177,7 +177,7 @@ export function WebSocketHealthIndicator({
 
       {/* Detailed metrics */}
       {showDetails && (
-        <div className="flex items-center gap-3 text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="flex items-center gap-3 text-xs text-neutral-10">
           <span>{metrics.avgSuccessRate}% success</span>
           <span>{metrics.totalReconnectionAttempts} reconnects</span>
         </div>

@@ -17,7 +17,7 @@ describe("PlanEditor", () => {
     complexity: "complicated",
     riskLevel: "medium",
     taskType: "code",
-    executorModel: "gemini-3-flash",
+    executorModel: "gemini-3-flash-preview",
     criticModel: "claude-haiku-4-5-20251001",
     estimatedCost: "0.05",
     message: "Help me refactor this code",
@@ -76,7 +76,7 @@ describe("PlanEditor", () => {
 
     it("should display executor model", () => {
       render(<PlanEditor {...defaultProps} />);
-      expect(screen.getByText(/gemini-3-flash/i)).toBeInTheDocument();
+      expect(screen.getByText(/gemini-3-flash-preview/i)).toBeInTheDocument();
     });
   });
 

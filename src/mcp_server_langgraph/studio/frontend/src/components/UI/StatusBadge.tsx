@@ -23,24 +23,23 @@ export const statusBadgeVariants = cva(
     variants: {
       status: {
         success: [
-          "bg-success-100 text-success-700",
-          "dark:bg-success-900/50 dark:text-success-300",
+          "bg-success-3 text-success-11",
+          "dark:bg-success-a6 dark:text-success-5",
         ],
         warning: [
-          "bg-warning-100 text-warning-700",
-          "dark:bg-warning-900/50 dark:text-warning-300",
+          "bg-warning-3 text-warning-10",
+          "dark:bg-warning-a6 dark:text-warning-6",
         ],
         error: [
-          "bg-error-100 text-error-700",
-          "dark:bg-error-900/50 dark:text-error-300",
+          "bg-error-3 text-error-11",
+          "dark:bg-error-a6 dark:text-error-9",
         ],
         info: [
-          "bg-primary-100 text-primary-700",
-          "dark:bg-primary-900/50 dark:text-primary-300",
+          "bg-primary-3 text-primary-11",
+          "dark:bg-primary-a6 dark:text-primary-5",
         ],
         neutral: [
-          "bg-neutral-100 text-neutral-700",
-          "dark:bg-neutral-700 dark:text-neutral-300",
+          "bg-neutral-2 text-neutral-11",
         ],
       },
       size: {

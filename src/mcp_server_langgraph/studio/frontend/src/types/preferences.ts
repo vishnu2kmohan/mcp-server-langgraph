@@ -18,6 +18,27 @@
 /** Theme options */
 export type ThemeMode = "light" | "dark" | "system";
 
+/** Color theme options for UI styling (Radix color combinations) */
+export type ColorTheme =
+  | "default"
+  | "blue"
+  | "green"
+  | "purple"
+  | "orange"
+  | "violet-sage"
+  | "teal-sage"
+  | "violet-olive"
+  | "teal-olive";
+
+/** Code font theme options */
+export type CodeFontTheme =
+  | "mono"
+  | "jetbrains"
+  | "fira"
+  | "firacode"
+  | "source"
+  | "monaspace";
+
 /** Font size options */
 export type FontSize = "small" | "medium" | "large";
 
@@ -80,6 +101,10 @@ export const DEFAULT_MODEL_PREFERENCES: ModelDefaultPreferences = {
 export interface GeneralPreferences {
   /** UI theme mode */
   theme: ThemeMode;
+  /** Color theme for UI styling */
+  colorTheme: ColorTheme;
+  /** Code font theme */
+  codeFontTheme: CodeFontTheme;
   /** User interface language */
   language: string;
   /** Auto-scroll to new messages */
@@ -92,7 +117,9 @@ export interface GeneralPreferences {
 
 /** Default general preferences */
 export const DEFAULT_GENERAL_PREFERENCES: GeneralPreferences = {
-  theme: "system",
+  theme: "dark", // Default to dark mode for Agent Studio branding
+  colorTheme: "default",
+  codeFontTheme: "mono",
   language: "en",
   autoScroll: true,
   notificationsEnabled: true,
@@ -153,6 +180,13 @@ export const DEFAULT_KEYBOARD_SHORTCUTS: KeyboardShortcut[] = [
     keys: "Cmd+Enter",
     scope: "chat",
     customizable: true,
+  },
+  {
+    action: "cycleExecutionMode",
+    label: "Cycle Execution Mode",
+    keys: "Cmd+Shift+M",
+    scope: "chat",
+    customizable: false,
   },
   {
     action: "showShortcuts",

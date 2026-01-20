@@ -64,6 +64,8 @@ export interface SyncResult {
   synced: number;
   failed: number;
   conflicts: SyncConflict[];
+  /** Timestamp when sync completed */
+  timestamp: Date;
 }
 
 export interface UseOfflineQueueOptions {
@@ -94,6 +96,8 @@ export interface UseOfflineQueueResult {
   clearQueue: () => void;
   /** Resolve a conflict */
   resolveConflict: (conflictId: string, resolution: ConflictResolution) => void;
+  /** Resolve all conflicts using their suggested resolutions */
+  resolveAllConflicts: () => void;
   /** Get all queued actions */
   getQueue: () => QueuedAction[];
 }
@@ -224,6 +228,7 @@ export function useOfflineQueue(
         synced,
         failed,
         conflicts: newConflicts,
+        timestamp: new Date(),
       };
 
       setLastSyncResult(result);
@@ -235,6 +240,7 @@ export function useOfflineQueue(
         synced: 0,
         failed: queue.length,
         conflicts: [],
+        timestamp: new Date(),
       };
       setLastSyncResult(result);
       setIsSyncing(false);
@@ -314,6 +320,16 @@ export function useOfflineQueue(
   );
 
   /**
+   * Resolve all conflicts using their suggested resolutions
+   */
+  const resolveAllConflicts = useCallback(() => {
+    // Process all conflicts with their suggested resolutions
+    for (const conflict of conflicts) {
+      resolveConflict(conflict.actionId, conflict.suggestedResolution);
+    }
+  }, [conflicts, resolveConflict]);
+
+  /**
    * Get all queued actions
    */
   const getQueue = useCallback((): QueuedAction[] => {
@@ -329,6 +345,7 @@ export function useOfflineQueue(
     sync,
     clearQueue,
     resolveConflict,
+    resolveAllConflicts,
     getQueue,
   };
 }
