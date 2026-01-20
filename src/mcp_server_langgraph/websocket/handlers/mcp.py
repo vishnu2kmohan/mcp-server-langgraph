@@ -74,44 +74,34 @@ class MCPWebSocketHandler(WebSocketBase):
         self._metrics: Any = None
         self._disconnected = False
 
-    async def on_connect(self, user: AuthUser | None) -> None:
+    async def on_connect(self, user: AuthUser) -> None:
         """
         Handle connection establishment.
 
         Creates appropriate MCP message handler based on authentication.
 
         Args:
-            user: Authenticated user or None for anonymous connections.
+            user: Authenticated user for the connection.
         """
-        if user is not None:
-            # Authenticated connection
-            self._user_id = user.id
-            self._roles = getattr(user, "roles", [])
+        # Authenticated connection
+        self._user_id = user.id
+        self._roles = getattr(user, "roles", [])
 
-            # Create authenticated handler (lazy import to avoid circular dependency)
-            from mcp_server_langgraph.mcp.message_handler import (
-                AuthenticatedMCPHandler,
-            )
+        # Create authenticated handler (lazy import to avoid circular dependency)
+        from mcp_server_langgraph.mcp.message_handler import (
+            AuthenticatedMCPHandler,
+        )
 
-            self._mcp_handler = AuthenticatedMCPHandler(
-                user_id=self._user_id,
-                roles=self._roles,
-                notification_callback=self._send_notification,
-                session_id=self.session_id,
-            )
-            logger.info(
-                f"MCP authenticated connection established for {self._user_id}",
-                extra={"user_id": self._user_id, "session_id": self.session_id},
-            )
-        else:
-            # Anonymous connection (lazy import to avoid circular dependency)
-            from mcp_server_langgraph.mcp.message_handler import MCPMessageHandler
-
-            self._mcp_handler = MCPMessageHandler()
-            logger.info(
-                "MCP anonymous connection established",
-                extra={"session_id": self.session_id},
-            )
+        self._mcp_handler = AuthenticatedMCPHandler(
+            user_id=self._user_id,
+            roles=self._roles,
+            notification_callback=self._send_notification,
+            session_id=self.session_id,
+        )
+        logger.info(
+            f"MCP authenticated connection established for {self._user_id}",
+            extra={"user_id": self._user_id, "session_id": self.session_id},
+        )
 
     async def on_disconnect(self) -> None:
         """

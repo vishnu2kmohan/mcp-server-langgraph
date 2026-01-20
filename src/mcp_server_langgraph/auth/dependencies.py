@@ -1246,6 +1246,57 @@ if FASTAPI_AVAILABLE:
             )
         return user
 
+    # ============================================================================
+    # Reference Resolution Authorization Dependencies (singleton-based)
+    # Uses reference:default for global markdown reference resolution
+    # ============================================================================
+
+    async def require_reference_viewer_global(
+        request: Request,
+    ) -> dict[str, Any]:
+        """
+        Require viewer access to reference:default for resolving markdown references.
+
+        Use for: POST /references/resolve
+        All authenticated users with reference:viewer can resolve [[type:qualifier:id]] references.
+        Individual ref authorization (connection, skill, artifact) is checked per-ref during resolution.
+        """
+        user = await get_current_user(request)
+
+        auth = get_auth_middleware_from_request(request)
+        if auth is None:
+            auth = _global_auth_middleware
+        if auth is None:
+            logger.warning("No auth middleware available, skipping reference viewer check")
+            return user
+
+        user_id = user.get("sub") or user.get("user_id") or ""
+        if not user_id.startswith("user:"):
+            user_id = f"user:{user_id}"
+
+        authorized = await auth.authorize(
+            user_id=user_id,
+            relation="viewer",
+            resource="reference:default",
+        )
+
+        if not authorized:
+            from mcp_server_langgraph.auth.metrics import log_authorization_denied
+
+            log_authorization_denied(
+                user_id=user_id,
+                relation="viewer",
+                resource="reference:default",
+                reason="permission_denied",
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Not authorized: {user_id} cannot resolve references",
+            )
+
+        return user
+
 
 # ============================================================================
 # Exports
@@ -1320,5 +1371,7 @@ if FASTAPI_AVAILABLE:
             # Cost authorization
             "require_cost_viewer",
             "require_cost_admin",
+            # Reference resolution authorization (global singleton - reference:default)
+            "require_reference_viewer_global",
         ]
     )

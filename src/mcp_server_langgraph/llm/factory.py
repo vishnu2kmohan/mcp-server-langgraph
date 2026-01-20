@@ -211,6 +211,47 @@ class LLMFactory:
             },
         )
 
+    def _is_gemini_3_model(self, model_name: str) -> bool:
+        """
+        Check if model is a Gemini 3 model that requires temperature=1.0.
+
+        Gemini 3 models (gemini-3-*) have a specific constraint where temperature < 1.0
+        can cause "infinite loops, degraded reasoning performance, and failure on complex tasks"
+        according to LiteLLM documentation.
+
+        Args:
+            model_name: Model identifier
+
+        Returns:
+            True if this is a Gemini 3 model
+        """
+        model_lower = model_name.lower()
+        # Match gemini-3-* patterns (e.g., gemini-3-flash-preview, gemini-3-pro)
+        return "gemini-3" in model_lower or "gemini/gemini-3" in model_lower
+
+    def _get_adjusted_temperature(self, model_name: str, requested_temperature: float) -> float:
+        """
+        Get adjusted temperature for model-specific constraints.
+
+        Gemini 3 models require temperature=1.0 to avoid degraded performance.
+        Other models use the requested temperature.
+
+        Args:
+            model_name: Model identifier
+            requested_temperature: Originally requested temperature
+
+        Returns:
+            Adjusted temperature (1.0 for Gemini 3, requested for others)
+        """
+        if self._is_gemini_3_model(model_name):
+            if requested_temperature < 1.0:
+                self.telemetry.logger.debug(
+                    f"Adjusting temperature to 1.0 for Gemini 3 model (was {requested_temperature})",
+                    extra={"model": model_name, "original_temperature": requested_temperature},
+                )
+            return 1.0
+        return requested_temperature
+
     def _get_provider_from_model(self, model_name: str) -> str:
         """
         Extract provider from model name.
@@ -527,10 +568,14 @@ class LLMFactory:
             known_params = {"temperature", "max_tokens", "timeout", "hook_context"}
             extra_kwargs = {k: v for k, v in kwargs.items() if k not in known_params}
 
+            # Get adjusted temperature for model-specific constraints (Gemini 3 requires 1.0)
+            requested_temp = kwargs.get("temperature", self.temperature)
+            adjusted_temp = self._get_adjusted_temperature(self.model_name, requested_temp)
+
             params = {
                 "model": self.model_name,
                 "messages": formatted_messages,
-                "temperature": kwargs.get("temperature", self.temperature),
+                "temperature": adjusted_temp,
                 "max_tokens": kwargs.get("max_tokens", self.max_tokens),
                 "timeout": kwargs.get("timeout", self.timeout),
                 **self.kwargs,
@@ -705,10 +750,12 @@ class LLMFactory:
                 formatted_messages = self._format_messages(messages)
                 # BUGFIX: Use provider-specific kwargs to avoid cross-provider parameter errors
                 provider_kwargs = self._get_provider_kwargs(fallback_model)
+                # Adjust temperature for model-specific constraints (Gemini 3 requires 1.0)
+                adjusted_temp = self._get_adjusted_temperature(fallback_model, self.temperature)
                 response = await acompletion(
                     model=fallback_model,
                     messages=formatted_messages,
-                    temperature=self.temperature,
+                    temperature=adjusted_temp,
                     max_tokens=self.max_tokens,
                     timeout=self.timeout,
                     **provider_kwargs,  # Forward provider-specific kwargs only
@@ -796,11 +843,15 @@ class LLMFactory:
             adaptive_bulkhead = get_provider_adaptive_bulkhead(self.provider)
             semaphore = adaptive_bulkhead.get_semaphore()
 
+            # Get adjusted temperature for model-specific constraints (Gemini 3 requires 1.0)
+            requested_temp = kwargs.get("temperature", self.temperature)
+            adjusted_temp = self._get_adjusted_temperature(self.model_name, requested_temp)
+
             # Build completion parameters
             params = {
                 "model": self.model_name,
                 "messages": formatted_messages,
-                "temperature": kwargs.get("temperature", self.temperature),
+                "temperature": adjusted_temp,
                 "max_tokens": kwargs.get("max_tokens", self.max_tokens),
                 "timeout": kwargs.get("timeout", self.timeout),
                 "stream": True,

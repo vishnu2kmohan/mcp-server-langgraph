@@ -10,7 +10,7 @@ These models support JSON serialization for Redis storage.
 """
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -30,6 +30,10 @@ class SessionConfig(BaseModel):
         ge=1,
         le=128000,
         description="Max tokens per response",
+    )
+    execution_mode: Literal["default", "plan", "auto_accept", "bypass"] = Field(
+        default="default",
+        description="Execution mode for bypass auto-approval: default, plan, auto_accept, bypass",
     )
 
 

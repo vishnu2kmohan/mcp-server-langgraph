@@ -43,6 +43,23 @@ class Note(BaseModel):
         default_factory=dict,
         description="Additional metadata",
     )
+    # Phase 4 fields for memory reference resolution
+    session_id: str | None = Field(
+        default=None,
+        description="Session ID for OpenFGA authorization (session:viewer check)",
+    )
+    user_id: str | None = Field(
+        default=None,
+        description="User ID who created the note",
+    )
+    title: str | None = Field(
+        default=None,
+        description="Display title for the note (used in [[memory:id]] refs)",
+    )
+    slug: str | None = Field(
+        default=None,
+        description="URL-friendly slug for friendly reference syntax",
+    )
 
     def to_markdown(self) -> str:
         """Convert note to markdown format.
@@ -50,8 +67,10 @@ class Note(BaseModel):
         Returns:
             Markdown-formatted note string
         """
+        # Use title for heading if available, otherwise use ID
+        heading = self.title if self.title else self.id
         lines = [
-            f"## {self.id}",
+            f"## {heading}",
             f"**Category:** {self.category}",
         ]
 
@@ -89,6 +108,10 @@ class NotesManager:
         category: str = "general",
         tags: list[str] | None = None,
         metadata: dict[str, Any] | None = None,
+        session_id: str | None = None,
+        user_id: str | None = None,
+        title: str | None = None,
+        slug: str | None = None,
     ) -> Note:
         """Add a new note.
 
@@ -97,6 +120,10 @@ class NotesManager:
             category: Note category
             tags: Optional tags
             metadata: Optional metadata
+            session_id: Optional session ID for authorization
+            user_id: Optional user ID for ownership
+            title: Optional display title
+            slug: Optional URL-friendly slug
 
         Returns:
             Created Note object
@@ -111,6 +138,10 @@ class NotesManager:
             category=category,
             tags=tags or [],
             metadata=metadata or {},
+            session_id=session_id,
+            user_id=user_id,
+            title=title,
+            slug=slug,
         )
         self._notes[note_id] = note
         return note
@@ -134,18 +165,29 @@ class NotesManager:
         """
         self._notes.pop(note_id, None)
 
-    def list_notes(self, category: str | None = None) -> list[Note]:
-        """List all notes, optionally filtered by category.
+    def list_notes(
+        self,
+        category: str | None = None,
+        session_id: str | None = None,
+        user_id: str | None = None,
+    ) -> list[Note]:
+        """List all notes, optionally filtered by category, session, or user.
 
         Args:
             category: Optional category filter
+            session_id: Optional session ID filter
+            user_id: Optional user ID filter
 
         Returns:
-            List of notes
+            List of notes matching all provided filters
         """
         notes = list(self._notes.values())
         if category:
             notes = [n for n in notes if n.category == category]
+        if session_id:
+            notes = [n for n in notes if n.session_id == session_id]
+        if user_id:
+            notes = [n for n in notes if n.user_id == user_id]
         return notes
 
     def search(self, query: str) -> list[Note]:

@@ -102,7 +102,7 @@ class DevToolsNetworkMiddleware(BaseHTTPMiddleware):
 
         Returns:
             DevToolsBroadcaster instance or None if websocket module unavailable
-            (e.g., in minimal Docker images like authz-proxy).
+            (e.g., in minimal Docker images).
         """
         try:
             from mcp_server_langgraph.websocket.registry import get_devtools_broadcaster
@@ -160,7 +160,7 @@ class DevToolsNetworkMiddleware(BaseHTTPMiddleware):
             logger.debug("Failed to emit network start event: %s", e)
 
         # Call the actual handler
-        response: Response = await call_next(request)
+        handler_response: Response = await call_next(request)
 
         # Calculate duration
         end_time = time.time()
@@ -171,21 +171,21 @@ class DevToolsNetworkMiddleware(BaseHTTPMiddleware):
             broadcaster = self._get_broadcaster()
             if broadcaster is None:
                 # Websocket module not available, skip broadcast
-                return response
-            status = "completed" if response.status_code < 400 else "error"
+                return handler_response
+            status = "completed" if handler_response.status_code < 400 else "error"
 
             # Try to get response size from content-length header
-            content_length = response.headers.get("content-length")
+            content_length = handler_response.headers.get("content-length")
             response_size = int(content_length) if content_length else None
 
             await broadcaster.broadcast_network_update(
                 {
                     "id": request_id,
                     "status": status,
-                    "statusCode": response.status_code,
+                    "statusCode": handler_response.status_code,
                     "duration": duration_ms,
                     "responseSize": response_size,
-                    "responseHeaders": dict(response.headers),
+                    "responseHeaders": dict(handler_response.headers),
                 },
                 context_entity_id=session_id,
             )
@@ -193,7 +193,7 @@ class DevToolsNetworkMiddleware(BaseHTTPMiddleware):
             # Don't fail the request if broadcasting fails
             logger.debug("Failed to emit network complete event: %s", e)
 
-        return response
+        return handler_response
 
 
 class DevToolsLoggingHandler(logging.Handler):
@@ -221,7 +221,7 @@ class DevToolsLoggingHandler(logging.Handler):
 
         Returns:
             DevToolsBroadcaster instance or None if websocket module unavailable
-            (e.g., in minimal Docker images like authz-proxy).
+            (e.g., in minimal Docker images).
         """
         try:
             from mcp_server_langgraph.websocket.registry import get_devtools_broadcaster

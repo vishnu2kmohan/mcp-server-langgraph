@@ -96,13 +96,21 @@ Return a JSON response with:
   "suggestions": [
     {
       "text": "string - the suggestion text",
-      "action": "navigate|modal|execute",
-      "target": "string - URL or modal ID to target",
+      "action": "navigate|create|learn|import|modal|execute",
+      "target": "string - URL, modal ID, or action identifier",
       "confidence": "float 0.0-1.0",
       "category": "onboarding|discovery|alternative"
     }
   ]
 }
+
+Action types:
+- navigate: Go to a page (target = URL path)
+- create: Create a new resource (target = resource type)
+- learn: Open documentation or tutorial (target = doc URL)
+- import: Import existing data (target = import type)
+- modal: Open a modal dialog (target = modal ID)
+- execute: Execute an action directly (target = action ID)
 </output_schema>
 
 <format_enforcement>

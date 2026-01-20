@@ -50,6 +50,9 @@ from mcp_server_langgraph.api.v1.workflow_executions import workflow_executions_
 from mcp_server_langgraph.api.v1.sandbox import router as sandbox_router
 from mcp_server_langgraph.api.v1.code_execution import router as code_execution_router
 
+# Unified tools API (manual tool selection for chat)
+from mcp_server_langgraph.api.v1.tools import tools_router
+
 # Agentic memory endpoints (Phase 1.2: enable_agentic_memory)
 from mcp_server_langgraph.api.v1.memory import memory_router
 
@@ -193,6 +196,9 @@ v1_router.include_router(sandbox_router, tags=["sandbox"])
 # Include sandboxed code execution endpoint for Studio Canvas
 v1_router.include_router(code_execution_router, tags=["code-execution"])
 
+# Include unified tools endpoint (manual tool selection for chat)
+v1_router.include_router(tools_router)
+
 # Include Studio AI endpoints (unified StudioShell AI capabilities - Sprint 1)
 v1_router.include_router(studio_ai_router, prefix="/studio", tags=["studio-ai"])
 
@@ -239,6 +245,11 @@ v1_router.include_router(alert_recommendation_router, tags=["alerts"])
 from mcp_server_langgraph.api.v1.skills import router as skills_router
 
 v1_router.include_router(skills_router, tags=["skills"])
+
+# Markdown reference resolution API ([[type:qualifier:id]] syntax)
+from mcp_server_langgraph.api.v1.references import references_router
+
+v1_router.include_router(references_router, tags=["references"])
 
 # =============================================================================
 # UX Measurement & Feedback Endpoints

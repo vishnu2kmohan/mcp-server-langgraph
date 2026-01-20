@@ -564,9 +564,9 @@ async def _generate_response_impl(
             logger.info(f"Pydantic AI response generated, confidence: {typed_response.confidence}")
         except Exception as e:
             logger.error(f"Pydantic AI response failed: {e}")
-            response = await model_for_response.ainvoke(messages_list)  # type: ignore[arg-type]
+            response = await model_for_response.ainvoke(messages_list)
     else:
-        response = await model_for_response.ainvoke(messages_list)  # type: ignore[arg-type]
+        response = await model_for_response.ainvoke(messages_list)
 
     # Check if the LLM generated tool calls (when tool calling is enabled)
     # If tool_calls are present, route to use_tools to execute them

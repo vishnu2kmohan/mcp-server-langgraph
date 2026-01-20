@@ -23,7 +23,7 @@ from fastapi import APIRouter
 if TYPE_CHECKING:
     from mcp_server_langgraph.core.config import Settings
     from mcp_server_langgraph.skills.auto_update import AutoUpdateScheduler as SchedulerType
-    from mcp_server_langgraph.skills.marketplace import MarketplaceRegistry
+    from mcp_server_langgraph.skills.marketplace import MarketplaceClient, MarketplaceRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class MarketplaceRegistryAdapter:
             registry: The actual MarketplaceRegistry instance
         """
         self._registry = registry
-        self._client = None  # Lazy-loaded MarketplaceClient
+        self._client: MarketplaceClient | None = None  # Lazy-loaded
 
     def _get_client(self) -> Any:
         """Get or create the MarketplaceClient with feature flag configuration."""

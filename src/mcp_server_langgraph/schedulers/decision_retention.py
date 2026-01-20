@@ -22,7 +22,7 @@ CLEANUP_INTERVAL_SECONDS = 86400  # 24 hours
 
 async def start_retention_scheduler(
     repository: "DecisionTraceRepositoryBase",
-) -> asyncio.Task:
+) -> asyncio.Task[None]:
     """Start background retention task.
 
     Creates a background task that periodically deletes expired

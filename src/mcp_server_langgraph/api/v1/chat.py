@@ -39,6 +39,7 @@ from litellm import acompletion
 from opentelemetry import trace
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.api.deps import get_audit_service, get_openfga_client
 from mcp_server_langgraph.auth.dependencies import get_current_user
 from mcp_server_langgraph.core.agent import create_agent_graph
 from mcp_server_langgraph.core.config import settings
@@ -107,6 +108,27 @@ class ChatCompletionRequest(BaseModel):
         "'kb_only' = only use KB/vector store for context, "
         "'web_only' = only use web search for context, "
         "'none' = disable context augmentation.",
+    )
+    # Manual tool selection parameters
+    selected_tools: list[str] | None = Field(
+        default=None,
+        description="Optional list of tool names to use. When provided with tool_selection_mode='manual', "
+        "bypasses semantic search and uses only these tools. Tool names must match exactly "
+        "(use qualified names for MCP tools, e.g., 'github:create_issue').",
+    )
+    tool_selection_mode: Literal["auto", "manual", "none"] = Field(
+        default="auto",
+        description="Tool selection mode: 'auto' = semantic search (default), "
+        "'manual' = use selected_tools only, 'none' = disable all tools.",
+    )
+    # Execution mode for plan-and-execute workflow (Shift+Tab toggle in UI)
+    execution_mode: Literal["default", "plan", "auto_accept", "bypass"] = Field(
+        default="default",
+        description="Execution mode controlling plan approval workflow. "
+        "'default' = approval required for medium/high-risk plans, "
+        "'plan' = all plans require approval, "
+        "'auto_accept' = auto-approve all plans (no modal), "
+        "'bypass' = skip all approvals (admin only, audited).",
     )
 
 
@@ -623,6 +645,131 @@ class ChatServiceImpl(ChatService):
         # Prepend context to messages
         return [context_message] + list(messages)
 
+    def _get_model_aware_history_limit(self) -> int:
+        """
+        Get model-aware token limit for conversation history loading.
+
+        Uses the same model-aware approach as ContextManager when
+        enable_model_aware_compaction is enabled. This ensures history
+        loading respects the model's context window size.
+
+        The limit is calculated as a percentage of the model's effective
+        context limit, leaving headroom for system prompts, tools, and response.
+
+        Returns:
+            Token limit for history loading (default: 8000 if not model-aware)
+        """
+        from mcp_server_langgraph.core.feature_flags import feature_flags
+
+        # Default limit when not model-aware
+        DEFAULT_HISTORY_LIMIT = 8000
+
+        if not feature_flags.enable_model_aware_compaction:
+            return DEFAULT_HISTORY_LIMIT
+
+        try:
+            from mcp_server_langgraph.agents.model_registry import get_default_registry
+
+            model_name = settings.model_name
+            registry = get_default_registry()
+            caps = registry.get(model_name)
+
+            # Use effective limit (accounts for reserved tokens) or context limit
+            effective_limit = caps.effective_limit if caps.effective_limit else caps.context_limit
+
+            # Use same threshold percentage as ContextManager (default 0.5)
+            # This leaves 50% for system prompts, dynamic context, tools, and response
+            threshold_percentage = feature_flags.context_compaction_threshold_percentage
+            history_limit = int(effective_limit * threshold_percentage)
+
+            # Ensure we have a reasonable minimum
+            return max(history_limit, 2000)
+
+        except Exception:
+            # Graceful fallback to default
+            return DEFAULT_HISTORY_LIMIT
+
+    async def _load_and_merge_history(
+        self,
+        session_id: str,
+        new_messages: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        """
+        Load session history from storage and merge with new messages.
+
+        This ensures the LLM receives full conversation context, not just
+        the current message. History is deduplicated and progressively loaded
+        to fit within token limits (prioritizing recent messages).
+
+        Args:
+            session_id: Session ID to load history for
+            new_messages: New message(s) from the current request
+
+        Returns:
+            Merged message list: history + new messages (token-aware, deduplicated)
+        """
+        from mcp_server_langgraph.context.conversation_loader import (
+            ConversationMessage,
+            ConversationProgressiveLoader,
+        )
+        from mcp_server_langgraph.observability.telemetry import logger
+
+        # If no storage configured, just return new messages
+        if self._session_storage is None:
+            return new_messages
+
+        try:
+            # Load stored history
+            stored_messages = await self._session_storage.get_messages(session_id)
+            if not stored_messages:
+                return new_messages
+
+            # Convert to list if needed
+            history = list(stored_messages)
+
+            # Deduplicate: don't add new messages that already exist in history
+            # Compare by role + content to identify duplicates
+            history_set = {(msg.get("role"), msg.get("content")) for msg in history}
+
+            unique_new = [msg for msg in new_messages if (msg.get("role"), msg.get("content")) not in history_set]
+
+            # Merge: history first, then unique new messages
+            merged = history + unique_new
+
+            # Apply progressive loading to fit within token limits
+            # This prioritizes recent messages and truncates oldest when over limit
+            # Uses model-aware token limits when enable_model_aware_compaction is enabled
+            max_tokens = self._get_model_aware_history_limit()
+            loader = ConversationProgressiveLoader(max_tokens=max_tokens)
+
+            # Convert to ConversationMessage format
+            conversation_messages = [
+                ConversationMessage(role=msg.get("role", "user"), content=msg.get("content", "")) for msg in merged
+            ]
+
+            loaded_context = await loader.load(conversation_messages)
+
+            # Convert back to dict format
+            result = [{"role": msg.role, "content": msg.content} for msg in loaded_context.messages]
+
+            if loaded_context.was_truncated:
+                logger.info(
+                    f"Conversation history truncated for session {session_id}: "
+                    f"{len(merged)} -> {len(result)} messages, {loaded_context.total_tokens} tokens"
+                )
+            else:
+                logger.debug(
+                    f"Loaded {len(history)} messages from history, "
+                    f"adding {len(unique_new)} new messages for session {session_id}"
+                )
+
+            return result
+
+        except Exception as e:
+            # Graceful fallback: log and continue with just new messages
+            logger.warning(f"Failed to load session history for {session_id}: {e}")
+            return new_messages
+
     async def _create_completion_via_litellm(
         self,
         session_id: str,
@@ -1047,6 +1194,18 @@ class ChatServiceImpl(ChatService):
                             if "total_available" in data:
                                 selected_tools_event["total_available"] = data["total_available"]
                             yield selected_tools_event
+                        elif event_name == "auth_required":
+                            # Emit auth_required event when tool call fails due to auth
+                            # This allows frontend to prompt user for connection setup
+                            data = event.get("data", {})
+                            yield {
+                                "type": "auth_required",
+                                "connection_id": data.get("connection_id"),
+                                "template_id": data.get("template_id"),
+                                "tool_name": data.get("tool_name", ""),
+                                "message": data.get("message", "Authentication required"),
+                                "retry_message_id": data.get("retry_message_id"),
+                            }
 
                     # Handle streaming content from chat model
                     elif event_type == "on_chat_model_stream":
@@ -1105,6 +1264,10 @@ class ChatServiceImpl(ChatService):
         from mcp_server_langgraph.agents.router_agent import DEFAULT_ROUTER_OUTPUT, RouterOutput
         from mcp_server_langgraph.api.v1.mcp_bridge import ChatError
         from mcp_server_langgraph.observability.telemetry import logger
+
+        # Load session history from storage and merge with new messages
+        # This ensures the LLM has full conversation context
+        messages = await self._load_and_merge_history(session_id, messages)
 
         # Check enable_routing: explicit param > feature flag > default False
         enable_routing = kwargs.pop("enable_routing", None)
@@ -1174,6 +1337,222 @@ class ChatServiceImpl(ChatService):
                         "routing_rationale": routing_decision.routing_rationale,
                     }
                 }
+
+        # ====================================================================
+        # Plan Generation and Bypass Mode Integration
+        # ====================================================================
+        # When plan generation is enabled, create ExecutionPlan from routing decision
+        # and emit plan_generated SSE. If bypass mode, evaluate with BypassManager.
+        from mcp_server_langgraph.core.feature_flags import feature_flags
+
+        if (
+            feature_flags.enable_plan_generation
+            and routing_decision is not None
+        ):
+            from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+            from mcp_server_langgraph.execution.cost_estimator import estimate_execution_cost
+
+            # Calculate estimated cost based on model and task characteristics
+            executor_model = kwargs.get("model") or settings.model_name
+            estimated_cost = estimate_execution_cost(
+                model=executor_model,
+                task_type=routing_decision.task_type,
+                complexity=routing_decision.complexity,
+                thinking_budget=routing_decision.thinking_budget,
+            )
+
+            # Create ExecutionPlan from RouterOutput
+            execution_plan = ExecutionPlan.from_router_output(
+                router_output=routing_decision,
+                session_id=session_id,
+                message=last_user_message,
+                executor_model=executor_model,
+                estimated_cost=estimated_cost,
+            )
+
+            # Emit plan_generated SSE (format matches useStreamingChat.ts:360)
+            yield {
+                "plan_generated": {
+                    "plan_id": execution_plan.plan_id,
+                    "status": execution_plan.status,
+                    "complexity": execution_plan.complexity,
+                    "risk_level": execution_plan.risk_level,
+                    "task_type": execution_plan.task_type,
+                    "executor_model": execution_plan.executor_model,
+                    "estimated_cost": str(execution_plan.estimated_cost),
+                    "tools_needed": execution_plan.tools_needed,
+                    "thinking_budget": execution_plan.thinking_budget,
+                    "critique_rounds": execution_plan.critique_rounds,
+                    "requires_approval": execution_plan.requires_approval,
+                }
+            }
+
+            # Bypass mode: evaluate risk and potentially auto-approve
+            execution_mode = kwargs.get("execution_mode", "default")
+            if execution_mode == "bypass":
+                from mcp_server_langgraph.execution.bypass_manager import BypassManager
+
+                bypass_manager = BypassManager()
+                bypass_decision = bypass_manager.evaluate_plan(execution_plan)
+
+                if bypass_decision.auto_approved:
+                    # Auto-approve low-risk plan
+                    approved_plan = execution_plan.approve(approved_by="system:bypass_auto")
+
+                    # Audit logging: BYPASS_AUTO_APPROVED event (FedRAMP/SOC2 compliance)
+                    from mcp_server_langgraph.audit.models import AuditEventType
+                    from mcp_server_langgraph.execution.bypass_audit import log_bypass_audit_event
+
+                    audit_service = kwargs.get("audit_service")
+                    current_user = kwargs.get("current_user", {})
+
+                    await log_bypass_audit_event(
+                        audit_service=audit_service,
+                        event_type=AuditEventType.BYPASS_AUTO_APPROVED,
+                        current_user=current_user,
+                        resource_type="execution_plan",
+                        resource_id=approved_plan.plan_id,
+                        action="Auto-approved low-risk plan in bypass mode",
+                        details={
+                            "risk_level": bypass_decision.risk_level,
+                            "original_risk_level": bypass_decision.original_risk_level,
+                            "complexity": bypass_decision.complexity,
+                            "risk_factors": bypass_decision.risk_factors,
+                            "tools_needed": execution_plan.tools_needed,
+                        },
+                    )
+
+                    # Emit auto-approval event
+                    yield {
+                        "plan_auto_approved": {
+                            "plan_id": approved_plan.plan_id,
+                            "status": approved_plan.status,
+                            "approved_by": approved_plan.approved_by,
+                            "risk_level": bypass_decision.risk_level,
+                            "original_risk_level": bypass_decision.original_risk_level,
+                            "complexity": bypass_decision.complexity,
+                            "risk_factors": bypass_decision.risk_factors,
+                        }
+                    }
+
+                    logger.info(
+                        f"Bypass mode auto-approved plan {approved_plan.plan_id}: "
+                        f"risk={bypass_decision.risk_level}, complexity={bypass_decision.complexity}"
+                    )
+                else:
+                    # Requires user approval even in bypass mode
+                    yield {
+                        "plan_requires_approval": {
+                            "plan_id": execution_plan.plan_id,
+                            "risk_level": bypass_decision.risk_level,
+                            "original_risk_level": bypass_decision.original_risk_level,
+                            "complexity": bypass_decision.complexity,
+                            "risk_factors": bypass_decision.risk_factors,
+                            "reason": "Risk level too high for auto-approval",
+                        }
+                    }
+
+                    logger.info(
+                        f"Bypass mode requires approval for plan {execution_plan.plan_id}: "
+                        f"risk={bypass_decision.risk_level}, complexity={bypass_decision.complexity}"
+                    )
+
+        # ====================================================================
+        # Critique Loop Integration (Executor+Critic Pattern)
+        # ====================================================================
+        # When routing indicates critique_rounds > 0 and critique loop is enabled,
+        # use the CritiqueExecutor for multi-pass refinement.
+        from mcp_server_langgraph.core.feature_flags import feature_flags
+
+        use_critique_loop = (
+            feature_flags.enable_critique_loop
+            and routing_decision is not None
+            and routing_decision.critique_rounds > 0
+            and routing_decision.risk != "low"  # Skip critique for low-risk
+        )
+
+        if use_critique_loop:
+            from mcp_server_langgraph.agents.critique_executor import CritiqueExecutor
+            from mcp_server_langgraph.agents.router_agent import select_executor_critic
+
+            try:
+                # Select executor and critic models based on complexity/risk
+                executor_model, critic_model = select_executor_critic(
+                    complexity=routing_decision.complexity,
+                    risk=routing_decision.risk,
+                    prefer_same_vendor=not feature_flags.critique_cross_vendor,
+                )
+
+                logger.info(
+                    f"Using critique loop: executor={executor_model}, "
+                    f"critic={critic_model}, rounds={routing_decision.critique_rounds}"
+                )
+
+                # Create CritiqueExecutor with feature flag limits
+                critique_executor = CritiqueExecutor(
+                    executor_model=executor_model,
+                    critic_model=critic_model,
+                    max_rounds=min(
+                        routing_decision.critique_rounds,
+                        feature_flags.max_critique_rounds,
+                    ),
+                )
+
+                # Execute with critique and stream results
+                async for event in critique_executor.execute_with_critique(
+                    messages=messages,
+                    critique_rounds=routing_decision.critique_rounds,
+                ):
+                    # Map critique events to SSE format
+                    if event["type"] == "executor_response":
+                        # Stream initial/refined response as delta events
+                        yield {"delta": {"content": event["content"]}}
+                        if feature_flags.critique_streaming:
+                            yield {
+                                "critique_status": {
+                                    "phase": "executed",
+                                    "round": event["round"],
+                                    "model": event.get("model"),
+                                }
+                            }
+                    elif event["type"] == "critique":
+                        # Emit critique result for frontend visibility
+                        if feature_flags.critique_streaming:
+                            yield {
+                                "critique_status": {
+                                    "phase": "critiqued",
+                                    "round": event["round"],
+                                    "approved": event["result"].approved,
+                                    "feedback": event["result"].feedback,
+                                    "confidence": event["result"].confidence,
+                                    "model": event.get("model"),
+                                }
+                            }
+                    elif event["type"] == "refined_response":
+                        # Stream refined response
+                        yield {"delta": {"content": event["content"]}}
+                        if feature_flags.critique_streaming:
+                            yield {
+                                "critique_status": {
+                                    "phase": "refined",
+                                    "round": event["round"],
+                                    "model": event.get("model"),
+                                }
+                            }
+
+                # Critique loop completed successfully
+                return
+
+            except Exception as e:
+                logger.warning(f"Critique loop failed, falling back to standard: {e}")
+                # Emit fallback notice
+                yield {
+                    "context_unavailable": {
+                        "reason": f"Critique loop error: {e}",
+                        "fallback": "standard_streaming",
+                    }
+                }
+                # Fall through to standard streaming
 
         # Try LangGraph agent if requested (via routing or explicit flag) and configured
         # Uses langgraph_agent property which lazily initializes if needed
@@ -1315,6 +1694,8 @@ async def create_completion(
 async def create_stream(
     request: ChatCompletionRequest,
     current_user: CurrentUser,
+    openfga_client: Any = Depends(get_openfga_client),
+    audit_service: Any = Depends(get_audit_service),
 ) -> StreamingResponse:
     """
     Create a streaming chat completion.
@@ -1322,7 +1703,58 @@ async def create_stream(
     Requires authentication. The user must be authenticated to create streams.
 
     Sends messages to the LLM and streams the response as Server-Sent Events.
+
+    Execution Modes:
+    - default: Approval required for medium/high-risk plans
+    - plan: All plans require approval
+    - auto_accept: Auto-approve all plans (no modal)
+    - bypass: Risk-aware auto-approval (requires bypass_executor permission)
     """
+    # OpenFGA permission check for bypass mode (replaces RBAC admin check)
+    if request.execution_mode == "bypass":
+        # CRITICAL: current_user["user_id"] is ALREADY "user:alice" from jwt_utils.py
+        user_id = current_user.get("user_id") or f"user:{current_user.get('preferred_username', 'anonymous')}"
+
+        # Check bypass_executor permission via OpenFGA (fail-closed)
+        has_bypass_permission = False
+        if openfga_client is not None:
+            try:
+                has_bypass_permission = await openfga_client.check_permission(
+                    user=user_id,
+                    relation="bypass_executor",
+                    object="system:global",
+                    critical=True,
+                )
+            except Exception:
+                # Fail-closed: deny on any error
+                has_bypass_permission = False
+
+        if not has_bypass_permission:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Bypass mode requires bypass_executor permission on system:global",
+            )
+
+        # Audit logging: BYPASS_ACTIVATED event (FedRAMP/SOC2 compliance)
+        # Uses helper to reduce duplication (see execution-mode-patterns.md gotcha #6)
+        from mcp_server_langgraph.audit.context import create_context_from_request
+        from mcp_server_langgraph.audit.models import AuditEventType
+        from mcp_server_langgraph.execution.bypass_audit import log_bypass_audit_event
+
+        await log_bypass_audit_event(
+            audit_service=audit_service,
+            event_type=AuditEventType.BYPASS_ACTIVATED,
+            current_user=current_user,
+            resource_type="session",
+            resource_id=request.session_id,
+            action="Activated risk-aware bypass execution mode",
+            details={
+                "execution_mode": request.execution_mode,
+                "session_id": request.session_id,
+            },
+            context=create_context_from_request(request),
+        )
+
     service = get_chat_service()
     messages = [msg.model_dump() for msg in request.messages]
     user_id = _get_user_id(current_user)
@@ -1339,6 +1771,9 @@ async def create_stream(
             enable_thinking=request.enable_thinking,
             kb_focus=request.kb_focus,
             user_id=user_id,
+            execution_mode=request.execution_mode,
+            audit_service=audit_service,
+            current_user=current_user,
         ):
             # Format as SSE
             import json

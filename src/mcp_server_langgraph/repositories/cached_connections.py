@@ -134,6 +134,39 @@ class CachedConnectionRepository(ConnectionRepository):
         # Return in original order
         return [results[cid] for cid in connection_ids if cid in results]
 
+    async def get_by_server_name(
+        self,
+        server_name: str,
+        owner_id: str,
+    ) -> MCPConnection | None:
+        """
+        Find first connection by server_name with caching.
+
+        Used for reference resolution to map server_name → connection_id.
+        Caches results for 5 minutes (CACHE_TTLS["connection"]).
+        """
+        cache_key = generate_cache_key(
+            server_name, owner_id, prefix="connection_by_name"
+        )
+
+        # Try cache first
+        cached = self._cache.get(cache_key)
+        if cached is not None:
+            return MCPConnection(**cached) if isinstance(cached, dict) else cached
+
+        # Cache miss: fetch from database
+        connection = await self._delegate.get_by_server_name(server_name, owner_id)
+
+        if connection is not None:
+            # Cache the result
+            self._cache.set(
+                cache_key,
+                connection.model_dump(),
+                ttl=CACHE_TTLS["connection"],
+            )
+
+        return connection
+
     async def list(
         self,
         owner_id: str,
@@ -143,6 +176,8 @@ class CachedConnectionRepository(ConnectionRepository):
         status: str | None = None,
         auth_type: str | None = None,
         project_id: str | None = None,
+        scope: str | None = None,
+        include_project_connections: bool = True,
         sort_by: str = "created_at",
         sort_order: str = "desc",
     ) -> tuple[list[MCPConnectionSummary], str | None]:
@@ -154,7 +189,14 @@ class CachedConnectionRepository(ConnectionRepository):
         """
         # Only cache unfiltered first page (most common query)
         is_cacheable = (
-            cursor is None and search is None and status is None and auth_type is None and project_id is None and limit <= 50
+            cursor is None
+            and search is None
+            and status is None
+            and auth_type is None
+            and project_id is None
+            and scope is None
+            and include_project_connections
+            and limit <= 50
         )
 
         if is_cacheable:
@@ -187,6 +229,8 @@ class CachedConnectionRepository(ConnectionRepository):
             status=status,
             auth_type=auth_type,
             project_id=project_id,
+            scope=scope,
+            include_project_connections=include_project_connections,
             sort_by=sort_by,
             sort_order=sort_order,
         )
@@ -245,6 +289,9 @@ class CachedConnectionRepository(ConnectionRepository):
             # Invalidate owner's list cache
             self._cache.clear(f"connection_list:{connection.owner_id}:*")
 
+            # Invalidate server_name lookup cache for this owner
+            self._cache.clear(f"connection_by_name:*:{connection.owner_id}:*")
+
         return connection
 
     async def delete(self, connection_id: str) -> bool:
@@ -270,6 +317,9 @@ class CachedConnectionRepository(ConnectionRepository):
             if owner_id:
                 self._cache.clear(f"connection_list:{owner_id}:*")
 
+                # Invalidate server_name lookup cache for this owner
+                self._cache.clear(f"connection_by_name:*:{owner_id}:*")
+
         return result
 
     # ==========================================================================
@@ -294,9 +344,12 @@ class CachedConnectionRepository(ConnectionRepository):
         state: str,
         code_verifier: str,
         redirect_uri: str,
+        popup: bool = False,
     ) -> None:
         """Create OAuth2 state (not cached)."""
-        await self._delegate.create_oauth2_state(connection_id, state, code_verifier, redirect_uri)
+        await self._delegate.create_oauth2_state(
+            connection_id, state, code_verifier, redirect_uri, popup
+        )
 
     async def get_and_delete_oauth2_state(self, state: str) -> dict[str, Any] | None:
         """Get and delete OAuth2 state (not cached, one-time use)."""

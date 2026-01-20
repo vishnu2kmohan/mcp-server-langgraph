@@ -23,7 +23,10 @@ from typing import Annotated, Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.api.deps import get_audit_service
+from mcp_server_langgraph.audit.models import AuditEventType
 from mcp_server_langgraph.auth.dependencies import get_current_user
+from mcp_server_langgraph.execution.bypass_audit import log_bypass_audit_event
 from mcp_server_langgraph.core.models.plan_template import PlanTemplate
 from mcp_server_langgraph.repositories.execution_plan import (
     ExecutionPlanRepository,
@@ -42,6 +45,7 @@ execution_plans_router = APIRouter(tags=["execution-plans"])
 # ============================================================================
 
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
+AuditService = Annotated[Any, Depends(get_audit_service)]
 
 
 def _get_user_id(user: dict[str, Any]) -> str:
@@ -214,6 +218,7 @@ async def get_plan(
 async def approve_plan(
     plan_id: str,
     current_user: CurrentUser,
+    audit_service: AuditService,
 ) -> dict[str, Any]:
     """
     Approve an execution plan.
@@ -244,6 +249,21 @@ async def approve_plan(
     approved_plan = plan.approve(approved_by=user_id)
     await repo.update(approved_plan)
 
+    # Audit logging: BYPASS_USER_APPROVED event (FedRAMP/SOC2 compliance)
+    await log_bypass_audit_event(
+        audit_service=audit_service,
+        event_type=AuditEventType.BYPASS_USER_APPROVED,
+        current_user=current_user,
+        resource_type="execution_plan",
+        resource_id=plan_id,
+        action="User approved execution plan",
+        details={
+            "risk_level": approved_plan.risk_level,
+            "complexity": approved_plan.complexity,
+            "tools_needed": approved_plan.tools_needed,
+        },
+    )
+
     return _plan_to_dict(approved_plan)
 
 
@@ -252,6 +272,7 @@ async def reject_plan(
     plan_id: str,
     request: RejectRequest,
     current_user: CurrentUser,
+    audit_service: AuditService,
 ) -> dict[str, Any]:
     """
     Reject an execution plan.
@@ -281,6 +302,22 @@ async def reject_plan(
     user_id = _get_user_id(current_user)
     rejected_plan = plan.reject(rejected_by=user_id, reason=request.reason)
     await repo.update(rejected_plan)
+
+    # Audit logging: BYPASS_REJECTED event (FedRAMP/SOC2 compliance)
+    await log_bypass_audit_event(
+        audit_service=audit_service,
+        event_type=AuditEventType.BYPASS_REJECTED,
+        current_user=current_user,
+        resource_type="execution_plan",
+        resource_id=plan_id,
+        action="User rejected execution plan",
+        details={
+            "risk_level": rejected_plan.risk_level,
+            "complexity": rejected_plan.complexity,
+            "tools_needed": rejected_plan.tools_needed,
+            "rejection_reason": request.reason,
+        },
+    )
 
     return _plan_to_dict(rejected_plan)
 

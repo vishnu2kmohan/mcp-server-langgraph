@@ -410,7 +410,7 @@ class DataDeletionService:
             return 0
 
         try:
-            count = await repo.delete_by_user(user_id)
+            count: int = await repo.delete_by_user(user_id)
             return count
         except Exception as e:
             logger.error(f"Failed to delete user decision traces: {e}", exc_info=True)

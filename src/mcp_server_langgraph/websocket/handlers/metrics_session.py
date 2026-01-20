@@ -24,7 +24,7 @@ Response Types (Server -> Client):
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from mcp_server_langgraph.websocket.base import WebSocketBase
 from mcp_server_langgraph.websocket.types import (
@@ -63,94 +63,95 @@ class MetricsSessionHandler(WebSocketBase):
         super().__init__(config=config)
         self._subscribed_sessions: set[str] = set()
 
-    async def on_connect(self, user: AuthUser | None) -> None:
+    async def on_connect(self, user: AuthUser) -> None:
         """Handle new WebSocket connection."""
         logger.info(
             "Metrics session WebSocket connected",
             extra={
-                "user_id": user.user_id if user else None,
+                "user_id": user.id,
             },
         )
 
-    async def on_disconnect(self, user: AuthUser | None) -> None:
+    async def on_disconnect(self) -> None:
         """Handle WebSocket disconnection."""
         self._subscribed_sessions.clear()
+        user_id = self._user.id if self._user else None
         logger.info(
             "Metrics session WebSocket disconnected",
             extra={
-                "user_id": user.user_id if user else None,
+                "user_id": user_id,
             },
         )
 
-    async def on_message(
-        self,
-        message: MessageEnvelope,
-        user: AuthUser | None,
-    ) -> dict[str, Any] | None:
+    async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
         """
         Handle incoming WebSocket messages.
 
         Args:
             message: The parsed message envelope
-            user: The authenticated user (if auth is required)
 
         Returns:
-            Response dict to send back, or None for no response
+            Response MessageEnvelope or None for no response
         """
         message_type = message.type
 
         if message_type == "subscribe":
-            return await self._handle_subscribe(message, user)
+            return await self._handle_subscribe(message)
         elif message_type == "unsubscribe":
-            return await self._handle_unsubscribe(message, user)
+            return await self._handle_unsubscribe(message)
         elif message_type == "ping":
-            return {"type": "pong", "timestamp": message.timestamp}
+            return MessageEnvelope(
+                type="pong",
+                payload={"timestamp": message.timestamp},
+                id=message.id,
+            )
         else:
-            return {
-                "type": "error",
-                "code": "unknown_message_type",
-                "message": f"Unknown message type: {message_type}",
-            }
+            return MessageEnvelope(
+                type="error",
+                payload={
+                    "code": "unknown_message_type",
+                    "message": f"Unknown message type: {message_type}",
+                },
+                id=message.id,
+            )
 
-    async def _handle_subscribe(
-        self,
-        message: MessageEnvelope,
-        user: AuthUser | None,
-    ) -> dict[str, Any]:
+    async def _handle_subscribe(self, message: MessageEnvelope) -> MessageEnvelope:
         """Handle subscription to session metrics."""
         payload = message.payload or {}
         session_id = payload.get("session_id")
 
         if not session_id:
-            return {
-                "type": "error",
-                "code": "missing_session_id",
-                "message": "session_id is required",
-            }
+            return MessageEnvelope(
+                type="error",
+                payload={
+                    "code": "missing_session_id",
+                    "message": "session_id is required",
+                },
+                id=message.id,
+            )
 
         self._subscribed_sessions.add(session_id)
 
         # Return initial metrics snapshot
-        return {
-            "type": "session_metrics",
-            "session_id": session_id,
-            "data": {
-                "status": "active",
-                "duration_seconds": 0,
-                "token_usage": {
-                    "input_tokens": 0,
-                    "output_tokens": 0,
-                    "total_tokens": 0,
+        return MessageEnvelope(
+            type="session_metrics",
+            payload={
+                "session_id": session_id,
+                "data": {
+                    "status": "active",
+                    "duration_seconds": 0,
+                    "token_usage": {
+                        "input_tokens": 0,
+                        "output_tokens": 0,
+                        "total_tokens": 0,
+                    },
+                    "message_count": 0,
                 },
-                "message_count": 0,
             },
-        }
+            id=message.id,
+        )
 
-    async def _handle_unsubscribe(
-        self,
-        message: MessageEnvelope,
-        user: AuthUser | None,
-    ) -> dict[str, Any]:
+    async def _handle_unsubscribe(self, message: MessageEnvelope) -> MessageEnvelope:
         """Handle unsubscription from session metrics."""
         payload = message.payload or {}
         session_id = payload.get("session_id")
@@ -158,7 +159,8 @@ class MetricsSessionHandler(WebSocketBase):
         if session_id and session_id in self._subscribed_sessions:
             self._subscribed_sessions.discard(session_id)
 
-        return {
-            "type": "unsubscribed",
-            "session_id": session_id,
-        }
+        return MessageEnvelope(
+            type="unsubscribed",
+            payload={"session_id": session_id},
+            id=message.id,
+        )

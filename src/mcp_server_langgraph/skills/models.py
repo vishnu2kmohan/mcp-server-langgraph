@@ -94,6 +94,20 @@ class Skill(BaseModel):
         description="Tags for categorization and search",
     )
 
+    # AgentSkills.io compliance fields (Appendix B)
+    license: str = Field(
+        default="",
+        description="License identifier (e.g., MIT, Apache-2.0)",
+    )
+    allowed_tools: list[str] = Field(
+        default_factory=list,
+        description="Pre-approved tools this skill can use (e.g., filesystem:read_file)",
+    )
+    category: str = Field(
+        default="",
+        description="Skill category (e.g., research, api-integration, automation)",
+    )
+
     # Instructions and examples
     instructions: str = Field(
         default="",

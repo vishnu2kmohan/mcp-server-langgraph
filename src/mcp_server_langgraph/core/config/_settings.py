@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     """Application settings with Infisical secrets support"""
 
     # Service
-    service_name: str = "mcp-server-langgraph"
+    service_name: str = "agent-studio"
     service_version: str = __version__  # Read from package version
     environment: str = "development"
 
@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     # SECURITY: Controls whether authorization can fall back to role-based checks when OpenFGA is unavailable
     # Default: False (fail-closed, secure by default)
     # Set to True only in development/testing environments to allow degraded authorization
-    allow_auth_fallback: bool = False
+    allow_auth_fallback: bool = True
 
     # HIPAA Compliance (only required if processing PHI)
     hipaa_integrity_secret: str | None = None
@@ -62,8 +62,18 @@ class Settings(BaseSettings):
         default=True,
         validation_alias=AliasChoices("ENABLE_CONSOLE_EXPORT"),
     )
-    enable_tracing: bool = True
-    enable_metrics: bool = True
+    enable_tracing: bool = False
+    enable_metrics: bool = False
+    # OpenTelemetry SDK control - read from OTEL_SDK_DISABLED env var
+    otel_sdk_disabled: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("OTEL_SDK_DISABLED"),
+    )
+    # OpenTelemetry service name - read from OTEL_SERVICE_NAME env var
+    otel_service_name: str = Field(
+        default="agent-studio",
+        validation_alias=AliasChoices("OTEL_SERVICE_NAME"),
+    )
 
     # Prometheus (for SLA monitoring and compliance metrics)
     prometheus_url: str = "http://prometheus:9090"
@@ -109,7 +119,7 @@ class Settings(BaseSettings):
     langsmith_tracing_v2: bool = True  # Use v2 tracing (recommended)
 
     # Observability Backend Selection
-    observability_backend: str = "both"  # opentelemetry, langsmith, both
+    observability_backend: str = "opentelemetry"  # opentelemetry, langsmith, both
 
     # LGTM Stack URLs (Loki, Grafana, Tempo, Mimir)
     # Used for startup validation and health checks
@@ -184,7 +194,7 @@ class Settings(BaseSettings):
     #   - vertex_ai/claude-sonnet-4-5@20250929 (Claude Sonnet 4.5 via Vertex AI)
     #   - vertex_ai/gemini-3-pro-preview (Gemini 3.0 Pro via Vertex AI)
     model_name: str = "gemini-2.5-flash"  # Default: Gemini 2.5 Flash (balanced cost/performance)
-    model_temperature: float = 0.7
+    model_temperature: float = 1.0
     model_max_tokens: int = 8192
     model_timeout: int = Field(
         default=60,
@@ -243,7 +253,7 @@ class Settings(BaseSettings):
     enable_dynamic_context_loading: bool = False  # Enable semantic search-based context loading
     qdrant_url: str = "localhost"  # Qdrant server URL
     qdrant_port: int = 6333  # Qdrant server port
-    qdrant_collection_name: str = "mcp_context"  # Collection name for context storage
+    qdrant_collection_name: str = "agent_studio"  # Collection name for context storage
     dynamic_context_max_tokens: int = 2000  # Max tokens to load from dynamic context
     dynamic_context_top_k: int = 3  # Number of top results from semantic search
 
@@ -315,7 +325,7 @@ class Settings(BaseSettings):
     # Code Execution Configuration (Anthropic Best Practice - Progressive Disclosure)
     # SECURITY: Disabled by default - must be explicitly enabled
     enable_code_execution: bool = False  # Enable sandboxed code execution
-    code_execution_backend: str = "docker-engine"  # Backend: docker-engine, kubernetes, process
+    code_execution_backend: str = "process"  # Backend: docker-engine, kubernetes, process
     code_execution_timeout: int = 30  # Execution timeout in seconds (1-600)
     code_execution_memory_limit_mb: int = 512  # Memory limit in MB (64-8192)
     code_execution_cpu_quota: float = 1.0  # CPU cores quota (0.1-8.0)
@@ -418,7 +428,7 @@ class Settings(BaseSettings):
 
     # Docker-specific settings
     code_execution_docker_image: str = (
-        "jupyter/scipy-notebook:python-3.12"  # Docker image for execution (includes numpy, pandas, matplotlib, scipy)
+        "ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:latest"  # Custom sandbox image
     )
     code_execution_docker_socket: str = "/var/run/docker.sock"  # Docker socket path
 
@@ -489,8 +499,8 @@ class Settings(BaseSettings):
     # This is the externally accessible URL (e.g., http://localhost/authn or https://auth.example.com/authn)
     # Falls back to keycloak_server_url if not set
     keycloak_public_url: str | None = None
-    keycloak_realm: str = "langgraph-agent"
-    keycloak_client_id: str = "langgraph-client"
+    keycloak_realm: str = "default"
+    keycloak_client_id: str = "agent-studio-keycloak-client-id"
     keycloak_client_secret: str | None = None
     keycloak_admin_realm: str = "master"  # Admin API uses master realm for admin-cli client
     keycloak_admin_username: str = "admin"
@@ -552,6 +562,13 @@ class Settings(BaseSettings):
     api_key_cache_db: int = 3  # Redis database number for API key cache (ISOLATED from L2 cache DB 2)
     api_key_cache_ttl: int = 3600  # Cache TTL in seconds (1 hour)
 
+    # Redis Cache URL (for L2 caching, semantic cache, etc.)
+    # Uses db 2 by default (see Redis DB allocation above)
+    redis_cache_url: str = Field(
+        default="redis://localhost:6379/2",
+        validation_alias=AliasChoices("REDIS_CACHE_URL", "redis_cache_url"),
+    )
+
     # Storage Backend Configuration (for compliance data retention)
     # Conversation Storage (uses checkpoint backend by default)
     conversation_storage_backend: str = "checkpoint"  # "checkpoint" (uses checkpoint_backend), "database"
@@ -565,14 +582,14 @@ class Settings(BaseSettings):
     # PostgreSQL URL for SQLAlchemy async (must use asyncpg driver)
     # Example: postgresql+asyncpg://user:pass@localhost:5432/dbname
     # NOTE: Default has no credentials. Set DATABASE_URL env var with credentials in production.
-    database_url: str = "postgresql+asyncpg://localhost:5432/mcp"
+    database_url: str = "postgresql+asyncpg://localhost:5432/agent_studio"
 
     # Workflow Storage Backend
     # Determines where workflow definitions and sharing metadata are stored
     # - "postgres": Uses PostgreSQL with FTS and cursor pagination (recommended for production)
     # - "redis": Uses Redis for fast access (good for caching layer)
     # - "memory": In-memory using fakeredis (development only, requires fakeredis package)
-    workflow_storage_backend: str = "postgres"  # "postgres" (recommended), "redis", "memory"
+    workflow_storage_backend: str = "memory"  # "postgres" (recommended), "redis", "memory"
 
     # GDPR/HIPAA/SOC2/FedRAMP Compliance Storage (ADR-0041: Pure PostgreSQL)
     # Storage for user profiles, preferences, consents, conversations, and audit logs

@@ -70,6 +70,13 @@ class ResourceType(str, Enum):
     MARKETPLACE = "marketplace"
     CONFIG = "config"
 
+    # References
+    REFERENCE = "reference"
+
+    # Memory and Plans (Phase 4 references)
+    MEMORY = "memory"
+    PLAN = "plan"
+
 
 @dataclass
 class ResourceTypeDefinition:
@@ -388,6 +395,34 @@ class ResourceTypeRegistry:
                 prefix="config:",
                 allowed_relations=["admin", "viewer"],
                 description="System configuration",
+            )
+        )
+
+        # ========== References ==========
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.REFERENCE.value,
+                prefix="reference:",
+                allowed_relations=["viewer"],
+                description="Markdown reference resolution",
+            )
+        )
+
+        # ========== Memory and Plans (Phase 4 References) ==========
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.MEMORY.value,
+                prefix="memory:",
+                allowed_relations=["session", "viewer"],
+                description="Memory notes for [[memory:id]] markdown references",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.PLAN.value,
+                prefix="plan:",
+                allowed_relations=["session", "viewer"],
+                description="Execution plans for [[plan:id]] markdown references",
             )
         )
 

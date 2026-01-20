@@ -29,8 +29,9 @@ if TYPE_CHECKING:
 # Default cache TTL for MCP capabilities (30 minutes)
 MCP_CACHE_TTL = 1800
 
-# Cache key prefixes
+# Cache key prefixes (v1 suffix ensures invalidation on schema changes)
 CACHE_PREFIX = "mcp:"
+CACHE_VERSION = "v1"
 
 
 # =============================================================================
@@ -87,11 +88,11 @@ def generate_tools_cache_key(server_name: str | None) -> str:
         server_name: Optional server filter. None means all servers.
 
     Returns:
-        Cache key string
+        Cache key string with version suffix
     """
     if server_name is None:
-        return f"{CACHE_PREFIX}tools:all"
-    return f"{CACHE_PREFIX}tools:{server_name}"
+        return f"{CACHE_PREFIX}tools:all:{CACHE_VERSION}"
+    return f"{CACHE_PREFIX}tools:{server_name}:{CACHE_VERSION}"
 
 
 def generate_resources_cache_key(server_name: str | None) -> str:
@@ -101,11 +102,11 @@ def generate_resources_cache_key(server_name: str | None) -> str:
         server_name: Optional server filter. None means all servers.
 
     Returns:
-        Cache key string
+        Cache key string with version suffix
     """
     if server_name is None:
-        return f"{CACHE_PREFIX}resources:all"
-    return f"{CACHE_PREFIX}resources:{server_name}"
+        return f"{CACHE_PREFIX}resources:all:{CACHE_VERSION}"
+    return f"{CACHE_PREFIX}resources:{server_name}:{CACHE_VERSION}"
 
 
 def generate_prompts_cache_key(server_name: str | None) -> str:
@@ -115,20 +116,20 @@ def generate_prompts_cache_key(server_name: str | None) -> str:
         server_name: Optional server filter. None means all servers.
 
     Returns:
-        Cache key string
+        Cache key string with version suffix
     """
     if server_name is None:
-        return f"{CACHE_PREFIX}prompts:all"
-    return f"{CACHE_PREFIX}prompts:{server_name}"
+        return f"{CACHE_PREFIX}prompts:all:{CACHE_VERSION}"
+    return f"{CACHE_PREFIX}prompts:{server_name}:{CACHE_VERSION}"
 
 
 def generate_server_list_cache_key() -> str:
     """Generate cache key for server list.
 
     Returns:
-        Cache key string
+        Cache key string with version suffix
     """
-    return f"{CACHE_PREFIX}servers:all"
+    return f"{CACHE_PREFIX}servers:all:{CACHE_VERSION}"
 
 
 def generate_server_capabilities_cache_key(server_name: str) -> str:
@@ -138,9 +139,9 @@ def generate_server_capabilities_cache_key(server_name: str) -> str:
         server_name: Name of the server
 
     Returns:
-        Cache key string
+        Cache key string with version suffix
     """
-    return f"{CACHE_PREFIX}server:{server_name}:capabilities"
+    return f"{CACHE_PREFIX}server:{server_name}:capabilities:{CACHE_VERSION}"
 
 
 # =============================================================================

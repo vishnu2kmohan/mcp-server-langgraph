@@ -2,7 +2,7 @@
 
 This module uses lazy imports via __getattr__ to avoid loading heavy dependencies
 (LangGraph, LLM providers) when only lightweight utilities are needed.
-This enables the authz-proxy Docker image to be ~100MB instead of 1.4GB.
+This enables minimal Docker images to be much smaller.
 """
 
 from typing import TYPE_CHECKING
@@ -162,7 +162,7 @@ __all__ = [
 # Lazy Import Handler
 # =============================================================================
 # Heavy modules (LangGraph, LLM providers) are loaded only when accessed.
-# This reduces authz-proxy Docker image from 1.4GB to ~100MB.
+# This keeps minimal Docker images small.
 
 
 def __getattr__(name: str):  # type: ignore[no-untyped-def]  # noqa: C901

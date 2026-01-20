@@ -66,9 +66,9 @@ class LangGraphExecutionManager:
     """
     Execution manager that integrates workflow storage with LangGraph execution.
 
-    Implements the ExecutionManagerInterface from workflow_execution_ws.py.
-    Uses workflow storage to fetch workflow definitions and tracks
-    execution state for running workflows.
+    Provides workflow fetching and execution tracking capabilities.
+    Used by the WebSocket endpoint at /api/v1/ws/workflows/{workflow_id}
+    (handler: mcp_server_langgraph.websocket.handlers.workflow).
     """
 
     def __init__(self, workflow_storage: WorkflowStorageProtocol) -> None:

@@ -463,7 +463,7 @@ FEEDBACK:
             Structured VerificationResult
         """
         # Extract scores using simple parsing (can be enhanced with regex)
-        criterion_scores = {}
+        criterion_scores: dict[str, float] = {}
         overall_score = None  # Will be set from OVERALL or calculated
         critical_issues = []
         suggestions = []
@@ -493,10 +493,10 @@ FEEDBACK:
                 current_section = "feedback"
             elif current_section == "scores" and ":" in line:
                 try:
-                    criterion, score = line.split(":", 1)
+                    criterion, score_str = line.split(":", 1)
                     criterion = criterion.strip(" -")
-                    score = float(score.strip())  # type: ignore[assignment]
-                    criterion_scores[criterion] = score
+                    score_val = float(score_str.strip())
+                    criterion_scores[criterion] = score_val
                 except (ValueError, IndexError):
                     pass
             elif current_section == "critical" and line.startswith("-"):
@@ -527,7 +527,7 @@ FEEDBACK:
         return VerificationResult(
             passed=passed,
             overall_score=overall_score,
-            criterion_scores=criterion_scores,  # type: ignore[arg-type]
+            criterion_scores=criterion_scores,
             feedback=feedback,
             requires_refinement=requires_refinement or not passed,
             critical_issues=critical_issues,

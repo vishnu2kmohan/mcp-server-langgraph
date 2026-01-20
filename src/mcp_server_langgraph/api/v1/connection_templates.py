@@ -49,6 +49,21 @@ class ConnectionTemplate(BaseModel):
     category: str
     oauth2_scopes: list[str] = Field(default_factory=list)
     config_fields: list[ConfigField] = Field(default_factory=list)
+    # Enhanced fields for connector directory (ADR-0102)
+    keywords: list[str] = Field(
+        default_factory=list,
+        description="Keywords for intent matching in chat suggestions",
+    )
+    popularity: int = Field(
+        default=50,
+        ge=0,
+        le=100,
+        description="Popularity score 0-100 for sorting (higher = more popular)",
+    )
+    documentation_url: str | None = Field(
+        default=None,
+        description="Link to service documentation",
+    )
 
 
 class TemplateCategory(BaseModel):
@@ -63,6 +78,13 @@ class TemplateListResponse(BaseModel):
     """Response for listing templates."""
 
     templates: list[ConnectionTemplate]
+
+
+class TemplateSuggestionsResponse(BaseModel):
+    """Response for template suggestions based on query keywords."""
+
+    templates: list[ConnectionTemplate]
+    total: int = Field(description="Total number of matching templates")
 
 
 class CategoryListResponse(BaseModel):
@@ -130,6 +152,11 @@ CATEGORIES: list[TemplateCategory] = [
         name="Custom",
         description="Custom API integrations",
     ),
+    TemplateCategory(
+        id="data",
+        name="Data & Analytics",
+        description="Databases, data warehouses, and analytics platforms",
+    ),
 ]
 
 TEMPLATES: list[ConnectionTemplate] = [
@@ -142,6 +169,9 @@ TEMPLATES: list[ConnectionTemplate] = [
         default_url="https://api.github.com/mcp",
         category="development",
         oauth2_scopes=["repo", "user", "read:org"],
+        keywords=["github", "pr", "pull request", "repository", "repo", "commit", "issue", "git", "code"],
+        popularity=95,
+        documentation_url="https://docs.github.com/",
         config_fields=[
             ConfigField(
                 name="oauth2_client_id",
@@ -171,6 +201,9 @@ TEMPLATES: list[ConnectionTemplate] = [
         default_url="https://slack.com/api/mcp",
         category="communication",
         oauth2_scopes=["channels:read", "chat:write", "users:read"],
+        keywords=["slack", "channel", "message", "dm", "workspace", "thread", "chat"],
+        popularity=90,
+        documentation_url="https://api.slack.com/",
         config_fields=[
             ConfigField(
                 name="oauth2_client_id",
@@ -191,6 +224,9 @@ TEMPLATES: list[ConnectionTemplate] = [
         default_url="https://api.notion.com/mcp",
         category="productivity",
         oauth2_scopes=["read", "write"],
+        keywords=["notion", "page", "database", "wiki", "notes", "workspace", "document"],
+        popularity=85,
+        documentation_url="https://developers.notion.com/",
         config_fields=[
             ConfigField(
                 name="oauth2_client_id",
@@ -211,6 +247,9 @@ TEMPLATES: list[ConnectionTemplate] = [
         default_url="https://gitlab.com/api/v4/mcp",
         category="development",
         oauth2_scopes=["api", "read_user", "read_repository"],
+        keywords=["gitlab", "merge request", "mr", "repository", "ci", "pipeline", "git", "code"],
+        popularity=70,
+        documentation_url="https://docs.gitlab.com/ee/api/",
         config_fields=[
             ConfigField(
                 name="oauth2_client_id",
@@ -240,6 +279,9 @@ TEMPLATES: list[ConnectionTemplate] = [
         default_url="https://api.atlassian.com/mcp",
         category="productivity",
         oauth2_scopes=["read:jira-work", "write:jira-work", "read:jira-user"],
+        keywords=["jira", "ticket", "sprint", "backlog", "issue", "project", "agile", "scrum"],
+        popularity=80,
+        documentation_url="https://developer.atlassian.com/cloud/jira/",
         config_fields=[
             ConfigField(
                 name="oauth2_client_id",
@@ -260,6 +302,9 @@ TEMPLATES: list[ConnectionTemplate] = [
         default_url="https://api.linear.app/mcp",
         category="productivity",
         oauth2_scopes=["read", "write"],
+        keywords=["linear", "issue", "project", "cycle", "roadmap", "sprint", "task"],
+        popularity=75,
+        documentation_url="https://developers.linear.app/",
         config_fields=[
             ConfigField(
                 name="oauth2_client_id",
@@ -280,6 +325,9 @@ TEMPLATES: list[ConnectionTemplate] = [
         default_url="https://discord.com/api/mcp",
         category="communication",
         oauth2_scopes=["bot", "messages.read"],
+        keywords=["discord", "server", "channel", "message", "voice", "bot", "community"],
+        popularity=65,
+        documentation_url="https://discord.com/developers/docs",
         config_fields=[
             ConfigField(
                 name="oauth2_client_id",
@@ -299,6 +347,9 @@ TEMPLATES: list[ConnectionTemplate] = [
         auth_type="none",
         default_url="http://localhost:3001",
         category="local",
+        keywords=["file", "filesystem", "local", "directory", "folder", "read", "write"],
+        popularity=60,
+        documentation_url=None,
         config_fields=[
             ConfigField(
                 name="url",
@@ -319,6 +370,9 @@ TEMPLATES: list[ConnectionTemplate] = [
         auth_type="none",
         default_url="http://localhost:3002",
         category="local",
+        keywords=["sqlite", "database", "sql", "query", "local", "data"],
+        popularity=55,
+        documentation_url="https://www.sqlite.org/docs.html",
         config_fields=[
             ConfigField(
                 name="url",
@@ -339,6 +393,9 @@ TEMPLATES: list[ConnectionTemplate] = [
         auth_type="api_key",
         default_url="https://your-mcp-server.example.com",
         category="custom",
+        keywords=["custom", "api", "key", "server", "integration"],
+        popularity=40,
+        documentation_url=None,
         config_fields=[
             ConfigField(
                 name="url",
@@ -367,6 +424,9 @@ TEMPLATES: list[ConnectionTemplate] = [
         default_url="https://your-mcp-server.example.com",
         category="custom",
         oauth2_scopes=[],
+        keywords=["custom", "oauth", "oauth2", "server", "integration"],
+        popularity=40,
+        documentation_url=None,
         config_fields=[
             ConfigField(
                 name="url",
@@ -391,6 +451,264 @@ TEMPLATES: list[ConnectionTemplate] = [
                 required=False,
                 placeholder="scope1,scope2",
                 description="Comma-separated list of OAuth scopes",
+            ),
+        ],
+    ),
+    # =========================================================================
+    # Data & Analytics Templates
+    # =========================================================================
+    ConnectionTemplate(
+        id="postgresql",
+        name="PostgreSQL",
+        description="Query PostgreSQL databases and manage schemas",
+        icon="database",
+        auth_type="api_key",
+        default_url="http://localhost:3010",
+        category="data",
+        keywords=["postgresql", "postgres", "sql", "database", "query", "table", "schema", "relational"],
+        popularity=85,
+        documentation_url="https://www.postgresql.org/docs/",
+        config_fields=[
+            ConfigField(
+                name="url",
+                label="MCP Server URL",
+                type="url",
+                required=True,
+                placeholder="http://localhost:3010",
+                default="http://localhost:3010",
+                description="URL of the PostgreSQL MCP server",
+            ),
+            ConfigField(
+                name="api_key",
+                label="Connection String / API Key",
+                type="password",
+                required=True,
+                placeholder="postgresql://user:pass@host:5432/db",
+                description="PostgreSQL connection string or MCP server API key",
+            ),
+        ],
+    ),
+    ConnectionTemplate(
+        id="mongodb",
+        name="MongoDB",
+        description="Query MongoDB collections and manage documents",
+        icon="database",
+        auth_type="api_key",
+        default_url="http://localhost:3011",
+        category="data",
+        keywords=["mongodb", "mongo", "nosql", "document", "collection", "database", "query"],
+        popularity=80,
+        documentation_url="https://www.mongodb.com/docs/",
+        config_fields=[
+            ConfigField(
+                name="url",
+                label="MCP Server URL",
+                type="url",
+                required=True,
+                placeholder="http://localhost:3011",
+                default="http://localhost:3011",
+                description="URL of the MongoDB MCP server",
+            ),
+            ConfigField(
+                name="api_key",
+                label="Connection String / API Key",
+                type="password",
+                required=True,
+                placeholder="mongodb://user:pass@host:27017/db",
+                description="MongoDB connection string or MCP server API key",
+            ),
+        ],
+    ),
+    ConnectionTemplate(
+        id="mysql",
+        name="MySQL",
+        description="Query MySQL databases and manage schemas",
+        icon="database",
+        auth_type="api_key",
+        default_url="http://localhost:3012",
+        category="data",
+        keywords=["mysql", "sql", "database", "query", "table", "schema", "relational", "mariadb"],
+        popularity=75,
+        documentation_url="https://dev.mysql.com/doc/",
+        config_fields=[
+            ConfigField(
+                name="url",
+                label="MCP Server URL",
+                type="url",
+                required=True,
+                placeholder="http://localhost:3012",
+                default="http://localhost:3012",
+                description="URL of the MySQL MCP server",
+            ),
+            ConfigField(
+                name="api_key",
+                label="Connection String / API Key",
+                type="password",
+                required=True,
+                placeholder="mysql://user:pass@host:3306/db",
+                description="MySQL connection string or MCP server API key",
+            ),
+        ],
+    ),
+    ConnectionTemplate(
+        id="redis",
+        name="Redis",
+        description="Access Redis key-value store and caching",
+        icon="database",
+        auth_type="api_key",
+        default_url="http://localhost:3013",
+        category="data",
+        keywords=["redis", "cache", "key-value", "nosql", "memory", "pub/sub", "queue"],
+        popularity=70,
+        documentation_url="https://redis.io/docs/",
+        config_fields=[
+            ConfigField(
+                name="url",
+                label="MCP Server URL",
+                type="url",
+                required=True,
+                placeholder="http://localhost:3013",
+                default="http://localhost:3013",
+                description="URL of the Redis MCP server",
+            ),
+            ConfigField(
+                name="api_key",
+                label="Connection String / API Key",
+                type="password",
+                required=True,
+                placeholder="redis://user:pass@host:6379/0",
+                description="Redis connection string or MCP server API key",
+            ),
+        ],
+    ),
+    ConnectionTemplate(
+        id="elasticsearch",
+        name="Elasticsearch",
+        description="Search and analyze data with Elasticsearch",
+        icon="search",
+        auth_type="api_key",
+        default_url="http://localhost:3014",
+        category="data",
+        keywords=["elasticsearch", "elastic", "search", "index", "query", "analytics", "logging", "kibana"],
+        popularity=70,
+        documentation_url="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html",
+        config_fields=[
+            ConfigField(
+                name="url",
+                label="MCP Server URL",
+                type="url",
+                required=True,
+                placeholder="http://localhost:3014",
+                default="http://localhost:3014",
+                description="URL of the Elasticsearch MCP server",
+            ),
+            ConfigField(
+                name="api_key",
+                label="API Key",
+                type="password",
+                required=True,
+                placeholder="Your Elasticsearch API key",
+                description="Elasticsearch API key or Base64 encoded credentials",
+            ),
+        ],
+    ),
+    ConnectionTemplate(
+        id="bigquery",
+        name="Google BigQuery",
+        description="Query and analyze data in Google BigQuery data warehouse",
+        icon="cloud",
+        auth_type="oauth2",
+        default_url="https://bigquery.googleapis.com/mcp",
+        category="data",
+        oauth2_scopes=["https://www.googleapis.com/auth/bigquery"],
+        keywords=["bigquery", "google", "data warehouse", "sql", "analytics", "gcp", "cloud", "query"],
+        popularity=75,
+        documentation_url="https://cloud.google.com/bigquery/docs",
+        config_fields=[
+            ConfigField(
+                name="oauth2_client_id",
+                label="OAuth2 Client ID",
+                type="text",
+                required=True,
+                placeholder="Your Google Cloud OAuth2 Client ID",
+                description="Create at https://console.cloud.google.com/apis/credentials",
+            ),
+            ConfigField(
+                name="project_id",
+                label="GCP Project ID",
+                type="text",
+                required=True,
+                placeholder="your-gcp-project-id",
+                description="Google Cloud Platform project ID",
+            ),
+        ],
+    ),
+    ConnectionTemplate(
+        id="snowflake",
+        name="Snowflake",
+        description="Query and analyze data in Snowflake data warehouse",
+        icon="snowflake",
+        auth_type="api_key",
+        default_url="https://your-account.snowflakecomputing.com/mcp",
+        category="data",
+        keywords=["snowflake", "data warehouse", "sql", "analytics", "cloud", "query", "data lake"],
+        popularity=70,
+        documentation_url="https://docs.snowflake.com/",
+        config_fields=[
+            ConfigField(
+                name="url",
+                label="Snowflake Account URL",
+                type="url",
+                required=True,
+                placeholder="https://your-account.snowflakecomputing.com",
+                description="Your Snowflake account URL",
+            ),
+            ConfigField(
+                name="api_key",
+                label="API Key / Auth Token",
+                type="password",
+                required=True,
+                placeholder="Your Snowflake authentication token",
+                description="Snowflake key pair or OAuth token",
+            ),
+            ConfigField(
+                name="warehouse",
+                label="Warehouse",
+                type="text",
+                required=False,
+                placeholder="COMPUTE_WH",
+                description="Default Snowflake warehouse to use",
+            ),
+        ],
+    ),
+    ConnectionTemplate(
+        id="clickhouse",
+        name="ClickHouse",
+        description="Query ClickHouse for real-time analytics",
+        icon="database",
+        auth_type="api_key",
+        default_url="http://localhost:8123",
+        category="data",
+        keywords=["clickhouse", "analytics", "olap", "sql", "real-time", "columnar", "query"],
+        popularity=60,
+        documentation_url="https://clickhouse.com/docs",
+        config_fields=[
+            ConfigField(
+                name="url",
+                label="ClickHouse URL",
+                type="url",
+                required=True,
+                placeholder="http://localhost:8123",
+                default="http://localhost:8123",
+                description="ClickHouse HTTP interface URL",
+            ),
+            ConfigField(
+                name="api_key",
+                label="Authentication",
+                type="password",
+                required=False,
+                placeholder="user:password",
+                description="ClickHouse username:password for authentication",
             ),
         ],
     ),
@@ -449,6 +767,44 @@ async def list_templates(
         templates = [t for t in templates if search_lower in t.name.lower() or search_lower in t.description.lower()]
 
     return TemplateListResponse(templates=templates)
+
+
+@templates_router.get("/suggestions")
+async def get_template_suggestions(
+    current_user: CurrentUser,
+    query: str = Query(..., min_length=1, max_length=200, description="Query text for intent matching"),
+    limit: int = Query(3, ge=1, le=10, description="Maximum number of suggestions to return"),
+) -> TemplateSuggestionsResponse:
+    """
+    Get template suggestions based on query keywords.
+
+    Performs fuzzy matching against template keywords and names.
+    Returns templates sorted by match relevance, then popularity.
+
+    Requires user authentication.
+    """
+    query_lower = query.lower()
+    query_words = set(query_lower.split())
+
+    matches: list[tuple[ConnectionTemplate, int]] = []
+    for template in TEMPLATES:
+        # Calculate match score
+        keyword_matches = sum(1 for kw in template.keywords if kw in query_lower)
+        name_match = 3 if template.name.lower() in query_lower else 0
+        word_matches = sum(1 for word in query_words if word in template.keywords)
+
+        score = keyword_matches * 2 + name_match + word_matches
+
+        if score > 0:
+            matches.append((template, score))
+
+    # Sort by score desc, then popularity desc
+    matches.sort(key=lambda x: (x[1], x[0].popularity), reverse=True)
+
+    return TemplateSuggestionsResponse(
+        templates=[m[0] for m in matches[:limit]],
+        total=len(matches),
+    )
 
 
 @templates_router.get("/{template_id}")

@@ -314,7 +314,7 @@ class LiteLLMModelSync:
         return model_id
 
 
-async def start_model_sync_scheduler() -> asyncio.Task:
+async def start_model_sync_scheduler() -> asyncio.Task[None]:
     """
     Start background model sync scheduler.
 

@@ -895,7 +895,7 @@ class SemanticIndexManager:
             )
             if self.query_cache_ttl_seconds > 0 and cache_key in self._query_cache:
                 self._query_cache_hits += 1
-                cached_results = self._query_cache[cache_key]
+                cached_results: list[ToolIndexEntry] = self._query_cache[cache_key]
                 span.set_attribute("cache_hit", True)
                 span.set_attribute("results_count", len(cached_results))
                 logger.debug(f"Query cache hit for tools search: {cache_key}")

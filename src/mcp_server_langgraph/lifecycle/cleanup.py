@@ -23,7 +23,6 @@ async def cleanup_all_clients() -> None:
     Call from FastAPI lifespan shutdown in:
     - mcp/server_streamable.py (Streamable HTTP) - CRITICAL
     - infrastructure/app_factory.py (stdio)
-    - authz_proxy/server.py (optional - already has OpenFGA cleanup)
 
     Safe to call even if no clients were created.
     Uses function-level imports to avoid circular import issues.

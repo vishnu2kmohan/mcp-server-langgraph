@@ -76,6 +76,10 @@ class SessionConfig(BaseModel):
         le=128000,
         description="Max tokens per response",
     )
+    execution_mode: Literal["default", "plan", "auto_accept", "bypass"] = Field(
+        default="default",
+        description="Execution mode for bypass auto-approval: default, plan, auto_accept, bypass",
+    )
 
 
 class Message(BaseModel):
@@ -266,6 +270,7 @@ class ProjectSummary(BaseModel):
 AuthType = Literal["none", "api_key", "oauth2"]
 ConnectionStatus = Literal["disconnected", "connecting", "connected", "error", "auth_required"]
 TransportProtocol = Literal["streamable_http", "stdio"]
+ConnectionScopeType = Literal["user", "project", "session"]
 
 
 class OAuth2Config(BaseModel):
@@ -314,10 +319,11 @@ class MCPConnection(BaseModel):
     resource_count: int = Field(default=0, description="Number of resources available")
     prompt_count: int = Field(default=0, description="Number of prompts available")
 
-    # Ownership
+    # Ownership and access control
     owner_id: str = Field(description="Owner user ID")
     organization_id: str | None = Field(default=None, description="Organization ID")
     project_id: str | None = Field(default=None, description="Project ID")
+    scope: ConnectionScopeType = Field(default="user", description="Access scope: user (owner only), project (project members), session (ephemeral)")
 
     # Timestamps
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="Creation timestamp")
@@ -343,6 +349,7 @@ class MCPConnection(BaseModel):
             prompt_count=self.prompt_count,
             last_connected_at=self.last_connected_at,
             created_at=self.created_at,
+            scope=self.scope,
         )
 
 
@@ -361,6 +368,7 @@ class MCPConnectionSummary(BaseModel):
     prompt_count: int = Field(default=0, description="Number of prompts available")
     last_connected_at: datetime | None = Field(default=None, description="Last successful connection")
     created_at: datetime = Field(description="Creation timestamp")
+    scope: ConnectionScopeType = Field(default="user", description="Access scope")
 
 
 class MCPConnectionCreate(BaseModel):
@@ -389,8 +397,9 @@ class MCPConnectionCreate(BaseModel):
     args: list[str] | None = Field(default=None, description="Command arguments (stdio transport)")
     env: dict[str, str] | None = Field(default=None, description="Environment variables (stdio transport)")
 
-    # Association
+    # Association and access control
     project_id: str | None = Field(default=None, description="Project to associate with")
+    scope: ConnectionScopeType = Field(default="user", description="Access scope: user (owner only), project (project members), session (ephemeral)")
 
 
 class MCPConnectionUpdate(BaseModel):

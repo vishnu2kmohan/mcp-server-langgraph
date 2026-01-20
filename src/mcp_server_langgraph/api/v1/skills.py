@@ -15,7 +15,7 @@ Endpoints:
 from __future__ import annotations
 
 import logging
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -24,6 +24,13 @@ from mcp_server_langgraph.auth.dependencies import (
     require_skill_viewer_global,
     require_skill_author_global,
 )
+from mcp_server_langgraph.core.feature_flags import feature_flags
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.skills.search import (
+        EmbeddingServiceProtocol,
+        VectorProviderProtocol,
+    )
 from mcp_server_langgraph.skills.auto_update import get_auto_update_scheduler
 from mcp_server_langgraph.skills.installer import SkillInstaller
 from mcp_server_langgraph.skills.marketplace import (
@@ -56,6 +63,12 @@ class SkillMetadata(BaseModel):
     author: str = Field(default="", description="Skill author")
     tags: list[str] = Field(default_factory=list, description="Skill tags")
     source: str | None = Field(default=None, description="Source marketplace")
+    # AgentSkills.io compliance fields (Appendix B)
+    license: str = Field(default="", description="License identifier (e.g., MIT, Apache-2.0)")
+    allowed_tools: list[str] = Field(
+        default_factory=list, description="Pre-approved tools this skill can use"
+    )
+    category: str = Field(default="", description="Skill category")
 
 
 class SkillListResponse(BaseModel):
@@ -372,3 +385,175 @@ async def apply_skill_updates(user: SkillAuthor) -> dict[str, Any]:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to apply updates: {e}",
         )
+
+
+# =============================================================================
+# Semantic Search Models
+# =============================================================================
+
+
+class SemanticSkillSearchRequest(BaseModel):
+    """Request body for semantic skill search."""
+
+    query: str = Field(..., min_length=1, description="Natural language search query")
+    limit: int = Field(default=10, ge=1, le=50, description="Maximum number of results")
+    min_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Minimum similarity score")
+
+
+class SemanticSkillSearchResult(BaseModel):
+    """A single semantic search result."""
+
+    skill_id: str = Field(..., description="Unique skill identifier")
+    name: str = Field(..., description="Skill name")
+    description: str = Field(..., description="Skill description")
+    score: float = Field(..., ge=0.0, le=1.0, description="Similarity score (0-1)")
+    tags: list[str] = Field(default_factory=list, description="Skill tags")
+
+
+class SemanticSkillSearchResponse(BaseModel):
+    """Response for semantic skill search."""
+
+    query: str = Field(..., description="Original search query")
+    results: list[SemanticSkillSearchResult] = Field(..., description="Search results ordered by score")
+    total_results: int = Field(..., description="Number of results returned")
+
+
+# =============================================================================
+# Semantic Search Provider Functions
+# =============================================================================
+
+
+def get_vector_provider() -> "VectorProviderProtocol":
+    """Get the vector provider for semantic search.
+
+    Returns:
+        Vector provider instance (Qdrant, pgvector, or in-memory)
+
+    Raises:
+        HTTPException: If vector provider is not available
+    """
+    try:
+        from mcp_server_langgraph.storage.vectors import get_vector_provider as _get_provider
+
+        provider = _get_provider()
+        if provider is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Vector provider not available. Ensure Qdrant or pgvector is configured.",
+            )
+        # Cast: VectorSearchProvider implements VectorProviderProtocol semantically
+        return cast("VectorProviderProtocol", provider)
+    except ImportError as e:
+        logger.warning(f"Vector provider import failed: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Vector storage not configured",
+        ) from e
+
+
+def get_embedding_service() -> "EmbeddingServiceProtocol":
+    """Get the embedding service for generating query vectors.
+
+    Returns:
+        Embedding service instance
+
+    Raises:
+        HTTPException: If embedding service is not available
+    """
+    try:
+        from mcp_server_langgraph.llm.embeddings import get_embedding_service as _get_service
+
+        service = _get_service()
+        if service is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Embedding service not available. Ensure LLM provider is configured.",
+            )
+        return service
+    except ImportError as e:
+        logger.warning(f"Embedding service import failed: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Embedding service not configured",
+        ) from e
+
+
+# =============================================================================
+# Semantic Search Endpoint
+# =============================================================================
+
+
+@router.post(
+    "/semantic-search",
+    summary="Semantic skill search",
+    description="Find skills using natural language query via vector similarity search",
+    response_model=SemanticSkillSearchResponse,
+)
+async def semantic_search_skills(
+    request: SemanticSkillSearchRequest,
+    user: SkillViewer,
+) -> SemanticSkillSearchResponse:
+    """Search for skills using semantic similarity.
+
+    This endpoint uses vector embeddings to find skills that semantically
+    match the user's natural language query. Requires the
+    enable_semantic_skill_search feature flag to be enabled.
+
+    Args:
+        request: Search request with query and options
+        user: Authenticated user with skill:viewer access
+
+    Returns:
+        Semantic search results with similarity scores
+
+    Raises:
+        HTTPException: 404 if feature not enabled, 503 if services unavailable
+    """
+    # Check feature flag
+    if not feature_flags.enable_semantic_skill_search:
+        raise HTTPException(
+            status_code=404,
+            detail="Semantic skill search is not enabled. Set FF_ENABLE_SEMANTIC_SKILL_SEARCH=true to activate.",
+        )
+
+    # Get services
+    vector_provider = get_vector_provider()
+    embedding_service = get_embedding_service()
+
+    # Generate query embedding
+    query_vector = await embedding_service.embed(request.query)
+
+    # Search vector store
+    raw_results = await vector_provider.search(
+        collection="skills",
+        query_vector=query_vector,
+        limit=request.limit,
+        min_score=request.min_score,
+    )
+
+    # Transform results to response model
+    results = [
+        SemanticSkillSearchResult(
+            skill_id=r.get("id", ""),
+            name=r.get("metadata", {}).get("name", ""),
+            description=r.get("metadata", {}).get("description", ""),
+            score=r.get("score", 0.0),
+            tags=r.get("metadata", {}).get("tags", []),
+        )
+        for r in raw_results
+    ]
+
+    logger.info(
+        f"Semantic skill search for '{request.query[:50]}...' returned {len(results)} results",
+        extra={
+            "user_id": user.get("sub", "unknown"),
+            "query": request.query[:100],
+            "result_count": len(results),
+        },
+    )
+
+    return SemanticSkillSearchResponse(
+        query=request.query,
+        results=results,
+        total_results=len(results),
+    )

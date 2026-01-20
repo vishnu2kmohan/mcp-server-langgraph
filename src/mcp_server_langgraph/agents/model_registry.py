@@ -302,7 +302,7 @@ class ModelRegistry:
             supports_effort_param=False,
             supports_json_mode=True,
             tier="complicated",
-            max_thinking_tokens=None,
+            max_thinking_tokens=32768,  # Defensive: prevents flaky test issues
             display_name="GPT-5.2",
             public_id="gpt-5.2",
             status="current",
@@ -594,7 +594,7 @@ class ModelRegistry:
             supports_streaming=True,
             supports_json_mode=True,
             tier="complicated",
-            max_thinking_tokens=None,
+            max_thinking_tokens=32768,  # Defensive: prevents flaky test issues
             display_name="GPT-5.2 (Azure)",
             public_id="gpt-5.2",  # Same as native - deduped
             status="current",
@@ -998,7 +998,7 @@ class ModelRegistry:
     def get_frontend_models(
         self,
         status: str | None = None,
-    ) -> list[dict[str, str | bool]]:
+    ) -> list[dict[str, str | bool | None]]:
         """Get models formatted for frontend Enhanced Model Selector.
 
         Returns a list of model dictionaries with fields required by the

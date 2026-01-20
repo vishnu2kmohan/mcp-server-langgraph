@@ -388,7 +388,7 @@ class DataExportService:
             return []
 
         try:
-            traces = await repo.get_by_user(user_id)
+            traces: list[dict[str, Any]] = await repo.get_by_user(user_id)
             return traces
         except Exception as e:
             logger.error(f"Failed to retrieve user decision traces: {e}", exc_info=True)

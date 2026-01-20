@@ -192,6 +192,30 @@ class GenerateWorkflowResponse(BaseModel):
 
 
 # ==============================================================================
+# Workflow Title Generation Models
+# ==============================================================================
+
+
+class GenerateTitleRequest(BaseModel):
+    """Request to generate a workflow title from context."""
+
+    description: str | None = Field(
+        default=None,
+        description="Workflow description for context",
+    )
+    session_context: str | None = Field(
+        default=None,
+        description="Context from originating session (e.g., first message or topic)",
+    )
+
+
+class GenerateTitleResponse(BaseModel):
+    """Response containing generated workflow title."""
+
+    title: str = Field(description="Generated workflow title (2-6 words)")
+
+
+# ==============================================================================
 # Chat-to-Workflow Models (ADR-0089, Plan Review Consensus)
 # ==============================================================================
 
@@ -1648,6 +1672,39 @@ async def generate_workflow(
         confidence=result["confidence"],
         suggestions=result.get("suggestions", []),
     )
+
+
+# ==============================================================================
+# Workflow Title Generation Endpoint
+# ==============================================================================
+
+
+@workflows_router.post("/workflows/generate-title")
+async def generate_workflow_title_endpoint(
+    request: GenerateTitleRequest,
+    current_user: CurrentUser,
+) -> GenerateTitleResponse:
+    """
+    Generate a workflow title from description and/or session context.
+
+    Uses AI to analyze the provided context and generate a concise,
+    descriptive title (2-6 words). Falls back to heuristic extraction
+    when LLM is unavailable.
+
+    Requires authentication.
+    """
+    _ = current_user  # Authentication required but user not used directly
+
+    from mcp_server_langgraph.studio.ai.workflow_title_generator import (
+        generate_workflow_title,
+    )
+
+    title = await generate_workflow_title(
+        description=request.description,
+        session_context=request.session_context,
+    )
+
+    return GenerateTitleResponse(title=title)
 
 
 # ==============================================================================

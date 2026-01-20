@@ -32,7 +32,13 @@ from pydantic import BaseModel, Field, model_validator
 from mcp_server_langgraph.api.deps import get_tempo_client
 from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.core.dependencies import (
+    get_audit_log_repository,
+    get_session_goal_repository,
+)
 from mcp_server_langgraph.monitoring.cost_tracker import invalidate_session_cost_cache
+from mcp_server_langgraph.repositories.audit_log import AuditLogRepository
+from mcp_server_langgraph.repositories.session_goal import SessionGoalRepository
 
 
 # Enums for type-safe status and role values
@@ -178,6 +184,10 @@ class SessionConfigResponse(BaseModel):
     model: str | None = Field(default=None, description="LLM model to use")
     temperature: float = Field(default=0.7, description="Sampling temperature")
     max_tokens: int | None = Field(default=None, description="Max tokens per response")
+    execution_mode: Literal["default", "plan", "auto_accept", "bypass"] = Field(
+        default="default",
+        description="Execution mode for bypass auto-approval",
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -210,6 +220,10 @@ class SessionConfigUpdateRequest(BaseModel):
     model: str | None = Field(default=None, description="LLM model to use")
     temperature: float | None = Field(default=None, ge=0.0, le=2.0, description="Sampling temperature")
     max_tokens: int | None = Field(default=None, ge=1, le=128000, description="Max tokens per response")
+    execution_mode: Literal["default", "plan", "auto_accept", "bypass"] | None = Field(
+        default=None,
+        description="Execution mode for bypass auto-approval",
+    )
 
 
 class SessionUpdateRequest(BaseModel):
@@ -322,6 +336,11 @@ class SessionService(ABC):
     @abstractmethod
     async def delete_session(self, session_id: str, user_id: str) -> bool:
         """Delete a session. Returns True if deleted, False if not found or not owned."""
+        ...
+
+    @abstractmethod
+    async def archive_session(self, session_id: str, user_id: str) -> bool:
+        """Archive a session (soft delete). Returns True if archived, False if not found or not owned."""
         ...
 
     @abstractmethod
@@ -504,6 +523,16 @@ class InMemorySessionService(SessionService):
         if session is None or session.get("user_id") != user_id:
             return False
         del self._sessions[session_id]
+        return True
+
+    async def archive_session(self, session_id: str, user_id: str) -> bool:
+        """Archive a session (soft delete). Only owner can archive."""
+        session = self._sessions.get(session_id)
+        # SECURITY: Verify ownership before archiving
+        if session is None or session.get("user_id") != user_id:
+            return False
+        session["status"] = SessionStatus.archived
+        session["updated_at"] = datetime.now(UTC).isoformat()
         return True
 
     async def update_config(self, session_id: str, user_id: str, config_update: dict[str, Any]) -> dict[str, Any] | None:
@@ -788,6 +817,20 @@ class RedisSessionService(SessionService):
         session = await self._manager.get_session(session_id)
         if session is None or session.user_id != user_id:
             return False
+        return await self._manager.delete_session(session_id)
+
+    async def archive_session(self, session_id: str, user_id: str) -> bool:
+        """Archive a session (soft delete). Only owner can archive.
+
+        Note: Redis storage doesn't persist status changes. For now, this
+        performs a delete. A future enhancement would add status to the
+        Redis storage model.
+        """
+        # SECURITY: Verify ownership before archiving
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return False
+        # For Redis, archive = delete (status not persisted in current model)
         return await self._manager.delete_session(session_id)
 
     async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
@@ -1121,6 +1164,20 @@ class PostgresSessionService(SessionService):
         session = await self._manager.get_session(session_id)
         if session is None or session.user_id != user_id:
             return False
+        return await self._manager.delete_session(session_id)
+
+    async def archive_session(self, session_id: str, user_id: str) -> bool:
+        """Archive a session (soft delete). Only owner can archive.
+
+        Note: PostgreSQL storage doesn't persist status changes yet. For now, this
+        performs a delete. A future enhancement would add status to the
+        PostgreSQL storage model.
+        """
+        # SECURITY: Verify ownership before archiving
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return False
+        # For PostgreSQL, archive = delete (status not persisted in current model)
         return await self._manager.delete_session(session_id)
 
     async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
@@ -1547,6 +1604,36 @@ async def delete_session(session_id: str, current_user: CurrentUser) -> None:
     await invalidate_session_cost_cache(session_id)
 
 
+@sessions_router.post(
+    "/sessions/{session_id}/archive",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Archive a session",
+    description="Archive a session (soft delete). Only the session owner can archive it.",
+)
+async def archive_session(session_id: str, current_user: CurrentUser) -> None:
+    """
+    Archive a session (soft delete).
+
+    Requires authentication. Only the session owner can archive it.
+    Archived sessions are hidden from the session list but can be restored.
+
+    Note: Currently archives are implemented as deletes in the storage layer.
+    A future enhancement will add proper archive/restore functionality.
+    """
+    user_id = _get_user_id(current_user)
+    service = get_session_service()
+    archived = await service.archive_session(session_id, user_id)
+
+    if not archived:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )
+
+    # Invalidate session cost cache to prevent stale data in WebSocket responses
+    await invalidate_session_cost_cache(session_id)
+
+
 @sessions_router.patch(
     "/sessions/{session_id}",
     summary="Update session metadata",
@@ -1866,6 +1953,491 @@ async def rate_message(
         rating=RatingValue(result["rating"]),
         message_id=message_id,
         feedback=result.get("feedback"),
+    )
+
+
+# ============================================================================
+# Session Goal Tracking Endpoints
+# ============================================================================
+
+
+class SetGoalRequest(BaseModel):
+    """Request body for setting a session goal."""
+
+    goal: str = Field(description="The goal text", min_length=1, max_length=500)
+    set_at: int = Field(description="Timestamp when goal was set (epoch ms)")
+
+
+class SetGoalResponse(BaseModel):
+    """Response model for set goal."""
+
+    session_id: str = Field(description="Session ID")
+    goal: str = Field(description="The goal text")
+    set_at: int = Field(description="Timestamp when goal was set (epoch ms)")
+
+
+class GoalAchievement(str, Enum):
+    """Goal achievement status."""
+
+    TRUE = "true"
+    FALSE = "false"
+    PARTIAL = "partial"
+
+
+class CompleteGoalRequest(BaseModel):
+    """Request body for completing a session goal."""
+
+    goal: str = Field(description="The goal text", min_length=1)
+    achieved: bool | Literal["partial"] = Field(description="Whether the goal was achieved")
+    feedback: str | None = Field(None, max_length=1000, description="Optional feedback")
+    completed_at: int = Field(description="Completion timestamp (epoch ms)")
+
+
+class CompleteGoalResponse(BaseModel):
+    """Response model for completed goal."""
+
+    session_id: str = Field(description="Session ID")
+    goal: str = Field(description="The goal text")
+    achieved: bool | Literal["partial"] = Field(description="Achievement status")
+    feedback: str | None = Field(None, description="Optional feedback")
+    set_at: int = Field(description="When goal was set (epoch ms)")
+    completed_at: int = Field(description="When goal was completed (epoch ms)")
+
+
+@sessions_router.post(
+    "/sessions/{session_id}/goal",
+    status_code=status.HTTP_201_CREATED,
+    summary="Set Session Goal",
+    description="Set a goal for a session to track user intent and measure success",
+)
+async def set_session_goal(
+    session_id: str,
+    request: SetGoalRequest,
+    current_user: CurrentUser,
+    goal_repo: SessionGoalRepository = Depends(get_session_goal_repository),
+    audit_repo: AuditLogRepository = Depends(get_audit_log_repository),
+) -> SetGoalResponse:
+    """
+    Set a goal for a session.
+
+    Allows users to define what they want to accomplish in a session,
+    enabling tracking of goal completion for HEART metrics.
+
+    Example:
+        ```
+        POST /api/v1/sessions/{session_id}/goal
+        {
+            "goal": "Complete the data analysis",
+            "set_at": 1705123456789
+        }
+        ```
+    """
+    user_id = _get_user_id(current_user)
+    service = get_session_service()
+
+    # Verify session ownership
+    session = await service.get_session(session_id, user_id)
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )
+
+    try:
+        # Create goal in repository
+        goal_data = await goal_repo.create_goal(
+            session_id=session_id,
+            user_id=user_id,
+            goal=request.goal,
+            set_at=request.set_at,
+        )
+    except Exception as e:
+        logger.exception(
+            "Failed to create session goal",
+            extra={"session_id": session_id, "user_id": user_id, "error": str(e)},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create session goal",
+        ) from e
+
+    # Log audit event
+    await audit_repo.log_event(
+        event_type="session_goal.created",
+        resource_type="session_goal",
+        resource_id=goal_data.get("id", session_id),
+        actor_id=user_id,
+        action="create",
+        details={
+            "session_id": session_id,
+            "goal_length": len(request.goal),
+        },
+    )
+
+    logger.info(
+        "Session goal set",
+        extra={
+            "session_id": session_id,
+            "goal_id": goal_data.get("id"),
+            "goal_length": len(request.goal),
+            "user_id": user_id,
+        },
+    )
+
+    return SetGoalResponse(
+        session_id=session_id,
+        goal=goal_data["goal"],
+        set_at=goal_data["set_at"],
+    )
+
+
+@sessions_router.post(
+    "/sessions/{session_id}/goal/complete",
+    status_code=status.HTTP_200_OK,
+    summary="Complete Session Goal",
+    description="Mark a session goal as completed with achievement status and optional feedback",
+)
+async def complete_session_goal(
+    session_id: str,
+    request: CompleteGoalRequest,
+    current_user: CurrentUser,
+    goal_repo: SessionGoalRepository = Depends(get_session_goal_repository),
+    audit_repo: AuditLogRepository = Depends(get_audit_log_repository),
+) -> CompleteGoalResponse:
+    """
+    Mark a session goal as completed.
+
+    Records whether the goal was achieved (fully, partially, or not at all)
+    along with optional feedback for quality improvement.
+
+    Example:
+        ```
+        POST /api/v1/sessions/{session_id}/goal/complete
+        {
+            "goal": "Complete the data analysis",
+            "achieved": true,
+            "feedback": "Completed faster than expected",
+            "completed_at": 1705127056789
+        }
+        ```
+    """
+    user_id = _get_user_id(current_user)
+    service = get_session_service()
+
+    # Verify session ownership
+    session = await service.get_session(session_id, user_id)
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )
+
+    try:
+        # Complete goal in repository
+        goal_data = await goal_repo.complete_goal(
+            session_id=session_id,
+            user_id=user_id,
+            goal=request.goal,
+            achieved=request.achieved,
+            completed_at=request.completed_at,
+            feedback=request.feedback,
+        )
+    except Exception as e:
+        logger.exception(
+            "Failed to complete session goal",
+            extra={"session_id": session_id, "user_id": user_id, "error": str(e)},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to complete session goal",
+        ) from e
+
+    # Log audit event
+    await audit_repo.log_event(
+        event_type="session_goal.completed",
+        resource_type="session_goal",
+        resource_id=goal_data.get("id", session_id),
+        actor_id=user_id,
+        action="complete",
+        details={
+            "session_id": session_id,
+            "achieved": request.achieved,
+            "has_feedback": request.feedback is not None,
+        },
+    )
+
+    logger.info(
+        "Session goal completed",
+        extra={
+            "session_id": session_id,
+            "goal_id": goal_data.get("id"),
+            "achieved": request.achieved,
+            "has_feedback": request.feedback is not None,
+            "user_id": user_id,
+        },
+    )
+
+    return CompleteGoalResponse(
+        session_id=session_id,
+        goal=goal_data["goal"],
+        achieved=goal_data["achieved"],
+        feedback=goal_data.get("feedback"),
+        set_at=goal_data["set_at"],
+        completed_at=goal_data["completed_at"],
+    )
+
+
+class SessionGoalHistoryItem(BaseModel):
+    """Individual goal in history."""
+
+    id: str = Field(description="Goal ID")
+    goal: str = Field(description="The goal text")
+    achieved: bool | Literal["partial"] | None = Field(None, description="Achievement status")
+    feedback: str | None = Field(None, description="Optional feedback")
+    set_at: int = Field(description="When goal was set (epoch ms)")
+    completed_at: int | None = Field(None, description="When goal was completed (epoch ms)")
+
+
+class SessionGoalHistoryResponse(BaseModel):
+    """Response model for goal history."""
+
+    session_id: str = Field(description="Session ID")
+    goals: list[SessionGoalHistoryItem] = Field(default_factory=list, description="List of goals")
+    total: int = Field(description="Total number of goals")
+
+
+@sessions_router.get(
+    "/sessions/{session_id}/goals",
+    status_code=status.HTTP_200_OK,
+    summary="Get Session Goal History",
+    description="Get all goals for a session with achievement status",
+)
+async def get_session_goal_history(
+    session_id: str,
+    current_user: CurrentUser,
+    goal_repo: SessionGoalRepository = Depends(get_session_goal_repository),
+    limit: int = Query(50, ge=1, le=100, description="Max goals to return"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
+) -> SessionGoalHistoryResponse:
+    """
+    Get goal history for a session.
+
+    Returns all goals set in the session with their achievement status.
+    Goals are ordered by set_at timestamp in descending order (newest first).
+
+    Example:
+        ```
+        GET /api/v1/sessions/{session_id}/goals?limit=10&offset=0
+        ```
+    """
+    user_id = _get_user_id(current_user)
+    service = get_session_service()
+
+    # Verify session ownership
+    session = await service.get_session(session_id, user_id)
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )
+
+    # Get goals and total count from repository
+    try:
+        goals = await goal_repo.get_goals_by_session(
+            session_id=session_id,
+            user_id=user_id,
+            limit=limit,
+            offset=offset,
+        )
+        total_count = await goal_repo.count_goals_by_session(
+            session_id=session_id,
+            user_id=user_id,
+        )
+    except Exception as e:
+        logger.exception(
+            "Failed to retrieve session goal history",
+            extra={"session_id": session_id, "user_id": user_id, "error": str(e)},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve session goal history",
+        ) from e
+
+    logger.info(
+        "Session goal history requested",
+        extra={
+            "session_id": session_id,
+            "limit": limit,
+            "offset": offset,
+            "goals_count": len(goals),
+            "total_count": total_count,
+            "user_id": user_id,
+        },
+    )
+
+    # Convert to response model
+    goal_items = [
+        SessionGoalHistoryItem(
+            id=g["id"],
+            goal=g["goal"],
+            achieved=g.get("achieved"),
+            feedback=g.get("feedback"),
+            set_at=g["set_at"],
+            completed_at=g.get("completed_at"),
+        )
+        for g in goals
+    ]
+
+    return SessionGoalHistoryResponse(
+        session_id=session_id,
+        goals=goal_items,
+        total=total_count,
+    )
+
+
+class CurrentGoalResponse(BaseModel):
+    """Response model for current goal."""
+
+    session_id: str = Field(description="Session ID")
+    goal: SessionGoalHistoryItem | None = Field(None, description="Current goal or null if none")
+
+
+@sessions_router.get(
+    "/sessions/{session_id}/goal/current",
+    status_code=status.HTTP_200_OK,
+    summary="Get Current Session Goal",
+    description="Get the current (incomplete) goal for a session",
+)
+async def get_current_session_goal(
+    session_id: str,
+    current_user: CurrentUser,
+    goal_repo: SessionGoalRepository = Depends(get_session_goal_repository),
+) -> CurrentGoalResponse:
+    """
+    Get the current active goal for a session.
+
+    Returns the most recent incomplete goal, or null if no active goal exists.
+
+    Example:
+        ```
+        GET /api/v1/sessions/{session_id}/goal/current
+        ```
+    """
+    user_id = _get_user_id(current_user)
+    service = get_session_service()
+
+    # Verify session ownership
+    session = await service.get_session(session_id, user_id)
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )
+
+    try:
+        goal_data = await goal_repo.get_current_goal(
+            session_id=session_id,
+            user_id=user_id,
+        )
+    except Exception as e:
+        logger.exception(
+            "Failed to get current session goal",
+            extra={"session_id": session_id, "user_id": user_id, "error": str(e)},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get current session goal",
+        ) from e
+
+    if goal_data is None:
+        return CurrentGoalResponse(session_id=session_id, goal=None)
+
+    goal_item = SessionGoalHistoryItem(
+        id=goal_data["id"],
+        goal=goal_data["goal"],
+        achieved=goal_data.get("achieved"),
+        feedback=goal_data.get("feedback"),
+        set_at=goal_data["set_at"],
+        completed_at=goal_data.get("completed_at"),
+    )
+
+    return CurrentGoalResponse(session_id=session_id, goal=goal_item)
+
+
+@sessions_router.delete(
+    "/sessions/{session_id}/goals/{goal_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete Session Goal",
+    description="Delete a specific goal from a session",
+)
+async def delete_session_goal(
+    session_id: str,
+    goal_id: str,
+    current_user: CurrentUser,
+    goal_repo: SessionGoalRepository = Depends(get_session_goal_repository),
+    audit_repo: AuditLogRepository = Depends(get_audit_log_repository),
+) -> None:
+    """
+    Delete a goal from a session.
+
+    Permanently removes a goal. This action cannot be undone.
+
+    Example:
+        ```
+        DELETE /api/v1/sessions/{session_id}/goals/{goal_id}
+        ```
+    """
+    user_id = _get_user_id(current_user)
+    service = get_session_service()
+
+    # Verify session ownership
+    session = await service.get_session(session_id, user_id)
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )
+
+    try:
+        deleted = await goal_repo.delete_goal(
+            goal_id=goal_id,
+            user_id=user_id,
+        )
+    except Exception as e:
+        logger.exception(
+            "Failed to delete session goal",
+            extra={"session_id": session_id, "goal_id": goal_id, "user_id": user_id, "error": str(e)},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete session goal",
+        ) from e
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Goal {goal_id} not found",
+        )
+
+    # Log audit event
+    await audit_repo.log_event(
+        event_type="session_goal.deleted",
+        resource_type="session_goal",
+        resource_id=goal_id,
+        actor_id=user_id,
+        action="delete",
+        details={
+            "session_id": session_id,
+        },
+    )
+
+    logger.info(
+        "Session goal deleted",
+        extra={
+            "session_id": session_id,
+            "goal_id": goal_id,
+            "user_id": user_id,
+        },
     )
 
 

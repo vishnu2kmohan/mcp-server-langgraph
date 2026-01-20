@@ -8,13 +8,13 @@ from typing import Any
 from urllib.parse import urlparse
 
 # Mapping of old route prefixes to new route prefixes
+# NOTE: /playground redirect removed - playground has been decommissioned
 REDIRECT_MAPPINGS: dict[str, str] = {
     # Frontend routes
     "/build": "/studio/workflows",
     "/chat": "/studio/chat",
     # API routes
     "/builder": "/api/v1/workflows",
-    "/playground": "/api/v1/sessions",
 }
 
 

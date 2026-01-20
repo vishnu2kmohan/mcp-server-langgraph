@@ -199,9 +199,6 @@ class BroadcastingSpanProcessor(SpanProcessor):
             )
 
             broadcaster = get_devtools_broadcaster()
-            if broadcaster is None:
-                return
-
             loop = asyncio.get_running_loop()
             _task = loop.create_task(
                 broadcaster.broadcast_trace_step(

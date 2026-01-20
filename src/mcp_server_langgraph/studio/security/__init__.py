@@ -19,11 +19,15 @@ from urllib.parse import unquote
 # CDN domains for code execution:
 # - codesandbox.io: Sandpack code execution
 # - cdn.jsdelivr.net: Pyodide Python runtime
+# Font domains:
+# - fonts.googleapis.com: Google Fonts CSS
+# - fonts.gstatic.com: Google Fonts files (Inter, JetBrains Mono)
 SECURITY_HEADERS: dict[str, str] = {
     "Content-Security-Policy": (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.codesandbox.io https://cdn.jsdelivr.net; "
-        "style-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data: https:; "
         "connect-src 'self' wss: https: https://*.codesandbox.io https://cdn.jsdelivr.net; "
         "frame-src 'self' https://*.codesandbox.io https://codesandbox.io; "

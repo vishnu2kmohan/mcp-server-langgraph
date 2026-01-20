@@ -429,17 +429,17 @@ class DecisionTrace(Base):  # type: ignore[misc,valid-type]
         nullable=False,
         doc="User query or input that triggered the decision (truncated to 500 chars)",
     )
-    input_artifacts: Mapped[dict | None] = mapped_column(
+    input_artifacts: Mapped[dict[str, Any] | None] = mapped_column(
         JSON,
         nullable=True,
         doc="Input artifact references (e.g., file IDs, document IDs)",
     )
-    available_options: Mapped[list | None] = mapped_column(
+    available_options: Mapped[list[Any] | None] = mapped_column(
         JSON,
         nullable=True,
         doc="Options considered (e.g., tool names, skill names) - max 20",
     )
-    constraints: Mapped[dict | None] = mapped_column(
+    constraints: Mapped[dict[str, Any] | None] = mapped_column(
         JSON,
         nullable=True,
         doc="Active constraints/policies affecting the decision",
@@ -451,7 +451,7 @@ class DecisionTrace(Base):  # type: ignore[misc,valid-type]
         nullable=False,
         doc="The action/tool/skill that was chosen",
     )
-    selected_items: Mapped[list | None] = mapped_column(
+    selected_items: Mapped[list[Any] | None] = mapped_column(
         JSON,
         nullable=True,
         doc="List of selected items if multiple (e.g., tools, skills) - max 20",
@@ -468,7 +468,7 @@ class DecisionTrace(Base):  # type: ignore[misc,valid-type]
         nullable=False,
         doc="Explanation for why this decision was made (truncated to 1000 chars)",
     )
-    reasoning_chain: Mapped[list | None] = mapped_column(
+    reasoning_chain: Mapped[list[Any] | None] = mapped_column(
         JSON,
         nullable=True,
         doc="Chain of thought steps (if available)",
@@ -478,7 +478,7 @@ class DecisionTrace(Base):  # type: ignore[misc,valid-type]
         nullable=True,
         doc="Version of policy/rules applied (for reproducibility)",
     )
-    feature_flags_snapshot: Mapped[dict | None] = mapped_column(
+    feature_flags_snapshot: Mapped[dict[str, Any] | None] = mapped_column(
         JSON,
         nullable=True,
         doc="Relevant feature flags at decision time",
@@ -512,7 +512,7 @@ class DecisionTrace(Base):  # type: ignore[misc,valid-type]
         nullable=True,
         doc="Outcome: success, failure, partial, pending",
     )
-    outcome_details: Mapped[dict | None] = mapped_column(
+    outcome_details: Mapped[dict[str, Any] | None] = mapped_column(
         JSON,
         nullable=True,
         doc="Detailed outcome information (errors, metrics)",
@@ -661,7 +661,7 @@ class DecisionEdge(Base):  # type: ignore[misc,valid-type]
         default=Decimal("1.0"),
         doc="Edge weight for weighted graph operations (0.000-1.000)",
     )
-    edge_metadata: Mapped[dict | None] = mapped_column(
+    edge_metadata: Mapped[dict[str, Any] | None] = mapped_column(
         JSON,
         nullable=True,
         doc="Additional edge metadata",

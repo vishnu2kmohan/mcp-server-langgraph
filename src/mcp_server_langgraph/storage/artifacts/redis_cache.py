@@ -36,6 +36,7 @@ def _generate_artifact_cache_key(artifact_id: str, user_id: str) -> str:
     Generate cache key for artifact.
 
     Security: Include user_id to prevent cross-user cache access.
+    Version suffix ensures cache invalidation on schema changes.
 
     Args:
         artifact_id: Artifact ID
@@ -44,13 +45,15 @@ def _generate_artifact_cache_key(artifact_id: str, user_id: str) -> str:
     Returns:
         Cache key string
     """
-    return f"artifact:{user_id}:{artifact_id}"
+    return f"artifact:{user_id}:{artifact_id}:v1"
 
 
 def _generate_versions_cache_key(artifact_id: str, user_id: str) -> str:
     """
     Generate cache key for artifact versions.
 
+    Version suffix ensures cache invalidation on schema changes.
+
     Args:
         artifact_id: Artifact ID
         user_id: User ID
@@ -58,7 +61,7 @@ def _generate_versions_cache_key(artifact_id: str, user_id: str) -> str:
     Returns:
         Cache key string
     """
-    return f"artifact_versions:{user_id}:{artifact_id}"
+    return f"artifact_versions:{user_id}:{artifact_id}:v1"
 
 
 class RedisCachedArtifactsService:

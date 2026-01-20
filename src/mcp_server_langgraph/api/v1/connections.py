@@ -78,6 +78,7 @@ class ConnectionResponse(BaseModel):
     transport: str  # Required: "streamable_http" or "stdio"
     auth_type: str
     status: str
+    scope: str = "user"  # ADR-0102 Phase 6: user, project, or session
     server_name: str | None = None
     server_version: str | None = None
     tool_count: int = 0
@@ -103,6 +104,7 @@ def to_connection_response(connection: MCPConnection) -> ConnectionResponse:
         transport=connection.transport,
         auth_type=connection.auth_type,
         status=connection.status,
+        scope=connection.scope,  # ADR-0102 Phase 6
         server_name=connection.server_name,
         server_version=connection.server_version,
         tool_count=connection.tool_count,
@@ -126,6 +128,10 @@ class OAuth2CallbackResponse(BaseModel):
     status: Literal["success"] = "success"
     message: str = "OAuth2 authorization completed"
     connection_id: str = Field(..., description="ID of the authorized connection")
+    popup: bool = Field(
+        default=False,
+        description="If true, the callback was initiated from a popup flow",
+    )
 
 
 # ============================================================================
@@ -434,6 +440,10 @@ async def start_oauth2_flow(
     request: Request,
     connection_id: str,
     user: ConnectionOwner,
+    popup: bool = Query(
+        False,
+        description="If true, use popup-friendly flow with postMessage callback instead of redirect",
+    ),
     repo: ConnectionRepository = Depends(get_connection_repository),
     oauth2_service: OAuth2Service = Depends(get_oauth2_service),
 ) -> OAuth2StartResponse:
@@ -444,6 +454,12 @@ async def start_oauth2_flow(
 
     Uses PKCE (Proof Key for Code Exchange) for security.
     Returns the authorization URL and state parameter.
+
+    Args:
+        popup: If True, the callback will return HTML that posts a message to the
+               opener window and closes itself, instead of redirecting. Use this
+               for in-chat OAuth flows where you want to maintain the user's
+               context in the main window.
     """
     connection = await repo.get(connection_id)
     if connection is None:
@@ -483,6 +499,7 @@ async def start_oauth2_flow(
         state=state,
         code_verifier=code_verifier,
         redirect_uri=redirect_uri,
+        popup=popup,
     )
 
     # Build authorization URL
@@ -573,7 +590,10 @@ async def oauth2_callback_stateless(
         expires_at=expires_at,
     )
 
-    return OAuth2CallbackResponse(connection_id=connection_id)
+    return OAuth2CallbackResponse(
+        connection_id=connection_id,
+        popup=state_data.get("popup", False),
+    )
 
 
 @connections_router.post("/{connection_id}/oauth/callback")

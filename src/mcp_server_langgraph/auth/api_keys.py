@@ -203,7 +203,7 @@ class APIKeyManager:
             return None
 
         try:
-            cache_key = f"apikey:{api_key_hash}"
+            cache_key = f"apikey:{api_key_hash}:v1"
             cached_data = await self.redis.get(cache_key)
             if cached_data:
                 import json
@@ -229,7 +229,7 @@ class APIKeyManager:
         try:
             import json
 
-            cache_key = f"apikey:{api_key_hash}"
+            cache_key = f"apikey:{api_key_hash}:v1"
             await self.redis.setex(cache_key, self.cache_ttl, json.dumps(user_info))
             logger.debug(f"API key cached for hash: {api_key_hash[:16]}...")
         except Exception as e:
@@ -246,7 +246,7 @@ class APIKeyManager:
             return
 
         try:
-            cache_key = f"apikey:{api_key_hash}"
+            cache_key = f"apikey:{api_key_hash}:v1"
             await self.redis.delete(cache_key)
             logger.debug(f"API key cache invalidated for hash: {api_key_hash[:16]}...")
         except Exception as e:

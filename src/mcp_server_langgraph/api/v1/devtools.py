@@ -4,7 +4,7 @@ DevTools-specific APIs.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from mcp_server_langgraph.auth.dependencies import require_observability_viewer
 
@@ -17,7 +17,7 @@ devtools_router = APIRouter(tags=["devtools"])
     summary="List known services for DevTools filters",
 )
 async def list_devtools_services(
-    _viewer=require_observability_viewer,
+    _viewer: dict[str, object] = Depends(require_observability_viewer),
 ) -> list[str]:
     """
     Return distinct service names based on Loki labels.

@@ -6,7 +6,10 @@ Provides dependency injection for commonly used services.
 
 import logging
 from collections.abc import AsyncGenerator
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.repositories.session_goal import SessionGoalRepository
 
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -800,6 +803,39 @@ def get_audit_log_repository(
     )
 
     return PostgresAuditLogRepository(session)
+
+
+# ==============================================================================
+# Session Goal Repository Dependencies
+# ==============================================================================
+
+
+def get_session_goal_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> "SessionGoalRepository":
+    """
+    Get SessionGoalRepository instance for dependency injection.
+
+    Args:
+        session: Database session (injected)
+
+    Returns:
+        PostgresSessionGoalRepository instance
+
+    Example:
+        @router.post("/sessions/{session_id}/goal")
+        async def set_goal(
+            session_id: str,
+            repo: SessionGoalRepository = Depends(get_session_goal_repository),
+        ):
+            return await repo.create_goal(...)
+    """
+    from mcp_server_langgraph.repositories.session_goal import (
+        PostgresSessionGoalRepository,
+        SessionGoalRepository,
+    )
+
+    return PostgresSessionGoalRepository(session)
 
 
 # ==============================================================================

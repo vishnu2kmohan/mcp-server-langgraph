@@ -240,8 +240,8 @@ class OpenFGAConfig(BaseModel):
                 "store_id": "01H...",
                 "model_id": "01H...",
                 # OIDC authentication (recommended)
-                "oidc_client_id": "openfga-server",
-                "oidc_client_secret": "test-openfga-server-secret",
+                "oidc_client_id": "agent-studio-openfga-oidc-cient-id-for-e2e-tests",
+                "oidc_client_secret": "agent-studio-openfga-oidc-client-secret-for-e2e-tests",
                 "oidc_issuer": "http://keycloak:8080/authn/realms/default",
                 # Legacy preshared key (deprecated)
                 # "preshared_key": "test-openfga-preshared-key",

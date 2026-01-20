@@ -7,8 +7,8 @@ Endpoints:
 - GET /workflows/{id}/executions - List executions for a workflow
 - GET /workflows/{id}/executions/{execution_id} - Get a specific execution
 
-This complements the WebSocket endpoint in workflow_execution_ws.py
-which provides real-time execution updates.
+This complements the WebSocket endpoint at /api/v1/ws/workflows/{workflow_id}
+(handler: mcp_server_langgraph.websocket.handlers.workflow) for real-time execution updates.
 """
 
 from datetime import datetime, UTC

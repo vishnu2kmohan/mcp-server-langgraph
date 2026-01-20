@@ -19,6 +19,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mcp_server_langgraph.models.connection import (
+    ConnectionScope,
     MCPConnectionModel,
     OAuth2StateModel,
 )
@@ -70,6 +71,26 @@ class ConnectionRepository(ABC):
         pass
 
     @abstractmethod
+    async def get_by_server_name(
+        self,
+        server_name: str,
+        owner_id: str,
+    ) -> MCPConnection | None:
+        """Find first connection by server_name for the given owner.
+
+        Used for resolving tool references (e.g., [[tool:filesystem:read_file]]).
+        Maps user-friendly server names to connection IDs for OpenFGA authorization.
+
+        Args:
+            server_name: The server name to search for (e.g., "filesystem")
+            owner_id: The owner's user ID
+
+        Returns:
+            The first matching connection, or None if not found
+        """
+        pass
+
+    @abstractmethod
     async def update(
         self,
         connection_id: str,
@@ -93,10 +114,27 @@ class ConnectionRepository(ABC):
         status: str | None = None,
         auth_type: str | None = None,
         project_id: str | None = None,
+        scope: str | None = None,
+        include_project_connections: bool = False,
         sort_by: str = "created_at",
         sort_order: str = "desc",
     ) -> tuple[list[MCPConnectionSummary], str | None]:
-        """List connections with filtering and pagination."""
+        """List connections with filtering and pagination.
+
+        Args:
+            owner_id: Owner user ID to filter by
+            cursor: Pagination cursor
+            limit: Maximum number of results
+            search: Full-text search query
+            status: Filter by connection status
+            auth_type: Filter by authentication type
+            project_id: Filter by project ID
+            scope: Filter by scope (user, project, session)
+            include_project_connections: If True and project_id is set, also include
+                project-scoped connections the user has access to
+            sort_by: Column to sort by
+            sort_order: Sort order (asc or desc)
+        """
         pass
 
     # Secret management
@@ -118,8 +156,14 @@ class ConnectionRepository(ABC):
         state: str,
         code_verifier: str,
         redirect_uri: str,
+        popup: bool = False,
     ) -> None:
-        """Create OAuth2 state for PKCE flow."""
+        """Create OAuth2 state for PKCE flow.
+
+        Args:
+            popup: If True, the callback should return HTML for popup close
+                   instead of a redirect.
+        """
         pass
 
     @abstractmethod
@@ -207,6 +251,7 @@ class PostgresConnectionRepository(ConnectionRepository):
             owner_id=model.owner_id,
             organization_id=str(model.organization_id) if model.organization_id else None,
             project_id=str(model.project_id) if model.project_id else None,
+            scope=model.scope,  # type: ignore[arg-type]
             created_at=model.created_at,
             updated_at=model.updated_at,
         )
@@ -226,6 +271,7 @@ class PostgresConnectionRepository(ConnectionRepository):
             prompt_count=model.prompt_count,
             last_connected_at=model.last_connected_at,
             created_at=model.created_at,
+            scope=model.scope,  # type: ignore[arg-type]
         )
 
     async def create(
@@ -252,6 +298,7 @@ class PostgresConnectionRepository(ConnectionRepository):
             status="disconnected",
             owner_id=owner_id,
             project_id=data.project_id,
+            scope=data.scope,
             tool_count=0,
             resource_count=0,
             prompt_count=0,
@@ -292,6 +339,28 @@ class PostgresConnectionRepository(ConnectionRepository):
         models = result.scalars().all()
 
         return [self._model_to_entity(m) for m in models]
+
+    async def get_by_server_name(
+        self,
+        server_name: str,
+        owner_id: str,
+    ) -> MCPConnection | None:
+        """Find first connection by server_name for the given owner."""
+        stmt = (
+            select(MCPConnectionModel)
+            .where(
+                MCPConnectionModel.server_name == server_name,
+                MCPConnectionModel.owner_id == owner_id,
+            )
+            .limit(1)
+        )
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+
+        if model is None:
+            return None
+
+        return self._model_to_entity(model)
 
     async def update(
         self,
@@ -352,20 +421,37 @@ class PostgresConnectionRepository(ConnectionRepository):
         status: str | None = None,
         auth_type: str | None = None,
         project_id: str | None = None,
+        scope: str | None = None,
+        include_project_connections: bool = False,
         sort_by: str = "created_at",
         sort_order: str = "desc",
     ) -> tuple[list[MCPConnectionSummary], str | None]:
         """List connections with filtering and pagination."""
-        # Build base query
-        stmt = select(MCPConnectionModel).where(MCPConnectionModel.owner_id == owner_id)
+        # Build base query with scope-aware access control
+        if include_project_connections and project_id:
+            # Include both owner's connections AND project-scoped connections
+            stmt = select(MCPConnectionModel).where(
+                or_(
+                    MCPConnectionModel.owner_id == owner_id,
+                    and_(
+                        MCPConnectionModel.project_id == project_id,
+                        MCPConnectionModel.scope == ConnectionScope.PROJECT.value,
+                    ),
+                )
+            )
+        else:
+            # Default: only owner's connections
+            stmt = select(MCPConnectionModel).where(MCPConnectionModel.owner_id == owner_id)
 
         # Apply filters
         if status:
             stmt = stmt.where(MCPConnectionModel.status == status)
         if auth_type:
             stmt = stmt.where(MCPConnectionModel.auth_type == auth_type)
-        if project_id:
+        if project_id and not include_project_connections:
             stmt = stmt.where(MCPConnectionModel.project_id == project_id)
+        if scope:
+            stmt = stmt.where(MCPConnectionModel.scope == scope)
 
         # Full-text search
         if search:
@@ -474,6 +560,7 @@ class PostgresConnectionRepository(ConnectionRepository):
         state: str,
         code_verifier: str,
         redirect_uri: str,
+        popup: bool = False,
     ) -> None:
         """Create OAuth2 state for PKCE flow."""
         state_model = OAuth2StateModel(
@@ -482,6 +569,7 @@ class PostgresConnectionRepository(ConnectionRepository):
             state=state,
             code_verifier=code_verifier,
             redirect_uri=redirect_uri,
+            popup=popup,
             expires_at=datetime.now(UTC) + timedelta(minutes=10),
         )
 
@@ -508,6 +596,7 @@ class PostgresConnectionRepository(ConnectionRepository):
             "state": model.state,
             "code_verifier": model.code_verifier,
             "redirect_uri": model.redirect_uri,
+            "popup": model.popup,
         }
 
         # Delete (one-time use)

@@ -48,6 +48,9 @@ WEBSOCKET_PERMISSIONS_MAP: dict[str, tuple[str, str, str]] = {
     "ai_suggestions": ("ai", "suggestions", "user"),
     "orchestrator_status": ("ai", "orchestrator", "viewer"),
     "traces": ("traces", "stream", "viewer"),
+    # LLM/Chat streaming WebSockets (added for complete authorization coverage)
+    "llm_streaming": ("chat", "llm-streaming", "viewer"),
+    "session_metrics": ("chat", "session-metrics", "viewer"),
 }
 
 user_router = APIRouter(tags=["user"])
@@ -132,6 +135,10 @@ class WebSocketPermissions(BaseModel):
     ai_suggestions: bool = Field(default=False, description="AI suggestions (/ws/ai/suggestions)")
     orchestrator_status: bool = Field(default=False, description="Orchestrator status (/ws/orchestrator/status)")
 
+    # LLM/Chat Streaming WebSockets
+    llm_streaming: bool = Field(default=False, description="LLM response streaming (/ws/llm/streaming)")
+    session_metrics: bool = Field(default=False, description="Session metrics streaming (/ws/metrics/session)")
+
 
 class WebSocketPermissionsResponse(BaseModel):
     """
@@ -207,6 +214,7 @@ class PersonaPreferencesUpdate(BaseModel):
 # Module IDs: cost (not costs), workflows (not flows)
 PERSONA_VISIBLE_MODULES: dict[str, list[str]] = {
     # === ADMIN PERSONAS (full platform access) ===
+    # Module IDs MUST match frontend KNOWN_NAV_IDS in navConstants.ts
     "admin": [
         # Core Work
         "projects",
@@ -214,16 +222,15 @@ PERSONA_VISIBLE_MODULES: dict[str, list[str]] = {
         "workflows",
         # AI & Data
         "agents",
-        "mcp",
         "vectors",
-        "files",
-        "skills",
+        "connections",
+        "artifacts",
         # Observability
-        "traces",
         "observability",
         "cost",
         # Admin
         "admin",
+        "skills",
         "audit",
         "compliance",
         # Bottom items
@@ -242,9 +249,12 @@ PERSONA_VISIBLE_MODULES: dict[str, list[str]] = {
         # Audit-only access
         "audit",
         "compliance",
+        # Bottom items
         "help",
+        "settings",
     ],
     # === ALICE PERSONAS (developer variants) ===
+    # Module IDs MUST match frontend KNOWN_NAV_IDS in navConstants.ts
     "alice-builder": [
         # Core Work
         "projects",
@@ -252,12 +262,11 @@ PERSONA_VISIBLE_MODULES: dict[str, list[str]] = {
         "workflows",
         # AI & Data
         "agents",
-        "mcp",
         "vectors",
-        "files",
-        "skills",
+        "connections",
+        "artifacts",
         # Observability
-        "traces",
+        "observability",
         "cost",
         # Bottom items
         "settings",
@@ -268,7 +277,6 @@ PERSONA_VISIBLE_MODULES: dict[str, list[str]] = {
         "projects",
         "chat",
         # Observability focus
-        "traces",
         "observability",
         "cost",
         # Bottom items
@@ -281,28 +289,32 @@ PERSONA_VISIBLE_MODULES: dict[str, list[str]] = {
         "chat",
         # Infrastructure focus
         "agents",
-        "mcp",
         "connections",
-        "traces",
+        "observability",
         # Bottom items
         "settings",
         "help",
     ],
     # === BOB PERSONAS (end user) ===
+    # Module IDs MUST match frontend KNOWN_NAV_IDS in navConstants.ts
     "compliance-officer": [
         # Compliance-focused access
         "audit",
         "compliance",
+        # Bottom items
         "help",
+        "settings",
     ],
     "bob": [
         # Core Work only - limited access
         "projects",
         "chat",
         "workflows",
-        # Skills - read-only browsing (viewer access via OpenFGA)
-        "skills",
+        # Observability (limited)
+        "cost",
+        # Bottom items
         "help",
+        "settings",
     ],
 }
 
@@ -327,10 +339,14 @@ def get_visible_modules_for_persona(persona: str) -> list[str]:
 
 # Deprecated module ID mappings (for backward compatibility)
 # These IDs should not be used in new code
+# Module IDs MUST match frontend KNOWN_NAV_IDS in navConstants.ts
 DEPRECATED_MODULE_ID_MAP: dict[str, str] = {
     "flows": "workflows",
     "costs": "cost",
     "metrics": "observability",
+    "mcp": "connections",
+    "files": "artifacts",
+    "traces": "observability",  # traces tab is part of observability
 }
 
 

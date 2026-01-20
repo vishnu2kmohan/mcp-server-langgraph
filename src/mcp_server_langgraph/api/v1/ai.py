@@ -1969,6 +1969,109 @@ class InterpretCommandResponse(BaseModel):
         return safe_float(v)
 
 
+# =============================================================================
+# AI Predictions (HEART Metrics)
+# =============================================================================
+
+
+class PredictionType(str, Enum):
+    """Types of AI predictions for HEART metrics."""
+
+    CHURN_RISK = "churn_risk"
+    ADOPTION_FORECAST = "adoption_forecast"
+    ENGAGEMENT_DECLINE = "engagement_decline"
+
+
+class PredictionFactor(BaseModel):
+    """A factor contributing to a prediction."""
+
+    name: str = Field(description="Factor name (e.g., 'session_frequency')")
+    impact: float = Field(ge=-1.0, le=1.0, description="Impact score (-1 to 1)")
+
+
+class AIPrediction(BaseModel):
+    """A single AI prediction for HEART metrics."""
+
+    id: str = Field(description="Unique prediction ID")
+    type: PredictionType = Field(description="Type of prediction")
+    metric: str = Field(description="The metric being predicted")
+    predicted_value: float = Field(ge=0.0, le=1.0, description="Predicted value (0-1)")
+    confidence: float = Field(ge=0.0, le=1.0, description="Confidence score (0-1)")
+    timeframe: Literal["7d", "30d", "90d"] = Field(description="Prediction timeframe")
+    factors: list[PredictionFactor] = Field(
+        default_factory=list, description="Contributing factors"
+    )
+    created_at: int = Field(description="Creation timestamp (epoch ms)")
+
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
+
+    @field_validator("predicted_value", mode="before")
+    @classmethod
+    def validate_predicted_value(cls, v: float | None) -> float:
+        """Convert NaN/Inf to 0.0 for JSON serialization safety."""
+        return safe_float(v)
+
+
+class PredictionsResponse(BaseModel):
+    """Response containing AI predictions."""
+
+    predictions: list[AIPrediction] = Field(
+        default_factory=list, description="List of predictions"
+    )
+
+
+@ai_router.get(
+    "/predictions",
+    status_code=status.HTTP_200_OK,
+    summary="Get AI Predictions",
+    description="Get AI-powered predictions for HEART metrics (churn risk, adoption forecasts)",
+)
+async def get_predictions(
+    current_user: CurrentUser,
+    session_id: str | None = None,
+    type: str | None = None,
+    min_confidence: float | None = None,
+) -> PredictionsResponse:
+    """
+    Get AI predictions for HEART metrics.
+
+    Returns predictive analytics including churn risk, adoption forecasts,
+    and engagement decline predictions. Predictions are based on user
+    behavior patterns and historical data.
+
+    Query Parameters:
+        - session_id: Filter predictions by session ID
+        - type: Filter by prediction type (churn_risk, adoption_forecast, engagement_decline)
+        - min_confidence: Minimum confidence threshold (0-1)
+
+    Example:
+        ```
+        GET /api/v1/ai/predictions?type=churn_risk&min_confidence=0.8
+        ```
+
+    Note: This endpoint returns stub data. Full implementation requires
+    integration with ML pipeline (see docs-internal/frontend/PENDING-BACKEND-APIS.md).
+    """
+    logger.info(
+        "AI predictions requested",
+        extra={
+            "session_id": session_id,
+            "type": type,
+            "min_confidence": min_confidence,
+        },
+    )
+
+    # Stub implementation - returns empty predictions
+    # Full implementation requires ML pipeline integration
+    # See: docs-internal/frontend/PENDING-BACKEND-APIS.md
+
+    return PredictionsResponse(predictions=[])
+
+
 @ai_router.post(
     "/interpret-command",
     status_code=status.HTTP_200_OK,

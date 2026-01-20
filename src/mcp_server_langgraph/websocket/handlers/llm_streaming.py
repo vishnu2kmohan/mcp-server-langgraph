@@ -26,7 +26,7 @@ Response Types (Server -> Client):
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from mcp_server_langgraph.websocket.base import WebSocketBase
 from mcp_server_langgraph.websocket.types import (
@@ -36,7 +36,7 @@ from mcp_server_langgraph.websocket.types import (
 )
 
 if TYPE_CHECKING:
-    pass
+    from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -65,85 +65,84 @@ class LLMStreamingHandler(WebSocketBase):
         super().__init__(config=config)
         self._subscribed_streams: set[str] = set()
 
-    async def on_connect(self, user: AuthUser | None) -> None:
-        """Handle new WebSocket connection."""
+    async def on_connect(self, user: AuthUser) -> None:
+        """Handle new WebSocket connection.
+
+        Args:
+            user: The authenticated user.
+        """
         logger.info(
             "LLM streaming WebSocket connected",
             extra={
-                "user_id": user.user_id if user else None,
+                "user_id": user.id,
             },
         )
 
-    async def on_disconnect(self, user: AuthUser | None) -> None:
+    async def on_disconnect(self) -> None:
         """Handle WebSocket disconnection."""
         self._subscribed_streams.clear()
+        user_id = self._user.id if self._user else None
         logger.info(
             "LLM streaming WebSocket disconnected",
             extra={
-                "user_id": user.user_id if user else None,
+                "user_id": user_id,
             },
         )
 
-    async def on_message(
-        self,
-        message: MessageEnvelope,
-        user: AuthUser | None,
-    ) -> dict[str, Any] | None:
+    async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
         """
         Handle incoming WebSocket messages.
 
         Args:
-            message: The parsed message envelope
-            user: The authenticated user (if auth is required)
+            message: The parsed message envelope.
 
         Returns:
-            Response dict to send back, or None for no response
+            Response MessageEnvelope, or None for no response.
         """
         message_type = message.type
 
         if message_type == "subscribe_stream":
-            return await self._handle_subscribe(message, user)
+            return await self._handle_subscribe(message)
         elif message_type == "unsubscribe_stream":
-            return await self._handle_unsubscribe(message, user)
+            return await self._handle_unsubscribe(message)
         elif message_type == "cancel_stream":
-            return await self._handle_cancel(message, user)
+            return await self._handle_cancel(message)
         elif message_type == "ping":
-            return {"type": "pong", "timestamp": message.timestamp}
+            return MessageEnvelope(
+                type="pong",
+                payload={"timestamp": message.timestamp},
+            )
         else:
-            return {
-                "type": "error",
-                "code": "unknown_message_type",
-                "message": f"Unknown message type: {message_type}",
-            }
+            return MessageEnvelope(
+                type="error",
+                payload={
+                    "code": "unknown_message_type",
+                    "message": f"Unknown message type: {message_type}",
+                },
+            )
 
-    async def _handle_subscribe(
-        self,
-        message: MessageEnvelope,
-        user: AuthUser | None,
-    ) -> dict[str, Any]:
+    async def _handle_subscribe(self, message: MessageEnvelope) -> MessageEnvelope:
         """Handle subscription to an LLM stream."""
         payload = message.payload or {}
         stream_id = payload.get("stream_id")
 
         if not stream_id:
-            return {
-                "type": "error",
-                "code": "missing_stream_id",
-                "message": "stream_id is required",
-            }
+            return MessageEnvelope(
+                type="error",
+                payload={
+                    "code": "missing_stream_id",
+                    "message": "stream_id is required",
+                },
+            )
 
         self._subscribed_streams.add(stream_id)
 
-        return {
-            "type": "subscribed",
-            "stream_id": stream_id,
-        }
+        return MessageEnvelope(
+            type="subscribed",
+            payload={"stream_id": stream_id},
+        )
 
-    async def _handle_unsubscribe(
-        self,
-        message: MessageEnvelope,
-        user: AuthUser | None,
-    ) -> dict[str, Any]:
+    async def _handle_unsubscribe(self, message: MessageEnvelope) -> MessageEnvelope:
         """Handle unsubscription from an LLM stream."""
         payload = message.payload or {}
         stream_id = payload.get("stream_id")
@@ -151,31 +150,29 @@ class LLMStreamingHandler(WebSocketBase):
         if stream_id and stream_id in self._subscribed_streams:
             self._subscribed_streams.discard(stream_id)
 
-        return {
-            "type": "unsubscribed",
-            "stream_id": stream_id,
-        }
+        return MessageEnvelope(
+            type="unsubscribed",
+            payload={"stream_id": stream_id},
+        )
 
-    async def _handle_cancel(
-        self,
-        message: MessageEnvelope,
-        user: AuthUser | None,
-    ) -> dict[str, Any]:
+    async def _handle_cancel(self, message: MessageEnvelope) -> MessageEnvelope:
         """Handle cancellation of an LLM stream."""
         payload = message.payload or {}
         stream_id = payload.get("stream_id")
 
         if not stream_id:
-            return {
-                "type": "error",
-                "code": "missing_stream_id",
-                "message": "stream_id is required for cancellation",
-            }
+            return MessageEnvelope(
+                type="error",
+                payload={
+                    "code": "missing_stream_id",
+                    "message": "stream_id is required for cancellation",
+                },
+            )
 
         # Remove from subscriptions
         self._subscribed_streams.discard(stream_id)
 
-        return {
-            "type": "stream_cancelled",
-            "stream_id": stream_id,
-        }
+        return MessageEnvelope(
+            type="stream_cancelled",
+            payload={"stream_id": stream_id},
+        )

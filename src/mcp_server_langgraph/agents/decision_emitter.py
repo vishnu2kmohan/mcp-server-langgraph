@@ -19,7 +19,7 @@ import asyncio
 import random
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from opentelemetry import trace
@@ -83,8 +83,8 @@ class DecisionEmitter:
             repository: Repository for persisting traces
         """
         self._repository = repository
-        self._queue: asyncio.Queue[dict] = asyncio.Queue()
-        self._worker_task: asyncio.Task | None = None
+        self._queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+        self._worker_task: asyncio.Task[None] | None = None
         self._sequence_counters: dict[str, int] = {}  # session_id -> seq
 
     async def start(self) -> None:
@@ -204,7 +204,7 @@ class DecisionEmitter:
 
     async def _persistence_worker(self) -> None:
         """Background worker for batched persistence."""
-        batch: list[dict] = []
+        batch: list[dict[str, Any]] = []
         batch_size = feature_flags.context_graph_batch_size
 
         while True:

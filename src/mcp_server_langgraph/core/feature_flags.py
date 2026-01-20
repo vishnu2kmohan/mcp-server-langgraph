@@ -551,6 +551,14 @@ class FeatureFlags(BaseSettings):
         "Set FF_ENABLE_KB_FOCUS=false to disable.",
     )
 
+    enable_markdown_references: bool = Field(
+        default=False,
+        description="Enable [[type:qualifier:id]] reference syntax in markdown. "
+        "Allows inline references to tools, skills, and artifacts with interactive chips. "
+        "References are batch-resolved via /api/v1/references/resolve with OpenFGA authorization. "
+        "Set FF_ENABLE_MARKDOWN_REFERENCES=true to enable.",
+    )
+
     # =========================================================================
     # Model Selector Feature Flags (Sprint 2 - Enhanced Model Selector)
     # =========================================================================
@@ -614,6 +622,15 @@ class FeatureFlags(BaseSettings):
         description="Enable URL content fetching (#url pattern) in StudioShell chat input. "
         "When enabled, users can use #url to fetch and include web content in their messages. "
         "Set FF_ENABLE_URL_FETCH_IN_SHELL=true to enable.",
+    )
+
+    # Connection Setup Features (ADR-0102 - Connections Page Redesign)
+    enable_connector_suggestions: bool = Field(
+        default=False,
+        description="Enable proactive connector suggestions in chat input. "
+        "When enabled, shows connection suggestions when user input matches tool keywords. "
+        "Part of the in-chat connection setup UX (ADR-0102). "
+        "Set FF_ENABLE_CONNECTOR_SUGGESTIONS=true to enable.",
     )
 
     # UX Enhancement Features (Priority 1-3 from competitive analysis)
@@ -1151,6 +1168,14 @@ class FeatureFlags(BaseSettings):
         "Part of ADR-0092. Set FF_ENABLE_USER_CAPABILITY_SELECTION=true to activate.",
     )
 
+    enable_manual_tool_selection: bool = Field(
+        default=False,
+        description="Enable manual tool selection dropdown in chat input. "
+        "Allows users to override semantic tool search with explicit tool choices. "
+        "Modes: auto (semantic search), manual (explicit selection), none (disabled). "
+        "Set FF_ENABLE_MANUAL_TOOL_SELECTION=true to activate.",
+    )
+
     enable_progressive_skill_loading: bool = Field(
         default=False,
         description="Enable 4-stage progressive skill loading for token efficiency. "
@@ -1212,6 +1237,35 @@ class FeatureFlags(BaseSettings):
         le=3,
         description="Default number of critique rounds for plan refinement (0-3). "
         "Higher values improve quality but increase latency and cost.",
+    )
+
+    # Critique Loop Feature Flags (Executor+Critic Pattern)
+    enable_critique_loop: bool = Field(
+        default=False,
+        description="Enable multi-pass executor+critic loop in chat. "
+        "When enabled, responses are refined through critique iterations. "
+        "Set FF_ENABLE_CRITIQUE_LOOP=true to activate.",
+    )
+
+    critique_cross_vendor: bool = Field(
+        default=True,
+        description="Use cross-vendor diversity for executor and critic. "
+        "Default: Gemini executor + Claude critic for independent review. "
+        "Set FF_CRITIQUE_CROSS_VENDOR=false to use same vendor.",
+    )
+
+    max_critique_rounds: int = Field(
+        default=3,
+        ge=1,
+        le=5,
+        description="Maximum number of critique rounds allowed (hard cap). "
+        "Router may request fewer rounds based on task complexity.",
+    )
+
+    critique_streaming: bool = Field(
+        default=True,
+        description="Stream intermediate critique results to frontend. "
+        "Enables real-time visibility into the critique loop progress.",
     )
 
     enable_plan_cache: bool = Field(
@@ -1451,6 +1505,48 @@ class FeatureFlags(BaseSettings):
         default=False,
         description="Enable template suggestion features for execution plans. "
         "Uses LLM to suggest templates based on user intent. Guarded for gradual rollout.",
+    )
+
+    # =========================================================================
+    # Execution Mode Features (Ctrl/Cmd+Shift+M Toggle in UI)
+    # =========================================================================
+    enable_execution_mode_toggle: bool = Field(
+        default=False,
+        description="Enable Ctrl/Cmd+Shift+M execution mode toggle in chat input. "
+        "Allows cycling between default, plan, auto_accept, and bypass modes.",
+    )
+
+    enable_plan_generation: bool = Field(
+        default=False,
+        description="Enable always-on plan generation for audit trail. "
+        "Plans are generated for all requests, approval depends on execution mode.",
+    )
+
+    enable_plan_approval_flow: bool = Field(
+        default=False,
+        description="Enable HITL approval flow for medium/high risk plans. "
+        "Requires enable_plan_generation=True to function.",
+    )
+
+    bypass_mode_admin_only: bool = Field(
+        default=True,
+        description="Restrict bypass mode to admin role only. "
+        "When True, only users with admin role can use bypass mode.",
+    )
+
+    bypass_risk_aware_enabled: bool = Field(
+        default=False,
+        description="Enable risk-aware bypass mode with auto-approval for low-risk plans. "
+        "When enabled, plans with low risk and simple/complicated complexity are auto-approved "
+        "in bypass mode. High-risk or complex plans still require user approval. "
+        "Requires bypass_executor permission via OpenFGA on system:global.",
+    )
+
+    preferences_menu_enabled: bool = Field(
+        default=False,
+        description="Enable consolidated preferences menu in chat input. "
+        "When enabled, model settings, tool mode, and KB focus are consolidated "
+        "into a single dropdown menu. When disabled, individual selectors are shown.",
     )
 
     # =========================================================================
@@ -1880,6 +1976,7 @@ class FeatureFlags(BaseSettings):
             "slash_commands": self.enable_slash_commands,
             "rich_text_chat_input": self.enable_rich_text_chat_input,
             "kb_focus": self.enable_kb_focus,
+            "markdown_references": self.enable_markdown_references,
             "enhanced_model_selector": self.enable_enhanced_model_selector,
             "style_presets": self.enable_style_presets,
             "show_chat_avatars": self.show_chat_avatars,
@@ -1928,6 +2025,13 @@ class FeatureFlags(BaseSettings):
             # Plan Editor Features (Phase 5b)
             "plan_search": self.enable_plan_search,
             "plan_templates": self.enable_plan_templates,
+            # Execution Mode Features (Ctrl/Cmd+Shift+M Toggle)
+            "execution_mode_toggle": self.enable_execution_mode_toggle,
+            "plan_generation": self.enable_plan_generation,
+            "plan_approval_flow": self.enable_plan_approval_flow,
+            "bypass_mode_admin_only": self.bypass_mode_admin_only,
+            "bypass_risk_aware": self.bypass_risk_aware_enabled,
+            "preferences_menu": self.preferences_menu_enabled,
             # WebSocket Infrastructure Features
             "websocket_new_base": self.enable_websocket_new_base,
             "websocket_server_heartbeat": self.enable_websocket_server_heartbeat,

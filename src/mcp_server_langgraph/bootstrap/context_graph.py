@@ -36,7 +36,7 @@ class ContextGraphState:
 
     emitter: "DecisionEmitter | None" = None
     repository: "DecisionTraceRepositoryBase | None" = None
-    retention_task: asyncio.Task | None = None
+    retention_task: asyncio.Task[None] | None = None
 
     async def cleanup(self) -> None:
         """Cleanup in reverse order.

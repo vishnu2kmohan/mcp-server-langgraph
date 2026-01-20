@@ -20,10 +20,13 @@ Reference: ADR-0101 Context Graphs
 
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Callable
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+# Type alias for session factory
+SessionFactory = Callable[[], Any]  # Returns context manager yielding AsyncSession
 
 from mcp_server_langgraph.database.models import DecisionTrace
 from mcp_server_langgraph.storage.models import (
@@ -141,7 +144,7 @@ class PostgresDecisionTraceRepository(DecisionTraceRepositoryBase):
     All methods use context managers for proper session lifecycle.
     """
 
-    def __init__(self, session_factory) -> None:
+    def __init__(self, session_factory: SessionFactory) -> None:
         """Initialize with async session factory.
 
         Args:
@@ -216,7 +219,7 @@ class PostgresDecisionTraceRepository(DecisionTraceRepositoryBase):
                 delete(DecisionTrace).where(DecisionTrace.user_id == user_id)
             )
             await session.commit()
-            return result.rowcount
+            return int(result.rowcount or 0)
 
     async def delete_expired(self, retention_days: int) -> int:
         """Delete traces older than retention period (edges deleted by CASCADE)."""
@@ -226,4 +229,4 @@ class PostgresDecisionTraceRepository(DecisionTraceRepositoryBase):
                 delete(DecisionTrace).where(DecisionTrace.timestamp < cutoff)
             )
             await session.commit()
-            return result.rowcount
+            return int(result.rowcount or 0)

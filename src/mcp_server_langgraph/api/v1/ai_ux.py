@@ -186,12 +186,17 @@ class DisclosureAnalyzeResponse(BaseModel):
 
 
 class EmptyStateActionType(str, Enum):
-    """Action types for empty state suggestions (ADR-0091 Phase 9 aligned)."""
+    """Action types for empty state suggestions (ADR-0091 Phase 9 aligned).
 
-    NAVIGATE = "navigate"
-    CREATE = "create"
-    LEARN = "learn"
-    IMPORT = "import"
+    Values aligned with EMPTY_STATE_SYSTEM_PROMPT output_schema.
+    """
+
+    NAVIGATE = "navigate"  # Navigate to a page
+    CREATE = "create"  # Create a new resource
+    LEARN = "learn"  # Open documentation/tutorial
+    IMPORT = "import"  # Import existing data
+    MODAL = "modal"  # Open a modal dialog
+    EXECUTE = "execute"  # Execute an action directly
 
 
 class EmptyStateSuggestionsRequest(BaseModel):

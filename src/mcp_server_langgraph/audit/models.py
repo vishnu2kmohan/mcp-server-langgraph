@@ -243,6 +243,22 @@ class AuditEventType(StrEnum):
     GDPR_EXPORT_REQUEST = "gdpr.export_request"
     """GDPR Article 20 - Data portability request."""
 
+    # Bypass execution mode events (Risk-aware auto-approval)
+    BYPASS_ACTIVATED = "execution_mode.bypass.activated"
+    """User activated risk-aware bypass execution mode."""
+
+    BYPASS_AUTO_APPROVED = "execution_mode.bypass.auto_approved"
+    """Execution plan auto-approved in bypass mode (low-risk)."""
+
+    BYPASS_USER_APPROVED = "execution_mode.bypass.user_approved"
+    """Execution plan manually approved by user in bypass mode (high-risk)."""
+
+    BYPASS_REJECTED = "execution_mode.bypass.rejected"
+    """Execution plan rejected by user in bypass mode."""
+
+    SANDBOXED_EXECUTION_AUTO_ALLOWED = "execution.sandboxed.auto_allowed"
+    """Sandboxed code execution auto-allowed in bypass mode."""
+
 
 class AuditActor(BaseModel):
     """

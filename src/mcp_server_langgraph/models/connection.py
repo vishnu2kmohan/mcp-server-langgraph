@@ -7,6 +7,7 @@ Implements MCP server connection management with:
 - API Key authentication
 - No authentication (local/development servers)
 - Secrets provider integration (credentials stored via references)
+- Scope-based access control (user, project, session)
 
 Uses modern SQLAlchemy 2.0+ async patterns with type annotations.
 """
@@ -15,6 +16,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import (
+    Boolean,
     Computed,
     DateTime,
     ForeignKey,
@@ -25,6 +27,12 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSON, TSVECTOR, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+# Import ConnectionScope from auth module (defined there to avoid SQLAlchemy
+# dependency in lightweight deployments)
+from mcp_server_langgraph.auth.connection_scope import ConnectionScope
+
+__all__ = ["ConnectionBase", "MCPConnectionModel", "OAuth2StateModel", "ConnectionScope"]
 
 
 class ConnectionBase(DeclarativeBase):
@@ -161,6 +169,14 @@ class MCPConnectionModel(ConnectionBase):
         index=True,
     )
 
+    # Access scope (Phase 6: Connections Page Redesign)
+    scope: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default=ConnectionScope.USER.value,
+        doc="Access scope: user (owner only), project (project members), session (ephemeral)",
+    )
+
     # Full-text search vector (PostgreSQL generated stored column)
     search_vector: Mapped[str | None] = mapped_column(
         TSVECTOR,
@@ -200,6 +216,7 @@ class MCPConnectionModel(ConnectionBase):
         Index("ix_mcp_connections_status", "status"),
         Index("ix_mcp_connections_url", "url"),
         Index("ix_mcp_connections_transport", "transport"),
+        Index("ix_mcp_connections_scope", "scope"),
         Index(
             "ix_mcp_connections_search_vector",
             "search_vector",
@@ -242,6 +259,12 @@ class OAuth2StateModel(ConnectionBase):
     redirect_uri: Mapped[str] = mapped_column(
         String(2048),
         nullable=False,
+    )
+    popup: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        doc="If true, callback returns HTML for popup close instead of redirect",
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

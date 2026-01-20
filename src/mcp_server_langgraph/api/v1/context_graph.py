@@ -14,7 +14,7 @@ Authorization:
 Reference: ADR-0101 Context Graphs, ADR-0068 Gateway-Level Authentication
 """
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from starlette.requests import Request
@@ -28,6 +28,11 @@ from mcp_server_langgraph.storage.models import (
     PrecedentSearchRequest,
     PrecedentSearchResult,
 )
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.repositories.decision_trace import (
+        DecisionTraceRepositoryBase,
+    )
 
 router = APIRouter(prefix="/context-graph", tags=["context-graph"])
 
@@ -82,13 +87,13 @@ async def _check_session_authorization(
             relation=relation,
             resource=resource,
         )
-        return authorized
+        return bool(authorized)
     except Exception:
         # Log error but fail closed for security
         return False
 
 
-def get_decision_repository(request: Request):
+def get_decision_repository(request: Request) -> "DecisionTraceRepositoryBase":
     """Get repository from app state.
 
     FastAPI dependency that provides access to the decision trace repository.
@@ -99,7 +104,8 @@ def get_decision_repository(request: Request):
     if not getattr(request.app.state, "decision_emitter", None):
         raise HTTPException(503, "Context graph not enabled")
     # Repository is accessible via emitter
-    return request.app.state.decision_emitter._repository
+    repo: DecisionTraceRepositoryBase = request.app.state.decision_emitter._repository
+    return repo
 
 
 # Alias for backward compatibility with tests
@@ -110,9 +116,9 @@ _get_repository = get_decision_repository
 async def get_trace(
     trace_id: str,
     request: Request,
-    repo=Depends(get_decision_repository),
-    current_user=Depends(get_current_user),
-):
+    repo: "DecisionTraceRepositoryBase" = Depends(get_decision_repository),
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> DecisionTraceRead:
     """Get a specific decision trace.
 
     Authorization: Requires viewer access to the trace's session.
@@ -167,9 +173,9 @@ async def get_session_traces(
     request: Request,
     limit: int = Query(default=100, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
-    repo=Depends(get_decision_repository),
-    current_user=Depends(get_current_user),
-):
+    repo: "DecisionTraceRepositoryBase" = Depends(get_decision_repository),
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> list[DecisionTraceSummary]:
     """Get decision traces for a session.
 
     Authorization: Requires viewer access to the session.
@@ -222,9 +228,9 @@ async def get_session_traces(
 async def search_precedents(
     body: PrecedentSearchRequest,
     request: Request,
-    repo=Depends(get_decision_repository),
-    current_user=Depends(get_current_user),
-):
+    repo: "DecisionTraceRepositoryBase" = Depends(get_decision_repository),
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> list[PrecedentSearchResult]:
     """Search for similar past decisions.
 
     Uses semantic search to find precedents that match the query.

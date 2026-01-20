@@ -128,9 +128,9 @@ SPA_SECURITY_HEADERS: dict[str, str] = {
     "Content-Security-Policy": (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.codesandbox.io https://cdn.jsdelivr.net; "
-        "style-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "img-src 'self' data: https:; "
-        "font-src 'self' data:; "
+        "font-src 'self' data: https://fonts.gstatic.com; "
         "connect-src 'self' ws: wss: https: https://*.codesandbox.io https://cdn.jsdelivr.net; "
         "frame-src 'self' https://*.codesandbox.io https://codesandbox.io; "
         "frame-ancestors 'none'"
@@ -1708,3 +1708,53 @@ async def switch_organization(
         org_id=org_id,
         message=f"Switched to organization {org_id}",
     )
+
+
+# ============================================================================
+# Bypass Permission Check
+# ============================================================================
+
+
+class BypassPermissionResponse(BaseModel):
+    """Response for bypass permission check."""
+
+    allowed: bool = Field(..., description="Whether user has bypass_executor permission")
+
+
+@auth_router.get(
+    "/bypass-permission",
+    summary="Check bypass execution mode permission",
+    description="Check if current user has bypass_executor permission on system:global",
+    response_model=BypassPermissionResponse,
+)
+async def check_bypass_permission(
+    request: Request,
+    current_user: dict[str, Any] = Depends(get_current_user),
+    openfga_client: Any = Depends(get_openfga_client),
+) -> BypassPermissionResponse:
+    """
+    Check if current user has bypass_executor permission on system:global.
+
+    This permission allows risk-aware auto-approval in bypass execution mode.
+    Only users with explicit bypass_executor relation or admin relation on
+    system:global can use bypass mode.
+
+    Returns:
+        BypassPermissionResponse with allowed=True if user has permission.
+    """
+    if openfga_client is None:
+        # Fail-closed: No OpenFGA client means no bypass permission
+        return BypassPermissionResponse(allowed=False)
+
+    # CRITICAL: current_user["user_id"] is ALREADY "user:alice" (from jwt_utils.py:170)
+    # Use it AS-IS - DO NOT prefix again!
+    user_id = current_user.get("user_id") or f"user:{current_user.get('preferred_username', 'anonymous')}"
+
+    allowed = await openfga_client.check_permission(
+        user=user_id,  # Already "user:alice" - NO prefix!
+        relation="bypass_executor",
+        object="system:global",
+        critical=True,  # Fail-closed
+    )
+
+    return BypassPermissionResponse(allowed=allowed)
