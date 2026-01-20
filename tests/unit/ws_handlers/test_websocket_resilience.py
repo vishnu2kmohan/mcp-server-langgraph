@@ -48,7 +48,12 @@ class TestWithCircuitBreaker:
             mock_breaker.call_async = AsyncMock(return_value=expected)
             mock_get_cb.return_value = mock_breaker
 
-            result = await with_circuit_breaker("test_service", successful_op())
+            # Create coroutine and ensure it's closed (mock bypasses actual await)
+            coro = successful_op()
+            try:
+                result = await with_circuit_breaker("test_service", coro)
+            finally:
+                coro.close()
 
             assert result == expected
             mock_get_cb.assert_called_once_with("test_service")
@@ -70,11 +75,16 @@ class TestWithCircuitBreaker:
             mock_breaker.call_async = AsyncMock(side_effect=pybreaker.CircuitBreakerError())
             mock_get_cb.return_value = mock_breaker
 
-            result = await with_circuit_breaker(
-                "test_service",
-                failing_op(),
-                fallback=fallback_value,
-            )
+            # Create coroutine and ensure it's closed (circuit is open, won't await)
+            coro = failing_op()
+            try:
+                result = await with_circuit_breaker(
+                    "test_service",
+                    coro,
+                    fallback=fallback_value,
+                )
+            finally:
+                coro.close()
 
             assert result == fallback_value
 
@@ -100,11 +110,16 @@ class TestWithCircuitBreaker:
             mock_breaker.call_async = AsyncMock(side_effect=pybreaker.CircuitBreakerError())
             mock_get_cb.return_value = mock_breaker
 
-            result = await with_circuit_breaker(
-                "test_service",
-                failing_op(),
-                fallback_fn=sync_fallback,
-            )
+            # Create coroutine and ensure it's closed (circuit is open, won't await)
+            coro = failing_op()
+            try:
+                result = await with_circuit_breaker(
+                    "test_service",
+                    coro,
+                    fallback_fn=sync_fallback,
+                )
+            finally:
+                coro.close()
 
             assert result is True
             assert len(fallback_called) == 1
@@ -128,11 +143,16 @@ class TestWithCircuitBreaker:
             mock_breaker.call_async = AsyncMock(side_effect=pybreaker.CircuitBreakerError())
             mock_get_cb.return_value = mock_breaker
 
-            result = await with_circuit_breaker(
-                "test_service",
-                failing_op(),
-                fallback_fn=async_fallback,
-            )
+            # Create coroutine and ensure it's closed (circuit is open, won't await)
+            coro = failing_op()
+            try:
+                result = await with_circuit_breaker(
+                    "test_service",
+                    coro,
+                    fallback_fn=async_fallback,
+                )
+            finally:
+                coro.close()
 
             assert result == {"cached": True}
 
@@ -152,8 +172,13 @@ class TestWithCircuitBreaker:
             mock_breaker.call_async = AsyncMock(side_effect=pybreaker.CircuitBreakerError())
             mock_get_cb.return_value = mock_breaker
 
-            with pytest.raises(pybreaker.CircuitBreakerError):
-                await with_circuit_breaker("test_service", failing_op())
+            # Create coroutine and ensure it's closed (circuit is open, won't await)
+            coro = failing_op()
+            try:
+                with pytest.raises(pybreaker.CircuitBreakerError):
+                    await with_circuit_breaker("test_service", coro)
+            finally:
+                coro.close()
 
     @pytest.mark.asyncio
     async def test_fallback_fn_takes_precedence_over_fallback(self) -> None:
@@ -171,12 +196,17 @@ class TestWithCircuitBreaker:
             mock_breaker.call_async = AsyncMock(side_effect=pybreaker.CircuitBreakerError())
             mock_get_cb.return_value = mock_breaker
 
-            result = await with_circuit_breaker(
-                "test_service",
-                failing_op(),
-                fallback={"static": True},
-                fallback_fn=lambda: {"dynamic": True},
-            )
+            # Create coroutine and ensure it's closed (circuit is open, won't await)
+            coro = failing_op()
+            try:
+                result = await with_circuit_breaker(
+                    "test_service",
+                    coro,
+                    fallback={"static": True},
+                    fallback_fn=lambda: {"dynamic": True},
+                )
+            finally:
+                coro.close()
 
             assert result == {"dynamic": True}
 

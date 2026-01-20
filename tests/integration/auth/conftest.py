@@ -224,81 +224,6 @@ def _get_test_token_via_modern_auth() -> str | None:
     return get_service_account_token(token_url, client_id, client_secret)
 
 
-def _authz_proxy_available() -> bool:
-    """Check if authz-proxy service is reachable.
-
-    This only checks if the service is up and responding to HTTP requests.
-    It does NOT check if authentication/authorization is configured correctly.
-
-    Philosophy: If infrastructure is up (via make test-infra-up), tests should
-    RUN and potentially FAIL if misconfigured - not SKIP. Skipping should only
-    happen when the service is completely unreachable (connection refused).
-
-    Returns:
-        True if service is reachable (any HTTP response)
-        False only if connection fails entirely (service not running)
-    """
-    try:
-        response = requests.get(
-            "http://localhost/playground/",
-            timeout=5,
-            allow_redirects=False,
-        )
-        # Any HTTP response means the service is up - test should run
-        # The test itself will verify correct behavior (401/403/200)
-        return response.status_code > 0  # Any valid HTTP status
-    except requests.exceptions.ConnectionError:
-        # Service not running - skip is appropriate
-        return False
-    except requests.exceptions.Timeout:
-        # Service not responding in time - skip is appropriate
-        return False
-    except Exception:
-        # Other network errors - skip is appropriate
-        return False
-
-
-def _authz_proxy_auth_functional() -> bool:
-    """Check if authz-proxy authentication is working correctly end-to-end.
-
-    This validates the full auth flow:
-    1. Get a service account token from Keycloak (client_credentials grant)
-    2. Send that token to the authz-proxy
-    3. Verify we get a non-401 response (auth was accepted)
-
-    This is a stricter check than _authz_proxy_available() because it validates
-    that the JWT validation is actually working, not just that the service is up.
-
-    Note: Uses service account token (RFC 9700 compliant) instead of ROPC which
-    is disabled per security audit.
-
-    Returns:
-        True if auth flow works end-to-end (token is validated correctly)
-        False if auth is broken (always returns 401 even with valid token)
-    """
-    try:
-        # Get service account token from Keycloak (ROPC is disabled)
-        token = get_service_account_token()
-        if not token:
-            return False
-
-        # Try the token with authz-proxy
-        proxy_response = requests.get(
-            "http://localhost/playground/",
-            headers={"Authorization": f"Bearer {token}"},
-            timeout=10,
-            allow_redirects=False,
-        )
-
-        # If we get 401, auth is broken (token not validated)
-        # If we get 403, 200, 302, 307, 404 - auth worked (token was validated)
-        # 503 means OpenFGA not configured (auth worked, authz unavailable)
-        return proxy_response.status_code != 401
-
-    except Exception:
-        return False
-
-
 def _keycloak_token_endpoint_functional() -> bool:
     """Check if Keycloak token endpoint returns valid JSON."""
     try:
@@ -492,17 +417,7 @@ def skip_if_infrastructure_unavailable(request):
         if not _grafana_oauth2_configured():
             pytest.skip("Grafana OAuth2 not configured (ADR-0068 infrastructure pending)")
 
-    elif test_file == "test_openfga_playground_proxy.py":
-        if not _keycloak_available():
-            pytest.skip("Keycloak not available at localhost:80/authn")
-        if not _authz_proxy_available():
-            pytest.skip("Authz-proxy/playground not available at localhost:80/playground")
-        if not _authz_proxy_auth_functional():
-            pytest.skip(
-                "Authz-proxy JWT authentication not working (admin token returns 401). "
-                "This usually means the authz-proxy is running but its auth middleware "
-                "is not correctly configured to validate Keycloak JWTs."
-            )
+    # NOTE: test_openfga_playground_proxy.py removed in Phase 4 decommission
 
 
 @pytest.fixture(autouse=True)

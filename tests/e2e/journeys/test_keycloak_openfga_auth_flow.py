@@ -9,9 +9,9 @@ through OpenFGA authorization. It tests the integration between:
 3. MCP Server - Protected endpoint access with auth
 
 User Journeys Tested:
-- Admin user: Full access to vector_store and authz:playground
-- Alice: Viewer access to vector_store and authz:playground
-- Bob: Viewer access to vector_store, NO access to authz:playground
+- Admin user: Full access (owner) to vector_store
+- Alice: Editor access to vector_store (CRUD)
+- Bob: Viewer access to vector_store (read-only)
 
 Reference: ADR-0068 - Gateway-Level Authentication
 
@@ -253,11 +253,11 @@ class OpenFGAAuthHelper:
         if response.status_code == 200:
             stores = response.json().get("stores", [])
             for store in stores:
-                if store.get("name") == "mcp-server-langgraph-test":
+                if store.get("name") == "agent-studio-openfga-store-test":
                     self._store_id = store.get("id")
                     return self._store_id
 
-        raise ValueError("Store 'mcp-server-langgraph-test' not found")
+        raise ValueError("Store 'agent-studio-openfga-store-test' not found")
 
     def _get_model_id(self) -> str:
         """Get the latest authorization model ID."""
@@ -477,53 +477,7 @@ class TestOpenFGAVectorStorePermissions:
         assert not allowed, "Alice should NOT have owner permission on vector_store:default"
 
 
-@pytest.mark.xdist_group(name="test_keycloak_openfga_auth_flow")
-class TestOpenFGAPlaygroundPermissions:
-    """Test OpenFGA permissions for authz:playground resource."""
-
-    def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
-        gc.collect()
-
-    def test_admin_has_admin_on_authz_playground(self):
-        """
-        GIVEN: Admin user authenticated
-        WHEN: Checking admin permission on authz:playground
-        THEN: Should return allowed=true
-
-        User Journey: Admin can access OpenFGA Playground
-        """
-        authz = OpenFGAAuthHelper()
-        allowed = authz.check_permission("user:admin", "admin", "authz:playground")
-        assert allowed, "Admin should have admin permission on authz:playground"
-
-    def test_alice_has_viewer_on_authz_playground(self):
-        """
-        GIVEN: Alice user authenticated
-        WHEN: Checking viewer permission on authz:playground
-        THEN: Should return allowed=true
-
-        User Journey: Alice can view OpenFGA Playground (read-only)
-        """
-        authz = OpenFGAAuthHelper()
-        allowed = authz.check_permission("user:alice", "viewer", "authz:playground")
-        assert allowed, "Alice should have viewer permission on authz:playground"
-
-    def test_bob_denied_access_to_authz_playground(self):
-        """
-        GIVEN: Bob user authenticated
-        WHEN: Checking any permission on authz:playground
-        THEN: Should return allowed=false
-
-        User Journey: Bob cannot access OpenFGA Playground (intentionally excluded)
-        """
-        authz = OpenFGAAuthHelper()
-
-        admin_allowed = authz.check_permission("user:bob", "admin", "authz:playground")
-        viewer_allowed = authz.check_permission("user:bob", "viewer", "authz:playground")
-
-        assert not admin_allowed, "Bob should NOT have admin permission on authz:playground"
-        assert not viewer_allowed, "Bob should NOT have viewer permission on authz:playground"
+# Note: TestOpenFGAPlaygroundPermissions class removed - playground deprecated
 
 
 @pytest.mark.xdist_group(name="test_keycloak_openfga_auth_flow")
@@ -558,13 +512,13 @@ class TestFullAuthFlow:
         allowed = authz.check_permission("user:admin", "owner", "vector_store:default")
         assert allowed, "Admin should have owner access to vector_store"
 
-    def test_alice_full_flow_playground_access(self):
+    def test_alice_full_flow_editor_access(self):
         """
         GIVEN: Alice credentials and running infrastructure
-        WHEN: Alice authenticates and checks playground permission
-        THEN: Full flow should succeed with viewer access
+        WHEN: Alice authenticates and checks vector_store permission
+        THEN: Full flow should succeed with editor access
 
-        User Journey: Alice logs in and views OpenFGA Playground
+        User Journey: Alice logs in and has CRUD access to vector_store
 
         Authentication: Uses RFC 8693 token exchange with ROPC fallback
         """
@@ -579,16 +533,16 @@ class TestFullAuthFlow:
 
         # Step 3: Check permission via OpenFGA
         authz = OpenFGAAuthHelper()
-        allowed = authz.check_permission("user:alice", "viewer", "authz:playground")
-        assert allowed, "Alice should have viewer access to authz:playground"
+        allowed = authz.check_permission("user:alice", "editor", "vector_store:default")
+        assert allowed, "Alice should have editor access to vector_store:default"
 
-    def test_bob_full_flow_denied_playground(self):
+    def test_bob_full_flow_viewer_only(self):
         """
         GIVEN: Bob credentials and running infrastructure
-        WHEN: Bob authenticates and checks playground permission
-        THEN: Authentication succeeds but authorization fails
+        WHEN: Bob authenticates and checks vector_store permission
+        THEN: Authentication succeeds, bob has viewer but NOT editor access
 
-        User Journey: Bob logs in but cannot access OpenFGA Playground
+        User Journey: Bob logs in with read-only access to vector_store
 
         Authentication: Uses RFC 8693 token exchange with ROPC fallback
         """
@@ -601,10 +555,12 @@ class TestFullAuthFlow:
         userinfo = auth.get_userinfo(token_response["access_token"])
         assert userinfo.get("preferred_username") == "bob"
 
-        # Step 3: Check permission via OpenFGA (should fail)
+        # Step 3: Check permission via OpenFGA
         authz = OpenFGAAuthHelper()
-        allowed = authz.check_permission("user:bob", "viewer", "authz:playground")
-        assert not allowed, "Bob should NOT have access to authz:playground"
+        viewer_allowed = authz.check_permission("user:bob", "viewer", "vector_store:default")
+        editor_allowed = authz.check_permission("user:bob", "editor", "vector_store:default")
+        assert viewer_allowed, "Bob should have viewer access to vector_store:default"
+        assert not editor_allowed, "Bob should NOT have editor access to vector_store:default"
 
     def test_organization_membership_flow(self):
         """

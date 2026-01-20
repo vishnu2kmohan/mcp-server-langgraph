@@ -3,14 +3,18 @@
   "realm": "default",
   "enabled": true,
   "displayName": "MCP Server LangGraph - Test Realm",
+  "loginTheme": "agent-studio",
+  "accountTheme": "agent-studio",
+  "adminTheme": "agent-studio",
+  "emailTheme": "keycloak",
   "accessTokenLifespan": 900,
   "refreshTokenMaxReuse": 0,
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 36000,
   "clients": [
     {
-      "clientId": "mcp-server",
-      "name": "MCP Server Test Client",
+      "clientId": "agent-studio-keycloak-client-id-for-e2e-tests",
+      "name": "Agent Studio Test Client",
       "enabled": true,
       "publicClient": false,
       "clientAuthenticatorType": "client-secret",
@@ -56,7 +60,7 @@
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "mcp-server",
+            "included.client.audience": "agent-studio-keycloak-client-id-for-e2e-tests",
             "id.token.claim": "true",
             "access.token.claim": "true"
           }
@@ -106,13 +110,13 @@
       ]
     },
     {
-      "clientId": "openfga-server",
+      "clientId": "agent-studio-openfga-oidc-cient-id-for-e2e-tests",
       "name": "OpenFGA Server Client",
       "description": "Service account for OpenFGA API authentication (ADR-0070)",
       "enabled": true,
       "publicClient": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "test-openfga-server-secret",
+      "secret": "agent-studio-openfga-oidc-client-secret-for-e2e-tests",
       "directAccessGrantsEnabled": false,
       "standardFlowEnabled": false,
       "implicitFlowEnabled": false,
@@ -134,7 +138,7 @@
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "openfga-server",
+            "included.client.audience": "agent-studio-openfga-oidc-cient-id-for-e2e-tests",
             "id.token.claim": "true",
             "access.token.claim": "true"
           }
@@ -271,6 +275,91 @@
         }
       ],
       "realmRoles": [
+        "offline_access",
+        "uma_authorization"
+      ],
+      "clientRoles": {
+        "account": [
+          "view-profile",
+          "manage-account"
+        ]
+      }
+    },
+    {
+      "username": "auditor-jane",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Jane",
+      "lastName": "Auditor",
+      "email": "auditor-jane@example.com",
+      "attributes": {
+        "sub_persona": ["auditor"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "auditor123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "offline_access",
+        "uma_authorization"
+      ],
+      "clientRoles": {
+        "account": [
+          "view-profile",
+          "manage-account"
+        ]
+      }
+    },
+    {
+      "username": "compliance-charlie",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Charlie",
+      "lastName": "Compliance",
+      "email": "compliance-charlie@example.com",
+      "attributes": {
+        "sub_persona": ["compliance-officer"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "compliance123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "offline_access",
+        "uma_authorization"
+      ],
+      "clientRoles": {
+        "account": [
+          "view-profile",
+          "manage-account"
+        ]
+      }
+    },
+    {
+      "username": "devops-dave",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Dave",
+      "lastName": "DevOps",
+      "email": "devops-dave@example.com",
+      "attributes": {
+        "sub_persona": ["devops"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "devops123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "developer",
         "offline_access",
         "uma_authorization"
       ],

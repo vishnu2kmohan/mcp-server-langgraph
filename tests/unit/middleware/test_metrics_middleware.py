@@ -463,4 +463,4 @@ class TestMetricsBroadcasterWiring:
                 for call in calls:
                     assert call.kwargs["session_id"] is None
 
-            asyncio.get_event_loop().run_until_complete(run_test())
+            asyncio.run(run_test())

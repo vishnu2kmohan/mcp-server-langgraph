@@ -335,3 +335,176 @@ class TestSpecificTemplates:
         assert response.status_code == 200
         data = response.json()
         assert data["auth_type"] == "api_key"
+
+
+# ============================================================================
+# Template Enhanced Fields Tests (ADR-0102)
+# ============================================================================
+
+
+@pytest.mark.xdist_group(name="connection_templates_api")
+class TestTemplateEnhancedFields:
+    """Tests for enhanced template fields: keywords, popularity, documentation_url."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_template_includes_keywords_field(self, client):
+        """Each template should include keywords list for intent matching."""
+        response = client.get("/connection-templates/github")
+        assert response.status_code == 200
+        data = response.json()
+        assert "keywords" in data
+        assert isinstance(data["keywords"], list)
+
+    def test_github_has_relevant_keywords(self, client):
+        """GitHub template should have relevant keywords for intent matching."""
+        response = client.get("/connection-templates/github")
+        assert response.status_code == 200
+        data = response.json()
+        keywords = data.get("keywords", [])
+        # Should include terms users might use when asking about GitHub
+        assert "github" in keywords
+        assert "repository" in keywords or "repo" in keywords
+
+    def test_template_includes_popularity_field(self, client):
+        """Each template should include popularity score."""
+        response = client.get("/connection-templates/github")
+        assert response.status_code == 200
+        data = response.json()
+        assert "popularity" in data
+        assert isinstance(data["popularity"], int)
+        assert 0 <= data["popularity"] <= 100
+
+    def test_popular_templates_have_high_popularity(self, client):
+        """Popular templates (GitHub, Slack) should have high popularity scores."""
+        response = client.get("/connection-templates")
+        assert response.status_code == 200
+        templates = response.json()["templates"]
+
+        github = next((t for t in templates if t["id"] == "github"), None)
+        slack = next((t for t in templates if t["id"] == "slack"), None)
+
+        assert github is not None
+        assert slack is not None
+        assert github["popularity"] >= 80
+        assert slack["popularity"] >= 80
+
+    def test_template_includes_documentation_url_field(self, client):
+        """Templates should include optional documentation URL."""
+        response = client.get("/connection-templates/github")
+        assert response.status_code == 200
+        data = response.json()
+        assert "documentation_url" in data
+        # GitHub should have docs URL
+        assert data["documentation_url"] is not None
+        assert "github" in data["documentation_url"].lower()
+
+    def test_all_templates_have_enhanced_fields(self, client):
+        """All templates should have keywords, popularity, and documentation_url fields."""
+        response = client.get("/connection-templates")
+        assert response.status_code == 200
+        templates = response.json()["templates"]
+
+        for template in templates:
+            # keywords should be list (can be empty)
+            assert "keywords" in template, f"Template {template['id']} missing keywords"
+            assert isinstance(template["keywords"], list)
+
+            # popularity should be 0-100
+            assert "popularity" in template, f"Template {template['id']} missing popularity"
+            assert 0 <= template["popularity"] <= 100
+
+            # documentation_url can be null
+            assert "documentation_url" in template, f"Template {template['id']} missing documentation_url"
+
+
+# ============================================================================
+# Template Suggestions Tests (ADR-0102)
+# ============================================================================
+
+
+@pytest.mark.xdist_group(name="connection_templates_api")
+class TestTemplateSuggestions:
+    """Tests for GET /connection-templates/suggestions endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_suggestions_returns_matching_templates(self, client):
+        """Should return templates matching query keywords."""
+        response = client.get("/connection-templates/suggestions?query=github pull request")
+        assert response.status_code == 200
+        data = response.json()
+        assert "templates" in data
+        # GitHub should match query about PRs
+        template_ids = [t["id"] for t in data["templates"]]
+        assert "github" in template_ids
+
+    def test_suggestions_respects_limit(self, client):
+        """Should respect limit parameter."""
+        response = client.get("/connection-templates/suggestions?query=api&limit=2")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["templates"]) <= 2
+
+    def test_suggestions_default_limit_is_three(self, client):
+        """Default limit should be 3."""
+        response = client.get("/connection-templates/suggestions?query=oauth")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["templates"]) <= 3
+
+    def test_suggestions_requires_query(self, client):
+        """Should require query parameter."""
+        response = client.get("/connection-templates/suggestions")
+        assert response.status_code == 422
+
+    def test_suggestions_query_minimum_length(self, client):
+        """Query should have minimum length."""
+        response = client.get("/connection-templates/suggestions?query=")
+        assert response.status_code == 422
+
+    def test_suggestions_matches_by_name(self, client):
+        """Should match templates by name."""
+        response = client.get("/connection-templates/suggestions?query=slack")
+        assert response.status_code == 200
+        data = response.json()
+        template_ids = [t["id"] for t in data["templates"]]
+        assert "slack" in template_ids
+
+    def test_suggestions_matches_by_keywords(self, client):
+        """Should match templates by keywords."""
+        response = client.get("/connection-templates/suggestions?query=channel message")
+        assert response.status_code == 200
+        data = response.json()
+        # Slack has channel/message keywords
+        template_ids = [t["id"] for t in data["templates"]]
+        assert "slack" in template_ids
+
+    def test_suggestions_sorted_by_relevance(self, client):
+        """Results should be sorted by match relevance, then popularity."""
+        response = client.get("/connection-templates/suggestions?query=github repo")
+        assert response.status_code == 200
+        data = response.json()
+        # GitHub should be first for this query
+        if len(data["templates"]) > 0:
+            assert data["templates"][0]["id"] == "github"
+
+    def test_suggestions_returns_total_count(self, client):
+        """Should return total count of matches."""
+        response = client.get("/connection-templates/suggestions?query=oauth")
+        assert response.status_code == 200
+        data = response.json()
+        assert "total" in data
+        assert isinstance(data["total"], int)
+
+    def test_suggestions_returns_empty_for_no_match(self, client):
+        """Should return empty list for queries with no matches."""
+        response = client.get("/connection-templates/suggestions?query=nonexistentxyz123")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["templates"] == []
+        assert data["total"] == 0

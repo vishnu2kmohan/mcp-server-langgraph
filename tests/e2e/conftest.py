@@ -60,7 +60,7 @@ def skip_if_e2e_infrastructure_unavailable():
 # OpenFGA configuration constants
 OPENFGA_URL = os.getenv("OPENFGA_API_URL", "http://localhost:9080")
 OPENFGA_PRESHARED_KEY = os.getenv("OPENFGA_PRESHARED_KEY", "test-openfga-preshared-key")
-OPENFGA_TEST_STORE_NAME = "mcp-server-langgraph-test"
+OPENFGA_TEST_STORE_NAME = "agent-studio-openfga-store-test"
 
 
 def _get_openfga_store_and_model() -> tuple[str | None, str | None]:
@@ -129,8 +129,7 @@ async def openfga_seeded_tuples(test_infrastructure):
     - user:alice member organization:acme
     - user:alice admin organization:acme
     - user:alice owner conversation:thread_1
-    - user:alice viewer vector_store:default
-    - user:alice viewer authz:playground
+    - user:alice editor vector_store:default
 
     Yields:
         dict: Mapping of pre-seeded tuples for test assertions

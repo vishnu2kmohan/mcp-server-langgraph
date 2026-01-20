@@ -925,6 +925,172 @@ class TestDeviceAuthorizationGrantE2E:
         assert response.status_code in [400, 503]
 
 
+# ============================================================================
+# E2E WebSocket Permissions in /api/v1/me Tests
+# ============================================================================
+
+
+class TestWebSocketPermissionsE2E:
+    """
+    E2E tests for WebSocket permissions in /api/v1/me endpoint.
+
+    These tests verify the complete flow:
+    1. User authenticates via OAuth2
+    2. Frontend calls /api/v1/me with access token
+    3. Response includes websocket_permissions from OpenFGA
+
+    Reference: GitHub issue - StatusBar shows "Disconnected" after OAuth login
+    This bug occurred because websocket_permissions weren't being fetched
+    after OAuth callback, preventing frontend hooks from connecting.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.skipif(not _api_available(), reason="API server not available")
+    @pytest.mark.skipif(
+        not _keycloak_available() and not _keycloak_via_gateway_available(),
+        reason="Keycloak not available",
+    )
+    @pytest.mark.xfail(
+        _XDIST_E2E_INFRASTRUCTURE_UNSTABLE,
+        reason="Infrastructure timing issues in xdist parallel execution",
+        strict=False,
+    )
+    def test_me_endpoint_returns_websocket_permissions(self, user_tokens) -> None:
+        """
+        GIVEN: User has valid access token from Keycloak
+        WHEN: GET /api/v1/me is called with Authorization header
+        THEN: Response includes websocket_permissions field with all 17 permissions.
+        """
+        response = requests.get(
+            "http://localhost/api/v1/me",
+            headers={"Authorization": f"Bearer {user_tokens['access_token']}"},
+            timeout=10,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify websocket_permissions is present
+        assert "websocket_permissions" in data, (
+            "/api/v1/me response must include websocket_permissions. "
+            "This is required for frontend WebSocket hooks to check permissions."
+        )
+
+        perms = data["websocket_permissions"]
+        assert isinstance(perms, dict)
+
+        # Verify all 17 permission fields are present
+        expected_fields = [
+            "alerts",
+            "notifications",
+            "devtools",
+            "audit",
+            "mcp_tasks",
+            "mcp_aggregated",
+            "connections_health",
+            "connections_realtime",
+            "heart_metrics",
+            "traces",
+            "cost_tracking",
+            "budget_alerts",
+            "agent_requests",
+            "ai_suggestions",
+            "orchestrator_status",
+            "llm_streaming",
+            "session_metrics",
+        ]
+
+        for field in expected_fields:
+            assert field in perms, f"Missing websocket_permissions.{field}"
+
+        assert len(perms) == 17, f"Expected 17 permissions, got {len(perms)}"
+
+    @pytest.mark.skipif(not _api_available(), reason="API server not available")
+    @pytest.mark.skipif(
+        not _keycloak_available() and not _keycloak_via_gateway_available(),
+        reason="Keycloak not available",
+    )
+    @pytest.mark.xfail(
+        _XDIST_E2E_INFRASTRUCTURE_UNSTABLE,
+        reason="Infrastructure timing issues in xdist parallel execution",
+        strict=False,
+    )
+    def test_websocket_permissions_are_booleans(self, user_tokens) -> None:
+        """
+        GIVEN: User has valid access token
+        WHEN: GET /api/v1/me is called
+        THEN: All websocket_permissions values are boolean (not null or string).
+        """
+        response = requests.get(
+            "http://localhost/api/v1/me",
+            headers={"Authorization": f"Bearer {user_tokens['access_token']}"},
+            timeout=10,
+        )
+
+        assert response.status_code == 200
+        perms = response.json()["websocket_permissions"]
+
+        for key, value in perms.items():
+            assert isinstance(value, bool), (
+                f"websocket_permissions.{key} should be boolean, got {type(value).__name__}"
+            )
+
+    @pytest.mark.skipif(not _api_available(), reason="API server not available")
+    @pytest.mark.skipif(
+        not _keycloak_available() and not _keycloak_via_gateway_available(),
+        reason="Keycloak not available",
+    )
+    @pytest.mark.xfail(
+        _XDIST_E2E_INFRASTRUCTURE_UNSTABLE,
+        reason="Infrastructure timing issues in xdist parallel execution",
+        strict=False,
+    )
+    def test_admin_user_has_all_websocket_permissions(self) -> None:
+        """
+        GIVEN: Admin user authenticated via Keycloak
+        WHEN: GET /api/v1/me is called
+        THEN: Admin has all websocket_permissions set to True (including alerts).
+        """
+        # Get admin tokens via Token Exchange or client credentials
+        admin_tokens = get_user_tokens(username="admin", password="admin123")
+        if admin_tokens is None:
+            pytest.skip("Could not obtain admin tokens")
+
+        response = requests.get(
+            "http://localhost/api/v1/me",
+            headers={"Authorization": f"Bearer {admin_tokens['access_token']}"},
+            timeout=10,
+        )
+
+        assert response.status_code == 200
+        perms = response.json()["websocket_permissions"]
+
+        # Admin should have ALL permissions True
+        for key, value in perms.items():
+            assert value is True, f"Admin should have {key}=True, got {value}"
+
+    @pytest.mark.skipif(not _api_available(), reason="API server not available")
+    def test_me_endpoint_requires_authentication(self) -> None:
+        """
+        GIVEN: No Authorization header provided
+        WHEN: GET /api/v1/me is called
+        THEN: Returns 401 Unauthorized (not 200 with null permissions).
+        """
+        response = requests.get(
+            "http://localhost/api/v1/me",
+            timeout=10,
+        )
+
+        # Must require authentication - never return permissions without auth
+        assert response.status_code == 401, (
+            "/api/v1/me must require authentication. "
+            "Returning 200 without auth would be a security vulnerability."
+        )
+
+
 def teardown_module():
     """Force GC to prevent mock accumulation in xdist workers."""
     gc.collect()

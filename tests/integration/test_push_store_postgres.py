@@ -66,7 +66,7 @@ async def test_engine():
     # Use test database URL from environment or default
     database_url = os.getenv(
         "TEST_DATABASE_URL",
-        "postgresql+asyncpg://postgres:postgres@localhost:9432/mcp_test",
+        "postgresql+asyncpg://postgres:postgres@localhost:9432/agent_studio_test",
     )
 
     try:

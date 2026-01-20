@@ -91,36 +91,7 @@ class TestLoadSampleTuples:
         )
         assert bob_viewer, "Bob should be viewer of vector_store:default"
 
-    def test_config_file_includes_authz_playground_tuples(self) -> None:
-        """
-        GIVEN: Config file exists
-        WHEN: load_sample_tuples is called
-        THEN: Should include authz:playground tuples for admin and alice
-        """
-        from mcp_server_langgraph.auth.openfga import load_sample_tuples
-
-        tuples = load_sample_tuples()
-
-        # Check authz tuples exist
-        authz_tuples = [t for t in tuples if "authz:playground" in t["object"]]
-
-        assert len(authz_tuples) >= 2, "Should have at least 2 authz:playground tuples"
-
-        # Verify admin is admin of playground
-        admin_is_admin = any(
-            t["user"] == "user:admin" and t["relation"] == "admin" and t["object"] == "authz:playground" for t in authz_tuples
-        )
-        assert admin_is_admin, "Admin should have admin on authz:playground"
-
-        # Verify alice is viewer (not admin)
-        alice_is_viewer = any(
-            t["user"] == "user:alice" and t["relation"] == "viewer" and t["object"] == "authz:playground" for t in authz_tuples
-        )
-        assert alice_is_viewer, "Alice should be viewer of authz:playground"
-
-        # Verify bob has NO access to playground
-        bob_tuples = [t for t in authz_tuples if t["user"] == "user:bob"]
-        assert len(bob_tuples) == 0, "Bob should have no access to authz:playground"
+    # Note: test_config_file_includes_authz_playground_tuples removed - playground deprecated
 
     def test_config_file_includes_organization_tuples(self) -> None:
         """

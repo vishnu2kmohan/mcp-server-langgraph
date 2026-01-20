@@ -84,6 +84,89 @@ class TestNote:
         assert "research" in markdown
         assert "important" in markdown
 
+    def test_note_creation_with_session_and_user(self) -> None:
+        """Test creating a note with session_id and user_id for Phase 4 refs."""
+        from mcp_server_langgraph.memory.notes import Note
+
+        note = Note(
+            id="note-session-1",
+            content="Session-scoped note",
+            session_id="session-abc-123",
+            user_id="user-xyz-456",
+        )
+
+        assert note.session_id == "session-abc-123"
+        assert note.user_id == "user-xyz-456"
+
+    def test_note_creation_with_title_and_slug(self) -> None:
+        """Test creating a note with title and slug for friendly refs."""
+        from mcp_server_langgraph.memory.notes import Note
+
+        note = Note(
+            id="note-titled-1",
+            content="Note with title",
+            title="Architecture Decision",
+            slug="architecture-decision",
+        )
+
+        assert note.title == "Architecture Decision"
+        assert note.slug == "architecture-decision"
+
+    def test_note_optional_fields_default_to_none(self) -> None:
+        """Test that session_id, user_id, title, slug default to None."""
+        from mcp_server_langgraph.memory.notes import Note
+
+        note = Note(
+            id="note-minimal",
+            content="Minimal note",
+        )
+
+        assert note.session_id is None
+        assert note.user_id is None
+        assert note.title is None
+        assert note.slug is None
+
+    def test_note_with_all_phase4_fields(self) -> None:
+        """Test creating a note with all Phase 4 prerequisite fields."""
+        from mcp_server_langgraph.memory.notes import Note
+
+        now = datetime.now(UTC)
+        note = Note(
+            id="note-full",
+            content="Full Phase 4 note",
+            category="memory",
+            tags=["phase4", "refs"],
+            created_at=now,
+            metadata={"source": "test"},
+            session_id="session-123",
+            user_id="user-456",
+            title="Full Note Title",
+            slug="full-note-title",
+        )
+
+        assert note.id == "note-full"
+        assert note.content == "Full Phase 4 note"
+        assert note.category == "memory"
+        assert note.session_id == "session-123"
+        assert note.user_id == "user-456"
+        assert note.title == "Full Note Title"
+        assert note.slug == "full-note-title"
+
+    def test_note_to_markdown_includes_title_when_present(self) -> None:
+        """Test that markdown output includes title when provided."""
+        from mcp_server_langgraph.memory.notes import Note
+
+        note = Note(
+            id="note-with-title",
+            content="Content here",
+            title="My Custom Title",
+        )
+
+        markdown = note.to_markdown()
+
+        # Title should be used in heading instead of ID
+        assert "My Custom Title" in markdown
+
 
 @pytest.mark.unit
 @pytest.mark.memory
@@ -239,6 +322,101 @@ class TestNotesManager:
         manager.clear()
 
         assert len(manager.list_notes()) == 0
+
+    def test_add_note_with_session_and_user(self, tmp_path: Path) -> None:
+        """Test adding a note with session_id and user_id."""
+        from mcp_server_langgraph.memory.notes import NotesManager
+
+        notes_file = tmp_path / "NOTES.md"
+        manager = NotesManager(notes_path=notes_file)
+
+        note = manager.add_note(
+            content="Session-bound note",
+            session_id="session-abc",
+            user_id="user-xyz",
+        )
+
+        assert note.session_id == "session-abc"
+        assert note.user_id == "user-xyz"
+
+    def test_add_note_with_title_and_slug(self, tmp_path: Path) -> None:
+        """Test adding a note with title and slug."""
+        from mcp_server_langgraph.memory.notes import NotesManager
+
+        notes_file = tmp_path / "NOTES.md"
+        manager = NotesManager(notes_path=notes_file)
+
+        note = manager.add_note(
+            content="Titled note content",
+            title="My Important Note",
+            slug="my-important-note",
+        )
+
+        assert note.title == "My Important Note"
+        assert note.slug == "my-important-note"
+
+    def test_persist_and_load_preserves_phase4_fields(self, tmp_path: Path) -> None:
+        """Test that session_id, user_id, title, slug survive persist/load."""
+        from mcp_server_langgraph.memory.notes import NotesManager
+
+        notes_file = tmp_path / "NOTES.md"
+        manager1 = NotesManager(notes_path=notes_file)
+
+        note = manager1.add_note(
+            content="Phase 4 note",
+            session_id="session-persist",
+            user_id="user-persist",
+            title="Persistent Title",
+            slug="persistent-slug",
+        )
+        note_id = note.id
+        manager1.persist()
+
+        # Reload in new manager
+        manager2 = NotesManager(notes_path=notes_file)
+        manager2.load()
+
+        loaded = manager2.get_note(note_id)
+        assert loaded is not None
+        assert loaded.session_id == "session-persist"
+        assert loaded.user_id == "user-persist"
+        assert loaded.title == "Persistent Title"
+        assert loaded.slug == "persistent-slug"
+
+    def test_list_notes_by_session(self, tmp_path: Path) -> None:
+        """Test listing notes filtered by session_id."""
+        from mcp_server_langgraph.memory.notes import NotesManager
+
+        notes_file = tmp_path / "NOTES.md"
+        manager = NotesManager(notes_path=notes_file)
+
+        manager.add_note(content="Session 1 note 1", session_id="session-1")
+        manager.add_note(content="Session 1 note 2", session_id="session-1")
+        manager.add_note(content="Session 2 note", session_id="session-2")
+        manager.add_note(content="No session note")
+
+        session1_notes = manager.list_notes(session_id="session-1")
+        session2_notes = manager.list_notes(session_id="session-2")
+
+        assert len(session1_notes) == 2
+        assert len(session2_notes) == 1
+
+    def test_list_notes_by_user(self, tmp_path: Path) -> None:
+        """Test listing notes filtered by user_id."""
+        from mcp_server_langgraph.memory.notes import NotesManager
+
+        notes_file = tmp_path / "NOTES.md"
+        manager = NotesManager(notes_path=notes_file)
+
+        manager.add_note(content="User A note 1", user_id="user-a")
+        manager.add_note(content="User A note 2", user_id="user-a")
+        manager.add_note(content="User B note", user_id="user-b")
+
+        user_a_notes = manager.list_notes(user_id="user-a")
+        user_b_notes = manager.list_notes(user_id="user-b")
+
+        assert len(user_a_notes) == 2
+        assert len(user_b_notes) == 1
 
 
 @pytest.mark.unit

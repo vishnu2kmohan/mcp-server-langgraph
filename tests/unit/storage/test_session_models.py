@@ -85,6 +85,88 @@ class TestSessionConfigDefaults:
         assert 0.0 <= config.temperature <= 2.0
 
 
+@pytest.mark.xdist_group(name="test_storage_session_config_execution_mode")
+@pytest.mark.unit
+class TestSessionConfigExecutionMode:
+    """Tests for SessionConfig execution_mode field for bypass mode persistence."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_session_config_execution_mode_defaults_to_default(self) -> None:
+        """GIVEN a new SessionConfig
+        WHEN no execution_mode is provided
+        THEN it should default to 'default'.
+        """
+        from mcp_server_langgraph.storage.models import SessionConfig
+
+        config = SessionConfig()
+
+        assert config.execution_mode == "default"
+
+    def test_session_config_execution_mode_accepts_valid_modes(self) -> None:
+        """GIVEN valid execution mode values
+        WHEN creating SessionConfig
+        THEN all valid modes should be accepted.
+        """
+        from mcp_server_langgraph.storage.models import SessionConfig
+
+        valid_modes = ["default", "plan", "auto_accept", "bypass"]
+
+        for mode in valid_modes:
+            config = SessionConfig(execution_mode=mode)
+            assert config.execution_mode == mode
+
+    def test_session_config_execution_mode_rejects_invalid_modes(self) -> None:
+        """GIVEN an invalid execution mode value
+        WHEN creating SessionConfig
+        THEN it should raise a ValidationError.
+        """
+        from pydantic import ValidationError
+
+        from mcp_server_langgraph.storage.models import SessionConfig
+
+        with pytest.raises(ValidationError) as exc_info:
+            SessionConfig(execution_mode="invalid_mode")
+
+        # Verify the error mentions the field
+        error_str = str(exc_info.value)
+        assert "execution_mode" in error_str
+
+    def test_session_config_execution_mode_serializes_correctly(self) -> None:
+        """GIVEN a SessionConfig with execution_mode
+        WHEN serialized to dict/JSON
+        THEN execution_mode should be included.
+        """
+        from mcp_server_langgraph.storage.models import SessionConfig
+
+        config = SessionConfig(execution_mode="bypass")
+        data = config.model_dump()
+
+        assert "execution_mode" in data
+        assert data["execution_mode"] == "bypass"
+
+    def test_session_preserves_execution_mode_in_config(self) -> None:
+        """GIVEN a Session with execution_mode in config
+        WHEN serialized and deserialized
+        THEN execution_mode should be preserved.
+        """
+        from mcp_server_langgraph.storage.models import Session, SessionConfig
+
+        session = Session(
+            session_id="session-test-123",
+            name="Test Session",
+            config=SessionConfig(execution_mode="plan"),
+        )
+
+        # Serialize and deserialize
+        data = session.model_dump()
+        restored = Session.model_validate(data)
+
+        assert restored.config.execution_mode == "plan"
+
+
 @pytest.mark.xdist_group(name="test_storage_unified_models")
 @pytest.mark.unit
 class TestUnifiedSessionConfigDefaults:

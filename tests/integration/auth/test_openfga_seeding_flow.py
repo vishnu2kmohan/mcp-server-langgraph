@@ -216,42 +216,10 @@ class TestOpenFGASeedingTupleVerification:
         allowed = self._check_permission("user:bob", "viewer", "vector_store:default")
         assert allowed, "Bob should have viewer permission on vector_store:default"
 
-    def test_admin_has_admin_on_authz_playground(self):
-        """
-        GIVEN: Seeding has completed
-        WHEN: Checking if admin has admin permission on authz:playground
-        THEN: Should return allowed=true
-
-        User Journey: Admin can access OpenFGA Playground
-        """
-        allowed = self._check_permission("user:admin", "admin", "authz:playground")
-        assert allowed, "Admin should have admin permission on authz:playground"
-
-    def test_alice_has_viewer_on_authz_playground(self):
-        """
-        GIVEN: Seeding has completed
-        WHEN: Checking if alice has viewer permission on authz:playground
-        THEN: Should return allowed=true
-
-        User Journey: Alice can view OpenFGA Playground (read-only)
-        """
-        allowed = self._check_permission("user:alice", "viewer", "authz:playground")
-        assert allowed, "Alice should have viewer permission on authz:playground"
-
-    def test_bob_has_no_access_to_authz_playground(self):
-        """
-        GIVEN: Seeding has completed
-        WHEN: Checking if bob has any permission on authz:playground
-        THEN: Should return allowed=false for all relations
-
-        User Journey: Bob cannot access OpenFGA Playground (intentionally excluded)
-        """
-        # Check both admin and viewer
-        admin_allowed = self._check_permission("user:bob", "admin", "authz:playground")
-        viewer_allowed = self._check_permission("user:bob", "viewer", "authz:playground")
-
-        assert not admin_allowed, "Bob should NOT have admin permission on authz:playground"
-        assert not viewer_allowed, "Bob should NOT have viewer permission on authz:playground"
+    # Note: authz:playground tests removed - playground deprecated
+    # Removed: test_admin_has_admin_on_authz_playground
+    # Removed: test_alice_has_viewer_on_authz_playground
+    # Removed: test_bob_has_no_access_to_authz_playground
 
 
 @pytest.mark.xdist_group(name="test_openfga_seeding_flow")

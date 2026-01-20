@@ -419,12 +419,7 @@ class TestRequiredTestUserPermissions:
             "admin should have owner on vector_store:default"
         )
 
-    def test_admin_has_admin_on_authz_playground(self, tuples_data: dict):
-        """admin should have admin on authz:playground."""
-        tuples = tuples_data["tuples"]
-        assert self._has_tuple(tuples, "user:admin", "admin", "authz:playground"), (
-            "admin should have admin on authz:playground"
-        )
+    # Note: test_admin_has_admin_on_authz_playground removed - playground deprecated
 
     def test_alice_has_editor_on_vector_store(self, tuples_data: dict):
         """alice should have editor on vector_store:default (CRUD access)."""
@@ -433,12 +428,7 @@ class TestRequiredTestUserPermissions:
             "alice should have editor on vector_store:default"
         )
 
-    def test_alice_has_viewer_on_authz_playground(self, tuples_data: dict):
-        """alice should have viewer on authz:playground."""
-        tuples = tuples_data["tuples"]
-        assert self._has_tuple(tuples, "user:alice", "viewer", "authz:playground"), (
-            "alice should have viewer on authz:playground"
-        )
+    # Note: test_alice_has_viewer_on_authz_playground removed - playground deprecated
 
     def test_bob_has_viewer_on_vector_store(self, tuples_data: dict):
         """bob should have viewer on vector_store:default."""
@@ -447,15 +437,7 @@ class TestRequiredTestUserPermissions:
             "bob should have viewer on vector_store:default"
         )
 
-    def test_bob_has_no_authz_playground_access(self, tuples_data: dict):
-        """bob should NOT have any access to authz:playground (intentional)."""
-        tuples = tuples_data["tuples"]
-
-        has_admin = self._has_tuple(tuples, "user:bob", "admin", "authz:playground")
-        has_viewer = self._has_tuple(tuples, "user:bob", "viewer", "authz:playground")
-
-        assert not has_admin, "bob should NOT have admin on authz:playground"
-        assert not has_viewer, "bob should NOT have viewer on authz:playground"
+    # Note: test_bob_has_no_authz_playground_access removed - playground deprecated
 
     def test_all_users_can_execute_chat_tool(self, tuples_data: dict):
         """All test users should be able to execute tool:chat."""

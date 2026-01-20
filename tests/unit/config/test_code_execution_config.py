@@ -34,8 +34,8 @@ class TestCodeExecutionSettings:
         """Test default code execution backend"""
         settings = Settings()
         assert hasattr(settings, "code_execution_backend")
-        # Should auto-detect or default to docker-engine
-        assert settings.code_execution_backend in ["docker-engine", "kubernetes", "process"]
+        # Default is "process" (safe for development without Docker)
+        assert settings.code_execution_backend == "process"
 
     def test_code_execution_timeout_default(self):
         """Test default code execution timeout"""
@@ -97,9 +97,10 @@ class TestCodeExecutionSettings:
         """Test default Docker image"""
         settings = Settings()
         assert hasattr(settings, "code_execution_docker_image")
-        # Image should be Python-capable (contains "python" in path)
-        # Note: Playwright images bundle Python without version in tag (e.g., v1.42.0-jammy)
-        assert "python" in settings.code_execution_docker_image.lower()
+        # Default image is the custom agent-studio sandbox image
+        assert settings.code_execution_docker_image == (
+            "ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:latest"
+        )
 
     def test_docker_socket_path_default(self):
         """Test default Docker socket path"""

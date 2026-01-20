@@ -2103,7 +2103,7 @@ class TestMCPWebSocketSecurityEnforcement:
         # Create connection
         import asyncio
 
-        asyncio.get_event_loop().run_until_complete(manager.connect(mock_ws, session_id="test-session", user_id="user:alice"))
+        asyncio.run(manager.connect(mock_ws, session_id="test-session", user_id="user:alice"))
 
         original_activity = manager._connections["test-session"].last_activity
 

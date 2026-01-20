@@ -55,16 +55,12 @@ EXCLUDED_FILES = {
     "marketplace_admin.py",
     # Main router file itself
     "router.py",
-    # WebSocket-only routers consolidated in ws_router
-    "agent_request_websocket.py",
-    "alert_websocket.py",
-    "audit_websocket.py",
-    "connection_health_ws.py",
+    # WebSocket-only routers consolidated in ws_router (ADR-0068)
+    # Note: Deprecated files (agent_request_websocket, alert_websocket, audit_websocket,
+    # connection_health_ws, mcp_task_websocket, workflow_execution_ws) have been removed
     "connections_realtime_ws.py",
     "cost_tracking_ws.py",
     "heart_metrics_ws.py",
-    "mcp_task_websocket.py",
-    "workflow_execution_ws.py",
     # ws_router is included directly, its handlers are internal
     "ws_router.py",
 }
@@ -74,7 +70,6 @@ EXCLUDED_ROUTERS = {
     # Registered in ws_router, not v1_router directly
     "mcp_task_ws_router",
     "connection_health_router",
-    "workflow_execution_router",
 }
 
 

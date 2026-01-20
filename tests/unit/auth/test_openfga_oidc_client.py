@@ -53,12 +53,12 @@ class TestOpenFGAConfigOIDC:
             api_url="http://localhost:8080",
             store_id="test-store",
             model_id="test-model",
-            oidc_client_id="openfga-server",
+            oidc_client_id="agent-studio-openfga-oidc-cient-id-for-e2e-tests",
             oidc_client_secret="test-secret",
             oidc_issuer="http://keycloak:8080/authn/realms/default",
         )
 
-        assert config.oidc_client_id == "openfga-server"
+        assert config.oidc_client_id == "agent-studio-openfga-oidc-cient-id-for-e2e-tests"
         assert config.oidc_client_secret == "test-secret"
         assert config.oidc_issuer == "http://keycloak:8080/authn/realms/default"
 

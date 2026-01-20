@@ -988,6 +988,278 @@ class TestDifferenceRelations:
 
 
 @pytest.mark.xdist_group(name="openfga_compose")
+class TestTupleToUsersetFromSyntax:
+    """
+    Test parsing tupleToUserset with 'from' syntax.
+
+    OpenFGA supports alternative tupleToUserset syntax:
+    - Arrow syntax: organization->member (more common)
+    - From syntax: viewer from session (less common, but valid)
+
+    Both map to JSON:
+    {
+      "tupleToUserset": {
+        "tupleset": {"relation": "session"},
+        "computedUserset": {"relation": "viewer"}
+      }
+    }
+
+    Regression tests for: memory#viewer from session issue where
+    compose_model.py wasn't handling the 'from' syntax correctly.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_parse_simple_from_syntax(self) -> None:
+        """
+        [FROM] Parse simple from syntax: viewer from session.
+
+        Regression test for: 'memory#viewer from session' relation undefined error.
+        """
+        fga_content = """type memory
+  relations
+    define session: [session]
+    define viewer: viewer from session"""
+
+        result = parse_fga_type(fga_content)
+
+        viewer_rel = result["relations"].get("viewer", {})
+
+        # Should have tupleToUserset structure, NOT a raw string
+        assert "tupleToUserset" in viewer_rel, (
+            f"Expected 'tupleToUserset' for 'viewer from session'. Got: {viewer_rel}"
+        )
+        assert viewer_rel["tupleToUserset"]["tupleset"]["relation"] == "session"
+        assert viewer_rel["tupleToUserset"]["computedUserset"]["relation"] == "viewer"
+
+    def test_parse_from_syntax_with_different_relations(self) -> None:
+        """
+        [FROM] Parse from syntax with different computed and tupleset relations.
+
+        Example: owner from plan (get 'owner' from the object in 'plan' relation)
+        """
+        fga_content = """type execution_plan
+  relations
+    define plan: [plan]
+    define approver: owner from plan"""
+
+        result = parse_fga_type(fga_content)
+
+        approver_rel = result["relations"].get("approver", {})
+
+        assert "tupleToUserset" in approver_rel, (
+            f"Expected 'tupleToUserset' for 'owner from plan'. Got: {approver_rel}"
+        )
+        assert approver_rel["tupleToUserset"]["tupleset"]["relation"] == "plan"
+        assert approver_rel["tupleToUserset"]["computedUserset"]["relation"] == "owner"
+
+    def test_parse_from_syntax_in_union(self) -> None:
+        """
+        [FROM] Parse from syntax in union: [user] or viewer from session.
+        """
+        fga_content = """type memory
+  relations
+    define session: [session]
+    define viewer: [user] or viewer from session"""
+
+        result = parse_fga_type(fga_content)
+
+        viewer_rel = result["relations"].get("viewer", {})
+
+        assert "union" in viewer_rel, f"Expected 'union' for viewer relation. Got: {viewer_rel}"
+
+        children = viewer_rel["union"]["child"]
+        assert len(children) == 2
+
+        # One should be 'this' for direct types
+        # One should be tupleToUserset for 'from' syntax
+        has_this = any("this" in c for c in children)
+        has_ttu = any("tupleToUserset" in c for c in children)
+
+        assert has_this, "Should have 'this' for direct types [user]"
+        assert has_ttu, "Should have tupleToUserset for 'viewer from session'"
+
+        # Verify the tupleToUserset structure
+        ttu_child = next(c for c in children if "tupleToUserset" in c)
+        assert ttu_child["tupleToUserset"]["tupleset"]["relation"] == "session"
+        assert ttu_child["tupleToUserset"]["computedUserset"]["relation"] == "viewer"
+
+    def test_parse_from_syntax_in_intersection(self) -> None:
+        """
+        [FROM] Parse from syntax in intersection: member and viewer from session.
+        """
+        fga_content = """type secure_memory
+  relations
+    define member: [user]
+    define session: [session]
+    define restricted_viewer: member and viewer from session"""
+
+        result = parse_fga_type(fga_content)
+
+        rel = result["relations"].get("restricted_viewer", {})
+
+        assert "intersection" in rel, (
+            f"Expected 'intersection' for 'member and viewer from session'. Got: {rel}"
+        )
+
+        children = rel["intersection"]["child"]
+        assert len(children) == 2
+
+        # One should be computedUserset for member
+        # One should be tupleToUserset for 'from' syntax
+        has_computed = any("computedUserset" in c for c in children)
+        has_ttu = any("tupleToUserset" in c for c in children)
+
+        assert has_computed, "Should have computedUserset for 'member'"
+        assert has_ttu, "Should have tupleToUserset for 'viewer from session'"
+
+    def test_parse_from_syntax_in_difference_base(self) -> None:
+        """
+        [FROM] Parse from syntax in difference base: viewer from session but not blocked.
+        """
+        fga_content = """type protected_memory
+  relations
+    define session: [session]
+    define blocked: [user]
+    define can_view: viewer from session but not blocked"""
+
+        result = parse_fga_type(fga_content)
+
+        rel = result["relations"].get("can_view", {})
+
+        assert "difference" in rel, (
+            f"Expected 'difference' for 'viewer from session but not blocked'. Got: {rel}"
+        )
+
+        base = rel["difference"]["base"]
+        subtract = rel["difference"]["subtract"]
+
+        # Base should be tupleToUserset for 'viewer from session'
+        assert "tupleToUserset" in base, f"Base should be tupleToUserset. Got: {base}"
+        assert base["tupleToUserset"]["tupleset"]["relation"] == "session"
+        assert base["tupleToUserset"]["computedUserset"]["relation"] == "viewer"
+
+        # Subtract should be computedUserset for 'blocked'
+        assert "computedUserset" in subtract, f"Subtract should be computedUserset. Got: {subtract}"
+        assert subtract["computedUserset"]["relation"] == "blocked"
+
+    def test_parse_from_syntax_in_difference_subtract(self) -> None:
+        """
+        [FROM] Parse from syntax in difference subtract: viewer but not blocked from session.
+        """
+        fga_content = """type protected_memory
+  relations
+    define viewer: [user]
+    define session: [session]
+    define filtered_view: viewer but not blocked from session"""
+
+        result = parse_fga_type(fga_content)
+
+        rel = result["relations"].get("filtered_view", {})
+
+        assert "difference" in rel, (
+            f"Expected 'difference' for 'viewer but not blocked from session'. Got: {rel}"
+        )
+
+        base = rel["difference"]["base"]
+        subtract = rel["difference"]["subtract"]
+
+        # Base should be computedUserset for 'viewer'
+        assert "computedUserset" in base, f"Base should be computedUserset. Got: {base}"
+        assert base["computedUserset"]["relation"] == "viewer"
+
+        # Subtract should be tupleToUserset for 'blocked from session'
+        assert "tupleToUserset" in subtract, f"Subtract should be tupleToUserset. Got: {subtract}"
+        assert subtract["tupleToUserset"]["tupleset"]["relation"] == "session"
+        assert subtract["tupleToUserset"]["computedUserset"]["relation"] == "blocked"
+
+    def test_from_syntax_roundtrip_with_real_modules(self) -> None:
+        """
+        [FROM] From syntax should survive extract → compose roundtrip.
+
+        This test verifies the full roundtrip using the actual module files
+        which contain 'from' syntax (e.g., 11-memory-plan.fga).
+
+        This is the critical test that would have caught the memory#viewer bug.
+        """
+        from pathlib import Path
+
+        base_dir = Path(__file__).parent.parent.parent.parent / "config" / "openfga"
+        modules_dir = base_dir / "modules"
+        memory_module = modules_dir / "11-memory-plan.fga"
+
+        if not memory_module.exists():
+            pytest.skip("11-memory-plan.fga module not found")
+
+        # Read the module file
+        with open(memory_module) as f:
+            fga_content = f.read()
+
+        # Parse the module
+        types = parse_fga_module(fga_content)
+
+        # Find memory type (or plan type)
+        memory_type = next((t for t in types if t["type"] in ("memory", "plan")), None)
+
+        if memory_type is None:
+            pytest.skip("No memory or plan type found in module")
+
+        # Verify viewer relation has tupleToUserset (not a string)
+        viewer_rel = memory_type.get("relations", {}).get("viewer", {})
+
+        if not viewer_rel:
+            # viewer might not exist in this type
+            pytest.skip(f"viewer relation not found in {memory_type['type']}")
+
+        assert "tupleToUserset" in viewer_rel, (
+            f"Expected 'tupleToUserset' for viewer relation in {memory_type['type']}.\n"
+            f"Got: {viewer_rel}\n"
+            f"This indicates 'from' syntax is not being parsed correctly."
+        )
+
+    def test_from_and_arrow_syntax_produce_same_result(self) -> None:
+        """
+        [FROM] 'X from Y' and 'Y->X' should produce equivalent tupleToUserset.
+
+        Example:
+        - viewer from session
+        - session->viewer
+
+        Both mean: get 'viewer' relation from the object stored in 'session'
+        """
+        # Parse 'from' syntax
+        fga_from = """type memory
+  relations
+    define session: [session]
+    define viewer: viewer from session"""
+
+        # Parse arrow syntax (equivalent)
+        fga_arrow = """type memory
+  relations
+    define session: [session]
+    define viewer: session->viewer"""
+
+        result_from = parse_fga_type(fga_from)
+        result_arrow = parse_fga_type(fga_arrow)
+
+        viewer_from = result_from["relations"]["viewer"]
+        viewer_arrow = result_arrow["relations"]["viewer"]
+
+        # Both should produce tupleToUserset with same structure
+        assert "tupleToUserset" in viewer_from, f"Expected tupleToUserset from 'from' syntax. Got: {viewer_from}"
+        assert "tupleToUserset" in viewer_arrow, f"Expected tupleToUserset from arrow syntax. Got: {viewer_arrow}"
+
+        # The tupleToUserset contents should be identical
+        assert viewer_from["tupleToUserset"] == viewer_arrow["tupleToUserset"], (
+            f"'from' and arrow syntax should produce same result.\n"
+            f"From: {viewer_from['tupleToUserset']}\n"
+            f"Arrow: {viewer_arrow['tupleToUserset']}"
+        )
+
+
+@pytest.mark.xdist_group(name="openfga_compose")
 class TestNestedExpressions:
     """
     Test parsing nested union/intersection expressions.

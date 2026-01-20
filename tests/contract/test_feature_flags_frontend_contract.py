@@ -85,6 +85,8 @@ FRONTEND_REQUIRED_FLAGS = {
     "workflow_from_chat",
     # Admin Dashboard AI Quality (Phase 5)
     "ai_quality_metrics",
+    # Markdown References ([[type:qualifier:id]] syntax)
+    "markdown_references",
 }
 
 

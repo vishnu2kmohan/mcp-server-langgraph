@@ -74,6 +74,10 @@
       {
         "name": "admin",
         "description": "Administrator role"
+      },
+      {
+        "name": "developer",
+        "description": "Developer role for development features"
       }
     ]
   },
@@ -93,7 +97,113 @@
       }
     }
   ],
-  "users": [],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["admin"]
+    },
+    {
+      "username": "alice",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Test",
+      "email": "alice@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "alice123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["developer"]
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Test",
+      "email": "bob@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "bob123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
+    },
+    {
+      "username": "auditor-jane",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Jane",
+      "lastName": "Auditor",
+      "email": "auditor-jane@example.com",
+      "attributes": {
+        "sub_persona": ["auditor"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "auditor123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
+    },
+    {
+      "username": "compliance-charlie",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Charlie",
+      "lastName": "Compliance",
+      "email": "compliance-charlie@example.com",
+      "attributes": {
+        "sub_persona": ["compliance-officer"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "compliance123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
+    },
+    {
+      "username": "devops-dave",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Dave",
+      "lastName": "DevOps",
+      "email": "devops-dave@example.com",
+      "attributes": {
+        "sub_persona": ["devops"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "devops123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["developer"]
+    }
+  ],
   "scopeMappings": [],
   "clientScopeMappings": {},
   "components": {},

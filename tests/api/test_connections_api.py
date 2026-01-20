@@ -171,12 +171,14 @@ class MockConnectionRepository:
         state: str,
         code_verifier: str,
         redirect_uri: str,
+        popup: bool = False,
     ) -> None:
         """Create OAuth2 state."""
         self.oauth2_states[state] = {
             "connection_id": connection_id,
             "code_verifier": code_verifier,
             "redirect_uri": redirect_uri,
+            "popup": popup,
         }
 
     async def get_and_delete_oauth2_state(self, state: str) -> dict | None:

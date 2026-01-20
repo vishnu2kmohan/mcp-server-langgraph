@@ -16,7 +16,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from mcp_server_langgraph.api.v1.alert_websocket import get_alert_broadcaster
+from mcp_server_langgraph.websocket.registry import get_alert_broadcaster
 from mcp_server_langgraph.notifications.push_sender import (
     PushMessage,
     PushNotificationSender,

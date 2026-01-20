@@ -37,8 +37,8 @@ REDIS_PORT = int(os.getenv("REDIS_PORT", "9379"))
 REDIS_RATE_LIMIT_DB = int(os.getenv("REDIS_RATE_LIMIT_DB", "3"))
 
 
-async def is_redis_available() -> bool:
-    """Check if Redis is available for testing."""
+async def _is_redis_available_async() -> bool:
+    """Check if Redis is available for testing (async implementation)."""
     try:
         client = redis.Redis(
             host=REDIS_HOST,
@@ -49,6 +49,17 @@ async def is_redis_available() -> bool:
         await client.ping()
         await client.aclose()
         return True
+    except Exception:
+        return False
+
+
+def is_redis_available() -> bool:
+    """Check if Redis is available for testing (sync wrapper).
+
+    Uses asyncio.run() instead of deprecated get_event_loop().run_until_complete().
+    """
+    try:
+        return asyncio.run(_is_redis_available_async())
     except Exception:
         return False
 
@@ -77,7 +88,7 @@ async def redis_client() -> AsyncGenerator[redis.Redis, None]:
 
 
 @pytest.mark.skipif(
-    not asyncio.get_event_loop().run_until_complete(is_redis_available()),
+    not is_redis_available(),
     reason="Redis not available",
 )
 class TestRedisUserRateLimiterIntegration:
@@ -207,7 +218,7 @@ class TestRedisUserRateLimiterIntegration:
 
 
 @pytest.mark.skipif(
-    not asyncio.get_event_loop().run_until_complete(is_redis_available()),
+    not is_redis_available(),
     reason="Redis not available",
 )
 class TestRedisWebSocketRateLimiterIntegration:
@@ -296,7 +307,7 @@ class TestRedisWebSocketRateLimiterIntegration:
 
 
 @pytest.mark.skipif(
-    not asyncio.get_event_loop().run_until_complete(is_redis_available()),
+    not is_redis_available(),
     reason="Redis not available",
 )
 class TestDistributedRateLimitingIntegration:

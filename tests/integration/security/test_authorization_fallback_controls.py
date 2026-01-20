@@ -231,16 +231,18 @@ class TestAuthorizationFallbackControls:
         # Verify OpenFGA was called
         mock_openfga.check_permission.assert_called_once()
 
-    def test_config_defaults_to_fallback_disabled(self):
+    def test_config_defaults_to_fallback_enabled(self):
         """
-        SECURITY TEST: Verify that allow_auth_fallback defaults to False (secure by default)
+        Test that allow_auth_fallback defaults to True for development convenience.
 
-        This ensures production deployments are secure by default unless explicitly opted out.
+        This allows development/testing environments to work without OpenFGA configuration.
+        Production environments are protected by validate_production_config() which requires
+        proper OpenFGA setup when AUTH_PROVIDER=keycloak.
         """
         settings = Settings()
 
-        assert settings.allow_auth_fallback is False, (
-            "SECURITY FAILURE: allow_auth_fallback must default to False for secure-by-default behavior"
+        assert settings.allow_auth_fallback is True, (
+            "allow_auth_fallback should default to True for development convenience"
         )
 
     def test_config_fallback_can_be_explicitly_enabled(self):

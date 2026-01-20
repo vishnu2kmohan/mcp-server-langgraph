@@ -103,7 +103,7 @@ TEST_POSTGRES_PORT = 9432  # +4000 from standard 5432
 TEST_POSTGRES_HOST = "localhost"  # Docker-compose test network
 TEST_POSTGRES_USER = "postgres"  # Test database user
 TEST_POSTGRES_PASSWORD = "postgres"  # Test database password (not for production)
-TEST_POSTGRES_DB = "mcp_test"  # Test database name
+TEST_POSTGRES_DB = "agent_studio_test"  # Test database name
 TEST_REDIS_PORT = 9379  # +3000 from standard 6379
 TEST_QDRANT_PORT = 9333  # +3000 from standard 6333
 TEST_OPENFGA_HTTP_PORT = 9080  # +1000 from standard 8080
@@ -114,7 +114,7 @@ TEST_KEYCLOAK_PORT = 9082  # +1002 from standard 8080
 TEST_MCP_SERVER_PORT = 8000  # Main MCP server
 TEST_UNIFIED_API_PORT = 8000  # Unified API (alias for MCP server - all /api/v1/* routes)
 TEST_BUILDER_API_PORT = 9001  # +1000 from dev port 8001 (deprecated, use TEST_UNIFIED_API_PORT)
-TEST_PLAYGROUND_API_PORT = 9002  # +1000 from dev port 8002 (deprecated, use TEST_UNIFIED_API_PORT)
+TEST_PLAYGROUND_API_PORT = 9002  # DEPRECATED: Playground removed, kept for backwards compatibility
 
 # Observability Ports (Grafana LGTM Stack)
 # Jaeger replaced by Tempo, Prometheus/Alertmanager replaced by Mimir + Alloy
@@ -133,15 +133,15 @@ TEST_ALERTMANAGER_PORT = TEST_MIMIR_PORT  # Alertmanager replaced by Grafana Uni
 # Redis Database Indices (same Redis instance, different databases)
 TEST_REDIS_CHECKPOINT_DB = 1  # LangGraph checkpoints
 TEST_REDIS_SESSION_DB = 0  # Session storage
-TEST_REDIS_PLAYGROUND_DB = 2  # Playground sessions
+TEST_REDIS_PLAYGROUND_DB = 2  # DEPRECATED: Playground removed, kept for backwards compatibility
 TEST_REDIS_BUILDER_DB = 3  # Builder workflow storage
 
 
 # ==============================================================================
-# Playground Configuration
+# Session Configuration (legacy playground config names for backwards compat)
 # ==============================================================================
 
-# Maximum messages per playground session
+# Maximum messages per session
 TEST_MAX_MESSAGES_PER_SESSION = 50
 
 # Session timeout in seconds

@@ -55,13 +55,13 @@ class TestSessionTraceEndpoint:
         mock_client = AsyncMock()  # noqa: async-mock-config
 
         if raise_error:
-            mock_client.search_traces.side_effect = raise_error
+            mock_client.search_by_attribute.side_effect = raise_error
         else:
             # Create mock TraceSearchResult
             mock_result = MagicMock()
             mock_result.traces = traces or []
             mock_result.total_count = len(traces) if traces else 0
-            mock_client.search_traces.return_value = mock_result
+            mock_client.search_by_attribute.return_value = mock_result
 
         return mock_client
 
@@ -150,11 +150,11 @@ class TestSessionTraceEndpoint:
         assert "start_time" in data
         assert "end_time" in data
 
-        # Verify Tempo was queried with session.id (OTEL dot notation)
-        mock_tempo.search_traces.assert_called_once()
-        call_kwargs = mock_tempo.search_traces.call_args.kwargs
-        assert "tags" in call_kwargs
-        assert call_kwargs["tags"].get("session.id") == "session-123"
+        # Verify Tempo was queried with session.id attribute
+        mock_tempo.search_by_attribute.assert_called_once()
+        call_kwargs = mock_tempo.search_by_attribute.call_args.kwargs
+        assert call_kwargs.get("attribute") == "session.id"
+        assert call_kwargs.get("value") == "session-123"
 
     @pytest.mark.asyncio
     async def test_get_session_trace_maps_spans_to_steps(self) -> None:

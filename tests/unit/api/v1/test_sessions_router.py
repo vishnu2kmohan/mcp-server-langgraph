@@ -969,6 +969,126 @@ class TestSessionConfigResponse:
         assert json_dict["max_tokens"] == settings.model_max_tokens
 
 
+# ============================================================================
+# Archive Session Tests
+# ============================================================================
+
+
+@pytest.mark.xdist_group(name="test_sessions_router_archive")
+class TestSessionsArchiveEndpoint:
+    """Tests for POST /api/v1/sessions/{id}/archive endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_archive_session_returns_204(self, test_app: FastAPI, sample_session: dict) -> None:
+        """
+        GIVEN a session exists and is owned by the user
+        WHEN POST request is made to /sessions/{id}/archive
+        THEN response should be 204 No Content
+        """
+        with (
+            patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service,
+            patch("mcp_server_langgraph.api.v1.sessions.invalidate_session_cost_cache") as mock_invalidate_cache,
+        ):
+            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service.archive_session.return_value = True
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.post(f"/api/v1/sessions/{sample_session['id']}/archive")
+
+            assert response.status_code == 204
+            mock_invalidate_cache.assert_called_once_with(sample_session["id"])
+
+    def test_archive_session_not_found_returns_404(self, test_app: FastAPI) -> None:
+        """
+        GIVEN a session does not exist
+        WHEN POST request is made to /sessions/{id}/archive
+        THEN response should be 404 Not Found
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service.archive_session.return_value = False
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            session_id = str(uuid4())
+            response = client.post(f"/api/v1/sessions/{session_id}/archive")
+
+            assert response.status_code == 404
+
+    def test_archive_session_not_owned_returns_404(self, test_app: FastAPI) -> None:
+        """
+        GIVEN a session exists but is owned by another user
+        WHEN POST request is made to /sessions/{id}/archive
+        THEN response should be 404 Not Found (to prevent session enumeration)
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()  # noqa: async-mock-config
+            # Service returns False when user doesn't own the session
+            mock_service.archive_session.return_value = False
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            session_id = str(uuid4())
+            response = client.post(f"/api/v1/sessions/{session_id}/archive")
+
+            assert response.status_code == 404
+            data = response.json()
+            assert "not found" in data["detail"].lower()
+
+    def test_archive_session_calls_service_with_user_id(
+        self, test_app: FastAPI, sample_session: dict, mock_user: dict
+    ) -> None:
+        """
+        GIVEN a valid session
+        WHEN POST request is made to /sessions/{id}/archive
+        THEN service.archive_session should be called with session_id and user_id
+        """
+        with (
+            patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service,
+            patch("mcp_server_langgraph.api.v1.sessions.invalidate_session_cost_cache"),
+        ):
+            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service.archive_session.return_value = True
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            client.post(f"/api/v1/sessions/{sample_session['id']}/archive")
+
+            mock_service.archive_session.assert_called_once_with(
+                sample_session["id"],
+                mock_user["sub"],
+            )
+
+    def test_archive_session_invalidates_cost_cache(
+        self, test_app: FastAPI, sample_session: dict
+    ) -> None:
+        """
+        GIVEN a session is archived successfully
+        WHEN the archive operation completes
+        THEN the session cost cache should be invalidated
+
+        This ensures stale cost data is not returned after session archival.
+        """
+        with (
+            patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service,
+            patch("mcp_server_langgraph.api.v1.sessions.invalidate_session_cost_cache") as mock_invalidate_cache,
+        ):
+            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service.archive_session.return_value = True
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            session_id = sample_session["id"]
+            response = client.post(f"/api/v1/sessions/{session_id}/archive")
+
+            assert response.status_code == 204
+            mock_invalidate_cache.assert_called_once_with(session_id)
+
+
 @pytest.mark.xdist_group(name="test_sessions_router")
 class TestSessionDescriptionField:
     """Tests for session description field (TDD RED phase)."""

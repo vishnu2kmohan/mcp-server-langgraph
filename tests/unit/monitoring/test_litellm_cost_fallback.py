@@ -155,7 +155,7 @@ class TestCostTrackerFallback:
             # Call record_usage without estimated_cost_usd
             import asyncio
 
-            asyncio.get_event_loop().run_until_complete(
+            asyncio.run(
                 collector.record_usage(
                     timestamp=datetime.now(UTC),
                     user_id="user:test",
@@ -198,7 +198,7 @@ class TestCostTrackerFallback:
             # Call record_usage WITH estimated_cost_usd
             import asyncio
 
-            asyncio.get_event_loop().run_until_complete(
+            asyncio.run(
                 collector.record_usage(
                     timestamp=datetime.now(UTC),
                     user_id="user:test",
@@ -246,7 +246,7 @@ class TestNoDeprecationWarning:
 
                 import asyncio
 
-                asyncio.get_event_loop().run_until_complete(
+                asyncio.run(
                     collector.record_usage(
                         timestamp=datetime.now(UTC),
                         user_id="user:test",

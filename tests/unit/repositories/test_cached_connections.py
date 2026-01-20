@@ -498,3 +498,162 @@ class TestCachedConnectionDelegation:
 
         assert result is not None
         mock_delegate.get_and_delete_oauth2_state.assert_called_once()
+
+
+@pytest.mark.xdist_group(name="cached_connections_tests")
+class TestCachedConnectionGetByServerName:
+    """Tests for get_by_server_name() with caching."""
+
+    def teardown_method(self) -> None:
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_get_by_server_name_returns_cached_value_on_hit(
+        self,
+        cached_repo,
+        mock_cache,
+        mock_delegate,
+        sample_connection,
+    ):
+        """Should return cached connection without hitting database."""
+        # Setup: cache returns connection data
+        mock_cache.get.return_value = sample_connection.model_dump()
+
+        # Execute
+        result = await cached_repo.get_by_server_name("test-server", "user-456")
+
+        # Verify
+        assert result is not None
+        assert result.id == "conn-123"
+        mock_cache.get.assert_called_once()
+        mock_delegate.get_by_server_name.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_get_by_server_name_fetches_from_db_on_cache_miss(
+        self,
+        cached_repo,
+        mock_cache,
+        mock_delegate,
+        sample_connection,
+    ):
+        """Should fetch from database and cache on miss."""
+        # Setup: cache miss
+        mock_cache.get.return_value = None
+        mock_delegate.get_by_server_name.return_value = sample_connection
+
+        # Execute
+        result = await cached_repo.get_by_server_name("test-server", "user-456")
+
+        # Verify
+        assert result is not None
+        assert result.id == "conn-123"
+        mock_delegate.get_by_server_name.assert_called_once_with(
+            "test-server", "user-456"
+        )
+        mock_cache.set.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_get_by_server_name_returns_none_for_nonexistent(
+        self,
+        cached_repo,
+        mock_cache,
+        mock_delegate,
+    ):
+        """Should return None for non-existent connection and not cache."""
+        mock_cache.get.return_value = None
+        mock_delegate.get_by_server_name.return_value = None
+
+        result = await cached_repo.get_by_server_name("nonexistent", "user-456")
+
+        assert result is None
+        mock_cache.set.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_get_by_server_name_uses_correct_cache_key_format(
+        self,
+        cached_repo,
+        mock_cache,
+        mock_delegate,
+        sample_connection,
+    ):
+        """Should use 'connection_by_name' prefix for cache key."""
+        mock_cache.get.return_value = None
+        mock_delegate.get_by_server_name.return_value = sample_connection
+
+        await cached_repo.get_by_server_name("my-server", "user-123")
+
+        # Verify cache key includes prefix and both identifiers
+        cache_key = mock_cache.get.call_args[0][0]
+        assert "connection_by_name" in cache_key
+        assert "my-server" in cache_key
+        assert "user-123" in cache_key
+
+
+@pytest.mark.xdist_group(name="cached_connections_tests")
+class TestCachedConnectionServerNameInvalidation:
+    """Tests for cache invalidation of server_name lookups."""
+
+    def teardown_method(self) -> None:
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_update_invalidates_server_name_cache(
+        self,
+        cached_repo,
+        mock_cache,
+        mock_delegate,
+        sample_connection,
+    ):
+        """Should invalidate server_name cache when connection is updated."""
+        sample_connection.server_name = "test-server"
+        mock_delegate.update.return_value = sample_connection
+
+        update_data = MCPConnectionUpdate(name="Updated Name")
+        await cached_repo.update("conn-123", update_data)
+
+        # Should clear server_name lookup cache for this owner
+        clear_calls = [str(call) for call in mock_cache.clear.call_args_list]
+        any_server_name_clear = any(
+            "connection_by_name" in str(call) for call in clear_calls
+        )
+        assert any_server_name_clear or mock_cache.clear.call_count >= 2
+
+    @pytest.mark.asyncio
+    async def test_delete_invalidates_server_name_cache(
+        self,
+        cached_repo,
+        mock_cache,
+        mock_delegate,
+        sample_connection,
+    ):
+        """Should invalidate server_name cache when connection is deleted."""
+        sample_connection.server_name = "test-server"
+        mock_delegate.get.return_value = sample_connection
+        mock_delegate.delete.return_value = True
+
+        await cached_repo.delete("conn-123")
+
+        # Should clear server_name lookup cache for this owner
+        clear_calls = [str(call) for call in mock_cache.clear.call_args_list]
+        any_server_name_clear = any(
+            "connection_by_name" in str(call) for call in clear_calls
+        )
+        assert any_server_name_clear or mock_cache.clear.call_count >= 2
+
+    @pytest.mark.asyncio
+    async def test_update_status_with_server_name_invalidates_cache(
+        self,
+        cached_repo,
+        mock_cache,
+        mock_delegate,
+    ):
+        """Should invalidate server_name cache when status includes new server_name."""
+        await cached_repo.update_status(
+            connection_id="conn-123",
+            status="connected",
+            server_name="new-server-name",
+            tool_count=5,
+        )
+
+        # Should invalidate connection cache (server_name might have changed)
+        mock_cache.delete.assert_called()

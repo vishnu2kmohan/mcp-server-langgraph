@@ -1028,7 +1028,7 @@ class TestBudgetMonitorSingleton:
 
             # Arrange - create a budget
             monitor = get_budget_monitor()
-            asyncio.get_event_loop().run_until_complete(
+            asyncio.run(
                 monitor.create_budget(
                     id="test_singleton_budget",
                     name="Test Budget",
@@ -1041,7 +1041,7 @@ class TestBudgetMonitorSingleton:
             same_monitor = get_budget_monitor()
 
             # Assert - budget still exists
-            budget = asyncio.get_event_loop().run_until_complete(same_monitor.get_budget("test_singleton_budget"))
+            budget = asyncio.run(same_monitor.get_budget("test_singleton_budget"))
             assert budget is not None
             assert budget.name == "Test Budget"
 

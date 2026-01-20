@@ -281,3 +281,107 @@ class TestSkillMetadata:
         )
         assert len(skill.tags) == 3
         assert "research" in skill.tags
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_skill_compliance_fields")
+class TestSkillComplianceFields:
+    """Test suite for AgentSkills.io compliance fields (Appendix B)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_skill_license_field(self):
+        """GIVEN a Skill model
+        WHEN setting license
+        THEN it should store the license identifier
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(
+            name="licensed-skill",
+            description="A skill with license",
+            license="MIT",
+        )
+        assert skill.license == "MIT"
+
+    def test_skill_license_defaults_to_empty(self):
+        """GIVEN a Skill model
+        WHEN license is not set
+        THEN it should default to empty string
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(name="test-skill", description="Test")
+        assert skill.license == ""
+
+    def test_skill_allowed_tools_field(self):
+        """GIVEN a Skill model
+        WHEN setting allowed_tools
+        THEN it should store the pre-approved tool list
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(
+            name="restricted-skill",
+            description="A skill with pre-approved tools",
+            allowed_tools=["filesystem:read_file", "filesystem:write_file"],
+        )
+        assert skill.allowed_tools == ["filesystem:read_file", "filesystem:write_file"]
+
+    def test_skill_allowed_tools_defaults_to_empty(self):
+        """GIVEN a Skill model
+        WHEN allowed_tools is not set
+        THEN it should default to empty list
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(name="test-skill", description="Test")
+        assert skill.allowed_tools == []
+
+    def test_skill_category_field(self):
+        """GIVEN a Skill model
+        WHEN setting category
+        THEN it should store the skill category
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(
+            name="research-skill",
+            description="A categorized skill",
+            category="research",
+        )
+        assert skill.category == "research"
+
+    def test_skill_category_defaults_to_empty(self):
+        """GIVEN a Skill model
+        WHEN category is not set
+        THEN it should default to empty string
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(name="test-skill", description="Test")
+        assert skill.category == ""
+
+    def test_skill_with_all_compliance_fields(self):
+        """GIVEN a Skill model
+        WHEN all AgentSkills.io compliance fields are set
+        THEN all should be stored correctly
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(
+            name="compliant-skill",
+            description="A fully compliant skill",
+            version="1.0.0",
+            author="Example Corp",
+            tags=["example", "compliant"],
+            license="Apache-2.0",
+            allowed_tools=["http:get", "http:post"],
+            category="api-integration",
+        )
+        assert skill.name == "compliant-skill"
+        assert skill.license == "Apache-2.0"
+        assert skill.allowed_tools == ["http:get", "http:post"]
+        assert skill.category == "api-integration"

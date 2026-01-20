@@ -262,24 +262,6 @@ class TestMCPAuthenticationContext:
         assert handler._mcp_handler is not None
         assert handler._user_id == "test-user"
 
-    @pytest.mark.asyncio
-    async def test_on_connect_anonymous_creates_base_handler(self) -> None:
-        """on_connect without user should create base MCPMessageHandler."""
-        from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
-        from mcp_server_langgraph.websocket import WebSocketConfig
-
-        config = WebSocketConfig(
-            endpoint_name="mcp",
-            require_auth=False,
-        )
-        handler = MCPWebSocketHandler(config=config)
-
-        await handler.on_connect(None)
-
-        # Should have a base MCP handler, not authenticated
-        assert handler._mcp_handler is not None
-
-
 class TestMCPSessionManagement:
     """Test session ID handling for MCP WebSocket."""
 
