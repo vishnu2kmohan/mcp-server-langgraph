@@ -340,9 +340,9 @@ CSP is implemented via a meta tag in `index.html`:
 |-----------|-------|---------|
 | `default-src` | `'self'` | Default fallback: only same-origin resources |
 | `script-src` | `'self' 'unsafe-inline' 'unsafe-eval' blob:` | Scripts: self + inline (React), eval (Monaco), blob (workers) |
-| `style-src` | `'self' 'unsafe-inline'` | Styles: self + inline (Tailwind, styled-components) |
+| `style-src` | `'self' 'unsafe-inline' https://fonts.googleapis.com` | Styles: self + inline (Tailwind) + Google Fonts CSS |
 | `img-src` | `'self' data: blob: https:` | Images: self, data URLs (SVGs), blobs, HTTPS |
-| `font-src` | `'self' data:` | Fonts: self + base64 embedded fonts |
+| `font-src` | `'self' data: https://fonts.gstatic.com` | Fonts: self + base64 + Google Fonts (Inter, JetBrains Mono) |
 | `connect-src` | `'self' ws: wss: localhost:*` | Fetch/XHR/WebSocket: API + localhost dev |
 | `frame-src` | `'self' blob:` | Iframes: self + blob (Sandpack code preview) |
 | `worker-src` | `'self' blob:` | Web workers: self + blob (Monaco, PWA) |

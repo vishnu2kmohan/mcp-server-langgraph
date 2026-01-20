@@ -1,0 +1,275 @@
+---
+title: Manual Tool Selection
+description: 'Control which tools the AI agent uses during conversations'
+icon: 'wrench'
+seoTitle: "Manual Tool Selection - MCP Server with LangGraph"
+seoDescription: "Learn how to control AI agent tool usage with Auto, Manual, and None modes in the Agent Studio"
+keywords: ["tool selection", "AI tools", "agent studio", "MCP tools", "manual mode"]
+contentType: "tutorial"
+---
+
+## Overview
+
+The **Tool Selection** feature gives you precise control over which tools the AI agent can use during conversations. By default, the agent uses semantic search to automatically determine the best tools for each task. With manual selection, you can override this behavior and specify exactly which tools to use.
+
+<CardGroup cols={3}>
+  <Card title="Auto Mode" icon="robot">
+    AI determines optimal tools
+  </Card>
+  <Card title="Manual Mode" icon="hand-pointer">
+    You select specific tools
+  </Card>
+  <Card title="None Mode" icon="ban">
+    Disable all tool usage
+  </Card>
+</CardGroup>
+
+---
+
+## Tool Selection Modes
+
+### Auto Mode (Default)
+
+In **Auto** mode, the AI agent uses semantic search to automatically determine which tools are most relevant for your request. This is the recommended mode for most conversations.
+
+**When to use Auto mode:**
+- General-purpose conversations
+- When you're not sure which tools are needed
+- When you want the AI to have full flexibility
+
+**Example:** You ask "What's the weather in San Francisco?" The agent automatically selects the `web_search` tool to find current weather data.
+
+### Manual Mode
+
+In **Manual** mode, you explicitly select which tools the agent can use. The agent will only use the tools you've selected and won't access any others.
+
+**When to use Manual mode:**
+- When you want to restrict the agent to specific capabilities
+- For testing specific tool behavior
+- When you know exactly which tools are needed
+- For security-sensitive tasks where you want to limit tool access
+
+**Example:** You select only the `calculator` tool, then ask "Calculate 15% tip on $45.80." The agent uses only the calculator and won't attempt web searches or other tools.
+
+### None Mode
+
+In **None** mode, the agent cannot use any tools. It will respond using only its knowledge and reasoning capabilities.
+
+**When to use None mode:**
+- For pure conversational interactions
+- When you want only the agent's knowledge, not real-time data
+- For privacy-sensitive queries where tool access should be restricted
+- When testing agent responses without tool augmentation
+
+**Example:** You ask "Explain the theory of relativity." The agent responds using its training knowledge without accessing external tools.
+
+---
+
+## How to Use Tool Selection
+
+<Steps>
+  <Step title="Access the Chat Interface">
+    Navigate to the Agent Studio chat interface at `/studio/chat`.
+  </Step>
+  <Step title="Locate the Tool Selector">
+    Find the **Tools** button in the chat input area, typically next to the send button. It shows the current mode (e.g., "Auto", "None", or a count of selected tools).
+  </Step>
+  <Step title="Choose a Mode">
+    Click the Tools button to open the dropdown. Select one of the three modes:
+    - **Auto** - Let the AI choose tools automatically
+    - **Manual** - Select specific tools
+    - **None** - Disable all tools
+  </Step>
+  <Step title="Select Tools (Manual Mode Only)">
+    In Manual mode, you'll see a searchable list of available tools. Check the boxes next to the tools you want to enable. Use the search box to filter tools by name.
+  </Step>
+  <Step title="Send Your Message">
+    Type your message and send. The agent will respect your tool selection for that conversation.
+  </Step>
+</Steps>
+
+---
+
+## Available Tools
+
+Tools are organized into two categories:
+
+### Built-in Tools
+
+These are core tools provided by the MCP Server:
+
+| Tool | Description |
+|------|-------------|
+| `calculator` | Perform mathematical calculations |
+| `web_search` | Search the internet for information |
+| `search_knowledge_base` | Query the configured knowledge base |
+| `read_file` | Read file contents from the sandbox |
+| `execute_python` | Execute Python code (sandbox required) |
+| `execute_bash` | Execute shell commands (sandbox required) |
+
+### MCP Server Tools
+
+These are tools provided by connected MCP servers:
+
+| Server | Example Tools |
+|--------|---------------|
+| GitHub | `create_issue`, `list_repos`, `create_pr` |
+| Slack | `send_message`, `list_channels` |
+| Database | `query`, `insert`, `update` |
+
+<Note>
+The available MCP tools depend on which servers are connected. See [MCP Server Configuration](/guides/mcp-server) for setup instructions.
+</Note>
+
+---
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Start with Auto Mode" icon="lightbulb">
+    For most use cases, Auto mode provides the best experience. The AI is trained to select appropriate tools based on context. Only switch to Manual mode when you have a specific reason.
+  </Accordion>
+
+  <Accordion title="Use Manual Mode for Precision" icon="bullseye">
+    When you need deterministic behavior or want to test specific tool combinations, switch to Manual mode. This is especially useful for:
+    - Debugging tool issues
+    - Creating reproducible workflows
+    - Restricting capabilities for security
+  </Accordion>
+
+  <Accordion title="Use None Mode for Pure AI Responses" icon="brain">
+    Sometimes you want the AI's knowledge without external data. None mode is perfect for:
+    - Explanations based on training data
+    - Creative writing tasks
+    - Opinion or analysis questions
+  </Accordion>
+
+  <Accordion title="Remember Tool Selection Persists" icon="clock">
+    Your tool selection persists during the conversation session. If you switch to Manual mode with specific tools, remember to switch back to Auto mode when you need full capabilities again.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## API Integration
+
+When using the Chat API directly, you can specify tool selection in your requests:
+
+```json
+{
+  "message": "Calculate 15% tip on $45.80",
+  "session_id": "abc123",
+  "tool_selection_mode": "manual",
+  "selected_tools": ["calculator"]
+}
+```
+
+### Request Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `tool_selection_mode` | `string` | One of `"auto"`, `"manual"`, or `"none"` |
+| `selected_tools` | `string[]` | Tool names to use (required when mode is `"manual"`) |
+
+### Example: Auto Mode (Default)
+
+```bash
+curl -X POST /api/v1/chat/completions/stream \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "What is the weather in Tokyo?",
+    "session_id": "session123"
+  }'
+```
+
+### Example: Manual Mode
+
+```bash
+curl -X POST /api/v1/chat/completions/stream \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Search for recent AI news",
+    "session_id": "session123",
+    "tool_selection_mode": "manual",
+    "selected_tools": ["web_search"]
+  }'
+```
+
+### Example: None Mode
+
+```bash
+curl -X POST /api/v1/chat/completions/stream \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Explain quantum computing",
+    "session_id": "session123",
+    "tool_selection_mode": "none"
+  }'
+```
+
+---
+
+## Feature Flag
+
+The Manual Tool Selection feature is controlled by a feature flag:
+
+```python
+# Feature flag
+manual_tool_selection: bool = False  # Enable gradual rollout
+```
+
+To enable this feature, set the `manual_tool_selection` feature flag to `true` in your configuration.
+
+See [Feature Flags](/guides/feature-flags) for more information on managing feature flags.
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Tool selector not visible" icon="eye-slash">
+    **Cause**: The `manual_tool_selection` feature flag may be disabled.
+
+    **Solution**: Check your feature flag configuration and ensure `manual_tool_selection` is set to `true`.
+  </Accordion>
+
+  <Accordion title="Selected tools not being used" icon="plug">
+    **Cause**: The tool may not be available or connected.
+
+    **Solution**:
+    1. Check that MCP servers are connected in the Connections page
+    2. Verify the tool appears in the available tools list
+    3. Check server logs for connection errors
+  </Accordion>
+
+  <Accordion title="Tool selector disabled during processing" icon="hourglass">
+    **Cause**: Tool selection is intentionally disabled while the agent is processing a message.
+
+    **Solution**: Wait for the current response to complete before changing tool selection.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Agent Studio" icon="wand-magic-sparkles" href="/guides/studio">
+    Complete guide to the Agent Studio
+  </Card>
+  <Card title="MCP Server Setup" icon="server" href="/guides/mcp-server">
+    Connect MCP servers for additional tools
+  </Card>
+  <Card title="Feature Flags" icon="flag" href="/guides/feature-flags">
+    Manage feature availability
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/mcp/tools">
+    Tools API documentation
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Ready to try!** Open the Agent Studio and click the **Tools** button to start customizing your tool selection.
+</Check>

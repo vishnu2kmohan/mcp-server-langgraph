@@ -264,7 +264,12 @@ http.get('/api/v1/features', () => {
 - ✅ Sprint 1: Frontend feature flag integration (`useAIIntelligenceConfig.ts`)
 - ✅ Sprint 1: AIIntelligenceContext extended with new feature types
 - ✅ Sprint 1: All 7 granular flags mapped with fallback to master flag
-- 🔄 Sprint 2: Session Intelligence implementation (in progress)
+- ✅ Sprint 2: Session Intelligence implementation
+
+**ADR-0102 Connection Scope (Phase 6):**
+- ✅ Backend: ConnectionScope enum, authorization logic, tests
+- ✅ Frontend: ScopeBadge, ScopeSelector, ConnectionDialog updated
+- ✅ API: ConnectionResponse includes scope field
 
 ---
 
@@ -281,21 +286,46 @@ These flags control advanced features in the StudioShell chat input (Chat Input 
 - `FF_ENABLE_MODEL_SELECTOR_IN_SHELL=true` - Enable model selector
 - `FF_ENABLE_URL_FETCH_IN_SHELL=true` - Enable URL fetch
 
-**Backend Location:** `src/mcp_server_langgraph/core/feature_flags.py` (lines 529-542)
+---
+
+## ADR-0102: Connection Setup Feature Flags
+
+These flags control the in-chat connection setup UX (Connections Page Redesign):
+
+| Flag Name (Backend) | Purpose | Default | Gate |
+|---------------------|---------|---------|------|
+| `enable_connector_suggestions` | Show proactive connector suggestions in chat input | `false` | ConnectorSuggestionBar |
+
+**Environment Variables:**
+- `FF_ENABLE_CONNECTOR_SUGGESTIONS=true` - Enable proactive suggestions
+
+**Backend Location:** `src/mcp_server_langgraph/core/feature_flags.py` (lines 619-626)
 
 **Frontend Usage:**
 ```typescript
-// In ConnectedConversationPanel.tsx
-const showModelSelector = useFeatureFlag('model_selector_in_shell');
-const enableUrlFetch = useFeatureFlag('url_fetch_in_shell');
+// In ConnectedChatInputForm.tsx
+const enableConnectorSuggestions = useFeatureFlag("connector_suggestions");
 
-// Wire to ConnectedChatInputForm
-<ConnectedChatInputForm
-  showModelSelector={showModelSelector}
-  enableUrlFetch={enableUrlFetch}
-  // ... other props
-/>
+const { suggestions, isVisible, dismiss } = useConnectorSuggestions({
+  enabled: enableConnectorSuggestions,
+  minInputLength: 5,
+  debounceMs: 300,
+});
+
+// Render ConnectorSuggestionBar when suggestions available
+{isVisible && suggestions.length > 0 && (
+  <ConnectorSuggestionBar
+    suggestions={suggestions}
+    onConnect={handleConnect}
+    onDismiss={dismiss}
+  />
+)}
 ```
+
+**Related Components:**
+- `ConnectorSuggestionBar.tsx` - Suggestion bar UI
+- `InlineConnectionCard.tsx` - In-chat auth setup (triggered by SSE auth_required)
+- `chatConnectionSlice.ts` - Redux state for connection awareness
 
 ---
 

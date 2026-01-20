@@ -1,12 +1,23 @@
 # MCP Connections Feature Documentation
 
-**Version**: 1.0.0
-**Last Updated**: 2025-12-14
+**Version**: 2.0.0
+**Last Updated**: 2026-01-14
 **Status**: Production Ready
 
 ## Overview
 
 The MCP Connections feature provides a comprehensive interface for managing Model Context Protocol (MCP) server connections. It enables users to register, configure, and monitor external MCP servers that provide tools, resources, and prompts to the LangGraph agent.
+
+### ADR-0102 Enhancements (v2.0.0)
+
+The Connections Page has been redesigned with a directory-style discovery UX and in-chat connection setup:
+
+- **Three-Tab Layout**: Discover / My Connectors / Capabilities
+- **Directory-Style Discovery**: Card grid with category filtering and popularity sorting
+- **In-Chat Connection Setup**: InlineConnectionCard for OAuth2/API Key auth during chat
+- **Proactive Suggestions**: ConnectorSuggestionBar suggests connections based on user intent
+- **OAuth2 Popup Flow**: Popup-based OAuth with postMessage handoff (fallback to redirect)
+- **SSE Auth Required Signal**: Real-time auth_required events during chat streaming
 
 ## Architecture
 
@@ -34,19 +45,30 @@ src/mcp_server_langgraph/
 ```
 src/mcp_server_langgraph/studio/frontend/src/
 ├── pages/
-│   ├── ConnectionsPage.tsx     # Main connections list page
-│   └── OAuth2CallbackPage.tsx  # OAuth2 callback handler
+│   ├── ConnectionsPage.tsx     # Main connections page (3-tab layout)
+│   └── OAuth2CallbackPage.tsx  # OAuth2 callback handler (popup + redirect)
 ├── components/Connection/
 │   ├── index.ts                # Barrel export
 │   ├── ConnectionDialog.tsx    # Create/Edit dialog
 │   ├── ConnectionBulkActions.tsx # Bulk operations bar
 │   ├── ConnectionTemplateSelector.tsx # Template picker
-│   └── ConnectionAuditLog.tsx  # Audit log viewer
+│   ├── ConnectionAuditLog.tsx  # Audit log viewer
+│   ├── ConnectorCard.tsx       # [ADR-0102] Grid card for connectors
+│   ├── ConnectorDirectory.tsx  # [ADR-0102] Discovery grid container
+│   └── CapabilitiesTab.tsx     # [ADR-0102] MCP capabilities explorer
+├── components/Chat/
+│   ├── InlineConnectionCard.tsx    # [ADR-0102] In-chat connection setup
+│   └── ConnectorSuggestionBar.tsx  # [ADR-0102] Proactive suggestions
 ├── hooks/
-│   ├── useConnectionHealth.ts  # Real-time health hook
-│   └── useKeyboardShortcuts.ts # Keyboard navigation
+│   ├── useConnectionHealth.ts      # Real-time health hook
+│   ├── useKeyboardShortcuts.ts     # Keyboard navigation
+│   ├── useConnectorSuggestions.ts  # [ADR-0102] Intent-based suggestions
+│   └── useStreamingChat.ts         # [ADR-0102] auth_required SSE parsing
+├── store/slices/
+│   └── chatConnectionSlice.ts  # [ADR-0102] Redux state for chat connections
 └── types/
-    └── connection.ts           # TypeScript types
+    ├── connection.ts           # TypeScript types
+    └── connectionTemplate.ts   # [ADR-0102] Template types with keywords/popularity
 ```
 
 ## API Reference
@@ -66,8 +88,10 @@ src/mcp_server_langgraph/studio/frontend/src/
 | POST | `/api/v1/connections/bulk/delete` | Bulk delete connections |
 | POST | `/api/v1/connections/bulk/test` | Bulk test connections |
 | GET | `/api/v1/connections/templates` | List available templates |
+| GET | `/api/v1/connection-templates/suggestions` | [ADR-0102] Intent-based template suggestions |
 | POST | `/api/v1/connections/{id}/oauth2/authorize` | Start OAuth2 flow |
 | POST | `/api/v1/connections/{id}/oauth2/callback` | Complete OAuth2 flow |
+| POST | `/api/v1/connections/{id}/oauth/start` | [ADR-0102] Start OAuth2 flow (popup mode) |
 
 ### Query Parameters (List)
 
@@ -179,6 +203,66 @@ Export formats: JSON, CSV
 | Ctrl+A | Select all |
 | Delete | Delete selected |
 | Escape | Close modal |
+
+### 8. Directory-Style Discovery (ADR-0102)
+
+**Three-Tab Layout**:
+- **Discover**: Browse available connector templates in a card grid
+- **My Connectors**: Manage configured connections with status badges
+- **Capabilities**: Explore aggregated MCP tools, resources, and prompts
+
+**Features**:
+- Category filtering (development, productivity, communication, local, custom)
+- Popularity-based sorting for discovery
+- Keywords for intent matching
+- ConnectorCard with hover animations (Motion/Framer Motion)
+
+### 9. In-Chat Connection Setup (ADR-0102)
+
+**InlineConnectionCard** appears in chat when:
+- SSE stream emits `auth_required` event
+- Tool execution requires unconfigured connection
+
+**States**:
+1. `collapsed` - Header with "Configure" button
+2. `expanded` - OAuth2/API Key selection form
+3. `authenticating` - OAuth popup open, spinner
+4. `testing` - Connection test in progress
+5. `complete` - Success, auto-dismiss after 2s
+6. `error` - Show error, retry option
+
+**OAuth2 Popup Flow**:
+- Opens popup window (600x700) for OAuth
+- Uses `postMessage` to communicate result back to parent
+- Falls back to full-page redirect if popup blocked
+- PKCE support for enhanced security
+
+### 10. Proactive Suggestions (ADR-0102)
+
+**ConnectorSuggestionBar** shows suggestions when:
+- User types in chat input (debounced 300ms)
+- Input matches template keywords (e.g., "github PR" → GitHub template)
+- Matching templates are not yet configured
+
+**Feature Flag**: `FF_ENABLE_CONNECTOR_SUGGESTIONS=true`
+
+### 11. SSE Auth Required Signal (ADR-0102)
+
+The chat streaming endpoint can emit `auth_required` events:
+
+```json
+{
+  "type": "auth_required",
+  "connection_id": "string | null",
+  "template_id": "string | null",
+  "tool_name": "github.list_pull_requests",
+  "message": "Authentication required to use GitHub",
+  "retry_message_id": "string | null"
+}
+```
+
+**Backend**: `src/mcp_server_langgraph/core/auth_required_detector.py`
+**Frontend**: Parsed in `useStreamingChat.ts`, dispatched to `chatConnectionSlice`
 
 ## Caching Strategy
 
@@ -300,6 +384,41 @@ CREATE INDEX idx_audit_logs_created ON connection_audit_logs(created_at DESC);
 3. Verify TTL settings match expected freshness
 
 ## Changelog
+
+### v2.0.0 (2026-01-14) - ADR-0102
+
+**Connections Page Redesign & Chat UX Enhancement**
+
+New Features:
+- Three-tab layout: Discover / My Connectors / Capabilities
+- Directory-style discovery with ConnectorCard grid
+- Category filtering and popularity sorting
+- Template keywords for intent matching
+- InlineConnectionCard for in-chat connection setup
+- ConnectorSuggestionBar for proactive suggestions
+- OAuth2 popup flow with postMessage handoff
+- SSE auth_required event for real-time auth prompts
+- chatConnectionSlice Redux state for connection awareness
+
+New Components:
+- `ConnectorCard.tsx` - Grid card with hover animations
+- `ConnectorDirectory.tsx` - Discovery grid container
+- `CapabilitiesTab.tsx` - MCP capabilities explorer
+- `InlineConnectionCard.tsx` - In-chat auth setup
+- `ConnectorSuggestionBar.tsx` - Proactive suggestions
+
+New Hooks:
+- `useConnectorSuggestions.ts` - Intent-based template matching
+- Enhanced `useStreamingChat.ts` - auth_required SSE parsing
+
+New Redux State:
+- `chatConnectionSlice.ts` - pendingAuthRequirements, activeConnectionSetup
+
+New Feature Flags:
+- `FF_ENABLE_CONNECTOR_SUGGESTIONS` - Proactive suggestions in chat
+
+E2E Tests:
+- `e2e/connection-oauth-popup.spec.ts` - OAuth popup flow tests
 
 ### v1.0.0 (2025-12-14)
 - Initial release with full CRUD operations

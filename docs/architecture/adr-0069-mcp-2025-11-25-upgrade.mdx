@@ -64,7 +64,12 @@ We will upgrade the MCP implementation to support all major features of the 2025
 - `src/mcp_server_langgraph/mcp/elicitation.py` - SEP-1330 enumNames, SEP-1036 URL mode
 
 #### TypeScript Updates
-- `playground/frontend/src/api/mcp-types.ts` - All new type definitions
+- `studio/frontend/src/types/mcp.ts` - All new type definitions (migrated from playground)
+
+<Note>
+The standalone MCP Playground frontend was decommissioned in favor of the unified Agent Studio.
+All MCP functionality is now available in the Studio frontend at `src/mcp_server_langgraph/studio/frontend/`.
+</Note>
 
 #### Tests
 - 90+ new unit tests covering all features

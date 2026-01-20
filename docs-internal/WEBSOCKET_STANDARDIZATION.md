@@ -2,7 +2,7 @@
 
 **ADR Reference**: ADR-0068 WebSocket Standardization, ADR-0074 WebSocket Token Expiration
 **Status**: Active
-**Last Updated**: 2025-12-29
+**Last Updated**: 2026-01-17
 **Owner**: Infrastructure Team
 
 ## Table of Contents
@@ -16,6 +16,11 @@
 - [Message Format](#message-format)
 - [Implementation Guide](#implementation-guide)
 - [Migration Status](#migration-status)
+- [Observability](#observability)
+- [Security Considerations](#security-considerations)
+- [Performance Optimization](#performance-optimization)
+- [WebSocket Permissions and Sub-Persona Architecture](#websocket-permissions-and-sub-persona-architecture)
+- [References](#references)
 
 ---
 
@@ -949,6 +954,145 @@ logger.warning("Rate limit exceeded", extra={
 - **Server-Initiated**: Server sends heartbeat, reducing client overhead
 - **Configurable Interval**: Adjust interval based on connection stability needs
 - **Early Detection**: Detects dead connections before idle timeout
+
+---
+
+## WebSocket Permissions and Sub-Persona Architecture
+
+### Overview
+
+WebSocket permissions are determined via OpenFGA at login time and stored in the user's session. The `/api/v1/me` endpoint returns 17 permission fields that control which WebSocket endpoints a user can access.
+
+### Permission Fields (17 Total)
+
+| Permission | OpenFGA Type:Object | Relation | Description |
+|------------|---------------------|----------|-------------|
+| `alerts` | `dashboard:alerts` | `admin` | Infrastructure alert streaming (admin only) |
+| `notifications` | `chat:notifications` | `viewer` | User notification streaming |
+| `devtools` | `dashboard:devtools` | `viewer` | DevTools panel access |
+| `audit` | `logs:audit` | `viewer` | Audit event streaming |
+| `mcp_tasks` | `mcp:websocket` | `user` | MCP task status updates |
+| `mcp_aggregated` | `mcp:aggregated-capabilities` | `viewer` | MCP aggregated capabilities |
+| `connections_health` | `mcp_connection:health` | `viewer` | Connection health monitoring |
+| `connections_realtime` | `mcp_connection:realtime` | `viewer` | Real-time connection status |
+| `heart_metrics` | `observability:heart` | `viewer` | HEART metrics streaming |
+| `traces` | `traces:stream` | `viewer` | Trace data streaming |
+| `cost_tracking` | `cost:usage` | `viewer` | Cost tracking updates |
+| `budget_alerts` | `cost:budget` | `viewer` | Budget alert notifications |
+| `agent_requests` | `workflow:hitl` | `editor` | HITL approval requests |
+| `ai_suggestions` | `ai:suggestions` | `user` | AI typing suggestions |
+| `orchestrator_status` | `ai:orchestrator` | `viewer` | AI orchestrator status |
+| `llm_streaming` | `chat:llm-streaming` | `viewer` | LLM response streaming |
+| `session_metrics` | `chat:session-metrics` | `viewer` | Session metrics streaming |
+
+### Implementation
+
+**Backend** (`src/mcp_server_langgraph/api/v1/user.py`):
+
+```python
+WEBSOCKET_PERMISSIONS_MAP: dict[str, tuple[str, str, str]] = {
+    "alerts": ("dashboard", "alerts", "admin"),
+    "notifications": ("chat", "notifications", "viewer"),
+    # ... all 17 permissions
+}
+
+async def get_websocket_permissions(user_id: str, authz: OpenFGAClientDep) -> dict[str, bool]:
+    """Query OpenFGA for each permission, return dict of permission -> bool."""
+```
+
+**Frontend** (`src/store/slices/authSlice.ts`):
+
+```typescript
+// initializeAuth thunk maps /api/v1/me response to Redux state
+const websocketPermissions: WebSocketPermissions = {
+  alerts: data.websocket_permissions.alerts ?? false,
+  devtools: data.websocket_permissions.devtools ?? false,
+  // ... all 17 permissions
+};
+```
+
+### Sub-Persona Architecture
+
+Sub-personas allow fine-grained permission control for specialized user roles beyond the standard admin/developer/user hierarchy.
+
+#### Test Users
+
+| Username | Sub-Persona | Role | Permissions |
+|----------|-------------|------|-------------|
+| `admin` | - | Admin | All 17 permissions |
+| `alice` | - | Developer | 16/17 (no alerts) |
+| `bob` | - | User | 15/17 (no alerts, no agent_requests) |
+| `auditor-jane` | `auditor` | User | 10/17 (audit focus, no HITL/developer features) |
+| `compliance-charlie` | `compliance-officer` | User | 10/17 (compliance focus, no developer features) |
+| `devops-dave` | `devops` | Developer | 17/17 (full access including alerts) |
+
+#### Sub-Persona Permission Design
+
+**Auditor** (auditor-jane):
+- ✅ `audit`, `traces`, `cost_tracking`, `notifications`
+- ❌ `agent_requests` (no HITL approval)
+- ❌ `devtools`, `ai_suggestions` (no developer features)
+- ❌ `alerts` (no infrastructure access)
+
+**Compliance Officer** (compliance-charlie):
+- ✅ `audit`, `notifications`, `cost_tracking`, `budget_alerts`
+- ❌ `agent_requests` (no HITL approval)
+- ❌ `devtools`, `ai_suggestions`, `mcp_tasks` (no developer features)
+- ❌ `alerts` (no infrastructure access)
+
+**DevOps** (devops-dave):
+- ✅ All 17 permissions including `alerts`
+- Has `developer` role + `devops` sub-persona
+- Production monitoring requires full observability access
+
+#### Configuration
+
+**Keycloak** (`tests/e2e/default-realm.json`):
+```json
+{
+  "username": "auditor-jane",
+  "attributes": {
+    "sub_persona": ["auditor"]
+  }
+}
+```
+
+**OpenFGA** (`config/openfga/sample-tuples.json`):
+```json
+{
+  "user": "user:auditor-jane",
+  "relation": "viewer",
+  "object": "logs:audit"
+}
+```
+
+### Fail-Closed Security
+
+When OpenFGA is unavailable or returns an error, all permissions default to `false`:
+
+```python
+# user.py - fail-closed behavior
+except Exception:
+    logger.warning("OpenFGA unavailable, returning fail-closed permissions")
+    return {key: False for key in WEBSOCKET_PERMISSIONS_MAP}
+```
+
+Frontend hooks also fail-closed:
+```typescript
+// useAIOrchestratorStatus.ts
+const hasPermission = wsPermissions?.orchestrator_status ?? false;
+const effectiveEnabled = enabled && isAuthenticated && hasPermission;
+```
+
+### Pre-commit Validation
+
+The `validate-websocket-permissions-schema` pre-commit hook ensures alignment between:
+1. `WEBSOCKET_PERMISSIONS_MAP` in `user.py`
+2. OpenFGA model types and relations in `config/openfga/model.json`
+
+```bash
+uv run --frozen python scripts/validators/validate_websocket_permissions.py
+```
 
 ---
 

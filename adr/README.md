@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
-**Last Updated**: 2026-01-03
-**Total ADRs**: 87
+**Last Updated**: 2026-01-13
+**Total ADRs**: 101
 
 ## Overview
 

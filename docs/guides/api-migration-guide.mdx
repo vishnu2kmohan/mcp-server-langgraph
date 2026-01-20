@@ -308,6 +308,11 @@ costs = client.cost.summary()
 | **+60 days** | Legacy endpoints return 410 Gone for new integrations |
 | **+90 days** | Legacy endpoints removed |
 
+<Warning>
+**Playground Decommissioned**: The standalone MCP Playground frontend and the OpenFGA authz-proxy have been fully removed.
+All MCP functionality is now integrated into Agent Studio at `/studio`. The `/api/playground/*` endpoints are no longer available.
+</Warning>
+
 ### Deprecation Headers
 
 During the deprecation period, legacy endpoints return:

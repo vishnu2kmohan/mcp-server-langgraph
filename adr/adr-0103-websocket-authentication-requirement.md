@@ -1,0 +1,122 @@
+# ADR-0103: WebSocket Authentication Requirement
+
+| Status   | Accepted                                     |
+|----------|----------------------------------------------|
+| Date     | 2026-01-13                                   |
+| Category | Security & Authentication                    |
+| Authors  | Claude Code                                  |
+
+## Context
+
+WebSocket handlers in the codebase extend `WebSocketBase`, which defines the contract for connection lifecycle methods. During a signature validation audit, we discovered inconsistency in how handlers treated the `user` parameter in `on_connect`:
+
+### The Problem
+
+1. **Inconsistent Signatures**: Some handlers had `on_connect(user: AuthUser | None)` while others had `on_connect(user: AuthUser)`
+2. **Anonymous Connection Support**: `MCPWebSocketHandler` specifically handled anonymous connections with fallback to base `MCPMessageHandler`
+3. **Contract Violation**: The `WebSocketBase` abstract class defines `on_connect(user: AuthUser)` as non-optional, but implementations varied
+
+### Business Context
+
+- All WebSocket endpoints are protected by authentication middleware
+- Anonymous access was legacy code from early prototyping
+- No production use case requires anonymous WebSocket connections
+- Keycloak SSO is the authoritative identity provider (ADR-0031)
+
+## Decision
+
+**All WebSocket handlers MUST require authenticated users.** The `on_connect` method signature is:
+
+```python
+async def on_connect(self, user: AuthUser) -> None:
+    """Handle authenticated WebSocket connection."""
+```
+
+### Enforcement
+
+1. **Meta-Test**: `tests/meta/test_websocket_handler_signatures.py` validates:
+   - All handlers implement `handle_message(message: MessageEnvelope)`
+   - `on_connect` takes non-optional `AuthUser` parameter
+   - `on_disconnect` takes no parameters
+   - No legacy `on_message` methods exist
+
+2. **Pre-Push Validation**: Handler file changes trigger meta-tests automatically
+
+3. **Router-Level Rejection**: Anonymous connections are rejected at the WebSocket router before `on_connect` is called
+
+### If Anonymous Access Is Needed
+
+For future use cases requiring unauthenticated access (e.g., public health checks, demo mode):
+
+1. **Create Guest User**: Generate a `GuestUser` that implements `AuthUser` interface with limited permissions
+2. **Separate Endpoint**: Create a distinct WebSocket endpoint with explicit anonymous support
+3. **Document Exception**: Create handler-specific ADR documenting the security implications
+
+## Consequences
+
+### Positive
+
+1. **Consistent Contract**: All handlers follow the same interface
+2. **Security by Default**: No accidental anonymous access to protected resources
+3. **Simplified Logic**: Handlers don't need null checks for user
+4. **Automated Validation**: Meta-test prevents signature drift
+
+### Negative
+
+1. **Migration Burden**: Existing anonymous connection tests removed
+2. **Reduced Flexibility**: Anonymous WebSocket connections require explicit opt-in
+
+### Risks
+
+1. **Breaking Change**: Any external clients relying on anonymous WebSocket access will fail
+   - Mitigated: No production anonymous usage identified
+2. **Development Friction**: Local testing requires valid authentication tokens
+   - Mitigated: Test fixtures provide mock `AuthUser` objects
+
+## Implementation
+
+### Handler Changes
+
+```python
+# BEFORE (incorrect)
+async def on_connect(self, user: AuthUser | None) -> None:
+    if user is not None:
+        self._user_id = user.id
+    else:
+        self._user_id = "anonymous"
+
+# AFTER (correct)
+async def on_connect(self, user: AuthUser) -> None:
+    self._user_id = user.id  # Always available
+```
+
+### Test Pattern
+
+```python
+@pytest.mark.asyncio
+async def test_on_connect_with_authenticated_user(self) -> None:
+    """on_connect should receive authenticated user."""
+    mock_user = MagicMock(spec=AuthUser)
+    mock_user.id = "test-user-123"
+    mock_user.roles = ["user"]
+
+    await handler.on_connect(mock_user)
+
+    assert handler._user_id == "test-user-123"
+```
+
+## Related ADRs
+
+- **ADR-0031**: Keycloak as Authoritative Identity Provider
+- **ADR-0068**: Consolidated WebSocket Router Architecture
+- **ADR-0007**: Authentication Provider Pattern
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `websocket/handlers/llm_streaming.py` | Fixed signature |
+| `websocket/handlers/metrics_session.py` | Fixed signature |
+| `websocket/handlers/mcp.py` | Removed anonymous support |
+| `tests/meta/test_websocket_handler_signatures.py` | New validation |
+| `scripts/run_pre_push_tests.py` | Handler changes trigger meta-tests |

@@ -1,14 +1,16 @@
 # Accessibility Implementation Guide
 
-**Last Updated:** 2026-01-05
-**WCAG Version:** 2.1 Level AA
-**Status:** Implemented (StudioShell UX Audit - Phase 1-4)
+**Last Updated:** 2026-01-13
+**WCAG Version:** 2.2 Level AA
+**Status:** Implemented (StudioShell UX Audit - Phase 1-4, Contrast Audit 2026-01)
 
 ---
 
 ## Executive Summary
 
-Agent Studio implements WCAG 2.1 Level AA accessibility features across the StudioShellLayout and related components. This document describes the implemented features, testing approach, and ongoing compliance requirements.
+Agent Studio implements WCAG 2.2 Level AA accessibility features across the StudioShellLayout and related components. This document describes the implemented features, testing approach, and ongoing compliance requirements.
+
+**2026-01-13 Update:** Comprehensive contrast audit completed. Color-contrast axe-core rule enabled in all tests. ESLint rules added to catch low-contrast patterns at lint time.
 
 ---
 
@@ -150,16 +152,59 @@ focus:outline-none focus-visible:ring-2
 
 ---
 
-### 6. Color Contrast (WCAG 1.4.3)
+### 6. Color Contrast (WCAG 1.4.3, 1.4.6)
 
-Design tokens ensure 4.5:1 contrast ratio for normal text:
+Design tokens ensure 4.5:1 contrast ratio for normal text (WCAG AA), 7:1 for enhanced (AAA).
+
+**Light Mode (safe patterns):**
 
 | Element | Foreground | Background | Ratio |
 |---------|------------|------------|-------|
-| Body text | `gray-900` | `white` | 21:1 |
+| Body text | `neutral-900` | `light-1` | 21:1 |
 | Primary buttons | `white` | `primary-600` | 7.5:1 |
-| Secondary text | `gray-600` | `white` | 5.7:1 |
-| Error messages | `red-700` | `red-50` | 5.2:1 |
+| Secondary text | `neutral-500` | `light-1` | 5.7:1 |
+| Error messages | `error-700` | `error-50` | 5.2:1 |
+
+**Dark Mode (safe patterns):**
+
+| Element | Foreground | Background | Ratio |
+|---------|------------|------------|-------|
+| Body text | `neutral-100` | `dark-1` | 15.8:1 |
+| Primary text | `neutral-200` | `dark-1` | 12.6:1 |
+| Secondary text | `neutral-300` | `dark-1` | 8.5:1 |
+| Muted text | `neutral-400` | `dark-1` | **4.03:1** ⚠️ |
+
+**⚠️ Dark Mode Contrast Violations (Fixed 2026-01-13):**
+
+The following patterns **FAIL** WCAG 2.2 AA (require 4.5:1 minimum):
+
+| Pattern | Contrast | Fix |
+|---------|----------|-----|
+| `dark:text-neutral-400` | 4.03:1 ❌ | Use `dark:text-neutral-300` (8.5:1) |
+| `dark:bg-*-900/20` | Varies ❌ | Use `/40` minimum, `/50` for badges |
+| `dark:bg-*-900/30` | Varies ❌ | Use `/40` minimum, `/50` for badges |
+
+**ESLint Enforcement:**
+
+The following patterns are now caught by ESLint (`no-restricted-syntax`):
+
+```javascript
+// ❌ FAILS lint - low contrast text
+"dark:text-neutral-400"
+
+// ❌ FAILS lint - low opacity backgrounds
+"dark:bg-primary-900/20"
+"dark:bg-warning-900/30"
+
+// ✅ PASSES lint - proper contrast
+"dark:text-neutral-300"
+"dark:bg-primary-900/50"
+```
+
+**Test Coverage:**
+
+- `src/components/UI/ContrastAccessibility.test.tsx` - Documents safe/unsafe patterns
+- `src/layout/__tests__/StudioShellLayout.accessibility.test.tsx` - axe-core with color-contrast enabled
 
 ---
 
@@ -373,8 +418,157 @@ Always provide a toggleable data table for users who cannot perceive the visual 
 
 ---
 
+## New Component Accessibility Checklist
+
+**Use this checklist when creating new components. All items are required for WCAG 2.2 AA compliance.**
+
+### Pre-Development
+
+- [ ] Review this guide and relevant WCAG success criteria
+- [ ] Check if similar components exist in `src/components/UI/` that can be extended
+- [ ] Identify any charts/visualizations that need accessible alternatives
+
+### Color & Contrast (Critical)
+
+- [ ] **Light mode text:** Use `text-neutral-500` or darker on light backgrounds
+- [ ] **Dark mode text:** Use `dark:text-neutral-300` or lighter (NOT `neutral-400`)
+- [ ] **Background opacity:** Use `/40` minimum, `/50` for badges (NOT `/20` or `/30`)
+- [ ] **No color-only meaning:** Icons, patterns, or text supplement color indicators
+- [ ] Run ESLint to verify no contrast violations: `npm run lint`
+
+### Semantic HTML
+
+- [ ] Use semantic elements (`<button>`, `<nav>`, `<main>`, `<article>`, etc.)
+- [ ] Import from design system: `import { Button, Badge } from "@/components/UI"`
+- [ ] No raw `<button>`, `<input>`, `<select>` outside UI primitives
+
+### ARIA & Labels
+
+- [ ] All buttons have accessible names (visible text or `aria-label`)
+- [ ] Icon-only buttons have `aria-label` describing the action
+- [ ] Icons have `aria-hidden="true"` to prevent double-reading
+- [ ] Form inputs have associated `<label>` elements or `aria-label`
+- [ ] Expandable content uses `aria-expanded` and `aria-controls`
+- [ ] Live regions use `aria-live` for dynamic content updates
+
+### Keyboard Navigation
+
+- [ ] All interactive elements reachable via Tab key
+- [ ] Focus order follows visual order (logical tab sequence)
+- [ ] Custom widgets implement arrow key navigation where expected
+- [ ] Escape key closes modals/dropdowns
+- [ ] Focus visible on all interactive elements (ring utilities)
+- [ ] No keyboard traps (use `useFocusTrap` for modals)
+
+### Focus Management
+
+- [ ] Modals trap focus and return focus on close
+- [ ] Newly revealed content receives focus or has skip link
+- [ ] Focus rings use design system tokens:
+  ```tsx
+  className="focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus-visible:outline-none"
+  ```
+
+### Testing
+
+- [ ] Write accessibility test using jest-axe:
+  ```typescript
+  import { axe, toHaveNoViolations } from 'jest-axe';
+  expect.extend(toHaveNoViolations);
+
+  it('has no accessibility violations', async () => {
+    const { container } = render(<MyComponent />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+  ```
+- [ ] Test keyboard navigation manually
+- [ ] Verify with browser dev tools accessibility tree
+
+### Charts & Data Visualization
+
+If component includes charts:
+- [ ] Container has `role="img"` and descriptive `aria-label`
+- [ ] Chart SVG has `aria-hidden="true"`
+- [ ] Screen reader description in `sr-only` span
+- [ ] Data table toggle available for accessible alternative
+
+### Quick Reference: Safe Color Classes
+
+```tsx
+// ✅ SAFE - Light mode text
+"text-neutral-500"  // Secondary (5.7:1)
+"text-neutral-600"  // Default (7.4:1)
+"text-neutral-900"  // Primary (21:1)
+
+// ✅ SAFE - Dark mode text
+"dark:text-neutral-100"  // Primary (15.8:1)
+"dark:text-neutral-200"  // Default (12.6:1)
+"dark:text-neutral-300"  // Secondary (8.5:1)
+
+// ❌ UNSAFE - Low contrast
+"dark:text-neutral-400"  // 4.03:1 - FAILS WCAG AA
+
+// ✅ SAFE - Badge backgrounds
+"dark:bg-primary-900/50"
+"dark:bg-success-900/50"
+"dark:bg-warning-900/40"
+
+// ❌ UNSAFE - Low opacity
+"dark:bg-primary-900/20"
+"dark:bg-primary-900/30"
+```
+
+---
+
+## Navigation Sync Validation
+
+**Added 2026-01-13**
+
+Navigation items must be synchronized between `ActivityBar.tsx` and `personaSlice.ts`.
+
+### Test Location
+
+`src/store/slices/__tests__/navigationSync.test.ts`
+
+### What It Validates
+
+1. All `NAV_ITEMS` IDs exist in persona `sidebarItems` configurations
+2. No ID mismatches (e.g., "audit" vs "audit-logs")
+3. Admin persona has access to all navigation items
+4. Item paths match `/studio/{id}` convention
+
+### Adding New Navigation Items
+
+1. Add to `NAV_ITEMS` in `ActivityBar.tsx`
+2. Add to `sidebarItems` in `personaSlice.ts` for appropriate personas
+3. Run validation test: `npm test -- --run navigationSync.test.ts`
+
+---
+
+## CI/CD Integration
+
+**GitHub Actions Workflow:** `.github/workflows/accessibility-tests.yaml`
+
+- **Blocking:** Tests are blocking (no `continue-on-error`)
+- **Script:** `npm run test:a11y` runs accessibility-focused tests
+- **Report:** JSON report uploaded as artifact
+
+### Running Locally
+
+```bash
+# Run accessibility tests
+npm run test:a11y
+
+# Run all tests including accessibility
+npm test
+```
+
+---
+
 ## Related Documentation
 
 - [KEYBOARD_SHORTCUTS.md](./KEYBOARD_SHORTCUTS.md) - Complete keyboard shortcuts reference
 - [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) - Design tokens and color system
 - [UX_AUDIT_REPORT.md](../UX_AUDIT_REPORT.md) - UX audit findings and roadmap
+- [ContrastAccessibility.test.tsx](../../src/mcp_server_langgraph/studio/frontend/src/components/UI/ContrastAccessibility.test.tsx) - Safe/unsafe pattern reference

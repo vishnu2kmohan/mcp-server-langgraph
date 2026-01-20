@@ -190,6 +190,7 @@
             "group": "Agent Studio",
             "pages": [
               "api-reference/studio",
+              "api-reference/connection-templates",
               "api-reference/websockets"
             ]
           },
@@ -361,6 +362,7 @@
             "pages": [
               "guides/studio",
               "guides/studio-feature-flags",
+              "guides/tool-selection",
               "guides/keyboard-shortcuts",
               "guides/code-execution",
               "guides/devtools",

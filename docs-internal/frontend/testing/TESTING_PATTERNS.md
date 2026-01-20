@@ -19,6 +19,12 @@ This document describes the testing patterns used in the Studio Frontend codebas
   - [Testing Cleanup on Unmount](#testing-cleanup-on-unmount)
   - [Testing Status Indicators](#testing-status-indicators)
 - [Best Practices](#best-practices)
+- [Additional Patterns (2025-01)](#additional-patterns-2025-01)
+  - [Mocking useSafeRouteLoaderData](#mocking-usesaferouteloaderdata)
+  - [Mocking authenticatedFetch](#mocking-authenticatedfetch)
+  - [Redux Provider for AIEmptyState Hook](#redux-provider-for-aiemptystate-hook)
+  - [ARIA Role for Toggle Components](#aria-role-for-toggle-components)
+  - [RTK Query Hook Mocking](#rtk-query-hook-mocking-with-usegetemptystatesuggestionsmutation)
 
 ---
 
@@ -915,3 +921,142 @@ These test files demonstrate the patterns documented above:
 | `src/pages/MCPPage.test.tsx` | Tab navigation, search filtering, Redux state |
 | `src/components/Layout/ActivityLog.test.tsx` | Notification types, compact mode, maxItems limiting |
 | `src/components/Artifacts/MDXArtifact.test.tsx` | Accordion expansion, tab switching, interactive components |
+| `src/pages/ArtifactsPage.test.tsx` | useSafeRouteLoaderData mocking, Redux Provider with AIEmptyState |
+| `src/pages/__tests__/WorkflowsPage.features.test.tsx` | authenticatedFetch mocking, hoisted mock pattern |
+
+---
+
+## Additional Patterns (2025-01)
+
+### Mocking useSafeRouteLoaderData
+
+When components use `useSafeRouteLoaderData` instead of `useRouteLoaderData`, mock the hook directly:
+
+```typescript
+// WRONG: Mocking useRouteLoaderData won't work
+vi.mock("react-router", async (importOriginal) => {
+  const actual = (await importOriginal()) as object;
+  return {
+    ...actual,
+    useRouteLoaderData: vi.fn(),  // Component doesn't use this
+  };
+});
+
+// CORRECT: Mock the actual hook used by the component
+const mockUseSafeRouteLoaderData = vi.fn();
+
+vi.mock("../hooks/useSafeRouteLoaderData", () => ({
+  useSafeRouteLoaderData: () => mockUseSafeRouteLoaderData(),
+  useIsDataRouter: () => true,
+}));
+
+// In beforeEach:
+mockUseSafeRouteLoaderData.mockReturnValue({
+  artifacts: testArtifacts,
+  total: 3,
+});
+```
+
+**Example file:** `src/pages/ArtifactsPage.test.tsx`
+
+### Mocking authenticatedFetch
+
+Components using `authenticatedFetch` require direct module mocking, NOT `global.fetch` assignment:
+
+```typescript
+// WRONG: Won't intercept calls through authenticatedFetch wrapper
+global.fetch = vi.fn();
+
+// CORRECT: Mock the authenticatedFetch module
+const mockAuthenticatedFetch = vi.hoisted(() => vi.fn());
+
+vi.mock("../../utils/authenticatedFetch", () => ({
+  authenticatedFetch: mockAuthenticatedFetch,
+}));
+
+// In tests:
+mockAuthenticatedFetch.mockResolvedValue({
+  ok: true,
+  json: () => Promise.resolve({ code: "test" }),
+});
+```
+
+**Example file:** `src/pages/__tests__/WorkflowsPage.features.test.tsx`
+
+### Redux Provider for AIEmptyState Hook
+
+Components using `useAIEmptyState` require Redux Provider with `persona` and `session` slices:
+
+```typescript
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import personaReducer from "../../store/slices/personaSlice";
+import sessionReducer from "../../store/slices/sessionSlice";
+
+const createTestStore = () =>
+  configureStore({
+    reducer: {
+      persona: personaReducer,
+      session: sessionReducer,
+    },
+    preloadedState: {
+      persona: {
+        persona: "developer" as const,
+        subPersona: null,
+        username: "test-user",
+        visibleModules: [],
+        error: null,
+      },
+      session: {
+        currentSessionId: null,
+        sessions: {},
+        recentSessions: [],
+        isLoading: false,
+        error: null,
+      },
+    },
+  });
+
+export const renderWithRouter = (component: React.ReactNode) => {
+  const store = createTestStore();
+  return render(
+    <Provider store={store}>
+      <MemoryRouter>{component}</MemoryRouter>
+    </Provider>,
+  );
+};
+```
+
+**Example file:** `src/pages/__tests__/ProjectsPage.fixtures.tsx`
+
+### ARIA Role for Toggle Components
+
+The `Toggle` component uses `role="switch"` (not `role="checkbox"`):
+
+```typescript
+// WRONG: Toggle doesn't render a checkbox
+expect(screen.getByRole("checkbox", { name: /enable verification/i })).toBeInTheDocument();
+
+// CORRECT: Toggle uses switch role with aria-checked
+const toggle = screen.getByRole("switch", { name: /enable verification/i });
+expect(toggle).toHaveAttribute("aria-checked", "true");
+
+// To simulate toggle:
+fireEvent.click(toggle);
+expect(toggle).toHaveAttribute("aria-checked", "false");
+```
+
+**Example file:** `src/pages/AgentsPage.test.tsx`
+
+### RTK Query Hook Mocking with useGetEmptyStateSuggestionsMutation
+
+Many page components use `useGetEmptyStateSuggestionsMutation` via `AIEmptyState`. Always mock it:
+
+```typescript
+vi.mock("../../api", () => ({
+  useGetEmptyStateSuggestionsMutation: () => [vi.fn(), { isLoading: false }],
+  // ... other hooks
+}));
+```
+
+See `scripts/add-missing-api-mocks.sh` for bulk-adding this mock to test files.
