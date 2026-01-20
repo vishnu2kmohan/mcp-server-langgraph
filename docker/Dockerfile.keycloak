@@ -66,6 +66,11 @@ LABEL org.opencontainers.image.licenses="Apache-2.0"
 # This is the critical step that eliminates runtime augmentation
 COPY --from=builder /opt/keycloak/lib/quarkus/ /opt/keycloak/lib/quarkus/
 
+# Copy custom Agent Studio theme (design system colors and branding)
+# Theme applies to login, account, and admin consoles
+# Source: docker/keycloak/themes/agent-studio/
+COPY docker/keycloak/themes/agent-studio /opt/keycloak/themes/agent-studio
+
 # Copy healthcheck script for OIDC-ready validation
 # This script performs two-phase healthcheck:
 # 1. /authn/health/ready on management port 9000 (JVM + DB ready)

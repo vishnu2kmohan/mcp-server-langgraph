@@ -89,6 +89,7 @@ def matches_workflow_pattern(changed_file: str) -> bool:
     - pyproject.toml (root only, not clients/*/pyproject.toml)
     - Makefile (build/test targets)
     - tests/**/conftest.py (fixture files at any level)
+    - src/mcp_server_langgraph/websocket/handlers/ (handler signature validation)
 
     Reference: Codex Audit - Change detection gaps (2025-12-01)
     Reference: P0-1 - Pre-commit/Pre-push Hook & CI Pipeline Remediation Plan
@@ -100,6 +101,9 @@ def matches_workflow_pattern(changed_file: str) -> bool:
         "scripts/security/",
         ".githooks/",
         ".pre-commit-hooks/",
+        # WebSocket handlers trigger signature validation meta-test
+        # Added 2026-01-13: tests/meta/test_websocket_handler_signatures.py
+        "src/mcp_server_langgraph/websocket/handlers/",
     ]
     for dir_prefix in workflow_dirs:
         if changed_file.startswith(dir_prefix):

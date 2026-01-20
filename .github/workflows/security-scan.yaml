@@ -106,14 +106,14 @@ jobs:
     # Image scan
     - name: Build Docker image
       if: matrix.scan-type == 'image'
-      run: docker build -f docker/Dockerfile -t mcp-server-langgraph:scan .
+      run: docker build -f docker/Dockerfile -t agent-studio:scan .
 
     - name: Run Trivy image scan
       if: matrix.scan-type == 'image'
       uses: aquasecurity/trivy-action@0.33.1
       with:
         scan-type: 'image'
-        image-ref: 'mcp-server-langgraph:scan'
+        image-ref: 'agent-studio:scan'
         format: 'sarif'
         output: 'trivy-image-results.sarif'
         severity: 'CRITICAL,HIGH'
@@ -234,13 +234,13 @@ jobs:
           trivy-db-${{ runner.os }}-
 
     - name: Build Docker image
-      run: docker build -f docker/Dockerfile -t mcp-server-langgraph:scan .
+      run: docker build -f docker/Dockerfile -t agent-studio:scan .
 
     - name: Generate SBOM
       uses: aquasecurity/trivy-action@0.33.1
       with:
         scan-type: 'image'
-        image-ref: 'mcp-server-langgraph:scan'
+        image-ref: 'agent-studio:scan'
         format: 'cyclonedx'
         output: 'sbom.json'
 

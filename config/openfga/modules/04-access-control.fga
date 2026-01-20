@@ -18,6 +18,7 @@ type system
     define developer: [user] or admin
     define user: [user] or developer
     define viewer: [user] or user
+    define bypass_executor: [user] or admin
 
 # API key management for user authentication. Per-tenant isolation via organization.
 type api_key

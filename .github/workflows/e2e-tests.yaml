@@ -155,7 +155,7 @@ jobs:
           fi
           if [ $i -eq 30 ]; then
             echo "❌ MCP Server not ready after 30 attempts"
-            docker compose -f docker-compose.test.yml logs mcp-server-test
+            docker compose -f docker-compose.test.yml logs agent-studio-test
             exit 1
           fi
           echo "Waiting for MCP Server... (attempt $i/30)"

@@ -519,6 +519,21 @@ jobs:
     - name: Run type checking
       run: npm run typecheck
 
+    - name: Audit design system consistency
+      run: |
+        echo "🎨 Running design system consistency audit..."
+        npx tsx scripts/audit-design-system.ts --strict
+      # This step fails CI if any color violations (errors) are found
+      # Warnings/info are reported but don't fail the build
+
+    - name: Check for unused exports (advisory)
+      run: |
+        echo "🔍 Checking for unused exports with knip..."
+        npm run check:unused || echo "::warning::Unused exports detected - review knip output above"
+      # Advisory mode: does not block CI, reports as warning
+      # Gate this step after tuning knip configuration
+      continue-on-error: true
+
     - name: Run tests with sharding (OOM prevention)
       run: |
         # Use sharded test execution to prevent OOM

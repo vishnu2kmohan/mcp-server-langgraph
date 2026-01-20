@@ -1,0 +1,20 @@
+# Module: 11-memory-plan
+# Description: Memory notes and execution plans (Phase 4 references)
+# Reference: ADR-0068 Phase 8 - Modularization
+
+model
+  schema 1.1
+
+# Memory note authorization for [[memory:id]] markdown references.
+# Notes inherit viewer access from their parent session.
+type memory
+  relations
+    define session: [session]
+    define viewer: viewer from session
+
+# Execution plan authorization for [[plan:id]] markdown references.
+# Plans inherit viewer access from their parent session.
+type plan
+  relations
+    define session: [session]
+    define viewer: viewer from session

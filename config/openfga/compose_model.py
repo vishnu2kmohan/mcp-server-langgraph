@@ -39,6 +39,8 @@ MODULES = [
     ("07-semantic-index", ["tool_index", "skill_index", "memory_index"], "Semantic search indices"),
     ("08-infrastructure", ["gateway", "identity", "mcp", "mcp_connection", "connection"], "Infrastructure access"),
     ("09-financial", ["cost", "budget", "execution", "compliance", "config", "chat"], "Financial and compliance"),
+    ("10-references", ["reference"], "Markdown reference resolution"),
+    ("11-memory-plan", ["memory", "plan"], "Memory notes and execution plans (Phase 4 references)"),
 ]
 
 
@@ -256,6 +258,14 @@ def _parse_relation(define_line: str) -> tuple[dict[str, Any], dict[str, Any], d
                     "computedUserset": {"relation": computed.strip()},
                 }
             }
+        elif " from " in base_expr:
+            computed, tupleset = base_expr.split(" from ")
+            base = {
+                "tupleToUserset": {
+                    "tupleset": {"relation": tupleset.strip()},
+                    "computedUserset": {"relation": computed.strip()},
+                }
+            }
         else:
             base = {"computedUserset": {"relation": base_expr}}
 
@@ -265,6 +275,14 @@ def _parse_relation(define_line: str) -> tuple[dict[str, Any], dict[str, Any], d
             # Note: subtract types don't typically need metadata
         elif "->" in subtract_expr:
             tupleset, computed = subtract_expr.split("->")
+            subtract = {
+                "tupleToUserset": {
+                    "tupleset": {"relation": tupleset.strip()},
+                    "computedUserset": {"relation": computed.strip()},
+                }
+            }
+        elif " from " in subtract_expr:
+            computed, tupleset = subtract_expr.split(" from ")
             subtract = {
                 "tupleToUserset": {
                     "tupleset": {"relation": tupleset.strip()},
@@ -290,6 +308,17 @@ def _parse_relation(define_line: str) -> tuple[dict[str, Any], dict[str, Any], d
             elif "->" in part:
                 # TupleToUserset: organization->member
                 tupleset, computed = part.split("->")
+                children.append(
+                    {
+                        "tupleToUserset": {
+                            "tupleset": {"relation": tupleset.strip()},
+                            "computedUserset": {"relation": computed.strip()},
+                        }
+                    }
+                )
+            elif " from " in part:
+                # TupleToUserset with 'from' syntax: viewer from session
+                computed, tupleset = part.split(" from ")
                 children.append(
                     {
                         "tupleToUserset": {
@@ -325,6 +354,17 @@ def _parse_relation(define_line: str) -> tuple[dict[str, Any], dict[str, Any], d
                         }
                     }
                 )
+            elif " from " in part:
+                # TupleToUserset with 'from' syntax: viewer from session
+                computed, tupleset = part.split(" from ")
+                children.append(
+                    {
+                        "tupleToUserset": {
+                            "tupleset": {"relation": tupleset.strip()},
+                            "computedUserset": {"relation": computed.strip()},
+                        }
+                    }
+                )
             else:
                 # Computed userset reference
                 children.append({"computedUserset": {"relation": part}})
@@ -339,6 +379,17 @@ def _parse_relation(define_line: str) -> tuple[dict[str, Any], dict[str, Any], d
     elif "->" in rel_expr:
         # Single tupleToUserset (rare but possible)
         tupleset, computed = rel_expr.split("->")
+        relation_def = {
+            "tupleToUserset": {
+                "tupleset": {"relation": tupleset.strip()},
+                "computedUserset": {"relation": computed.strip()},
+            }
+        }
+
+    elif " from " in rel_expr:
+        # TupleToUserset with 'from' syntax: "viewer from session"
+        # This means: get 'viewer' relation from the object in 'session' relation
+        computed, tupleset = rel_expr.split(" from ")
         relation_def = {
             "tupleToUserset": {
                 "tupleset": {"relation": tupleset.strip()},

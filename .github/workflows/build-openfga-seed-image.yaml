@@ -15,7 +15,7 @@ name: Build OpenFGA Seed Image
 # - Weekly schedule (to get security updates)
 #
 # The image is pushed to:
-# - Preview/Dev: ghcr.io/vishnu2kmohan/mcp-server-langgraph-openfga-seed (GHCR)
+# - Preview/Dev: ghcr.io/vishnu2kmohan/agent-studio-openfga-seed (GHCR)
 # - Production: Promoted from GHCR to cloud-specific registries
 #
 # Note: This is a run-once container (no health endpoint).
@@ -130,7 +130,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-openfga-seed
+            ghcr.io/${{ github.repository_owner }}/agent-studio-openfga-seed
           tags: |
             type=sha,prefix=
             type=raw,value=latest
@@ -151,7 +151,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: |
-            type=registry,ref=ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-openfga-seed:latest
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/agent-studio-openfga-seed:latest
           cache-to: |
             type=inline
           provenance: true
@@ -203,7 +203,7 @@ jobs:
 
       - name: Pull and verify image
         run: |
-          IMAGE="ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-openfga-seed:latest"
+          IMAGE="ghcr.io/${{ github.repository_owner }}/agent-studio-openfga-seed:latest"
 
           echo "Pulling image: $IMAGE"
           docker pull "$IMAGE"
@@ -222,7 +222,7 @@ jobs:
           echo ""
           echo "Verifying store was created..."
           STORES=$(curl -s -H "Authorization: Bearer test-openfga-preshared-key" http://localhost:8080/stores)
-          if echo "$STORES" | grep -q "mcp-server-langgraph-test"; then
+          if echo "$STORES" | grep -q "agent-studio-openfga-store-test"; then
             echo "✅ Store created successfully"
           else
             echo "Store not found in response: $STORES"
@@ -235,7 +235,7 @@ jobs:
       - name: Security scan with Trivy
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: 'ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-openfga-seed:latest'
+          image-ref: 'ghcr.io/${{ github.repository_owner }}/agent-studio-openfga-seed:latest'
           format: 'sarif'
           output: 'trivy-openfga-seed-results.sarif'
           severity: 'CRITICAL,HIGH'

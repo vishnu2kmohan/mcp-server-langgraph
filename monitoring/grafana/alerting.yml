@@ -298,6 +298,288 @@ groups:
           correlation: pool-timeout
           team: platform
 
+  # =========================================================================
+  # Bypass Mode Anomaly Detection
+  # =========================================================================
+  # These alerts detect anomalies in bypass mode usage patterns that may
+  # indicate security concerns, misconfiguration, or user experience issues.
+  #
+  # Reference: Chat Input UX & Risk-Aware Bypass Mode Plan
+  # =========================================================================
+  - orgId: 1
+    name: Bypass Mode Anomalies
+    folder: ExecutionMode
+    interval: 1m
+    rules:
+      # -----------------------------------------------------------------------
+      # High Rejection Rate - Users attempting high-risk actions
+      # -----------------------------------------------------------------------
+      - uid: bypass-rejection-rate-high
+        title: Bypass Mode Rejection Rate High
+        condition: C
+        data:
+          # A: Rejection rate over 5 minutes
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: sum(rate(bypass_rejections_total[5m])) or vector(0)
+              instant: true
+              refId: A
+          # B: Total bypass activity (approvals + rejections)
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: sum(rate(bypass_approvals_total[5m])) + sum(rate(bypass_rejections_total[5m])) or vector(0)
+              instant: true
+              refId: B
+          # C: Rejection ratio > 50% with significant activity
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: ($B > 0.01) && ($A / $B > 0.5)
+              refId: C
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: High bypass mode rejection rate detected
+          description: |
+            **Anomaly Detected**: Bypass mode rejection rate is above 50%.
+            Rejection rate: {{ $values.A.Value | printf "%.3f" }}/s
+            Total activity: {{ $values.B.Value | printf "%.3f" }}/s
+
+            This may indicate:
+            - Users attempting high-risk operations that require approval
+            - Risk matrix may be too conservative
+            - Training needed on bypass mode appropriate use
+
+            **Recommended Actions**:
+            1. Review rejected plans in audit logs
+            2. Analyze risk_level and complexity distribution
+            3. Consider tuning auto-approval matrix if legitimate use cases blocked
+          runbook_url: https://docs/runbooks/BYPASS_MODE.md#high-rejection-rate
+          dashboard_url: /d/execution-mode/bypass-mode-metrics
+        labels:
+          severity: warning
+          feature: bypass-mode
+          team: platform
+
+      # -----------------------------------------------------------------------
+      # Tool Escalation Spike - Many tools causing risk escalation
+      # -----------------------------------------------------------------------
+      - uid: bypass-tool-escalation-spike
+        title: Bypass Mode Tool Escalation Spike
+        condition: A
+        data:
+          # A: Tool escalation rate
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: sum(rate(bypass_tool_escalations_total[5m])) > 0.1
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: High rate of tool-based risk escalations in bypass mode
+          description: |
+            **Anomaly Detected**: Tools are frequently triggering risk escalation.
+            Escalation rate: {{ $values.A.Value | printf "%.3f" }}/s
+
+            Common escalation triggers:
+            - execute_bash, execute_python (high risk)
+            - edit_file, write_file (medium risk)
+            - web_fetch, navigate (sandbox required)
+
+            **Recommended Actions**:
+            1. Review which tools are causing escalations
+            2. Check if users are attempting sandbox-required operations
+            3. Ensure users understand tool risk levels
+          runbook_url: https://docs/runbooks/BYPASS_MODE.md#tool-escalation
+          dashboard_url: /d/execution-mode/bypass-mode-metrics
+        labels:
+          severity: info
+          feature: bypass-mode
+          team: platform
+
+      # -----------------------------------------------------------------------
+      # Permission Check Failures - OpenFGA issues
+      # -----------------------------------------------------------------------
+      - uid: bypass-permission-failures-high
+        title: Bypass Permission Check Failures High
+        condition: C
+        data:
+          # A: Denied permission checks
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: sum(rate(bypass_permission_checks_total{result="denied"}[5m])) or vector(0)
+              instant: true
+              refId: A
+          # B: Total permission checks
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: sum(rate(bypass_permission_checks_total[5m])) or vector(0)
+              instant: true
+              refId: B
+          # C: Denial ratio > 80% with activity
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: ($B > 0.01) && ($A / $B > 0.8)
+              refId: C
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: Most bypass permission checks are being denied
+          description: |
+            **Anomaly Detected**: Over 80% of bypass permission checks are denied.
+            Denied: {{ $values.A.Value | printf "%.3f" }}/s
+            Total: {{ $values.B.Value | printf "%.3f" }}/s
+
+            This may indicate:
+            - Users without bypass_executor permission trying to use bypass mode
+            - OpenFGA configuration issue
+            - Permission not propagated correctly
+
+            **Recommended Actions**:
+            1. Check OpenFGA tuples for bypass_executor relation
+            2. Verify Keycloak role mappings
+            3. Review which users are attempting bypass access
+          runbook_url: https://docs/runbooks/BYPASS_MODE.md#permission-failures
+          dashboard_url: /d/execution-mode/bypass-mode-metrics
+        labels:
+          severity: warning
+          feature: bypass-mode
+          team: platform
+
+      # -----------------------------------------------------------------------
+      # Unusual Active Bypass Sessions - Security concern
+      # -----------------------------------------------------------------------
+      - uid: bypass-sessions-high
+        title: Unusually High Active Bypass Sessions
+        condition: A
+        data:
+          # A: Active bypass sessions above threshold
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: bypass_active_sessions{mode="bypass"} > 20
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: Alerting
+        for: 10m
+        annotations:
+          summary: Unusually high number of active bypass mode sessions
+          description: |
+            **Security Alert**: More than 20 sessions are currently using bypass mode.
+            Active bypass sessions: {{ $values.A.Value }}
+
+            Bypass mode allows auto-approval of low-risk operations, which
+            could be a security concern if many users are in this mode.
+
+            **Recommended Actions**:
+            1. Review active bypass sessions
+            2. Verify all users have legitimate need for bypass mode
+            3. Check for session anomalies or unauthorized access
+            4. Consider per-user bypass session limits
+          runbook_url: https://docs/runbooks/BYPASS_MODE.md#session-limit
+          dashboard_url: /d/execution-mode/bypass-mode-metrics
+        labels:
+          severity: warning
+          feature: bypass-mode
+          team: security
+
+      # -----------------------------------------------------------------------
+      # Auto vs User Approval Imbalance - Matrix tuning needed
+      # -----------------------------------------------------------------------
+      - uid: bypass-approval-imbalance
+        title: Bypass Mode Approval Type Imbalance
+        condition: C
+        data:
+          # A: Auto approvals
+          - refId: A
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: sum(rate(bypass_approvals_total{approval_type="auto"}[1h])) or vector(0)
+              instant: true
+              refId: A
+          # B: User approvals
+          - refId: B
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: sum(rate(bypass_approvals_total{approval_type="user"}[1h])) or vector(0)
+              instant: true
+              refId: B
+          # C: User approvals much higher than auto (user > 2x auto)
+          - refId: C
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: ($A > 0.001) && ($B > 2 * $A)
+              refId: C
+        noDataState: OK
+        execErrState: Alerting
+        for: 30m
+        annotations:
+          summary: Most bypass approvals require user intervention
+          description: |
+            **UX Alert**: User approvals ({{ $values.B.Value | printf "%.3f" }}/s) are more than
+            2x auto approvals ({{ $values.A.Value | printf "%.3f" }}/s).
+
+            This suggests the auto-approval matrix may be too conservative,
+            reducing the benefit of bypass mode.
+
+            **Recommended Actions**:
+            1. Review risk_level and complexity distribution of user-approved plans
+            2. Consider expanding auto-approval for common low-risk patterns
+            3. Gather user feedback on bypass mode friction
+          runbook_url: https://docs/runbooks/BYPASS_MODE.md#matrix-tuning
+          dashboard_url: /d/execution-mode/bypass-mode-metrics
+        labels:
+          severity: info
+          feature: bypass-mode
+          team: platform
+
 # =============================================================================
 # NOTE: The following alerts have been migrated to Mimir/Prometheus format:
 #

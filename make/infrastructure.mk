@@ -24,31 +24,69 @@ test-infra-up:
 	@echo "  MCP Server:   http://localhost:8000"
 	@echo ""
 
-test-infra-up-build:
-	@echo "Rebuilding and starting full test infrastructure..."
+test-infra-up-build: test-infra-build-images
+	@echo "Starting full test infrastructure..."
 	@npm install --package-lock-only --prefix src/mcp_server_langgraph/studio/frontend
-	$(DOCKER_COMPOSE) -f docker-compose.test.yml up --build -d
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d
 	@echo "Full test infrastructure rebuilt and started!"
 
 test-infra-down:
 	@echo "Stopping test infrastructure..."
 	$(DOCKER_COMPOSE) -f docker-compose.test.yml down --remove-orphans
 	@echo "Test infrastructure stopped"
-	@echo "Note: Data persists in Docker volumes. Use 'make test-infra-clean-volumes' to remove."
+	@echo "Note: Data persists in Docker volumes. Use 'make test-infra-cleanup-volumes' to remove."
 
-test-infra-clean-volumes:
+test-infra-cleanup-volumes:
 	@echo "Removing test infrastructure volumes..."
-	docker volume rm mcp-server-langgraph_postgres-data 2>/dev/null || true
-	docker volume rm mcp-server-langgraph_redis-data 2>/dev/null || true
-	docker volume rm mcp-server-langgraph_qdrant-data 2>/dev/null || true
-	docker volume rm mcp-server-langgraph_loki-data 2>/dev/null || true
-	docker volume rm mcp-server-langgraph_tempo-data 2>/dev/null || true
-	docker volume rm mcp-server-langgraph_mimir-data 2>/dev/null || true
-	docker volume rm mcp-server-langgraph_grafana-data 2>/dev/null || true
+	@# Use docker compose down -v to remove project-scoped volumes correctly
+	@# This handles worktree directories with different project names
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml down -v --remove-orphans 2>/dev/null || true
 	@echo "Test volumes cleaned"
 
-test-infra-reset: test-infra-down test-infra-clean-volumes
-	@echo "Test infrastructure reset (all data removed)"
+# Image names for custom-built images (GHCR registry)
+GHCR_REGISTRY := ghcr.io/vishnu2kmohan
+TEST_IMAGES := \
+	$(GHCR_REGISTRY)/agent-studio \
+	$(GHCR_REGISTRY)/agent-studio-alembic \
+	$(GHCR_REGISTRY)/agent-studio-keycloak \
+	$(GHCR_REGISTRY)/agent-studio-openfga-seed \
+	$(GHCR_REGISTRY)/agent-studio-sandbox
+
+test-infra-cleanup-images:
+	@echo "Cleaning up test infrastructure Docker images..."
+	@echo ""
+	@echo "Step 1: Removing dangling images..."
+	@docker image prune -f
+	@echo ""
+	@echo "Step 2: Removing all custom GHCR images..."
+	@for img in $(TEST_IMAGES); do \
+		echo "  Removing $$img..."; \
+		docker images "$$img" --format "{{.Repository}}:{{.Tag}}" 2>/dev/null | xargs -r docker rmi 2>/dev/null || true; \
+	done
+	@echo ""
+	@echo "Step 3: Remaining custom images (should be empty):"
+	@docker images --filter "reference=$(GHCR_REGISTRY)/agent-studio*" --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}" || echo "  (none)"
+	@echo ""
+	@echo "Image cleanup complete"
+
+test-infra-build-images:
+	@echo "Building all test infrastructure images with GHCR tags..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml build \
+		alembic-migrate-test \
+		openfga-seed-test \
+		keycloak-test \
+		agent-studio-test
+	@echo ""
+	@echo "Building sandbox image (build-only profile)..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml build agent-studio-sandbox
+	@echo ""
+	@echo "All images built with GHCR tags"
+
+# Convenience alias for building images
+test-infra-images: test-infra-build-images
+
+test-infra-reset: test-infra-down test-infra-cleanup-volumes test-infra-cleanup-images
+	@echo "Test infrastructure reset complete (containers, volumes, and images)"
 
 test-infra-logs:
 	@echo "Showing test infrastructure logs..."
@@ -69,7 +107,7 @@ test-loki-logs:
 
 test-studio-up:
 	@echo "Starting unified Studio frontend..."
-	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d mcp-server-test
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d agent-studio-test
 	@echo "Studio started"
 	@echo ""
 	@echo "Unified Studio:"
@@ -81,7 +119,7 @@ test-studio-up:
 
 test-studio-down:
 	@echo "Stopping unified Studio frontend..."
-	$(DOCKER_COMPOSE) -f docker-compose.test.yml stop mcp-server-test
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml stop agent-studio-test
 	@echo "Studio stopped"
 
 # DEPRECATED aliases
@@ -90,12 +128,6 @@ test-builder-up: test-studio-up
 
 test-builder-down: test-studio-down
 	@echo "DEPRECATED: test-builder-down is deprecated. Use 'make test-studio-down' instead."
-
-test-playground-up: test-studio-up
-	@echo "DEPRECATED: test-playground-up is deprecated. Use 'make test-studio-up' instead."
-
-test-playground-down: test-studio-down
-	@echo "DEPRECATED: test-playground-down is deprecated. Use 'make test-studio-down' instead."
 
 test-e2e:
 	@echo "Running end-to-end tests (parallel execution, requires test infrastructure)..."

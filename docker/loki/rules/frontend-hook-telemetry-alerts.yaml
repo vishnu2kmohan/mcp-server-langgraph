@@ -1,0 +1,175 @@
+# Frontend Hook Telemetry Alert Rules
+#
+# Loki ruler alerting rules for frontend WebSocket hook telemetry.
+# These alerts monitor graceful degradation, error rates, and retry behavior
+# from the hookTelemetry.ts logging infrastructure.
+#
+# Log Format: [HookName] Event type { context }
+# Reference: docs-internal/frontend/TELEMETRY-DASHBOARD-QUERIES.md
+# Dashboard: monitoring/grafana/dashboards/WebSocket/frontend-hook-telemetry.json
+
+groups:
+  - name: frontend_hook_error_alerts
+    rules:
+      # High frontend WebSocket error rate (>0.1/s over 5 minutes)
+      # Indicates systematic issues with WebSocket connectivity or backend
+      - alert: FrontendWebSocketHighErrorRate
+        expr: |
+          sum(
+            count_over_time({app="studio-frontend"} |~ "Error occurred" [5m])
+          ) / 300 > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: frontend
+          endpoint: websocket
+        annotations:
+          summary: "High frontend WebSocket error rate"
+          description: "Frontend is experiencing {{ $value | printf \"%.3f\" }} errors/second over the last 5 minutes (threshold: 0.1/s)"
+          runbook_url: "https://docs.internal/runbooks/frontend-websocket-errors"
+          dashboard_url: "http://localhost:13000/d/frontend-hook-telemetry"
+
+      # Critical error rate (>1/s over 5 minutes)
+      - alert: FrontendWebSocketCriticalErrorRate
+        expr: |
+          sum(
+            count_over_time({app="studio-frontend"} |~ "Error occurred" [5m])
+          ) / 300 > 1
+        for: 3m
+        labels:
+          severity: critical
+          component: frontend
+          endpoint: websocket
+        annotations:
+          summary: "CRITICAL: Frontend WebSocket error rate extremely high"
+          description: "Frontend WebSocket errors at {{ $value | printf \"%.2f\" }}/second. Users are likely experiencing real-time data loss."
+          runbook_url: "https://docs.internal/runbooks/frontend-websocket-critical"
+          dashboard_url: "http://localhost:13000/d/frontend-hook-telemetry"
+
+  - name: frontend_hook_degradation_alerts
+    rules:
+      # Frequent graceful degradation (>50 events in 5 minutes)
+      # Indicates systematic issues causing hooks to fall back to safe defaults
+      - alert: FrontendFrequentDegradation
+        expr: |
+          sum(
+            count_over_time({app="studio-frontend"} |~ "Graceful degradation" [5m])
+          ) > 50
+        for: 10m
+        labels:
+          severity: warning
+          component: frontend
+          endpoint: websocket
+        annotations:
+          summary: "Frequent frontend degradation events"
+          description: "{{ $value | printf \"%.0f\" }} graceful degradation events in the last 5 minutes. Frontend is frequently falling back to degraded behavior."
+          runbook_url: "https://docs.internal/runbooks/frontend-degradation"
+          dashboard_url: "http://localhost:13000/d/frontend-hook-telemetry"
+
+      # Missing session ID errors (common integration issue)
+      - alert: FrontendMissingSessionIdErrors
+        expr: |
+          sum(
+            count_over_time({app="studio-frontend"} |~ "missing_session_id" [1h])
+          ) > 20
+        for: 15m
+        labels:
+          severity: warning
+          component: frontend
+          endpoint: websocket
+        annotations:
+          summary: "Missing session ID errors in frontend hooks"
+          description: "{{ $value | printf \"%.0f\" }} missing session ID errors in the last hour. Check session initialization flow and authentication state."
+          runbook_url: "https://docs.internal/runbooks/frontend-session-id"
+          dashboard_url: "http://localhost:13000/d/frontend-hook-telemetry"
+
+  - name: frontend_hook_retry_alerts
+    rules:
+      # Retry exhaustion (>5 events in 5 minutes)
+      # Critical: indicates complete backend connectivity failure
+      - alert: FrontendRetryExhaustion
+        expr: |
+          sum(
+            count_over_time({app="studio-frontend"} |~ "retriesExhausted.*true" [5m])
+          ) > 5
+        for: 5m
+        labels:
+          severity: critical
+          component: frontend
+          endpoint: websocket
+        annotations:
+          summary: "Frontend retry exhaustion - backend connectivity issue"
+          description: "{{ $value | printf \"%.0f\" }} hooks have exhausted all retries in the last 5 minutes. Backend is likely unreachable or severely degraded."
+          runbook_url: "https://docs.internal/runbooks/frontend-retry-exhaustion"
+          dashboard_url: "http://localhost:13000/d/frontend-hook-telemetry"
+
+      # High retry rate (>100 retry attempts in 5 minutes)
+      # Indicates network instability or backend issues
+      - alert: FrontendHighRetryRate
+        expr: |
+          sum(
+            count_over_time({app="studio-frontend"} |~ "Retry attempt" [5m])
+          ) > 100
+        for: 10m
+        labels:
+          severity: warning
+          component: frontend
+          endpoint: websocket
+        annotations:
+          summary: "High frontend retry rate"
+          description: "{{ $value | printf \"%.0f\" }} retry attempts in the last 5 minutes. Check network stability and backend health."
+          runbook_url: "https://docs.internal/runbooks/frontend-high-retry"
+          dashboard_url: "http://localhost:13000/d/frontend-hook-telemetry"
+
+  - name: frontend_hook_endpoint_alerts
+    rules:
+      # AI suggestions endpoint errors
+      - alert: FrontendAISuggestionsErrors
+        expr: |
+          sum(
+            count_over_time({app="studio-frontend"} |~ "Error occurred" | json | endpoint="ai_suggestions" [15m])
+          ) > 10
+        for: 10m
+        labels:
+          severity: warning
+          component: frontend
+          endpoint: ai_suggestions
+        annotations:
+          summary: "AI Suggestions endpoint experiencing errors"
+          description: "{{ $value | printf \"%.0f\" }} errors on the AI Suggestions WebSocket endpoint in the last 15 minutes."
+          runbook_url: "https://docs.internal/runbooks/frontend-ai-suggestions"
+          dashboard_url: "http://localhost:13000/d/frontend-hook-telemetry"
+
+      # Cost tracking endpoint errors
+      - alert: FrontendCostTrackingErrors
+        expr: |
+          sum(
+            count_over_time({app="studio-frontend"} |~ "Error occurred" | json | endpoint="cost_tracking" [15m])
+          ) > 10
+        for: 10m
+        labels:
+          severity: warning
+          component: frontend
+          endpoint: cost_tracking
+        annotations:
+          summary: "Cost Tracking endpoint experiencing errors"
+          description: "{{ $value | printf \"%.0f\" }} errors on the Cost Tracking WebSocket endpoint in the last 15 minutes."
+          runbook_url: "https://docs.internal/runbooks/frontend-cost-tracking"
+          dashboard_url: "http://localhost:13000/d/frontend-hook-telemetry"
+
+      # WebSocket metrics push endpoint errors
+      - alert: FrontendMetricsPushErrors
+        expr: |
+          sum(
+            count_over_time({app="studio-frontend"} |~ "Error occurred" | json | endpoint="websocket_metrics_push" [15m])
+          ) > 10
+        for: 10m
+        labels:
+          severity: warning
+          component: frontend
+          endpoint: websocket_metrics_push
+        annotations:
+          summary: "WebSocket Metrics Push endpoint experiencing errors"
+          description: "{{ $value | printf \"%.0f\" }} errors pushing metrics to backend in the last 15 minutes. Observability data may be incomplete."
+          runbook_url: "https://docs.internal/runbooks/frontend-metrics-push"
+          dashboard_url: "http://localhost:13000/d/frontend-hook-telemetry"

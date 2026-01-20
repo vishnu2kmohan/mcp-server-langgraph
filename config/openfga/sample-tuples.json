@@ -5,11 +5,10 @@
     "purpose": "Single source of truth for test user permissions",
     "users": {
       "admin": "Super user with owner/admin access to all resources. Model inheritance (ADR-0068) ensures admin implicitly has 'user' and 'developer' relations via computed relations.",
-      "alice": "Developer user with editor access to vectors (CRUD), viewer access to OpenFGA authz UI",
-      "bob": "Basic user with viewer access to vectors (read-only, no OpenFGA authz UI access)"
+      "alice": "Developer user with editor access to vectors (CRUD)",
+      "bob": "Basic user with viewer access to vectors (read-only)"
     },
     "intentional_exclusions": {
-      "authz:playground": "bob excluded - only admin/developer should access OpenFGA authorization UI",
       "identity:keycloak": "alice/bob excluded - Keycloak admin access is admin-only for security",
       "marketplace:admin": "alice/bob excluded - marketplace registration/management is admin-only (they have viewer for browsing)",
       "dashboard:alerts": "alice/bob excluded - infrastructure alerts are admin-only",
@@ -18,15 +17,20 @@
       "skill:admin": "alice/bob excluded - skill system administration is admin-only (alice has author for install/update, bob has viewer)"
     },
     "model_inheritance_notes": {
-      "ai_type": "admin → user → viewer (ADR-0068 fix for ai:suggestions bug)",
-      "system_type": "admin → developer, admin → user, admin → viewer",
-      "conversation_type": "owner → editor → viewer",
-      "tool_index_type": "admin → viewer, organization member → viewer",
-      "skill_type": "admin → author → viewer (alice can author skills, bob can view)",
-      "marketplace_type": "admin → viewer (alice/bob can browse, only admin can register)",
-      "memory_index_type": "owner → viewer, admin → viewer (user-scoped with admin override for privacy)"
+      "ai_type": "admin \u2192 user \u2192 viewer (ADR-0068 fix for ai:suggestions bug)",
+      "system_type": "admin \u2192 developer, admin \u2192 user, admin \u2192 viewer",
+      "conversation_type": "owner \u2192 editor \u2192 viewer",
+      "tool_index_type": "admin \u2192 viewer, organization member \u2192 viewer",
+      "skill_type": "admin \u2192 author \u2192 viewer (alice can author skills, bob can view)",
+      "marketplace_type": "admin \u2192 viewer (alice/bob can browse, only admin can register)",
+      "memory_index_type": "owner \u2192 viewer, admin \u2192 viewer (user-scoped with admin override for privacy)"
     },
-    "adr_references": ["ADR-0002 (OpenFGA Authorization)", "ADR-0068 (Gateway-Level Auth + OpenFGA Updates)", "ADR-0091 (API Response Transformation)", "ADR-0099 (Semantic Tool Selection)"],
+    "adr_references": [
+      "ADR-0002 (OpenFGA Authorization)",
+      "ADR-0068 (Gateway-Level Auth + OpenFGA Updates)",
+      "ADR-0091 (API Response Transformation)",
+      "ADR-0099 (Semantic Tool Selection)"
+    ],
     "updated": "2026-01-08"
   },
   "tuples": [
@@ -148,18 +152,6 @@
       "user": "project:default",
       "relation": "project",
       "object": "artifact:default"
-    },
-    {
-      "_comment": "OpenFGA Authorization UI (authz-proxy) permissions - bob intentionally excluded",
-      "user": "user:admin",
-      "relation": "admin",
-      "object": "authz:playground"
-    },
-    {
-      "_comment": "Alice can view OpenFGA authz UI but not modify",
-      "user": "user:alice",
-      "relation": "viewer",
-      "object": "authz:playground"
     },
     {
       "_comment": "Workflow permissions (/api/v1/workflows)",
@@ -369,6 +361,224 @@
       "user": "user:bob",
       "relation": "viewer",
       "object": "chat:llm-streaming"
+    },
+    {
+      "_comment": "=== SUB-PERSONA: Auditor (auditor-jane) - Compliance-focused, read-only (10/17) ==="
+    },
+    {
+      "_comment": "Auditor has compliance access but NO operational/developer features"
+    },
+    {
+      "user": "user:auditor-jane",
+      "relation": "member",
+      "object": "organization:acme"
+    },
+    {
+      "user": "user:auditor-jane",
+      "relation": "viewer",
+      "object": "logs:audit"
+    },
+    {
+      "user": "user:auditor-jane",
+      "relation": "viewer",
+      "object": "traces:stream"
+    },
+    {
+      "user": "user:auditor-jane",
+      "relation": "viewer",
+      "object": "chat:notifications"
+    },
+    {
+      "user": "user:auditor-jane",
+      "relation": "viewer",
+      "object": "dashboard:devtools"
+    },
+    {
+      "user": "user:auditor-jane",
+      "relation": "viewer",
+      "object": "cost:usage"
+    },
+    {
+      "user": "user:auditor-jane",
+      "relation": "viewer",
+      "object": "observability:heart"
+    },
+    {
+      "user": "user:auditor-jane",
+      "relation": "viewer",
+      "object": "chat:llm-streaming"
+    },
+    {
+      "user": "user:auditor-jane",
+      "relation": "viewer",
+      "object": "chat:session-metrics"
+    },
+    {
+      "user": "user:auditor-jane",
+      "relation": "viewer",
+      "object": "ai:orchestrator"
+    },
+    {
+      "user": "user:auditor-jane",
+      "relation": "viewer",
+      "object": "cost:budget"
+    },
+    {
+      "_comment": "=== SUB-PERSONA: Compliance Officer (compliance-charlie) - Compliance-focused (10/17) ==="
+    },
+    {
+      "_comment": "Compliance officer has same access as auditor - compliance without dev features"
+    },
+    {
+      "user": "user:compliance-charlie",
+      "relation": "member",
+      "object": "organization:acme"
+    },
+    {
+      "user": "user:compliance-charlie",
+      "relation": "viewer",
+      "object": "logs:audit"
+    },
+    {
+      "user": "user:compliance-charlie",
+      "relation": "viewer",
+      "object": "traces:stream"
+    },
+    {
+      "user": "user:compliance-charlie",
+      "relation": "viewer",
+      "object": "chat:notifications"
+    },
+    {
+      "user": "user:compliance-charlie",
+      "relation": "viewer",
+      "object": "dashboard:devtools"
+    },
+    {
+      "user": "user:compliance-charlie",
+      "relation": "viewer",
+      "object": "cost:usage"
+    },
+    {
+      "user": "user:compliance-charlie",
+      "relation": "viewer",
+      "object": "observability:heart"
+    },
+    {
+      "user": "user:compliance-charlie",
+      "relation": "viewer",
+      "object": "chat:llm-streaming"
+    },
+    {
+      "user": "user:compliance-charlie",
+      "relation": "viewer",
+      "object": "chat:session-metrics"
+    },
+    {
+      "user": "user:compliance-charlie",
+      "relation": "viewer",
+      "object": "ai:orchestrator"
+    },
+    {
+      "user": "user:compliance-charlie",
+      "relation": "viewer",
+      "object": "cost:budget"
+    },
+    {
+      "_comment": "=== SUB-PERSONA: DevOps (devops-dave) - Developer + infrastructure alerts (17/17) ==="
+    },
+    {
+      "_comment": "DevOps has full developer access PLUS alerts for production deployments"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "member",
+      "object": "organization:acme"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "viewer",
+      "object": "dashboard:devtools"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "viewer",
+      "object": "chat:notifications"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "viewer",
+      "object": "logs:audit"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "user",
+      "object": "mcp:websocket"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "user",
+      "object": "mcp:aggregated-capabilities"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "viewer",
+      "object": "mcp_connection:health"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "viewer",
+      "object": "mcp_connection:realtime"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "viewer",
+      "object": "observability:heart"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "viewer",
+      "object": "cost:usage"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "viewer",
+      "object": "cost:budget"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "editor",
+      "object": "workflow:hitl"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "user",
+      "object": "ai:suggestions"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "viewer",
+      "object": "ai:orchestrator"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "viewer",
+      "object": "traces:stream"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "viewer",
+      "object": "chat:llm-streaming"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "viewer",
+      "object": "chat:session-metrics"
+    },
+    {
+      "user": "user:devops-dave",
+      "relation": "admin",
+      "object": "dashboard:alerts"
     },
     {
       "_comment": "MCP Connection permissions (/api/v1/mcp)",
@@ -629,6 +839,12 @@
       "_comment": "System permissions - bob has user access (standard user tier)",
       "user": "user:bob",
       "relation": "user",
+      "object": "system:global"
+    },
+    {
+      "_comment": "Bypass execution mode - alice can use risk-aware auto-approval (admin inherits via relation)",
+      "user": "user:alice",
+      "relation": "bypass_executor",
       "object": "system:global"
     },
     {
@@ -1016,6 +1232,16 @@
       "user": "user:admin",
       "relation": "admin",
       "object": "partner:acme_partner_sharing"
+    },
+    {
+      "_comment": "=== Markdown Reference Resolution (Plan: Unified Markdown Reference System) ===",
+      "_section": "All authenticated users can resolve references via reference:default"
+    },
+    {
+      "_comment": "All authenticated users have viewer access to resolve markdown references",
+      "user": "user:*",
+      "relation": "viewer",
+      "object": "reference:default"
     }
   ]
 }

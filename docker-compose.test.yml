@@ -1,4 +1,4 @@
-# Docker Compose for MCP Server LangGraph - Test Environment
+# Docker Compose for Agent Studio - Test Environment
 # ============================================================
 # Isolated test infrastructure with ephemeral storage and test-specific ports
 #
@@ -27,7 +27,7 @@
 # GATEWAY ROUTES (via Traefik on port 80):
 #   /_oauth           - OAuth callback (traefik-forward-auth)
 #   /api/*            - API endpoints for frontend [protected]
-#   /mcp              - MCP Server API [protected]
+#   /agent-studio     - Agent Studio API [protected]
 #   /studio/*         - Unified Studio Frontend [protected]
 #                       - /studio/workflows - Visual Workflow Builder
 #                       - /studio/chat      - Interactive Chat
@@ -74,6 +74,9 @@
 #   or docker compose commands:
 #     docker compose -f docker-compose.test.yml exec postgres-test psql -U postgres
 
+# Project name ensures consistent container/volume naming regardless of directory
+name: agent-studio-test
+
 services:
   # ==============================================================================
   # API GATEWAY (Traefik)
@@ -82,7 +85,7 @@ services:
   # Dashboard available at http://localhost/gateway or http://localhost:8080
 
   traefik-gateway:
-    image: traefik:v3.6.4
+    image: traefik:v3.6.6  # Updated 2026-01-12: Security fix CVE-2025-66490
     # RESILIENCE: Auto-restart on failure for critical gateway infrastructure
     restart: unless-stopped
     #
@@ -101,7 +104,7 @@ services:
       # Docker provider
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=mcp-test-network"
+      - "--providers.docker.network=agent-studio-test-network"
       # Entrypoints
       - "--entrypoints.web.address=:80"
       # Prometheus metrics (for Grafana dashboards)
@@ -138,7 +141,7 @@ services:
           cpus: '0.05'
           memory: 64M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - gateway
           # 'traefik-gateway' alias for Alloy Prometheus scrape target
@@ -155,9 +158,9 @@ services:
       - "traefik.http.middlewares.forward-auth.forwardauth.address=http://traefik-forward-auth:4181"
       - "traefik.http.middlewares.forward-auth.forwardauth.trustForwardHeader=true"
       - "traefik.http.middlewares.forward-auth.forwardauth.authResponseHeaders=X-Forwarded-User,X-Auth-User,X-Auth-Email"
-      # CSP Headers for Sandpack (codesandbox.io) and Pyodide (cdn.jsdelivr.net)
-      # Required for SandpackExecutor and CanvasArtifact Python execution
-      - "traefik.http.middlewares.sandpack-csp.headers.customresponseheaders.Content-Security-Policy=default-src 'self'; frame-src 'self' https://*.codesandbox.io https://codesandbox.io; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.codesandbox.io https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.codesandbox.io wss://*.codesandbox.io https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' data:;"
+      # CSP Headers for Sandpack (codesandbox.io), Pyodide (cdn.jsdelivr.net), and Google Fonts
+      # Required for SandpackExecutor, CanvasArtifact Python execution, and Inter/JetBrains Mono fonts
+      - "traefik.http.middlewares.sandpack-csp.headers.customresponseheaders.Content-Security-Policy=default-src 'self'; frame-src 'self' https://*.codesandbox.io https://codesandbox.io; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.codesandbox.io https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' https://*.codesandbox.io wss://*.codesandbox.io https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com;"
       # Route: /gateway/* -> Traefik Dashboard [PROTECTED]
       # Traefik dashboard requires both /api and /dashboard paths internally.
       # We use replacepathregex to rewrite /gateway/api -> /api and /gateway/dashboard -> /dashboard
@@ -227,7 +230,7 @@ services:
           cpus: '0.1'
           memory: 256M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - postgres
 
@@ -261,7 +264,7 @@ services:
           cpus: '0.02'
           memory: 32M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - postgres-exporter
 
@@ -269,26 +272,26 @@ services:
   # DATABASE MIGRATIONS (Alembic)
   # ==============================================================================
   # Standardized on Alembic for all PostgreSQL schema migrations
-  # This runs AFTER postgres-test is healthy and BEFORE mcp-server-test starts
+  # This runs AFTER postgres-test is healthy and BEFORE agent-studio-test starts
   # Pattern matches openfga-migrate-test for consistency
 
   alembic-migrate-test:
     # IMAGE STRATEGY (2025-12-11):
-    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest)
+    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/agent-studio-alembic:latest)
     #   Built by .github/workflows/build-alembic-image.yaml
     # - Local: Build with `docker compose build alembic-migrate-test`
-    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest for push
-    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest
-    # OPTIMIZATION: Use pre-built GHCR image when available, build only if missing
-    # This avoids unnecessary rebuilds during local development
-    pull_policy: if_not_present
+    #   Tags the image as ghcr.io/vishnu2kmohan/agent-studio-alembic:latest for push
+    image: ghcr.io/vishnu2kmohan/agent-studio-alembic:latest
+    # LOCAL DEV: Always build locally (GHCR images not published for local dev)
+    # CI: Uses pre-built images via separate workflow
+    pull_policy: build
     build:
       context: .
       dockerfile: docker/Dockerfile.alembic
       tags:
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:local
-    # Run Alembic upgrade to apply all migrations to mcp_test database
+        - ghcr.io/vishnu2kmohan/agent-studio-alembic:latest
+        - ghcr.io/vishnu2kmohan/agent-studio-alembic:local
+    # Run Alembic upgrade to apply all migrations to agent_studio_test database
     command: alembic upgrade head
     depends_on:
       postgres-test:
@@ -298,7 +301,7 @@ services:
       - TESTING=true
       - POSTGRES_HOST=postgres-test
       - POSTGRES_PORT=5432
-      - POSTGRES_DB=mcp_test
+      - POSTGRES_DB=agent_studio_test
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
@@ -312,7 +315,7 @@ services:
           cpus: '0.05'
           memory: 128M
     networks:
-      - mcp-test-network
+      - agent-studio-test-network
     restart: "no"  # Run once and exit
 
   # ==============================================================================
@@ -339,8 +342,61 @@ services:
           cpus: '0.05'
           memory: 128M
     networks:
-      - mcp-test-network
+      - agent-studio-test-network
     restart: "no"  # Run once and exit
+
+  # ==============================================================================
+  # OpenFGA OIDC Wait Init Container
+  # ==============================================================================
+  # Waits for Keycloak OIDC discovery endpoint before OpenFGA starts.
+  # This prevents the panic: "failed to initialize authenticator: error fetching OIDC configuration"
+  # OpenFGA uses a distroless image without shell, so we need a separate init container.
+  # Reference: Test Infrastructure Improvements Plan - OpenFGA OIDC Startup Race Condition
+  openfga-oidc-wait:
+    # Init container to wait for Keycloak OIDC endpoint before OpenFGA starts
+    # Required because OpenFGA uses a distroless image with no shell for healthcheck
+    # This Alpine container checks OIDC readiness via Traefik gateway (Docker network)
+    image: alpine:3.19
+    command:
+      - /bin/sh
+      - -c
+      - |
+        # Check via Traefik gateway using Docker network hostname
+        # This verifies the full path (traefik-gateway -> keycloak-test) is ready
+        # OpenFGA uses http://localhost/authn/... with extra_hosts, but for the wait
+        # container we can use the Docker network directly which is more reliable
+        OIDC_URL="http://traefik-gateway/authn/realms/default/.well-known/openid-configuration"
+        echo "============================================================"
+        echo "Waiting for Keycloak OIDC Discovery Endpoint (via Gateway)"
+        echo "============================================================"
+        echo "URL: $$OIDC_URL"
+        echo ""
+        MAX_RETRIES=60
+        DELAY=2
+        attempt=0
+        while [ $$attempt -lt $$MAX_RETRIES ]; do
+          attempt=$$((attempt + 1))
+          response=$$(wget -q -O /dev/null -S "$$OIDC_URL" 2>&1 | grep "HTTP/" | tail -1 | awk '{print $$2}')
+          if [ "$$response" = "200" ]; then
+            echo "  [$$attempt/$$MAX_RETRIES] OIDC discovery endpoint is ready!"
+            echo ""
+            echo "OpenFGA can now start safely."
+            exit 0
+          fi
+          echo "  [$$attempt/$$MAX_RETRIES] HTTP $$response, retrying in $${DELAY}s..."
+          sleep $$DELAY
+        done
+        echo ""
+        echo "ERROR: OIDC discovery endpoint did not become ready in time"
+        exit 1
+    depends_on:
+      keycloak-test:
+        condition: service_healthy
+      traefik-gateway:
+        condition: service_healthy
+    networks:
+      - agent-studio-test-network
+    restart: "no"
 
   openfga-test:
     image: openfga/openfga:v1.11.2
@@ -351,6 +407,8 @@ services:
       postgres-test:
         condition: service_healthy
       openfga-migrate-test:
+        condition: service_completed_successfully
+      openfga-oidc-wait:
         condition: service_completed_successfully
       keycloak-test:
         condition: service_healthy
@@ -374,7 +432,7 @@ services:
       # Authentication Strategy: OIDC (Defense-in-Depth Security)
       # ======================================================================
       # OpenFGA validates OIDC tokens from Keycloak
-      # Services (authz-proxy, mcp-server) obtain OIDC tokens via client credentials grant
+      # Services (authz-proxy, agent-studio) obtain OIDC tokens via client credentials grant
       # This provides defense-in-depth: even with network access, attackers need valid tokens
       # Reference: ADR-0070 - OpenFGA OIDC Authentication Migration
       # IMPORTANT: OpenFGA must use the same issuer URL that Keycloak advertises in tokens
@@ -388,7 +446,7 @@ services:
       # Aliases kept for backwards compatibility with tokens issued before KC_HOSTNAME_URL change
       # In steady state, all tokens should have the primary issuer
       - OPENFGA_AUTHN_OIDC_ISSUER_ALIASES=http://localhost:8080/authn/realms/default,http://keycloak-test:8080/authn/realms/default
-      - OPENFGA_AUTHN_OIDC_AUDIENCE=openfga-server
+      - OPENFGA_AUTHN_OIDC_AUDIENCE=agent-studio-openfga-oidc-cient-id-for-e2e-tests
       - TESTING=true
     healthcheck:
       test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
@@ -405,7 +463,7 @@ services:
           cpus: '0.05'
           memory: 128M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - openfga
     labels:
@@ -430,21 +488,21 @@ services:
   # This service runs AFTER openfga-test is healthy to seed:
   # 1. Authorization model from config/openfga/model.json
   # 2. Relationship tuples for test users (admin, alice, bob)
-  # 3. Permissions for vector_store and authz:playground
+  # 3. Permissions for vector_store and WebSocket resources
   #
   # Reference: ADR-0068 - Gateway-Level Authentication
 
   openfga-seed-test:
-    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-openfga-seed:latest
-    # OPTIMIZATION: Use pre-built GHCR image when available, build only if missing
-    # This avoids unnecessary rebuilds during local development
-    pull_policy: if_not_present
+    image: ghcr.io/vishnu2kmohan/agent-studio-openfga-seed:latest
+    # LOCAL DEV: Always build locally (GHCR images not published for local dev)
+    # CI: Uses pre-built images via separate workflow
+    pull_policy: build
     build:
       context: .
       dockerfile: docker/Dockerfile.openfga-seed
       tags:
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-openfga-seed:latest
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-openfga-seed:local
+        - ghcr.io/vishnu2kmohan/agent-studio-openfga-seed:latest
+        - ghcr.io/vishnu2kmohan/agent-studio-openfga-seed:local
     depends_on:
       keycloak-test:
         condition: service_healthy
@@ -452,14 +510,17 @@ services:
         condition: service_healthy
       # NOTE: traefik-gateway dependency removed - seed script uses direct Keycloak connection
       # OpenFGA accepts tokens with keycloak-test issuer via OPENFGA_AUTHN_OIDC_ISSUER_ALIASES
+      # NOTE: keycloak-init-test dependency NOT needed - the OpenFGA OIDC client is imported
+      # with the realm by keycloak-test (--import-realm). keycloak-init-test only configures
+      # SSO IdPs and token exchange, which the seed script doesn't need.
     environment:
       - OPENFGA_API_URL=http://openfga-test:8080
       # OIDC Authentication (ADR-0070 - OpenFGA OIDC Migration)
       # Seed script uses client credentials grant to obtain tokens from Keycloak
       # Direct connection to Keycloak - tokens have issuer http://keycloak-test:8080/authn/realms/default
       # OpenFGA accepts this via OPENFGA_AUTHN_OIDC_ISSUER_ALIASES configuration
-      - OPENFGA_OIDC_CLIENT_ID=openfga-server
-      - OPENFGA_OIDC_CLIENT_SECRET=test-openfga-server-secret
+      - OPENFGA_OIDC_CLIENT_ID=agent-studio-openfga-oidc-cient-id-for-e2e-tests
+      - OPENFGA_OIDC_CLIENT_SECRET=agent-studio-openfga-oidc-client-secret-for-e2e-tests
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
       - KEYCLOAK_REALM=default
       # Deprecated: Preshared key authentication (kept for rollback compatibility)
@@ -480,7 +541,7 @@ services:
       # Mount config directory for model and tuples updates without rebuilding
       - ./config/openfga:/app/config/openfga:ro
     networks:
-      - mcp-test-network
+      - agent-studio-test-network
     restart: "no"  # Run once and exit
 
   # ==============================================================================
@@ -494,22 +555,22 @@ services:
     # This matches production behavior and speeds up container startup
     #
     # IMAGE STRATEGY (2025-12-11):
-    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest)
+    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/agent-studio-keycloak:latest)
     #   Built by .github/workflows/build-keycloak-image.yaml
     # - Local: Build with `docker compose build keycloak-test`
-    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest for push
+    #   Tags the image as ghcr.io/vishnu2kmohan/agent-studio-keycloak:latest for push
     #
     # The GHCR image is pushed with tags: latest, 26.4.2, 26.4.2-<sha>
-    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest
-    # OPTIMIZATION: Use pre-built GHCR image when available, build only if missing
-    # Keycloak rarely changes - avoid expensive Quarkus rebuild
-    pull_policy: if_not_present
+    image: ghcr.io/vishnu2kmohan/agent-studio-keycloak:latest
+    # LOCAL DEV: Always build locally (GHCR images not published for local dev)
+    # CI: Uses pre-built images via separate workflow
+    pull_policy: build
     build:
       context: .
       dockerfile: docker/Dockerfile.keycloak
       tags:
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:local
+        - ghcr.io/vishnu2kmohan/agent-studio-keycloak:latest
+        - ghcr.io/vishnu2kmohan/agent-studio-keycloak:local
     # --optimized skips Quarkus augmentation (done at build time)
     # --import-realm imports the test realm on first start
     # --http-enabled=true must be explicit for production mode (Keycloak 26+)
@@ -525,6 +586,10 @@ services:
       # This eliminates the need for manual setup and prevents E2E test auth failures
       # NOTE: Filename must match realm name for Keycloak 26.x --import-realm
       - ./tests/e2e/default-realm.json:/opt/keycloak/data/import/default-realm.json:ro
+      # Agent Studio theme (design system colors and branding)
+      # Theme is also baked into the Docker image (docker/Dockerfile.keycloak)
+      # This volume mount allows local theme development without rebuilding
+      - ./docker/keycloak/themes/agent-studio:/opt/keycloak/themes/agent-studio:ro
     environment:
       # Admin credentials (Keycloak 26+ uses KC_BOOTSTRAP_ADMIN_* instead of KEYCLOAK_ADMIN_*)
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
@@ -625,7 +690,7 @@ services:
           cpus: '0.25'
           memory: 768M   # Increased to match JVM -Xmx768m
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - keycloak
     labels:
@@ -652,7 +717,9 @@ services:
     # NO build: section here - reuses image already built by keycloak-test service
     # This avoids BuildKit "already exists" error when both services try to export
     # to the same image tag during `docker compose up --build`
-    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest
+    image: ghcr.io/vishnu2kmohan/agent-studio-keycloak:latest
+    # Never pull - this service reuses the image built by keycloak-test
+    pull_policy: never
     # Override entrypoint and command to run the init script
     entrypoint: ["/bin/bash", "-c"]
     command:
@@ -753,29 +820,29 @@ services:
             -s "enabled=false" 2>/dev/null && echo "✓ Microsoft IdP disabled" || echo "Warning: Could not disable Microsoft IdP"
         fi
 
-        # Configure Token Exchange (RFC 8693) for mcp-server client
+        # Configure Token Exchange (RFC 8693) for agent-studio client
         # This enables user impersonation without ROPC (password grant)
         # Reference: ADR-0086 - Security Audit Keycloak/OpenFGA
         echo "Configuring Token Exchange permissions..."
 
-        # Get mcp-server client ID
-        MCP_CLIENT_ID=$(/opt/keycloak/bin/kcadm.sh get clients -r default -q clientId=mcp-server --fields id 2>/dev/null | grep -o '"id" : "[^"]*"' | head -1 | cut -d'"' -f4)
+        # Get agent-studio client ID
+        AGENT_STUDIO_CLIENT_ID=$(/opt/keycloak/bin/kcadm.sh get clients -r default -q clientId=agent-studio-keycloak-client-id-for-e2e-tests --fields id 2>/dev/null | grep -o '"id" : "[^"]*"' | head -1 | cut -d'"' -f4)
 
-        if [ -n "$$MCP_CLIENT_ID" ]; then
-          echo "Found mcp-server client ID: $$MCP_CLIENT_ID"
+        if [ -n "$$AGENT_STUDIO_CLIENT_ID" ]; then
+          echo "Found agent-studio client ID: $$AGENT_STUDIO_CLIENT_ID"
 
           # Enable token exchange permission on the client
           # The authorizationServicesEnabled=true is already set in the realm JSON
           # Now we need to create the token-exchange permission
 
           # Create token-exchange scope in the authorization settings
-          /opt/keycloak/bin/kcadm.sh create clients/$$MCP_CLIENT_ID/authz/resource-server/scope \
+          /opt/keycloak/bin/kcadm.sh create clients/$$AGENT_STUDIO_CLIENT_ID/authz/resource-server/scope \
             -r default \
             -s 'name=token-exchange' \
             -s 'displayName=Token Exchange' 2>/dev/null && echo "✓ Created token-exchange scope" || echo "Token-exchange scope may already exist"
 
-          # Get the service account user for mcp-server
-          SERVICE_ACCOUNT_ID=$(/opt/keycloak/bin/kcadm.sh get users -r default -q username=service-account-mcp-server --fields id 2>/dev/null | grep -o '"id" : "[^"]*"' | head -1 | cut -d'"' -f4)
+          # Get the service account user for agent-studio
+          SERVICE_ACCOUNT_ID=$(/opt/keycloak/bin/kcadm.sh get users -r default -q username=service-account-agent-studio-keycloak-client-id-for-e2e-tests --fields id 2>/dev/null | grep -o '"id" : "[^"]*"' | head -1 | cut -d'"' -f4)
 
           if [ -n "$$SERVICE_ACCOUNT_ID" ]; then
             echo "Found service account ID: $$SERVICE_ACCOUNT_ID"
@@ -783,15 +850,15 @@ services:
             # Grant impersonation role to the service account
             # This allows the client to impersonate other users
             /opt/keycloak/bin/kcadm.sh add-roles -r default \
-              --uusername service-account-mcp-server \
+              --uusername service-account-agent-studio-keycloak-client-id-for-e2e-tests \
               --rolename admin 2>/dev/null && echo "✓ Granted admin role for impersonation" || echo "Admin role may already be assigned"
           else
             echo "Service account not found - will be created on first token request"
           fi
 
-          echo "✓ Token Exchange configured for mcp-server"
+          echo "✓ Token Exchange configured for agent-studio"
         else
-          echo "Warning: Could not find mcp-server client - Token Exchange not configured"
+          echo "Warning: Could not find agent-studio client - Token Exchange not configured"
         fi
 
         echo "Keycloak initialization complete"
@@ -814,7 +881,7 @@ services:
           cpus: '0.1'
           memory: 256M
     networks:
-      - mcp-test-network
+      - agent-studio-test-network
     restart: "no"  # Run once and exit
 
   # ==============================================================================
@@ -837,7 +904,7 @@ services:
     # CI FIX: Ensure 'localhost' resolves to traefik-gateway (172.x.x.x) not ::1 (IPv6 loopback).
     # The traefik-gateway has 'localhost' as a network alias, but Docker's default /etc/hosts
     # entry (127.0.0.1 localhost) can take precedence. This extra_hosts entry ensures localhost
-    # resolves to the gateway container via Docker DNS within the mcp-test-network.
+    # resolves to the gateway container via Docker DNS within the agent-studio-test-network.
     # Note: We use 'host-gateway' special hostname which Docker resolves to the host IP, but
     # since we're on the same Docker network, the network alias approach via depends_on is sufficient.
     # The real fix is the restart policy which will retry on connection refused.
@@ -849,7 +916,7 @@ services:
       # internal Docker hostnames like keycloak-test.
       - DEFAULT_PROVIDER=oidc
       - PROVIDERS_OIDC_ISSUER_URL=http://localhost/authn/realms/default
-      - PROVIDERS_OIDC_CLIENT_ID=mcp-server
+      - PROVIDERS_OIDC_CLIENT_ID=agent-studio-keycloak-client-id-for-e2e-tests
       - PROVIDERS_OIDC_CLIENT_SECRET=test-client-secret-for-e2e-tests
       # Cookie and Session Configuration
       - SECRET=test-forward-auth-secret-change-in-production
@@ -862,7 +929,7 @@ services:
       # Logout Configuration
       # /_oauth/logout redirects to Keycloak logout for complete SSO logout
       # post_logout_redirect_uri=http://localhost allows users to return to /studio after re-login
-      - LOGOUT_REDIRECT=http://localhost/authn/realms/default/protocol/openid-connect/logout?post_logout_redirect_uri=http%3A%2F%2Flocalhost&client_id=mcp-server
+      - LOGOUT_REDIRECT=http://localhost/authn/realms/default/protocol/openid-connect/logout?post_logout_redirect_uri=http%3A%2F%2Flocalhost&client_id=agent-studio-keycloak-client-id-for-e2e-tests
       # Logging
       - LOG_LEVEL=info
       - LOG_FORMAT=json
@@ -881,7 +948,7 @@ services:
           cpus: '0.05'
           memory: 64M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - forward-auth
     labels:
@@ -926,7 +993,7 @@ services:
           cpus: '0.05'
           memory: 64M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - redis
 
@@ -960,7 +1027,7 @@ services:
           cpus: '0.02'
           memory: 32M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - redis-exporter
 
@@ -1010,7 +1077,7 @@ services:
           cpus: '0.1'
           memory: 128M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - qdrant
     labels:
@@ -1023,7 +1090,7 @@ services:
       - "traefik.http.routers.qdrant.priority=10"
       - "traefik.http.services.qdrant.loadbalancer.server.port=6333"
       - "traefik.http.middlewares.qdrant-strip.stripprefix.prefixes=/vectors"
-      # NO forward-auth - Internal API accessed by mcp-server
+      # NO forward-auth - Internal API accessed by agent-studio
       - "traefik.http.routers.qdrant.middlewares=qdrant-strip"
       # Route: /dashboard/* -> qdrant:6333/dashboard/* (Qdrant Web UI)
       # Qdrant dashboard uses hardcoded absolute paths (/dashboard/*) for assets.
@@ -1048,7 +1115,7 @@ services:
       qdrant-test:
         condition: service_healthy
     # Create default collection(s) for E2E testing
-    # - mcp_context: Default collection matching config.qdrant_collection_name
+    # - agent_studio_context: Default collection matching config.qdrant_collection_name
     # - Vector size 768 matches Vertex AI text-embedding-005 model
     command:
       - /bin/sh
@@ -1066,14 +1133,14 @@ services:
           sleep 2
         done
 
-        # Create mcp_context collection if it doesn't exist
+        # Create agent_studio_context collection if it doesn't exist
         # Vector size: 768 (Vertex AI text-embedding-005)
         # Distance: Cosine (default for semantic similarity)
-        COLLECTION_EXISTS=$$(curl -sf http://qdrant:6333/collections/mcp_context 2>/dev/null | grep -c '"status":"ok"' || true)
+        COLLECTION_EXISTS=$$(curl -sf http://qdrant:6333/collections/agent_studio_context 2>/dev/null | grep -c '"status":"ok"' || true)
 
         if [ "$$COLLECTION_EXISTS" = "0" ]; then
-          echo "Creating mcp_context collection (768 dimensions, Cosine)..."
-          curl -X PUT http://qdrant:6333/collections/mcp_context \
+          echo "Creating agent_studio_context collection (768 dimensions, Cosine)..."
+          curl -X PUT http://qdrant:6333/collections/agent_studio_context \
             -H "Content-Type: application/json" \
             -d '{
               "vectors": {
@@ -1082,9 +1149,9 @@ services:
               }
             }'
           echo ""
-          echo "✓ mcp_context collection created"
+          echo "✓ agent_studio_context collection created"
         else
-          echo "✓ mcp_context collection already exists"
+          echo "✓ agent_studio_context collection already exists"
         fi
 
         # Verify collection is accessible
@@ -1101,13 +1168,13 @@ services:
           cpus: '0.01'
           memory: 32M
     networks:
-      - mcp-test-network
+      - agent-studio-test-network
 
   # ==============================================================================
   # MCP SERVER (for E2E tests)
   # ==============================================================================
 
-  mcp-server-test:
+  agent-studio-test:
     # RESILIENCE: Auto-restart on failure for MCP server application
     restart: unless-stopped
     # CODEX FINDING FIX (2025-11-21): MCP Server for E2E Tests
@@ -1116,19 +1183,22 @@ services:
     # Addresses Bucket 4: E2E MCP journeys missing service dependencies
     #
     # IMAGE STRATEGY (2025-12-13):
-    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest)
+    # - CI: Pulls from GHCR (ghcr.io/vishnu2kmohan/agent-studio:test-latest)
     #   Built by .github/workflows/ci.yaml docker-build job (test variant)
-    # - Local: Build with `docker compose build mcp-server-test`
+    # - Local: Build with `docker compose build agent-studio-test`
     #   Uses same Dockerfile + target as CI for local/CI parity
-    #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest for push
-    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest
+    #   Tags the image as ghcr.io/vishnu2kmohan/agent-studio:test-latest for push
+    image: ghcr.io/vishnu2kmohan/agent-studio:test-latest
+    # LOCAL DEV: Always build locally (GHCR images not published for local dev)
+    # CI: Uses pre-built images via separate workflow
+    pull_policy: build
     build:
       context: .
       dockerfile: docker/Dockerfile
       target: final-test
       tags:
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-latest
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph:test-local
+        - ghcr.io/vishnu2kmohan/agent-studio:test-latest
+        - ghcr.io/vishnu2kmohan/agent-studio:test-local
     command: >
       sh -c "
       echo 'Waiting for dependencies to be ready...' &&
@@ -1178,16 +1248,14 @@ services:
       # PostgreSQL Databases (all on postgres-test:5432)
       # -----------------------------------------------------------------------
       # DB Allocation:
-      #   - mcp_test:       Main MCP server data (sessions, workflows, audit logs)
+      #   - agent_studio_test: Main Agent Studio data (sessions, workflows, audit logs)
       #   - compliance_test: Multi-framework compliance (GDPR, HIPAA, SOC2, FedRAMP)
       #   - openfga_test:   OpenFGA authorization (tuples, permissions) - used by openfga-test
       #   - keycloak_test:  Keycloak identity (users, realms, clients) - used by keycloak-test
       - POSTGRES_HOST=postgres-test
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres-test:5432/mcp_test
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres-test:5432/agent_studio_test
       # Compliance database for GDPR/HIPAA/SOC2/FedRAMP data (user profiles, consents, audit)
       - COMPLIANCE_POSTGRES_URL=postgresql://postgres:postgres@postgres-test:5432/compliance_test
-      - COMPLIANCE_STORAGE_BACKEND=postgres
-      - WORKFLOW_STORAGE_BACKEND=postgres
       # -----------------------------------------------------------------------
       # Keycloak Authentication (Docker network internal URLs)
       # -----------------------------------------------------------------------
@@ -1196,20 +1264,16 @@ services:
       # Must be reachable from inside Docker container
       - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
       # Public URL for browser redirects in OAuth2/PKCE flow (externally accessible)
-      - KEYCLOAK_PUBLIC_URL=http://localhost/authn
       # Frontend URL for OAuth2 callback redirects (must be gateway URL, not internal port)
       # This fixes the callback redirect issue where users were redirected to localhost:5173
       # which is inaccessible from the browser (internal Vite port).
-      - FRONTEND_URL=http://localhost
       - OPENFGA_API_URL=http://openfga-test:8080
       # Dynamic lookup: Use store name instead of hardcoded IDs
       # The OpenFGA client will look up store_id by name and fetch the latest model_id
       # This ensures CI/CD works without stale hardcoded values
-      - OPENFGA_STORE_NAME=mcp-server-langgraph-test
       # OIDC issuer URL for OpenFGA token acquisition (via gateway for correct issuer in tokens)
       # The gateway routes to Keycloak and Keycloak returns tokens with iss: http://localhost/authn/realms/default
       # which matches OpenFGA's OPENFGA_AUTHN_OIDC_ISSUER setting
-      - OPENFGA_OIDC_ISSUER=http://localhost/authn/realms/default
       # -----------------------------------------------------------------------
       # Redis Databases (all on redis-test:6379)
       # -----------------------------------------------------------------------
@@ -1229,201 +1293,31 @@ services:
       # Vector Database (Qdrant)
       # -----------------------------------------------------------------------
       - QDRANT_URL=http://qdrant-test:6333
-      # Embedding configuration for semantic search (ADR-0099)
-      # Vertex AI text-embedding-005 (768 dimensions) - requires GCP ADC credentials
-      # See: https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/text-embeddings-api
-      - EMBEDDING_PROVIDER=google_vertex
-      - EMBEDDING_MODEL_NAME=text-embedding-005
-      - EMBEDDING_DIMENSIONS=768
-      # OpenTelemetry configuration for distributed tracing
-      # Alloy receives OTLP telemetry and forwards to Tempo (traces), Mimir (metrics), Loki (logs)
+      # -----------------------------------------------------------------------
+      # OpenTelemetry (Alloy OTLP endpoint)
+      # -----------------------------------------------------------------------
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
-      - OTEL_SERVICE_NAME=mcp-server-langgraph
+      - OTEL_SERVICE_NAME=agent-studio-test
       - OTEL_RESOURCE_ATTRIBUTES=service.namespace=agent-studio,deployment.environment=test
-      # LGTM Stack configuration (Loki, Grafana, Tempo, Mimir)
-      # Backend selection for observability query clients (concrete implementations, not stubs)
-      - OBSERVABILITY_TRACING_BACKEND=tempo
-      - OBSERVABILITY_LOGGING_BACKEND=loki
-      - OBSERVABILITY_METRICS_BACKEND=prometheus
-      - OBSERVABILITY_ALERTING_BACKEND=grafana
-      # LGTM Stack URLs (must reference container names for Docker networking)
+      # -----------------------------------------------------------------------
+      # LGTM Stack URLs (container names for Docker networking)
+      # -----------------------------------------------------------------------
       - TEMPO_URL=http://tempo-test:3200
       - LOKI_URL=http://loki-test:3100
       - MIMIR_URL=http://mimir-test:9009
       - GRAFANA_URL=http://grafana-test:3000
-      # Grafana API Authentication
-      # NOTE: JWT auth requires HTTPS for JWKS URL (GF_AUTH_JWT_JWK_SET_URL).
-      # In test environment without TLS, we use basic auth with admin credentials.
-      # UI login still uses Keycloak OAuth (GF_AUTH_GENERIC_OAUTH_ENABLED=true).
-      # In production with HTTPS, switch to GRAFANA_USE_OIDC=true for JWT auth.
-      - GRAFANA_USERNAME=admin
-      - GRAFANA_PASSWORD=admin
-      # GCP credentials for Vertex AI (mounted from host for local development)
+      # -----------------------------------------------------------------------
+      # GCP Credentials (mounted from host for local development)
+      # -----------------------------------------------------------------------
       - GOOGLE_APPLICATION_CREDENTIALS=/app/.config/gcloud/application_default_credentials.json
-      # GCP Project ID required for google-genai SDK (pydantic-ai) when using ADC
-      # GOOGLE_CLOUD_PROJECT is the standard GCP env var read by google-genai SDK
       - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT:-}
-      # Also set GOOGLE_PROJECT_ID for mcp-server-langgraph settings compatibility
       - GOOGLE_PROJECT_ID=${GOOGLE_CLOUD_PROJECT:-}
-      # Feature Flags for AI Suggestions (ADR-xxxx)
-      # Enable Redis-backed distributed rate limiting for multi-instance deployments
-      - FF_ENABLE_DISTRIBUTED_RATE_LIMITING=true
-      # Enable suggestion pre-warming (pre-computes common suggestions during startup)
-      - FF_ENABLE_SUGGESTION_PREWARM=true
-      # Enable suggestion quality tracking for click-through metrics
-      - FF_ENABLE_SUGGESTION_QUALITY_TRACKING=true
       # -----------------------------------------------------------------------
-      # Canvas/Studio UI Feature Flags (Phased Rollout)
+      # Feature Flags: Loaded from .env.test
       # -----------------------------------------------------------------------
-      # All phases enabled for testing. In production, enable incrementally.
-      # See: src/mcp_server_langgraph/core/feature_flags.py for descriptions
-      - FF_STUDIO_CANVAS_SHELL=true      # Phase 1: Studio shell at /studio
-      - FF_CANVAS_EDITABLE=true          # Phase 2: Editable artifacts in Canvas panel
-      - FF_CANVAS_AGENTS=true            # Phase 4: Background agent panel
-      - FF_CANVAS_AI_PALETTE=true        # Phase 4: AI fallback in command palette
-      - FF_ENABLE_AI_SUGGESTIONS=true    # Phase 4: AI-powered suggestions in Canvas and Chat
-      - FF_ENABLE_AI_SUGGESTIONS_WEBSOCKET=true  # AI suggestions WebSocket endpoint
-      - FF_CANVAS_COMPLIANCE=true        # Phase 5: Compliance dashboards (GDPR, HIPAA, SOC2, FedRAMP)
-      - FF_CANVAS_HELP=true              # Phase 6: In-app help pane with contextual assistance
-      # -----------------------------------------------------------------------
-      # AI UX Features (Phase 6 AI-Native Integration)
-      # -----------------------------------------------------------------------
-      # All AI-powered UX features enabled for comprehensive testing
-      - FF_ENABLE_AI_DISCLOSURE=true     # AI progressive disclosure analysis
-      - FF_ENABLE_AI_EMPTY_STATES=true   # AI-powered empty state suggestions
-      - FF_ENABLE_AI_NUDGES=true         # AI smart nudge recommendations
-      - FF_ENABLE_AI_ERROR_RECOVERY=true # AI error classification and recovery
-      - FF_ENABLE_AI_ONBOARDING=true     # AI onboarding personalization
-      - FF_ENABLE_AI_METRICS_INSIGHTS=true # AI HEART metrics insights
-      - FF_ENABLE_AI_PERSONA_ANALYSIS=true # AI persona behavior analysis
-      # -----------------------------------------------------------------------
-      # Shell Chat Input Features (Sprint 1 - Chat Input Gap Fix)
-      # -----------------------------------------------------------------------
-      - FF_ENABLE_MODEL_SELECTOR_IN_SHELL=true  # Model selection dropdown in shell
-      - FF_ENABLE_URL_FETCH_IN_SHELL=true       # URL content fetch (#url pattern) in shell
-      - FF_ENABLE_ENHANCED_MODEL_SELECTOR=true  # Enhanced model selector (recent models, search, capability badges)
-      # -----------------------------------------------------------------------
-      # LLM Factory Streaming (Production-Ready Resilient Streaming)
-      # -----------------------------------------------------------------------
-      - FF_ENABLE_LLM_FACTORY_STREAMING=true # Resilient streaming via LLMFactory (bulkhead, retry)
-      # -----------------------------------------------------------------------
-      # Anthropic Best Practices (ADR-0072)
-      # All flags enabled in test environment for comprehensive integration/e2e testing
-      # -----------------------------------------------------------------------
-      - FF_ENABLE_TOOL_EXAMPLES=true    # Tool input examples (72% -> 90% accuracy)
-      - FF_ENABLE_THINK_TOOL=true       # Think tool for structured reasoning
-      - FF_ENABLE_DEFER_LOADING=true    # Defer_loading for token efficiency
-      - FF_ENABLE_SKILLS_SYSTEM=true    # SKILL.md-based skills
-      - FF_ENABLE_SKILLS_MARKETPLACE=true # Anthropic skills marketplace
-      - FF_ENABLE_PII_TOKENIZATION=true # GDPR/HIPAA: PII detection and tokenization
-      - FF_ENABLE_PROGRAMMATIC_TOOLS=true # Tool calling from sandbox
-      - FF_ENABLE_MULTI_AGENT_ORCHESTRATION=true # Orchestrator-worker pattern
-      - FF_ENABLE_AGENTIC_MEMORY=true   # NOTES.md structured note-taking
-      # Claude Agent SDK integration (ADR-0077)
-      - FF_ENABLE_SDK_HOOKS=true        # SDK hook system for tool lifecycle
-      - FF_ENABLE_SDK_FILE_CHECKPOINTING=true # File rollback capability
-      - FF_ENABLE_SDK_INTERRUPT=true    # Graceful interrupt support
-      # -----------------------------------------------------------------------
-      # Plan Editor Features (Phase 5b - Prompt Architecture ADR-0089)
-      # -----------------------------------------------------------------------
-      - FF_ENABLE_PLAN_SEARCH=true      # Semantic template search using vector embeddings
-      - FF_ENABLE_PLAN_TEMPLATES=true   # Template suggestion features for execution plans
-      # -----------------------------------------------------------------------
-      # Chat-to-Workflow Feature (Plan: greedy-wiggling-marshmallow.md)
-      # -----------------------------------------------------------------------
-      - FF_ENABLE_WORKFLOW_FROM_CHAT=true # Generate workflows from chat with versioning
-      # -----------------------------------------------------------------------
-      # Studio AI Orchestration (StudioShell AI Enhancement)
-      # -----------------------------------------------------------------------
-      - FF_ENABLE_STUDIO_AI=true                   # Master toggle for Studio AI
-      - FF_ENABLE_SESSION_INTELLIGENCE=true        # Session summarize, group, similarity
-      - FF_ENABLE_CONVERSATION_INTELLIGENCE=true   # Intent detection, context optimization
-      - FF_ENABLE_CANVAS_INTELLIGENCE=true         # Artifact suggestions, code analysis
-      - FF_ENABLE_DIAGRAM_INTELLIGENCE=true        # Diagram analyze, convert to code
-      - FF_ENABLE_TRACE_INTELLIGENCE=true          # Trace summarize, anomaly detection
-      - FF_ENABLE_HITL_AI=true                     # Risk assessment, decision history
-      - FF_ENABLE_GENUI=true                       # Generative UI components
-      # -----------------------------------------------------------------------
-      # UI Enhancement Features
-      # -----------------------------------------------------------------------
-      - FF_ENABLE_INTERACTIVE_ARTIFACTS=true       # Interactive rendering (Sandpack, Mermaid)
-      - FF_ENABLE_URL_CONTENT_FETCH=true           # #URL content fetch
-      - FF_ENABLE_SLASH_COMMANDS=true              # Slash commands (/)
-      - FF_ENABLE_RICH_TEXT_CHAT_INPUT=true        # Pill + RichTextInput chat mode
-      - FF_ENABLE_STYLE_PRESETS=true               # Response style presets
-      - FF_ENABLE_COMMAND_PALETTE=true             # Command palette (Cmd+K)
-      - FF_ENABLE_KEYBOARD_SHORTCUTS=true          # Customizable keyboard shortcuts
-      # -----------------------------------------------------------------------
-      # Experimental Features
-      # -----------------------------------------------------------------------
-      - FF_ENABLE_EXPERIMENTAL_FEATURES=true       # Master switch for experimental
-      - FF_ENABLE_MULTI_AGENT_COLLABORATION=true   # Multi-agent coordination
-      - FF_ENABLE_TOOL_REFLECTION=true             # Agent tool usage analysis
-      # -----------------------------------------------------------------------
-      # DevTools AI Features
-      # -----------------------------------------------------------------------
-      - FF_DEVTOOLS_AI_INSIGHTS=true               # AI Insights tab in DevTools
-      - FF_DEVTOOLS_AI_LAYOUT=true                 # AI-powered layout suggestions
-      # -----------------------------------------------------------------------
-      # Agent HITL Features (explicit for visibility)
-      # -----------------------------------------------------------------------
-      - FF_ENABLE_AGENT_HITL=true                  # Confidence-based human-in-the-loop
-      - FF_ENABLE_AGENT_HITL_PUSH_NOTIFICATIONS=true # Push notifications for approvals
-      - FF_ENABLE_AGENT_HITL_WEBSOCKET=true        # WebSocket for real-time updates
-      # -----------------------------------------------------------------------
-      # ADR-0092 Hierarchical Capability Architecture (Phase 1-6 Complete)
-      # -----------------------------------------------------------------------
-      - FF_ENABLE_HIERARCHICAL_CAPABILITY_PROVIDER=true  # Master toggle for ADR-0092
-      - FF_ENABLE_ENHANCED_ROUTER_OUTPUT=true      # RouterOutput with skills/execution_mode
-      - FF_ENABLE_CAPABILITY_RESOLUTION=true       # Hierarchical registries + providers
-      - FF_ENABLE_STUDIO_MD_LOADING=true           # STUDIO.md discovery and parsing
-      - FF_ENABLE_MULTI_PATTERN_EXECUTION=true     # ReACT, programmatic, orchestrator modes
-      - FF_ENABLE_USER_CAPABILITY_SELECTION=true   # UI tool/skill selectors
-      - FF_ENABLE_PROGRESSIVE_SKILL_LOADING=true   # 4-stage progressive skill loading
-      - FF_ENABLE_HITL_UNDO_ROLLBACK=true          # Reversible actions with undo
-      # -----------------------------------------------------------------------
-      # ADR-0099 Semantic Search for Tools, Skills, and Memories
-      # -----------------------------------------------------------------------
-      # Enables semantic search for dynamic capability discovery
-      # Reduces token usage by 34-64% with 50+ tools (Anthropic Tool Search Tool pattern)
-      - FF_ENABLE_SEMANTIC_TOOL_SEARCH=true      # Adds retrieve_tools node
-      - FF_ENABLE_SEMANTIC_SKILL_SEARCH=true     # Adds retrieve_skills node
-      - FF_ENABLE_SEMANTIC_MEMORY_SEARCH=true    # Adds retrieve_memories node
-      - MAX_SELECTED_TOOLS=10                    # Maximum tools to bind per request
-      - MAX_SELECTED_SKILLS=5                    # Maximum skills to bind per request
-      - MAX_RETRIEVED_MEMORIES=10                # Maximum memories to retrieve per request
-      - SEMANTIC_TOOL_SEARCH_THRESHOLD=0.5       # Minimum similarity score (0.0-1.0)
-      # -----------------------------------------------------------------------
-      # Semantic Search Audit Feature Flags (ADR-0094/0095)
-      # -----------------------------------------------------------------------
-      - FF_ENABLE_MULTI_TENANT_ISOLATION=true      # Phase 2.2: Tenant isolation in vector search
-      - FF_ENABLE_PROGRESSIVE_CONTEXT_DISCOVERY=true  # Phase 3.2: Iterative semantic search
-      - FF_ENABLE_KB_FOCUS=true                    # ADR-0094: KB focus mode
-      # -----------------------------------------------------------------------
-      # WebSocket Infrastructure (ADR-0068)
-      # -----------------------------------------------------------------------
-      - FF_ENABLE_WEBSOCKET_NEW_BASE=true          # New WebSocketBase infrastructure
-      - FF_ENABLE_WEBSOCKET_SERVER_HEARTBEAT=true  # Server-initiated heartbeat
-      - FF_ENABLE_WEBSOCKET_ENHANCED_METRICS=true  # Enhanced WebSocket metrics
-      # -----------------------------------------------------------------------
-      # AI UX Master Switches
-      # -----------------------------------------------------------------------
-      - FF_ENABLE_AI_UX=true                       # Master switch for AI UX features
-      - FF_ENABLE_AI_UX_PARALLEL_GRAPH=true        # Parallel graph execution
-      # Sandboxed code execution (Docker or K8s)
-      # NOTE: Build the sandbox image first if not available:
-      #   docker compose -f docker-compose.test.yml build agent-studio-sandbox
-      - ENABLE_CODE_EXECUTION=true
-      - CODE_EXECUTION_BACKEND=docker-engine
-      - CODE_EXECUTION_DOCKER_IMAGE=ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:latest
-      - CODE_EXECUTION_NETWORK_MODE=unrestricted
-      - CODE_EXECUTION_TIMEOUT=30
-      - CODE_EXECUTION_MEMORY_LIMIT_MB=512
-      - CODE_EXECUTION_CPU_QUOTA=1.0
-      # Visual verification / screenshot tooling
-      - ENABLE_VISUAL_VERIFICATION=true
-      # Explicitly mark sandbox tools as allowed in test stack
-      - ENABLE_SANDBOX_TOOLS=true
+      # All feature flags (FF_*) are defined in .env.test for single source of truth.
+      # They are automatically loaded via env_file directive above.
+      # Only container-specific overrides (hostnames, URLs) are defined here.
     # Map localhost to traefik-gateway so MCP server can resolve OIDC issuer URLs from Keycloak
     # OPENFGA_OIDC_ISSUER=http://localhost/authn/realms/default requires localhost to resolve to gateway
     # Same pattern as openfga-test (line 333-334) for consistent OIDC token acquisition
@@ -1452,102 +1346,102 @@ services:
           cpus: '0.25'
           memory: 512M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
-          - mcp-server
+          - agent-studio
     labels:
       - "traefik.enable=true"
-      # Route: /mcp/* -> mcp-server:8000 (MCP Server API)
+      # Route: /agent-studio/* -> agent-studio:8000 (Agent Studio API)
       # Authentication: MCP tools validate JWT tokens via auth.verify_token() (no forward-auth)
-      - "traefik.http.routers.mcp-api.rule=PathPrefix(`/mcp`)"
-      - "traefik.http.routers.mcp-api.entrypoints=web"
-      - "traefik.http.routers.mcp-api.priority=10"
-      - "traefik.http.services.mcp-api.loadbalancer.server.port=8000"
+      - "traefik.http.routers.agent-studio-api.rule=PathPrefix(`/agent-studio`)"
+      - "traefik.http.routers.agent-studio-api.entrypoints=web"
+      - "traefik.http.routers.agent-studio-api.priority=10"
+      - "traefik.http.services.agent-studio-api.loadbalancer.server.port=8000"
       # WebSocket transport settings: disable buffering for real-time connections
-      - "traefik.http.services.mcp-api.loadbalancer.responseForwarding.flushInterval=-1"
-      - "traefik.http.middlewares.mcp-strip.stripprefix.prefixes=/mcp"
+      - "traefik.http.services.agent-studio-api.loadbalancer.responseForwarding.flushInterval=-1"
+      - "traefik.http.middlewares.agent-studio-strip.stripprefix.prefixes=/agent-studio"
       # NO forward-auth - MCP protocol requires 'token' parameter in tool calls
-      - "traefik.http.routers.mcp-api.middlewares=mcp-strip"
-      # Route: /studio/* -> mcp-server:8000/studio/* (Unified Studio Frontend)
+      - "traefik.http.routers.agent-studio-api.middlewares=agent-studio-strip"
+      # Route: /studio/* -> agent-studio:8000/studio/* (Unified Studio Frontend)
       # SPA routing handled by SPAStaticFiles in FastAPI (fallback to index.html)
       # Frontend served from src/mcp_server_langgraph/studio/frontend/dist
       # Authentication: React SPA handles OAuth2 PKCE flow natively (no forward-auth)
       - "traefik.http.routers.studio.rule=PathPrefix(`/studio`)"
       - "traefik.http.routers.studio.entrypoints=web"
       - "traefik.http.routers.studio.priority=10"
-      - "traefik.http.routers.studio.service=mcp-api"
+      - "traefik.http.routers.studio.service=agent-studio-api"
       # Apply CSP headers for Sandpack (CodeSandbox iframe execution)
       - "traefik.http.routers.studio.middlewares=sandpack-csp@docker"
       # NO forward-auth - SPA implements OAuth2 Authorization Code + PKCE flow
       # NO strip - FastAPI serves /studio/* directly
-      # Route: /login -> mcp-server:8000/login (Native Login Page - NO AUTH)
+      # Route: /login -> agent-studio:8000/login (Native Login Page - NO AUTH)
       # Native login page bypasses forward-auth for seamless user experience
       - "traefik.http.routers.login.rule=Path(`/login`)"
       - "traefik.http.routers.login.entrypoints=web"
       - "traefik.http.routers.login.priority=100"
-      - "traefik.http.routers.login.service=mcp-api"
+      - "traefik.http.routers.login.service=agent-studio-api"
       # NO forward-auth middleware - login page is publicly accessible
-      # Route: /auth/callback -> mcp-server (NO AUTH for OAuth2 callback)
+      # Route: /auth/callback -> agent-studio (NO AUTH for OAuth2 callback)
       # OAuth2 Authorization Code + PKCE callback page (receives tokens in URL fragment)
       - "traefik.http.routers.auth-callback.rule=Path(`/auth/callback`)"
       - "traefik.http.routers.auth-callback.entrypoints=web"
       - "traefik.http.routers.auth-callback.priority=100"
-      - "traefik.http.routers.auth-callback.service=mcp-api"
+      - "traefik.http.routers.auth-callback.service=agent-studio-api"
       # NO forward-auth middleware - callback page is publicly accessible (tokens in fragment)
-      # Route: /studio/assets/* -> mcp-server (NO AUTH for static assets)
+      # Route: /studio/assets/* -> agent-studio (NO AUTH for static assets)
       # Frontend JS/CSS assets needed for login page (served from /studio/assets)
       - "traefik.http.routers.assets.rule=PathPrefix(`/studio/assets`) || PathPrefix(`/assets`)"
       - "traefik.http.routers.assets.entrypoints=web"
       - "traefik.http.routers.assets.priority=100"
-      - "traefik.http.routers.assets.service=mcp-api"
+      - "traefik.http.routers.assets.service=agent-studio-api"
       # NO forward-auth middleware - static assets are publicly accessible
-      # Route: /sounds/* -> mcp-server (NO AUTH for alert sounds)
+      # Route: /sounds/* -> agent-studio (NO AUTH for alert sounds)
       # Alert sound files (critical-alert.wav, etc.) used by useAlertSound hook
       - "traefik.http.routers.sounds.rule=PathPrefix(`/sounds`)"
       - "traefik.http.routers.sounds.entrypoints=web"
       - "traefik.http.routers.sounds.priority=100"
-      - "traefik.http.routers.sounds.service=mcp-api"
+      - "traefik.http.routers.sounds.service=agent-studio-api"
       # NO forward-auth middleware - sound assets are publicly accessible
-      # Route: /api/v1/auth/* -> mcp-server (NO AUTH)
+      # Route: /api/v1/auth/* -> agent-studio (NO AUTH)
       # Native OAuth2 endpoints (login, logout, callback, refresh, introspect, etc.)
       # These endpoints handle Keycloak OAuth2 flows directly without traefik-forward-auth
       - "traefik.http.routers.api-auth.rule=PathPrefix(`/api/v1/auth`)"
       - "traefik.http.routers.api-auth.entrypoints=web"
       - "traefik.http.routers.api-auth.priority=100"
-      - "traefik.http.routers.api-auth.service=mcp-api"
+      - "traefik.http.routers.api-auth.service=agent-studio-api"
       # NO forward-auth middleware - OAuth2 endpoints are publicly accessible
-      # Route: /api/v1/health/* -> mcp-server (NO AUTH)
+      # Route: /api/v1/health/* -> agent-studio (NO AUTH)
       # Health endpoints must be publicly accessible for Kubernetes probes and monitoring
       - "traefik.http.routers.api-health.rule=PathPrefix(`/api/v1/health`)"
       - "traefik.http.routers.api-health.entrypoints=web"
       - "traefik.http.routers.api-health.priority=100"
-      - "traefik.http.routers.api-health.service=mcp-api"
+      - "traefik.http.routers.api-health.service=agent-studio-api"
       # NO forward-auth middleware - health endpoints are publicly accessible
-      # Route: /api/v1/identity-providers -> mcp-server (NO AUTH)
+      # Route: /api/v1/identity-providers -> agent-studio (NO AUTH)
       # Identity providers endpoint must be publicly accessible for login page
       # The login page needs to fetch available IdPs BEFORE user authentication
       - "traefik.http.routers.api-idp.rule=PathPrefix(`/api/v1/identity-providers`)"
       - "traefik.http.routers.api-idp.entrypoints=web"
       - "traefik.http.routers.api-idp.priority=100"
-      - "traefik.http.routers.api-idp.service=mcp-api"
+      - "traefik.http.routers.api-idp.service=agent-studio-api"
       # NO forward-auth middleware - identity providers endpoint is publicly accessible
-      # Route: /api/v1/ws/* -> mcp-server:8000/api/v1/ws/* (WebSocket endpoints)
+      # Route: /api/v1/ws/* -> agent-studio:8000/api/v1/ws/* (WebSocket endpoints)
       # Dedicated WebSocket router with higher priority for real-time connections
       # Frontend hooks connect to /api/v1/ws/notifications, /api/v1/ws/alerts, etc.
       # Authentication: WebSocket auth via token query param (validated by backend)
       - "traefik.http.routers.api-ws.rule=PathPrefix(`/api/v1/ws`)"
       - "traefik.http.routers.api-ws.entrypoints=web"
       - "traefik.http.routers.api-ws.priority=15"
-      - "traefik.http.routers.api-ws.service=mcp-api"
+      - "traefik.http.routers.api-ws.service=agent-studio-api"
       # NO forward-auth - WebSocket handles auth via token query param
       # NO strip - FastAPI serves /api/v1/ws/* directly
-      # Route: /api/* -> mcp-server:8000/api/* (API endpoints for frontend)
+      # Route: /api/* -> agent-studio:8000/api/* (API endpoints for frontend)
       # This allows the frontend at /studio to call /api/v1/* endpoints directly
       # Authentication: JWT validation via AuthRequestMiddleware (no forward-auth)
       - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
       - "traefik.http.routers.api.entrypoints=web"
       - "traefik.http.routers.api.priority=10"
-      - "traefik.http.routers.api.service=mcp-api"
+      - "traefik.http.routers.api.service=agent-studio-api"
       # NO forward-auth - API endpoints validate JWT tokens from Authorization header
       # NO strip - FastAPI serves /api/* directly
       # Route: / -> redirect to /login (Native Login entry point)
@@ -1560,22 +1454,22 @@ services:
       - "traefik.http.middlewares.root-redirect.redirectregex.regex=.*"
       - "traefik.http.middlewares.root-redirect.redirectregex.replacement=/login"
       - "traefik.http.middlewares.root-redirect.redirectregex.permanent=false"
-      - "traefik.http.routers.root.service=mcp-api"
-      # Route: /ws/* -> mcp-server:8000/ws/* (WebSocket endpoints)
+      - "traefik.http.routers.root.service=agent-studio-api"
+      # Route: /ws/* -> agent-studio:8000/ws/* (WebSocket endpoints)
       # WebSocket connections for real-time notifications and updates
       # Authentication: WebSocket auth via token query param or header
       - "traefik.http.routers.ws.rule=PathPrefix(`/ws`)"
       - "traefik.http.routers.ws.entrypoints=web"
       - "traefik.http.routers.ws.priority=10"
-      - "traefik.http.routers.ws.service=mcp-api"
+      - "traefik.http.routers.ws.service=agent-studio-api"
       # NO forward-auth - WebSocket handles auth via token param
       # NO strip - FastAPI serves /ws/* directly
-      # Route: /health/* -> mcp-server:8000/health/* (Health endpoints)
+      # Route: /health/* -> agent-studio:8000/health/* (Health endpoints)
       # Kubernetes probes and monitoring tools access /health/live, /health/ready, /health/startup
       - "traefik.http.routers.health.rule=PathPrefix(`/health`)"
       - "traefik.http.routers.health.entrypoints=web"
       - "traefik.http.routers.health.priority=100"
-      - "traefik.http.routers.health.service=mcp-api"
+      - "traefik.http.routers.health.service=agent-studio-api"
       # NO forward-auth middleware - health endpoints are publicly accessible
 
   # ==============================================================================
@@ -1619,6 +1513,8 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      # Default theme: dark (matches Agent Studio design system)
+      - GF_USERS_DEFAULT_THEME=dark
       # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
       # Reference: https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#log
       - GF_LOG_MODE=console
@@ -1715,7 +1611,7 @@ services:
           cpus: '0.05'
           memory: 128M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - grafana
     labels:
@@ -1751,9 +1647,9 @@ services:
       - sh
       - -c
       - |
-        mkdir -p /tmp/loki/chunks /tmp/loki/rules /tmp/loki/ruler /tmp/loki/compactor
+        mkdir -p /tmp/loki/chunks /tmp/loki/rules/fake /tmp/loki/ruler /tmp/loki/compactor
         chown -R 10001:10001 /tmp/loki
-        echo "Loki volume permissions set (UID 10001)"
+        echo "Loki volume permissions set (UID 10001, tenant: fake)"
     volumes:
       - loki-data:/tmp/loki
     deploy:
@@ -1765,7 +1661,7 @@ services:
           cpus: '0.01'
           memory: 8M
     networks:
-      - mcp-test-network
+      - agent-studio-test-network
 
   tempo-init:
     image: busybox:1.37
@@ -1789,7 +1685,7 @@ services:
           cpus: '0.01'
           memory: 8M
     networks:
-      - mcp-test-network
+      - agent-studio-test-network
 
   mimir-init:
     image: busybox:1.37
@@ -1813,7 +1709,7 @@ services:
           cpus: '0.01'
           memory: 8M
     networks:
-      - mcp-test-network
+      - agent-studio-test-network
 
   grafana-init:
     image: busybox:1.37
@@ -1837,7 +1733,7 @@ services:
           cpus: '0.01'
           memory: 8M
     networks:
-      - mcp-test-network
+      - agent-studio-test-network
 
   # ==============================================================================
   # LOG STORAGE (Loki)
@@ -1862,6 +1758,9 @@ services:
     volumes:
       - ./docker/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
       - loki-data:/tmp/loki
+      # Mount alerting rules under "fake" tenant (auth_enabled: false uses "fake")
+      # Reference: https://grafana.com/docs/loki/latest/alert/#ruler
+      - ./docker/loki/rules:/tmp/loki/rules/fake:ro
     healthcheck:
       # NOTE: Loki 3.6.2 uses distroless image with no shell utilities (no bash, wget, curl)
       # Healthcheck disabled; service is still accessible on port 3100
@@ -1877,7 +1776,7 @@ services:
           cpus: '0.1'
           memory: 256M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - loki
     labels:
@@ -1931,7 +1830,7 @@ services:
           cpus: '0.1'
           memory: 256M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - tempo
     labels:
@@ -1986,7 +1885,7 @@ services:
           cpus: '0.1'
           memory: 256M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - mimir
     labels:
@@ -2054,7 +1953,7 @@ services:
           cpus: '0.1'
           memory: 256M
     networks:
-      mcp-test-network:
+      agent-studio-test-network:
         aliases:
           - alloy
     labels:
@@ -2094,98 +1993,10 @@ services:
   # See: CHANGELOG.md [Unreleased] for full consolidation details
 
   # ==============================================================================
-  # OPENFGA PLAYGROUND AUTH PROXY (ADR-0068)
-  # ==============================================================================
-  # Protects OpenFGA Playground with Keycloak + OpenFGA authorization
-  # Users must have 'admin' permission on 'authz:playground' to access
-  #
-  # Authentication flow:
-  # 1. User accesses /playground with JWT token
-  # 2. authz-proxy validates JWT via Keycloak JWKS
-  # 3. authz-proxy checks OpenFGA for admin permission
-  # 4. If authorized, request is proxied to OpenFGA Playground
-
-  authz-proxy-test:
-    # RESILIENCE: Auto-restart on failure for authorization proxy
-    restart: unless-stopped
-    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-authz-proxy:latest
-    # OPTIMIZATION: Use pre-built GHCR image when available, build only if missing
-    # For active development, use: docker compose build authz-proxy-test
-    pull_policy: if_not_present
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.authz-proxy
-      tags:
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-authz-proxy:latest
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-authz-proxy:local
-    depends_on:
-      keycloak-test:
-        condition: service_healthy
-      openfga-seed-test:
-        condition: service_completed_successfully  # Wait for tuples to be seeded
-      # OBSERVABILITY: Ensure OTLP endpoint is ready for telemetry from first request
-      alloy-test:
-        condition: service_healthy
-    ports:
-      - "9004:8003"  # Auth proxy port (offset +1001 from internal port)
-    env_file:
-      - .env.test
-    environment:
-      # Docker networking values (container hostnames require compose-level resolution)
-      # Note: KEYCLOAK_REALM comes from .env.test (env_file above)
-      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
-      - OPENFGA_API_URL=http://openfga-test:8080
-      # OpenFGA Authentication: OIDC (Defense-in-Depth Security)
-      # authz-proxy obtains OIDC tokens from Keycloak via client credentials grant
-      # OpenFGA server validates these tokens (authn=oidc)
-      # Note: OPENFGA_OIDC_CLIENT_ID and OPENFGA_OIDC_CLIENT_SECRET come from .env.test
-      - OPENFGA_PLAYGROUND_URL=http://openfga-test:3000
-      # OpenTelemetry configuration for distributed tracing
-      # Alloy receives OTLP telemetry and forwards to Tempo (traces), Mimir (metrics), Loki (logs)
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
-      - OTEL_SERVICE_NAME=authz-proxy-test
-      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=agent-studio,deployment.environment=test
-      - LOG_FORMAT=json
-      # Disable console span/metric export (send to OTLP only, reduces log noise)
-      - ENABLE_CONSOLE_EXPORT=false
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8003/api/authz-proxy/health"]
-      interval: 10s  # Reduced from 5s to minimize log noise
-      timeout: 5s
-      retries: 20  # Increased to tolerate Keycloak OIDC endpoint delays (200s max with 10s interval)
-      start_period: 30s  # Allow time for OIDC token acquisition from Keycloak
-    init: true
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          cpus: '0.05'
-          memory: 128M
-    networks:
-      mcp-test-network:
-        aliases:
-          - authz-proxy
-    labels:
-      - "traefik.enable=true"
-      # Route: /playground/* -> authz-proxy:8003 -> OpenFGA Playground
-      # NOTE: This route is INACTIVE when OPENFGA_PLAYGROUND_ENABLED=false (OIDC mode)
-      # OpenFGA Playground doesn't support OIDC authentication
-      # Route preserved for non-OIDC environments where Playground can be enabled
-      - "traefik.http.routers.openfga-playground.rule=PathPrefix(`/playground`)"
-      - "traefik.http.routers.openfga-playground.entrypoints=web"
-      - "traefik.http.routers.openfga-playground.priority=12"
-      - "traefik.http.services.openfga-playground.loadbalancer.server.port=8003"
-      - "traefik.http.middlewares.openfga-playground-strip.stripprefix.prefixes=/playground"
-      - "traefik.http.routers.openfga-playground.middlewares=openfga-playground-strip"
-      # NOTE: No forward-auth - authz-proxy handles JWT validation and OpenFGA permission checks
-
-  # ==============================================================================
   # AGENT STUDIO SANDBOX (Code Execution Runtime)
   # ==============================================================================
   # Sandbox image for high-risk tools (bash, web_fetch, screenshot, computer-use)
-  # Used by the code execution engine in mcp-server-test
+  # Used by the code execution engine in agent-studio-test
   #
   # This is a BUILD-ONLY service - it doesn't run as a container in the compose stack.
   # The MCP server spawns sandbox containers on-demand using Docker API.
@@ -2194,23 +2005,25 @@ services:
   # Reference: docker/Dockerfile.sandbox
 
   agent-studio-sandbox:
-    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:latest
-    pull_policy: if_not_present
+    image: ghcr.io/vishnu2kmohan/agent-studio-sandbox:latest
+    # LOCAL DEV: Always build locally (GHCR images not published for local dev)
+    # CI: Uses pre-built images via separate workflow
+    pull_policy: build
     build:
       context: .
       dockerfile: docker/Dockerfile.sandbox
       tags:
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:latest
-        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:local
+        - ghcr.io/vishnu2kmohan/agent-studio-sandbox:latest
+        - ghcr.io/vishnu2kmohan/agent-studio-sandbox:local
     # This service is NOT meant to run - it's a build target only
-    # The actual sandbox containers are spawned by mcp-server-test via Docker API
+    # The actual sandbox containers are spawned by agent-studio-test via Docker API
     profiles:
       - build-only
 
 networks:
-  mcp-test-network:
+  agent-studio-test-network:
     driver: bridge
-    name: mcp-test-network
+    name: agent-studio-test-network
 
 # ==============================================================================
 # NAMED VOLUMES FOR DATA PERSISTENCE

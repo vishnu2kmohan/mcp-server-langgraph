@@ -141,7 +141,7 @@ The sample tuples configure three test users with different permission levels:
 
 The `openfga-seed-test` Docker container seeds the authorization data:
 
-1. Creates store `mcp-server-langgraph-test`
+1. Creates store `agent-studio-openfga-store-test`
 2. Uploads `model.json`
 3. Writes tuples from `sample-tuples.json`
 4. Verifies permissions work correctly

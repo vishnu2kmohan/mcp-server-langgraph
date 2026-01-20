@@ -1,0 +1,1210 @@
+/**
+ * Agent Studio Login Theme - Custom CSS
+ *
+ * Applies the MCP Server LangGraph design system to Keycloak login pages.
+ * Uses PatternFly 5 CSS custom properties for theming.
+ *
+ * Design System Source:
+ *   src/mcp_server_langgraph/studio/frontend/src/design-system/tokens.ts
+ *
+ * PatternFly 5 Variables Reference:
+ *   https://www.patternfly.org/v5/tokens/all-patternfly-tokens
+ *
+ * Keycloak Theming Reference:
+ *   https://www.keycloak.org/ui-customization/themes
+ */
+
+/* =============================================================================
+ * DESIGN TOKENS
+ * =============================================================================
+ * All custom properties for the login page - always dark theme.
+ * Flat, minimal design - NO nested boxes, NO borders, NO underlines.
+ */
+
+:root {
+  /* ==========================================================================
+   * RADIX SLATE DARK MODE COLORS
+   * ==========================================================================
+   * These match the React app's design system exactly.
+   * Source: src/mcp_server_langgraph/studio/frontend/src/index.css (.dark section)
+   * ========================================================================== */
+
+  /* Page backgrounds - Radix Slate dark mode (neutral-1 to neutral-2) */
+  --kc-page-bg-start: #111113;  /* slate-1 dark */
+  --kc-page-bg-end: #18191b;    /* slate-2 dark */
+
+  /* Card - matches React LoginPage: bg-neutral-2 border border-neutral-5 */
+  --kc-card-bg: #18191b;        /* slate-2 dark */
+  --kc-card-border: #2e3135;    /* slate-5 dark */
+
+  /* Input fields - Radix slate-3 with opacity for subtle background */
+  --kc-input-bg: rgba(33, 34, 37, 0.8);  /* slate-3 (#212225) with opacity */
+  --kc-input-text: #edeef0;     /* slate-12 dark */
+  --kc-input-placeholder: #696e77;  /* slate-9 dark */
+
+  /* IdP buttons - Radix slate dark mode (matches React LoginPage) */
+  --kc-idp-btn-bg: #212225;     /* slate-3 dark - matches bg-neutral-3 */
+  --kc-idp-btn-hover: #272a2d;  /* slate-4 dark - matches hover:bg-neutral-4 */
+
+  /* Text colors - Radix slate dark mode */
+  --kc-text-primary: #edeef0;   /* slate-12 dark */
+  --kc-text-secondary: #b0b4ba; /* slate-11 dark */
+  --kc-text-muted: #777b84;     /* slate-10 dark */
+
+  /* Primary button - Radix violet-9/10 (matches design system) */
+  --kc-btn-primary-bg: #6e56cf;   /* violet-9 */
+  --kc-btn-primary-hover: #7c66dc; /* violet-10 */
+  --kc-btn-primary-text: #ffffff;
+
+  /* Focus ring - violet alpha for consistency */
+  --kc-focus-ring: rgba(110, 86, 207, 0.5);
+
+  /* Links - Radix violet-11 dark */
+  --kc-link-color: #baa7ff;     /* violet-11 dark */
+  --kc-link-hover: #e2ddfe;     /* violet-12 dark */
+
+  /* Dividers - Radix slate-6 dark */
+  --kc-divider: #363a3f;        /* slate-6 dark */
+
+  /* Alerts - using ruby (error) colors from Radix */
+  --kc-alert-error-bg: rgba(100, 23, 35, 0.8);  /* ruby-4 dark with opacity */
+  --kc-alert-error-border: #e5484d;  /* ruby-9 */
+  --kc-alert-error-text: #feecee;    /* ruby-12 dark */
+
+  /* ==========================================================================
+   * TYPOGRAPHY - Aligned with Design System
+   * ==========================================================================
+   * Font family: Inter (primary), with system fallbacks
+   * Source: tailwind.config.ts fontFamily.sans
+   *
+   * Font Size Scale (matches CSS variables in index.css):
+   * - xs: 0.75rem (12px)
+   * - sm: 0.875rem (14px)
+   * - base: 1rem (16px)
+   * - lg: 1.125rem (18px)
+   * - xl: 1.25rem (20px)
+   * - 2xl: 1.5rem (24px)
+   *
+   * Font Weights:
+   * - normal: 400
+   * - medium: 500
+   * - semibold: 600
+   * - bold: 700
+   * ========================================================================== */
+
+  /* Primary font stack - matches React app */
+  --kc-font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Font size tokens */
+  --kc-font-size-xs: 0.75rem;      /* 12px - footer, hints */
+  --kc-font-size-sm: 0.875rem;     /* 14px - labels, subtitle */
+  --kc-font-size-base: 1rem;       /* 16px - body, inputs */
+  --kc-font-size-lg: 1.125rem;     /* 18px - large body */
+  --kc-font-size-xl: 1.25rem;      /* 20px - subheadings */
+  --kc-font-size-2xl: 1.5rem;      /* 24px - title */
+
+  /* Font weight tokens */
+  --kc-font-weight-normal: 400;
+  --kc-font-weight-medium: 500;
+  --kc-font-weight-semibold: 600;
+  --kc-font-weight-bold: 700;
+
+  /* Line height tokens */
+  --kc-line-height-tight: 1.25;
+  --kc-line-height-normal: 1.5;
+  --kc-line-height-relaxed: 1.625;
+
+  /* ==========================================================================
+   * SPACING TOKENS - Aligned with Tailwind 4px base unit
+   * ==========================================================================
+   * Consistent spacing creates visual rhythm. Use these tokens for all margins
+   * and paddings to ensure alignment with the React app's design system.
+   *
+   * Scale: 0.25rem (4px), 0.5rem (8px), 0.75rem (12px), 1rem (16px),
+   *        1.25rem (20px), 1.5rem (24px), 2rem (32px)
+   * ========================================================================== */
+
+  --kc-space-1: 0.25rem;    /* 4px - micro spacing */
+  --kc-space-2: 0.5rem;     /* 8px - tight spacing */
+  --kc-space-3: 0.75rem;    /* 12px - compact spacing */
+  --kc-space-4: 1rem;       /* 16px - standard spacing */
+  --kc-space-5: 1.25rem;    /* 20px - comfortable spacing */
+  --kc-space-6: 1.5rem;     /* 24px - section spacing */
+  --kc-space-8: 2rem;       /* 32px - major section spacing */
+
+  /* ==========================================================================
+   * BORDER RADIUS TOKENS - Aligned with STYLE.md
+   * ==========================================================================
+   * From STYLE.md:
+   * - rounded (4px) / rounded-md (6px): buttons, inputs
+   * - rounded-lg (8px): cards, dialogs
+   * - rounded-xl (12px): large cards, panels
+   * - rounded-2xl (16px): hero cards
+   * - rounded-full (9999px): pills, avatars
+   * ========================================================================== */
+
+  --kc-radius-sm: 0.125rem;   /* 2px - subtle */
+  --kc-radius-DEFAULT: 0.25rem; /* 4px - rounded */
+  --kc-radius-md: 0.375rem;   /* 6px - rounded-md (inputs, buttons) */
+  --kc-radius-lg: 0.5rem;     /* 8px - rounded-lg (cards) */
+  --kc-radius-xl: 0.75rem;    /* 12px - rounded-xl */
+  --kc-radius-2xl: 1rem;      /* 16px - rounded-2xl (logo) */
+  --kc-radius-full: 9999px;   /* pills, avatars */
+
+  /* ==========================================================================
+   * SHADOW TOKENS - Aligned with STYLE.md
+   * ==========================================================================
+   * From STYLE.md:
+   * - shadow-soft (~shadow-sm): subtle elevation for cards
+   * - shadow-md: default cards, dropdowns
+   * - shadow-lg: popovers, tooltips
+   * ========================================================================== */
+
+  --kc-shadow-soft: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --kc-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --kc-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+  /* ==========================================================================
+   * TRANSITION TOKENS - Aligned with STYLE.md
+   * ==========================================================================
+   * From STYLE.md:
+   * - Hover state: 100-150ms ease-out
+   * - Focus ring: 100ms ease-out
+   * - Dropdown open: 150-200ms ease-out
+   * ========================================================================== */
+
+  --kc-duration-fast: 100ms;
+  --kc-duration-normal: 150ms;
+  --kc-duration-slow: 200ms;
+  --kc-easing-out: cubic-bezier(0, 0, 0.2, 1);
+  --kc-easing-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ==========================================================================
+   * SIZING TOKENS - Aligned with STYLE.md
+   * ==========================================================================
+   * From STYLE.md:
+   * - min-h-touch: 44px (WCAG AAA touch target)
+   * - Input height: 40px (2.5rem) = min-h-10
+   * - Button height: 40px (2.5rem) = min-h-10
+   * ========================================================================== */
+
+  --kc-size-input: 2.5rem;      /* 40px - standard input height */
+  --kc-size-touch: 2.75rem;     /* 44px - WCAG AAA touch target */
+  --kc-size-touch-min: 2rem;    /* 32px - WCAG AA minimum touch target */
+  --kc-size-icon: 1rem;         /* 16px - standard icon size */
+  --kc-size-icon-lg: 1.25rem;   /* 20px - large icon size */
+  --kc-size-logo: 4rem;         /* 64px - logo dimensions */
+  --kc-size-card-max: 25rem;    /* 400px - card max width */
+}
+
+/* =============================================================================
+ * BASE RESET - Override PatternFly/Keycloak defaults completely
+ * =============================================================================
+ */
+
+/* NUCLEAR OPTION: Remove ALL borders from form elements */
+#kc-form input,
+#kc-form button,
+#kc-form .pf-c-form-control,
+#kc-form .pf-v5-c-form-control,
+#kc-form .pf-c-input-group,
+#kc-form .pf-v5-c-input-group,
+#kc-form .pf-c-button,
+#kc-form .pf-v5-c-button,
+.pf-c-login input,
+.pf-c-login button,
+.pf-v5-c-login input,
+.pf-v5-c-login button {
+  border: none !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  outline: none !important;
+}
+
+html,
+body {
+  min-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: linear-gradient(135deg, var(--kc-page-bg-start) 0%, var(--kc-page-bg-end) 100%) !important;
+  font-family: var(--kc-font-family) !important;
+}
+
+/* =============================================================================
+ * MAIN LOGIN CONTAINER - Full viewport centered single column
+ * =============================================================================
+ * Override ALL grid/flex layouts from PatternFly to create a simple centered layout.
+ */
+
+/* Main login wrapper - reset all grid properties */
+.pf-c-login,
+.pf-v5-c-login,
+.login-pf-page,
+#kc-login,
+body.kc-login {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  padding: var(--kc-space-8) !important;  /* 32px */
+  box-sizing: border-box !important;
+  background: transparent !important;
+  /* Reset any grid layout */
+  grid-template-columns: none !important;
+  grid-template-rows: none !important;
+  grid-template-areas: none !important;
+}
+
+/* Container - single column, no grid */
+.pf-c-login__container,
+.pf-v5-c-login__container,
+#kc-container,
+#kc-container-wrapper,
+.container-fluid,
+.container {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  max-width: var(--kc-size-card-max) !important;  /* 400px */
+  margin: 0 auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+  /* Reset grid */
+  grid-template-columns: none !important;
+  grid-template-rows: none !important;
+  grid-template-areas: none !important;
+}
+
+/* =============================================================================
+ * HEADER - Logo and "Agent Studio" title
+ * =============================================================================
+ */
+
+/* Header wrapper - balanced spacing for visual symmetry
+ * Spacing: logo (64px) + gap (16px) + title + gap (8px) + subtitle + gap (24px) = form
+ */
+.pf-c-login__header,
+.pf-v5-c-login__header,
+#kc-header {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin-bottom: var(--kc-space-6) !important;  /* 24px - section spacing before form */
+  background: transparent !important;
+  order: -1 !important;
+  grid-area: unset !important;
+}
+
+/* Brand/header wrapper - displays "Agent Studio" branding
+ * Uses CSS to override the Keycloak realm name with consistent branding.
+ * The actual realm name is hidden and replaced with "Agent Studio".
+ */
+#kc-header-wrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 0 !important; /* Hide original realm name text */
+  color: transparent !important;
+}
+
+/* Display "Agent Studio" title and "Sign in to continue" subtitle */
+#kc-header-wrapper::after {
+  content: "Agent Studio" !important;
+  display: block !important;
+  font-size: var(--kc-font-size-2xl) !important;  /* 24px - matches text-2xl */
+  font-weight: var(--kc-font-weight-bold) !important;  /* 700 - matches font-bold */
+  line-height: var(--kc-line-height-tight) !important;
+  color: var(--kc-text-primary) !important;
+  margin-top: 0 !important;
+}
+
+/* Header section - add subtitle via pf-c-login__header or kc-header */
+.pf-c-login__header::after,
+.pf-v5-c-login__header::after,
+#kc-header::after {
+  content: "Sign in to continue" !important;
+  display: block !important;
+  font-size: var(--kc-font-size-sm) !important;  /* 14px - matches text-sm */
+  font-weight: var(--kc-font-weight-normal) !important;  /* 400 */
+  line-height: var(--kc-line-height-normal) !important;
+  color: var(--kc-text-muted) !important;
+  margin-top: var(--kc-space-2) !important;  /* 8px - tight spacing between title and subtitle */
+  text-align: center !important;
+}
+
+/* Icon ABOVE the realm name - displays the project logo SVG directly
+ * The icon.svg already has its own gradient background (#3b82f6 to #1d4ed8),
+ * so we don't add any background-color here to avoid color mismatch.
+ *
+ * Sizing: 64px logo with rounded-2xl (16px) corners
+ * Spacing: 16px bottom margin before title
+ */
+#kc-header-wrapper::before {
+  content: "" !important;
+  display: block !important;
+  width: var(--kc-size-logo) !important;  /* 64px */
+  height: var(--kc-size-logo) !important;  /* 64px */
+  background-image: url("../img/icon.svg") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: var(--kc-size-logo) var(--kc-size-logo) !important;  /* 64px */
+  border-radius: var(--kc-radius-2xl) !important;  /* 16px - rounded-2xl for logo */
+  margin: 0 auto var(--kc-space-4) auto !important;  /* 16px bottom margin */
+  flex-shrink: 0 !important;
+  box-shadow: var(--kc-shadow-lg) !important;  /* shadow-lg token */
+  overflow: hidden !important;
+}
+
+/* Hide PatternFly brand images if they exist */
+.pf-c-brand,
+.pf-v5-c-brand,
+.pf-c-brand img,
+.pf-v5-c-brand img {
+  display: none !important;
+}
+
+/* =============================================================================
+ * LOGIN CARD - The main form container
+ * =============================================================================
+ */
+
+/* Main card - Flat borderless design (no nested boxes) */
+.pf-c-login__main,
+.pf-v5-c-login__main,
+#kc-form-wrapper,
+#kc-content-wrapper,
+.pf-c-card,
+.pf-v5-c-card {
+  width: 100% !important;
+  max-width: var(--kc-size-card-max) !important;  /* 400px */
+  margin: 0 auto !important;
+  padding: var(--kc-space-8) !important;  /* 32px */
+  background: transparent !important;  /* No card background - flat design */
+  background-color: transparent !important;
+  border: none !important;  /* No border */
+  border-radius: 0 !important;
+  box-shadow: none !important;  /* No shadow - eliminates "nested box" look */
+  backdrop-filter: none !important;
+  box-sizing: border-box !important;
+  grid-area: unset !important;
+
+  /* Override ALL PatternFly CSS variables that could create borders/shadows */
+  --pf-v5-c-card--BackgroundColor: transparent !important;
+  --pf-v5-c-card--BoxShadow: none !important;
+  --pf-v5-c-card--BorderWidth: 0 !important;
+  --pf-v5-c-card--BorderRadius: 0 !important;
+  --pf-v5-c-login__main--BackgroundColor: transparent !important;
+  --pf-v5-c-login__main--BoxShadow: none !important;
+  --pf-c-card--BackgroundColor: transparent !important;
+  --pf-c-card--BoxShadow: none !important;
+  --pf-c-login__main--BackgroundColor: transparent !important;
+  --pf-c-login__main--BoxShadow: none !important;
+}
+
+/* Content area - use block layout to prevent flex stretching */
+#kc-content {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+}
+
+#kc-form {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* Form header - hide description, style title */
+.pf-c-login__main-header,
+.pf-v5-c-login__main-header {
+  text-align: center !important;
+  padding: 0 !important;
+  margin-bottom: var(--kc-space-6) !important;  /* 24px */
+}
+
+.pf-c-login__main-header-desc,
+.pf-v5-c-login__main-header-desc {
+  display: none !important;
+}
+
+/* Page title - HIDE redundant title (we have "Sign in to continue" in header) */
+#kc-page-title,
+.pf-c-login__main-header-title,
+.pf-v5-c-login__main-header-title,
+.pf-c-login__main-header,
+.pf-v5-c-login__main-header {
+  display: none !important;
+}
+
+/* =============================================================================
+ * FORM ELEMENTS
+ * =============================================================================
+ */
+
+/* Form body */
+.pf-c-login__main-body,
+.pf-v5-c-login__main-body,
+#kc-form-login {
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+/* Form groups - consistent spacing
+ * Gap between form fields: 20px (comfortable spacing)
+ * This creates visual separation without excessive whitespace.
+ */
+.pf-c-form__group,
+.pf-v5-c-form__group,
+.form-group {
+  margin-bottom: var(--kc-space-5) !important;  /* 20px - comfortable spacing between fields */
+}
+
+.pf-c-form__group:last-of-type,
+.pf-v5-c-form__group:last-of-type {
+  margin-bottom: 0 !important;
+}
+
+/* Labels */
+label,
+.pf-c-form__label,
+.pf-v5-c-form__label {
+  display: block !important;
+  color: var(--kc-text-secondary) !important;
+  font-weight: var(--kc-font-weight-medium) !important;  /* 500 */
+  font-size: var(--kc-font-size-sm) !important;  /* 14px */
+  line-height: var(--kc-line-height-normal) !important;
+  margin-bottom: var(--kc-space-2) !important;  /* 8px - 4px grid aligned */
+}
+
+/* Input fields - compact, clean rounded boxes
+ * CRITICAL: All inputs must have IDENTICAL dimensions for visual consistency.
+ * This includes standalone inputs AND inputs inside input-groups (password).
+ *
+ * From STYLE.md:
+ * - Border radius: rounded-md (6px) for inputs
+ * - Height: 40px (2.5rem) = min-h-10
+ * - Transitions: 150ms ease-out for focus states
+ */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="text"]:not([type]),
+.pf-c-form-control,
+.pf-v5-c-form-control,
+.pf-c-text-input-group__text-input,
+.pf-v5-c-text-input-group__text-input {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0.625rem 0.875rem !important;  /* 10px 14px - compact padding */
+  background-color: var(--kc-input-bg) !important;
+  background: var(--kc-input-bg) !important;
+  border: none !important;
+  border-radius: var(--kc-radius-md) !important;  /* 6px - rounded-md per STYLE.md */
+  color: var(--kc-input-text) !important;
+  font-family: var(--kc-font-family) !important;
+  font-size: var(--kc-font-size-base) !important;  /* 16px */
+  line-height: 1.25 !important;  /* Tighter line height for compact feel */
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: box-shadow var(--kc-duration-normal) var(--kc-easing-out) !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  min-height: var(--kc-size-input) !important;  /* 40px - consistent height */
+  height: var(--kc-size-input) !important;  /* Fixed height for perfect alignment */
+}
+
+input::placeholder,
+.pf-c-form-control::placeholder,
+.pf-v5-c-form-control::placeholder {
+  color: var(--kc-input-placeholder) !important;
+  opacity: 1 !important;
+}
+
+/* UNIVERSAL focus ring reset - remove all browser and PatternFly focus styles first */
+input:focus,
+input:focus-visible,
+input:focus-within,
+.pf-c-form-control:focus,
+.pf-v5-c-form-control:focus,
+.pf-c-form-control:focus-visible,
+.pf-v5-c-form-control:focus-visible {
+  outline: none !important;
+  outline-width: 0 !important;
+  border: none !important;
+}
+
+/* Remove any browser default focus styling */
+input:-webkit-autofill:focus,
+input:-moz-focusring {
+  outline: none !important;
+}
+
+/* STANDALONE inputs (not inside input-group) - apply focus ring directly
+ * Uses :not() to exclude inputs that are inside input-group containers
+ */
+input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__text-input):focus,
+input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__text-input):focus-visible,
+.pf-c-form-control:not(.pf-c-text-input-group__text-input):focus,
+.pf-v5-c-form-control:not(.pf-v5-c-text-input-group__text-input):focus {
+  box-shadow: 0 0 0 2px var(--kc-focus-ring) !important;
+}
+
+/* Inputs INSIDE text-input-group - NO focus ring (container handles it) */
+.pf-c-text-input-group__text-input:focus,
+.pf-v5-c-text-input-group__text-input:focus,
+.pf-c-text-input-group__text-input:focus-visible,
+.pf-v5-c-text-input-group__text-input:focus-visible,
+.pf-c-input-group input:focus,
+.pf-v5-c-input-group input:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Remove any ::after or ::before pseudo-elements that might create underlines */
+.pf-c-form-control::after,
+.pf-c-form-control::before,
+.pf-v5-c-form-control::after,
+.pf-v5-c-form-control::before,
+.pf-c-form__group::after,
+.pf-c-form__group::before,
+.pf-v5-c-form__group::after,
+.pf-v5-c-form__group::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* Input group (for password toggle) - MUST match standalone input EXACTLY
+ * The input-group container is used for password fields with visibility toggle.
+ * It must have identical dimensions to standalone inputs (username field).
+ *
+ * CRITICAL: Use overflow:visible so focus ring isn't clipped.
+ * The toggle button is positioned absolutely inside the container.
+ */
+.pf-c-input-group,
+.pf-v5-c-input-group,
+.pf-c-text-input-group,
+.pf-v5-c-text-input-group {
+  display: flex !important;
+  align-items: center !important;
+  position: relative !important;  /* For absolute positioning of toggle button */
+  width: 100% !important;
+  max-width: 100% !important;
+  background-color: var(--kc-input-bg) !important;
+  background: var(--kc-input-bg) !important;
+  border: none !important;
+  border-radius: var(--kc-radius-md) !important;  /* 6px - STYLE.md aligned */
+  overflow: visible !important;  /* CHANGED: Allow focus ring to show outside container */
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 !important;  /* No wrapper padding - input handles its own padding */
+  margin: 0 !important;
+  /* FIXED height - MUST match standalone input exactly */
+  min-height: var(--kc-size-input) !important;  /* 40px - same as standalone input */
+  height: var(--kc-size-input) !important;  /* Fixed height for perfect alignment */
+  box-sizing: border-box !important;
+
+  /* Override ALL PatternFly CSS variables that could create borders */
+  --pf-v5-c-input-group--BorderWidth: 0 !important;
+  --pf-v5-c-input-group--BorderColor: transparent !important;
+  --pf-v5-c-text-input-group--BorderWidth: 0 !important;
+  --pf-v5-c-text-input-group--BorderColor: transparent !important;
+  --pf-c-input-group--BorderWidth: 0 !important;
+  --pf-c-input-group--BorderColor: transparent !important;
+  --pf-c-text-input-group--BorderWidth: 0 !important;
+  --pf-c-text-input-group--BorderColor: transparent !important;
+}
+
+/* Text input group main wrapper - reset any extra padding */
+.pf-c-text-input-group__main,
+.pf-v5-c-text-input-group__main {
+  display: flex !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  min-height: var(--kc-size-input) !important;  /* Match standalone input min-height */
+  height: 100% !important;
+  border-radius: var(--kc-radius-md) !important;  /* Match container radius */
+  overflow: hidden !important;  /* Clip content to rounded corners */
+}
+
+/* Text input inside text-input-group - MUST match standalone input exactly */
+.pf-c-text-input-group__text-input,
+.pf-v5-c-text-input-group__text-input {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  /* Same padding as standalone input, extra right padding for toggle button */
+  padding: 0.625rem 0.875rem !important;
+  padding-right: 2.75rem !important;  /* Space for absolute-positioned toggle button */
+  min-height: var(--kc-size-input) !important;  /* Match standalone input */
+  background: transparent !important;
+  border: none !important;
+  color: var(--kc-input-text) !important;
+  font-family: var(--kc-font-family) !important;
+  font-size: var(--kc-font-size-base) !important;
+  line-height: 1.25 !important;  /* Match standalone input line-height */
+  box-sizing: border-box !important;
+}
+
+/* Input inside input-group - MUST match standalone input exactly */
+.pf-c-input-group .pf-c-form-control,
+.pf-v5-c-input-group .pf-v5-c-form-control,
+.pf-c-input-group input,
+.pf-v5-c-input-group input,
+.pf-c-text-input-group input,
+.pf-v5-c-text-input-group input {
+  /* Same styling as standalone inputs */
+  border-radius: 0 !important;  /* Container has border-radius */
+  background: transparent !important;
+  background-color: transparent !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;  /* Allow shrinking */
+  min-height: var(--kc-size-input) !important;  /* Match standalone input */
+  margin: 0 !important;
+  /* Same padding as standalone input, extra right padding for toggle button */
+  padding: 0.625rem 0.875rem !important;
+  padding-right: 2.75rem !important;  /* Space for absolute-positioned toggle button */
+  box-sizing: border-box !important;
+  transition: box-shadow var(--kc-duration-normal) var(--kc-easing-out) !important;
+}
+
+/* Focus ring on INPUT-GROUP CONTAINER when child has focus (not inner input) */
+.pf-c-input-group:focus-within,
+.pf-v5-c-input-group:focus-within,
+.pf-c-text-input-group:focus-within,
+.pf-v5-c-text-input-group:focus-within {
+  /* Outer focus ring - matches standalone input focus styling */
+  box-shadow: 0 0 0 2px var(--kc-focus-ring) !important;
+  outline: none !important;
+}
+
+/* Remove focus ring from inner input - container handles it */
+.pf-c-input-group input:focus,
+.pf-v5-c-input-group input:focus,
+.pf-c-input-group input:focus-visible,
+.pf-v5-c-input-group input:focus-visible,
+.pf-c-input-group .pf-c-form-control:focus,
+.pf-v5-c-input-group .pf-v5-c-form-control:focus,
+.pf-c-text-input-group input:focus,
+.pf-v5-c-text-input-group input:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Password visibility toggle wrapper - positioned INSIDE the input field */
+.pf-c-input-group__item,
+.pf-v5-c-input-group__item,
+.pf-c-text-input-group__utilities,
+.pf-v5-c-text-input-group__utilities {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-left: none !important;
+  box-shadow: none !important;
+  /* Position inside the input field */
+  position: absolute !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 1 !important;  /* Above the input */
+}
+
+/* Toggle button base styles */
+.pf-c-button.pf-m-control,
+.pf-v5-c-button.pf-m-control {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-left: none !important;
+  box-shadow: none !important;
+  color: var(--kc-text-muted) !important;
+  transition: color var(--kc-duration-normal) var(--kc-easing-out) !important;
+}
+
+.pf-c-button.pf-m-control:hover,
+.pf-v5-c-button.pf-m-control:hover {
+  color: var(--kc-text-secondary) !important;
+  background: transparent !important;
+}
+
+.pf-c-button.pf-m-control:focus,
+.pf-v5-c-button.pf-m-control:focus,
+.pf-c-button.pf-m-control:focus-visible,
+.pf-v5-c-button.pf-m-control:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove any dividers between input and button */
+.pf-c-input-group > *,
+.pf-v5-c-input-group > *,
+.pf-c-input-group__item::before,
+.pf-v5-c-input-group__item::before,
+.pf-c-input-group__item::after,
+.pf-v5-c-input-group__item::after {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* CRITICAL: Remove PatternFly's inset border that creates vertical separator */
+.pf-c-input-group__item,
+.pf-v5-c-input-group__item,
+.pf-c-button.pf-m-control {
+  --pf-c-button--m-control--after--BorderLeftWidth: 0 !important;
+  --pf-v5-c-button--m-control--after--BorderLeftWidth: 0 !important;
+  --pf-c-input-group__item--BorderLeftWidth: 0 !important;
+  --pf-v5-c-input-group__item--BorderLeftWidth: 0 !important;
+}
+
+/* Remove ::after pseudo-element that PatternFly uses for left border */
+.pf-c-button.pf-m-control::after,
+.pf-v5-c-button.pf-m-control::after,
+.pf-c-input-group__item::after,
+.pf-v5-c-input-group__item::after {
+  display: none !important;
+  border: none !important;
+  border-left: none !important;
+  content: none !important;
+}
+
+/* Password toggle icon styling - consistent sizing for both states */
+.pf-c-button.pf-m-control svg,
+.pf-v5-c-button.pf-m-control svg,
+.pf-c-button.pf-m-control .pf-v5-c-icon,
+.pf-v5-c-button.pf-m-control .pf-v5-c-icon,
+.pf-c-button.pf-m-control i,
+.pf-v5-c-button.pf-m-control i {
+  width: var(--kc-size-icon) !important;  /* 16px */
+  height: var(--kc-size-icon) !important;  /* 16px */
+  font-size: var(--kc-size-icon) !important;  /* 16px */
+  color: inherit !important;
+  /* Prevent layout shift between different icons */
+  flex-shrink: 0 !important;
+}
+
+/* Ensure toggle button has FIXED width to prevent layout shift between icon states
+ * The Eye and EyeOff icons may have slightly different widths, so we fix the button size.
+ */
+.pf-c-button.pf-m-control,
+.pf-v5-c-button.pf-m-control {
+  /* Fixed dimensions to prevent any shift */
+  width: var(--kc-size-input) !important;  /* 40px */
+  min-width: var(--kc-size-input) !important;  /* 40px */
+  max-width: var(--kc-size-input) !important;  /* 40px */
+  height: 100% !important;
+  min-height: var(--kc-size-touch-min) !important;  /* 32px - WCAG AA compliant hit target */
+  /* Centered content */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  /* Positioning */
+  position: absolute !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  transform: none !important;
+  /* No padding variance */
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+}
+
+/* =============================================================================
+ * PASSWORD VISIBILITY ICON FIX
+ * =============================================================================
+ * PatternFly convention: eye-slash when visible (meaning "click to hide")
+ * User expectation: open eye when visible, slashed eye when hidden
+ *
+ * Solution: Completely hide the SVG and use CSS ::before with inline SVG
+ * background-image to render the correct icon based on aria-label state.
+ *
+ * Icon states:
+ * - aria-label="Hide password" = password IS visible → show OPEN eye
+ * - aria-label="Show password" = password IS hidden → show SLASHED eye
+ */
+
+/* Base: position the button for pseudo-element replacement */
+.pf-c-button.pf-m-control,
+.pf-v5-c-button.pf-m-control {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Hide the original PatternFly SVG icon completely */
+.pf-c-button.pf-m-control svg,
+.pf-v5-c-button.pf-m-control svg,
+.pf-c-button.pf-m-control .pf-v5-c-icon,
+.pf-v5-c-button.pf-m-control .pf-v5-c-icon {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  position: absolute !important;
+}
+
+/* Create the replacement icon container */
+.pf-c-button.pf-m-control::before,
+.pf-v5-c-button.pf-m-control::before {
+  content: "" !important;
+  display: block !important;
+  width: var(--kc-size-icon) !important;  /* 16px */
+  height: var(--kc-size-icon) !important;  /* 16px */
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: contain !important;
+  pointer-events: none !important;
+}
+
+/* When password IS VISIBLE (aria-label="Hide password"): show OPEN eye
+ * Eye SVG from Lucide icons (open eye)
+ */
+.pf-c-button.pf-m-control[aria-label*="Hide"]::before,
+.pf-v5-c-button.pf-m-control[aria-label*="Hide"]::before,
+button[aria-label*="Hide password"]::before {
+  /* Open eye SVG - slate-10 color (#777b84) */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23777b84' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") !important;
+}
+
+/* When password IS HIDDEN (aria-label="Show password"): show SLASHED eye
+ * Eye-off SVG from Lucide icons (slashed eye)
+ */
+.pf-c-button.pf-m-control[aria-label*="Show"]::before,
+.pf-v5-c-button.pf-m-control[aria-label*="Show"]::before,
+button[aria-label*="Show password"]::before {
+  /* Slashed eye SVG - slate-10 color (#777b84) */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23777b84' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49'/%3E%3Cpath d='M14.084 14.158a3 3 0 0 1-4.242-4.242'/%3E%3Cpath d='M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143'/%3E%3Cpath d='m2 2 20 20'/%3E%3C/svg%3E") !important;
+}
+
+/* Remove any ::after pseudo-elements that might interfere */
+.pf-c-button.pf-m-control::after,
+.pf-v5-c-button.pf-m-control::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Hover states - use brighter color (slate-11 = #b0b4ba) */
+.pf-c-button.pf-m-control:hover[aria-label*="Hide"]::before,
+.pf-v5-c-button.pf-m-control:hover[aria-label*="Hide"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23b0b4ba' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") !important;
+}
+
+.pf-c-button.pf-m-control:hover[aria-label*="Show"]::before,
+.pf-v5-c-button.pf-m-control:hover[aria-label*="Show"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23b0b4ba' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49'/%3E%3Cpath d='M14.084 14.158a3 3 0 0 1-4.242-4.242'/%3E%3Cpath d='M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143'/%3E%3Cpath d='m2 2 20 20'/%3E%3C/svg%3E") !important;
+}
+
+/* Remember me checkbox */
+.pf-c-check,
+.pf-v5-c-check {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--kc-space-2) !important;  /* 8px */
+  margin: var(--kc-space-4) 0 !important;  /* 16px */
+}
+
+.pf-c-check__input,
+.pf-v5-c-check__input {
+  width: var(--kc-size-icon) !important;  /* 16px */
+  height: var(--kc-size-icon) !important;  /* 16px */
+  accent-color: var(--kc-btn-primary-bg) !important;
+}
+
+.pf-c-check__label,
+.pf-v5-c-check__label {
+  color: var(--kc-text-secondary) !important;
+  font-size: var(--kc-font-size-sm) !important;  /* 14px */
+  font-weight: var(--kc-font-weight-normal) !important;
+}
+
+/* =============================================================================
+ * BUTTONS
+ * =============================================================================
+ */
+
+/* Submit button - SAME WIDTH as inputs for visual alignment
+ * Uses identical box-sizing and width constraints as input fields.
+ */
+#kc-login,
+input[type="submit"],
+button[type="submit"],
+.pf-c-button.pf-m-primary,
+.pf-v5-c-button.pf-m-primary,
+.btn-primary {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  /* Same height as inputs for consistent alignment */
+  height: var(--kc-size-input) !important;  /* 40px */
+  min-height: var(--kc-size-input) !important;  /* 40px */
+  padding: 0.625rem var(--kc-space-4) !important;  /* 10px 16px - same vertical as inputs */
+  background-color: var(--kc-btn-primary-bg) !important;
+  border: none !important;
+  border-radius: var(--kc-radius-md) !important;  /* 6px - STYLE.md aligned */
+  color: var(--kc-btn-primary-text) !important;
+  font-family: var(--kc-font-family) !important;
+  font-size: var(--kc-font-size-base) !important;  /* 16px */
+  font-weight: var(--kc-font-weight-semibold) !important;  /* 600 */
+  line-height: var(--kc-line-height-tight) !important;
+  cursor: pointer !important;
+  transition: background-color var(--kc-duration-normal) var(--kc-easing-out) !important;
+  margin: 0 !important;  /* Container provides spacing */
+  box-sizing: border-box !important;
+}
+
+#kc-login:hover,
+input[type="submit"]:hover,
+button[type="submit"]:hover,
+.pf-c-button.pf-m-primary:hover,
+.pf-v5-c-button.pf-m-primary:hover,
+.btn-primary:hover {
+  background-color: var(--kc-btn-primary-hover) !important;
+}
+
+#kc-login:focus-visible,
+input[type="submit"]:focus-visible,
+button[type="submit"]:focus-visible {
+  outline: 2px solid var(--kc-btn-primary-bg) !important;
+  outline-offset: 2px !important;
+}
+
+/* Form buttons container - prevent flex stretching */
+#kc-form-buttons {
+  margin-top: var(--kc-space-6) !important;  /* 24px */
+  display: block !important;
+  flex: 0 0 auto !important;
+  flex-grow: 0 !important;
+  height: auto !important;
+}
+
+/* Form body and main - prevent children from stretching */
+.pf-c-login__main-body,
+.pf-v5-c-login__main-body,
+#kc-form-login,
+#kc-form {
+  display: block !important;
+  flex: 0 0 auto !important;
+  flex-grow: 0 !important;
+  height: auto !important;
+}
+
+/* Login main card - don't use flex column that stretches children */
+.pf-c-login__main,
+.pf-v5-c-login__main {
+  display: block !important;
+  height: auto !important;
+  min-height: unset !important;
+}
+
+/* =============================================================================
+ * LINKS AND OPTIONS
+ * =============================================================================
+ */
+
+/* Options below form */
+#kc-form-options,
+#kc-registration {
+  text-align: center !important;
+  margin-top: var(--kc-space-4) !important;  /* 16px */
+}
+
+a {
+  color: var(--kc-link-color) !important;
+  text-decoration: none !important;
+  transition: color var(--kc-duration-normal) var(--kc-easing-out) !important;
+}
+
+a:hover {
+  color: var(--kc-link-hover) !important;
+  text-decoration: underline !important;
+}
+
+/* =============================================================================
+ * ALERTS AND MESSAGES
+ * =============================================================================
+ */
+
+.alert,
+.pf-c-alert,
+.pf-v5-c-alert,
+.kc-feedback-text,
+#kc-error-message {
+  background-color: var(--kc-alert-error-bg) !important;
+  border: 1px solid var(--kc-alert-error-border) !important;
+  color: var(--kc-alert-error-text) !important;
+  padding: var(--kc-space-3) var(--kc-space-4) !important;  /* 12px 16px */
+  border-radius: var(--kc-radius-lg) !important;  /* 8px - alert cards */
+  margin-bottom: var(--kc-space-4) !important;  /* 16px */
+  text-align: center !important;
+  font-size: var(--kc-font-size-sm) !important;  /* 14px */
+  font-weight: var(--kc-font-weight-medium) !important;
+}
+
+/* =============================================================================
+ * SOCIAL/IDP LOGIN
+ * =============================================================================
+ */
+
+/* Social providers section - subtle divider */
+#kc-social-providers {
+  margin-top: var(--kc-space-6) !important;  /* 24px */
+  padding-top: var(--kc-space-6) !important;  /* 24px */
+  border-top: 1px solid var(--kc-divider) !important;
+  position: relative !important;
+}
+
+/* "Or continue with" text overlay on divider */
+#kc-social-providers::before {
+  content: "or continue with" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  background-color: var(--kc-card-bg) !important;
+  padding: 0 var(--kc-space-3) !important;  /* 12px */
+  font-size: var(--kc-font-size-xs) !important;  /* 12px */
+  font-weight: var(--kc-font-weight-normal) !important;
+  color: var(--kc-text-muted) !important;
+  text-transform: lowercase !important;
+}
+
+#kc-social-providers ul {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--kc-space-3) !important;  /* 12px */
+}
+
+#kc-social-providers li {
+  margin: 0 !important;
+}
+
+/* SSO IdP buttons (GitHub, Google, Microsoft, etc.) - clean borderless design */
+.pf-c-button.pf-m-link,
+.pf-v5-c-button.pf-m-link,
+#kc-social-providers a,
+.social-link-style {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--kc-space-3) !important;  /* 12px */
+  width: 100% !important;
+  padding: var(--kc-space-3) var(--kc-space-4) !important;  /* 12px 16px */
+  background-color: var(--kc-idp-btn-bg) !important;  /* slate-3 dark - matches bg-neutral-3 */
+  border: none !important;
+  border-radius: var(--kc-radius-lg) !important;  /* 8px - secondary button style */
+  color: var(--kc-text-primary) !important;
+  font-family: var(--kc-font-family) !important;
+  font-weight: var(--kc-font-weight-medium) !important;  /* 500 */
+  font-size: var(--kc-font-size-sm) !important;  /* 14px - slightly smaller than primary button */
+  line-height: var(--kc-line-height-tight) !important;
+  text-decoration: none !important;
+  transition: background-color var(--kc-duration-normal) var(--kc-easing-out) !important;
+  cursor: pointer !important;
+}
+
+.pf-c-button.pf-m-link:hover,
+.pf-v5-c-button.pf-m-link:hover,
+#kc-social-providers a:hover {
+  background-color: var(--kc-idp-btn-hover) !important;  /* slate-4 dark - matches hover:bg-neutral-4 */
+  text-decoration: none !important;
+}
+
+/* IdP icons styling */
+#kc-social-providers .pf-c-button__icon,
+#kc-social-providers .pf-v5-c-button__icon,
+#kc-social-providers svg,
+#kc-social-providers img {
+  width: var(--kc-size-icon-lg) !important;  /* 20px */
+  height: var(--kc-size-icon-lg) !important;  /* 20px */
+  flex-shrink: 0 !important;
+}
+
+/* =============================================================================
+ * FOOTER
+ * =============================================================================
+ */
+
+.pf-c-login__footer,
+.pf-v5-c-login__footer,
+#kc-info,
+#kc-footer {
+  text-align: center !important;
+  margin-top: var(--kc-space-8) !important;  /* 32px */
+  color: var(--kc-text-muted) !important;
+  font-size: var(--kc-font-size-xs) !important;  /* 12px */
+  font-weight: var(--kc-font-weight-normal) !important;
+  opacity: 0.6 !important;
+  grid-area: unset !important;
+}
+
+/* =============================================================================
+ * ACCESSIBILITY
+ * =============================================================================
+ */
+
+:focus-visible {
+  outline: 2px solid var(--kc-btn-primary-bg) !important;
+  outline-offset: 2px !important;
+}
+
+/* High contrast for links */
+a:not(.pf-c-button):not(.pf-v5-c-button) {
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+}
+
+/* =============================================================================
+ * THEME ALIGNMENT - Match React LoginPage dark mode
+ * =============================================================================
+ * These styles ensure visual consistency between the Keycloak login page
+ * and the React LoginPage component in the Studio frontend.
+ *
+ * Design principles:
+ * - FLAT design: NO card box, NO nested containers, NO borders
+ * - Inputs are clean rounded boxes with subtle background
+ * - Password toggle seamlessly integrated (no separator line)
+ * - SSO IdP buttons (GitHub, Google, Microsoft, etc.) fully supported
+ *
+ * Colors aligned with design system (Radix violet palette):
+ * - Background gradient: #111827 → #1f2937 (neutral.950 → neutral.900)
+ * - Card: TRANSPARENT (no visual box)
+ * - Inputs: rgba(17, 24, 39, 0.6) background, NO border
+ * - Primary button: #6e56cf (violet-9 / primary-9)
+ * - Primary hover: #7c66dc (violet-10 / primary-10)
+ * - Links: #a78bfa → #c4b5fd (violet-400 → violet-300)
+ * - Text primary: #f9fafb (neutral.50)
+ * - Text secondary: #d1d5db (neutral.300)
+ * - Text muted: #9ca3af (neutral.400)
+ *
+ * Branding:
+ * - Header displays "Agent Studio" (overrides Keycloak realm name via CSS)
+ * - Icon uses project's icon.svg with gradient background
+ * - Favicon is project's favicon.svg (configured in theme.properties)
+ */

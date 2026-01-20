@@ -40,11 +40,18 @@ OPENFGA_OIDC_CLIENT_SECRET = os.getenv("OPENFGA_OIDC_CLIENT_SECRET")
 KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
 KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM", "default")
 
-STORE_NAME = "mcp-server-langgraph-test"
+STORE_NAME = os.getenv("OPENFGA_STORE_NAME", "agent-studio-openfga-store-test")
 MODEL_PATH = Path("/app/config/openfga/model.json")
 TUPLES_PATH = Path("/app/config/openfga/sample-tuples.json")
 MAX_RETRIES = 30
 RETRY_DELAY = 2
+
+# Keycloak OIDC readiness check configuration
+# Addresses race condition where Keycloak's health check passes
+# but the token endpoint is not yet ready to issue tokens
+OIDC_MAX_RETRIES = 20  # 20 retries with exponential backoff
+OIDC_INITIAL_DELAY: float = 2.0  # Start with 2 second delay
+OIDC_MAX_DELAY: float = 15.0  # Cap delay at 15 seconds (total max wait ~90s)
 
 # Token cache (simple in-memory cache for script lifetime)
 _oidc_token_cache: dict[str, str | int] = {}
@@ -127,6 +134,66 @@ def get_headers() -> dict[str, str]:
         headers["Authorization"] = f"Bearer {OPENFGA_PRESHARED_KEY}"
 
     return headers
+
+
+def wait_for_keycloak_oidc() -> bool:
+    """
+    Wait for Keycloak OIDC endpoint to be ready for token acquisition.
+
+    Addresses race condition where Keycloak's health check passes
+    but the token endpoint is not yet ready to issue tokens.
+    Uses exponential backoff to avoid hammering Keycloak during startup.
+
+    Returns:
+        True if OIDC is ready (or not configured), False if timeout
+    """
+    # If OIDC not configured, skip check
+    if not all([KEYCLOAK_SERVER_URL, OPENFGA_OIDC_CLIENT_ID, OPENFGA_OIDC_CLIENT_SECRET]):
+        print("OIDC not configured, skipping Keycloak readiness check")
+        return True
+
+    # Type narrowing: KEYCLOAK_SERVER_URL is guaranteed non-None here
+    keycloak_url = KEYCLOAK_SERVER_URL  # type: str
+    token_endpoint = f"{keycloak_url.rstrip('/')}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/token"
+    print(f"Waiting for Keycloak OIDC at {token_endpoint}...")
+
+    delay = OIDC_INITIAL_DELAY
+    for attempt in range(OIDC_MAX_RETRIES):
+        try:
+            response = httpx.post(
+                token_endpoint,
+                data={
+                    "grant_type": "client_credentials",
+                    "client_id": OPENFGA_OIDC_CLIENT_ID,
+                    "client_secret": OPENFGA_OIDC_CLIENT_SECRET,
+                },
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                timeout=10.0,
+            )
+
+            if response.status_code == 200:
+                token_data = response.json()
+                if token_data.get("access_token"):
+                    # Cache the token for later use
+                    _oidc_token_cache["access_token"] = token_data["access_token"]
+                    _oidc_token_cache["expires_at"] = time.time() + token_data.get("expires_in", 3600)
+                    print(f"  Keycloak OIDC is ready (attempt {attempt + 1})")
+                    return True
+
+            print(f"  Attempt {attempt + 1}/{OIDC_MAX_RETRIES}: HTTP {response.status_code}, retrying in {delay:.1f}s...")
+
+        except httpx.ConnectError:
+            print(f"  Attempt {attempt + 1}/{OIDC_MAX_RETRIES}: Connection refused, retrying in {delay:.1f}s...")
+        except httpx.TimeoutException:
+            print(f"  Attempt {attempt + 1}/{OIDC_MAX_RETRIES}: Timeout, retrying in {delay:.1f}s...")
+        except Exception as e:
+            print(f"  Attempt {attempt + 1}/{OIDC_MAX_RETRIES}: {e}, retrying in {delay:.1f}s...")
+
+        time.sleep(delay)
+        delay = min(delay * 1.5, OIDC_MAX_DELAY)  # Exponential backoff capped at max
+
+    print("Keycloak OIDC did not become ready in time")
+    return False
 
 
 def wait_for_openfga() -> bool:
@@ -428,10 +495,73 @@ def verify_permissions(store_id: str, model_id: str) -> bool:
         ("user:alice", "viewer", "vector_store:default", True),  # editor implies viewer
         ("user:bob", "viewer", "vector_store:default", True),  # bob is read-only
         ("user:bob", "editor", "vector_store:default", False),  # bob cannot edit
-        ("user:admin", "admin", "authz:playground", True),
-        ("user:alice", "admin", "authz:playground", False),  # alice is only viewer
-        ("user:bob", "viewer", "authz:playground", False),  # bob has no access
+        # Note: authz:playground checks removed - playground frontend deprecated
     ]
+
+    # WebSocket permissions verification (matches WEBSOCKET_PERMISSIONS_MAP in user.py)
+    # These verify the authorization paths used by frontend WebSocket hooks
+    websocket_test_cases = [
+        # alerts - admin only (dashboard:alerts with admin relation)
+        ("user:admin", "admin", "dashboard:alerts", True),
+        ("user:alice", "admin", "dashboard:alerts", False),  # alice is developer, not admin
+        # notifications - viewer access (chat:notifications)
+        ("user:admin", "viewer", "chat:notifications", True),
+        ("user:alice", "viewer", "chat:notifications", True),
+        # traces - viewer access (traces:stream)
+        ("user:admin", "viewer", "traces:stream", True),
+        ("user:alice", "viewer", "traces:stream", True),
+        # mcp_tasks - user access (mcp:websocket)
+        ("user:admin", "user", "mcp:websocket", True),
+        ("user:alice", "user", "mcp:websocket", True),
+        # ai_suggestions - user access (ai:suggestions)
+        ("user:admin", "user", "ai:suggestions", True),
+        ("user:alice", "user", "ai:suggestions", True),
+        # agent_requests - editor access (workflow:hitl)
+        ("user:admin", "editor", "workflow:hitl", True),
+        ("user:alice", "editor", "workflow:hitl", True),  # alice has workflow editor
+        # llm_streaming - viewer access (chat:llm-streaming)
+        ("user:admin", "viewer", "chat:llm-streaming", True),
+        ("user:alice", "viewer", "chat:llm-streaming", True),
+        ("user:bob", "viewer", "chat:llm-streaming", True),
+        # session_metrics - viewer access (chat:session-metrics)
+        ("user:admin", "viewer", "chat:session-metrics", True),
+        ("user:alice", "viewer", "chat:session-metrics", True),
+        ("user:bob", "viewer", "chat:session-metrics", True),
+    ]
+
+    # Sub-persona permission verification
+    # Verifies that sub-personas have correctly restricted permissions per security audit
+    subpersona_test_cases = [
+        # === Auditor (auditor-jane): Compliance-focused, read-only (10/17) ===
+        # Should have: audit, traces, notifications, devtools, cost_tracking, heart_metrics,
+        #              llm_streaming, session_metrics, orchestrator_status, budget_alerts
+        # Should NOT have: alerts, agent_requests, ai_suggestions, mcp_tasks, mcp_aggregated,
+        #                  connections_health, connections_realtime
+        ("user:auditor-jane", "viewer", "logs:audit", True),  # Has audit access
+        ("user:auditor-jane", "viewer", "traces:stream", True),  # Has traces access
+        ("user:auditor-jane", "admin", "dashboard:alerts", False),  # NO alerts access
+        ("user:auditor-jane", "editor", "workflow:hitl", False),  # NO HITL/agent_requests
+        ("user:auditor-jane", "user", "ai:suggestions", False),  # NO ai_suggestions
+        ("user:auditor-jane", "user", "mcp:websocket", False),  # NO mcp_tasks
+        # === Compliance Officer (compliance-charlie): Same as auditor (10/17) ===
+        ("user:compliance-charlie", "viewer", "logs:audit", True),  # Has audit access
+        ("user:compliance-charlie", "viewer", "traces:stream", True),  # Has traces access
+        ("user:compliance-charlie", "admin", "dashboard:alerts", False),  # NO alerts access
+        ("user:compliance-charlie", "editor", "workflow:hitl", False),  # NO HITL/agent_requests
+        ("user:compliance-charlie", "user", "ai:suggestions", False),  # NO ai_suggestions
+        ("user:compliance-charlie", "viewer", "mcp:aggregated-capabilities", False),  # NO mcp_aggregated
+        # === DevOps (devops-dave): Developer + infrastructure alerts (17/17) ===
+        # Should have ALL permissions including alerts (key difference from alice)
+        ("user:devops-dave", "admin", "dashboard:alerts", True),  # HAS alerts (production deployments)
+        ("user:devops-dave", "editor", "workflow:hitl", True),  # HAS agent_requests
+        ("user:devops-dave", "user", "ai:suggestions", True),  # HAS ai_suggestions
+        ("user:devops-dave", "user", "mcp:websocket", True),  # HAS mcp_tasks
+        ("user:devops-dave", "viewer", "mcp_connection:health", True),  # HAS connections_health
+        ("user:devops-dave", "viewer", "logs:audit", True),  # HAS audit
+    ]
+
+    # Combine all test cases
+    test_cases = test_cases + websocket_test_cases + subpersona_test_cases
 
     all_passed = True
 
@@ -483,6 +613,12 @@ def main() -> int:
     else:
         print("Auth: Disabled")
 
+    # Step 0: Wait for Keycloak OIDC (if configured)
+    # This addresses race condition where Keycloak health check passes
+    # but token endpoint is not yet ready (ADR-0070)
+    if not wait_for_keycloak_oidc():
+        return 1
+
     # Step 1: Wait for OpenFGA
     if not wait_for_openfga():
         return 1
@@ -499,22 +635,32 @@ def main() -> int:
 
     # Step 4: Seed relationship tuples
     if not seed_relationship_tuples(store_id, model_id):
-        print("\n⚠ Some tuples failed to seed, but continuing...")
+        print("\n✗ Some tuples failed to seed")
+        return 1
 
-    # Step 5: Verify permissions
+    # Step 5: Verify permissions (including WebSocket permissions)
+    # CRITICAL: This verification step ensures tuples were loaded correctly.
+    # Failure here indicates authorization will not work and services should not start.
     if not verify_permissions(store_id, model_id):
-        print("\n⚠ Some permission checks failed")
+        print("\n✗ Permission verification FAILED - tuples may not be correctly loaded")
+        print("This will cause WebSocket authorization failures in the frontend.")
+        return 1
 
     # Summary
     print("\n" + "=" * 60)
     print("✓ OpenFGA seeding complete!")
+    print("✓ All permissions verified (including WebSocket permissions)")
     print("=" * 60)
     print(f"\nStore ID: {store_id}")
     print(f"Model ID: {model_id}")
     print("\nSeeded permissions:")
-    print("  - admin: owner on vector_store:default, admin on authz:playground (OpenFGA UI)")
-    print("  - alice: editor on vector_store:default (CRUD), viewer on authz:playground")
-    print("  - bob:   viewer on vector_store:default (read-only, no authz UI access)")
+    print("  - admin: owner on vector_store:default")
+    print("  - alice: editor on vector_store:default (CRUD)")
+    print("  - bob:   viewer on vector_store:default (read-only)")
+    print("\nSub-persona WebSocket permissions:")
+    print("  - auditor-jane:       10/17 (compliance-focused, NO HITL/alerts/mcp)")
+    print("  - compliance-charlie: 10/17 (compliance-focused, NO HITL/alerts/mcp)")
+    print("  - devops-dave:        17/17 (developer + alerts for production)")
     print()
 
     return 0

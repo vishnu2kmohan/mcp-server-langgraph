@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-studio-design-tokens",
+  "description": "Agent Studio Design System Tokens - Exported for service theming",
+  "source": "src/mcp_server_langgraph/studio/frontend/src/design-system/tokens.ts",
+  "colors": {
+    "primary": {
+      "50": "#eff6ff",
+      "100": "#dbeafe",
+      "200": "#bfdbfe",
+      "300": "#93c5fd",
+      "400": "#60a5fa",
+      "500": "#3b82f6",
+      "600": "#2563eb",
+      "700": "#1d4ed8",
+      "800": "#1e40af",
+      "900": "#1e3a8a"
+    },
+    "neutral": {
+      "50": "#f9fafb",
+      "100": "#f3f4f6",
+      "200": "#e5e7eb",
+      "300": "#d1d5db",
+      "400": "#9ca3af",
+      "500": "#6b7280",
+      "600": "#4b5563",
+      "700": "#374151",
+      "800": "#1f2937",
+      "900": "#111827",
+      "950": "#030712"
+    },
+    "success": {
+      "50": "#f0fdf4",
+      "100": "#dcfce7",
+      "500": "#22c55e",
+      "600": "#16a34a",
+      "700": "#15803d"
+    },
+    "warning": {
+      "50": "#fffbeb",
+      "100": "#fef3c7",
+      "500": "#f59e0b",
+      "600": "#d97706",
+      "700": "#b45309"
+    },
+    "error": {
+      "50": "#fef2f2",
+      "100": "#fee2e2",
+      "500": "#ef4444",
+      "600": "#dc2626",
+      "700": "#b91c1c"
+    },
+    "info": {
+      "50": "#ecfeff",
+      "100": "#cffafe",
+      "500": "#06b6d4",
+      "600": "#0891b2",
+      "700": "#0e7490"
+    },
+    "insight": {
+      "50": "#faf5ff",
+      "100": "#f3e8ff",
+      "500": "#a855f7",
+      "600": "#9333ea",
+      "700": "#7e22ce"
+    },
+    "grafana": {
+      "500": "#F46800"
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "sans": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+      "mono": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace"
+    },
+    "fontSize": {
+      "xs": "0.75rem",
+      "sm": "0.875rem",
+      "base": "1rem",
+      "lg": "1.125rem",
+      "xl": "1.25rem",
+      "2xl": "1.5rem",
+      "3xl": "1.875rem",
+      "4xl": "2.25rem"
+    }
+  },
+  "borderRadius": {
+    "none": "0",
+    "sm": "0.125rem",
+    "md": "0.375rem",
+    "lg": "0.5rem",
+    "xl": "0.75rem",
+    "2xl": "1rem",
+    "3xl": "1.5rem",
+    "full": "9999px"
+  },
+  "shadows": {
+    "sm": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    "md": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+    "lg": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+    "xl": "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)"
+  },
+  "patternfly": {
+    "description": "PatternFly v5 CSS variable mappings for Keycloak theming",
+    "variables": {
+      "--pf-v5-global--primary-color--100": "#2563eb",
+      "--pf-v5-global--primary-color--200": "#3b82f6",
+      "--pf-v5-global--link--Color": "#2563eb",
+      "--pf-v5-global--link--Color--hover": "#1d4ed8",
+      "--pf-v5-global--success-color--100": "#22c55e",
+      "--pf-v5-global--warning-color--100": "#f59e0b",
+      "--pf-v5-global--danger-color--100": "#ef4444",
+      "--pf-v5-global--info-color--100": "#06b6d4",
+      "--pf-v5-global--BackgroundColor--100": "#ffffff",
+      "--pf-v5-global--BackgroundColor--200": "#f9fafb",
+      "--pf-v5-global--BackgroundColor--dark-100": "#1f2937",
+      "--pf-v5-global--BackgroundColor--dark-200": "#111827",
+      "--pf-v5-global--Color--100": "#1f2937",
+      "--pf-v5-global--Color--200": "#4b5563",
+      "--pf-v5-global--BorderColor--100": "#e5e7eb"
+    }
+  }
+}

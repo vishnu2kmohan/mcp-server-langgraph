@@ -1,0 +1,666 @@
+/**
+ * Agent Studio - Account Console Theme
+ *
+ * Consistent branding for Keycloak account console (React SPA).
+ * Uses PatternFly 5 CSS variable overrides for theme customization.
+ *
+ * Design System Source:
+ *   src/mcp_server_langgraph/studio/frontend/src/design-system/tokens.ts
+ *   docs-internal/frontend/STYLE.md
+ *
+ * Color System: Radix Colors (Slate for neutrals, Violet for primary)
+ * This matches the Agent Studio React frontend exactly.
+ */
+
+/* =============================================================================
+ * DESIGN TOKENS - Light Mode (Default)
+ * =============================================================================
+ * Aligned with STYLE.md and the React app's design system.
+ * Uses Radix Colors for consistent theming.
+ * ============================================================================= */
+
+:root {
+  /* ==========================================================================
+   * RADIX SLATE LIGHT MODE COLORS
+   * ==========================================================================
+   * Source: src/mcp_server_langgraph/studio/frontend/src/index.css
+   * ========================================================================== */
+
+  /* Page backgrounds - Radix Slate light mode */
+  --kc-page-bg-start: #fcfcfd;  /* slate-1 light */
+  --kc-page-bg-end: #f1f3f5;    /* slate-3 light */
+
+  /* Card - matches React app: bg-neutral-1 border border-neutral-6 */
+  --kc-card-bg: #ffffff;        /* white */
+  --kc-card-border: #d7dbdf;    /* slate-6 light */
+
+  /* Input fields - Radix slate-2 light */
+  --kc-input-bg: #f9f9fb;       /* slate-2 light */
+  --kc-input-border: #d7dbdf;   /* slate-6 light */
+  --kc-input-border-focus: #6e56cf;  /* violet-9 */
+  --kc-input-text: #1c2024;     /* slate-12 light */
+  --kc-input-placeholder: #889096;  /* slate-9 light */
+
+  /* Text colors - Radix slate light mode */
+  --kc-text-primary: #1c2024;   /* slate-12 light */
+  --kc-text-secondary: #60646c; /* slate-11 light */
+  --kc-text-muted: #889096;     /* slate-9 light */
+
+  /* Primary - Radix violet-9/10 (matches design system) */
+  --kc-brand-primary: #6e56cf;    /* violet-9 */
+  --kc-brand-primary-hover: #7c66dc; /* violet-10 */
+  --kc-brand-gradient-start: #6e56cf;  /* violet-9 */
+  --kc-brand-gradient-end: #5746af;    /* violet-8 */
+
+  /* Focus ring - violet alpha for consistency */
+  --kc-focus-ring: rgba(110, 86, 207, 0.4);
+
+  /* Links - Radix violet-11 light */
+  --kc-link-color: #5746af;     /* violet-8 light */
+  --kc-link-hover: #6e56cf;     /* violet-9 light */
+
+  /* Dividers - Radix slate-6 light */
+  --kc-divider: #d7dbdf;        /* slate-6 light */
+
+  /* Status Colors - Radix semantic colors */
+  --kc-success: #30a46c;        /* grass-9 */
+  --kc-warning: #f5a623;        /* amber-9 */
+  --kc-error: #e5484d;          /* ruby-9 */
+  --kc-info: #0091ff;           /* blue-9 */
+
+  /* Status backgrounds (light, transparent) */
+  --kc-success-bg: rgba(48, 164, 108, 0.1);
+  --kc-warning-bg: rgba(245, 166, 35, 0.1);
+  --kc-error-bg: rgba(229, 72, 77, 0.1);
+  --kc-info-bg: rgba(0, 145, 255, 0.1);
+
+  /* ==========================================================================
+   * TYPOGRAPHY - Aligned with Design System
+   * ========================================================================== */
+
+  /* Primary font stack - matches React app */
+  --kc-font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Font size tokens */
+  --kc-font-size-xs: 0.75rem;      /* 12px */
+  --kc-font-size-sm: 0.875rem;     /* 14px */
+  --kc-font-size-base: 1rem;       /* 16px */
+  --kc-font-size-lg: 1.125rem;     /* 18px */
+  --kc-font-size-xl: 1.25rem;      /* 20px */
+  --kc-font-size-2xl: 1.5rem;      /* 24px */
+
+  /* Font weight tokens */
+  --kc-font-weight-normal: 400;
+  --kc-font-weight-medium: 500;
+  --kc-font-weight-semibold: 600;
+  --kc-font-weight-bold: 700;
+
+  /* Line height tokens */
+  --kc-line-height-tight: 1.25;
+  --kc-line-height-normal: 1.5;
+  --kc-line-height-relaxed: 1.625;
+
+  /* ==========================================================================
+   * SPACING TOKENS - Aligned with Tailwind 4px base unit
+   * ========================================================================== */
+
+  --kc-space-1: 0.25rem;    /* 4px */
+  --kc-space-2: 0.5rem;     /* 8px */
+  --kc-space-3: 0.75rem;    /* 12px */
+  --kc-space-4: 1rem;       /* 16px */
+  --kc-space-5: 1.25rem;    /* 20px */
+  --kc-space-6: 1.5rem;     /* 24px */
+  --kc-space-8: 2rem;       /* 32px */
+
+  /* ==========================================================================
+   * BORDER RADIUS TOKENS - Aligned with STYLE.md
+   * ========================================================================== */
+
+  --kc-radius-sm: 0.125rem;   /* 2px */
+  --kc-radius-DEFAULT: 0.25rem; /* 4px - rounded */
+  --kc-radius-md: 0.375rem;   /* 6px - rounded-md (inputs, buttons) */
+  --kc-radius-lg: 0.5rem;     /* 8px - rounded-lg (cards) */
+  --kc-radius-xl: 0.75rem;    /* 12px - rounded-xl */
+  --kc-radius-2xl: 1rem;      /* 16px */
+  --kc-radius-full: 9999px;   /* pills, avatars */
+
+  /* ==========================================================================
+   * SHADOW TOKENS - Aligned with STYLE.md
+   * ========================================================================== */
+
+  --kc-shadow-soft: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --kc-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --kc-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --kc-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+  /* ==========================================================================
+   * TRANSITION TOKENS - Aligned with STYLE.md
+   * ========================================================================== */
+
+  --kc-duration-fast: 100ms;
+  --kc-duration-normal: 150ms;
+  --kc-duration-slow: 200ms;
+  --kc-easing-out: cubic-bezier(0, 0, 0.2, 1);
+  --kc-easing-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ==========================================================================
+   * SIZING TOKENS - Aligned with STYLE.md
+   * ========================================================================== */
+
+  --kc-size-input: 2.5rem;      /* 40px - standard input height */
+  --kc-size-touch: 2.75rem;     /* 44px - WCAG AAA touch target */
+  --kc-size-icon: 1rem;         /* 16px */
+  --kc-size-icon-lg: 1.25rem;   /* 20px */
+}
+
+/* =============================================================================
+ * DARK MODE OVERRIDES
+ * =============================================================================
+ * Automatically switches via prefers-color-scheme.
+ * Uses Radix Slate/Violet dark mode colors.
+ * ============================================================================= */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Page backgrounds - Radix Slate dark mode */
+    --kc-page-bg-start: #111113;  /* slate-1 dark */
+    --kc-page-bg-end: #18191b;    /* slate-2 dark */
+
+    /* Card - matches React app dark mode */
+    --kc-card-bg: #18191b;        /* slate-2 dark */
+    --kc-card-border: #2e3135;    /* slate-5 dark */
+
+    /* Input fields - Radix slate-3 dark with opacity */
+    --kc-input-bg: rgba(33, 34, 37, 0.8);  /* slate-3 dark */
+    --kc-input-border: #363a3f;   /* slate-6 dark */
+    --kc-input-border-focus: #6e56cf;  /* violet-9 */
+    --kc-input-text: #edeef0;     /* slate-12 dark */
+    --kc-input-placeholder: #696e77;  /* slate-9 dark */
+
+    /* Text colors - Radix slate dark mode */
+    --kc-text-primary: #edeef0;   /* slate-12 dark */
+    --kc-text-secondary: #b0b4ba; /* slate-11 dark */
+    --kc-text-muted: #777b84;     /* slate-10 dark */
+
+    /* Primary - Radix violet dark mode */
+    --kc-brand-primary: #6e56cf;    /* violet-9 */
+    --kc-brand-primary-hover: #7c66dc; /* violet-10 */
+
+    /* Links - Radix violet-11 dark */
+    --kc-link-color: #baa7ff;     /* violet-11 dark */
+    --kc-link-hover: #e2ddfe;     /* violet-12 dark */
+
+    /* Dividers - Radix slate-6 dark */
+    --kc-divider: #363a3f;        /* slate-6 dark */
+
+    /* Status Colors - Radix dark mode variants */
+    --kc-success: #3dd68c;        /* grass-9 dark */
+    --kc-warning: #ffb224;        /* amber-9 dark */
+    --kc-error: #e5484d;          /* ruby-9 */
+    --kc-info: #52a9ff;           /* blue-9 dark */
+
+    /* Status backgrounds (dark, transparent) */
+    --kc-success-bg: rgba(61, 214, 140, 0.15);
+    --kc-warning-bg: rgba(255, 178, 36, 0.15);
+    --kc-error-bg: rgba(229, 72, 77, 0.15);
+    --kc-info-bg: rgba(82, 169, 255, 0.15);
+
+    /* Shadows - darker for dark mode */
+    --kc-shadow-soft: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    --kc-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+    --kc-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+    --kc-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* =============================================================================
+ * PATTERNFLY 5 VARIABLE OVERRIDES
+ * =============================================================================
+ * These affect all PatternFly components in the React account console.
+ * ============================================================================= */
+
+:root {
+  /* Global PatternFly colors */
+  --pf-v5-global--primary-color--100: var(--kc-brand-primary);
+  --pf-v5-global--primary-color--200: var(--kc-brand-primary-hover);
+  --pf-v5-global--link--Color: var(--kc-link-color);
+  --pf-v5-global--link--Color--hover: var(--kc-link-hover);
+
+  /* Background */
+  --pf-v5-global--BackgroundColor--100: var(--kc-card-bg);
+  --pf-v5-global--BackgroundColor--200: var(--kc-page-bg-start);
+
+  /* Text */
+  --pf-v5-global--Color--100: var(--kc-text-primary);
+  --pf-v5-global--Color--200: var(--kc-text-secondary);
+
+  /* Status */
+  --pf-v5-global--success-color--100: var(--kc-success);
+  --pf-v5-global--warning-color--100: var(--kc-warning);
+  --pf-v5-global--danger-color--100: var(--kc-error);
+  --pf-v5-global--info-color--100: var(--kc-info);
+
+  /* Borders */
+  --pf-v5-global--BorderColor--100: var(--kc-card-border);
+  --pf-v5-global--BorderColor--200: var(--kc-input-border);
+
+  /* Shadows */
+  --pf-v5-global--BoxShadow--sm: var(--kc-shadow-soft);
+  --pf-v5-global--BoxShadow--md: var(--kc-shadow-md);
+  --pf-v5-global--BoxShadow--lg: var(--kc-shadow-lg);
+
+  /* Font */
+  --pf-v5-global--FontFamily--sans-serif: var(--kc-font-family);
+}
+
+/* =============================================================================
+ * PAGE BACKGROUND
+ * =============================================================================
+ */
+
+body {
+  background: linear-gradient(
+    135deg,
+    var(--kc-page-bg-start) 0%,
+    var(--kc-page-bg-end) 100%
+  ) !important;
+  min-height: 100vh;
+  font-family: var(--kc-font-family) !important;
+}
+
+/* =============================================================================
+ * NAVIGATION / HEADER BRANDING
+ * =============================================================================
+ */
+
+/* Masthead/Header background - violet gradient */
+.pf-v5-c-masthead,
+.pf-v5-c-page__header {
+  background: linear-gradient(
+    135deg,
+    var(--kc-brand-gradient-start) 0%,
+    var(--kc-brand-gradient-end) 100%
+  ) !important;
+}
+
+/* Header text should be white on gradient background */
+.pf-v5-c-masthead,
+.pf-v5-c-masthead *,
+.pf-v5-c-page__header,
+.pf-v5-c-page__header * {
+  color: #ffffff !important;
+}
+
+/* Navigation links in header */
+.pf-v5-c-masthead a,
+.pf-v5-c-page__header a {
+  color: rgba(255, 255, 255, 0.9) !important;
+  transition: color var(--kc-duration-normal) var(--kc-easing-out) !important;
+}
+
+.pf-v5-c-masthead a:hover,
+.pf-v5-c-page__header a:hover {
+  color: #ffffff !important;
+}
+
+/* =============================================================================
+ * SIDE NAVIGATION
+ * =============================================================================
+ */
+
+.pf-v5-c-nav,
+.pf-v5-c-page__sidebar {
+  background-color: var(--kc-card-bg) !important;
+  border-right: 1px solid var(--kc-card-border) !important;
+}
+
+.pf-v5-c-nav__link {
+  color: var(--kc-text-primary) !important;
+  transition: all var(--kc-duration-normal) var(--kc-easing-out) !important;
+  border-radius: var(--kc-radius-md) !important;
+  margin: var(--kc-space-1) var(--kc-space-2) !important;
+}
+
+.pf-v5-c-nav__link:hover {
+  background-color: var(--kc-page-bg-end) !important;
+}
+
+.pf-v5-c-nav__link.pf-m-current {
+  color: var(--kc-brand-primary) !important;
+  border-left: 3px solid var(--kc-brand-primary) !important;
+  background-color: var(--kc-info-bg) !important;
+}
+
+/* =============================================================================
+ * CONTENT AREA / CARDS
+ * =============================================================================
+ */
+
+.pf-v5-c-page__main-section {
+  background-color: transparent !important;
+  padding: var(--kc-space-6) !important;
+}
+
+.pf-v5-c-card {
+  background-color: var(--kc-card-bg) !important;
+  border: 1px solid var(--kc-card-border) !important;
+  box-shadow: var(--kc-shadow-md) !important;
+  border-radius: var(--kc-radius-xl) !important;  /* 12px - rounded-xl for cards */
+}
+
+.pf-v5-c-card__title,
+.pf-v5-c-card__header {
+  color: var(--kc-text-primary) !important;
+  font-weight: var(--kc-font-weight-semibold) !important;
+}
+
+.pf-v5-c-card__body {
+  color: var(--kc-text-secondary) !important;
+  padding: var(--kc-space-4) !important;
+}
+
+/* =============================================================================
+ * BUTTONS
+ * =============================================================================
+ */
+
+/* Primary button */
+.pf-v5-c-button.pf-m-primary {
+  background: linear-gradient(
+    135deg,
+    var(--kc-brand-gradient-start) 0%,
+    var(--kc-brand-gradient-end) 100%
+  ) !important;
+  border: none !important;
+  border-radius: var(--kc-radius-md) !important;  /* 6px - STYLE.md aligned */
+  box-shadow: var(--kc-shadow-soft) !important;
+  min-height: var(--kc-size-input) !important;
+  padding: var(--kc-space-2) var(--kc-space-4) !important;
+  font-weight: var(--kc-font-weight-semibold) !important;
+  transition: all var(--kc-duration-normal) var(--kc-easing-out) !important;
+}
+
+.pf-v5-c-button.pf-m-primary:hover {
+  filter: brightness(1.1) !important;
+  box-shadow: var(--kc-shadow-md) !important;
+}
+
+/* Secondary button */
+.pf-v5-c-button.pf-m-secondary {
+  color: var(--kc-brand-primary) !important;
+  border: 1px solid var(--kc-brand-primary) !important;
+  border-radius: var(--kc-radius-md) !important;
+  background: transparent !important;
+  min-height: var(--kc-size-input) !important;
+  padding: var(--kc-space-2) var(--kc-space-4) !important;
+  font-weight: var(--kc-font-weight-medium) !important;
+  transition: all var(--kc-duration-normal) var(--kc-easing-out) !important;
+}
+
+.pf-v5-c-button.pf-m-secondary:hover {
+  background-color: var(--kc-info-bg) !important;
+}
+
+/* Link button */
+.pf-v5-c-button.pf-m-link {
+  color: var(--kc-link-color) !important;
+  padding: var(--kc-space-2) var(--kc-space-3) !important;
+  transition: color var(--kc-duration-normal) var(--kc-easing-out) !important;
+}
+
+.pf-v5-c-button.pf-m-link:hover {
+  color: var(--kc-link-hover) !important;
+}
+
+/* =============================================================================
+ * FORM CONTROLS
+ * =============================================================================
+ */
+
+.pf-v5-c-form-control {
+  background-color: var(--kc-input-bg) !important;
+  border: 1px solid var(--kc-input-border) !important;
+  border-radius: var(--kc-radius-md) !important;  /* 6px - STYLE.md aligned */
+  color: var(--kc-input-text) !important;
+  min-height: var(--kc-size-input) !important;
+  padding: var(--kc-space-2) var(--kc-space-3) !important;
+  font-family: var(--kc-font-family) !important;
+  font-size: var(--kc-font-size-base) !important;
+  transition: all var(--kc-duration-normal) var(--kc-easing-out) !important;
+}
+
+.pf-v5-c-form-control:focus {
+  border-color: var(--kc-input-border-focus) !important;
+  box-shadow: 0 0 0 2px var(--kc-focus-ring) !important;
+  outline: none !important;
+}
+
+.pf-v5-c-form-control::placeholder {
+  color: var(--kc-input-placeholder) !important;
+}
+
+/* Labels */
+.pf-v5-c-form__label-text {
+  color: var(--kc-text-primary) !important;
+  font-weight: var(--kc-font-weight-medium) !important;
+  font-size: var(--kc-font-size-sm) !important;
+  margin-bottom: var(--kc-space-2) !important;
+}
+
+/* Helper text */
+.pf-v5-c-form__helper-text {
+  color: var(--kc-text-muted) !important;
+  font-size: var(--kc-font-size-sm) !important;
+  margin-top: var(--kc-space-1) !important;
+}
+
+/* Form groups */
+.pf-v5-c-form__group {
+  margin-bottom: var(--kc-space-5) !important;
+}
+
+/* =============================================================================
+ * ALERTS / NOTIFICATIONS
+ * =============================================================================
+ */
+
+.pf-v5-c-alert {
+  border-radius: var(--kc-radius-lg) !important;
+  padding: var(--kc-space-3) var(--kc-space-4) !important;
+}
+
+.pf-v5-c-alert.pf-m-success {
+  background-color: var(--kc-success-bg) !important;
+  border-left: 3px solid var(--kc-success) !important;
+}
+
+.pf-v5-c-alert.pf-m-warning {
+  background-color: var(--kc-warning-bg) !important;
+  border-left: 3px solid var(--kc-warning) !important;
+}
+
+.pf-v5-c-alert.pf-m-danger {
+  background-color: var(--kc-error-bg) !important;
+  border-left: 3px solid var(--kc-error) !important;
+}
+
+.pf-v5-c-alert.pf-m-info {
+  background-color: var(--kc-info-bg) !important;
+  border-left: 3px solid var(--kc-info) !important;
+}
+
+/* =============================================================================
+ * TABLES
+ * =============================================================================
+ */
+
+.pf-v5-c-table {
+  background-color: var(--kc-card-bg) !important;
+  border-radius: var(--kc-radius-lg) !important;
+  overflow: hidden !important;
+}
+
+.pf-v5-c-table thead th {
+  background-color: var(--kc-page-bg-end) !important;
+  color: var(--kc-text-primary) !important;
+  font-weight: var(--kc-font-weight-semibold) !important;
+  border-bottom: 2px solid var(--kc-card-border) !important;
+  padding: var(--kc-space-3) var(--kc-space-4) !important;
+}
+
+.pf-v5-c-table tbody td {
+  color: var(--kc-text-secondary) !important;
+  border-bottom: 1px solid var(--kc-card-border) !important;
+  padding: var(--kc-space-3) var(--kc-space-4) !important;
+}
+
+.pf-v5-c-table tbody tr {
+  transition: background-color var(--kc-duration-fast) var(--kc-easing-out) !important;
+}
+
+.pf-v5-c-table tbody tr:hover {
+  background-color: var(--kc-page-bg-end) !important;
+}
+
+/* =============================================================================
+ * MODALS / DIALOGS
+ * =============================================================================
+ */
+
+.pf-v5-c-modal-box {
+  background-color: var(--kc-card-bg) !important;
+  border: 1px solid var(--kc-card-border) !important;
+  box-shadow: var(--kc-shadow-xl) !important;
+  border-radius: var(--kc-radius-xl) !important;
+}
+
+.pf-v5-c-modal-box__header {
+  border-bottom: 1px solid var(--kc-card-border) !important;
+  padding: var(--kc-space-4) var(--kc-space-6) !important;
+}
+
+.pf-v5-c-modal-box__title {
+  color: var(--kc-text-primary) !important;
+  font-weight: var(--kc-font-weight-semibold) !important;
+}
+
+.pf-v5-c-modal-box__body {
+  padding: var(--kc-space-4) var(--kc-space-6) !important;
+}
+
+.pf-v5-c-modal-box__footer {
+  border-top: 1px solid var(--kc-card-border) !important;
+  padding: var(--kc-space-4) var(--kc-space-6) !important;
+  gap: var(--kc-space-3) !important;
+}
+
+/* =============================================================================
+ * TABS
+ * =============================================================================
+ */
+
+.pf-v5-c-tabs__link {
+  color: var(--kc-text-secondary) !important;
+  padding: var(--kc-space-3) var(--kc-space-4) !important;
+  transition: all var(--kc-duration-normal) var(--kc-easing-out) !important;
+}
+
+.pf-v5-c-tabs__link:hover {
+  color: var(--kc-text-primary) !important;
+}
+
+.pf-v5-c-tabs__item.pf-m-current .pf-v5-c-tabs__link {
+  color: var(--kc-brand-primary) !important;
+  border-bottom: 2px solid var(--kc-brand-primary) !important;
+  font-weight: var(--kc-font-weight-medium) !important;
+}
+
+/* =============================================================================
+ * DROPDOWN / MENU
+ * =============================================================================
+ */
+
+.pf-v5-c-menu,
+.pf-v5-c-dropdown__menu {
+  background-color: var(--kc-card-bg) !important;
+  border: 1px solid var(--kc-card-border) !important;
+  box-shadow: var(--kc-shadow-lg) !important;
+  border-radius: var(--kc-radius-lg) !important;
+  padding: var(--kc-space-2) !important;
+}
+
+.pf-v5-c-menu__item,
+.pf-v5-c-dropdown__menu-item {
+  color: var(--kc-text-primary) !important;
+  padding: var(--kc-space-2) var(--kc-space-3) !important;
+  border-radius: var(--kc-radius-md) !important;
+  transition: background-color var(--kc-duration-fast) var(--kc-easing-out) !important;
+}
+
+.pf-v5-c-menu__item:hover,
+.pf-v5-c-dropdown__menu-item:hover {
+  background-color: var(--kc-page-bg-end) !important;
+}
+
+/* =============================================================================
+ * BADGES / CHIPS
+ * =============================================================================
+ */
+
+.pf-v5-c-badge {
+  border-radius: var(--kc-radius-full) !important;
+  padding: var(--kc-space-1) var(--kc-space-2) !important;
+  font-size: var(--kc-font-size-xs) !important;
+  font-weight: var(--kc-font-weight-medium) !important;
+}
+
+.pf-v5-c-chip {
+  border-radius: var(--kc-radius-md) !important;
+  padding: var(--kc-space-1) var(--kc-space-2) !important;
+}
+
+/* =============================================================================
+ * LINKS
+ * =============================================================================
+ */
+
+a {
+  color: var(--kc-link-color) !important;
+  text-decoration: none !important;
+  transition: color var(--kc-duration-normal) var(--kc-easing-out) !important;
+}
+
+a:hover {
+  color: var(--kc-link-hover) !important;
+  text-decoration: underline !important;
+}
+
+/* =============================================================================
+ * FOCUS STYLES - ACCESSIBILITY
+ * =============================================================================
+ */
+
+*:focus-visible {
+  outline: 2px solid var(--kc-brand-primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* Remove default focus styles for mouse users */
+*:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+/* =============================================================================
+ * REDUCED MOTION - ACCESSIBILITY
+ * =============================================================================
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

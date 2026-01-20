@@ -187,6 +187,31 @@ repos:
       Test: tests/meta/test_local_ci_parity.py::test_pre_push_includes_uv_pip_check
 
       '
+  - id: validate-websocket-permissions-schema
+    name: Validate WebSocket Permissions Schema Alignment
+    description: |
+      Validates that WEBSOCKET_PERMISSIONS_MAP in user.py aligns with OpenFGA model.json.
+
+      Security requirement: Ensures all WebSocket permissions map to valid OpenFGA
+      type:relation tuples, preventing authorization bypasses from schema drift.
+
+      What this validates:
+      1. All 15 WebSocket permission keys are present
+      2. Each permission maps to a type that exists in OpenFGA model.json
+      3. Each permission uses a relation that exists on that type
+
+      Triggered by changes to:
+      - src/mcp_server_langgraph/api/v1/user.py (WEBSOCKET_PERMISSIONS_MAP)
+      - config/openfga/model.json (OpenFGA authorization model)
+
+      Regression prevention for: StatusBar 'Disconnected after OAuth login' bug
+    entry: uv run --frozen python scripts/validators/validate_websocket_permissions.py
+    language: system
+    files: ^(src/mcp_server_langgraph/api/v1/user\.py|config/openfga/model\.json)$
+    pass_filenames: false
+    stages:
+    - pre-commit
+    - pre-push
   - id: run-pre-push-tests
     name: Run Pre-Push Tests (consolidated - dev profile)
     # CRITICAL: OTEL_SDK_DISABLED must be set BEFORE uv run to prevent pytest-xdist
@@ -332,6 +357,30 @@ repos:
       Run npm run format to auto-fix formatting issues.
 
       Duration: ~1-2s when node_modules cached.
+
+      '
+  - id: frontend-design-system
+    name: Frontend Design System Compliance
+    entry: uv run --frozen python -u .pre-commit-hooks/check_frontend_design_system.py
+    language: system
+    pass_filenames: true
+    files: ^src/mcp_server_langgraph/studio/frontend/src/.*\.(ts|tsx)$
+    always_run: false
+    stages:
+    - pre-commit
+    description: 'Validates frontend code follows design system conventions.
+
+      Added 2025-01-15 to prevent design system violations.
+
+      Catches:
+      - Raw Tailwind colors (text-white, bg-black) - use Radix semantic tokens
+      - Redundant dark: prefixes - Radix handles dark mode automatically
+      - Inline style colors - use className with design tokens
+      - Button/Badge components without variant prop (warning only)
+
+      Auto-fix: python src/mcp_server_langgraph/studio/frontend/scripts/fix-design-system-colors.py
+
+      Duration: ~1s (fast regex checks).
 
       '
   - id: frontend-typecheck
@@ -529,6 +578,75 @@ repos:
       Duration: ~2-3s (ripgrep scan).
 
       Always exits 0 (informational only). Use --strict flag for enforcement.
+
+      '
+  - id: frontend-design-system-audit
+    name: Frontend Design System Audit (Blocking)
+    entry: >
+      bash -c 'cd src/mcp_server_langgraph/studio/frontend &&
+      if [ ! -d "node_modules" ]; then
+        echo "Installing frontend dependencies..." && npm ci --silent;
+      fi &&
+      npm run audit:design-system:strict 2>&1 || (echo "" && echo "ERROR - Design system violations detected (color errors)." && echo "Run: cd src/mcp_server_langgraph/studio/frontend && npm run audit:design-system" && exit 1)'
+    language: system
+    pass_filenames: false
+    files: ^src/mcp_server_langgraph/studio/frontend/src/.*\.(ts|tsx|css)$
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Enforces design system consistency (blocking on errors).
+
+      Added 2026-01-14 for design system governance.
+
+      Validates:
+      - No raw Tailwind colors (red-500, blue-600) - use semantic (error-*, primary-*)
+      - No legacy neutral scale (neutral-50..950) - use Radix (neutral-1..12)
+      - No non-token z-index values - use z-50, z-60, z-70, z-75
+      - No arbitrary spacing without justification
+
+      Error severity (blocking):
+      - Color violations (breaks brand consistency)
+
+      Warning severity (non-blocking):
+      - Sizing, spacing, z-index (caught by --strict but allows push)
+
+      Duration: ~2-3s (ripgrep scan).
+
+      Run npm run audit:design-system --fix for remediation suggestions.
+
+      '
+  - id: frontend-design-system-contract
+    name: Frontend Design System Contract (CSS Variable Validation)
+    entry: >
+      bash -c 'cd src/mcp_server_langgraph/studio/frontend &&
+      if [ ! -d "node_modules" ]; then
+        echo "Installing frontend dependencies..." && npm ci --silent;
+      fi &&
+      npm run test:design-system-contract 2>&1 || (echo "" && echo "ERROR - Design system contract tests failed." && echo "CSS variables referenced in tailwind.config.ts may not be defined in index.css." && echo "Run: cd src/mcp_server_langgraph/studio/frontend && npm run test:design-system-contract" && exit 1)'
+    language: system
+    pass_filenames: false
+    files: ^src/mcp_server_langgraph/studio/frontend/(tailwind\.config\.ts|src/index\.css|src/design-system/.*\.ts)$
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Validates CSS variable contract between Tailwind config and CSS.
+
+      Added 2026-01-15 to prevent design system drift (white screen bugs).
+
+      This hook prevents the issue where:
+      - tailwind.config.ts references var(--color-name)
+      - But index.css never defines --color-name
+      - Result: Styles silently fail, causing white/unstyled UI
+
+      Contract tests validate:
+      - All CSS variables referenced in tailwind.config.ts exist in index.css
+      - All design tokens (colors, typography, spacing, shadows, etc.) are defined
+      - Dark mode has proper color overrides
+      - Values follow design system conventions (Radix 1-12 scale, 4px spacing base)
+
+      Duration: ~20s (runs Vitest contract tests).
+
+      Run: npm run test:design-system-contract for details.
 
       '
   - id: run-integration-tests
@@ -2157,6 +2275,33 @@ repos:
       Fix: Remove create_all() and create Alembic migration instead.
 
       Created: 2025-12-31 (Schema drift audit)
+
+      '
+  - id: check-keycloak-theme
+    name: Keycloak Theme Validation
+    entry: uv run --frozen python -u .pre-commit-hooks/check_keycloak_theme.py
+    language: system
+    pass_filenames: false
+    files: ^docker/keycloak/themes/.*$
+    always_run: false
+    stages:
+    - pre-commit
+    - pre-push
+    description: 'Validates Keycloak theme files for common issues.
+
+      Added 2026-01-14 to prevent theming regressions.
+
+      Checks:
+      - theme.properties meta property format (meta=name==content)
+      - Required assets exist (icon.svg, logo.svg, login.css)
+      - No duplicate CSS pseudo-element selectors (::before/::after)
+
+      Prevents issues like:
+      - FreeMarker InvalidReferenceException from invalid meta=
+      - Multiple icons appearing from duplicate ::before selectors
+      - 404 errors from missing theme assets
+
+      Duration: <1s (static analysis).
 
       '
 

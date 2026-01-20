@@ -1,0 +1,13 @@
+# Module: 10-references
+# Description: Markdown reference resolution
+# Reference: ADR-0068 Phase 8 - Modularization
+
+model
+  schema 1.1
+
+# Reference resolution authorization for [[type:qualifier:id]] markdown references.
+# All authenticated users can resolve references via reference:default viewer access.
+# Individual resource authorization (connection, skill, artifact) is checked per-ref.
+type reference
+  relations
+    define viewer: [user, user:*, organization#member]
