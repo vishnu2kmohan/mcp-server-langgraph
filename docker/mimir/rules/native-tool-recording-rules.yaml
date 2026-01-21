@@ -1,0 +1,182 @@
+groups:
+  # Native Tool SLO Recording Rules (v7)
+  # Pre-compute SLI metrics for native tool performance and reliability
+
+  - name: native_tool_availability
+    interval: 30s
+    rules:
+      # Native tool success rate by provider (99% target)
+      - record: native_tool:success_rate:5m
+        expr: |
+          sum(rate(native_tool_execution_duration_count{success="true"}[5m])) by (provider)
+          /
+          sum(rate(native_tool_execution_duration_count[5m])) by (provider)
+        labels:
+          slo: "native_tool_availability"
+          target: "99"
+
+      # Native tool success rate by tool
+      - record: native_tool:success_rate:by_tool:5m
+        expr: |
+          sum(rate(native_tool_execution_duration_count{success="true"}[5m])) by (tool_name, provider)
+          /
+          sum(rate(native_tool_execution_duration_count[5m])) by (tool_name, provider)
+        labels:
+          slo: "native_tool_availability"
+
+      # Fallback rate (should be < 10%)
+      - record: native_tool:fallback_rate:5m
+        expr: |
+          sum(rate(native_tool_fallback_count_total[5m])) by (tool_name)
+          /
+          (sum(rate(tool_source_selection_count_total{source="native"}[5m])) by (tool_name) > 0)
+        labels:
+          slo: "native_tool_fallback"
+          target: "10"
+
+      # Circuit breaker open ratio by provider
+      - record: native_tool:circuit_breaker_open_ratio:5m
+        expr: |
+          avg_over_time(native_tool_circuit_breaker_state[5m])
+        labels:
+          slo: "circuit_breaker_health"
+
+  - name: native_tool_latency
+    interval: 30s
+    rules:
+      # Native tool latency p50 by provider
+      - record: native_tool:latency:p50:5m
+        expr: |
+          histogram_quantile(0.5, sum(rate(native_tool_execution_duration_bucket[5m])) by (le, provider))
+        labels:
+          slo: "native_tool_latency"
+          quantile: "0.50"
+
+      # Native tool latency p95 by provider (< 2000ms target)
+      - record: native_tool:latency:p95:5m
+        expr: |
+          histogram_quantile(0.95, sum(rate(native_tool_execution_duration_bucket[5m])) by (le, provider))
+        labels:
+          slo: "native_tool_latency"
+          quantile: "0.95"
+          target: "2000"
+
+      # Native tool latency p99 by provider (< 5000ms target)
+      - record: native_tool:latency:p99:5m
+        expr: |
+          histogram_quantile(0.99, sum(rate(native_tool_execution_duration_bucket[5m])) by (le, provider))
+        labels:
+          slo: "native_tool_latency"
+          quantile: "0.99"
+          target: "5000"
+
+      # Builtin tool latency p95 for comparison
+      - record: builtin_tool:latency:p95:5m
+        expr: |
+          histogram_quantile(0.95, sum(rate(builtin_tool_execution_duration_bucket[5m])) by (le, tool_name))
+        labels:
+          slo: "builtin_tool_latency"
+          quantile: "0.95"
+
+      # Native vs builtin latency ratio (< 2x target)
+      - record: native_tool:latency_ratio:p95:5m
+        expr: |
+          native_tool:latency:p95:5m
+          /
+          on(tool_name) group_left
+          builtin_tool:latency:p95:5m
+        labels:
+          slo: "native_tool_latency_comparison"
+          target: "2.0"
+
+  - name: native_tool_error_budget
+    interval: 1m
+    rules:
+      # Error budget remaining (daily)
+      # SLO: 99% success rate = 1% error budget
+      - record: native_tool:error_budget:remaining:24h
+        expr: |
+          1 - (
+            (
+              sum(increase(native_tool_errors_count_total[24h])) by (provider)
+              /
+              sum(increase(native_tool_execution_duration_count[24h])) by (provider)
+            )
+            / 0.01  # 1% error budget
+          )
+        labels:
+          slo: "error_budget"
+          window: "24h"
+
+      # Error budget burn rate (should be < 1)
+      - record: native_tool:error_budget:burn_rate:1h
+        expr: |
+          (
+            sum(rate(native_tool_errors_count_total[1h])) by (provider)
+            /
+            sum(rate(native_tool_execution_duration_count[1h])) by (provider)
+          )
+          / 0.01  # 1% error budget
+        labels:
+          slo: "error_budget_burn_rate"
+          window: "1h"
+
+  - name: native_tool_throughput
+    interval: 30s
+    rules:
+      # Total native tool executions per minute
+      - record: native_tool:execution_rate:1m
+        expr: |
+          sum(rate(native_tool_execution_duration_count[1m])) by (provider)
+        labels:
+          metric: "throughput"
+
+      # Total builtin tool executions per minute
+      - record: builtin_tool:execution_rate:1m
+        expr: |
+          sum(rate(builtin_tool_execution_duration_count[1m])) by (tool_name)
+        labels:
+          metric: "throughput"
+
+      # Native tool selection percentage
+      - record: native_tool:selection_percentage:5m
+        expr: |
+          sum(rate(tool_source_selection_count_total{source="native"}[5m]))
+          /
+          sum(rate(tool_source_selection_count_total[5m]))
+        labels:
+          metric: "native_adoption"
+
+      # Fallback events per minute
+      - record: native_tool:fallback_rate:1m
+        expr: |
+          sum(rate(native_tool_fallback_count_total[1m])) by (reason)
+        labels:
+          metric: "fallback"
+
+  - name: native_tool_errors
+    interval: 30s
+    rules:
+      # Error rate by type
+      - record: native_tool:error_rate:by_type:5m
+        expr: |
+          sum(rate(native_tool_errors_count_total[5m])) by (provider, error_type)
+        labels:
+          metric: "error_rate"
+
+      # Timeout rate (should be < 5%)
+      - record: native_tool:timeout_rate:5m
+        expr: |
+          sum(rate(native_tool_errors_count_total{error_type="timeout"}[5m])) by (provider)
+          /
+          sum(rate(native_tool_execution_duration_count[5m])) by (provider)
+        labels:
+          slo: "timeout_rate"
+          target: "5"
+
+      # Rate limit hit rate
+      - record: native_tool:rate_limit_rate:5m
+        expr: |
+          sum(rate(native_tool_errors_count_total{error_type="rate_limit"}[5m])) by (provider)
+        labels:
+          metric: "rate_limit"

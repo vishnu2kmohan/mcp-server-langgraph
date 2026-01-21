@@ -35,7 +35,7 @@ common:
   storage:
     backend: filesystem
     filesystem:
-      dir: /tmp/mimir/data
+      dir: /data/mimir/data
 
 # Ingester configuration - single node
 ingester:
@@ -60,7 +60,7 @@ distributor:
 
 # Compactor configuration
 compactor:
-  data_dir: /tmp/mimir/compactor
+  data_dir: /data/mimir/compactor
   sharding_ring:
     kvstore:
       store: inmemory
@@ -76,22 +76,22 @@ store_gateway:
 blocks_storage:
   backend: filesystem
   filesystem:
-    dir: /tmp/mimir/blocks
+    dir: /data/mimir/blocks
   tsdb:
-    dir: /tmp/mimir/tsdb
+    dir: /data/mimir/tsdb
   bucket_store:
-    sync_dir: /tmp/mimir/bucket-sync
+    sync_dir: /data/mimir/bucket-sync
 
 # Ruler configuration
 # The ruler must have rule_path set explicitly or it defaults to ./data-ruler/ which causes
-# permission errors. We use /tmp/mimir/evaldata which is created by mimir-init container
+# permission errors. We use /data/mimir/evaldata which is created by mimir-init container
 # with correct ownership (UID 10001).
 # IMPORTANT: rule_path and ruler_storage.filesystem.dir must not share any prefix
 # Mimir does prefix-matching to detect overlap - "rule" is prefix of "rules" fails validation
 # Reference: https://github.com/grafana/mimir/discussions/3300
 ruler:
   enable_api: true
-  rule_path: /tmp/mimir/evaldata  # Ruler evaluation data (no overlap with storage)
+  rule_path: /data/mimir/evaldata  # Ruler evaluation data (no overlap with storage)
   alertmanager_url: http://localhost:9009/alertmanager
   ring:
     kvstore:
@@ -99,16 +99,16 @@ ruler:
 
 # Ruler storage - must be COMPLETELY different path from ruler.rule_path (no prefix overlap)
 # IMPORTANT: With multitenancy_enabled: false, Mimir uses tenant "anonymous"
-# Rules must be placed in: /tmp/mimir/ruleconfigs/anonymous/<rule_files>.yaml
-# The docker-compose mounts docker/mimir/rules/ -> /tmp/mimir/ruleconfigs/anonymous/
+# Rules must be placed in: /data/mimir/ruleconfigs/anonymous/<rule_files>.yaml
+# The docker-compose mounts docker/mimir/rules/ -> /data/mimir/ruleconfigs/anonymous/
 ruler_storage:
   backend: filesystem
   filesystem:
-    dir: /tmp/mimir/ruleconfigs
+    dir: /data/mimir/ruleconfigs
 
 # Alertmanager configuration (built-in)
 alertmanager:
-  data_dir: /tmp/mimir/alertmanager
+  data_dir: /data/mimir/alertmanager
   enable_api: true
   external_url: http://localhost:9009/alertmanager
   fallback_config_file: /etc/mimir/alertmanager-fallback.yaml

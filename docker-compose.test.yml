@@ -34,7 +34,6 @@
 #                       - /studio/sessions  - Session Management
 #   /authn            - Keycloak (Authentication) [public]
 #   /authz            - OpenFGA API [protected]
-#   /playground       - OpenFGA Playground UI [protected]
 #   /vectors          - Qdrant API [internal]
 #   /dashboard        - Qdrant Web UI [protected]
 #   /traces           - Tempo (Tracing) [internal]
@@ -1647,11 +1646,11 @@ services:
       - sh
       - -c
       - |
-        mkdir -p /tmp/loki/chunks /tmp/loki/rules/fake /tmp/loki/ruler /tmp/loki/compactor
-        chown -R 10001:10001 /tmp/loki
+        mkdir -p /data/loki/chunks /data/loki/rules/fake /data/loki/ruler /data/loki/compactor
+        chown -R 10001:10001 /data/loki
         echo "Loki volume permissions set (UID 10001, tenant: fake)"
     volumes:
-      - loki-data:/tmp/loki
+      - loki-data:/data/loki
     deploy:
       resources:
         limits:
@@ -1671,11 +1670,11 @@ services:
       - sh
       - -c
       - |
-        mkdir -p /tmp/tempo/traces /tmp/tempo/wal /tmp/tempo/blocks
-        chown -R 10001:10001 /tmp/tempo
+        mkdir -p /var/tempo/traces /var/tempo/wal /var/tempo/blocks
+        chown -R 10001:10001 /var/tempo
         echo "Tempo volume permissions set (UID 10001)"
     volumes:
-      - tempo-data:/tmp/tempo
+      - tempo-data:/var/tempo
     deploy:
       resources:
         limits:
@@ -1695,11 +1694,11 @@ services:
       - sh
       - -c
       - |
-        mkdir -p /tmp/mimir/data /tmp/mimir/tsdb /tmp/mimir/evaldata /tmp/mimir/ruleconfigs/anonymous
-        chown -R 10001:10001 /tmp/mimir
+        mkdir -p /data/mimir/data /data/mimir/tsdb /data/mimir/evaldata /data/mimir/ruleconfigs/anonymous
+        chown -R 10001:10001 /data/mimir
         echo "Mimir volume permissions set (UID 10001)"
     volumes:
-      - mimir-data:/tmp/mimir
+      - mimir-data:/data/mimir
     deploy:
       resources:
         limits:
@@ -1757,10 +1756,10 @@ services:
       - "13100:3100"  # Loki API (offset by 10000)
     volumes:
       - ./docker/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
-      - loki-data:/tmp/loki
+      - loki-data:/data/loki
       # Mount alerting rules under "fake" tenant (auth_enabled: false uses "fake")
       # Reference: https://grafana.com/docs/loki/latest/alert/#ruler
-      - ./docker/loki/rules:/tmp/loki/rules/fake:ro
+      - ./docker/loki/rules:/data/loki/rules/fake:ro
     healthcheck:
       # NOTE: Loki 3.6.2 uses distroless image with no shell utilities (no bash, wget, curl)
       # Healthcheck disabled; service is still accessible on port 3100
@@ -1815,7 +1814,7 @@ services:
       - "14318:4318"  # OTLP HTTP (offset by 10000)
     volumes:
       - ./docker/tempo/tempo-config.yaml:/etc/tempo/tempo-config.yaml:ro
-      - tempo-data:/tmp/tempo
+      - tempo-data:/var/tempo
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3200/ready"]
       interval: 10s
@@ -1866,11 +1865,11 @@ services:
       - ./docker/mimir/mimir-config.yaml:/etc/mimir/mimir-config.yaml:ro
       - ./docker/mimir/alertmanager-fallback.yaml:/etc/mimir/alertmanager-fallback.yaml:ro
       # Named volume must be listed before bind mounts to subdirectories
-      - mimir-data:/tmp/mimir
+      - mimir-data:/data/mimir
       # Alerting rules for Mimir ruler (auto-loaded on startup)
-      # Mimir expects rules in tenant-specific paths: /tmp/mimir/ruleconfigs/<tenant>/
+      # Mimir expects rules in tenant-specific paths: /data/mimir/ruleconfigs/<tenant>/
       # With multitenancy_enabled: false, the tenant is "anonymous"
-      - ./docker/mimir/rules:/tmp/mimir/ruleconfigs/anonymous:ro
+      - ./docker/mimir/rules:/data/mimir/ruleconfigs/anonymous:ro
     # NOTE: Mimir uses distroless image with no wget/curl
     # See: https://github.com/grafana/mimir/issues/9034
     # Healthcheck disabled; service is still accessible on port 9009

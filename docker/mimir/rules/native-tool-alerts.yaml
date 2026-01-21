@@ -1,0 +1,213 @@
+groups:
+- name: native_tools.circuit_breaker
+  interval: 30s
+  rules:
+  - alert: NativeToolCircuitBreakerOpen
+    expr: native_tool_circuit_breaker_state == 1
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Native tool circuit breaker OPEN: {{ $labels.provider }}'
+      description: |
+        Circuit breaker for native tool provider {{ $labels.provider }} has been open for 5+ minutes.
+        Native tools from this provider are disabled and fallback to builtin tools is active.
+
+        Impact: Native tool features may be degraded. Builtin fallbacks are handling requests.
+
+        Investigate:
+        1. Check provider API status: {{ $labels.provider }}
+        2. Review error logs for root cause
+        3. Check native_tool_errors_count_total for error types
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/native-tool-alerts.md#circuit-breaker-open
+      dashboard_url: '{{ grafana_url }}/d/native-tool-metrics?var-provider={{ $labels.provider }}'
+
+  - alert: NativeToolCircuitBreakerFlapping
+    expr: rate(native_tool_circuit_breaker_state_changes_total[10m]) > 0.1
+    for: 15m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Native tool circuit breaker flapping: {{ $labels.provider }}'
+      description: |
+        Circuit breaker for {{ $labels.provider }} is changing state frequently.
+        This indicates an unstable native tool provider.
+
+        Consider:
+        - Increasing circuit breaker threshold
+        - Temporarily disabling native tools for this provider
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/native-tool-alerts.md#circuit-breaker-flapping
+      dashboard_url: '{{ grafana_url }}/d/native-tool-metrics'
+
+- name: native_tools.fallback
+  interval: 30s
+  rules:
+  - alert: NativeToolFallbackRateHigh
+    expr: |
+      (
+        sum(rate(native_tool_fallback_count_total[5m])) by (tool_name)
+        /
+        (sum(rate(tool_source_selection_count_total{source="native"}[5m])) by (tool_name) > 0)
+      ) > 0.3
+    for: 10m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'High native tool fallback rate: {{ $labels.tool_name }}'
+      description: |
+        More than 30% of native tool executions for {{ $labels.tool_name }} are falling back to builtins.
+        Current fallback rate: {{ $value | humanizePercentage }}
+
+        This may indicate:
+        - Provider API issues
+        - Rate limiting
+        - Configuration problems
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/native-tool-alerts.md#high-fallback-rate
+      dashboard_url: '{{ grafana_url }}/d/native-tool-metrics?var-tool_name={{ $labels.tool_name }}'
+
+  - alert: NativeToolFallbackSpiked
+    expr: |
+      sum(increase(native_tool_fallback_count_total[5m])) > 50
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Native tool fallback spike detected'
+      description: |
+        A sudden increase in native tool fallbacks has been detected.
+        50+ fallbacks in the last 5 minutes.
+
+        Check provider status and error logs immediately.
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/native-tool-alerts.md#fallback-spike
+      dashboard_url: '{{ grafana_url }}/d/native-tool-metrics'
+
+- name: native_tools.errors
+  interval: 30s
+  rules:
+  - alert: NativeToolErrorRateHigh
+    expr: |
+      sum(rate(native_tool_errors_count_total[5m])) by (provider, error_type) > 0.5
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'High native tool error rate: {{ $labels.provider }} ({{ $labels.error_type }})'
+      description: |
+        Native tool errors for {{ $labels.provider }} are occurring at {{ $value | humanize }}/s.
+        Error type: {{ $labels.error_type }}
+
+        Check:
+        1. Provider API status
+        2. Rate limit status
+        3. Authentication configuration
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/native-tool-alerts.md#high-error-rate
+      dashboard_url: '{{ grafana_url }}/d/native-tool-metrics?var-provider={{ $labels.provider }}'
+
+  - alert: NativeToolTimeoutRateHigh
+    expr: |
+      sum(rate(native_tool_errors_count_total{error_type="timeout"}[5m])) by (provider) > 0.2
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'High native tool timeout rate: {{ $labels.provider }}'
+      description: |
+        Native tool timeouts for {{ $labels.provider }} are occurring at {{ $value | humanize }}/s.
+
+        Consider:
+        - Increasing timeout thresholds
+        - Checking provider latency
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/native-tool-alerts.md#high-timeout-rate
+      dashboard_url: '{{ grafana_url }}/d/native-tool-metrics?var-provider={{ $labels.provider }}'
+
+  - alert: NativeToolRateLimitHit
+    expr: |
+      sum(increase(native_tool_errors_count_total{error_type="rate_limit"}[5m])) by (provider) > 10
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Native tool rate limit hit: {{ $labels.provider }}'
+      description: |
+        Native tool rate limits for {{ $labels.provider }} are being hit.
+        10+ rate limit errors in the last 5 minutes.
+
+        Consider:
+        - Reducing native tool usage
+        - Implementing request batching
+        - Upgrading API tier
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/native-tool-alerts.md#rate-limit-hit
+      dashboard_url: '{{ grafana_url }}/d/native-tool-metrics?var-provider={{ $labels.provider }}'
+
+- name: native_tools.latency
+  interval: 30s
+  rules:
+  - alert: NativeToolLatencyHigh
+    expr: |
+      histogram_quantile(0.95, sum(rate(native_tool_execution_duration_bucket[5m])) by (le, provider)) > 5000
+    for: 10m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'High native tool latency: {{ $labels.provider }}'
+      description: |
+        Native tool p95 latency for {{ $labels.provider }} is {{ $value | humanizeDuration }}.
+        This exceeds the 5 second threshold.
+
+        Consider:
+        - Checking provider performance
+        - Temporarily preferring builtin tools
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/native-tool-alerts.md#high-latency
+      dashboard_url: '{{ grafana_url }}/d/native-tool-metrics?var-provider={{ $labels.provider }}'
+
+  - alert: NativeToolSlowerThanBuiltin
+    expr: |
+      (
+        histogram_quantile(0.95, sum(rate(native_tool_execution_duration_bucket[15m])) by (le, tool_name))
+        >
+        histogram_quantile(0.95, sum(rate(builtin_tool_execution_duration_bucket[15m])) by (le, tool_name)) * 2
+      ) > 0
+    for: 30m
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: 'Native tool significantly slower than builtin: {{ $labels.tool_name }}'
+      description: |
+        Native tool {{ $labels.tool_name }} is more than 2x slower than its builtin equivalent.
+        Consider reviewing tool preference settings.
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/native-tool-alerts.md#native-slower-than-builtin
+      dashboard_url: '{{ grafana_url }}/d/native-tool-metrics'
+
+- name: native_tools.usage
+  interval: 1m
+  rules:
+  - alert: NoNativeToolUsage
+    expr: |
+      sum(rate(tool_source_selection_count_total{source="native"}[1h])) == 0
+      and
+      sum(rate(tool_source_selection_count_total{source="builtin"}[1h])) > 0
+    for: 1h
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: 'No native tool usage detected'
+      description: |
+        No native tools have been used in the last hour despite builtin tool usage.
+        This may indicate:
+        - Native tools are disabled via feature flags
+        - Circuit breakers are open for all providers
+        - Configuration issues
+
+        Check feature flag status and circuit breaker state.
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/native-tool-alerts.md#no-native-usage
+      dashboard_url: '{{ grafana_url }}/d/native-tool-metrics'

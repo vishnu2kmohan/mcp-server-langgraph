@@ -152,6 +152,21 @@ repos:
     types: [python]
     stages:
     - pre-push
+  - id: check-websocket-deprecated-patterns
+    name: Validate WebSocket handler patterns
+    description: 'Detects deprecated patterns in WebSocket handlers that should use
+      WebSocketBase helpers instead.
+
+      Problem: Direct _user_id storage or verbose subscription guards.
+      Fix: Use self.user_id property, send_if_subscribed(), etc.
+
+      '
+    entry: uv run --frozen python -u scripts/lint_websocket_patterns.py
+    language: system
+    types: [python]
+    files: ^src/mcp_server_langgraph/websocket/handlers/.*\.py$
+    stages:
+    - pre-push
   - id: uv-lock-check
     name: Validate uv.lock synchronized with pyproject.toml
     entry: bash -c 'uv lock --check || (echo "ERROR - uv.lock out of sync. Run uv lock"; exit 1)'

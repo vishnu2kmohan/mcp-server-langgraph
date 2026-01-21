@@ -25,11 +25,11 @@ server:
 
 common:
   instance_addr: 127.0.0.1
-  path_prefix: /tmp/loki
+  path_prefix: /data/loki
   storage:
     filesystem:
-      chunks_directory: /tmp/loki/chunks
-      rules_directory: /tmp/loki/rules
+      chunks_directory: /data/loki/chunks
+      rules_directory: /data/loki/rules
   replication_factor: 1
   ring:
     instance_addr: 127.0.0.1
@@ -75,14 +75,14 @@ schema_config:
 
 # Ruler configuration for alerting rules
 # Enable API for rule management; storage uses local filesystem
-# Init container ensures /tmp/loki/rules directory has correct permissions
+# Init container ensures /data/loki/rules directory has correct permissions
 ruler:
   enable_api: true
   storage:
     type: local
     local:
-      directory: /tmp/loki/rules
-  rule_path: /tmp/loki/ruler
+      directory: /data/loki/rules
+  rule_path: /data/loki/ruler
   # Disable alertmanager for test environment (no external dependencies)
   # Rules can still be loaded and evaluated; alerts logged but not dispatched
   alertmanager_url: ""
@@ -124,7 +124,7 @@ limits_config:
 
 # Compactor for TSDB
 compactor:
-  working_directory: /tmp/loki/compactor
+  working_directory: /data/loki/compactor
   compaction_interval: 10m
   retention_enabled: true
   retention_delete_delay: 2h

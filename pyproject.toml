@@ -994,6 +994,10 @@ markers = [
     "adr0099: ADR-0099 semantic tool selection tests (semantic search for tools, skills, memories)",
     "bootstrap: Application bootstrap and initialization tests (semantic index, auth, dependencies)",
     "service_principal: Service principal authentication tests (non-interactive OAuth2, M2M)",
+    "session: Session data flow E2E tests (repository, messages, lifecycle)",
+    "budget: Budget checking and alert broadcasting tests (thresholds, WebSocket)",
+    "native_tools: Native LLM provider tools tests (metrics, fallback, comparison)",
+    "source_citations: Source citation extraction tests (Anthropic, Google, OpenAI, ToolMessage)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

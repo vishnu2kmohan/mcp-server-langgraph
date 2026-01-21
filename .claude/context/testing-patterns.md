@@ -1851,14 +1851,199 @@ Monitor these indicators to identify files needing splits:
 
 ---
 
+## 🔄 Data Flow Integration Testing (Updated 2026-01-21)
+
+**Purpose**: E2E tests that verify complete data flows from producer through storage to API.
+**Location**: `tests/integration/dataflow/`
+**Test Count**: 93 tests across 9 data flow chains
+
+### Pattern: Producer → Store → API → UI
+
+Data flow tests catch "wiring bugs" where components work individually but aren't properly connected. Example: Cost Page showing no data despite Grafana dashboards working (two separate data paths).
+
+```
+Producer (LLM Factory, Agent)
+    ↓
+Store (PostgreSQL, In-Memory Repository)
+    ↓
+API (REST endpoint)
+    ↓
+UI (Frontend component)
+```
+
+### Data Flow Test Structure
+
+```python
+"""
+E2E Integration Test: <Data Flow Name>
+
+Tests the complete <flow> data flow:
+    <Producer> → <Store/Service> → <Repository> → <API>
+
+Following memory safety patterns for pytest-xdist (see CLAUDE.md).
+"""
+
+import gc
+from uuid import uuid4
+import pytest
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.dataflow_category,  # e.g., cost, audit, session
+    pytest.mark.asyncio,
+    pytest.mark.xdist_group(name="unique_flow_name"),  # Critical for isolation
+]
+
+# ============================================================================
+# Test Fixtures (unique IDs for isolation)
+# ============================================================================
+
+@pytest.fixture
+def unique_entity_id() -> str:
+    """Generate unique ID for test isolation."""
+    return f"entity-{uuid4().hex[:8]}"
+
+# ============================================================================
+# E2E Data Flow Tests
+# ============================================================================
+
+class TestDataFlowE2E:
+    """E2E tests verifying the complete data flow."""
+
+    def setup_method(self):
+        """Reset singleton dependencies to prevent xdist pollution."""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+        reset_singleton_dependencies()
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+        reset_singleton_dependencies()
+        gc.collect()
+
+    async def test_producer_stores_data(self, unique_entity_id):
+        """
+        E2E: Verify Producer → Repository flow.
+
+        GIVEN: A producer with in-memory repository
+        WHEN: Data is produced
+        THEN: Data is stored and retrievable
+        """
+        # ... test implementation
+```
+
+### Memory Safety Patterns (pytest-xdist)
+
+**Critical for parallel execution**:
+
+1. **Unique IDs**: Every test entity uses `uuid4().hex[:8]` for isolation
+2. **reset_singleton_dependencies()**: Called in setup/teardown
+3. **gc.collect()**: Force garbage collection after each test
+4. **xdist_group marker**: Groups related tests on same worker
+
+```python
+# Each test class MUST have these methods:
+def setup_method(self):
+    from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+    reset_singleton_dependencies()
+
+def teardown_method(self):
+    from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+    reset_singleton_dependencies()
+    gc.collect()
+```
+
+### Available Data Flow Test Suites
+
+| Suite | Tests | Pattern | Markers |
+|-------|-------|---------|---------|
+| Cost Flow | 5 | LLM Factory → CostMetricsCollector → Storage → API | `cost` |
+| Audit Flow | 8 | Producer → UnifiedAuditService → Repository → API | `audit` |
+| Session Flow | 11 | Chat API → SessionRepository → Storage → Sessions API | `session` |
+| Budget Alerts | 10 | Cost Recording → BudgetChecker → Broadcaster → WebSocket | `budget` |
+| Native Tools Metrics | 12 | Tool Selection → record_* → Aggregator → Comparison Data | `native_tools` |
+| Source Citations | 14 | AI Response → extract_sources → SourceCitation → Messages | `source_citations` |
+
+### In-Memory Repository Pattern
+
+Use in-memory implementations for test isolation:
+
+```python
+# Cost storage
+@pytest.fixture(autouse=True)
+def use_memory_storage_backend(monkeypatch):
+    monkeypatch.setenv("COST_STORAGE_BACKEND", "memory")
+
+# Audit repository
+from mcp_server_langgraph.audit.repository import InMemoryUnifiedAuditRepository
+repository = InMemoryUnifiedAuditRepository()
+
+# Session repository
+from mcp_server_langgraph.storage.memory import InMemorySessionRepository
+repository = InMemorySessionRepository()
+```
+
+### Factory Fixtures
+
+Use factory fixtures for complex test objects:
+
+```python
+@pytest.fixture
+def create_test_entity():
+    """Factory for creating test entities."""
+    from mcp_server_langgraph.models import Entity
+
+    def _create(
+        entity_id: str,
+        param1: str = "default",
+        param2: int = 100,
+    ) -> Entity:
+        return Entity(
+            entity_id=entity_id,
+            param1=param1,
+            param2=param2,
+        )
+
+    return _create
+
+# Usage in test:
+async def test_something(self, unique_id, create_test_entity):
+    entity = create_test_entity(entity_id=unique_id, param1="custom")
+```
+
+### Running Data Flow Tests
+
+```bash
+# Run all data flow tests
+uv run pytest tests/integration/dataflow/ -v
+
+# Run specific flow
+uv run pytest tests/integration/dataflow/test_cost_flow_e2e.py -v
+
+# Run by marker
+uv run pytest -m "cost and integration" -v
+uv run pytest -m "audit and integration" -v
+```
+
+### When to Add Data Flow Tests
+
+Add a new data flow test when:
+1. **New data pipeline**: Producer writes to storage that API reads
+2. **Bug found**: Data not appearing in UI despite backend working
+3. **Integration point**: Two systems communicating via shared storage
+4. **WebSocket flows**: Events broadcast to connected clients
+
+---
+
 **Related Files**:
 - Test Configuration: `pyproject.toml` (pytest settings)
 - Test Requirements: `requirements-dev.txt`
 - Testing Guide: `TESTING.md`
 - CI Test Workflow: `.github/workflows/ci.yaml`
 - Vitest Configuration: `src/mcp_server_langgraph/studio/frontend/vitest.config.ts`
+- Data Flow Tests: `tests/integration/dataflow/`
 
 ---
 
 **Auto-Generated**: This file should be updated when new test patterns emerge
-**Last Review**: 2026-01-13
+**Last Review**: 2026-01-21
