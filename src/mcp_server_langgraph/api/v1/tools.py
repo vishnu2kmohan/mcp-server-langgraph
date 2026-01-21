@@ -26,6 +26,13 @@ from mcp_server_langgraph.auth.dependencies import get_current_user
 from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.observability.telemetry import logger
 from mcp_server_langgraph.tools import get_all_tools
+from mcp_server_langgraph.tools.constants import (
+    SANDBOX_REQUIRED_TOOLS,
+    TOOL_CATEGORY_MAP,
+    get_display_name as _get_display_name,
+    get_tool_category as _get_tool_category,
+    tool_requires_sandbox,
+)
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.skills.search import (
@@ -39,79 +46,8 @@ tools_router = APIRouter(prefix="/tools", tags=["Tools"])
 # Type alias for authenticated user dependency
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
-# Source type for tool origin
-ToolSource = Literal["builtin", "mcp"]
-
-# =============================================================================
-# Category Mapping for Built-in Tools
-# =============================================================================
-
-# Map tool names to categories
-TOOL_CATEGORY_MAP: dict[str, str] = {
-    # Calculator tools
-    "calculator": "calculator",
-    "add": "calculator",
-    "subtract": "calculator",
-    "multiply": "calculator",
-    "divide": "calculator",
-    # Search tools
-    "search_knowledge_base": "search",
-    "web_search": "search",
-    "explore_knowledge_iteratively": "search",
-    # Filesystem tools (read-only)
-    "read_file": "filesystem",
-    "list_directory": "filesystem",
-    "search_files": "filesystem",
-    # File mutation tools
-    "edit_file": "filesystem",
-    "write_file": "filesystem",
-    # Code execution tools
-    "execute_bash": "code_execution",
-    "execute_python": "code_execution",
-    # Web tools
-    "web_fetch": "web",
-    # Visual tools
-    "capture_screenshot": "visual",
-    # Computer use tools
-    "navigate": "computer_use",
-    "go_back": "computer_use",
-    "go_forward": "computer_use",
-    "mouse_click": "computer_use",
-    "mouse_move": "computer_use",
-    "mouse_drag": "computer_use",
-    "keyboard_type": "computer_use",
-    "keyboard_press": "computer_use",
-    "scroll": "computer_use",
-    "select_option": "computer_use",
-    "fill_form": "computer_use",
-    "get_element_info": "computer_use",
-    "get_screen_info": "computer_use",
-}
-
-# Tools that require sandbox environment (high-risk operations)
-SANDBOX_REQUIRED_TOOLS: frozenset[str] = frozenset(
-    {
-        "execute_bash",
-        "execute_python",
-        "edit_file",
-        "write_file",
-        "web_fetch",
-        "navigate",
-        "go_back",
-        "go_forward",
-        "mouse_click",
-        "mouse_move",
-        "mouse_drag",
-        "keyboard_type",
-        "keyboard_press",
-        "scroll",
-        "select_option",
-        "fill_form",
-        "get_element_info",
-        "get_screen_info",
-        "capture_screenshot",
-    }
-)
+# Source type for tool origin (v7: added "native" for LLM provider tools)
+ToolSource = Literal["builtin", "mcp", "native"]
 
 
 # =============================================================================
@@ -120,13 +56,17 @@ SANDBOX_REQUIRED_TOOLS: frozenset[str] = frozenset(
 
 
 class UnifiedToolResponse(BaseModel):
-    """Unified tool response combining built-in and MCP tools."""
+    """Unified tool response combining built-in, MCP, and native tools."""
 
+    # v7: Add tool_id as unique identifier for selection
+    tool_id: str = Field(..., description="Unique tool identifier (source:name)")
     name: str = Field(..., description="Tool name (qualified name for MCP tools)")
     display_name: str = Field(..., description="Human-readable display name")
     description: str = Field(..., description="Tool description")
-    source: ToolSource = Field(..., description="Tool source: 'builtin' or 'mcp'")
+    source: ToolSource = Field(..., description="Tool source: 'builtin', 'mcp', or 'native'")
     server_name: str | None = Field(None, description="MCP server name (MCP tools only)")
+    # v7: Add provider field for native tools
+    provider: str | None = Field(None, description="Native tool provider (anthropic, google)")
     category: str | None = Field(None, description="Tool category for grouping")
     input_schema: dict[str, Any] = Field(default_factory=dict, description="JSON Schema for parameters")
     requires_sandbox: bool = Field(default=False, description="Whether tool requires sandbox environment")
@@ -138,23 +78,14 @@ class UnifiedToolsListResponse(BaseModel):
     tools: list[UnifiedToolResponse] = Field(..., description="List of unified tools")
     builtin_count: int = Field(..., description="Number of built-in tools")
     mcp_count: int = Field(..., description="Number of MCP tools")
+    # v7: Add native_count for native LLM provider tools
+    native_count: int = Field(default=0, description="Number of native LLM provider tools")
     total_count: int = Field(..., description="Total number of tools")
 
 
 # =============================================================================
 # Helper Functions
 # =============================================================================
-
-
-def _get_tool_category(tool_name: str) -> str | None:
-    """Get the category for a tool by name."""
-    return TOOL_CATEGORY_MAP.get(tool_name)
-
-
-def _get_display_name(tool_name: str) -> str:
-    """Convert tool name to human-readable display name."""
-    # Convert snake_case to Title Case
-    return tool_name.replace("_", " ").title()
 
 
 def _tool_matches_search(tool: UnifiedToolResponse, search: str) -> bool:
@@ -182,11 +113,14 @@ def _builtin_tool_to_response(tool: Any) -> UnifiedToolResponse:
             pass
 
     return UnifiedToolResponse(
+        # v7: Add tool_id in format "builtin:{name}"
+        tool_id=f"builtin:{tool_name}",
         name=tool_name,
         display_name=_get_display_name(tool_name),
         description=tool.description or "",
         source="builtin",
         server_name=None,
+        provider=None,  # v7: No provider for builtin tools
         category=category,
         input_schema=input_schema,
         requires_sandbox=tool_name in SANDBOX_REQUIRED_TOOLS,
@@ -199,15 +133,90 @@ def _mcp_tool_to_response(tool: dict[str, Any]) -> UnifiedToolResponse:
     server_name = tool.get("server_name")
 
     return UnifiedToolResponse(
+        # v7: Add tool_id in format "mcp:{qualified_name}"
+        tool_id=f"mcp:{qualified_name}",
         name=qualified_name,
         display_name=_get_display_name(tool.get("name", qualified_name)),
         description=tool.get("description", ""),
         source="mcp",
         server_name=server_name,
+        provider=None,  # v7: No provider for MCP tools
         category=None,  # MCP tools don't have predefined categories
         input_schema=tool.get("input_schema", {}),
         requires_sandbox=False,  # MCP tools are externally managed
     )
+
+
+def _native_tool_to_response(
+    name: str,
+    provider: str,
+    provider_type: str,
+    description: str,
+) -> UnifiedToolResponse:
+    """Convert a native tool definition to UnifiedToolResponse.
+
+    v7: Native tools are LLM provider-specific tools like Anthropic's web_search
+    or Google's grounded search that are executed by the provider directly.
+    """
+    return UnifiedToolResponse(
+        tool_id=f"native:{name}",
+        name=name,
+        display_name=f"{name.replace('_', ' ').title()} (Native)",
+        description=description,
+        source="native",
+        server_name=None,
+        provider=provider,
+        category="native",
+        input_schema={},  # Native tools have provider-managed schemas
+        requires_sandbox=False,  # Native tools run in provider's environment
+    )
+
+
+def _get_native_tools() -> list[UnifiedToolResponse]:
+    """Get list of available native tools based on feature flags.
+
+    v7: Native tools are conditionally included based on feature flags.
+    """
+    native_tools: list[UnifiedToolResponse] = []
+
+    try:
+        from mcp_server_langgraph.tools.native_registry import NATIVE_TOOLS
+
+        for (name, provider), defn in NATIVE_TOOLS.items():
+            # Check provider-specific flags
+            if provider == "anthropic":
+                if name == "web_search" and feature_flags.anthropic_native_web_search_enabled:
+                    native_tools.append(
+                        _native_tool_to_response(
+                            name=defn.name,
+                            provider=defn.provider,
+                            provider_type=defn.provider_type,
+                            description=defn.description,
+                        )
+                    )
+                elif name == "code_execution" and feature_flags.anthropic_native_code_execution_enabled:
+                    native_tools.append(
+                        _native_tool_to_response(
+                            name=defn.name,
+                            provider=defn.provider,
+                            provider_type=defn.provider_type,
+                            description=defn.description,
+                        )
+                    )
+            elif provider == "google":
+                if name == "web_search" and feature_flags.google_native_search_enabled:
+                    native_tools.append(
+                        _native_tool_to_response(
+                            name=defn.name,
+                            provider=defn.provider,
+                            provider_type=defn.provider_type,
+                            description=defn.description,
+                        )
+                    )
+    except ImportError:
+        logger.warning("Native registry not available")
+
+    return native_tools
 
 
 # =============================================================================
@@ -218,21 +227,23 @@ def _mcp_tool_to_response(tool: dict[str, Any]) -> UnifiedToolResponse:
 @tools_router.get(
     "",
     summary="List all available tools",
-    description="Get unified list of built-in and MCP tools for manual selection",
+    description="Get unified list of built-in, MCP, and native tools for manual selection",
     response_model=UnifiedToolsListResponse,
 )
 async def list_tools(
     current_user: CurrentUser,
-    source: Literal["all", "builtin", "mcp"] | None = None,
+    source: Literal["all", "builtin", "mcp", "native"] | None = None,
     category: str | None = None,
     search: str | None = None,
 ) -> UnifiedToolsListResponse:
-    """List all tools (built-in + MCP) available for manual selection.
+    """List all tools (built-in + MCP + native) available for manual selection.
+
+    v7: Added native LLM provider tools support.
 
     Requires user authentication.
 
     Args:
-        source: Filter by source ('all', 'builtin', 'mcp')
+        source: Filter by source ('all', 'builtin', 'mcp', 'native')
         category: Filter by tool category
         search: Search term for filtering by name/description
 
@@ -242,8 +253,9 @@ async def list_tools(
     tools: list[UnifiedToolResponse] = []
     builtin_count = 0
     mcp_count = 0
+    native_count = 0
 
-    # Get built-in tools if not filtered to MCP only
+    # Get built-in tools if not filtered to MCP or native only
     if source in (None, "all", "builtin"):
         builtin_tools = get_all_tools()
         for bt in builtin_tools:
@@ -256,7 +268,7 @@ async def list_tools(
             tools.append(tool_response)
             builtin_count += 1
 
-    # Get MCP tools if not filtered to builtin only
+    # Get MCP tools if not filtered to builtin or native only
     if source in (None, "all", "mcp"):
         try:
             from mcp_server_langgraph.mcp.client.cached_unified_registry import (
@@ -279,17 +291,30 @@ async def list_tools(
             # If MCP registry is not available, just return builtin tools
             pass
 
+    # v7: Get native tools if enabled and not filtered to builtin or mcp only
+    if source in (None, "all", "native") and feature_flags.native_tools_enabled:
+        native_tools = _get_native_tools()
+        for nt in native_tools:
+            # Apply category filter
+            if category and nt.category != category:
+                continue
+
+            tools.append(nt)
+            native_count += 1
+
     # Apply search filter
     if search:
         tools = [t for t in tools if _tool_matches_search(t, search)]
         # Recount after filtering
         builtin_count = sum(1 for t in tools if t.source == "builtin")
         mcp_count = sum(1 for t in tools if t.source == "mcp")
+        native_count = sum(1 for t in tools if t.source == "native")
 
     return UnifiedToolsListResponse(
         tools=tools,
         builtin_count=builtin_count,
         mcp_count=mcp_count,
+        native_count=native_count,
         total_count=len(tools),
     )
 

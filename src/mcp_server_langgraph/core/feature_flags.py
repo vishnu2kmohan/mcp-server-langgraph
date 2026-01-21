@@ -712,6 +712,31 @@ class FeatureFlags(BaseSettings):
     )
 
     # =========================================================================
+    # Native LLM Provider Tools (v7)
+    # Enable native tools from LLM providers (Anthropic, Google) that run
+    # server-side with better context and quality than external tool calls.
+    # =========================================================================
+    native_tools_enabled: bool = Field(
+        default=False,
+        description="Master switch for native LLM provider tools (web_search, code_execution)",
+    )
+
+    anthropic_native_web_search_enabled: bool = Field(
+        default=False,
+        description="Enable Anthropic web_search_20250305 native tool",
+    )
+
+    google_native_search_enabled: bool = Field(
+        default=False,
+        description="Enable Google googleSearch grounded search",
+    )
+
+    anthropic_native_code_execution_enabled: bool = Field(
+        default=False,
+        description="Enable Anthropic code_execution_20250825 remote sandbox",
+    )
+
+    # =========================================================================
     # Claude Agent SDK Patterns (SDK-Inspired Features)
     # See ADR-0077 for architecture decisions and implementation details.
     #
@@ -1511,7 +1536,7 @@ class FeatureFlags(BaseSettings):
     # Execution Mode Features (Ctrl/Cmd+Shift+M Toggle in UI)
     # =========================================================================
     enable_execution_mode_toggle: bool = Field(
-        default=False,
+        default=True,
         description="Enable Ctrl/Cmd+Shift+M execution mode toggle in chat input. "
         "Allows cycling between default, plan, auto_accept, and bypass modes.",
     )
@@ -1543,7 +1568,7 @@ class FeatureFlags(BaseSettings):
     )
 
     preferences_menu_enabled: bool = Field(
-        default=False,
+        default=True,
         description="Enable consolidated preferences menu in chat input. "
         "When enabled, model settings, tool mode, and KB focus are consolidated "
         "into a single dropdown menu. When disabled, individual selectors are shown.",

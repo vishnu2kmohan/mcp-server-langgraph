@@ -121,6 +121,12 @@ class ChatCompletionRequest(BaseModel):
         description="Tool selection mode: 'auto' = semantic search (default), "
         "'manual' = use selected_tools only, 'none' = disable all tools.",
     )
+    tool_preference: Literal["auto", "native", "builtin", "mcp"] = Field(
+        default="auto",
+        description="Tool preference for this request: 'auto' = prefer native tools when available, "
+        "'native' = only use native LLM provider tools (fallback to builtin if unavailable), "
+        "'builtin' = only use built-in tools, 'mcp' = only use MCP server tools.",
+    )
     # Execution mode for plan-and-execute workflow (Shift+Tab toggle in UI)
     execution_mode: Literal["default", "plan", "auto_accept", "bypass"] = Field(
         default="default",
@@ -1091,12 +1097,21 @@ class ChatServiceImpl(ChatService):
         # Extract kb_focus from kwargs (default: "all" per ADR-0094)
         kb_focus = kwargs.pop("kb_focus", "all")
 
+        # v7: Extract tool parameters for native tools integration
+        tool_preference = kwargs.pop("tool_preference", "auto")
+        tool_selection_mode = kwargs.pop("tool_selection_mode", "auto")
+        selected_tools = kwargs.pop("selected_tools", None)
+
         initial_state = {
             "messages": langgraph_messages,
             "next_action": "",
             "user_id": kwargs.get("user_id"),
             "request_id": session_id,
             "kb_focus": kb_focus,
+            # v7: Tool controls for native tools integration
+            "tool_preference": tool_preference,
+            "tool_selection_mode": tool_selection_mode,
+            "selected_tools": selected_tools,
         }
 
         config = {"configurable": {"thread_id": session_id}}
@@ -1774,6 +1789,10 @@ async def create_stream(
             execution_mode=request.execution_mode,
             audit_service=audit_service,
             current_user=current_user,
+            # v7: Native tools integration parameters
+            tool_preference=request.tool_preference,
+            tool_selection_mode=request.tool_selection_mode,
+            selected_tools=request.selected_tools,
         ):
             # Format as SSE
             import json

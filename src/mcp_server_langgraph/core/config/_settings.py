@@ -218,6 +218,14 @@ class Settings(BaseSettings):
     verification_model_temperature: float = 0.0  # Deterministic for consistent verification
     verification_model_max_tokens: int = 1000  # Smaller output for verification feedback
 
+    # Executor/Critic Models (for critique loop)
+    # When FF_ENABLE_CRITIQUE_LOOP=true, these models are used for the multi-pass refinement pattern.
+    # If not specified, models are auto-selected from TIER_MODELS based on task complexity/risk.
+    # Set EXECUTOR_MODEL_NAME to override the auto-selected executor model.
+    # Set CRITIC_MODEL_NAME to override the auto-selected critic model.
+    executor_model_name: str | None = None  # Default: auto-select based on complexity
+    critic_model_name: str | None = None  # Default: auto-select based on complexity/risk
+
     # Fallback Models (for resilience)
     # Uses Vertex AI models to avoid requiring separate Anthropic/OpenAI API keys
     # Provides cross-model resilience within Vertex AI (Gemini + Claude)

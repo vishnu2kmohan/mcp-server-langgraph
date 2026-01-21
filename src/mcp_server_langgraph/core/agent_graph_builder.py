@@ -72,6 +72,11 @@ class AgentState(TypedDict):
     selected_tools: list[str] | None
     selected_skills: list[str] | None
 
+    # v7: Native tool controls
+    tool_preference: str | None  # "auto", "native", "builtin", "mcp"
+    tool_selection_mode: str | None  # "auto", "manual", "none"
+    selected_tool_ids: list[str] | None  # tool_ids for SSE/frontend (separate from names)
+
     # Semantic memory retrieval for context enrichment
     retrieved_memories: list[str] | None
 
@@ -256,6 +261,7 @@ async def _retrieve_tools_impl(
     if not last_message:
         # No message to search with - use all tools
         state["selected_tools"] = None
+        state["selected_tool_ids"] = None  # v7: Also set tool_ids to None
         logger.debug("No message for semantic tool selection, using all tools")
         return {k: v for k, v in state.items() if k != "messages"}
 
@@ -268,6 +274,7 @@ async def _retrieve_tools_impl(
     # Short queries may not benefit from semantic search
     if len(query.strip()) < 10:
         state["selected_tools"] = None
+        state["selected_tool_ids"] = None  # v7: Also set tool_ids to None
         logger.debug("Query too short for semantic tool selection, using all tools")
         return {k: v for k, v in state.items() if k != "messages"}
 
@@ -289,6 +296,8 @@ async def _retrieve_tools_impl(
             if tool_entries:
                 # Extract tool names from search results
                 state["selected_tools"] = [entry.name for entry in tool_entries]
+                # v7: Also extract tool_ids for SSE/frontend
+                state["selected_tool_ids"] = [entry.tool_id for entry in tool_entries]
                 logger.info(
                     f"Semantic tool selection: selected {len(state['selected_tools'])} tools: "
                     f"{state['selected_tools']}"
@@ -296,16 +305,19 @@ async def _retrieve_tools_impl(
             else:
                 # No tools found - fall back to all tools
                 state["selected_tools"] = None
+                state["selected_tool_ids"] = None  # v7
                 logger.info("Semantic tool selection: no matching tools, using all tools")
         else:
             # No semantic index manager provided - use all tools
             state["selected_tools"] = None
+            state["selected_tool_ids"] = None  # v7
             logger.debug("Semantic tool selection: manager not configured, using all tools")
 
     except Exception as e:
         # Graceful fallback - use all tools if semantic search fails
         logger.warning(f"Semantic tool selection failed, falling back to all tools: {e}")
         state["selected_tools"] = None
+        state["selected_tool_ids"] = None  # v7
 
     return {k: v for k, v in state.items() if k != "messages"}
 

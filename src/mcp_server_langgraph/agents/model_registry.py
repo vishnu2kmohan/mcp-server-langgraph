@@ -99,6 +99,11 @@ class ModelCapabilities:
     # Only set for deprecated models to indicate when they will be retired
     sunset_date: str | None = None
 
+    # v7: Native LLM provider tools support
+    supports_native_web_search: bool = False
+    supports_native_code_execution: bool = False
+    native_provider: str | None = None  # "anthropic", "google", etc.
+
     def __post_init__(self) -> None:
         """Calculate effective_limit and set frontend defaults."""
         if self.effective_limit is None:
@@ -171,6 +176,10 @@ class ModelRegistry:
             display_name="Claude Opus 4.5",
             public_id="claude-opus-4-5",
             status="current",
+            # v7: Native tools
+            supports_native_web_search=True,
+            supports_native_code_execution=True,
+            native_provider="anthropic",
         )
 
         self._models["claude-sonnet-4-5-20250929"] = ModelCapabilities(
@@ -192,6 +201,10 @@ class ModelRegistry:
             display_name="Claude Sonnet 4.5",
             public_id="claude-sonnet-4-5",
             status="current",
+            # v7: Native tools
+            supports_native_web_search=True,
+            supports_native_code_execution=True,
+            native_provider="anthropic",
         )
 
         # Claude Haiku 4.5 is the first Haiku to support extended thinking
@@ -284,6 +297,9 @@ class ModelRegistry:
             display_name="Gemini 2.5 Flash",
             public_id="gemini-2.5-flash",
             status="current",
+            # v7: Native tools (Google grounded search)
+            supports_native_web_search=True,
+            native_provider="google",
         )
 
         # OpenAI GPT-5 models (CURRENT)
@@ -815,6 +831,9 @@ class ModelRegistry:
             display_name="Gemini 2.5 Pro",
             public_id="gemini-2.5-pro",
             status="current",
+            # v7: Native tools (Google grounded search)
+            supports_native_web_search=True,
+            native_provider="google",
         )
 
         # Gemini Pro 1.0 (LEGACY - superseded by 2.5)
@@ -998,6 +1017,7 @@ class ModelRegistry:
     def get_frontend_models(
         self,
         status: str | None = None,
+        default_model_id: str | None = None,
     ) -> list[dict[str, str | bool | None]]:
         """Get models formatted for frontend Enhanced Model Selector.
 
@@ -1007,30 +1027,33 @@ class ModelRegistry:
         Sprint 1: Enhanced Model Selector - Single source of truth for model
         capabilities, eliminating the hardcoded AVAILABLE_MODELS in config.py.
 
+        12-Factor App Compliance:
+        - Each model variant (native API vs Vertex AI) is listed separately
+        - Full model_id is used (e.g., vertex_ai/gemini-3-flash-preview)
+        - No deduplication - explicit provider+model specification
+        - isDefault is set based on exact match with settings.model_name
+
         Args:
             status: Optional filter by status (current, preview, legacy, deprecated)
+            default_model_id: The default model from settings.model_name (exact match)
 
         Returns:
-            List of model dicts with: id, name, provider, supports_thinking,
-            supports_vision, supports_tools, status
+            List of model dicts with: id, name, provider, vendor, supports_thinking,
+            supports_vision, supports_tools, status, isDefault
         """
         models = []
-        seen_public_ids: set[str] = set()
 
         for caps in self._models.values():
             # Apply status filter if specified
             if status and caps.status != status:
                 continue
 
-            # Use public_id as the unique identifier for frontend
-            public_id = caps.public_id or caps.model_id
+            # Use full model_id - no deduplication to preserve explicit variants
+            # This allows users to explicitly select vertex_ai/gemini-3-flash vs gemini-3-flash
+            model_id = caps.model_id
 
-            # Skip duplicates (e.g., Vertex AI variants of same model)
-            if public_id in seen_public_ids:
-                continue
-            seen_public_ids.add(public_id)
-
-            # Map vendor to simplified provider for frontend
+            # Map vendor to simplified provider for frontend display/grouping
+            # Keep original vendor for transparency (Vertex AI vs native API)
             provider = caps.vendor
             if provider == "vertex_ai_anthropic":
                 provider = "anthropic"
@@ -1038,13 +1061,15 @@ class ModelRegistry:
                 provider = "google"
 
             model_dict: dict[str, str | bool | None] = {
-                "id": public_id,
+                "id": model_id,  # Full model_id for explicit selection
                 "name": caps.display_name or caps.model_id,
-                "provider": provider,
+                "provider": provider,  # Simplified for grouping (google, anthropic, openai)
+                "vendor": caps.vendor,  # Actual backend (vertex_ai, vertex_ai_anthropic, google, etc.)
                 "supports_thinking": caps.supports_extended_thinking,
                 "supports_vision": caps.supports_vision,
                 "supports_tools": caps.supports_tools,
                 "status": caps.status,
+                "isDefault": model_id == default_model_id,  # Exact match
             }
 
             # Include sunset_date for deprecated models

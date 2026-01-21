@@ -216,6 +216,7 @@ async def get_available_models(current_user: CurrentUser) -> list[dict]:
     - supports_thinking: Whether the model supports extended thinking
     - supports_vision: Whether the model supports image inputs
     - supports_tools: Whether the model supports tool/function calling
+    - isDefault: Whether this is the default model (from settings.model_name)
 
     This endpoint provides the single source of truth for model options,
     ensuring frontend model selectors reflect actual backend capabilities.
@@ -223,26 +224,37 @@ async def get_available_models(current_user: CurrentUser) -> list[dict]:
     When FF_USE_MODEL_REGISTRY_FOR_FRONTEND is enabled, uses ModelRegistry
     as the single source of truth instead of hardcoded AVAILABLE_MODELS.
 
+    12-Factor App Compliance:
+    - Default model is determined by settings.model_name (env: MODEL_NAME)
+    - Frontend should NOT hardcode default model - use isDefault from this API
+
     Returns:
         List of model dictionaries with id, name, provider, supports_thinking,
-        supports_vision, supports_tools
+        supports_vision, supports_tools, isDefault
 
     Example Response:
         [
             {
-                "id": "claude-3-5-sonnet",
-                "name": "Claude 3.5 Sonnet",
-                "provider": "anthropic",
+                "id": "gemini-2.5-flash",
+                "name": "Gemini 2.5 Flash",
+                "provider": "google",
                 "supports_thinking": true,
                 "supports_vision": true,
-                "supports_tools": true
+                "supports_tools": true,
+                "isDefault": true
             },
             ...
         ]
     """
+    # Get the default model from settings (12-Factor: config from environment)
+    # Use exact matching - no normalization to preserve explicit provider+model specification
+    default_model_id = settings.model_name
+
     if feature_flags.use_model_registry_for_frontend:
         registry = get_default_registry()
-        return registry.get_frontend_models()
+        # Pass default_model_id to mark the correct model as default
+        models = registry.get_frontend_models(default_model_id=default_model_id)
+        return models
 
     # Emit deprecation warning when legacy AVAILABLE_MODELS is used
     warnings.warn(
@@ -253,7 +265,13 @@ async def get_available_models(current_user: CurrentUser) -> list[dict]:
         DeprecationWarning,
         stacklevel=2,
     )
-    return AVAILABLE_MODELS
+
+    # Mark default for legacy AVAILABLE_MODELS - exact match
+    models = [dict(m) for m in AVAILABLE_MODELS]  # Copy to avoid mutation
+    for model in models:
+        model["isDefault"] = model.get("id", "") == default_model_id
+
+    return models
 
 
 @config_router.get("/config/defaults")
@@ -275,13 +293,19 @@ async def get_defaults(current_user: CurrentUser) -> dict:
         - model_provider: Inferred provider (openai, anthropic, google, azure)
         - max_tokens: Default max tokens from settings
         - temperature: Default temperature (0.7)
+        - executor_model_name: Optional override for executor model (critique loop)
+        - critic_model_name: Optional override for critic model (critique loop)
+        - critique_loop_enabled: Whether the critique loop feature is enabled
 
     Example Response:
         {
             "model_name": "gemini-2.5-flash",
             "model_provider": "google",
             "max_tokens": 8192,
-            "temperature": 0.7
+            "temperature": 0.7,
+            "executor_model_name": null,
+            "critic_model_name": null,
+            "critique_loop_enabled": false
         }
     """
     model_name = settings.model_name
@@ -295,4 +319,8 @@ async def get_defaults(current_user: CurrentUser) -> dict:
         "model_provider": model_provider,
         "max_tokens": settings.model_max_tokens,
         "temperature": temperature,
+        # Executor/Critic model configuration (for critique loop)
+        "executor_model_name": settings.executor_model_name,
+        "critic_model_name": settings.critic_model_name,
+        "critique_loop_enabled": feature_flags.enable_critique_loop,
     }
