@@ -6,14 +6,36 @@
  * Outputs JSON metrics for CI dashboards and tracking.
  *
  * Usage:
- *   npx tsx scripts/check-design-system-compliance.ts
+ *   npx tsx scripts/check-design-system-compliance.ts [options]
  *   npm run check:design-system
+ *
+ * Options:
+ *   --json        Output JSON metrics (also enabled in CI)
+ *   --strict      Exit non-zero on violations (for CI enforcement)
+ *   --violations  Show detailed violation report with file paths
+ *   --verbose     Show score breakdown weights
+ *
+ * Examples:
+ *   npx tsx scripts/check-design-system-compliance.ts --violations
+ *   npx tsx scripts/check-design-system-compliance.ts --strict --violations
  *
  * Metrics tracked:
  * - Raw HTML element usage vs design system components
+ * - Button variant compliance (STYLE.md: ghost for nav, secondary for cancel, danger for destructive)
+ * - Navigation context compliance (buttons in <nav>, sidebar, tabs should use variant="ghost")
  * - Form element adoption (Checkbox, RadioGroup, Toggle)
- * - Gray vs neutral color usage
+ * - Gray vs neutral color usage (Radix 1-12 scale)
  * - Storybook coverage for UI components
+ * - Icon button size compliance (WCAG 2.2 touch targets)
+ * - Field sizing compliance (size prop vs className overrides)
+ *
+ * Score weighting:
+ *   Button adoption:     20%
+ *   Form adoption:       20%
+ *   Button variants:     20%
+ *   Nav context:         15%
+ *   Color adoption:      15%
+ *   Storybook coverage:  10%
  */
 
 import { execSync } from "child_process";
@@ -56,6 +78,18 @@ interface ComplianceMetrics {
     buttonWithColorOverride: number;
     colorOverrideCompliancePercent: number;
   };
+  navigationContext: {
+    navButtonsWithGhost: number;
+    navButtonsWithoutGhost: number;
+    navButtonCompliancePercent: number;
+    sidebarButtonsWithGhost: number;
+    sidebarButtonsWithoutGhost: number;
+    sidebarButtonCompliancePercent: number;
+    tabButtonsWithGhost: number;
+    tabButtonsWithoutGhost: number;
+    tabButtonCompliancePercent: number;
+    filesWithNavViolations: string[];
+  };
   fieldSizing: {
     inputWithSizeProp: number;
     inputWithSizingOverride: number;
@@ -80,6 +114,7 @@ interface ComplianceMetrics {
     colorAdoptionPercent: number;
     storybookCoveragePercent: number;
     buttonVariantCompliancePercent: number;
+    navContextCompliancePercent: number;
     overallScore: number;
   };
 }
@@ -98,6 +133,143 @@ function countRgMatches(pattern: string, glob?: string, excludePatterns?: string
   }
 }
 
+function findFilesWithPattern(pattern: string, glob?: string, excludePatterns?: string[]): string[] {
+  try {
+    const globArg = glob ? `-g '${glob}'` : "";
+    const excludeArgs = excludePatterns ? excludePatterns.map((p) => `-g '!${p}'`).join(" ") : "";
+    const escapedPattern = pattern.replace(/'/g, "'\\''");
+    const cmd = `rg -l '${escapedPattern}' src/ ${globArg} ${excludeArgs} 2>/dev/null`;
+    const result = execSync(cmd, { encoding: "utf-8", cwd: path.join(__dirname, "..") }).trim();
+    return result ? result.split("\n").filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Analyzes files for navigation context button compliance.
+ * Per STYLE.md: Navigation buttons (inside <nav>, sidebar, tabs) should use variant="ghost"
+ *
+ * Detection strategy:
+ * 1. Find files with navigation context patterns (nav, sidebar, tabs, menu)
+ * 2. Check if Buttons in those contexts use variant="ghost"
+ */
+function isExemptFile(filePath: string): boolean {
+  const fileName = path.basename(filePath);
+  return NAV_CONTEXT_EXCEPTIONS.includes(fileName);
+}
+
+function analyzeNavigationContextCompliance(excludePatterns: string[]): {
+  navWithGhost: number;
+  navWithoutGhost: number;
+  sidebarWithGhost: number;
+  sidebarWithoutGhost: number;
+  tabWithGhost: number;
+  tabWithoutGhost: number;
+  violationFiles: string[];
+} {
+  const violationFiles: string[] = [];
+
+  // Pattern 1: Buttons inside <nav> elements
+  // Files with <nav> containing Button - check for ghost variant
+  const filesWithNav = findFilesWithPattern("<nav", "*.tsx", excludePatterns).filter(f => !isExemptFile(f));
+  let navWithGhost = 0;
+  let navWithoutGhost = 0;
+
+  for (const file of filesWithNav) {
+    try {
+      const content = fs.readFileSync(path.join(__dirname, "..", file), "utf-8");
+      // Find <nav> blocks and check buttons within
+      const navRegex = /<nav[^>]*>[\s\S]*?<\/nav>/g;
+      const matches = content.match(navRegex) || [];
+      for (const navBlock of matches) {
+        // Count buttons with ghost variant in nav
+        const ghostButtons = (navBlock.match(/<Button[^>]*variant=["']ghost["']/g) || []).length;
+        // Count buttons without ghost variant (missing variant or different variant)
+        const allButtons = (navBlock.match(/<Button\b/g) || []).length;
+        const nonGhostButtons = allButtons - ghostButtons;
+
+        navWithGhost += ghostButtons;
+        navWithoutGhost += nonGhostButtons;
+
+        if (nonGhostButtons > 0 && !violationFiles.includes(file)) {
+          violationFiles.push(file);
+        }
+      }
+    } catch {
+      // File read error, skip
+    }
+  }
+
+  // Pattern 2: Sidebar navigation buttons
+  // Look for common sidebar patterns: className containing "sidebar", "side-nav", "nav-menu"
+  const filesWithSidebar = findFilesWithPattern("(sidebar|side-nav|sideNav|SideNav)", "*.tsx", excludePatterns).filter(f => !isExemptFile(f));
+  let sidebarWithGhost = 0;
+  let sidebarWithoutGhost = 0;
+
+  for (const file of filesWithSidebar) {
+    try {
+      const content = fs.readFileSync(path.join(__dirname, "..", file), "utf-8");
+      // Find sidebar-like blocks (divs with sidebar class or role="navigation")
+      const sidebarRegex = /<(?:div|aside|section)[^>]*(?:className|role)=[^>]*(?:sidebar|navigation|side-nav)[^>]*>[\s\S]*?<\/(?:div|aside|section)>/gi;
+      const matches = content.match(sidebarRegex) || [];
+      for (const sidebarBlock of matches) {
+        const ghostButtons = (sidebarBlock.match(/<Button[^>]*variant=["']ghost["']/g) || []).length;
+        const allButtons = (sidebarBlock.match(/<Button\b/g) || []).length;
+        const nonGhostButtons = allButtons - ghostButtons;
+
+        sidebarWithGhost += ghostButtons;
+        sidebarWithoutGhost += nonGhostButtons;
+
+        if (nonGhostButtons > 0 && !violationFiles.includes(file)) {
+          violationFiles.push(file);
+        }
+      }
+    } catch {
+      // File read error, skip
+    }
+  }
+
+  // Pattern 3: Tab navigation buttons
+  // Look for tabs patterns: role="tablist", className containing "tabs"
+  const filesWithTabs = findFilesWithPattern('(role=["\\\'"]tablist["\\\'"]|className=[^>]*tabs)', "*.tsx", excludePatterns).filter(f => !isExemptFile(f));
+  let tabWithGhost = 0;
+  let tabWithoutGhost = 0;
+
+  for (const file of filesWithTabs) {
+    try {
+      const content = fs.readFileSync(path.join(__dirname, "..", file), "utf-8");
+      // Find tablist blocks
+      const tablistRegex = /<[^>]*role=["']tablist["'][^>]*>[\s\S]*?<\/[^>]+>/g;
+      const matches = content.match(tablistRegex) || [];
+      for (const tabBlock of matches) {
+        const ghostButtons = (tabBlock.match(/<Button[^>]*variant=["']ghost["']/g) || []).length;
+        const allButtons = (tabBlock.match(/<Button\b/g) || []).length;
+        const nonGhostButtons = allButtons - ghostButtons;
+
+        tabWithGhost += ghostButtons;
+        tabWithoutGhost += nonGhostButtons;
+
+        if (nonGhostButtons > 0 && !violationFiles.includes(file)) {
+          violationFiles.push(file);
+        }
+      }
+    } catch {
+      // File read error, skip
+    }
+  }
+
+  return {
+    navWithGhost,
+    navWithoutGhost,
+    sidebarWithGhost,
+    sidebarWithoutGhost,
+    tabWithGhost,
+    tabWithoutGhost,
+    violationFiles,
+  };
+}
+
 // Standard exclusions for production code metrics
 // Excludes: tests, stories, UI component definitions, contexts (JSDoc examples), canvas (native handlers)
 const PROD_EXCLUSIONS = [
@@ -106,6 +278,14 @@ const PROD_EXCLUSIONS = [
   "**/components/UI/**",
   "**/contexts/**",
   "**/canvas/**",
+];
+
+// Components that are exempt from navigation button compliance
+// These use specialized button patterns that are intentional
+const NAV_CONTEXT_EXCEPTIONS = [
+  "StepProgress.tsx",      // Specialized progress indicator with circular step buttons
+  "Pagination.tsx",        // Pagination buttons have different semantics
+  "SegmentedControl.tsx",  // Segment buttons are toggle-style, not navigation
 ];
 
 function countStorybookCoverage(): { total: number; covered: number } {
@@ -256,6 +436,15 @@ function calculateMetrics(): ComplianceMetrics {
     ? 100
     : Math.round((totalFieldsWithSizing / Math.max(totalFieldsWithSizing + totalFieldsWithOverrides, 1)) * 100);
 
+  // Analyze navigation context compliance (STYLE.md: nav/sidebar/tab buttons should use ghost)
+  const navCompliance = analyzeNavigationContextCompliance(PROD_EXCLUSIONS);
+  const totalNavButtons = Math.max(navCompliance.navWithGhost + navCompliance.navWithoutGhost, 1);
+  const navButtonCompliancePercent = Math.round((navCompliance.navWithGhost / totalNavButtons) * 100);
+  const totalSidebarButtons = Math.max(navCompliance.sidebarWithGhost + navCompliance.sidebarWithoutGhost, 1);
+  const sidebarButtonCompliancePercent = Math.round((navCompliance.sidebarWithGhost / totalSidebarButtons) * 100);
+  const totalTabButtons = Math.max(navCompliance.tabWithGhost + navCompliance.tabWithoutGhost, 1);
+  const tabButtonCompliancePercent = Math.round((navCompliance.tabWithGhost / totalTabButtons) * 100);
+
   // Count Storybook coverage
   const storybookStats = countStorybookCoverage();
 
@@ -286,13 +475,24 @@ function calculateMetrics(): ComplianceMetrics {
     ? Math.round((storybookStats.covered / storybookStats.total) * 100)
     : 0;
 
-  // Overall score (weighted average - updated to include variant compliance)
+  // Calculate navigation context compliance aggregate
+  const totalNavContextButtons = (navCompliance.navWithGhost + navCompliance.navWithoutGhost) +
+    (navCompliance.sidebarWithGhost + navCompliance.sidebarWithoutGhost) +
+    (navCompliance.tabWithGhost + navCompliance.tabWithoutGhost);
+  const navContextCompliantButtons = navCompliance.navWithGhost +
+    navCompliance.sidebarWithGhost + navCompliance.tabWithGhost;
+  const navContextCompliancePercent = totalNavContextButtons > 0
+    ? Math.round((navContextCompliantButtons / totalNavContextButtons) * 100)
+    : 100;
+
+  // Overall score (weighted average - updated to include variant and navigation compliance)
   const overallScore = Math.round(
-    buttonAdoptionPercent * 0.25 +
-      formAdoptionPercent * 0.25 +
-      colorAdoptionPercent * 0.2 +
-      storybookCoveragePercent * 0.15 +
-      buttonVariantCompliancePercent * 0.15
+    buttonAdoptionPercent * 0.20 +
+      formAdoptionPercent * 0.20 +
+      colorAdoptionPercent * 0.15 +
+      storybookCoveragePercent * 0.10 +
+      buttonVariantCompliancePercent * 0.20 +
+      navContextCompliancePercent * 0.15
   );
 
   return {
@@ -327,6 +527,18 @@ function calculateMetrics(): ComplianceMetrics {
       buttonWithColorOverride,
       colorOverrideCompliancePercent,
     },
+    navigationContext: {
+      navButtonsWithGhost: navCompliance.navWithGhost,
+      navButtonsWithoutGhost: navCompliance.navWithoutGhost,
+      navButtonCompliancePercent,
+      sidebarButtonsWithGhost: navCompliance.sidebarWithGhost,
+      sidebarButtonsWithoutGhost: navCompliance.sidebarWithoutGhost,
+      sidebarButtonCompliancePercent,
+      tabButtonsWithGhost: navCompliance.tabWithGhost,
+      tabButtonsWithoutGhost: navCompliance.tabWithoutGhost,
+      tabButtonCompliancePercent,
+      filesWithNavViolations: navCompliance.violationFiles,
+    },
     fieldSizing: {
       inputWithSizeProp,
       inputWithSizingOverride,
@@ -351,6 +563,7 @@ function calculateMetrics(): ComplianceMetrics {
       colorAdoptionPercent,
       storybookCoveragePercent,
       buttonVariantCompliancePercent,
+      navContextCompliancePercent,
       overallScore,
     },
   };
@@ -391,6 +604,26 @@ function printReport(metrics: ComplianceMetrics): void {
   console.log(`  w/ color overrides:       ${metrics.componentVariants.buttonWithColorOverride}`);
   console.log(`  Color override compliance:${metrics.componentVariants.colorOverrideCompliancePercent}%`);
 
+  console.log("\nNavigation Context Compliance (STYLE.md: nav/sidebar/tab buttons should use variant='ghost'):");
+  console.log(`  Nav buttons w/ ghost:     ${metrics.navigationContext.navButtonsWithGhost}`);
+  console.log(`  Nav buttons w/o ghost:    ${metrics.navigationContext.navButtonsWithoutGhost}`);
+  console.log(`  Nav compliance:           ${metrics.navigationContext.navButtonCompliancePercent}%`);
+  console.log(`  Sidebar w/ ghost:         ${metrics.navigationContext.sidebarButtonsWithGhost}`);
+  console.log(`  Sidebar w/o ghost:        ${metrics.navigationContext.sidebarButtonsWithoutGhost}`);
+  console.log(`  Sidebar compliance:       ${metrics.navigationContext.sidebarButtonCompliancePercent}%`);
+  console.log(`  Tab buttons w/ ghost:     ${metrics.navigationContext.tabButtonsWithGhost}`);
+  console.log(`  Tab buttons w/o ghost:    ${metrics.navigationContext.tabButtonsWithoutGhost}`);
+  console.log(`  Tab compliance:           ${metrics.navigationContext.tabButtonCompliancePercent}%`);
+  if (metrics.navigationContext.filesWithNavViolations.length > 0) {
+    console.log(`  Files with violations:`);
+    for (const file of metrics.navigationContext.filesWithNavViolations.slice(0, 10)) {
+      console.log(`    - ${file}`);
+    }
+    if (metrics.navigationContext.filesWithNavViolations.length > 10) {
+      console.log(`    ... and ${metrics.navigationContext.filesWithNavViolations.length - 10} more`);
+    }
+  }
+
   console.log("\nField Sizing Compliance:");
   console.log(`  Input w/ size prop:       ${metrics.fieldSizing.inputWithSizeProp}`);
   console.log(`  Input w/ sizing override: ${metrics.fieldSizing.inputWithSizingOverride}`);
@@ -415,8 +648,21 @@ function printReport(metrics: ComplianceMetrics): void {
   console.log(`  Color adoption:      ${metrics.adoption.colorAdoptionPercent}%`);
   console.log(`  Storybook coverage:  ${metrics.adoption.storybookCoveragePercent}%`);
   console.log(`  Button variants:     ${metrics.adoption.buttonVariantCompliancePercent}%`);
+  console.log(`  Nav context:         ${metrics.adoption.navContextCompliancePercent}%`);
   console.log(`  Overall score:       ${metrics.adoption.overallScore}%`);
   console.log("----------------------------------------\n");
+
+  // Show score breakdown when verbose
+  if (process.argv.includes("--verbose")) {
+    console.log("Score Breakdown (weights):");
+    console.log("  Button adoption:     20%");
+    console.log("  Form adoption:       20%");
+    console.log("  Color adoption:      15%");
+    console.log("  Storybook coverage:  10%");
+    console.log("  Button variants:     20%");
+    console.log("  Nav context:         15%");
+    console.log("----------------------------------------\n");
+  }
 
   // Output JSON for CI
   if (process.env.CI || process.argv.includes("--json")) {
@@ -425,12 +671,82 @@ function printReport(metrics: ComplianceMetrics): void {
   }
 }
 
+/**
+ * Outputs detailed violation information for debugging
+ */
+function printViolations(metrics: ComplianceMetrics): void {
+  console.log("\n========================================");
+  console.log("   Detailed Violations Report");
+  console.log("========================================\n");
+
+  // Navigation context violations
+  if (metrics.navigationContext.filesWithNavViolations.length > 0) {
+    console.log("Navigation Context Violations (buttons in nav/sidebar/tabs without variant='ghost'):");
+    console.log("Per STYLE.md: Navigation buttons should use variant='ghost'\n");
+    for (const file of metrics.navigationContext.filesWithNavViolations) {
+      console.log(`  ${file}`);
+    }
+    console.log("");
+  }
+
+  // Cancel/Close button violations
+  if (metrics.componentVariants.cancelButtonsWithoutSecondary > 0) {
+    console.log(`Cancel/Close Buttons Without variant='secondary': ${metrics.componentVariants.cancelButtonsWithoutSecondary}`);
+    console.log("Per STYLE.md: Cancel, Close, Back, Dismiss, No buttons should use variant='secondary'\n");
+  }
+
+  // Destructive button violations
+  if (metrics.componentVariants.destructiveButtonsWithoutDanger > 0) {
+    console.log(`Destructive Buttons Without variant='danger': ${metrics.componentVariants.destructiveButtonsWithoutDanger}`);
+    console.log("Per STYLE.md: Delete, Remove, Clear, Destroy, Discard buttons should use variant='danger'\n");
+  }
+
+  // Buttons without any variant
+  if (metrics.componentVariants.buttonWithoutVariant > 0) {
+    console.log(`Buttons Without Explicit Variant: ${metrics.componentVariants.buttonWithoutVariant}`);
+    console.log("Consider adding explicit variant prop for clarity.\n");
+  }
+
+  // Color overrides
+  if (metrics.componentVariants.buttonWithColorOverride > 0) {
+    console.log(`Buttons With Color Class Overrides: ${metrics.componentVariants.buttonWithColorOverride}`);
+    console.log("Per STYLE.md: Use variant prop instead of inline color classes.\n");
+  }
+
+  console.log("========================================\n");
+}
+
 // Main execution
 const metrics = calculateMetrics();
 printReport(metrics);
 
+// Print detailed violations if requested
+if (process.argv.includes("--violations")) {
+  printViolations(metrics);
+}
+
 // Exit with non-zero if adoption is critically low (for CI enforcement)
-if (process.argv.includes("--strict") && metrics.adoption.overallScore < 50) {
-  console.error("ERROR: Design system adoption is below 50%");
-  process.exit(1);
+if (process.argv.includes("--strict")) {
+  let exitCode = 0;
+
+  if (metrics.adoption.overallScore < 50) {
+    console.error("ERROR: Design system adoption is below 50%");
+    exitCode = 1;
+  }
+
+  // Additional strict checks
+  if (metrics.navigationContext.filesWithNavViolations.length > 0) {
+    console.error(`ERROR: ${metrics.navigationContext.filesWithNavViolations.length} files have navigation context violations`);
+    console.error("  Run with --violations flag for details");
+    exitCode = 1;
+  }
+
+  if (metrics.componentVariants.destructiveButtonsWithoutDanger > 0) {
+    console.error(`ERROR: ${metrics.componentVariants.destructiveButtonsWithoutDanger} destructive buttons missing variant='danger'`);
+    exitCode = 1;
+  }
+
+  if (exitCode !== 0) {
+    process.exit(exitCode);
+  }
 }

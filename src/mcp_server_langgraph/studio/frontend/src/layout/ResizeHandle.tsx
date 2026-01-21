@@ -44,8 +44,10 @@ export function ResizeHandle({
     <PanelResizeHandle
       className={cn(
         !prefersReducedMotion && "transition-colors",
-        "bg-transparent hover:bg-primary-a4",
-        "relative z-10",
+        // Visual indicator with subtle border and hover highlight
+        "bg-neutral-4 hover:bg-primary-7",
+        // Ensure proper stacking above panel borders
+        "relative z-20",
         // Invisible hit target via before: pseudo-element
         "before:absolute before:inset-0 before:z-10",
         vertical

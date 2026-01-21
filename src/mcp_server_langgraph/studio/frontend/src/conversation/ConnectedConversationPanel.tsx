@@ -44,6 +44,7 @@ import {
   clearMessages,
   saveAssistantMessage,
 } from "../store/slices/sessionSlice";
+import { selectExecutionMode } from "../store/slices/executionModeSlice";
 import { useMessageRevalidation } from "../hooks/useMessageRevalidation";
 import { useSessionAutoName } from "../hooks/useSessionAutoName";
 import { useStreamingChat } from "../hooks/useStreamingChat";
@@ -363,6 +364,9 @@ export const ConnectedConversationPanel = forwardRef<
   // Get current session from Redux (contains optimistic updates)
   const currentSession = useAppSelector(selectCurrentSession);
 
+  // Get execution mode from Redux (plan/default/auto_accept/bypass)
+  const executionMode = useAppSelector(selectExecutionMode);
+
   // Get pending auth requirements for InlineConnectionCard (ADR-0102)
   const pendingAuthRequirements = useAppSelector(selectPendingAuthRequirements);
 
@@ -556,12 +560,13 @@ export const ConnectedConversationPanel = forwardRef<
 
         // 2. Start streaming response from LLM
         // This calls POST /api/v1/chat/completions/stream
-        // Pass model, reasoning options, and KB focus mode
+        // Pass model, reasoning options, KB focus mode, and execution mode
         startStream(effectiveSessionId, content, {
           model: selectedModel,
           reasoningEffort: modelSupportsThinking ? reasoningEffort : undefined,
           enableThinking: modelSupportsThinking ? enableThinking : undefined,
           kbFocus: kbFocusMode,
+          executionMode,
         });
 
         // 3. Trigger revalidation to sync loader data
@@ -585,6 +590,7 @@ export const ConnectedConversationPanel = forwardRef<
       reasoningEffort,
       enableThinking,
       modelSupportsThinking,
+      executionMode,
     ],
   );
 

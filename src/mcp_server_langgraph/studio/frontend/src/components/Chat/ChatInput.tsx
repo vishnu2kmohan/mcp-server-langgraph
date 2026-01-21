@@ -67,12 +67,20 @@ import { cn } from "../../utils/cn";
 export interface ModelOption {
   id: string;
   name: string;
+  /** Simplified provider for grouping (google, anthropic, openai) */
   provider: string;
+  /**
+   * Actual backend vendor (vertex_ai, vertex_ai_anthropic, google, anthropic, etc.)
+   * Shows which API/credentials are used. Optional for backward compatibility.
+   */
+  vendor?: string;
   supportsThinking?: boolean;
   /** Model lifecycle status for badges */
   status?: "current" | "preview" | "deprecated";
   /** Sunset date for deprecated models */
   sunsetDate?: string;
+  /** Whether this is the default model (from backend settings.model_name) */
+  isDefault?: boolean;
 }
 
 export interface MentionOption {
@@ -270,6 +278,18 @@ export interface ChatInputProps {
   kbFocusMode?: KBFocusMode;
   /** Callback when KB focus mode changes via PreferencesMenu */
   onKBFocusModeChange?: (mode: KBFocusMode) => void;
+
+  // Executor/Critic model props (Critique Loop)
+  /** Whether critique loop is enabled (FF_ENABLE_CRITIQUE_LOOP) */
+  critiqueLoopEnabled?: boolean;
+  /** Currently selected executor model ID (for critique loop) */
+  executorModel?: string | null;
+  /** Callback when executor model changes */
+  onExecutorModelChange?: (modelId: string | null) => void;
+  /** Currently selected critic model ID (for critique loop) */
+  criticModel?: string | null;
+  /** Callback when critic model changes */
+  onCriticModelChange?: (modelId: string | null) => void;
 }
 
 // ==============================================================================
@@ -414,6 +434,13 @@ export function ChatInput({
   showPreferencesMenu = false,
   kbFocusMode = "all",
   onKBFocusModeChange,
+
+  // Executor/Critic model props (Critique Loop)
+  critiqueLoopEnabled = false,
+  executorModel,
+  onExecutorModelChange,
+  criticModel,
+  onCriticModelChange,
 }: ChatInputProps) {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [modelSearchQuery, setModelSearchQuery] = useState("");
@@ -1023,8 +1050,8 @@ export function ChatInput({
             />
           ) : null}
 
-          {/* Model settings dropdown */}
-          {showModelSelector && (
+          {/* Model settings dropdown - only shown when PreferencesMenu is hidden */}
+          {!showPreferencesMenu && showModelSelector && (
             <div ref={modelDropdownRef} className="relative">
               <Button
                 data-testid="model-settings-button"
@@ -1227,9 +1254,13 @@ export function ChatInput({
             </div>
           )}
 
-          {/* Preferences menu - consolidated settings (thinking, tools, KB focus) */}
+          {/* Preferences menu - consolidated settings (model, thinking, tools, KB focus) */}
           {showPreferencesMenu && (
             <PreferencesMenu
+              selectedModel={selectedModel}
+              availableModels={availableModels}
+              isModelsLoading={isModelsLoading}
+              onModelChange={onModelChange}
               thinkingLevel={reasoningEffort}
               onThinkingLevelChange={onReasoningEffortChange}
               toolMode={toolSelectionMode}
@@ -1240,6 +1271,12 @@ export function ChatInput({
               onKBFocusChange={onKBFocusModeChange}
               disabled={disabled}
               compact
+              // Executor/Critic model selection (Critique Loop)
+              critiqueLoopEnabled={critiqueLoopEnabled}
+              executorModel={executorModel}
+              onExecutorModelChange={onExecutorModelChange}
+              criticModel={criticModel}
+              onCriticModelChange={onCriticModelChange}
             />
           )}
 

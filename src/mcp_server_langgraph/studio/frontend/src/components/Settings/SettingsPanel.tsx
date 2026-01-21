@@ -712,7 +712,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
         className="flex border-b border-neutral-5 px-2"
       >
         {TABS.map((tab, index) => (
-          <Button
+          <Button variant="ghost"
             className="flex .5 px-3 py-2 text-sm border-b-2 -mb-px focus:ring-inset focus:ring-primary-7"
             key={tab.id}
             id={`tab-${tab.id}`}

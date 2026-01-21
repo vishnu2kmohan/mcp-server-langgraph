@@ -114,7 +114,7 @@ export function FollowUpSuggestions({
         const isHovered = hoveredId === suggestion.id;
 
         return (
-          <Button
+          <Button variant="ghost"
             key={suggestion.id}
             ref={(el) => {
               chipsRef.current[index] = el;

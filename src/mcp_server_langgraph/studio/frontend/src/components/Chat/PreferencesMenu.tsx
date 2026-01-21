@@ -17,11 +17,12 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Settings2, ChevronDown, Check, Brain, Wrench, Database, Loader2 } from "lucide-react";
+import { Settings2, ChevronDown, Check, Brain, Wrench, Database, Loader2, Cpu, Sparkles, MessageSquare } from "lucide-react";
 import { cn } from "../../utils/cn";
 import type { ReasoningEffortLevel } from "./ReasoningEffortSelector";
 import type { KBFocusMode } from "./KnowledgeBaseFocus";
 import type { ToolSelectionMode } from "@/types/tools";
+import type { ModelOption } from "./ChatInput";
 
 // =============================================================================
 // Types
@@ -30,6 +31,10 @@ import type { ToolSelectionMode } from "@/types/tools";
 export interface PreferencesMenuProps {
   /** Currently selected model ID */
   selectedModel?: string;
+  /** Available models for selection */
+  availableModels?: ModelOption[];
+  /** Whether models are loading */
+  isModelsLoading?: boolean;
   /** Callback when model selection changes */
   onModelChange?: (modelId: string) => void;
   /** Current thinking level */
@@ -56,6 +61,19 @@ export interface PreferencesMenuProps {
   compact?: boolean;
   /** Additional CSS classes */
   className?: string;
+  // =========================================================================
+  // Executor/Critic Model Selection (Critique Loop)
+  // =========================================================================
+  /** Whether critique loop is enabled (FF_ENABLE_CRITIQUE_LOOP) */
+  critiqueLoopEnabled?: boolean;
+  /** Currently selected executor model ID (for critique loop) */
+  executorModel?: string | null;
+  /** Callback when executor model changes */
+  onExecutorModelChange?: (modelId: string | null) => void;
+  /** Currently selected critic model ID (for critique loop) */
+  criticModel?: string | null;
+  /** Callback when critic model changes */
+  onCriticModelChange?: (modelId: string | null) => void;
 }
 
 // =============================================================================
@@ -82,12 +100,41 @@ const KB_FOCUS_MODES: { value: KBFocusMode; label: string }[] = [
 ];
 
 // =============================================================================
+// Helpers
+// =============================================================================
+
+/**
+ * Format model provider display with vendor info for transparency.
+ * Shows "google (Vertex AI)" when using Vertex AI instead of native API.
+ */
+function formatProviderDisplay(model: ModelOption): string {
+  const { provider, vendor } = model;
+  if (!vendor) return provider;
+
+  // Show vendor distinction when it differs from simplified provider
+  if (vendor === "vertex_ai" && provider === "google") {
+    return "Google (Vertex AI)";
+  }
+  if (vendor === "vertex_ai_anthropic" && provider === "anthropic") {
+    return "Anthropic (Vertex AI)";
+  }
+  if (vendor === "azure" && provider === "openai") {
+    return "OpenAI (Azure)";
+  }
+
+  // Capitalize provider for display
+  return provider.charAt(0).toUpperCase() + provider.slice(1);
+}
+
+// =============================================================================
 // Component
 // =============================================================================
 
 export function PreferencesMenu({
-  selectedModel: _selectedModel,
-  onModelChange: _onModelChange,
+  selectedModel,
+  availableModels = [],
+  isModelsLoading = false,
+  onModelChange,
   thinkingLevel = "medium",
   onThinkingLevelChange,
   toolMode = "auto",
@@ -100,7 +147,15 @@ export function PreferencesMenu({
   disabled = false,
   compact = false,
   className,
+  // Executor/Critic props
+  critiqueLoopEnabled = false,
+  executorModel,
+  onExecutorModelChange,
+  criticModel,
+  onCriticModelChange,
 }: PreferencesMenuProps) {
+  // Get current model info (reserved for future tooltip/display enhancements)
+  const _currentModel = availableModels.find((m) => m.id === selectedModel);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -158,6 +213,27 @@ export function PreferencesMenu({
     [onKBFocusChange]
   );
 
+  const handleModelChange = useCallback(
+    (modelId: string) => {
+      onModelChange?.(modelId);
+    },
+    [onModelChange]
+  );
+
+  const handleExecutorModelChange = useCallback(
+    (modelId: string | null) => {
+      onExecutorModelChange?.(modelId);
+    },
+    [onExecutorModelChange]
+  );
+
+  const handleCriticModelChange = useCallback(
+    (modelId: string | null) => {
+      onCriticModelChange?.(modelId);
+    },
+    [onCriticModelChange]
+  );
+
   return (
     <div
       ref={containerRef}
@@ -211,13 +287,184 @@ export function PreferencesMenu({
           role="menu"
           aria-label="Preferences menu"
           className={cn(
-            "absolute right-0 top-full mt-1 z-50",
-            "min-w-[240px] rounded-lg border border-neutral-6",
+            "absolute right-0 bottom-full mb-1 z-50",
+            "min-w-[240px] max-h-[70vh] overflow-y-auto rounded-lg border border-neutral-6",
             "bg-neutral-2 shadow-lg",
             "py-2"
           )}
         >
-          {/* Model Section */}
+          {/* Model Selection Section */}
+          {availableModels.length > 0 && (
+            <>
+              <div className="px-3 py-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-neutral-11 uppercase tracking-wide mb-2">
+                  <Cpu className="h-3 w-3" aria-hidden="true" />
+                  Model
+                </div>
+                {isModelsLoading ? (
+                  <div className="flex items-center justify-center py-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-neutral-9" aria-label="Loading models" />
+                  </div>
+                ) : (
+                  <div className="space-y-1 max-h-[200px] overflow-y-auto" role="listbox" aria-label="Model selection">
+                    {availableModels.map((model) => (
+                      // eslint-disable-next-line react/forbid-elements -- Custom listbox option with role="option" and aria-selected
+                      <button
+                        key={model.id}
+                        type="button"
+                        role="option"
+                        aria-selected={selectedModel === model.id}
+                        onClick={() => handleModelChange(model.id)}
+                        className={cn(
+                          "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                          "hover:bg-neutral-4 transition-colors",
+                          selectedModel === model.id
+                            ? "text-primary-11 bg-primary-3"
+                            : "text-neutral-12"
+                        )}
+                      >
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span className="font-medium">{model.name}</span>
+                          <span className="text-xs text-neutral-10">{formatProviderDisplay(model)}</span>
+                        </div>
+                        {selectedModel === model.id && (
+                          <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="border-t border-neutral-6 my-2" />
+            </>
+          )}
+
+          {/* Executor/Critic Model Selection (Critique Loop) */}
+          {critiqueLoopEnabled && availableModels.length > 0 && (
+            <>
+              {/* Executor Model Section */}
+              <div className="px-3 py-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-neutral-11 uppercase tracking-wide mb-2">
+                  <Sparkles className="h-3 w-3" aria-hidden="true" />
+                  Executor Model
+                </div>
+                <p className="text-xs text-neutral-10 mb-2">
+                  Generates initial response and refinements
+                </p>
+                <div className="space-y-1 max-h-[150px] overflow-y-auto" role="listbox" aria-label="Executor model selection">
+                  {/* Auto option */}
+                  {/* eslint-disable-next-line react/forbid-elements -- Custom listbox option with role="option" and aria-selected */}
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={executorModel === null || executorModel === undefined}
+                    onClick={() => handleExecutorModelChange(null)}
+                    className={cn(
+                      "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                      "hover:bg-neutral-4 transition-colors",
+                      (executorModel === null || executorModel === undefined)
+                        ? "text-primary-11 bg-primary-3"
+                        : "text-neutral-12"
+                    )}
+                  >
+                    <span className="font-medium">Auto (based on complexity)</span>
+                    {(executorModel === null || executorModel === undefined) && (
+                      <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                    )}
+                  </button>
+                  {availableModels.map((model) => (
+                    // eslint-disable-next-line react/forbid-elements -- Custom listbox option with role="option" and aria-selected
+                    <button
+                      key={model.id}
+                      type="button"
+                      role="option"
+                      aria-selected={executorModel === model.id}
+                      onClick={() => handleExecutorModelChange(model.id)}
+                      className={cn(
+                        "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                        "hover:bg-neutral-4 transition-colors",
+                        executorModel === model.id
+                          ? "text-primary-11 bg-primary-3"
+                          : "text-neutral-12"
+                      )}
+                    >
+                      <div className="flex flex-col items-start gap-0.5">
+                        <span className="font-medium">{model.name}</span>
+                        <span className="text-xs text-neutral-10">{formatProviderDisplay(model)}</span>
+                      </div>
+                      {executorModel === model.id && (
+                        <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t border-neutral-6 my-2" />
+
+              {/* Critic Model Section */}
+              <div className="px-3 py-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-neutral-11 uppercase tracking-wide mb-2">
+                  <MessageSquare className="h-3 w-3" aria-hidden="true" />
+                  Critic Model
+                </div>
+                <p className="text-xs text-neutral-10 mb-2">
+                  Reviews and provides feedback for refinement
+                </p>
+                <div className="space-y-1 max-h-[150px] overflow-y-auto" role="listbox" aria-label="Critic model selection">
+                  {/* Auto option */}
+                  {/* eslint-disable-next-line react/forbid-elements -- Custom listbox option with role="option" and aria-selected */}
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={criticModel === null || criticModel === undefined}
+                    onClick={() => handleCriticModelChange(null)}
+                    className={cn(
+                      "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                      "hover:bg-neutral-4 transition-colors",
+                      (criticModel === null || criticModel === undefined)
+                        ? "text-primary-11 bg-primary-3"
+                        : "text-neutral-12"
+                    )}
+                  >
+                    <span className="font-medium">Auto (cross-vendor diversity)</span>
+                    {(criticModel === null || criticModel === undefined) && (
+                      <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                    )}
+                  </button>
+                  {availableModels.map((model) => (
+                    // eslint-disable-next-line react/forbid-elements -- Custom listbox option with role="option" and aria-selected
+                    <button
+                      key={model.id}
+                      type="button"
+                      role="option"
+                      aria-selected={criticModel === model.id}
+                      onClick={() => handleCriticModelChange(model.id)}
+                      className={cn(
+                        "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                        "hover:bg-neutral-4 transition-colors",
+                        criticModel === model.id
+                          ? "text-primary-11 bg-primary-3"
+                          : "text-neutral-12"
+                      )}
+                    >
+                      <div className="flex flex-col items-start gap-0.5">
+                        <span className="font-medium">{model.name}</span>
+                        <span className="text-xs text-neutral-10">{formatProviderDisplay(model)}</span>
+                      </div>
+                      {criticModel === model.id && (
+                        <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t border-neutral-6 my-2" />
+            </>
+          )}
+
+          {/* Thinking Level Section */}
           <div className="px-3 py-2">
             <div className="flex items-center gap-2 text-xs font-semibold text-neutral-11 uppercase tracking-wide mb-2">
               <Brain className="h-3 w-3" aria-hidden="true" />

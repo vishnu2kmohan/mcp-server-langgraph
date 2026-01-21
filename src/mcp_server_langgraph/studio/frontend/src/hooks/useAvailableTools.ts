@@ -57,6 +57,8 @@ export interface UseAvailableToolsResult {
   builtinCount: number;
   /** Count of MCP tools */
   mcpCount: number;
+  /** Count of native LLM provider tools (v7) */
+  nativeCount: number;
   /** Total count of tools */
   totalCount: number;
   /** Get a tool by its name */
@@ -89,6 +91,7 @@ export function useAvailableTools(
   const groupedTools = useMemo<GroupedTools>(() => {
     const builtin: UnifiedToolCamelCase[] = [];
     const mcp: Record<string, UnifiedToolCamelCase[]> = {};
+    const native: Record<string, UnifiedToolCamelCase[]> = {}; // v7
 
     for (const tool of tools) {
       if (tool.source === "builtin") {
@@ -98,10 +101,16 @@ export function useAvailableTools(
           mcp[tool.serverName] = [];
         }
         mcp[tool.serverName].push(tool);
+      } else if (tool.source === "native" && tool.provider) {
+        // v7: Group native tools by provider
+        if (!native[tool.provider]) {
+          native[tool.provider] = [];
+        }
+        native[tool.provider].push(tool);
       }
     }
 
-    return { builtin, mcp };
+    return { builtin, mcp, native };
   }, [tools]);
 
   // Filter tools based on options
@@ -151,6 +160,7 @@ export function useAvailableTools(
     refetch,
     builtinCount: data?.builtinCount ?? 0,
     mcpCount: data?.mcpCount ?? 0,
+    nativeCount: data?.nativeCount ?? 0, // v7
     totalCount: data?.totalCount ?? 0,
     getToolByName,
   };

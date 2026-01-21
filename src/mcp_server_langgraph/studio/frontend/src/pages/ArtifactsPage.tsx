@@ -185,14 +185,14 @@ function FileCard({
           "flex flex-col items-center p-4 rounded-lg",
           "bg-neutral-2",
           "border border-neutral-6",
-          "hover:border-primary-5 dark:hover:border-primary-10",
+          "hover:border-primary-5",
           "transition-colors cursor-pointer",
           "group",
         )}
         onClick={() => onPreview(file)}
       >
         <div className="mb-3">{getFileIcon(file.type)}</div>
-        <p className="text-sm font-medium text-neutral-12 dark:text-white truncate w-full text-center">
+        <p className="text-sm font-medium text-neutral-12 truncate w-full text-center">
           {file.name}
         </p>
         <p className="text-xs text-neutral-11 mt-1">
@@ -201,7 +201,7 @@ function FileCard({
         <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button
             variant="secondary"
-            className="p-1 rounded hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10"
+            className="p-1 rounded hover:bg-neutral-21 dark:hover:bg-neutral-10"
             type="button"
             onClick={(e) => {
               e.stopPropagation();
@@ -244,7 +244,7 @@ function FileCard({
     >
       {getFileIcon(file.type)}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-neutral-12 dark:text-white truncate">
+        <p className="text-sm font-medium text-neutral-12 truncate">
           {file.name}
         </p>
         <p className="text-xs text-neutral-11">
@@ -254,7 +254,7 @@ function FileCard({
       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <Button
           variant="secondary"
-          className="p-2 rounded hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10"
+          className="p-2 rounded hover:bg-neutral-21 dark:hover:bg-neutral-10"
           type="button"
           onClick={(e) => {
             e.stopPropagation();
@@ -266,7 +266,7 @@ function FileCard({
         </Button>
         <Button
           variant="secondary"
-          className="p-2 rounded hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10"
+          className="p-2 rounded hover:bg-neutral-21 dark:hover:bg-neutral-10"
           type="button"
           onClick={(e) => {
             e.stopPropagation();
@@ -524,7 +524,7 @@ export function ArtifactsPage() {
         className="flex flex-col items-center justify-center h-full bg-neutral-1 text-neutral-11"
       >
         <AlertCircle size={48} className="mb-4 text-error-9" />
-        <p className="text-lg font-medium text-neutral-12 dark:text-white">
+        <p className="text-lg font-medium text-neutral-12">
           Failed to load artifacts
         </p>
         <p className="text-sm mt-1">{loaderData.error}</p>
@@ -545,11 +545,11 @@ export function ArtifactsPage() {
             "absolute top-2 right-2 z-20 px-3 py-1.5 rounded-lg text-sm font-medium",
             "transition-all duration-200 shadow-lg",
             deleteStatus === "pending" &&
-              "bg-warning-3 dark:bg-warning-12/50 text-warning-10 dark:text-warning-6",
+              "bg-warning-3/50 text-warning-10",
             deleteStatus === "success" &&
-              "bg-success-3 dark:bg-success-12/50 text-success-11 dark:text-success-5",
+              "bg-success-3/50 text-success-11",
             deleteStatus === "error" &&
-              "bg-error-3 dark:bg-error-12/50 text-error-11 dark:text-error-9",
+              "bg-error-3/50 text-error-11",
           )}
         >
           {deleteStatus === "pending" && (
@@ -566,7 +566,7 @@ export function ArtifactsPage() {
       <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-6 bg-neutral-2">
         <div className="flex items-center gap-3">
           <FolderOpen size={24} className="text-primary-9" />
-          <h1 className="text-lg font-semibold text-neutral-12 dark:text-white">
+          <h1 className="text-lg font-semibold text-neutral-12">
             Artifacts
           </h1>
           <span className="text-sm text-neutral-11">
@@ -579,7 +579,7 @@ export function ArtifactsPage() {
           <div className="relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-6 dark:text-neutral-6"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-6"
             />
             <Input
               data-testid="file-search"
@@ -589,7 +589,7 @@ export function ArtifactsPage() {
               className={cn(
                 "pl-9 pr-4 py-2 rounded-lg text-sm w-64",
                 "bg-neutral-3",
-                "border border-neutral-6 dark:border-neutral-9",
+                "border border-neutral-6",
                 "focus:outline-none focus:ring-2 focus:ring-primary-7",
                 "placeholder-neutral-6",
               )}
@@ -605,8 +605,8 @@ export function ArtifactsPage() {
               className={cn(
                 "p-1.5 rounded",
                 viewMode === "grid"
-                  ? "bg-white dark:bg-neutral-9 shadow-sm"
-                  : "text-neutral-11 hover:text-neutral-10 dark:text-neutral-3 dark:hover:text-neutral-5",
+                  ? "bg-neutral-2 shadow-sm"
+                  : "text-neutral-11 hover:text-neutral-10 dark:hover:text-neutral-5",
               )}
               aria-label="Grid view"
             >
@@ -619,8 +619,8 @@ export function ArtifactsPage() {
               className={cn(
                 "p-1.5 rounded",
                 viewMode === "list"
-                  ? "bg-white dark:bg-neutral-9 shadow-sm"
-                  : "text-neutral-11 hover:text-neutral-10 dark:text-neutral-3 dark:hover:text-neutral-5",
+                  ? "bg-neutral-2 shadow-sm"
+                  : "text-neutral-11 hover:text-neutral-10 dark:hover:text-neutral-5",
               )}
               aria-label="List view"
             >
@@ -683,7 +683,7 @@ export function ArtifactsPage() {
               <div className="flex items-center gap-3">
                 {getFileIcon(selectedFile.type)}
                 <div>
-                  <h3 className="font-medium text-neutral-12 dark:text-white">
+                  <h3 className="font-medium text-neutral-12">
                     {selectedFile.name}
                   </h3>
                   <p className="text-xs text-neutral-11">
@@ -694,7 +694,7 @@ export function ArtifactsPage() {
               </div>
               <Button
                 variant="secondary"
-                className="p-2 rounded hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10"
+                className="p-2 rounded hover:bg-neutral-21 dark:hover:bg-neutral-10"
                 type="button"
                 onClick={handleClosePreview}
                 aria-label="Close preview"
@@ -703,7 +703,7 @@ export function ArtifactsPage() {
               </Button>
             </div>
             <div className="p-4 overflow-auto max-h-[60vh]">
-              <pre className="text-sm font-mono whitespace-pre-wrap text-neutral-11 dark:text-neutral-3 bg-neutral-1 p-4 rounded">
+              <pre className="text-sm font-mono whitespace-pre-wrap text-neutral-11 bg-neutral-1 p-4 rounded">
                 {previewArtifact.content}
               </pre>
             </div>
@@ -733,7 +733,7 @@ export function ArtifactsPage() {
             className="bg-neutral-2 rounded-lg shadow-xl max-w-md w-full m-4 p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-medium text-neutral-12 dark:text-white mb-2">
+            <h3 className="text-lg font-medium text-neutral-12 mb-2">
               Delete File
             </h3>
             <p className="text-sm text-neutral-11 mb-6">

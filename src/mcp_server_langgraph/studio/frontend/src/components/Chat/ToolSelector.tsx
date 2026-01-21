@@ -26,10 +26,16 @@ import type { ToolSelectionMode } from "@/types/tools";
 
 /** Simplified tool representation for the selector */
 export interface ToolOption {
+  /** Tool name for execution */
   name: string;
+  /** Unique tool identifier for selection (v7: use tool_id for selection) */
+  toolId?: string;
   displayName: string;
-  source: "builtin" | "mcp";
+  /** Tool source: builtin, mcp, or native (v7) */
+  source: "builtin" | "mcp" | "native";
   serverName?: string;
+  /** Native tool provider (v7: anthropic, google) */
+  provider?: string;
   description?: string;
   category?: string;
 }

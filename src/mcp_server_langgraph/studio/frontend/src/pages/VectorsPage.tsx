@@ -279,8 +279,8 @@ export function VectorsPage() {
       </header>
       {/* Error Banner */}
       {error && collections.length > 0 && (
-        <div className="px-6 py-3 bg-error-1 dark:bg-error-12/20 border-b border-error-4 dark:border-error-11">
-          <p className="text-error-11 dark:text-error-7 text-sm">{error}</p>
+        <div className="px-6 py-3 bg-error-1/20 border-b border-error-4">
+          <p className="text-error-11 text-sm">{error}</p>
         </div>
       )}
       {/* Content */}
@@ -425,7 +425,7 @@ export function VectorsPage() {
               </h2>
               <Button
                 variant="secondary"
-                className="p-2 text-neutral-11 hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10 rounded"
+                className="p-2 text-neutral-11 hover:bg-neutral-21 dark:hover:bg-neutral-10 rounded"
                 onClick={() => {
                   setShowSearchPanel(false);
                   setSearchResults([]);
@@ -527,7 +527,7 @@ export function VectorsPage() {
                         <span className="text-sm font-mono text-neutral-11">
                           ID: {result.id}
                         </span>
-                        <span className="px-2 py-0.5 bg-insight-2 dark:bg-insight-12/30 text-insight-11 dark:text-insight-9 text-sm rounded">
+                        <span className="px-2 py-0.5 bg-insight-2 text-insight-11 text-sm rounded">
                           Score: {result.score.toFixed(2)}
                         </span>
                       </div>
@@ -557,7 +557,7 @@ export function VectorsPage() {
               </h2>
               <Button
                 variant="secondary"
-                className="p-2 text-neutral-11 hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10 rounded"
+                className="p-2 text-neutral-11 hover:bg-neutral-21 dark:hover:bg-neutral-10 rounded"
                 onClick={() => {
                   setShowUpsertPanel(false);
                   setUpsertSuccess(false);
@@ -572,14 +572,14 @@ export function VectorsPage() {
             <form onSubmit={handleUpsert} className="p-6 space-y-4">
               {/* Success Message */}
               {upsertSuccess && (
-                <div className="p-3 bg-success-1 dark:bg-success-12/20 border border-success-4 dark:border-success-11 rounded-lg text-success-11 dark:text-success-7 text-sm">
+                <div className="p-3 bg-success-1/20 border border-success-4 rounded-lg text-success-11 text-sm">
                   Point upserted successfully!
                 </div>
               )}
 
               {/* Error Message */}
               {upsertError && (
-                <div className="p-3 bg-error-1 dark:bg-error-12/20 border border-error-4 dark:border-error-11 rounded-lg text-error-11 dark:text-error-7 text-sm">
+                <div className="p-3 bg-error-1/20 border border-error-4 rounded-lg text-error-11 text-sm">
                   Failed to upsert: {upsertError}
                 </div>
               )}

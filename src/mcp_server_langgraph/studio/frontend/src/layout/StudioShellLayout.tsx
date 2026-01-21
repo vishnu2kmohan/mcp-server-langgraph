@@ -416,25 +416,39 @@ export function StudioShellLayout() {
   } = useGetAvailableModelsQuery();
 
   // Fallback models when API fails (graceful degradation)
+  // IMPORTANT: These are only used when /api/v1/config/models is unavailable.
+  // The backend sets isDefault based on MODEL_NAME environment variable.
+  // Frontend should NOT hardcode default - backend is single source of truth.
+  //
+  // 12-Factor App Compliance:
+  // - Default model is determined by backend settings.model_name
+  // - API response includes isDefault: true for the configured model
+  // - Fallback exists only for network failure scenarios
   const fallbackModels = useMemo(
-    () => [
+    (): Array<{
+      id: string;
+      name: string;
+      provider: string;
+      supportsThinking: boolean;
+      isDefault?: boolean;
+    }> => [
+      {
+        id: "gemini-2.5-flash",
+        name: "Gemini 2.5 Flash",
+        provider: "google",
+        supportsThinking: true,
+        // isDefault is set by backend API, not hardcoded here
+      },
       {
         id: "claude-3-5-sonnet",
         name: "Claude 3.5 Sonnet",
         provider: "anthropic",
         supportsThinking: true,
-        isDefault: true,
       },
       {
         id: "gpt-4o",
         name: "GPT-4o",
         provider: "openai",
-        supportsThinking: false,
-      },
-      {
-        id: "gemini-2.5-flash",
-        name: "Gemini 2.5 Flash",
-        provider: "google",
         supportsThinking: false,
       },
     ],

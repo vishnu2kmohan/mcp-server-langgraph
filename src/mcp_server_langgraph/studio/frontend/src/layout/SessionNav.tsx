@@ -433,13 +433,13 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
         className={cn(
           "flex flex-col h-full",
           "bg-neutral-1",
-          "border-r border-neutral-5",
+          // Note: border-r removed - ResizeHandle provides visual separation
           className,
         )}
       >
         {/* Header with New Chat button */}
         <div className="p-2 border-b border-neutral-5">
-          <Button
+          <Button variant="ghost"
             type="button"
             data-testid="new-chat-button"
             onClick={handleNewChat}

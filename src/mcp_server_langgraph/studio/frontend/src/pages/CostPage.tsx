@@ -372,7 +372,7 @@ export function CostPage({
                     ? "bg-success-3 bg-success-4"
                     : wsStatus === "error"
                       ? "bg-error-3 bg-error-4"
-                      : "bg-warning-3 dark:bg-warning-12/30"
+                      : "bg-warning-3/30"
                 }`}
               >
                 <wsStatusDisplay.Icon
@@ -472,7 +472,7 @@ export function CostPage({
       {enableRealtime && budgetWarnings.length > 0 && (
         <div
           data-testid="budget-warning-banner"
-          className="mx-6 mt-4 p-4 bg-warning-3 bg-warning-3 border border-warning-6 dark:border-warning-11 rounded-lg"
+          className="mx-6 mt-4 p-4 bg-warning-3 border border-warning-6 rounded-lg"
         >
           <div className="flex items-start gap-3">
             <AlertTriangle
@@ -480,10 +480,10 @@ export function CostPage({
               className="text-warning-9 flex-shrink-0 mt-0.5"
             />
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-warning-11 dark:text-warning-6">
+              <h3 className="text-sm font-medium text-warning-11">
                 Budget Warning
               </h3>
-              <p className="text-sm text-warning-10 dark:text-warning-6 mt-1">
+              <p className="text-sm text-warning-10 mt-1">
                 {budgetWarnings[budgetWarnings.length - 1].message}
               </p>
             </div>
@@ -503,10 +503,10 @@ export function CostPage({
           data-testid="budget-alerts-banner"
           className={`mx-6 mt-4 p-4 rounded-lg border ${
             budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-              ? "bg-error-1 dark:bg-error-12/20 border-error-4 dark:border-error-11"
+              ? "bg-error-1/20 border-error-4"
               : budgetAlerts[budgetAlerts.length - 1].status === "critical"
-                ? "bg-grafana-1 dark:bg-grafana-12/20 border-grafana-4 dark:border-grafana-11"
-                : "bg-warning-3 bg-warning-3 border-warning-6 dark:border-warning-11"
+                ? "bg-grafana-1 border-grafana-4"
+                : "bg-warning-3 border-warning-6"
           }`}
         >
           <div className="flex items-start gap-3">
@@ -524,11 +524,11 @@ export function CostPage({
               <h3
                 className={`text-sm font-medium ${
                   budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-                    ? "text-error-11 dark:text-error-4"
+                    ? "text-error-11"
                     : budgetAlerts[budgetAlerts.length - 1].status ===
                         "critical"
-                      ? "text-grafana-11 dark:text-grafana-4"
-                      : "text-warning-11 dark:text-warning-6"
+                      ? "text-grafana-11"
+                      : "text-warning-11"
                 }`}
               >
                 Budget Alert (
@@ -537,11 +537,11 @@ export function CostPage({
               <p
                 className={`text-sm mt-1 ${
                   budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-                    ? "text-error-11 dark:text-error-9"
+                    ? "text-error-11"
                     : budgetAlerts[budgetAlerts.length - 1].status ===
                         "critical"
-                      ? "text-grafana-10 dark:text-grafana-5"
-                      : "text-warning-10 dark:text-warning-6"
+                      ? "text-grafana-10"
+                      : "text-warning-10"
                 }`}
               >
                 {budgetAlerts[budgetAlerts.length - 1].message}
@@ -549,11 +549,11 @@ export function CostPage({
               <p
                 className={`text-xs mt-1 ${
                   budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
-                    ? "text-error-10 dark:text-error-7"
+                    ? "text-error-10"
                     : budgetAlerts[budgetAlerts.length - 1].status ===
                         "critical"
-                      ? "text-grafana-9 dark:text-grafana-7"
-                      : "text-warning-9 dark:text-warning-9"
+                      ? "text-grafana-9"
+                      : "text-warning-9"
                 }`}
               >
                 {budgetAlerts[budgetAlerts.length - 1].entityType}:{" "}
@@ -580,7 +580,7 @@ export function CostPage({
               ${userBudget.remaining.toFixed(2)} remaining
             </span>
           </div>
-          <div className="relative h-2 bg-neutral-3 dark:bg-neutral-10 rounded-full overflow-hidden">
+          <div className="relative h-2 bg-neutral-3 rounded-full overflow-hidden">
             <div
               className={`absolute left-0 top-0 h-full rounded-full transition-all ${
                 (userBudget.currentUsage / userBudget.budgetLimit) * 100 >= 90
@@ -848,7 +848,7 @@ export function CostPage({
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-neutral-1 dark:bg-neutral-10/50">
+                  <thead className="bg-neutral-1/50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-neutral-11 uppercase tracking-wider">
                         Model

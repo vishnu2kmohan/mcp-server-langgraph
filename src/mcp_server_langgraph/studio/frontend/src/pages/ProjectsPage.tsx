@@ -473,7 +473,7 @@ export function ProjectsPage() {
                       <span
                         className={`px-2 py-0.5 text-xs rounded-full ${
                           project.status === "active"
-                            ? "bg-success-3 text-success-11 dark:text-success-11"
+                            ? "bg-success-3 text-success-11"
                             : "bg-neutral-2 text-neutral-11"
                         }`}
                       >
@@ -540,7 +540,7 @@ export function ProjectsPage() {
               <div className="bg-neutral-1 border border-neutral-5 rounded-lg overflow-hidden">
                 {/* Bulk action bar */}
                 {selectedProjects.size > 0 && (
-                  <div className="px-4 py-2 bg-primary-2 dark:bg-primary-a3 border-b border-primary-5 dark:border-primary-7 flex items-center justify-between">
+                  <div className="px-4 py-2 bg-primary-2 border-b border-primary-5 flex items-center justify-between">
                     <span className="text-sm text-primary-11">
                       {selectedProjects.size} project
                       {selectedProjects.size > 1 ? "s" : ""} selected
@@ -626,7 +626,7 @@ export function ProjectsPage() {
                         key={project.id}
                         className={`hover:bg-neutral-a6 transition-colors ${
                           selectedProjects.has(project.id)
-                            ? "bg-primary-1 dark:bg-primary-a2"
+                            ? "bg-primary-1"
                             : ""
                         }`}
                       >
@@ -663,7 +663,7 @@ export function ProjectsPage() {
                           <span
                             className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
                               project.status === "active"
-                                ? "bg-success-3 text-success-11 dark:text-success-11"
+                                ? "bg-success-3 text-success-11"
                                 : "bg-neutral-2 text-neutral-11"
                             }`}
                           >

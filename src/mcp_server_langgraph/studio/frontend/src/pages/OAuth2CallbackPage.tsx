@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useState, useCallback } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router";
+import { useSearchParams, useNavigate } from "react-router";
 import {
   CheckCircle,
   XCircle,
@@ -159,13 +159,13 @@ export function OAuth2CallbackPage() {
   // Render processing state
   if (state === "processing") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-1 dark:bg-neutral-12">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-1">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary-9 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-neutral-12 dark:text-white mb-2">
+          <h1 className="text-xl font-semibold text-neutral-12 mb-2">
             Processing Authorization
           </h1>
-          <p className="text-neutral-8 dark:text-neutral-6">
+          <p className="text-neutral-11">
             Please wait while we complete the OAuth2 flow...
           </p>
         </div>
@@ -176,13 +176,13 @@ export function OAuth2CallbackPage() {
   // Render success state
   if (state === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-1 dark:bg-neutral-12">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-1">
         <div className="text-center">
           <CheckCircle className="w-16 h-16 text-success-9 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-neutral-12 dark:text-white mb-2">
+          <h1 className="text-xl font-semibold text-neutral-12 mb-2">
             Authorization Successful
           </h1>
-          <p className="text-neutral-8 dark:text-neutral-6 mb-4">
+          <p className="text-neutral-11 mb-4">
             Your MCP connection has been authorized.
             {connectionId && (
               <span className="block text-sm mt-1">
@@ -190,7 +190,7 @@ export function OAuth2CallbackPage() {
               </span>
             )}
           </p>
-          <p className="text-sm text-neutral-6 dark:text-neutral-6">
+          <p className="text-sm text-neutral-9">
             Redirecting to connections...
           </p>
         </div>
@@ -200,19 +200,19 @@ export function OAuth2CallbackPage() {
 
   // Render error state
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-1 dark:bg-neutral-12">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-1">
       <div className="text-center max-w-md mx-4">
         <XCircle className="w-16 h-16 text-error-9 mx-auto mb-4" />
-        <h1 className="text-xl font-semibold text-neutral-12 dark:text-white mb-2">
+        <h1 className="text-xl font-semibold text-neutral-12 mb-2">
           Authorization Failed
         </h1>
         {error && (
           <>
-            <p className="text-error-10 dark:text-error-7 mb-2">
+            <p className="text-error-10 mb-2">
               {error.message}
             </p>
             {error.detail && (
-              <p className="text-neutral-8 dark:text-neutral-6 text-sm mb-4">
+              <p className="text-neutral-11 text-sm mb-4">
                 {error.detail}
               </p>
             )}
@@ -221,19 +221,20 @@ export function OAuth2CallbackPage() {
         <div className="flex items-center justify-center gap-4 mt-6">
           <Button
             variant="primary"
-            className="flex px-4 py-2 bg-primary-10 text-white rounded-md hover:bg-primary-11"
+            className="gap-2"
             onClick={() => processCallback()}
           >
             <RefreshCw className="w-4 h-4" />
             Try Again
           </Button>
-          <Link
-            to="/studio/connections"
-            className="flex items-center gap-2 px-4 py-2 text-neutral-10 dark:text-neutral-5 hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-11 rounded-md"
+          <Button
+            variant="ghost"
+            className="gap-2"
+            onClick={() => navigate("/studio/connections")}
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Connections
-          </Link>
+          </Button>
         </div>
       </div>
     </div>

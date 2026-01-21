@@ -180,7 +180,77 @@
   --neutral-10: var(--slate-10);
   --neutral-11: var(--slate-11);
   --neutral-12: var(--slate-12);
+}
 
+/* ==========================================================================
+ * COLOR THEME OVERRIDES
+ * Remaps semantic colors based on user-selected color theme
+ * Applied via data-color-theme attribute on document element
+ * ========================================================================== */
+
+/* Teal & Slate theme - teal primary with cool blue-gray neutrals */
+[data-color-theme="teal-sage"] {
+  --primary-1: var(--teal-1);
+  --primary-2: var(--teal-2);
+  --primary-3: var(--teal-3);
+  --primary-4: var(--teal-4);
+  --primary-5: var(--teal-5);
+  --primary-6: var(--teal-6);
+  --primary-7: var(--teal-7);
+  --primary-8: var(--teal-8);
+  --primary-9: var(--teal-9);
+  --primary-10: var(--teal-10);
+  --primary-11: var(--teal-11);
+  --primary-12: var(--teal-12);
+  /* neutral stays slate (default) */
+}
+
+/* Violet & Olive theme - violet primary with warm green-gray neutrals */
+[data-color-theme="violet-olive"] {
+  /* primary stays violet (default) */
+  --neutral-1: var(--olive-1);
+  --neutral-2: var(--olive-2);
+  --neutral-3: var(--olive-3);
+  --neutral-4: var(--olive-4);
+  --neutral-5: var(--olive-5);
+  --neutral-6: var(--olive-6);
+  --neutral-7: var(--olive-7);
+  --neutral-8: var(--olive-8);
+  --neutral-9: var(--olive-9);
+  --neutral-10: var(--olive-10);
+  --neutral-11: var(--olive-11);
+  --neutral-12: var(--olive-12);
+}
+
+/* Teal & Olive theme - teal primary with warm green-gray neutrals */
+[data-color-theme="teal-olive"] {
+  --primary-1: var(--teal-1);
+  --primary-2: var(--teal-2);
+  --primary-3: var(--teal-3);
+  --primary-4: var(--teal-4);
+  --primary-5: var(--teal-5);
+  --primary-6: var(--teal-6);
+  --primary-7: var(--teal-7);
+  --primary-8: var(--teal-8);
+  --primary-9: var(--teal-9);
+  --primary-10: var(--teal-10);
+  --primary-11: var(--teal-11);
+  --primary-12: var(--teal-12);
+  --neutral-1: var(--olive-1);
+  --neutral-2: var(--olive-2);
+  --neutral-3: var(--olive-3);
+  --neutral-4: var(--olive-4);
+  --neutral-5: var(--olive-5);
+  --neutral-6: var(--olive-6);
+  --neutral-7: var(--olive-7);
+  --neutral-8: var(--olive-8);
+  --neutral-9: var(--olive-9);
+  --neutral-10: var(--olive-10);
+  --neutral-11: var(--olive-11);
+  --neutral-12: var(--olive-12);
+}
+
+:root {
   /* Alpha variants (Radix slateA scale) for third-party components requiring inline color values */
   --neutral-a1: hsla(206, 6%, 9%, 0.012);
   --neutral-a2: hsla(206, 6%, 9%, 0.027);

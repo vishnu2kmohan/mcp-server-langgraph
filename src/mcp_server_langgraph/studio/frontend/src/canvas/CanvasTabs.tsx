@@ -125,7 +125,7 @@ export function CanvasTabs({
         const isDisabled = isTabDisabled(tab);
 
         return (
-          <Button
+          <Button variant="ghost"
             key={tab}
             ref={(el) => tabRefs.current.set(tab, el)}
             role="tab"

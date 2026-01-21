@@ -430,7 +430,7 @@ export function WorkflowsPage() {
             )}
 
             {!validation.isValid && (
-              <span className="text-xs px-2 py-1 bg-error-3 text-error-11 dark:text-error-11 rounded">
+              <span className="text-xs px-2 py-1 bg-error-3 text-error-11 rounded">
                 {validation.errors.length} errors
               </span>
             )}
@@ -439,10 +439,10 @@ export function WorkflowsPage() {
             {validationError && (
               <div
                 role="alert"
-                className="flex items-center gap-2 px-3 py-1.5 bg-error-3 border border-error-4 dark:border-error-11 rounded-lg"
+                className="flex items-center gap-2 px-3 py-1.5 bg-error-3 border border-error-4 rounded-lg"
               >
                 <AlertCircle size={14} className="text-error-9" />
-                <span className="text-sm text-error-11 dark:text-error-11">
+                <span className="text-sm text-error-11">
                   {validationError}
                 </span>
                 <Button
@@ -460,9 +460,9 @@ export function WorkflowsPage() {
               <span
                 className={`
                   text-xs px-2 py-1 rounded
-                  ${executionState === "running" ? "bg-primary-3 text-primary-11 dark:text-primary-11" : ""}
-                  ${executionState === "completed" ? "bg-success-3 text-success-11 dark:text-success-11" : ""}
-                  ${executionState === "error" ? "bg-error-3 text-error-11 dark:text-error-11" : ""}
+                  ${executionState === "running" ? "bg-primary-3 text-primary-11" : ""}
+                  ${executionState === "completed" ? "bg-success-3 text-success-11" : ""}
+                  ${executionState === "error" ? "bg-error-3 text-error-11" : ""}
                 `}
               >
                 {executionState}
@@ -476,10 +476,10 @@ export function WorkflowsPage() {
                 title={`Connection: ${connectionStatus}${reconnectAttempts > 0 ? ` (attempt ${reconnectAttempts})` : ""}`}
                 className={`
                   flex items-center gap-1 text-xs px-2 py-1 rounded
-                  ${connectionStatus === "connected" ? "bg-success-3 text-success-11 dark:text-success-11" : ""}
-                  ${connectionStatus === "connecting" ? "bg-warning-3 text-warning-11 dark:bg-warning-a4 dark:text-warning-11" : ""}
-                  ${connectionStatus === "reconnecting" ? "bg-grafana-2 text-grafana-11 dark:bg-grafana-12/30 dark:text-grafana-11" : ""}
-                  ${connectionStatus === "disconnected" || connectionStatus === "error" ? "bg-error-3 text-error-11 dark:text-error-11" : ""}
+                  ${connectionStatus === "connected" ? "bg-success-3 text-success-11" : ""}
+                  ${connectionStatus === "connecting" ? "bg-warning-3 text-warning-11" : ""}
+                  ${connectionStatus === "reconnecting" ? "bg-grafana-2 text-grafana-11" : ""}
+                  ${connectionStatus === "disconnected" || connectionStatus === "error" ? "bg-error-3 text-error-11" : ""}
                 `}
               >
                 {connectionStatus === "connected" && <Wifi size={12} />}

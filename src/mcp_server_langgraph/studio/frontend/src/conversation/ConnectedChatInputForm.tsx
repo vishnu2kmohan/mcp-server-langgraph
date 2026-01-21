@@ -303,9 +303,11 @@ export function ConnectedChatInputForm({
     if (!availableToolsData) return [];
     return availableToolsData.map((tool) => ({
       name: tool.name,
+      toolId: tool.toolId, // v7: Add toolId for selection
       displayName: tool.displayName,
       source: tool.source,
       serverName: tool.serverName ?? undefined,
+      provider: tool.provider ?? undefined, // v7: Add provider for native tools
       description: tool.description,
       category: tool.category ?? undefined,
     }));

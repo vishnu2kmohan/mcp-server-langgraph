@@ -37,6 +37,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { AuditEventPanel } from "../components/Settings/AuditEventPanel";
+import { ThemeSettings } from "../components/Settings/ThemeSettings";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
@@ -83,7 +84,6 @@ export function SettingsPage() {
     user?.displayName || user?.username || "",
   );
   const [email, setEmail] = useState(user?.email || "");
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
   const [_notifications, _setNotifications] = useState({
     sessionComplete: true,
     errors: true,
@@ -260,9 +260,14 @@ export function SettingsPage() {
           <nav className="space-y-1">
             {tabs.map((tab) => (
               <Button
-                className="w-full flex px-4 py-2 rounded-lg"
                 key={tab.id}
+                variant="ghost"
                 onClick={() => setActiveTab(tab.id)}
+                className={`w-full justify-start gap-2 px-4 py-2 ${
+                  activeTab === tab.id
+                    ? "bg-primary-3 text-primary-11 dark:bg-primary-4 dark:text-primary-9"
+                    : "text-neutral-11 hover:bg-neutral-3"
+                }`}
               >
                 <tab.icon size={20} />
                 {tab.label}
@@ -323,8 +328,8 @@ export function SettingsPage() {
             {/* API Keys Tab */}
             {activeTab === "api-keys" && (
               <div className="space-y-6">
-                <div className="p-4 bg-warning-3 bg-warning-3 border border-warning-6 dark:border-warning-11 rounded-lg">
-                  <p className="text-sm text-warning-11 dark:text-warning-6">
+                <div className="p-4 bg-warning-3 border border-warning-6 rounded-lg">
+                  <p className="text-sm text-warning-11">
                     API keys provide access to your account. Keep them secure
                     and never share them publicly.
                   </p>
@@ -343,7 +348,7 @@ export function SettingsPage() {
                     />
                     <Button
                       variant="secondary"
-                      className="px-4 py-2 border border-neutral-6 rounded-lg hover:bg-neutral-2 dark:bg-neutral-11 dark:hover:bg-neutral-10"
+                      className="px-4 py-2 border border-neutral-6 rounded-lg hover:bg-neutral-21 dark:hover:bg-neutral-10"
                       onClick={() => setShowApiKey(!showApiKey)}
                     >
                       {showApiKey ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -352,7 +357,7 @@ export function SettingsPage() {
                 </div>
                 <Button
                   variant="danger"
-                  className="px-4 py-2 bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4 dark:hover:bg-error-12/50"
+                  className="px-4 py-2 bg-error-3 text-error-11 bg-error-4 rounded-lg hover:bg-error-4 dark:hover:bg-error-12/50"
                 >
                   Regenerate API Key
                 </Button>
@@ -378,14 +383,14 @@ export function SettingsPage() {
                   </p>
 
                   {!isPushSupported ? (
-                    <div className="flex items-center gap-2 text-warning-9 dark:text-warning-9">
+                    <div className="flex items-center gap-2 text-warning-9">
                       <BellOff className="h-4 w-4" />
                       <span className="text-sm">
                         Push notifications are not supported in this browser.
                       </span>
                     </div>
                   ) : pushPermission === "denied" ? (
-                    <div className="flex items-center gap-2 text-error-10 dark:text-error-7">
+                    <div className="flex items-center gap-2 text-error-10">
                       <AlertCircle className="h-4 w-4" />
                       <span className="text-sm">
                         Notifications are blocked. Please enable them in your
@@ -395,7 +400,7 @@ export function SettingsPage() {
                   ) : isPushSubscribed ? (
                     <Button
                       variant="danger"
-                      className="flex px-4 py-2 bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4 dark:hover:bg-error-12/50"
+                      className="flex px-4 py-2 bg-error-3 text-error-11 bg-error-4 rounded-lg hover:bg-error-4 dark:hover:bg-error-12/50"
                       data-testid="push-notifications-toggle"
                       onClick={unsubscribePush}
                       disabled={isPushLoading}
@@ -431,30 +436,8 @@ export function SettingsPage() {
             {/* Appearance Tab */}
             {activeTab === "appearance" && (
               <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-11 mb-4">
-                    Theme
-                  </label>
-                  <div className="grid grid-cols-3 gap-4">
-                    {(["light", "dark", "system"] as const).map((t) => (
-                      <Button
-                        variant="ghost"
-                        className={`p-4 rounded-lg border-2 ${
-                          theme === t
-                            ? "border-primary-9 bg-primary-1 bg-primary-4"
-                            : "border-neutral-6"
-                        }`}
-                        key={t}
-                        onClick={() => setTheme(t)}
-                      >
-                        <div className="text-center">
-                          <Palette size={24} className="mx-auto mb-2" />
-                          <span className="capitalize">{t}</span>
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
+                {/* Full Theme Settings Component with color themes */}
+                <ThemeSettings />
 
                 {/* Panel Layout Section (Sprint 1.2) */}
                 <div className="p-4 bg-neutral-2 rounded-lg border border-neutral-6">
@@ -474,7 +457,7 @@ export function SettingsPage() {
                       </p>
                       <Button
                         variant="secondary"
-                        className="flex px-4 py-2 bg-neutral-3 text-neutral-11 rounded-lg hover:bg-neutral-3 dark:bg-neutral-10 dark:hover:bg-neutral-9"
+                        className="flex px-4 py-2 bg-neutral-3 text-neutral-11 rounded-lg hover:bg-neutral-30 dark:hover:bg-neutral-9"
                         type="button"
                         onClick={() => dispatch(resetToDefaults())}
                       >
@@ -512,7 +495,7 @@ export function SettingsPage() {
                   </p>
                   <Button
                     variant="danger"
-                    className="px-4 py-2 bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4"
+                    className="px-4 py-2 bg-error-3 text-error-11 bg-error-4 rounded-lg hover:bg-error-4"
                   >
                     Sign Out All Devices
                   </Button>
@@ -523,8 +506,8 @@ export function SettingsPage() {
             {/* Audit Log Tab (Admin Only) */}
             {activeTab === "audit-log" && isAdmin && (
               <div className="space-y-6">
-                <div className="p-4 bg-insight-1 dark:bg-insight-12/20 border border-insight-4 dark:border-insight-11 rounded-lg">
-                  <p className="text-sm text-insight-11 dark:text-insight-4">
+                <div className="p-4 bg-insight-1 border border-insight-4 rounded-lg">
+                  <p className="text-sm text-insight-11">
                     Real-time audit event stream for compliance and security
                     monitoring.
                   </p>
@@ -536,8 +519,8 @@ export function SettingsPage() {
             {/* Manage User Keys Tab (Admin Only) */}
             {activeTab === "manage-keys" && isAdmin && (
               <div className="space-y-6">
-                <div className="p-4 bg-primary-1 dark:bg-primary-12/20 border border-primary-4 dark:border-primary-11 rounded-lg">
-                  <p className="text-sm text-primary-11 dark:text-primary-4">
+                <div className="p-4 bg-primary-1/20 border border-primary-4 rounded-lg">
+                  <p className="text-sm text-primary-11">
                     As an administrator, you can manage API keys for all users
                     in the system.
                   </p>
@@ -563,17 +546,17 @@ export function SettingsPage() {
                 {adminError && !isLoadingUsers && (
                   <div
                     role="alert"
-                    className="p-4 bg-error-1 dark:bg-error-12/20 border border-error-4 dark:border-error-11 rounded-lg"
+                    className="p-4 bg-error-1/20 border border-error-4 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
                       <AlertCircle size={20} className="text-error-9" />
-                      <p className="text-sm text-error-11 dark:text-error-7">
+                      <p className="text-sm text-error-11">
                         {adminError}
                       </p>
                     </div>
                     <Button
                       variant="danger"
-                      className="mt-3 flex px-3 py-1.5 text-sm bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4"
+                      className="mt-3 flex px-3 py-1.5 text-sm bg-error-3 text-error-11 bg-error-4 rounded-lg hover:bg-error-4"
                       onClick={loadManagedUsers}
                     >
                       <RefreshCw size={14} />
@@ -587,7 +570,7 @@ export function SettingsPage() {
                   <div className="relative">
                     <Search
                       size={16}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-6 dark:text-neutral-6"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-6"
                     />
                     <Input
                       className="pl-9 pr-4 py-2 text-neutral-12"
@@ -624,7 +607,7 @@ export function SettingsPage() {
                         className="flex items-center justify-between p-4 bg-neutral-2 rounded-lg border border-neutral-6"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-neutral-3 dark:bg-neutral-10 rounded-full flex items-center justify-center">
+                          <div className="w-10 h-10 bg-neutral-3 rounded-full flex items-center justify-center">
                             <User
                               size={20}
                               className="text-neutral-11"
@@ -645,7 +628,7 @@ export function SettingsPage() {
                           {managedUser.hasApiKey ? (
                             <Button
                               variant="danger"
-                              className="flex px-3 py-1.5 text-sm bg-error-3 text-error-11 bg-error-4 dark:text-error-7 rounded-lg hover:bg-error-4"
+                              className="flex px-3 py-1.5 text-sm bg-error-3 text-error-11 bg-error-4 rounded-lg hover:bg-error-4"
                               onClick={() => handleRevokeKey(managedUser.id)}
                               aria-label="Revoke"
                             >
@@ -655,7 +638,7 @@ export function SettingsPage() {
                           ) : (
                             <Button
                               variant="success"
-                              className="flex px-3 py-1.5 text-sm bg-success-3 text-success-11 bg-success-4 dark:text-success-7 rounded-lg hover:bg-success-4"
+                              className="flex px-3 py-1.5 text-sm bg-success-3 text-success-11 bg-success-4 rounded-lg hover:bg-success-4"
                               onClick={() => handleGenerateKey(managedUser.id)}
                               aria-label="Generate"
                             >

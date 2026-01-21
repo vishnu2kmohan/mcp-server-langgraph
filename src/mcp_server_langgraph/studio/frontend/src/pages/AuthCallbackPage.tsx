@@ -162,16 +162,16 @@ export function AuthCallbackPage() {
   }, [dispatch, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-1 to-neutral-2 dark:from-neutral-12 dark:to-neutral-11 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-1 px-4">
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-neutral-11 rounded-2xl shadow-xl p-8 border border-neutral-3 dark:border-neutral-10 text-center">
+        <div className="bg-neutral-2 rounded-2xl shadow-xl p-8 border border-neutral-6 text-center">
           {status === "processing" && (
             <>
               <Loader2 className="w-12 h-12 text-primary-10 animate-spin mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-neutral-12 dark:text-white mb-2">
+              <h2 className="text-xl font-semibold text-neutral-12 mb-2">
                 Completing sign in...
               </h2>
-              <p className="text-neutral-8 dark:text-neutral-6">
+              <p className="text-neutral-11">
                 Please wait while we verify your credentials.
               </p>
             </>
@@ -180,10 +180,10 @@ export function AuthCallbackPage() {
           {status === "success" && (
             <>
               <CheckCircle className="w-12 h-12 text-success-10 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-neutral-12 dark:text-white mb-2">
+              <h2 className="text-xl font-semibold text-neutral-12 mb-2">
                 Sign in successful!
               </h2>
-              <p className="text-neutral-8 dark:text-neutral-6">
+              <p className="text-neutral-11">
                 Redirecting to Agent Studio...
               </p>
             </>
@@ -192,15 +192,14 @@ export function AuthCallbackPage() {
           {status === "error" && (
             <>
               <AlertCircle className="w-12 h-12 text-error-10 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-neutral-12 dark:text-white mb-2">
+              <h2 className="text-xl font-semibold text-neutral-12 mb-2">
                 Sign in failed
               </h2>
-              <p className="text-error-10 dark:text-error-7 mb-4">
+              <p className="text-error-10 mb-4">
                 {errorMessage}
               </p>
               <Button
                 variant="primary"
-                className="px-4 py-2 bg-primary-10 text-white rounded-lg hover:bg-primary-11"
                 onClick={() => navigate("/login", { replace: true })}
               >
                 Try again

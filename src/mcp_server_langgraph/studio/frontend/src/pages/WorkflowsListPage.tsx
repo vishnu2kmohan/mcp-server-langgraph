@@ -466,7 +466,7 @@ export function WorkflowsListPage() {
               <div className="bg-neutral-1 border border-neutral-5 rounded-lg overflow-hidden">
                 {/* Bulk action bar */}
                 {selectedWorkflows.size > 0 && (
-                  <div className="px-4 py-2 bg-primary-2 dark:bg-primary-a3 border-b border-primary-5 dark:border-primary-7 flex items-center justify-between">
+                  <div className="px-4 py-2 bg-primary-2 border-b border-primary-5 flex items-center justify-between">
                     <span className="text-sm text-primary-11">
                       {selectedWorkflows.size} workflow
                       {selectedWorkflows.size > 1 ? "s" : ""} selected
@@ -534,7 +534,7 @@ export function WorkflowsListPage() {
                         key={workflow.id}
                         className={`hover:bg-neutral-a6 transition-colors ${
                           selectedWorkflows.has(workflow.id)
-                            ? "bg-primary-1 dark:bg-primary-a2"
+                            ? "bg-primary-1"
                             : ""
                         }`}
                       >

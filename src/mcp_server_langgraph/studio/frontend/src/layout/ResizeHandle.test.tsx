@@ -83,11 +83,11 @@ describe("ResizeHandle", () => {
       expect(handle).toHaveClass("transition-colors");
     });
 
-    it("should have transparent background by default", () => {
+    it("should have visible background by default for discoverability", () => {
       render(<TestWrapper />);
 
       const handle = document.querySelector("[data-panel-resize-handle-id]");
-      expect(handle).toHaveClass("bg-transparent");
+      expect(handle).toHaveClass("bg-neutral-4");
     });
   });
 

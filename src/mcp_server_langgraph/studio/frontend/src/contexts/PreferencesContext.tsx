@@ -326,6 +326,24 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
   }, [preferences.general.theme]);
 
   // ---------------------------------------------------------------------------
+  // Apply color theme to document
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    const { colorTheme } = preferences.general;
+
+    // Apply color theme via data attribute
+    // CSS rules in index.css use [data-color-theme="..."] selectors
+    if (colorTheme) {
+      document.documentElement.dataset.colorTheme = colorTheme;
+    } else {
+      // Default to violet-sage if not set
+      document.documentElement.dataset.colorTheme = "violet-sage";
+    }
+    // We only want to re-run when colorTheme changes, not on every general preferences update
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferences.general.colorTheme]);
+
+  // ---------------------------------------------------------------------------
   // Save preferences to localStorage (debounced) using storage utility
   // ---------------------------------------------------------------------------
   const saveToStorage = useCallback(

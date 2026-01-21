@@ -59,11 +59,11 @@ export function HelpPage() {
                   className={cn(
                     "inline-block text-xs px-2 py-0.5 rounded mb-4",
                     selectedTopic.category === "basics" &&
-                      "bg-primary-3 text-primary-11 dark:text-primary-11",
+                      "bg-primary-3 text-primary-11",
                     selectedTopic.category === "productivity" &&
-                      "bg-success-3 text-success-11 dark:text-success-11",
+                      "bg-success-3 text-success-11",
                     selectedTopic.category === "compliance" &&
-                      "bg-insight-2 text-insight-11 dark:bg-insight-a4 dark:text-insight-11",
+                      "bg-insight-2 text-insight-11",
                   )}
                 >
                   {selectedTopic.category}

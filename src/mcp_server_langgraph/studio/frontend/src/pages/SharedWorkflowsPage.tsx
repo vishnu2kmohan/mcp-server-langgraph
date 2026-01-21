@@ -101,7 +101,7 @@ export function SharedWorkflowsPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-neutral-8 dark:text-neutral-6">
+      <div className="flex flex-col items-center justify-center h-full text-neutral-8">
         <p className="text-lg">Failed to load shared workflows</p>
         <p className="text-sm">Please try again later</p>
       </div>
@@ -129,10 +129,10 @@ export function SharedWorkflowsPage() {
   if (!workflowList || workflowList.length === 0) {
     return (
       <div className="p-8">
-        <h1 className="text-2xl font-bold text-neutral-12 dark:text-white mb-6">
+        <h1 className="text-2xl font-bold text-neutral-12 mb-6">
           Shared Workflows
         </h1>
-        <div className="flex flex-col items-center justify-center py-16 text-neutral-8 dark:text-neutral-6">
+        <div className="flex flex-col items-center justify-center py-16 text-neutral-8">
           <GitBranch className="w-16 h-16 mb-4 opacity-50" />
           <p className="text-lg font-medium">No shared workflows</p>
           <p className="text-sm mt-2">
@@ -146,19 +146,19 @@ export function SharedWorkflowsPage() {
   return (
     <div className="p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-12 dark:text-white">
+        <h1 className="text-2xl font-bold text-neutral-12">
           Shared Workflows
         </h1>
-        <p className="text-neutral-8 dark:text-neutral-6 mt-1">
+        <p className="text-neutral-8 mt-1">
           Workflows shared with you by team members (read-only access)
         </p>
       </div>
       {/* Search and Sort Controls */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-6 dark:text-neutral-6" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-6" />
           <Input
-            className="pl-10 pr-4 py-2 text-neutral-12 dark:text-white focus:ring-primary-7"
+            className="pl-10 pr-4 py-2 text-neutral-12 focus:ring-primary-7"
             placeholder="Search workflows..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -166,7 +166,7 @@ export function SharedWorkflowsPage() {
         </div>
         <Select
           size="lg"
-          className="px-4 py-2 text-neutral-12 dark:text-white focus:ring-primary-7"
+          className="px-4 py-2 text-neutral-12 focus:ring-primary-7"
           aria-label="Sort by"
           value={sortBy}
           onChange={handleSortChange}
@@ -178,7 +178,7 @@ export function SharedWorkflowsPage() {
       </div>
       {/* Empty search results */}
       {filteredWorkflows.length === 0 && searchQuery && (
-        <div className="flex flex-col items-center justify-center py-16 text-neutral-8 dark:text-neutral-6">
+        <div className="flex flex-col items-center justify-center py-16 text-neutral-8">
           <Search className="w-12 h-12 mb-4 opacity-50" />
           <p className="text-lg font-medium">No workflows match your search</p>
           <p className="text-sm mt-2">Try adjusting your search terms</p>
@@ -188,27 +188,27 @@ export function SharedWorkflowsPage() {
         {filteredWorkflows.map((workflow) => (
           <div
             key={workflow.id}
-            className="bg-white dark:bg-neutral-11 rounded-lg border border-neutral-3 dark:border-neutral-10 p-4 hover:border-primary-5 dark:hover:border-primary-10 transition-colors"
+            className="bg-neutral-2 rounded-lg border border-neutral-3 p-4 hover:border-primary-5 transition-colors"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2">
                 <GitBranch className="w-5 h-5 text-primary-9" />
-                <h3 className="font-medium text-neutral-12 dark:text-white">
+                <h3 className="font-medium text-neutral-12">
                   {workflow.name}
                 </h3>
               </div>
-              <span className="text-xs px-2 py-1 bg-neutral-2 dark:bg-neutral-10 text-neutral-8 dark:text-neutral-6 rounded">
+              <span className="text-xs px-2 py-1 bg-neutral-2 text-neutral-8 rounded">
                 Read-only
               </span>
             </div>
 
             {workflow.description && (
-              <p className="text-sm text-neutral-9 dark:text-neutral-5 mb-4 line-clamp-2">
+              <p className="text-sm text-neutral-9 mb-4 line-clamp-2">
                 {workflow.description}
               </p>
             )}
 
-            <div className="flex items-center gap-4 text-xs text-neutral-8 dark:text-neutral-6 mb-4">
+            <div className="flex items-center gap-4 text-xs text-neutral-8 mb-4">
               <div className="flex items-center gap-1">
                 <UserIcon className="w-3 h-3" />
                 <span>Owner: {workflow.owner}</span>
@@ -221,7 +221,7 @@ export function SharedWorkflowsPage() {
 
             <Button
               variant="primary"
-              className="w-full flex px-3 py-2 text-sm text-primary-10 dark:text-primary-7 bg-primary-1 dark:bg-primary-12/20 rounded-lg hover:bg-primary-3 dark:hover:bg-primary-12/40"
+              className="w-full flex px-3 py-2 text-sm text-primary-10 bg-primary-1/20 rounded-lg hover:bg-primary-3 dark:hover:bg-primary-12/40"
               onClick={() => handleViewWorkflow(workflow.id)}
             >
               <Eye className="w-4 h-4" />

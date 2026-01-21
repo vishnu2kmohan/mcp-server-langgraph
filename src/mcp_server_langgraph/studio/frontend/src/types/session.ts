@@ -68,6 +68,23 @@ export interface ServerConfig {
    * Optional for backward compatibility with older backend versions.
    */
   default_reasoning_effort?: ReasoningEffortLevel;
+  /**
+   * Override for executor model in critique loop.
+   * When null, auto-selected based on task complexity.
+   * Only relevant when critique_loop_enabled is true.
+   */
+  executor_model_name?: string | null;
+  /**
+   * Override for critic model in critique loop.
+   * When null, auto-selected based on task complexity/risk.
+   * Only relevant when critique_loop_enabled is true.
+   */
+  critic_model_name?: string | null;
+  /**
+   * Whether the critique loop feature is enabled (FF_ENABLE_CRITIQUE_LOOP).
+   * When true, responses are refined through executor+critic iterations.
+   */
+  critique_loop_enabled?: boolean;
 }
 
 /**
@@ -83,13 +100,16 @@ export type ServerConfigCamelCase = SnakeToCamelCaseDeep<ServerConfig>;
  * The frontend should prefer using the ServerConfig from /api/v1/config/defaults
  * to ensure the UI reflects the backend-configured model.
  *
+ * Matches backend settings.model_name default (gemini-2.5-flash).
+ * In test/CI environment: MODEL_NAME=vertex_ai/gemini-3-flash-preview
+ *
  * @deprecated Prefer using useGetServerConfigQuery() and apply server defaults
  */
 export const DEFAULT_SESSION_CONFIG: SessionConfig = {
-  modelProvider: "google", // Fallback - actual default is set in backend
-  modelName: "gemini-2.5-flash", // Fallback - actual default comes from server
+  modelProvider: "google",
+  modelName: "gemini-2.5-flash", // Matches backend settings.model_name default
   temperature: 0.7,
-  maxTokens: 8192, // Fallback - actual default comes from server
+  maxTokens: 8192,
 };
 
 // ==============================================================================

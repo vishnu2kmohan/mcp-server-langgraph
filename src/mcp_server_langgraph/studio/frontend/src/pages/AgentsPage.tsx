@@ -132,7 +132,7 @@ export function AgentsPage() {
           </div>
           <Button
             variant="secondary"
-            className="flex px-4 py-2 bg-neutral-3 rounded-lg hover:bg-neutral-3 dark:bg-neutral-10 dark:hover:bg-neutral-9"
+            className="flex px-4 py-2 bg-neutral-3 rounded-lg hover:bg-neutral-30 dark:hover:bg-neutral-9"
             onClick={handleRefresh}
           >
             <RefreshCw size={16} />
@@ -230,7 +230,7 @@ export function AgentsPage() {
               <h2 className="text-xl font-semibold text-neutral-12">
                 Available Tools
               </h2>
-              <span className="px-2 py-1 text-xs bg-insight-2 dark:bg-insight-12/30 text-insight-11 dark:text-insight-9 rounded-full">
+              <span className="px-2 py-1 text-xs bg-insight-2 text-insight-11 rounded-full">
                 {tools.length} tools available
               </span>
             </div>

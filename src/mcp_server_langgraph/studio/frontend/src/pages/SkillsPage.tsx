@@ -514,7 +514,7 @@ function UpdatesContent({
           {updates.length} update(s) available
         </p>
         <Button
-          className="flex px-4 py-2 bg-accent-primary text-white rounded-md hover:bg-accent-primary/90"
+          variant="primary" className="gap-2"
           onClick={onApplyAll}
           disabled={isApplying}
         >
@@ -576,7 +576,7 @@ function SkillCard({
           </div>
         ) : (
           <Button
-            className="flex px-3 py-1.5 text-sm bg-accent-primary text-white rounded-md hover:bg-accent-primary/90"
+            variant="primary" size="sm" className="gap-2"
             onClick={onInstall}
             disabled={isInstalling}
           >

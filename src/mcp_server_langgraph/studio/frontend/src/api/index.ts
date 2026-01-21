@@ -1570,12 +1570,13 @@ export const api = createApi({
     // Unified Tools API (Manual Tool Selection)
     // =========================================================================
 
-    /** List all available tools (built-in + MCP) for manual selection */
+    /** List all available tools (built-in + MCP + native) for manual selection */
     listUnifiedTools: builder.query<
       {
         tools: UnifiedToolCamelCase[];
         builtinCount: number;
         mcpCount: number;
+        nativeCount: number; // v7: Add native count
         totalCount: number;
       },
       ListToolsParams | void
@@ -1593,6 +1594,7 @@ export const api = createApi({
           tools: UnifiedToolCamelCase[];
           builtinCount: number;
           mcpCount: number;
+          nativeCount: number; // v7: Add native count
           totalCount: number;
         },
       providesTags: ["Connection"], // Invalidate when connections change (MCP tools)

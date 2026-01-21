@@ -11,11 +11,20 @@
 // Tool Source
 // =============================================================================
 
-/** Tool source - built-in (Python) or MCP server */
-export type ToolSource = "builtin" | "mcp";
+/**
+ * Tool source - built-in (Python), MCP server, or native LLM provider
+ * v7: Added "native" for native LLM provider tools (Anthropic web_search, etc.)
+ */
+export type ToolSource = "builtin" | "mcp" | "native";
 
 /** Tool selection mode for chat requests */
 export type ToolSelectionMode = "auto" | "manual" | "none";
+
+/**
+ * Tool preference for native vs builtin execution
+ * v7: Controls whether to use native LLM provider tools when available
+ */
+export type ToolPreference = "auto" | "native" | "builtin" | "mcp";
 
 // =============================================================================
 // Unified Tool Types (Snake Case - Backend Response)
@@ -23,17 +32,24 @@ export type ToolSelectionMode = "auto" | "manual" | "none";
 
 /** Unified tool representation from backend (snake_case) */
 export interface UnifiedTool {
+  /**
+   * Unique tool identifier for selection (v7)
+   * Format: "source:name" (e.g., "builtin:web_search", "mcp:github:create_issue", "native:web_search")
+   */
+  tool_id: string;
   /** Tool name (qualified name for MCP tools, e.g., "github:create_issue") */
   name: string;
   /** Human-readable display name */
   display_name: string;
   /** Tool description */
   description: string;
-  /** Tool source: "builtin" or "mcp" */
+  /** Tool source: "builtin", "mcp", or "native" */
   source: ToolSource;
-  /** MCP server name (MCP tools only, null for built-in) */
+  /** MCP server name (MCP tools only, null for built-in/native) */
   server_name: string | null;
-  /** Tool category (calculator, search, filesystem, etc.) */
+  /** Native tool provider (v7: "anthropic", "google", null for non-native) */
+  provider: string | null;
+  /** Tool category (calculator, search, filesystem, native, etc.) */
   category: string | null;
   /** JSON Schema for tool parameters */
   input_schema: Record<string, unknown>;
@@ -49,6 +65,8 @@ export interface UnifiedToolsListResponse {
   builtin_count: number;
   /** Number of MCP tools */
   mcp_count: number;
+  /** Number of native LLM provider tools (v7) */
+  native_count: number;
   /** Total number of tools */
   total_count: number;
 }
@@ -59,17 +77,24 @@ export interface UnifiedToolsListResponse {
 
 /** Unified tool representation for frontend use (camelCase) */
 export interface UnifiedToolCamelCase {
+  /**
+   * Unique tool identifier for selection (v7)
+   * Format: "source:name" (e.g., "builtin:web_search", "mcp:github:create_issue", "native:web_search")
+   */
+  toolId: string;
   /** Tool name (qualified name for MCP tools, e.g., "github:create_issue") */
   name: string;
   /** Human-readable display name */
   displayName: string;
   /** Tool description */
   description: string;
-  /** Tool source: "builtin" or "mcp" */
+  /** Tool source: "builtin", "mcp", or "native" */
   source: ToolSource;
-  /** MCP server name (MCP tools only, null for built-in) */
+  /** MCP server name (MCP tools only, null for built-in/native) */
   serverName: string | null;
-  /** Tool category (calculator, search, filesystem, etc.) */
+  /** Native tool provider (v7: "anthropic", "google", null for non-native) */
+  provider: string | null;
+  /** Tool category (calculator, search, filesystem, native, etc.) */
   category: string | null;
   /** JSON Schema for tool parameters */
   inputSchema: Record<string, unknown>;
@@ -85,6 +110,8 @@ export interface UnifiedToolsListResponseCamelCase {
   builtinCount: number;
   /** Number of MCP tools */
   mcpCount: number;
+  /** Number of native LLM provider tools (v7) */
+  nativeCount: number;
   /** Total number of tools */
   totalCount: number;
 }
@@ -95,8 +122,8 @@ export interface UnifiedToolsListResponseCamelCase {
 
 /** Query parameters for listing tools */
 export interface ListToolsParams {
-  /** Filter by source (all, builtin, mcp) */
-  source?: "all" | "builtin" | "mcp";
+  /** Filter by source (all, builtin, mcp, native) - v7: added native */
+  source?: "all" | "builtin" | "mcp" | "native";
   /** Filter by category */
   category?: string;
   /** Search term for filtering */
@@ -115,7 +142,8 @@ export type ToolCategory =
   | "code_execution"
   | "web"
   | "visual"
-  | "computer_use";
+  | "computer_use"
+  | "native"; // v7: Native LLM provider tools category
 
 /** Category display information */
 export interface ToolCategoryInfo {
@@ -173,6 +201,13 @@ export const TOOL_CATEGORIES: Record<ToolCategory, ToolCategoryInfo> = {
     description: "Browser and desktop automation",
     icon: "Monitor",
   },
+  // v7: Native LLM provider tools category
+  native: {
+    id: "native",
+    displayName: "Native",
+    description: "Native LLM provider tools (Anthropic, Google)",
+    icon: "Zap",
+  },
 };
 
 // =============================================================================
@@ -185,6 +220,8 @@ export interface GroupedTools {
   builtin: UnifiedToolCamelCase[];
   /** MCP tools grouped by server name */
   mcp: Record<string, UnifiedToolCamelCase[]>;
+  /** Native LLM provider tools grouped by provider (v7) */
+  native: Record<string, UnifiedToolCamelCase[]>;
 }
 
 // =============================================================================
@@ -193,10 +230,12 @@ export interface GroupedTools {
 
 /** State for tool selection in chat input */
 export interface ToolSelectionState {
-  /** Currently selected tool names */
+  /** Currently selected tool IDs (v7: using tool_id for selection) */
   selectedTools: string[];
   /** Tool selection mode */
   mode: ToolSelectionMode;
+  /** Tool preference for native vs builtin execution (v7) */
+  preference: ToolPreference;
   /** Whether the selector dropdown is open */
   isOpen: boolean;
   /** Search term for filtering tools */

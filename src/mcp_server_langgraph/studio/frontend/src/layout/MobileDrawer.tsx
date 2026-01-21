@@ -346,7 +346,7 @@ export function MobileDrawer({
         <nav className="flex flex-col flex-1 overflow-y-auto py-4">
           <div className="flex flex-col gap-1 px-2">
             {visibleNavItems.map((item) => (
-              <Button
+              <Button variant="ghost"
                 key={item.id}
                 type="button"
                 data-testid={`mobile-nav-${item.id}`}
@@ -373,7 +373,7 @@ export function MobileDrawer({
           {/* Bottom Items */}
           <div className="flex flex-col gap-1 px-2 pt-4 mt-4 border-t border-neutral-5">
             {visibleBottomItems.map((item) => (
-              <Button
+              <Button variant="ghost"
                 key={item.id}
                 type="button"
                 data-testid={`mobile-nav-${item.id}`}

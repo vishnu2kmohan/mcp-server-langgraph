@@ -123,13 +123,13 @@ export function AuditLogPage() {
 
   const getActionColor = (action: string) => {
     if (action.includes("delete"))
-      return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
+      return "bg-error-3 text-error-11 bg-error-4";
     if (action.includes("create"))
-      return "bg-success-3 text-success-11 bg-success-4 dark:text-success-7";
+      return "bg-success-3 text-success-11 bg-success-4";
     if (action.includes("update"))
-      return "bg-warning-3 text-warning-10 dark:bg-warning-a4 dark:text-warning-9";
+      return "bg-warning-3 text-warning-10";
     if (action.includes("login"))
-      return "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7";
+      return "bg-primary-3 text-primary-11 bg-primary-4";
     return "bg-neutral-2 text-neutral-11";
   };
 

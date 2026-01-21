@@ -158,7 +158,7 @@ export function SettingsDocument({
         <aside className="w-48 bg-neutral-1 border-r border-neutral-5 p-3">
           <nav className="space-y-1">
             {tabs.map((tab) => (
-              <Button
+              <Button variant="ghost"
                 className="w-full flex px-3 py-2 text-sm rounded-lg"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}

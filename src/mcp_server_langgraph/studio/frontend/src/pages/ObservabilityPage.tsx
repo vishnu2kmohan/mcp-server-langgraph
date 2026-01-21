@@ -382,24 +382,24 @@ export function ObservabilityPage() {
   const getLogLevelColor = (level: "info" | "warn" | "error" | "debug") => {
     switch (level) {
       case "error":
-        return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
+        return "bg-error-3 text-error-11 bg-error-4";
       case "warn":
-        return "bg-warning-3 text-warning-10 dark:bg-warning-12/30 dark:text-warning-9";
+        return "bg-warning-3 text-warning-10/30";
       case "info":
-        return "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7";
+        return "bg-primary-3 text-primary-11 bg-primary-4";
       case "debug":
-        return "bg-neutral-2 dark:bg-neutral-11 text-neutral-10 dark:text-neutral-3 dark:bg-neutral-12/30 dark:text-neutral-6";
+        return "bg-neutral-2 text-neutral-10/30";
     }
   };
 
   const getStatusColor = (status: "success" | "error" | "running") => {
     switch (status) {
       case "success":
-        return "bg-success-3 text-success-11 bg-success-4 dark:text-success-7";
+        return "bg-success-3 text-success-11 bg-success-4";
       case "error":
-        return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
+        return "bg-error-3 text-error-11 bg-error-4";
       case "running":
-        return "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7";
+        return "bg-primary-3 text-primary-11 bg-primary-4";
     }
   };
 
@@ -408,13 +408,13 @@ export function ObservabilityPage() {
   ) => {
     switch (severity) {
       case "critical":
-        return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
+        return "bg-error-3 text-error-11 bg-error-4";
       case "error":
-        return "bg-grafana-2 text-grafana-11 dark:bg-grafana-12/30 dark:text-grafana-7";
+        return "bg-grafana-2 text-grafana-11";
       case "warning":
-        return "bg-warning-3 text-warning-11 dark:bg-warning-12/30 dark:text-warning-9";
+        return "bg-warning-3 text-warning-11/30";
       case "info":
-        return "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7";
+        return "bg-primary-3 text-primary-11 bg-primary-4";
     }
   };
 
@@ -423,13 +423,13 @@ export function ObservabilityPage() {
   ) => {
     switch (state) {
       case "firing":
-        return "bg-error-3 text-error-11 bg-error-4 dark:text-error-7";
+        return "bg-error-3 text-error-11 bg-error-4";
       case "pending":
-        return "bg-warning-3 text-warning-11 dark:bg-warning-12/30 dark:text-warning-9";
+        return "bg-warning-3 text-warning-11/30";
       case "resolved":
-        return "bg-success-3 text-success-11 bg-success-4 dark:text-success-7";
+        return "bg-success-3 text-success-11 bg-success-4";
       case "silenced":
-        return "bg-neutral-2 dark:bg-neutral-11 text-neutral-11 dark:bg-neutral-12/30 dark:text-neutral-6";
+        return "bg-neutral-2 text-neutral-11/30";
     }
   };
 
@@ -493,7 +493,7 @@ export function ObservabilityPage() {
             />
             <Button
               variant="secondary"
-              className="flex px-4 py-2 bg-neutral-3 rounded-lg hover:bg-neutral-3 dark:bg-neutral-10 dark:hover:bg-neutral-9"
+              className="flex px-4 py-2 bg-neutral-3 rounded-lg hover:bg-neutral-30 dark:hover:bg-neutral-9"
               onClick={handleRefresh}
             >
               <RefreshCw size={16} />
@@ -671,24 +671,24 @@ export function ObservabilityPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           {session.status === "active" ? (
-                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-success-3 text-success-11 bg-success-4 dark:text-success-7">
+                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-success-3 text-success-11 bg-success-4">
                               <CheckCircle size={12} />
                               Active
                             </span>
                           ) : session.status === "archived" ? (
-                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-warning-3 text-warning-10 dark:bg-warning-12/30 dark:text-warning-9">
+                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-warning-3 text-warning-10/30">
                               <Clock size={12} />
                               Archived
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-neutral-2 dark:bg-neutral-11 text-neutral-10 dark:text-neutral-3 dark:bg-neutral-12/30 dark:text-neutral-6">
+                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-neutral-2 text-neutral-10/30">
                               <XCircle size={12} />
                               {session.status}
                             </span>
                           )}
                           <ExternalLink
                             size={16}
-                            className="text-neutral-6 dark:text-neutral-6"
+                            className="text-neutral-6"
                           />
                         </div>
                       </div>
@@ -743,16 +743,16 @@ export function ObservabilityPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7">
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-primary-3 text-primary-11 bg-primary-4">
                             <Activity size={12} />
                             {workflow.nodeCount} nodes
                           </span>
-                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-neutral-2 dark:bg-neutral-11 text-neutral-10 dark:text-neutral-3 dark:bg-neutral-12/30 dark:text-neutral-6">
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-neutral-2 text-neutral-10/30">
                             {workflow.edgeCount} edges
                           </span>
                           <ExternalLink
                             size={16}
-                            className="text-neutral-6 dark:text-neutral-6"
+                            className="text-neutral-6"
                           />
                         </div>
                       </div>
@@ -847,7 +847,7 @@ export function ObservabilityPage() {
                       <div className="flex justify-center pt-4">
                         <Button
                           variant="secondary"
-                          className="flex px-4 py-2 bg-neutral-3 text-neutral-11 rounded-lg hover:bg-neutral-3 dark:bg-neutral-10 dark:hover:bg-neutral-9"
+                          className="flex px-4 py-2 bg-neutral-3 text-neutral-11 rounded-lg hover:bg-neutral-30 dark:hover:bg-neutral-9"
                           onClick={() => setCursor(tracesData.nextCursor)}
                           disabled={isTracesFetching}
                         >
@@ -871,7 +871,7 @@ export function ObservabilityPage() {
                             Trace Details
                           </span>
                           <Button
-                            className="text-sm text-neutral-11 hover:text-neutral-10 dark:text-neutral-3 dark:text-neutral-6 dark:hover:text-neutral-3"
+                            className="text-sm text-neutral-11 hover:text-neutral-10 dark:hover:text-neutral-3"
                             onClick={() => setSelectedTraceId(null)}
                           >
                             Close
@@ -912,7 +912,7 @@ export function ObservabilityPage() {
                                   Summary
                                 </h4>
                                 {traceSummary.isLoading ? (
-                                  <div className="flex items-center gap-2 text-sm text-neutral-6 dark:text-neutral-6">
+                                  <div className="flex items-center gap-2 text-sm text-neutral-6">
                                     <Loader2
                                       size={14}
                                       className="animate-spin"
@@ -930,7 +930,7 @@ export function ObservabilityPage() {
                                           (action, idx) => (
                                             <span
                                               key={idx}
-                                              className="px-2 py-0.5 text-xs bg-primary-3 bg-primary-4 text-primary-11 dark:text-primary-5 rounded"
+                                              className="px-2 py-0.5 text-xs bg-primary-3 bg-primary-4 text-primary-11 rounded"
                                             >
                                               {action}
                                             </span>
@@ -959,7 +959,7 @@ export function ObservabilityPage() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <p className="text-sm text-neutral-6 dark:text-neutral-6">
+                                  <p className="text-sm text-neutral-6">
                                     No summary available
                                   </p>
                                 )}
@@ -971,7 +971,7 @@ export function ObservabilityPage() {
                                   Health & Anomalies
                                 </h4>
                                 {traceAnomaly.isLoading ? (
-                                  <div className="flex items-center gap-2 text-sm text-neutral-6 dark:text-neutral-6">
+                                  <div className="flex items-center gap-2 text-sm text-neutral-6">
                                     <Loader2
                                       size={14}
                                       className="animate-spin"
@@ -989,10 +989,10 @@ export function ObservabilityPage() {
                                         <span
                                           className={`text-sm font-medium ${
                                             traceAnomaly.healthScore >= 80
-                                              ? "text-success-10 dark:text-success-7"
+                                              ? "text-success-10"
                                               : traceAnomaly.healthScore >= 60
-                                                ? "text-warning-9 dark:text-warning-9"
-                                                : "text-error-10 dark:text-error-7"
+                                                ? "text-warning-9"
+                                                : "text-error-10"
                                           }`}
                                         >
                                           {traceAnomaly.healthScore}/100
@@ -1015,7 +1015,7 @@ export function ObservabilityPage() {
                                               content={`${bottleneck.durationMs}ms (${bottleneck.percentageOfTotal}% of total)`}
                                               position="top"
                                             >
-                                              <span className="inline-block px-2 py-0.5 text-xs bg-grafana-2 dark:bg-grafana-12/30 text-grafana-10 dark:text-grafana-5 rounded cursor-help">
+                                              <span className="inline-block px-2 py-0.5 text-xs bg-grafana-2 text-grafana-10 rounded cursor-help">
                                                 {bottleneck.stepName}
                                               </span>
                                             </Tooltip>
@@ -1044,11 +1044,11 @@ export function ObservabilityPage() {
                                               <div
                                                 className={`text-xs px-2 py-1 rounded cursor-help ${
                                                   anomaly.severity === "error"
-                                                    ? "bg-error-3 bg-error-4 text-error-11 dark:text-error-9"
+                                                    ? "bg-error-3 bg-error-4 text-error-11"
                                                     : anomaly.severity ===
                                                         "warning"
-                                                      ? "bg-warning-3 dark:bg-warning-12/30 text-warning-10 dark:text-warning-6"
-                                                      : "bg-primary-3 bg-primary-4 text-primary-11 dark:text-primary-5"
+                                                      ? "bg-warning-3/30 text-warning-10"
+                                                      : "bg-primary-3 bg-primary-4 text-primary-11"
                                                 }`}
                                               >
                                                 {anomaly.stepName}:{" "}
@@ -1079,7 +1079,7 @@ export function ObservabilityPage() {
 
                                     {traceAnomaly.anomalies.length === 0 &&
                                       traceAnomaly.bottlenecks.length === 0 && (
-                                        <p className="text-sm text-success-10 dark:text-success-7 flex items-center gap-1">
+                                        <p className="text-sm text-success-10 flex items-center gap-1">
                                           <TrendingUp size={14} />
                                           No issues detected
                                         </p>
@@ -1155,7 +1155,7 @@ export function ObservabilityPage() {
                   <h3 className="text-sm font-medium text-neutral-11 mb-1">
                     Total Errors
                   </h3>
-                  <div className="text-2xl font-semibold text-error-10 dark:text-error-7">
+                  <div className="text-2xl font-semibold text-error-10">
                     {(metrics.errorsTotal ?? 0).toLocaleString()}
                   </div>
                 </div>
@@ -1351,7 +1351,7 @@ export function ObservabilityPage() {
                               href={alert.generatorUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1 text-neutral-6 dark:text-neutral-6 hover:text-primary-9 transition-colors"
+                              className="p-1 text-neutral-6 hover:text-primary-9 transition-colors"
                               title="View in Grafana"
                             >
                               <ExternalLink size={16} />
