@@ -255,6 +255,7 @@ class RedisSessionManager:
         role: str,
         content: str,
         metadata: dict[str, Any] | None = None,
+        sources: list[dict[str, Any]] | None = None,
     ) -> Message | None:
         """
         Add a message to session history.
@@ -264,6 +265,7 @@ class RedisSessionManager:
             role: Message role ("user" or "assistant")
             content: Message content
             metadata: Optional message metadata
+            sources: Optional source citations for the message
 
         Returns:
             Created message if session found, None otherwise
@@ -278,6 +280,7 @@ class RedisSessionManager:
             content=content,
             timestamp=datetime.now(UTC),
             metadata=metadata or {},
+            sources=sources or [],
         )
 
         session.messages.append(message)

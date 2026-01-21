@@ -98,8 +98,6 @@ class AuditHandler(WebSocketBase):
         super().__init__(config=config, metrics=metrics)
         self._broadcaster = broadcaster
         self._current_filter: AuditFilter = AuditFilter()
-        self._user_id: str | None = None
-
     async def on_connect(self, user: AuthUser) -> None:
         """
         Handle connection establishment.
@@ -107,7 +105,6 @@ class AuditHandler(WebSocketBase):
         Args:
             user: The authenticated user.
         """
-        self._user_id = user.id
         # Subscribe to all events initially (no filter)
         if self._websocket:
             await self._broadcaster.subscribe(self._websocket, self._current_filter)
@@ -121,8 +118,8 @@ class AuditHandler(WebSocketBase):
         if self._websocket:
             await self._broadcaster.unsubscribe(self._websocket)
         logger.info(
-            f"Audit stream disconnected: user={self._user_id}",
-            extra={"user_id": self._user_id},
+            f"Audit stream disconnected: user={self.user_id}",
+            extra={"user_id": self.user_id},
         )
 
     async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:

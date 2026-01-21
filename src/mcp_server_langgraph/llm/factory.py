@@ -51,6 +51,7 @@ from mcp_server_langgraph.core.exceptions import (
 from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.core.hooks import HookContext
 from mcp_server_langgraph.llm.metrics import record_llm_request_duration, record_llm_token_usage
+from mcp_server_langgraph.monitoring.cost_tracker import get_cost_collector
 from mcp_server_langgraph.llm.streaming_metrics import StreamingMetricsContext
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff, with_bulkhead, with_timeout
@@ -474,6 +475,7 @@ class LLMFactory:
         messages: list[BaseMessage | dict[str, Any]],
         *,
         hook_context: HookContext | None = None,
+        native_tools: list[dict[str, Any]] | None = None,
         **kwargs: Any,
     ) -> AIMessage:
         """
@@ -489,9 +491,15 @@ class LLMFactory:
         - BEFORE_MODEL: Dispatched before LLM call (can skip with cached response or deny)
         - AFTER_MODEL: Dispatched after LLM response (can modify output)
 
+        v7 Native Tools Support:
+        - For OpenAI with Responses API: Uses LiteLLM aresponses() for native tools
+        - For Anthropic/Google: Passes native_tools config to acompletion()
+        - Native tool results are stored in AIMessage.additional_kwargs["native_output"]
+
         Args:
             messages: List of messages
             hook_context: Optional hook context for BEFORE_MODEL/AFTER_MODEL hooks
+            native_tools: Optional list of native tool configs (v7)
             **kwargs: Additional parameters for the model
 
         Returns:
@@ -565,22 +573,15 @@ class LLMFactory:
             span.set_attribute("bulkhead.error_rate", adaptive_bulkhead.get_error_rate())
 
             # Extract known parameters with defaults
-            known_params = {"temperature", "max_tokens", "timeout", "hook_context"}
+            known_params = {"temperature", "max_tokens", "timeout", "hook_context", "native_tools"}
             extra_kwargs = {k: v for k, v in kwargs.items() if k not in known_params}
 
             # Get adjusted temperature for model-specific constraints (Gemini 3 requires 1.0)
             requested_temp = kwargs.get("temperature", self.temperature)
             adjusted_temp = self._get_adjusted_temperature(self.model_name, requested_temp)
 
-            params = {
-                "model": self.model_name,
-                "messages": formatted_messages,
-                "temperature": adjusted_temp,
-                "max_tokens": kwargs.get("max_tokens", self.max_tokens),
-                "timeout": kwargs.get("timeout", self.timeout),
-                **self.kwargs,
-                **extra_kwargs,  # Pass through additional kwargs (e.g., response_format)
-            }
+            # Determine if we should use OpenAI Responses API for native tools
+            use_responses_api = native_tools and self.provider == "openai" and feature_flags.use_responses_api_for_openai
 
             # Use adaptive bulkhead semaphore to enforce concurrency limit
             # This prevents overwhelming the LLM provider with too many concurrent requests
@@ -588,6 +589,101 @@ class LLMFactory:
 
             try:
                 async with semaphore:
+                    if use_responses_api and native_tools:
+                        # v7: Use LiteLLM Responses API for OpenAI native tools
+                        response_content, usage, native_output = await self._call_responses_api(
+                            messages=formatted_messages,
+                            tools=native_tools,
+                            temperature=adjusted_temp,
+                            max_tokens=kwargs.get("max_tokens", self.max_tokens),
+                            timeout=kwargs.get("timeout", self.timeout),
+                            extra_params=extra_kwargs,
+                        )
+
+                        # Record metrics - usage has attribute access via SimpleNamespace
+                        duration_ms = (time.perf_counter() - start_time) * 1000
+                        record_llm_request_duration(self.model_name, duration_ms, self.provider)
+                        record_llm_token_usage(
+                            self.model_name,
+                            usage.prompt_tokens,
+                            usage.completion_tokens,
+                        )
+
+                        # OTEL attributes
+                        span.set_attribute("gen_ai.usage.input_tokens", usage.prompt_tokens)
+                        span.set_attribute("gen_ai.usage.output_tokens", usage.completion_tokens)
+                        span.set_attribute("gen_ai.responses_api", True)
+
+                        self.telemetry.metrics.successful_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
+                        adaptive_bulkhead.record_success()
+
+                        # Record cost to PostgreSQL for Cost Page dashboard
+                        if feature_flags.enable_cost_tracking:
+                            try:
+                                from datetime import datetime, UTC
+
+                                collector = get_cost_collector()
+                                await collector.record_usage(
+                                    timestamp=datetime.now(UTC),
+                                    user_id=kwargs.get("user_id", "unknown"),
+                                    session_id=kwargs.get("session_id", "unknown"),
+                                    model=self.model_name,
+                                    provider=self.provider,
+                                    prompt_tokens=usage.prompt_tokens,
+                                    completion_tokens=usage.completion_tokens,
+                                )
+                            except Exception as e:
+                                # Cost recording failure should not fail the LLM call
+                                self.telemetry.logger.warning(
+                                    f"Failed to record cost to PostgreSQL: {e}",
+                                    extra={"model": self.model_name, "error": str(e)},
+                                )
+
+                        # ADR-0080: Dispatch AFTER_MODEL hook
+                        if self.hook_dispatcher and feature_flags.enable_llm_hooks:
+                            from mcp_server_langgraph.core.hooks import TokenUsage as HookTokenUsage
+
+                            ctx = hook_context or HookContext(session_id="default")
+                            hook_usage = HookTokenUsage(
+                                prompt_tokens=usage.prompt_tokens,
+                                completion_tokens=usage.completion_tokens,
+                                total_tokens=usage.total_tokens,
+                            )
+
+                            after_result = await self.hook_dispatcher.dispatch_after_model(
+                                content=response_content,
+                                model=self.model_name,
+                                context=ctx,
+                                usage=hook_usage,
+                                latency_ms=duration_ms,
+                                finish_reason="stop",
+                            )
+
+                            if after_result.modified_output is not None:
+                                response_content = after_result.modified_output
+                                span.set_attribute("hook.after_model.modified", True)
+
+                        # Return AIMessage with native_output in additional_kwargs
+                        return AIMessage(
+                            content=response_content,
+                            additional_kwargs={"native_output": native_output} if native_output else {},
+                        )
+
+                    # Standard acompletion path
+                    params = {
+                        "model": self.model_name,
+                        "messages": formatted_messages,
+                        "temperature": adjusted_temp,
+                        "max_tokens": kwargs.get("max_tokens", self.max_tokens),
+                        "timeout": kwargs.get("timeout", self.timeout),
+                        **self.kwargs,
+                        **extra_kwargs,  # Pass through additional kwargs (e.g., response_format)
+                    }
+
+                    # Pass native tools for Anthropic/Google via acompletion
+                    if native_tools and self.provider in ("anthropic", "google"):
+                        params["tools"] = native_tools
+
                     response: ModelResponse = await acompletion(**params)
 
                 content = response.choices[0].message.content  # type: ignore[union-attr]
@@ -619,6 +715,28 @@ class LLMFactory:
                     },
                 )
 
+                # Record cost to PostgreSQL for Cost Page dashboard
+                if feature_flags.enable_cost_tracking and response.usage:  # type: ignore[attr-defined]
+                    try:
+                        from datetime import datetime, UTC
+
+                        collector = get_cost_collector()
+                        await collector.record_usage(
+                            timestamp=datetime.now(UTC),
+                            user_id=kwargs.get("user_id", "unknown"),
+                            session_id=kwargs.get("session_id", "unknown"),
+                            model=self.model_name,
+                            provider=self.provider,
+                            prompt_tokens=response.usage.prompt_tokens or 0,  # type: ignore[attr-defined]
+                            completion_tokens=response.usage.completion_tokens or 0,  # type: ignore[attr-defined]
+                        )
+                    except Exception as e:
+                        # Cost recording failure should not fail the LLM call
+                        self.telemetry.logger.warning(
+                            f"Failed to record cost to PostgreSQL: {e}",
+                            extra={"model": self.model_name, "error": str(e)},
+                        )
+
                 # ADR-0080: Dispatch AFTER_MODEL hook
                 # This allows hooks to: filter output, add disclaimers, transform response
                 if self.hook_dispatcher and feature_flags.enable_llm_hooks:
@@ -628,7 +746,7 @@ class LLMFactory:
 
                     # Build token usage for hook
                     # Note: litellm ModelResponse has usage attr but type stubs don't reflect it
-                    hook_usage = None
+                    hook_usage: HookTokenUsage | None = None  # type: ignore[no-redef]
                     if response.usage:  # type: ignore[attr-defined]
                         hook_usage = HookTokenUsage(
                             prompt_tokens=response.usage.prompt_tokens or 0,  # type: ignore[attr-defined]
@@ -775,6 +893,87 @@ class LLMFactory:
 
         msg = "All async models failed including fallbacks"
         raise RuntimeError(msg)
+
+    async def _call_responses_api(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]],
+        temperature: float,
+        max_tokens: int,
+        timeout: int,
+        extra_params: dict[str, Any],
+    ) -> tuple[str, Any, list[dict[str, Any]]]:
+        """Call OpenAI via LiteLLM Responses API.
+
+        v7: Uses LiteLLM's Responses API for OpenAI native tools (web_search, code_interpreter).
+        Returns raw Responses payload for inline processing.
+        Includes ALL parameters for behavior parity with acompletion.
+
+        Args:
+            messages: Formatted messages list
+            tools: Native tool configs (e.g., [{"type": "web_search_preview"}])
+            temperature: Temperature setting
+            max_tokens: Max output tokens
+            timeout: Timeout in seconds
+            extra_params: Additional params (response_format, reasoning, etc.)
+
+        Returns:
+            Tuple of (content, usage_namespace, output_items)
+            - content: Text content for AIMessage.content
+            - usage_namespace: SimpleNamespace with prompt_tokens/completion_tokens
+            - output_items: Raw output items for additional_kwargs["native_output"]
+        """
+        from types import SimpleNamespace
+
+        import litellm
+
+        # Filter to Responses API supported params
+        responses_supported = {"response_format", "reasoning", "store", "metadata"}
+        filtered_extra = {k: v for k, v in extra_params.items() if k in responses_supported}
+
+        params = {
+            "model": self.model_name,
+            "input": messages,  # Responses API uses "input" not "messages"
+            "tools": tools,
+            "temperature": temperature,
+            "max_output_tokens": max_tokens,
+            "timeout": timeout,
+            **filtered_extra,
+        }
+
+        # Filter out None values
+        params = {k: v for k, v in params.items() if v is not None}
+
+        self.telemetry.logger.info(
+            f"Calling Responses API for model {self.model_name}",
+            extra={"tool_count": len(tools)},
+        )
+
+        response = await litellm.aresponses(**params)
+
+        # Convert to dict if needed
+        raw_response = dict(response) if hasattr(response, "__dict__") else response
+
+        # Extract text content from output array
+        content = ""
+        output_items = raw_response.get("output", [])
+
+        for item in output_items:
+            if item.get("type") == "message":
+                for block in item.get("content", []):
+                    if block.get("type") == "output_text":
+                        content += block.get("text", "")
+
+        # Map usage keys and use SimpleNamespace for attribute access
+        # CRITICAL: Metrics/hooks use response.usage.prompt_tokens (attribute access)
+        raw_usage = raw_response.get("usage", {})
+        usage = SimpleNamespace(
+            prompt_tokens=raw_usage.get("input_tokens", 0),
+            completion_tokens=raw_usage.get("output_tokens", 0),
+            total_tokens=raw_usage.get("total_tokens", 0),
+        )
+
+        return content, usage, output_items
 
     async def astream(
         self,

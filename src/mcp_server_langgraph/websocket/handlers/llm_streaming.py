@@ -137,9 +137,8 @@ class LLMStreamingHandler(WebSocketBase):
 
         self._subscribed_streams.add(stream_id)
 
-        return MessageEnvelope(
-            type="subscribed",
-            payload={"stream_id": stream_id},
+        return self.create_subscribed_response(
+            extra_payload={"stream_id": stream_id},
         )
 
     async def _handle_unsubscribe(self, message: MessageEnvelope) -> MessageEnvelope:
@@ -150,9 +149,8 @@ class LLMStreamingHandler(WebSocketBase):
         if stream_id and stream_id in self._subscribed_streams:
             self._subscribed_streams.discard(stream_id)
 
-        return MessageEnvelope(
-            type="unsubscribed",
-            payload={"stream_id": stream_id},
+        return self.create_unsubscribed_response(
+            extra_payload={"stream_id": stream_id},
         )
 
     async def _handle_cancel(self, message: MessageEnvelope) -> MessageEnvelope:

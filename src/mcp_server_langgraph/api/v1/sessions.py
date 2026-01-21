@@ -113,11 +113,21 @@ sessions_router = APIRouter(tags=["sessions"])
 
 
 class SourceCitation(BaseModel):
-    """A source citation for a message."""
+    """A source citation for a message.
+
+    Source citations are extracted from native web search results (Anthropic,
+    Google, OpenAI) and knowledge base references.
+    """
 
     title: str = Field(description="Source title")
     url: str | None = Field(default=None, description="Source URL")
     snippet: str | None = Field(default=None, description="Relevant snippet from source")
+    relevance_score: float | None = Field(
+        default=None,
+        description="Relevance score for ranking (0.0 to 1.0)",
+        ge=0.0,
+        le=1.0,
+    )
 
 
 class MessageRequest(BaseModel):
@@ -580,6 +590,7 @@ class InMemorySessionService(SessionService):
             "role": message_data["role"],
             "content": message_data["content"],
             "timestamp": datetime.now(UTC).isoformat(),
+            "sources": message_data.get("sources", []),
         }
 
         session["messages"].append(message)
@@ -845,6 +856,7 @@ class RedisSessionService(SessionService):
                 "role": m.role,
                 "content": m.content,
                 "timestamp": m.timestamp.isoformat(),
+                "sources": m.sources,
             }
             for m in session.messages
         ]
@@ -855,6 +867,7 @@ class RedisSessionService(SessionService):
             session_id=session_id,
             role=message_data["role"],
             content=message_data["content"],
+            sources=message_data.get("sources", []),
         )
 
         if message is None:
@@ -865,6 +878,7 @@ class RedisSessionService(SessionService):
             "role": message.role,
             "content": message.content,
             "timestamp": message.timestamp.isoformat(),
+            "sources": message.sources,
         }
 
     async def clear_messages(self, session_id: str) -> bool:
@@ -1192,6 +1206,7 @@ class PostgresSessionService(SessionService):
                 "role": m.role,
                 "content": m.content,
                 "timestamp": m.timestamp.isoformat(),
+                "sources": m.sources,
             }
             for m in session.messages
         ]
@@ -1202,6 +1217,7 @@ class PostgresSessionService(SessionService):
             session_id=session_id,
             role=message_data["role"],
             content=message_data["content"],
+            sources=message_data.get("sources", []),
         )
 
         if message is None:
@@ -1212,6 +1228,7 @@ class PostgresSessionService(SessionService):
             "role": message.role,
             "content": message.content,
             "timestamp": message.timestamp.isoformat(),
+            "sources": message.sources,
         }
 
     async def clear_messages(self, session_id: str) -> bool:

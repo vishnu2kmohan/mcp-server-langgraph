@@ -225,13 +225,12 @@ class CostTrackingHandler(WebSocketBase):
         if user_id:
             self.subscribed_users.discard(user_id)
 
-        return MessageEnvelope(
-            type="unsubscribed",
-            payload={
+        return self.create_unsubscribed_response(
+            correlation_id=message.id,
+            extra_payload={
                 "session_id": session_id,
                 "user_id": user_id,
             },
-            id=message.id,
         )
 
     async def push_cost_event(self, session_id: str, cost_data: dict[str, Any]) -> None:

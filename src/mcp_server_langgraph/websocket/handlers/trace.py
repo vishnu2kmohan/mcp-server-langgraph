@@ -33,6 +33,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from mcp_server_langgraph.websocket.base import WebSocketBase
+from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
 from mcp_server_langgraph.websocket.types import (
     AuthUser,
     MessageEnvelope,
@@ -77,7 +78,7 @@ class TraceBroadcasterProtocol(Protocol):
         ...
 
 
-class TraceHandler(WebSocketBase):
+class TraceHandler(WebSocketBase, BroadcasterMixin):
     """
     WebSocket handler for real-time trace/span streaming.
 
@@ -115,22 +116,35 @@ class TraceHandler(WebSocketBase):
         super().__init__(config=config, metrics=metrics)
         self._broadcaster = broadcaster
         self._current_filter: TraceFilter = TraceFilter()
-        self._subscribed: bool = False
-        self._user_id: str | None = None
+        # Note: _subscribed is managed by BroadcasterMixin
+        self._session_id: str | None = None
 
     async def on_connect(self, user: AuthUser) -> None:
         """
         Handle successful connection.
 
-        Called after authentication and authorization succeed.
-        Subscribes to trace events with empty filter (receives all).
+        Uses session_id from base class (extracted from query params in run())
+        for session-scoped trace filtering. Subscribes to trace events.
+
+        Args:
+            user: The authenticated user.
         """
-        self._user_id = user.id
-        logger.info(f"Trace stream connected: user={user.id}")
+        # Use session_id from base class if available (populated in run()).
+        # Fallback to direct query_params extraction for tests that bypass run().
+        if self.session_id:
+            self._session_id = self.session_id
+        elif self._websocket:
+            query_params = getattr(self._websocket, "query_params", {}) or {}
+            self._session_id = query_params.get("session_id")
 
         if self._websocket:
-            await self._broadcaster.subscribe(self._websocket, self._current_filter)
-            self._subscribed = True
+            # Use BroadcasterMixin's subscribe() with filter_ kwarg
+            await self.subscribe(filter_=self._current_filter)
+
+        logger.info(
+            f"Trace stream connected: user={user.id}",
+            extra={"user_id": user.id, "session_id": self.session_id},
+        )
 
     async def on_disconnect(self) -> None:
         """
@@ -138,10 +152,9 @@ class TraceHandler(WebSocketBase):
 
         Unsubscribes from trace broadcaster.
         """
-        if self._subscribed and self._websocket:
-            await self._broadcaster.unsubscribe(self._websocket)
-            self._subscribed = False
-            logger.info(f"Trace stream disconnected: user={self._user_id}")
+        # Use BroadcasterMixin's unsubscribe() for cleanup
+        await self.unsubscribe()
+        logger.info(f"Trace stream disconnected: user={self.user_id}")
 
     async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
         """
@@ -164,39 +177,30 @@ class TraceHandler(WebSocketBase):
         elif message.type == "get_recent":
             return await self._handle_get_recent(message)
         else:
-            return MessageEnvelope(
-                type="error",
-                payload={
-                    "code": "unknown_message_type",
-                    "message": f"Unknown message type: {message.type}",
-                },
-                id=message.id,
-            )
+            return self.create_unknown_message_error(message.type, message.id)
 
     async def _handle_subscribe(self, message: MessageEnvelope) -> MessageEnvelope:
         """Handle subscribe message."""
         if self._websocket and not self._subscribed:
-            await self._broadcaster.subscribe(self._websocket, self._current_filter)
-            self._subscribed = True
-            logger.info(f"User {self._user_id} subscribed to traces")
+            # Use BroadcasterMixin's subscribe() with filter_ kwarg
+            await self.subscribe(filter_=self._current_filter)
+            logger.info(f"User {self.user_id} subscribed to traces")
 
-        return MessageEnvelope(
-            type="subscribed",
-            payload={"message": "Successfully subscribed to traces"},
-            id=message.id,
+        return self.create_subscribed_response(
+            correlation_id=message.id,
+            message="Successfully subscribed to traces",
         )
 
     async def _handle_unsubscribe(self, message: MessageEnvelope) -> MessageEnvelope:
         """Handle unsubscribe message."""
         if self._websocket and self._subscribed:
-            await self._broadcaster.unsubscribe(self._websocket)
-            self._subscribed = False
-            logger.info(f"User {self._user_id} unsubscribed from traces")
+            # Use BroadcasterMixin's unsubscribe()
+            await self.unsubscribe()
+            logger.info(f"User {self.user_id} unsubscribed from traces")
 
-        return MessageEnvelope(
-            type="unsubscribed",
-            payload={"message": "Successfully unsubscribed from traces"},
-            id=message.id,
+        return self.create_unsubscribed_response(
+            correlation_id=message.id,
+            message="Successfully unsubscribed from traces",
         )
 
     async def _handle_set_filter(self, message: MessageEnvelope) -> MessageEnvelope:
@@ -211,13 +215,13 @@ class TraceHandler(WebSocketBase):
             status=payload.get("status"),
         )
 
-        # Resubscribe with new filter
+        # Resubscribe with new filter using BroadcasterMixin methods
         if self._websocket and self._subscribed:
-            await self._broadcaster.unsubscribe(self._websocket)
-            await self._broadcaster.subscribe(self._websocket, new_filter)
+            await self.unsubscribe()
+            await self.subscribe(filter_=new_filter)
 
         self._current_filter = new_filter
-        logger.info(f"User {self._user_id} updated trace filter: {new_filter}")
+        logger.info(f"User {self.user_id} updated trace filter: {new_filter}")
 
         return MessageEnvelope(
             type="filter_updated",
@@ -237,13 +241,13 @@ class TraceHandler(WebSocketBase):
         """Handle clear_filter message."""
         new_filter = TraceFilter()
 
-        # Resubscribe with empty filter
+        # Resubscribe with empty filter using BroadcasterMixin methods
         if self._websocket and self._subscribed:
-            await self._broadcaster.unsubscribe(self._websocket)
-            await self._broadcaster.subscribe(self._websocket, new_filter)
+            await self.unsubscribe()
+            await self.subscribe(filter_=new_filter)
 
         self._current_filter = new_filter
-        logger.info(f"User {self._user_id} cleared trace filter")
+        logger.info(f"User {self.user_id} cleared trace filter")
 
         return MessageEnvelope(
             type="filter_cleared",

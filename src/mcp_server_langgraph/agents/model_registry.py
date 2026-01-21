@@ -252,6 +252,9 @@ class ModelRegistry:
             display_name="Gemini 3 Flash",
             public_id="gemini-3-flash",
             status="preview",
+            # v7: Native tools (Google grounded search)
+            supports_native_web_search=True,
+            native_provider="google",
         )
 
         self._models["gemini-3-pro"] = ModelCapabilities(
@@ -273,6 +276,9 @@ class ModelRegistry:
             display_name="Gemini 3 Pro",
             public_id="gemini-3-pro",
             status="preview",
+            # v7: Native tools (Google grounded search)
+            supports_native_web_search=True,
+            native_provider="google",
         )
 
         # Google Gemini 2.5 models (CURRENT - GA Aug 2025)
@@ -322,6 +328,10 @@ class ModelRegistry:
             display_name="GPT-5.2",
             public_id="gpt-5.2",
             status="current",
+            # v7: Native tools (OpenAI Responses API)
+            supports_native_web_search=True,
+            supports_native_code_execution=True,
+            native_provider="openai",
         )
 
         self._models["gpt-5.2-pro"] = ModelCapabilities(
@@ -343,6 +353,10 @@ class ModelRegistry:
             display_name="GPT-5.2 Pro",
             public_id="gpt-5.2-pro",
             status="current",
+            # v7: Native tools (OpenAI Responses API)
+            supports_native_web_search=True,
+            supports_native_code_execution=True,
+            native_provider="openai",
         )
 
         # OpenAI GPT-4.1 models (LEGACY - superseded by GPT-5.x)
@@ -403,6 +417,10 @@ class ModelRegistry:
             display_name="o3",
             public_id="o3",
             status="current",
+            # v7: Native tools (OpenAI Responses API)
+            supports_native_web_search=True,
+            supports_native_code_execution=True,
+            native_provider="openai",
         )
 
         # OpenAI o3-mini (CURRENT - cost-efficient reasoning)
@@ -425,6 +443,10 @@ class ModelRegistry:
             display_name="o3 Mini",
             public_id="o3-mini",
             status="current",
+            # v7: Native tools (OpenAI Responses API)
+            supports_native_web_search=True,
+            native_provider="openai",
+            # Note: o3-mini may not support code_interpreter
         )
 
         # OpenAI o4-mini (CURRENT - Apr 2025, successor to o3-mini)
@@ -447,10 +469,14 @@ class ModelRegistry:
             display_name="o4 Mini",
             public_id="o4-mini",
             status="current",
+            # v7: Native tools (OpenAI Responses API)
+            supports_native_web_search=True,
+            native_provider="openai",
         )
 
         # Vertex AI Anthropic models (CURRENT, use @ format)
         # Note: These share public_id with native Anthropic models (deduped in get_frontend_models)
+        # Native tools: web_search supported (requires beta header), code_execution NOT supported on Vertex AI
         self._models["claude-opus-4-5@20251101"] = ModelCapabilities(
             model_id="claude-opus-4-5@20251101",
             vendor="vertex_ai_anthropic",
@@ -470,6 +496,9 @@ class ModelRegistry:
             display_name="Claude Opus 4.5 (Vertex AI)",
             public_id="claude-opus-4-5",  # Same as native - deduped
             status="current",
+            supports_native_web_search=True,  # v7: web_search_20250305 via Vertex AI
+            native_provider="anthropic",  # v7: Native tool provider
+            # Note: code_execution NOT supported on Vertex AI (only direct API/Bedrock)
         )
 
         self._models["claude-sonnet-4-5@20250929"] = ModelCapabilities(
@@ -490,6 +519,8 @@ class ModelRegistry:
             display_name="Claude Sonnet 4.5 (Vertex AI)",
             public_id="claude-sonnet-4-5",  # Same as native - deduped
             status="current",
+            supports_native_web_search=True,  # v7: web_search_20250305 via Vertex AI
+            native_provider="anthropic",  # v7: Native tool provider
         )
 
         self._models["claude-haiku-4-5@20251001"] = ModelCapabilities(
@@ -510,10 +541,13 @@ class ModelRegistry:
             display_name="Claude Haiku 4.5 (Vertex AI)",
             public_id="claude-haiku-4-5",  # Same as native - deduped
             status="current",
+            supports_native_web_search=True,  # v7: web_search_20250305 via Vertex AI
+            native_provider="anthropic",  # v7: Native tool provider
         )
 
         # Vertex AI Gemini 3 models (PREVIEW)
         # Note: These share public_id with native Gemini models (deduped in get_frontend_models)
+        # Native tools: googleSearch (grounded search) supported via LiteLLM
         self._models["vertex_ai/gemini-3-flash"] = ModelCapabilities(
             model_id="vertex_ai/gemini-3-flash",
             vendor="vertex_ai",
@@ -532,6 +566,8 @@ class ModelRegistry:
             display_name="Gemini 3 Flash (Vertex AI)",
             public_id="gemini-3-flash",  # Same as native - deduped
             status="preview",
+            supports_native_web_search=True,  # v7: googleSearch via Vertex AI
+            native_provider="google",  # v7: Native tool provider
         )
 
         self._models["vertex_ai/gemini-3-pro"] = ModelCapabilities(
@@ -552,6 +588,8 @@ class ModelRegistry:
             display_name="Gemini 3 Pro (Vertex AI)",
             public_id="gemini-3-pro",  # Same as native - deduped
             status="preview",
+            supports_native_web_search=True,  # v7: googleSearch via Vertex AI
+            native_provider="google",  # v7: Native tool provider
         )
 
         # Vertex AI Gemini 3 preview models (PREVIEW - gemini-3 is currently in preview)
@@ -573,6 +611,8 @@ class ModelRegistry:
             display_name="Gemini 3 Flash Preview",
             public_id="gemini-3-flash-preview",
             status="preview",
+            supports_native_web_search=True,  # v7: googleSearch via Vertex AI
+            native_provider="google",  # v7: Native tool provider
         )
 
         self._models["vertex_ai/gemini-3-pro-preview"] = ModelCapabilities(
@@ -593,6 +633,8 @@ class ModelRegistry:
             display_name="Gemini 3 Pro Preview",
             public_id="gemini-3-pro-preview",
             status="preview",
+            supports_native_web_search=True,  # v7: googleSearch via Vertex AI
+            native_provider="google",  # v7: Native tool provider
         )
 
         # Azure OpenAI models (CURRENT)
@@ -1060,8 +1102,12 @@ class ModelRegistry:
             elif provider == "vertex_ai":
                 provider = "google"
 
+            # Use public_id for frontend display when available (user-friendly)
+            # Fall back to model_id for models without explicit public_id
+            frontend_id = caps.public_id or model_id
+
             model_dict: dict[str, str | bool | None] = {
-                "id": model_id,  # Full model_id for explicit selection
+                "id": frontend_id,  # User-friendly ID for frontend selection
                 "name": caps.display_name or caps.model_id,
                 "provider": provider,  # Simplified for grouping (google, anthropic, openai)
                 "vendor": caps.vendor,  # Actual backend (vertex_ai, vertex_ai_anthropic, google, etc.)
@@ -1069,7 +1115,7 @@ class ModelRegistry:
                 "supports_vision": caps.supports_vision,
                 "supports_tools": caps.supports_tools,
                 "status": caps.status,
-                "isDefault": model_id == default_model_id,  # Exact match
+                "isDefault": frontend_id == default_model_id or model_id == default_model_id,  # Match either
             }
 
             # Include sunset_date for deprecated models

@@ -28,6 +28,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from mcp_server_langgraph.websocket.base import WebSocketBase
+from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
 from mcp_server_langgraph.websocket.types import (
     AuthUser,
     MessageEnvelope,
@@ -148,14 +149,21 @@ class DevToolsBroadcaster:
             context_entity_id: Optional context ID for filtering
         """
         failed_subscribers: list[Any] = []
+        sent_count = 0
+        skipped_count = 0
 
-        for websocket, (_, sub_context) in list(self._subscribers.items()):
+        msg_type = message.get("type", "unknown")
+        total_subscribers = len(self._subscribers)
+
+        for websocket, (user_id, sub_context) in list(self._subscribers.items()):
             # Filter by context if specified
             if sub_context and context_entity_id and sub_context != context_entity_id:
+                skipped_count += 1
                 continue
 
             try:
                 await websocket.send_json(message)
+                sent_count += 1
             except Exception as e:
                 logger.warning(
                     "Failed to send to subscriber, removing",
@@ -166,6 +174,18 @@ class DevToolsBroadcaster:
         # Remove failed subscribers
         for ws in failed_subscribers:
             self._subscribers.pop(ws, None)
+
+        logger.debug(
+            "DevTools broadcast complete",
+            extra={
+                "message_type": msg_type,
+                "context_entity_id": context_entity_id,
+                "total_subscribers": total_subscribers,
+                "sent_count": sent_count,
+                "skipped_count": skipped_count,
+                "failed_count": len(failed_subscribers),
+            },
+        )
 
     async def broadcast_console(
         self,
@@ -249,7 +269,7 @@ class DevToolsBroadcaster:
 # =============================================================================
 
 
-class DevToolsHandler(WebSocketBase):
+class DevToolsHandler(WebSocketBase, BroadcasterMixin):
     """
     WebSocket handler for real-time DevTools console and network events.
 
@@ -286,31 +306,39 @@ class DevToolsHandler(WebSocketBase):
         """
         super().__init__(config=config, metrics=metrics)
         self._broadcaster = broadcaster
-        self._subscribed: bool = False
-        self._user_id: str | None = None
+        # Note: _subscribed is managed by BroadcasterMixin
         self._context_entity_id: str | None = None
 
     async def on_connect(self, user: AuthUser) -> None:
         """
         Handle connection establishment.
 
-        Subscribes the client to the DevTools broadcaster.
+        Uses context_id from base class (extracted from query params in run())
+        and subscribes the client to the DevTools broadcaster.
 
         Args:
             user: The authenticated user.
         """
-        self._user_id = user.id
+        # Use context_id from base class if available (populated in run()).
+        # Fallback to direct query_params extraction for tests that bypass run().
+        if self.context_id:
+            self._context_entity_id = self.context_id
+        elif self._websocket:
+            query_params = getattr(self._websocket, "query_params", {}) or {}
+            self._context_entity_id = query_params.get("context_id")
 
         if self._websocket:
-            await self._broadcaster.subscribe(
-                self._websocket,
-                user_id=self._user_id,
+            # Use BroadcasterMixin's subscribe() with kwargs
+            await self.subscribe(
+                user_id=self.user_id,
                 context_entity_id=self._context_entity_id,
             )
-            self._subscribed = True
             logger.info(
-                f"DevTools stream connected: user={self._user_id}",
-                extra={"user_id": self._user_id},
+                f"DevTools stream connected: user={self.user_id}",
+                extra={
+                    "user_id": self.user_id,
+                    "context_entity_id": self._context_entity_id,
+                },
             )
 
     async def on_disconnect(self) -> None:
@@ -319,12 +347,12 @@ class DevToolsHandler(WebSocketBase):
 
         Unsubscribes the client from the DevTools broadcaster.
         """
-        if self._websocket and self._subscribed:
-            await self._broadcaster.unsubscribe(self._websocket)
-            logger.info(
-                f"DevTools stream disconnected: user={self._user_id}",
-                extra={"user_id": self._user_id},
-            )
+        # Use BroadcasterMixin's unsubscribe() for cleanup
+        await self.unsubscribe()
+        logger.info(
+            f"DevTools stream disconnected: user={self.user_id}",
+            extra={"user_id": self.user_id},
+        )
 
     async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
         """
@@ -340,7 +368,7 @@ class DevToolsHandler(WebSocketBase):
         """
         logger.debug(
             f"Received message type: {message.type}",
-            extra={"message_type": message.type, "user_id": self._user_id},
+            extra={"message_type": message.type, "user_id": self.user_id},
         )
 
         if message.type == "subscribe":
@@ -349,28 +377,24 @@ class DevToolsHandler(WebSocketBase):
                 self._context_entity_id = message.payload.get("contextEntityId")
 
             if self._websocket and not self._subscribed:
-                await self._broadcaster.subscribe(
-                    self._websocket,
-                    user_id=self._user_id,
+                # Use BroadcasterMixin's subscribe() with kwargs
+                await self.subscribe(
+                    user_id=self.user_id,
                     context_entity_id=self._context_entity_id,
                 )
-                self._subscribed = True
 
-            return MessageEnvelope(
-                type="subscribed",
-                id=message.id,
-                payload={"status": "subscribed", "contextEntityId": self._context_entity_id},
+            return self.create_subscribed_response(
+                correlation_id=message.id,
+                extra_payload={"status": "subscribed", "contextEntityId": self._context_entity_id},
             )
 
         elif message.type == "unsubscribe":
-            if self._websocket and self._subscribed:
-                await self._broadcaster.unsubscribe(self._websocket)
-                self._subscribed = False
+            # Use BroadcasterMixin's unsubscribe()
+            await self.unsubscribe()
 
-            return MessageEnvelope(
-                type="unsubscribed",
-                id=message.id,
-                payload={"status": "unsubscribed"},
+            return self.create_unsubscribed_response(
+                correlation_id=message.id,
+                extra_payload={"status": "unsubscribed"},
             )
 
         elif message.type == "set_context":
@@ -378,12 +402,11 @@ class DevToolsHandler(WebSocketBase):
             if message.payload and isinstance(message.payload, dict):
                 self._context_entity_id = message.payload.get("contextEntityId")
 
-                # Re-subscribe with new context
+                # Re-subscribe with new context using BroadcasterMixin methods
                 if self._websocket and self._subscribed:
-                    await self._broadcaster.unsubscribe(self._websocket)
-                    await self._broadcaster.subscribe(
-                        self._websocket,
-                        user_id=self._user_id,
+                    await self.unsubscribe()
+                    await self.subscribe(
+                        user_id=self.user_id,
                         context_entity_id=self._context_entity_id,
                     )
 

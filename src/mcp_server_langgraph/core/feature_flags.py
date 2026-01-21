@@ -353,7 +353,7 @@ class FeatureFlags(BaseSettings):
     )
 
     devtools_ai_insights: bool = Field(
-        default=False,
+        default=True,
         description="Enable AI Insights tab in DevTools for anomaly detection and suggestions",
     )
 
@@ -552,11 +552,20 @@ class FeatureFlags(BaseSettings):
     )
 
     enable_markdown_references: bool = Field(
-        default=False,
+        default=True,
         description="Enable [[type:qualifier:id]] reference syntax in markdown. "
         "Allows inline references to tools, skills, and artifacts with interactive chips. "
         "References are batch-resolved via /api/v1/references/resolve with OpenFGA authorization. "
-        "Set FF_ENABLE_MARKDOWN_REFERENCES=true to enable.",
+        "Set FF_ENABLE_MARKDOWN_REFERENCES=false to disable.",
+    )
+
+    enable_source_citations: bool = Field(
+        default=True,
+        description="Enable source citations in chat responses. "
+        "Extracts and displays URLs from web search results (native and builtin tools), "
+        "knowledge base references, and Google grounding metadata. "
+        "Sources are deduplicated by URL and can be ranked by relevance. "
+        "Set FF_ENABLE_SOURCE_CITATIONS=false to disable.",
     )
 
     # =========================================================================
@@ -609,28 +618,37 @@ class FeatureFlags(BaseSettings):
         description="Show user and assistant avatars in chat messages (Sprint 3.1 feature)",
     )
 
+    # Message Rendering Consolidation (ADR-0104)
+    unified_message_list: bool = Field(
+        default=False,
+        description="Use UnifiedMessageList for consolidated message rendering. "
+        "Merges MessageList and ChatMessages into a single component with full feature support: "
+        "thinking traces, source citations, rating, agent traces, follow-up suggestions, token usage. "
+        "Set FF_UNIFIED_MESSAGE_LIST=true to enable (ADR-0104).",
+    )
+
     # Shell-specific features (Sprint 4 - Chat Input Feature Gap)
     enable_model_selector_in_shell: bool = Field(
-        default=False,
+        default=True,
         description="Enable model selector in StudioShell chat input. "
         "When enabled, shows model selection dropdown in the shell's ConnectedConversationPanel. "
-        "Set FF_ENABLE_MODEL_SELECTOR_IN_SHELL=true to enable.",
+        "Set FF_ENABLE_MODEL_SELECTOR_IN_SHELL=false to disable.",
     )
 
     enable_url_fetch_in_shell: bool = Field(
-        default=False,
+        default=True,
         description="Enable URL content fetching (#url pattern) in StudioShell chat input. "
         "When enabled, users can use #url to fetch and include web content in their messages. "
-        "Set FF_ENABLE_URL_FETCH_IN_SHELL=true to enable.",
+        "Set FF_ENABLE_URL_FETCH_IN_SHELL=false to disable.",
     )
 
     # Connection Setup Features (ADR-0102 - Connections Page Redesign)
     enable_connector_suggestions: bool = Field(
-        default=False,
+        default=True,
         description="Enable proactive connector suggestions in chat input. "
         "When enabled, shows connection suggestions when user input matches tool keywords. "
         "Part of the in-chat connection setup UX (ADR-0102). "
-        "Set FF_ENABLE_CONNECTOR_SUGGESTIONS=true to enable.",
+        "Set FF_ENABLE_CONNECTOR_SUGGESTIONS=false to disable.",
     )
 
     # UX Enhancement Features (Priority 1-3 from competitive analysis)
@@ -735,6 +753,38 @@ class FeatureFlags(BaseSettings):
         default=False,
         description="Enable Anthropic code_execution_20250825 remote sandbox",
     )
+
+    # OpenAI Native Tools (via Responses API)
+    # NOTE: OpenAI native tools REQUIRE use_responses_api_for_openai=True to function.
+    # The Responses API is OpenAI's new approach that supports native tools.
+    openai_native_web_search_enabled: bool = Field(
+        default=False,
+        description="Enable OpenAI web_search native tool via Responses API",
+    )
+
+    openai_native_code_interpreter_enabled: bool = Field(
+        default=False,
+        description="Enable OpenAI code_interpreter native tool via Responses API",
+    )
+
+    # Responses API switch (for OpenAI only, gradual rollout)
+    # REQUIRED for OpenAI native tools (openai_native_web_search_enabled,
+    # openai_native_code_interpreter_enabled) to function.
+    use_responses_api_for_openai: bool = Field(
+        default=False,
+        description="Use LiteLLM Responses API for OpenAI GPT-5.x models with native tools",
+    )
+
+    # NOTE: Native tool rate limits, timeouts, and circuit breaker settings
+    # have been moved to Settings (src/mcp_server_langgraph/core/config/_settings.py)
+    # as they are operational configuration, not feature toggles.
+    # Access via: from mcp_server_langgraph.core.config import settings
+    # - settings.native_tool_rate_limit_anthropic
+    # - settings.native_tool_rate_limit_google
+    # - settings.native_tool_rate_limit_openai
+    # - settings.native_tool_timeout_seconds
+    # - settings.native_tool_circuit_breaker_threshold
+    # - settings.native_tool_circuit_breaker_reset_seconds
 
     # =========================================================================
     # Claude Agent SDK Patterns (SDK-Inspired Features)
@@ -1194,11 +1244,11 @@ class FeatureFlags(BaseSettings):
     )
 
     enable_manual_tool_selection: bool = Field(
-        default=False,
+        default=True,
         description="Enable manual tool selection dropdown in chat input. "
         "Allows users to override semantic tool search with explicit tool choices. "
         "Modes: auto (semantic search), manual (explicit selection), none (disabled). "
-        "Set FF_ENABLE_MANUAL_TOOL_SELECTION=true to activate.",
+        "Set FF_ENABLE_MANUAL_TOOL_SELECTION=false to disable.",
     )
 
     enable_progressive_skill_loading: bool = Field(
@@ -1213,25 +1263,25 @@ class FeatureFlags(BaseSettings):
     # All three use Qdrant vector search for dynamic capability discovery.
 
     enable_semantic_tool_search: bool = Field(
-        default=False,
+        default=True,
         description="Enable vector-based semantic tool discovery. "
         "Uses embeddings to find relevant tools based on user query. "
         "Reduces token usage by 34-64% with 50+ tools (Anthropic Tool Search Tool pattern). "
-        "Part of ADR-0099. Set FF_ENABLE_SEMANTIC_TOOL_SEARCH=true to activate.",
+        "Part of ADR-0099. Set FF_ENABLE_SEMANTIC_TOOL_SEARCH=false to disable.",
     )
 
     enable_semantic_skill_search: bool = Field(
-        default=False,
+        default=True,
         description="Enable vector-based semantic skill discovery. "
         "Uses embeddings to find relevant skills based on task description. "
-        "Part of ADR-0092/ADR-0099. Set FF_ENABLE_SEMANTIC_SKILL_SEARCH=true to activate.",
+        "Part of ADR-0092/ADR-0099. Set FF_ENABLE_SEMANTIC_SKILL_SEARCH=false to disable.",
     )
 
     enable_semantic_memory_search: bool = Field(
-        default=False,
+        default=True,
         description="Enable vector-based semantic memory search. "
         "Uses embeddings to find relevant memories for context enrichment. "
-        "Part of ADR-0092/ADR-0099. Set FF_ENABLE_SEMANTIC_MEMORY_SEARCH=true to activate.",
+        "Part of ADR-0092/ADR-0099. Set FF_ENABLE_SEMANTIC_MEMORY_SEARCH=false to disable.",
     )
 
     enable_hitl_undo_rollback: bool = Field(
@@ -1549,14 +1599,12 @@ class FeatureFlags(BaseSettings):
 
     enable_plan_approval_flow: bool = Field(
         default=False,
-        description="Enable HITL approval flow for medium/high risk plans. "
-        "Requires enable_plan_generation=True to function.",
+        description="Enable HITL approval flow for medium/high risk plans. Requires enable_plan_generation=True to function.",
     )
 
     bypass_mode_admin_only: bool = Field(
         default=True,
-        description="Restrict bypass mode to admin role only. "
-        "When True, only users with admin role can use bypass mode.",
+        description="Restrict bypass mode to admin role only. When True, only users with admin role can use bypass mode.",
     )
 
     bypass_risk_aware_enabled: bool = Field(
@@ -1672,17 +1720,18 @@ class FeatureFlags(BaseSettings):
     # =========================================================================
 
     enable_context_graph: bool = Field(
-        default=False,
+        default=True,
         description="Enable context graph decision trace capture (FF_ENABLE_CONTEXT_GRAPH). "
         "When enabled, captures decision rationale for routing, tool selection, and approvals. "
-        "Opt-in feature for searchable precedent data.",
+        "Set FF_ENABLE_CONTEXT_GRAPH=false to disable.",
     )
 
     enable_precedent_search: bool = Field(
-        default=False,
+        default=True,
         description="Enable semantic precedent search in Qdrant (FF_ENABLE_PRECEDENT_SEARCH). "
         "Allows searching similar past decisions for learning and reference. "
-        "Requires enable_context_graph=true and Qdrant vector store.",
+        "Requires enable_context_graph=true and Qdrant vector store. "
+        "Set FF_ENABLE_PRECEDENT_SEARCH=false to disable.",
     )
 
     context_graph_async_persistence: bool = Field(
@@ -1729,6 +1778,102 @@ class FeatureFlags(BaseSettings):
         le=100,
         description="Maximum precedent search results to return (FF_PRECEDENT_SEARCH_MAX_RESULTS). "
         "Limits the number of similar past decisions returned.",
+    )
+
+    # =========================================================================
+    # Settings Migration: Feature Toggles (moved from Settings for proper FF semantics)
+    # These flags control feature enablement and are suitable for gradual rollout,
+    # A/B testing, and kill switches. Infrastructure config remains in Settings.
+    # =========================================================================
+
+    # Verification Features
+    verification_enabled: bool = Field(
+        default=True,
+        description="Enable LLM-as-judge verification for response quality. "
+        "Set FF_VERIFICATION_ENABLED=false to disable verification loop.",
+    )
+
+    visual_verification_enabled: bool = Field(
+        default=False,
+        description="Enable visual verification with screenshots (experimental). "
+        "Set FF_VISUAL_VERIFICATION_ENABLED=true to enable.",
+    )
+
+    # Context Features
+    checkpointing_enabled: bool = Field(
+        default=True,
+        description="Enable conversation checkpointing for state persistence. "
+        "Set FF_CHECKPOINTING_ENABLED=false to disable.",
+    )
+
+    context_compaction_enabled: bool = Field(
+        default=True,
+        description="Enable conversation context compaction to manage context window. "
+        "Set FF_CONTEXT_COMPACTION_ENABLED=false to disable.",
+    )
+
+    dynamic_context_loading_enabled: bool = Field(
+        default=False,
+        description="Enable semantic search-based dynamic context loading. "
+        "Set FF_DYNAMIC_CONTEXT_LOADING_ENABLED=true to enable.",
+    )
+
+    # Execution Features
+    parallel_tool_execution_enabled: bool = Field(
+        default=False,
+        description="Enable parallel tool execution for improved performance. "
+        "Set FF_PARALLEL_TOOL_EXECUTION_ENABLED=true to enable.",
+    )
+
+    code_execution_enabled: bool = Field(
+        default=False,
+        description="Enable sandboxed code execution (security-sensitive). "
+        "Set FF_CODE_EXECUTION_ENABLED=true to enable.",
+    )
+
+    sandbox_tools_enabled: bool = Field(
+        default=False,
+        description="Enable sandbox tools for isolated execution. "
+        "Set FF_SANDBOX_TOOLS_ENABLED=true to enable.",
+    )
+
+    # Model Features
+    dedicated_summarization_model_enabled: bool = Field(
+        default=True,
+        description="Use dedicated model for summarization tasks. "
+        "Set FF_DEDICATED_SUMMARIZATION_MODEL_ENABLED=false to use primary model.",
+    )
+
+    dedicated_verification_model_enabled: bool = Field(
+        default=True,
+        description="Use dedicated model for verification tasks. "
+        "Set FF_DEDICATED_VERIFICATION_MODEL_ENABLED=false to use primary model.",
+    )
+
+    llm_extraction_enabled: bool = Field(
+        default=False,
+        description="Use LLM for structured note extraction. "
+        "Set FF_LLM_EXTRACTION_ENABLED=true to enable.",
+    )
+
+    # Streaming Features
+    streaming_enabled: bool = Field(
+        default=True,
+        description="Enable streaming support globally. "
+        "Set FF_STREAMING_ENABLED=false to disable all streaming.",
+    )
+
+    # Artifacts Features
+    artifacts_semantic_search_enabled: bool = Field(
+        default=True,
+        description="Enable vector search for artifacts. "
+        "Set FF_ARTIFACTS_SEMANTIC_SEARCH_ENABLED=false to disable.",
+    )
+
+    artifacts_cloud_storage_enabled: bool = Field(
+        default=False,
+        description="Enable cloud storage for large artifacts. "
+        "Set FF_ARTIFACTS_CLOUD_STORAGE_ENABLED=true to enable.",
     )
 
     model_config = SettingsConfigDict(
@@ -1794,6 +1939,9 @@ class FeatureFlags(BaseSettings):
         Get the effective rate limit for a feature.
 
         Uses feature-specific override if set, otherwise falls back to default.
+
+        NOTE: Native tool rate limits have been moved to Settings.
+        Use tool_executor.get_native_tool_rate_limit(provider) instead.
 
         Args:
             feature: Optional feature name ("suggestions", "frontend_cache", "websocket",
@@ -2005,6 +2153,7 @@ class FeatureFlags(BaseSettings):
             "enhanced_model_selector": self.enable_enhanced_model_selector,
             "style_presets": self.enable_style_presets,
             "show_chat_avatars": self.show_chat_avatars,
+            "unified_message_list": self.unified_message_list,
             # UX Enhancement Features
             "user_preferences_sync": self.enable_user_preferences_sync,
             "session_export": self.enable_session_export,

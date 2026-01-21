@@ -6,6 +6,15 @@ Enables dynamic model discovery and pricing updates.
 
 Sprint 1 - Enhanced Model Selector: LiteLLM Dynamic Model Sync
 
+What Is Synced:
+- Pricing (input_cost_per_1m, output_cost_per_1m)
+- Reasoning capabilities (supports_extended_thinking via supports_reasoning)
+
+What Is NOT Synced (v7):
+- Native tool capabilities (supports_native_web_search, supports_native_code_execution)
+  These are provider-specific and must be configured in ModelRegistry directly.
+  See ADR-0102 for native tool integration details.
+
 Usage:
     from mcp_server_langgraph.agents.litellm_model_sync import (
         LiteLLMModelSync,

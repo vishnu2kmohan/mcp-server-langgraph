@@ -237,10 +237,9 @@ class ConnectionHealthHandler(WebSocketBase):
 
         self._subscriptions.add(connection_id)
 
-        return MessageEnvelope(
-            type="subscribed",
-            payload={"connection_id": connection_id},
-            id=message.id,
+        return self.create_subscribed_response(
+            correlation_id=message.id,
+            extra_payload={"connection_id": connection_id},
         )
 
     async def _handle_unsubscribe(self, message: MessageEnvelope) -> MessageEnvelope:
@@ -260,10 +259,9 @@ class ConnectionHealthHandler(WebSocketBase):
 
         self._subscriptions.discard(connection_id)
 
-        return MessageEnvelope(
-            type="unsubscribed",
-            payload={"connection_id": connection_id},
-            id=message.id,
+        return self.create_unsubscribed_response(
+            correlation_id=message.id,
+            extra_payload={"connection_id": connection_id},
         )
 
     async def _handle_check_health(self, message: MessageEnvelope) -> MessageEnvelope:

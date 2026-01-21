@@ -175,13 +175,12 @@ class BudgetAlertsHandler(WebSocketBase):
             extra={"entity_ids": entity_ids},
         )
 
-        return MessageEnvelope(
-            type="subscribed",
-            payload={
+        return self.create_subscribed_response(
+            correlation_id=message.id,
+            extra_payload={
                 "entity_ids": list(self.subscribed_entities),
                 "subscribe_all": self.subscribe_all,
             },
-            id=message.id,
         )
 
     async def _handle_subscribe_all(self, message: MessageEnvelope) -> MessageEnvelope:
@@ -190,13 +189,13 @@ class BudgetAlertsHandler(WebSocketBase):
 
         logger.info("Budget alerts subscribed to all")
 
-        return MessageEnvelope(
-            type="subscribed",
-            payload={
+        return self.create_subscribed_response(
+            correlation_id=message.id,
+            message="Subscribed to all budget alerts",
+            extra_payload={
                 "entity_ids": list(self.subscribed_entities),
                 "subscribe_all": True,
             },
-            id=message.id,
         )
 
     async def _handle_unsubscribe(self, message: MessageEnvelope) -> MessageEnvelope:
@@ -206,10 +205,8 @@ class BudgetAlertsHandler(WebSocketBase):
 
         logger.info("Budget alerts unsubscribed")
 
-        return MessageEnvelope(
-            type="unsubscribed",
-            payload={},
-            id=message.id,
+        return self.create_unsubscribed_response(
+            correlation_id=message.id,
         )
 
     async def push_budget_alert(self, status: BudgetStatus) -> None:

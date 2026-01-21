@@ -224,10 +224,9 @@ class ConnectionsRealtimeHandler(WebSocketBase):
         if connection_id:
             self.subscriptions.discard(connection_id)
 
-        return MessageEnvelope(
-            type="unsubscribed",
-            payload={"connection_id": connection_id},
-            id=message.id,
+        return self.create_unsubscribed_response(
+            correlation_id=message.id,
+            extra_payload={"connection_id": connection_id},
         )
 
     async def _handle_health_check(self, message: MessageEnvelope) -> MessageEnvelope:

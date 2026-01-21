@@ -277,6 +277,7 @@ class PostgresSessionManager:
         role: str,
         content: str,
         metadata: dict[str, Any] | None = None,
+        sources: list[dict[str, Any]] | None = None,
     ) -> Message | None:
         """
         Add a message to session history.
@@ -286,6 +287,7 @@ class PostgresSessionManager:
             role: Message role ("user" or "assistant")
             content: Message content
             metadata: Optional message metadata
+            sources: Optional source citations for the message
 
         Returns:
             Created message if session found, None otherwise
@@ -306,12 +308,17 @@ class PostgresSessionManager:
             message_id = str(uuid.uuid4())
             now = datetime.now(UTC)
 
+            # Store sources in metadata_json to avoid schema migration
+            full_metadata = metadata or {}
+            if sources:
+                full_metadata["sources"] = sources
+
             message_model = MessageModel(
                 id=message_id,
                 session_id=session_id,
                 role=role,
                 content=content,
-                metadata_json=metadata or {},
+                metadata_json=full_metadata,
                 timestamp=now,
                 order_index=order_index,
             )
@@ -509,10 +516,15 @@ class PostgresSessionManager:
 
     def _model_to_message(self, model: MessageModel) -> Message:
         """Convert SQLAlchemy message model to Pydantic model."""
+        # Extract sources from metadata_json (stored there to avoid schema migration)
+        metadata = model.metadata_json or {}
+        sources = metadata.pop("sources", []) if isinstance(metadata, dict) else []
+
         return Message(
             message_id=model.id,
             role=model.role,
             content=model.content,
             timestamp=model.timestamp,
-            metadata=model.metadata_json,
+            metadata=metadata,
+            sources=sources,
         )

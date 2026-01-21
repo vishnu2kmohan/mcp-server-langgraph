@@ -1,20 +1,35 @@
 """
-Unified Tools API
+Unified Tools API (v7)
 
-Provides endpoints to list and search available tools (built-in + MCP).
+Provides endpoints to list and search available tools (built-in, MCP, and native).
 Supports manual tool selection in the chat input by exposing all tools
 that can be selected by the user.
 
-Built-in tools are sourced from the tools module (get_all_tools).
-MCP tools are sourced from the CachedUnifiedRegistry.
+Tool Sources:
+- **builtin**: Python-implemented tools (web_search, calculator, execute_python, etc.)
+- **mcp**: Tools from connected MCP servers (external integrations)
+- **native**: Native LLM provider tools (Anthropic web_search, code_execution; Google grounded search)
+
+v7 Changes:
+- Added `tool_id` field for unique identification (format: "source:name")
+- Added `provider` field for native tools (anthropic, google)
+- Added `native_count` to response for native tool count
+- Added source=native filter option
 
 Usage:
     GET /api/v1/tools - List all available tools
     GET /api/v1/tools?source=builtin - List only built-in tools
     GET /api/v1/tools?source=mcp - List only MCP tools
+    GET /api/v1/tools?source=native - List only native LLM provider tools
     GET /api/v1/tools?category=search - Filter by category
     GET /api/v1/tools?search=query - Search tools by name/description
     POST /api/v1/tools/semantic-search - Vector-based semantic search (feature flagged)
+
+Feature Flags:
+- native_tools_enabled: Master switch for native tools
+- anthropic_native_web_search_enabled: Enable Anthropic web_search
+- google_native_search_enabled: Enable Google grounded search
+- anthropic_native_code_execution_enabled: Enable Anthropic code execution
 """
 
 from typing import TYPE_CHECKING, Annotated, Any, Literal, cast
@@ -176,6 +191,7 @@ def _get_native_tools() -> list[UnifiedToolResponse]:
     """Get list of available native tools based on feature flags.
 
     v7: Native tools are conditionally included based on feature flags.
+    Supports Anthropic, Google, and OpenAI (via Responses API) native tools.
     """
     native_tools: list[UnifiedToolResponse] = []
 
@@ -205,6 +221,26 @@ def _get_native_tools() -> list[UnifiedToolResponse]:
                     )
             elif provider == "google":
                 if name == "web_search" and feature_flags.google_native_search_enabled:
+                    native_tools.append(
+                        _native_tool_to_response(
+                            name=defn.name,
+                            provider=defn.provider,
+                            provider_type=defn.provider_type,
+                            description=defn.description,
+                        )
+                    )
+            elif provider == "openai":
+                # OpenAI native tools require Responses API flag
+                if name == "web_search" and feature_flags.openai_native_web_search_enabled:
+                    native_tools.append(
+                        _native_tool_to_response(
+                            name=defn.name,
+                            provider=defn.provider,
+                            provider_type=defn.provider_type,
+                            description=defn.description,
+                        )
+                    )
+                elif name == "code_execution" and feature_flags.openai_native_code_interpreter_enabled:
                     native_tools.append(
                         _native_tool_to_response(
                             name=defn.name,
@@ -488,4 +524,251 @@ async def semantic_search_tools(
         query=request.query,
         results=results,
         total_results=len(results),
+    )
+
+
+# =============================================================================
+# Native Tool Metrics (v7)
+# =============================================================================
+
+
+class ToolSourceMetrics(BaseModel):
+    """Metrics for a single tool source (native/builtin/mcp)."""
+
+    provider: str | None = Field(None, description="Provider name for native tools")
+    selection_count: int = Field(0, description="Number of times selected")
+    execution_count: int = Field(0, description="Number of executions")
+    error_count: int = Field(0, description="Number of errors")
+    fallback_count: int = Field(0, description="Number of fallbacks")
+    avg_latency_ms: float = Field(0.0, description="Average latency in ms")
+    min_latency_ms: float = Field(0.0, description="Minimum latency in ms")
+    max_latency_ms: float = Field(0.0, description="Maximum latency in ms")
+    p50_latency_ms: float = Field(0.0, description="50th percentile latency")
+    p95_latency_ms: float = Field(0.0, description="95th percentile latency")
+    p99_latency_ms: float = Field(0.0, description="99th percentile latency")
+    error_rate: float = Field(0.0, description="Error rate percentage")
+
+
+class ToolComparisonData(BaseModel):
+    """Comparison data for a single tool across sources."""
+
+    tool_name: str = Field(..., description="Tool name")
+    native: ToolSourceMetrics | None = Field(None, description="Native tool metrics")
+    builtin: ToolSourceMetrics | None = Field(None, description="Builtin tool metrics")
+    mcp: ToolSourceMetrics | None = Field(None, description="MCP tool metrics")
+
+
+class ToolMetricsSummary(BaseModel):
+    """Summary of tool metrics across all sources."""
+
+    native_selections: int = Field(0, description="Total native tool selections")
+    builtin_selections: int = Field(0, description="Total builtin tool selections")
+    native_errors: int = Field(0, description="Total native tool errors")
+    builtin_errors: int = Field(0, description="Total builtin tool errors")
+    uptime_seconds: float = Field(0.0, description="Server uptime in seconds")
+
+
+class NativeToolMetricsResponse(BaseModel):
+    """Response for native tool metrics comparison endpoint."""
+
+    tools: list[ToolComparisonData] = Field(..., description="Per-tool metrics")
+    summary: ToolMetricsSummary = Field(..., description="Aggregated summary")
+
+
+@tools_router.get(
+    "/metrics/comparison",
+    summary="Get native vs builtin tool metrics",
+    description="Compare performance metrics between native and builtin tools",
+    response_model=NativeToolMetricsResponse,
+)
+async def get_tool_metrics_comparison(
+    current_user: CurrentUser,
+) -> NativeToolMetricsResponse:
+    """Get comparison metrics between native and builtin tools.
+
+    v7: Provides latency, error rate, and selection count comparisons
+    for the cost/latency comparison dashboard.
+
+    Returns in-memory metrics since last server restart.
+    For persistent metrics, use Prometheus/Grafana integration.
+    """
+    from mcp_server_langgraph.tools.native_metrics import get_metrics_aggregator
+
+    aggregator = get_metrics_aggregator()
+    data = aggregator.get_comparison_data()
+
+    # Convert to response model
+    tools = []
+    for tool_data in data.get("tools", []):
+        native_metrics = None
+        builtin_metrics = None
+        mcp_metrics = None
+
+        if tool_data.get("native"):
+            native_metrics = ToolSourceMetrics(**tool_data["native"])
+        if tool_data.get("builtin"):
+            builtin_metrics = ToolSourceMetrics(**tool_data["builtin"])
+        if tool_data.get("mcp"):
+            mcp_metrics = ToolSourceMetrics(**tool_data["mcp"])
+
+        tools.append(
+            ToolComparisonData(
+                tool_name=tool_data["tool_name"],
+                native=native_metrics,
+                builtin=builtin_metrics,
+                mcp=mcp_metrics,
+            )
+        )
+
+    summary_data = data.get("summary", {})
+    summary = ToolMetricsSummary(
+        native_selections=summary_data.get("native_selections", 0),
+        builtin_selections=summary_data.get("builtin_selections", 0),
+        native_errors=summary_data.get("native_errors", 0),
+        builtin_errors=summary_data.get("builtin_errors", 0),
+        uptime_seconds=summary_data.get("uptime_seconds", 0.0),
+    )
+
+    logger.info(
+        f"Tool metrics comparison requested: {len(tools)} tools tracked",
+        extra={
+            "user_id": current_user.get("sub", "unknown"),
+            "tool_count": len(tools),
+        },
+    )
+
+    return NativeToolMetricsResponse(
+        tools=tools,
+        summary=summary,
+    )
+
+
+# =============================================================================
+# Native Tool Capabilities Endpoint (v7)
+# =============================================================================
+
+
+class NativeToolCapability(BaseModel):
+    """Native tool capability for a specific model."""
+
+    tool_name: str = Field(..., description="Tool name (e.g., web_search, code_execution)")
+    supported: bool = Field(..., description="Whether the model supports this tool")
+    provider_type: str | None = Field(
+        None, description="Provider-specific type (e.g., web_search_20250305)"
+    )
+    enabled: bool = Field(..., description="Whether the feature flag is enabled")
+
+
+class NativeCapabilitiesResponse(BaseModel):
+    """Response for native tool capabilities detection."""
+
+    model_id: str = Field(..., description="The model ID queried")
+    native_provider: str | None = Field(
+        None, description="Native tool provider (anthropic, google, openai)"
+    )
+    capabilities: list[NativeToolCapability] = Field(
+        default_factory=list, description="Available native tool capabilities"
+    )
+    master_enabled: bool = Field(..., description="Whether native tools are enabled globally")
+
+
+@tools_router.get(
+    "/native-capabilities/{model_id:path}",
+    summary="Get native tool capabilities for a model",
+    description="Detect which native LLM provider tools are available for a specific model",
+    response_model=NativeCapabilitiesResponse,
+)
+async def get_native_capabilities(
+    model_id: str,
+    current_user: CurrentUser,
+) -> NativeCapabilitiesResponse:
+    """Get native tool capabilities for a specific model.
+
+    v7: Auto-detect which native tools are available based on model capabilities
+    and feature flags. Used by frontend to show/hide native tool options.
+
+    Args:
+        model_id: Model identifier (e.g., claude-sonnet-4-5-20250929)
+
+    Returns:
+        Native capabilities response with supported tools and their status
+    """
+    from mcp_server_langgraph.agents.model_registry import ModelRegistry
+    from mcp_server_langgraph.tools.native_handler import NativeToolHandler
+
+    registry = ModelRegistry()
+    caps = registry.get(model_id)
+    handler = NativeToolHandler(model_id)
+
+    capabilities: list[NativeToolCapability] = []
+
+    # Check web_search capability
+    web_search_supported = caps.supports_native_web_search
+    web_search_enabled = False
+    web_search_type = None
+
+    if web_search_supported:
+        if caps.native_provider == "anthropic":
+            web_search_enabled = feature_flags.anthropic_native_web_search_enabled
+            web_search_type = "web_search_20250305"
+        elif caps.native_provider == "google":
+            web_search_enabled = feature_flags.google_native_search_enabled
+            web_search_type = "googleSearch"
+        elif caps.native_provider == "openai":
+            web_search_enabled = (
+                feature_flags.openai_native_web_search_enabled
+                and feature_flags.use_responses_api_for_openai
+            )
+            web_search_type = "web_search_preview"
+
+    capabilities.append(
+        NativeToolCapability(
+            tool_name="web_search",
+            supported=web_search_supported,
+            provider_type=web_search_type,
+            enabled=web_search_enabled and feature_flags.native_tools_enabled,
+        )
+    )
+
+    # Check code_execution capability
+    code_exec_supported = caps.supports_native_code_execution
+    code_exec_enabled = False
+    code_exec_type = None
+
+    if code_exec_supported:
+        if caps.native_provider == "anthropic":
+            code_exec_enabled = feature_flags.anthropic_native_code_execution_enabled
+            code_exec_type = "code_execution_20250825"
+        elif caps.native_provider == "openai":
+            code_exec_enabled = (
+                feature_flags.openai_native_code_interpreter_enabled
+                and feature_flags.use_responses_api_for_openai
+            )
+            code_exec_type = "code_interpreter"
+
+    capabilities.append(
+        NativeToolCapability(
+            tool_name="code_execution",
+            supported=code_exec_supported,
+            provider_type=code_exec_type,
+            enabled=code_exec_enabled and feature_flags.native_tools_enabled,
+        )
+    )
+
+    logger.info(
+        f"Native capabilities requested for model {model_id}",
+        extra={
+            "user_id": current_user.get("sub", "unknown"),
+            "model_id": model_id,
+            "native_provider": caps.native_provider,
+            "web_search_supported": web_search_supported,
+            "code_exec_supported": code_exec_supported,
+        },
+    )
+
+    return NativeCapabilitiesResponse(
+        model_id=model_id,
+        native_provider=caps.native_provider,
+        capabilities=capabilities,
+        master_enabled=feature_flags.native_tools_enabled,
     )

@@ -57,6 +57,7 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 from mcp_server_langgraph.websocket import orchestrator_prometheus_metrics as prom_metrics
 
 from mcp_server_langgraph.websocket.base import WebSocketBase
+from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
 from mcp_server_langgraph.websocket.types import (
     AuthUser,
     MessageEnvelope,
@@ -795,7 +796,7 @@ class OrchestratorStatusBroadcasterProtocol(Protocol):
 # =============================================================================
 
 
-class OrchestratorStatusHandler(WebSocketBase):
+class OrchestratorStatusHandler(WebSocketBase, BroadcasterMixin):
     """
     WebSocket handler for real-time AI orchestrator status updates.
 
@@ -851,9 +852,7 @@ class OrchestratorStatusHandler(WebSocketBase):
         """
         super().__init__(config=config, metrics=metrics)
         self._broadcaster = broadcaster or get_orchestrator_status_broadcaster()
-        self._subscribed: bool = False
-        self._user_id: str | None = None
-
+        # Note: _subscribed is managed by BroadcasterMixin
     async def on_connect(self, user: AuthUser) -> None:
         """
         Handle connection establishment.
@@ -863,17 +862,12 @@ class OrchestratorStatusHandler(WebSocketBase):
         Args:
             user: The authenticated user.
         """
-        self._user_id = user.id
-
         if self._websocket:
-            await self._broadcaster.subscribe(
-                self._websocket,
-                user_id=self._user_id,
-            )
-            self._subscribed = True
+            # Use BroadcasterMixin's subscribe() with user_id kwarg
+            await self.subscribe(user_id=self.user_id)
             logger.info(
-                f"Orchestrator status stream connected: user={self._user_id}",
-                extra={"user_id": self._user_id},
+                f"Orchestrator status stream connected: user={self.user_id}",
+                extra={"user_id": self.user_id},
             )
 
     async def on_disconnect(self) -> None:
@@ -882,12 +876,12 @@ class OrchestratorStatusHandler(WebSocketBase):
 
         Unsubscribes the client from the orchestrator status broadcaster.
         """
-        if self._websocket and self._subscribed:
-            await self._broadcaster.unsubscribe(self._websocket)
-            logger.info(
-                f"Orchestrator status stream disconnected: user={self._user_id}",
-                extra={"user_id": self._user_id},
-            )
+        # Use BroadcasterMixin's unsubscribe() for cleanup
+        await self.unsubscribe()
+        logger.info(
+            f"Orchestrator status stream disconnected: user={self.user_id}",
+            extra={"user_id": self.user_id},
+        )
 
     async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
         """
@@ -903,32 +897,26 @@ class OrchestratorStatusHandler(WebSocketBase):
         """
         logger.debug(
             f"Received message type: {message.type}",
-            extra={"message_type": message.type, "user_id": self._user_id},
+            extra={"message_type": message.type, "user_id": self.user_id},
         )
 
         if message.type == "subscribe":
             if self._websocket and not self._subscribed:
-                await self._broadcaster.subscribe(
-                    self._websocket,
-                    user_id=self._user_id,
-                )
-                self._subscribed = True
+                # Use BroadcasterMixin's subscribe()
+                await self.subscribe(user_id=self.user_id)
 
-            return MessageEnvelope(
-                type="subscribed",
-                id=message.id,
-                payload={"status": "subscribed"},
+            return self.create_subscribed_response(
+                correlation_id=message.id,
+                extra_payload={"status": "subscribed"},
             )
 
         elif message.type == "unsubscribe":
-            if self._websocket and self._subscribed:
-                await self._broadcaster.unsubscribe(self._websocket)
-                self._subscribed = False
+            # Use BroadcasterMixin's unsubscribe()
+            await self.unsubscribe()
 
-            return MessageEnvelope(
-                type="unsubscribed",
-                id=message.id,
-                payload={"status": "unsubscribed"},
+            return self.create_unsubscribed_response(
+                correlation_id=message.id,
+                extra_payload={"status": "unsubscribed"},
             )
 
         elif message.type == "get_status":

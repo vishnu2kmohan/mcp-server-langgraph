@@ -68,7 +68,6 @@ class MCPWebSocketHandler(WebSocketBase):
 
         self.session_id = session_id or str(uuid.uuid4())
         self._mcp_handler: Any = None  # MCPMessageHandler or AuthenticatedMCPHandler
-        self._user_id: str | None = None
         self._roles: list[str] = []
         self._websocket: Any = None
         self._metrics: Any = None
@@ -84,7 +83,6 @@ class MCPWebSocketHandler(WebSocketBase):
             user: Authenticated user for the connection.
         """
         # Authenticated connection
-        self._user_id = user.id
         self._roles = getattr(user, "roles", [])
 
         # Create authenticated handler (lazy import to avoid circular dependency)
@@ -93,14 +91,14 @@ class MCPWebSocketHandler(WebSocketBase):
         )
 
         self._mcp_handler = AuthenticatedMCPHandler(
-            user_id=self._user_id,
+            user_id=self.user_id,
             roles=self._roles,
             notification_callback=self._send_notification,
             session_id=self.session_id,
         )
         logger.info(
-            f"MCP authenticated connection established for {self._user_id}",
-            extra={"user_id": self._user_id, "session_id": self.session_id},
+            f"MCP authenticated connection established for {self.user_id}",
+            extra={"user_id": self.user_id, "session_id": self.session_id},
         )
 
     async def on_disconnect(self) -> None:
@@ -113,7 +111,7 @@ class MCPWebSocketHandler(WebSocketBase):
         self._mcp_handler = None
         logger.info(
             "MCP connection disconnected",
-            extra={"user_id": self._user_id, "session_id": self.session_id},
+            extra={"user_id": self.user_id, "session_id": self.session_id},
         )
 
     async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:

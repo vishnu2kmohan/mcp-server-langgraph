@@ -104,7 +104,6 @@ class AISuggestionsHandler(WebSocketBase):
             metrics: Optional metrics collector.
         """
         super().__init__(config=config, metrics=metrics)
-        self._user_id: str | None = None
         self._session_context: dict[str, str] = {}
 
     async def on_connect(self, user: AuthUser) -> None:
@@ -114,17 +113,16 @@ class AISuggestionsHandler(WebSocketBase):
         Args:
             user: The authenticated user.
         """
-        self._user_id = user.id
         logger.info(
-            f"AI suggestions stream connected: user={self._user_id}",
-            extra={"user_id": self._user_id},
+            f"AI suggestions stream connected: user={self.user_id}",
+            extra={"user_id": self.user_id},
         )
 
     async def on_disconnect(self) -> None:
         """Handle connection teardown."""
         # Fall back to base class user if on_connect was never called
         # This handles the race condition where client disconnects during auth
-        user_id = self._user_id or (self._user.id if self._user else None)
+        user_id = self.user_id or (self._user.id if self._user else None)
         logger.info(
             f"AI suggestions stream disconnected: user={user_id}",
             extra={"user_id": user_id},
@@ -157,13 +155,13 @@ class AISuggestionsHandler(WebSocketBase):
             else:
                 logger.debug(
                     f"Unhandled message type: {message_type}",
-                    extra={"message_type": message_type, "user_id": self._user_id},
+                    extra={"message_type": message_type, "user_id": self.user_id},
                 )
                 return None
         except Exception as e:
             logger.exception(
                 f"Error handling AI suggestion message: {e}",
-                extra={"message_type": message_type, "user_id": self._user_id},
+                extra={"message_type": message_type, "user_id": self.user_id},
             )
             return self._create_error_response(
                 code="internal_error",
@@ -187,7 +185,7 @@ class AISuggestionsHandler(WebSocketBase):
         except (KeyError, TypeError, ValueError) as e:
             logger.warning(
                 f"Invalid suggestion request: {e}",
-                extra={"user_id": self._user_id},
+                extra={"user_id": self.user_id},
             )
             return self._create_error_response(
                 code="invalid_request",
@@ -228,7 +226,7 @@ class AISuggestionsHandler(WebSocketBase):
             f"Suggestion accepted: {suggestion_id}",
             extra={
                 "suggestion_id": suggestion_id,
-                "user_id": self._user_id,
+                "user_id": self.user_id,
             },
         )
         # Record metrics for suggestion acceptance
@@ -254,7 +252,7 @@ class AISuggestionsHandler(WebSocketBase):
             extra={
                 "suggestion_id": suggestion_id,
                 "reason": reason,
-                "user_id": self._user_id,
+                "user_id": self.user_id,
             },
         )
         # Record metrics for suggestion rejection
@@ -283,7 +281,7 @@ class AISuggestionsHandler(WebSocketBase):
                 extra={
                     "session_id": session_id,
                     "context_length": len(context),
-                    "user_id": self._user_id,
+                    "user_id": self.user_id,
                 },
             )
         return None
@@ -318,7 +316,7 @@ class AISuggestionsHandler(WebSocketBase):
                 "session_id": request.session_id,
                 "input_length": len(request.input_text),
                 "context_length": len(context),
-                "user_id": self._user_id,
+                "user_id": self.user_id,
             },
         )
 
@@ -354,7 +352,7 @@ Return ONLY the suggested completion text, nothing else."""
                     "suggestion_id": suggestion_id,
                     "suggestion_length": len(suggestion_text),
                     "confidence": confidence,
-                    "user_id": self._user_id,
+                    "user_id": self.user_id,
                 },
             )
 
@@ -371,7 +369,7 @@ Return ONLY the suggested completion text, nothing else."""
                 extra={
                     "suggestion_id": suggestion_id,
                     "error": str(e),
-                    "user_id": self._user_id,
+                    "user_id": self.user_id,
                 },
             )
             # Return a fallback response

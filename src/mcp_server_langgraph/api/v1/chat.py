@@ -26,10 +26,10 @@ Authorization:
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
-from dataclasses import dataclass, field
 import asyncio
 import time
+from collections.abc import AsyncIterator
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 from uuid import uuid4
 
@@ -43,6 +43,7 @@ from mcp_server_langgraph.api.deps import get_audit_service, get_openfga_client
 from mcp_server_langgraph.auth.dependencies import get_current_user
 from mcp_server_langgraph.core.agent import create_agent_graph
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.tools.source_citation import SourceCitation
 
 if TYPE_CHECKING:
     from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -164,6 +165,10 @@ class ChatCompletionResponse(BaseModel):
     thinking: ThinkingContent | None = Field(
         default=None,
         description="Thinking/reasoning content from extended thinking models (Claude Opus 4.5, Sonnet 4, Gemini 2.5)",
+    )
+    sources: list[SourceCitation] | None = Field(
+        default=None,
+        description="Source citations from web search results (native or builtin tools)",
     )
 
 
@@ -1030,8 +1035,17 @@ class ChatServiceImpl(ChatService):
             from mcp_server_langgraph.websocket.registry import get_devtools_broadcaster
 
             broadcaster = get_devtools_broadcaster()
-        except Exception:
+            logger.debug(
+                "DevTools broadcaster initialized for LangGraph trace streaming",
+                extra={"session_id": session_id, "has_broadcaster": broadcaster is not None},
+            )
+        except Exception as e:
             # DevTools broadcaster is optional; continue without it if unavailable.
+            logger.warning(
+                "Failed to initialize DevTools broadcaster for trace streaming: %s",
+                str(e),
+                extra={"session_id": session_id, "error": str(e)},
+            )
             broadcaster = None
 
         node_start_times: dict[str, int] = {}
@@ -1084,9 +1098,20 @@ class ChatServiceImpl(ChatService):
                     broadcaster.broadcast_trace_step(payload, context_entity_id=session_id),
                 )
                 del _task  # Fire-and-forget; suppress RUF006
+                logger.debug(
+                    "Scheduled trace step broadcast",
+                    extra={
+                        "session_id": session_id,
+                        "node_name": node_name,
+                        "status": status,
+                    },
+                )
             except RuntimeError:
                 # No running loop; skip best-effort devtools broadcast
-                pass
+                logger.debug(
+                    "No running loop for trace step broadcast",
+                    extra={"session_id": session_id, "node_name": node_name},
+                )
             except Exception as exc:  # pragma: no cover - defensive logging only
                 logger.debug("Failed to broadcast trace step: %s", exc)
 
@@ -1221,6 +1246,13 @@ class ChatServiceImpl(ChatService):
                                 "message": data.get("message", "Authentication required"),
                                 "retry_message_id": data.get("retry_message_id"),
                             }
+                        elif event_name == "sources_collected":
+                            # Emit sources SSE event for web search citations
+                            # Frontend displays these as source links in the chat message
+                            data = event.get("data", {})
+                            sources = data.get("sources", [])
+                            if sources:
+                                yield {"sources": sources}
 
                     # Handle streaming content from chat model
                     elif event_type == "on_chat_model_stream":
@@ -1619,15 +1651,54 @@ class ChatServiceImpl(ChatService):
         return list(result) if result is not None else None
 
 
-# Service singleton
+# Service singletons
 _chat_service: ChatService | None = None
+_session_repository: Any | None = None
+
+
+def get_session_repository() -> Any:
+    """
+    Get the session repository instance for message history storage.
+
+    Returns a SessionRepository that implements get_messages() for loading
+    conversation history before LLM calls.
+
+    Returns:
+        InMemorySessionRepository by default, can be overridden via set_session_repository().
+    """
+    global _session_repository
+    if _session_repository is None:
+        from mcp_server_langgraph.storage import InMemorySessionRepository
+
+        _session_repository = InMemorySessionRepository()
+    return _session_repository
+
+
+def set_session_repository(repository: Any) -> None:
+    """Set the session repository instance (for testing/DI)."""
+    global _session_repository
+    _session_repository = repository
+
+
+def reset_session_repository() -> None:
+    """Reset the session repository singleton (for testing)."""
+    global _session_repository
+    _session_repository = None
 
 
 def get_chat_service() -> ChatService:
-    """Get the chat service instance (returns ChatServiceImpl)."""
+    """
+    Get the chat service instance (returns ChatServiceImpl).
+
+    The service is initialized with a session_storage backend so that
+    conversation history can be loaded from storage before LLM calls.
+    This ensures the LLM receives full conversation context, not just
+    the current message.
+    """
     global _chat_service
     if _chat_service is None:
-        _chat_service = ChatServiceImpl()
+        session_storage = get_session_repository()
+        _chat_service = ChatServiceImpl(session_storage=session_storage)
     return _chat_service
 
 
@@ -1641,6 +1712,8 @@ def reset_chat_service() -> None:
     """Reset the chat service singleton (for testing)."""
     global _chat_service
     _chat_service = None
+    # Also reset the session repository to ensure fresh state
+    reset_session_repository()
 
 
 # Endpoints

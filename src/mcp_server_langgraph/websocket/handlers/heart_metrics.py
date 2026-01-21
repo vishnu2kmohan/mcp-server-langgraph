@@ -241,10 +241,9 @@ class HeartMetricsHandler(WebSocketBase):
         if dimension:
             self.subscribed_dimensions.discard(dimension)
 
-        return MessageEnvelope(
-            type="unsubscribed",
-            payload={"dimension": dimension},
-            id=message.id,
+        return self.create_unsubscribed_response(
+            correlation_id=message.id,
+            extra_payload={"dimension": dimension},
         )
 
     async def push_dimension_update(self, dimension: str, metrics: dict[str, Any]) -> None:

@@ -104,16 +104,25 @@ class AgentRequestHandler(WebSocketBase):
         self._broadcaster = broadcaster
         self._session_id = session_id or "global"
         self._subscribed: bool = False
-        self._user_id: str | None = None
-
     async def on_connect(self, user: AuthUser) -> None:
         """
         Handle connection establishment.
 
+        Uses session_id from base class (extracted from query params in run())
+        if not provided via constructor, enabling session-scoped HITL notifications.
+
         Args:
             user: The authenticated user.
         """
-        self._user_id = user.id
+        # Extract session_id from query params if still using default "global"
+        # Note: We check query_params directly since this handler may set
+        # its own _session_id in __init__ which shadows the base class property.
+        if self._session_id == "global" and self._websocket:
+            query_params = getattr(self._websocket, "query_params", {}) or {}
+            url_session_id = query_params.get("session_id")
+            if url_session_id:
+                self._session_id = url_session_id
+
         if self._websocket:
             # Pass accept=False because WebSocketBase already accepted the connection
             await self._broadcaster.connect(self._websocket, self._session_id, user.id, accept=False)
@@ -128,8 +137,8 @@ class AgentRequestHandler(WebSocketBase):
             self._broadcaster.disconnect(self._websocket)
         self._subscribed = False
         logger.info(
-            f"Agent request WebSocket disconnected: user={self._user_id}",
-            extra={"user_id": self._user_id, "session_id": self._session_id},
+            f"Agent request WebSocket disconnected: user={self.user_id}",
+            extra={"user_id": self.user_id, "session_id": self._session_id},
         )
 
     async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
@@ -169,23 +178,19 @@ class AgentRequestHandler(WebSocketBase):
         self._session_id = session_id
         self._subscribed = True
 
-        return MessageEnvelope(
-            type="subscribed",
-            payload={
-                "session_id": session_id,
-                "message": "Successfully subscribed to HITL notifications",
-            },
-            id=message.id,
+        return self.create_subscribed_response(
+            correlation_id=message.id,
+            message="Successfully subscribed to HITL notifications",
+            extra_payload={"session_id": session_id},
         )
 
     async def _handle_unsubscribe(self, message: MessageEnvelope) -> MessageEnvelope:
         """Handle unsubscribe message."""
         self._subscribed = False
 
-        return MessageEnvelope(
-            type="unsubscribed",
-            payload={"message": "Successfully unsubscribed from HITL notifications"},
-            id=message.id,
+        return self.create_unsubscribed_response(
+            correlation_id=message.id,
+            message="Successfully unsubscribed from HITL notifications",
         )
 
     async def push_approval_required(self, request: dict[str, Any]) -> None:
@@ -197,13 +202,12 @@ class AgentRequestHandler(WebSocketBase):
         Args:
             request: The approval request data.
         """
-        if self._websocket and self._subscribed:
-            await self._websocket.send_json(
-                {
-                    "type": "approval_required",
-                    "payload": request,
-                }
-            )
+        await self.send_if_subscribed(
+            {
+                "type": "approval_required",
+                "payload": request,
+            }
+        )
 
     async def push_clarification_required(self, request: dict[str, Any]) -> None:
         """
@@ -214,13 +218,12 @@ class AgentRequestHandler(WebSocketBase):
         Args:
             request: The clarification request data.
         """
-        if self._websocket and self._subscribed:
-            await self._websocket.send_json(
-                {
-                    "type": "clarification_required",
-                    "payload": request,
-                }
-            )
+        await self.send_if_subscribed(
+            {
+                "type": "clarification_required",
+                "payload": request,
+            }
+        )
 
     async def push_approval_updated(self, request_id: str, status: str, decided_by: str, reason: str | None = None) -> None:
         """
@@ -234,18 +237,17 @@ class AgentRequestHandler(WebSocketBase):
             decided_by: Who made the decision.
             reason: Optional reason for decision.
         """
-        if self._websocket and self._subscribed:
-            await self._websocket.send_json(
-                {
-                    "type": "approval_updated",
-                    "payload": {
-                        "request_id": request_id,
-                        "status": status,
-                        "decided_by": decided_by,
-                        "reason": reason,
-                    },
-                }
-            )
+        await self.send_if_subscribed(
+            {
+                "type": "approval_updated",
+                "payload": {
+                    "request_id": request_id,
+                    "status": status,
+                    "decided_by": decided_by,
+                    "reason": reason,
+                },
+            }
+        )
 
     async def push_execution_resumed(self, request_id: str, task_id: str, agent_name: str, status: str) -> None:
         """
@@ -259,15 +261,14 @@ class AgentRequestHandler(WebSocketBase):
             agent_name: Name of the agent.
             status: Final status (approved, rejected).
         """
-        if self._websocket and self._subscribed:
-            await self._websocket.send_json(
-                {
-                    "type": "execution_resumed",
-                    "payload": {
-                        "request_id": request_id,
-                        "task_id": task_id,
-                        "agent_name": agent_name,
-                        "status": status,
-                    },
-                }
-            )
+        await self.send_if_subscribed(
+            {
+                "type": "execution_resumed",
+                "payload": {
+                    "request_id": request_id,
+                    "task_id": task_id,
+                    "agent_name": agent_name,
+                    "status": status,
+                },
+            }
+        )

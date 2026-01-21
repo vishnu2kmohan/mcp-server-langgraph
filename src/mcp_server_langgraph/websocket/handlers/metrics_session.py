@@ -159,8 +159,7 @@ class MetricsSessionHandler(WebSocketBase):
         if session_id and session_id in self._subscribed_sessions:
             self._subscribed_sessions.discard(session_id)
 
-        return MessageEnvelope(
-            type="unsubscribed",
-            payload={"session_id": session_id},
-            id=message.id,
+        return self.create_unsubscribed_response(
+            correlation_id=message.id,
+            extra_payload={"session_id": session_id},
         )

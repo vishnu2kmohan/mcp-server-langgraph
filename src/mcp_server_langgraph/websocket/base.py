@@ -124,6 +124,15 @@ class WebSocketBase(ABC):
         self._auth_token: str | None = None
         self._validation_task: asyncio.Task[None] | None = None
 
+        # Context extraction from query parameters
+        # These are populated in run() after connection acceptance
+        self._context_id: str | None = None
+        self._session_id: str | None = None
+
+        # Subscription state for handlers that use subscribe/unsubscribe pattern
+        # Handlers can set this to track whether client has subscribed to events
+        self._subscribed: bool = False
+
         # Initialize rate limiter (Redis or in-memory based on feature flag)
         self._rate_limiter = self._create_rate_limiter()
 
@@ -165,6 +174,95 @@ class WebSocketBase(ABC):
     def user(self) -> AuthUser | None:
         """Get the authenticated user."""
         return self._user
+
+    @property
+    def user_id(self) -> str | None:
+        """
+        Get the authenticated user's ID.
+
+        Convenience property that returns the user ID if authenticated,
+        or None if not yet authenticated. Avoids the need for handlers
+        to store their own `_user_id` attribute.
+
+        Returns:
+            User ID string or None.
+        """
+        return self._user.id if self._user else None
+
+    @property
+    def context_id(self) -> str | None:
+        """
+        Get the context_id extracted from query parameters.
+
+        Populated after connection acceptance in run().
+        Used for session-scoped message filtering.
+        """
+        return self._context_id
+
+    @context_id.setter
+    def context_id(self, value: str | None) -> None:
+        """Set the context_id (allows subclasses to override)."""
+        self._context_id = value
+
+    @property
+    def session_id(self) -> str | None:
+        """
+        Get the session_id extracted from query parameters.
+
+        Populated after connection acceptance in run().
+        Used for session-scoped message filtering.
+        Subclasses may also set this value directly.
+        """
+        return self._session_id
+
+    @session_id.setter
+    def session_id(self, value: str | None) -> None:
+        """Set the session_id (allows subclasses to override)."""
+        self._session_id = value
+
+    @property
+    def is_ready_to_send(self) -> bool:
+        """
+        Check if the handler is ready to send messages to the client.
+
+        Returns True when:
+        - WebSocket connection is established (_websocket is set)
+        - Client has subscribed to events (_subscribed is True)
+
+        Handlers should check this before sending push notifications.
+        This replaces the common pattern:
+            if self._websocket and self._subscribed:
+                await self._websocket.send_json(...)
+
+        Returns:
+            True if ready to send, False otherwise.
+        """
+        return self._websocket is not None and self._subscribed
+
+    async def send_if_subscribed(self, message: dict[str, Any]) -> bool:
+        """
+        Send a message to the client if subscribed.
+
+        Convenience method that combines the is_ready_to_send check with
+        sending. Reduces boilerplate in handlers with push notification methods.
+
+        Before (common pattern):
+            if self._websocket and self._subscribed:
+                await self._websocket.send_json({...})
+
+        After:
+            await self.send_if_subscribed({...})
+
+        Args:
+            message: The message dict to send.
+
+        Returns:
+            True if message was sent, False if not ready to send.
+        """
+        if self.is_ready_to_send:
+            await self._websocket.send_json(message)  # type: ignore[union-attr]
+            return True
+        return False
 
     @abstractmethod
     async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
@@ -239,6 +337,12 @@ class WebSocketBase(ABC):
                 # Accept the connection
                 await websocket.accept()
                 self._state = ConnectionState.CONNECTED
+
+                # Extract context/session IDs from query parameters
+                # These are used by handlers for session-scoped filtering
+                query_params = getattr(websocket, "query_params", {}) or {}
+                self._context_id = query_params.get("context_id")
+                self._session_id = query_params.get("session_id")
 
                 # Record connection in metrics
                 if self._metrics:
@@ -680,6 +784,223 @@ class WebSocketBase(ABC):
         if self._websocket is None:
             raise RuntimeError("WebSocket not connected")
         await self._send_message(self._websocket, message)
+
+    def create_error_response(
+        self,
+        code: str,
+        message: str,
+        correlation_id: str | None = None,
+    ) -> MessageEnvelope:
+        """
+        Create a standardized error response envelope.
+
+        Reduces boilerplate for handlers that need to return error responses.
+        All error responses follow the same structure:
+        - type: "error"
+        - payload: {"code": <code>, "message": <message>}
+        - id: correlation_id from the request
+
+        Args:
+            code: Error code string (e.g., "validation_failed", "not_found").
+            message: Human-readable error message.
+            correlation_id: Optional request ID for correlation.
+
+        Returns:
+            MessageEnvelope with error type and payload.
+        """
+        return MessageEnvelope(
+            type="error",
+            payload={"code": code, "message": message},
+            id=correlation_id,
+        )
+
+    def create_unknown_message_error(
+        self,
+        message_type: str,
+        correlation_id: str | None = None,
+    ) -> MessageEnvelope:
+        """
+        Create a standardized "unknown_message_type" error response.
+
+        This is the most common error across handlers - when handle_message
+        receives an unrecognized message type. Provides consistent error format.
+
+        Args:
+            message_type: The unknown message type that was received.
+            correlation_id: Optional request ID for correlation.
+
+        Returns:
+            MessageEnvelope with unknown_message_type error.
+        """
+        return self.create_error_response(
+            code="unknown_message_type",
+            message=f"Unknown message type: {message_type}",
+            correlation_id=correlation_id,
+        )
+
+    def create_success_response(
+        self,
+        type: str,
+        payload: dict[str, Any],
+        correlation_id: str | None = None,
+    ) -> MessageEnvelope:
+        """
+        Create a standardized success response envelope.
+
+        Complements create_error_response for creating success responses.
+        Reduces boilerplate for handlers returning success messages.
+
+        Before (common pattern):
+            return MessageEnvelope(
+                type="subscribed",
+                payload={"message": "Successfully subscribed"},
+                id=message.id,
+            )
+
+        After:
+            return self.create_success_response(
+                type="subscribed",
+                payload={"message": "Successfully subscribed"},
+                correlation_id=message.id,
+            )
+
+        Args:
+            type: Response type string (e.g., "subscribed", "data_ready").
+            payload: Response payload dictionary.
+            correlation_id: Optional request ID for correlation.
+
+        Returns:
+            MessageEnvelope with the specified type and payload.
+        """
+        return MessageEnvelope(
+            type=type,
+            payload=payload,
+            id=correlation_id,
+        )
+
+    def log_connected(self, extra: dict[str, Any] | None = None) -> None:
+        """
+        Log a standardized connection message.
+
+        Provides consistent logging format across all handlers for connection
+        events. Automatically includes endpoint and user_id.
+
+        Args:
+            extra: Additional fields to include in log extra dict.
+        """
+        log_extra: dict[str, Any] = {
+            "endpoint": self.config.endpoint_name,
+            "user_id": self.user_id,
+        }
+        if extra:
+            log_extra.update(extra)
+
+        logger.info(
+            f"WebSocket connected: {self.config.endpoint_name}",
+            extra=log_extra,
+        )
+
+    def log_disconnected(self, extra: dict[str, Any] | None = None) -> None:
+        """
+        Log a standardized disconnection message.
+
+        Provides consistent logging format across all handlers for disconnection
+        events. Automatically includes endpoint and user_id.
+
+        Args:
+            extra: Additional fields to include in log extra dict.
+        """
+        log_extra: dict[str, Any] = {
+            "endpoint": self.config.endpoint_name,
+            "user_id": self.user_id,
+        }
+        if extra:
+            log_extra.update(extra)
+
+        logger.info(
+            f"WebSocket disconnected: {self.config.endpoint_name}",
+            extra=log_extra,
+        )
+
+    def create_subscribed_response(
+        self,
+        correlation_id: str | None = None,
+        message: str = "Successfully subscribed",
+        extra_payload: dict[str, Any] | None = None,
+    ) -> MessageEnvelope:
+        """
+        Create a standardized "subscribed" response envelope.
+
+        This is one of the most common response patterns across handlers.
+        Reduces boilerplate for handling subscribe messages.
+
+        Before (common pattern):
+            return MessageEnvelope(
+                type="subscribed",
+                payload={"message": "Successfully subscribed"},
+                id=message.id,
+            )
+
+        After:
+            return self.create_subscribed_response(correlation_id=message.id)
+
+        Args:
+            correlation_id: Optional request ID for correlation.
+            message: Success message (default: "Successfully subscribed").
+            extra_payload: Additional fields to include in payload.
+
+        Returns:
+            MessageEnvelope with type="subscribed" and payload.
+        """
+        payload: dict[str, Any] = {"message": message}
+        if extra_payload:
+            payload.update(extra_payload)
+
+        return MessageEnvelope(
+            type="subscribed",
+            payload=payload,
+            id=correlation_id,
+        )
+
+    def create_unsubscribed_response(
+        self,
+        correlation_id: str | None = None,
+        message: str = "Successfully unsubscribed",
+        extra_payload: dict[str, Any] | None = None,
+    ) -> MessageEnvelope:
+        """
+        Create a standardized "unsubscribed" response envelope.
+
+        This is one of the most common response patterns across handlers.
+        Reduces boilerplate for handling unsubscribe messages.
+
+        Before (common pattern):
+            return MessageEnvelope(
+                type="unsubscribed",
+                payload={"message": "Successfully unsubscribed"},
+                id=message.id,
+            )
+
+        After:
+            return self.create_unsubscribed_response(correlation_id=message.id)
+
+        Args:
+            correlation_id: Optional request ID for correlation.
+            message: Success message (default: "Successfully unsubscribed").
+            extra_payload: Additional fields to include in payload.
+
+        Returns:
+            MessageEnvelope with type="unsubscribed" and payload.
+        """
+        payload: dict[str, Any] = {"message": message}
+        if extra_payload:
+            payload.update(extra_payload)
+
+        return MessageEnvelope(
+            type="unsubscribed",
+            payload=payload,
+            id=correlation_id,
+        )
 
     async def _check_rate_limit(self) -> bool:
         """

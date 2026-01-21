@@ -28,6 +28,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from mcp_server_langgraph.websocket.base import WebSocketBase
+from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
 from mcp_server_langgraph.websocket.types import (
     AuthUser,
     MessageEnvelope,
@@ -73,7 +74,7 @@ class AlertBroadcasterProtocol(Protocol):
         ...
 
 
-class AlertHandler(WebSocketBase):
+class AlertHandler(WebSocketBase, BroadcasterMixin):
     """
     WebSocket handler for real-time alert streaming.
 
@@ -110,9 +111,7 @@ class AlertHandler(WebSocketBase):
         """
         super().__init__(config=config, metrics=metrics)
         self._broadcaster = broadcaster
-        self._subscribed: bool = False
-        self._user_id: str | None = None
-
+        # Note: _subscribed is managed by BroadcasterMixin
     async def on_connect(self, user: AuthUser) -> None:
         """
         Handle connection establishment.
@@ -120,7 +119,6 @@ class AlertHandler(WebSocketBase):
         Args:
             user: The authenticated user.
         """
-        self._user_id = user.id
         logger.info(
             f"Alert stream connected: user={user.id}",
             extra={"user_id": user.id},
@@ -128,12 +126,11 @@ class AlertHandler(WebSocketBase):
 
     async def on_disconnect(self) -> None:
         """Clean up on disconnect."""
-        if self._subscribed and self._websocket:
-            await self._broadcaster.unsubscribe(self._websocket)
-            self._subscribed = False
+        # Use BroadcasterMixin's unsubscribe() for cleanup
+        await self.unsubscribe()
         logger.info(
-            f"Alert stream disconnected: user={self._user_id}",
-            extra={"user_id": self._user_id},
+            f"Alert stream disconnected: user={self.user_id}",
+            extra={"user_id": self.user_id},
         )
 
     async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
@@ -170,28 +167,17 @@ class AlertHandler(WebSocketBase):
     async def _handle_subscribe(self, message: MessageEnvelope) -> MessageEnvelope:
         """Handle subscribe message."""
         if self._websocket and not self._subscribed:
-            # user_id is set in on_connect and is always available here
-            await self._broadcaster.subscribe(self._websocket, user_id=self._user_id or "")
-            self._subscribed = True
+            # Use BroadcasterMixin's subscribe() with user_id kwarg
+            await self.subscribe(user_id=self.user_id or "")
 
-        return MessageEnvelope(
-            type="subscribed",
-            payload={"message": "Successfully subscribed to alerts"},
-            id=message.id,
-        )
+        return self.create_subscribed_response(correlation_id=message.id)
 
     async def _handle_unsubscribe(self, message: MessageEnvelope) -> MessageEnvelope:
         """Handle unsubscribe message."""
-        if self._subscribed:
-            if self._websocket:
-                await self._broadcaster.unsubscribe(self._websocket)
-            self._subscribed = False
+        # Use BroadcasterMixin's unsubscribe()
+        await self.unsubscribe()
 
-        return MessageEnvelope(
-            type="unsubscribed",
-            payload={"message": "Successfully unsubscribed from alerts"},
-            id=message.id,
-        )
+        return self.create_unsubscribed_response(correlation_id=message.id)
 
     async def _handle_get_recent(self, message: MessageEnvelope) -> MessageEnvelope:
         """Handle get_recent message."""
@@ -227,8 +213,7 @@ class AlertHandler(WebSocketBase):
         Args:
             alert: The alert data to send.
         """
-        if self._websocket and self._subscribed:
-            await self._websocket.send_json(
+        await self.send_if_subscribed(
                 {
                     "type": "alert",
                     "payload": alert,

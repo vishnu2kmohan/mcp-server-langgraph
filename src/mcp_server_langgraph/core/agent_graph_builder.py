@@ -299,8 +299,7 @@ async def _retrieve_tools_impl(
                 # v7: Also extract tool_ids for SSE/frontend
                 state["selected_tool_ids"] = [entry.tool_id for entry in tool_entries]
                 logger.info(
-                    f"Semantic tool selection: selected {len(state['selected_tools'])} tools: "
-                    f"{state['selected_tools']}"
+                    f"Semantic tool selection: selected {len(state['selected_tools'])} tools: {state['selected_tools']}"
                 )
             else:
                 # No tools found - fall back to all tools
@@ -386,8 +385,7 @@ async def _retrieve_skills_impl(
                 # Extract skill names from search results
                 state["selected_skills"] = [entry.name for entry in skill_entries]
                 logger.info(
-                    f"Semantic skill selection: selected {len(state['selected_skills'])} skills: "
-                    f"{state['selected_skills']}"
+                    f"Semantic skill selection: selected {len(state['selected_skills'])} skills: {state['selected_skills']}"
                 )
             else:
                 # No skills found - fall back to all skills
@@ -470,9 +468,7 @@ async def _retrieve_memories_impl(
             if memory_entries:
                 # Extract memory contents from search results
                 state["retrieved_memories"] = [entry.content for entry in memory_entries]
-                logger.info(
-                    f"Semantic memory retrieval: retrieved {len(state['retrieved_memories'])} memories"
-                )
+                logger.info(f"Semantic memory retrieval: retrieved {len(state['retrieved_memories'])} memories")
             else:
                 # No memories found - no context enrichment
                 state["retrieved_memories"] = None
@@ -496,14 +492,22 @@ async def _generate_response_impl(
     bound_tools: list[Any],
     model_with_tools: Any | None,
     pydantic_agent: Any | None,
+    config: Any | None = None,
 ) -> dict[str, Any]:
     """
-    Generate response implementation with dynamic tool binding support.
+    Generate response implementation with dynamic tool binding and native tool support.
 
     This is a testable helper function for the generate_response node.
-    It implements ADR-0099 dynamic tool binding:
-    - If state["selected_tools"] contains tool names, bind only those tools
-    - If state["selected_tools"] is None or empty, use all bound tools
+    It implements:
+    - ADR-0099 dynamic tool binding
+    - v7 native tool support (Anthropic, Google, OpenAI via Responses API)
+
+    Key features:
+    - Prefers selected_tool_ids over selected_tools
+    - Respects tool_selection_mode and kb_focus
+    - Derives native candidates from bound_tools via get_native_for_builtin()
+    - Passes native configs to model invocation
+    - Routes to verification when enabled
 
     Args:
         state: Current agent state with messages and optional selected_tools
@@ -511,12 +515,14 @@ async def _generate_response_impl(
         bound_tools: List of all available tool objects
         model_with_tools: Model pre-bound with all tools (fallback)
         pydantic_agent: Optional Pydantic AI agent for typed responses
+        config: Optional AgentConfig for verification settings
 
     Returns:
         Updated state with response message
     """
-    from langchain_core.messages import SystemMessage
+    from langchain_core.messages import AIMessage
 
+    from mcp_server_langgraph.core.feature_flags import feature_flags
     from mcp_server_langgraph.observability.telemetry import logger
 
     messages_list = list(state["messages"])
@@ -531,10 +537,102 @@ async def _generate_response_impl(
         )
         messages_list = [refinement_prompt] + messages_list
 
+    # Get tool preference settings from state
+    tool_preference = state.get("tool_preference", "auto")
+    tool_selection_mode = state.get("tool_selection_mode", "auto")
+    kb_focus = state.get("kb_focus", "all")
+
+    # Check if tools are disabled
+    tools_disabled = tool_selection_mode == "none"
+
+    # Skip native tools for pydantic agent (doesn't support native_tools kwarg)
+    if pydantic_agent:
+        try:
+            typed_response = await pydantic_agent.generate_response(
+                messages_list,
+                context={
+                    "user_id": state.get("user_id", "unknown"),
+                    "routing_confidence": str(state.get("routing_confidence", 0.0)),
+                    "refinement_attempt": str(refinement_attempts),
+                },
+            )
+            response = AIMessage(content=typed_response.content)
+            logger.info(f"Pydantic AI response generated, confidence: {typed_response.confidence}")
+
+            # Determine next_action based on verification
+            enable_verification = config.enable_verification if config else False
+            next_action = "verify" if enable_verification else "end"
+            return {**state, "messages": [response], "next_action": next_action}
+        except Exception as e:
+            logger.error(f"Pydantic AI response failed, falling back: {e}")
+            # Fall through to normal model invocation
+
+    # Get model name for capability lookup
+    model_name: str = getattr(model, "model_name", None) or getattr(model, "model", None) or "unknown"
+
+    # CRITICAL: Prefer selected_tool_ids when present (preserves MCP qualified names)
+    tool_selection = state.get("selected_tool_ids") or state.get("selected_tools")
+
+    # Parse tool selection for native vs builtin
+    native_configs: list[dict[str, Any]] = []
+    builtin_tool_ids: list[str] = []
+
+    if not tools_disabled and tool_selection and feature_flags.native_tools_enabled:
+        from mcp_server_langgraph.tools.native_handler import NativeToolHandler
+
+        handler = NativeToolHandler(model_name)
+
+        # Filter out web_search from native if kb_focus restricts it
+        filtered_selection = list(tool_selection)
+        if kb_focus == "kb_only":
+            # Don't allow native web_search when KB-only mode
+            filtered_selection = [t for t in tool_selection if "web_search" not in t]
+
+        if filtered_selection:
+            native_configs, builtin_tool_ids = handler.get_native_configs(
+                filtered_selection,
+                tool_preference,
+            )
+
+    elif not tools_disabled and tool_preference in ("auto", "native") and bound_tools and feature_flags.native_tools_enabled:
+        # Auto mode with no selection - derive from bound_tools
+        from mcp_server_langgraph.tools.native_handler import NativeToolHandler
+        from mcp_server_langgraph.tools.native_registry import get_native_for_builtin
+
+        handler = NativeToolHandler(model_name)
+
+        # Build candidate list from bound_tools that have native equivalents
+        native_candidates = []
+        for tool in bound_tools:
+            native_def = get_native_for_builtin(tool.name, handler.caps.native_provider or "")
+            if native_def:
+                native_candidates.append(tool.name)
+
+        # Filter out web_search if kb_focus restricts it
+        if kb_focus == "kb_only":
+            native_candidates = [t for t in native_candidates if t != "web_search"]
+
+        if native_candidates:
+            native_configs, _ = handler.get_native_configs(native_candidates, tool_preference)
+
     # Determine which model to use based on selected_tools (ADR-0099)
     selected_tool_names = state.get("selected_tools")
 
-    if selected_tool_names and len(selected_tool_names) > 0 and bound_tools:
+    if builtin_tool_ids and bound_tools:
+        # Match by name or full tool_id
+        filtered_tools = [
+            t for t in bound_tools if t.name in builtin_tool_ids or any(t.name in tid for tid in builtin_tool_ids)
+        ]
+        if filtered_tools and hasattr(model, "bind_tools"):
+            model_for_response = model.bind_tools(filtered_tools)
+            logger.info(
+                f"Dynamic tool binding: using {len(filtered_tools)} builtin tools, {len(native_configs)} native configs"
+            )
+        elif model_with_tools is not None:
+            model_for_response = model_with_tools
+        else:
+            model_for_response = model
+    elif selected_tool_names and len(selected_tool_names) > 0 and bound_tools:
         # Filter tools to only those selected by semantic search
         filtered_tools = [t for t in bound_tools if t.name in selected_tool_names]
 
@@ -559,38 +657,87 @@ async def _generate_response_impl(
         # No tools bound at all
         model_for_response = model
 
-    # Generate response
-    if pydantic_agent:
-        try:
-            typed_response = await pydantic_agent.generate_response(
-                messages_list,
-                context={
-                    "user_id": state.get("user_id", "unknown"),
-                    "routing_confidence": str(state.get("routing_confidence", 0.0)),
-                    "refinement_attempt": str(refinement_attempts),
-                },
-            )
-            from langchain_core.messages import AIMessage
+    # Generate response - PASS NATIVE CONFIGS if any
+    invoke_kwargs: dict[str, Any] = {}
+    if native_configs:
+        invoke_kwargs["native_tools"] = native_configs
+        logger.info(f"Passing {len(native_configs)} native tool config(s) to model")
 
-            response = AIMessage(content=typed_response.content)
-            logger.info(f"Pydantic AI response generated, confidence: {typed_response.confidence}")
-        except Exception as e:
-            logger.error(f"Pydantic AI response failed: {e}")
-            response = await model_for_response.ainvoke(messages_list)
-    else:
-        response = await model_for_response.ainvoke(messages_list)
+    response = await model_for_response.ainvoke(messages_list, **invoke_kwargs)
+
+    # Check for native tool results in response (v7)
+    # Native tools return results as content blocks or in additional_kwargs
+    from langchain_core.callbacks.manager import adispatch_custom_event
+
+    from mcp_server_langgraph.tools.native_handler import parse_native_results
+    from mcp_server_langgraph.tools.source_citation import extract_sources_from_message
+
+    native_tool_messages = parse_native_results(response)
+
+    # Determine verification setting
+    enable_verification = config.enable_verification if config else False
+
+    if native_tool_messages:
+        # Append native results directly (bypass use_tools routing)
+        logger.info(f"Detected {len(native_tool_messages)} native tool result(s)")
+
+        # Collect source citations from native web search results
+        sources = extract_sources_from_message(response)
+        if sources:
+            sources_data = [s.model_dump() for s in sources]
+            await adispatch_custom_event(
+                "sources_collected",
+                {"sources": sources_data},
+            )
+            logger.info(f"Collected {len(sources)} source citations from native tool results")
+
+        # CRITICAL: Route to verification if enabled, not just "end"
+        next_action = "verify" if enable_verification else "end"
+        return {
+            **state,
+            "messages": [response] + native_tool_messages,
+            "next_action": next_action,
+            "_native_configs_used": native_configs,  # For observability
+        }
+
+    # Check for native output in additional_kwargs (OpenAI Responses API)
+    has_native_output = bool(
+        native_configs and hasattr(response, "additional_kwargs") and response.additional_kwargs.get("native_output")
+    )
+
+    if has_native_output:
+        # Native tools are internally hosted - response complete!
+        logger.info("Native tool response complete via Responses API")
+
+        # Collect source citations from OpenAI Responses API results
+        sources = extract_sources_from_message(response)
+        if sources:
+            sources_data = [s.model_dump() for s in sources]
+            await adispatch_custom_event(
+                "sources_collected",
+                {"sources": sources_data},
+            )
+            logger.info(f"Collected {len(sources)} source citations from Responses API")
+
+        next_action = "verify" if enable_verification else "end"
+        return {
+            **state,
+            "messages": [response],
+            "next_action": next_action,
+            "_native_configs_used": native_configs,
+        }
 
     # Check if the LLM generated tool calls (when tool calling is enabled)
     # If tool_calls are present, route to use_tools to execute them
     tool_calls = getattr(response, "tool_calls", None)
     if tool_calls and len(tool_calls) > 0:
-        state["next_action"] = "use_tools"
+        next_action = "use_tools"
         logger.info(f"LLM generated {len(tool_calls)} tool call(s), routing to use_tools")
     else:
         # No tool calls - proceed with verification or end
-        state["next_action"] = "end"
+        next_action = "verify" if enable_verification else "end"
 
-    return {**state, "messages": [response]}
+    return {**state, "messages": [response], "next_action": next_action}
 
 
 def build_agent_graph(
@@ -827,6 +974,9 @@ def build_agent_graph(
 
     async def use_tools(state: AgentState) -> AgentState:
         """Execute tools based on LangChain tool calls."""
+        from langchain_core.callbacks.manager import adispatch_custom_event
+
+        from mcp_server_langgraph.tools.source_citation import collect_sources_from_messages
 
         messages = state["messages"]
         last_message = messages[-1]
@@ -840,41 +990,66 @@ def build_agent_graph(
 
         logger.info(f"Executing {len(tool_calls)} tools")
 
+        # Get tool preference from state (v7: native tool fallback support)
+        tool_preference: str = state.get("tool_preference", "auto") or "auto"
+
         # Execute tools (parallel execution controlled by config.enable_parallel_execution)
         if config.enable_parallel_execution and len(tool_calls) > 1:
-            tool_messages = await _execute_tools_parallel(tool_calls, config.max_parallel_tools)
+            tool_messages = await _execute_tools_parallel(tool_calls, config.max_parallel_tools, tool_preference)
         else:
-            tool_messages = await _execute_tools_serial(tool_calls)
+            tool_messages = await _execute_tools_serial(tool_calls, tool_preference)
+
+        # Collect source citations from web_search tool results
+        sources = collect_sources_from_messages(tool_messages)
+        if sources:
+            # Dispatch event for SSE streaming (chat.py handles sources_collected)
+            sources_data = [s.model_dump() for s in sources]
+            await adispatch_custom_event(
+                "sources_collected",
+                {"sources": sources_data},
+            )
+            logger.info(f"Collected {len(sources)} source citations from tool results")
 
         return {**state, "messages": tool_messages, "next_action": "respond"}
 
-    async def _execute_tools_serial(tool_calls: list[dict]) -> list:  # type: ignore[type-arg]
-        """Execute tools serially."""
+    async def _execute_tools_serial(
+        tool_calls: list[dict[str, Any]],
+        tool_preference: str = "auto",
+    ) -> list[Any]:
+        """Execute tools serially with fallback chain support (v7).
+
+        When native tools are enabled and tool_preference allows, uses the
+        fallback chain to automatically fall back to builtin tools on failure.
+
+        Args:
+            tool_calls: List of tool calls from the LLM
+            tool_preference: User preference (auto/native/builtin/mcp)
+        """
         from langchain_core.messages import ToolMessage
 
-        from mcp_server_langgraph.tools import get_tool_by_name
+        from mcp_server_langgraph.core.tool_executor import execute_tool_with_fallback
 
         tool_messages: list[ToolMessage] = []
+        model_name = effective_settings.model_name
+
         for tool_call in tool_calls:
             tool_name = tool_call.get("name", "unknown")
             tool_call_id = tool_call.get("id", str(len(tool_messages)))
             tool_args = tool_call.get("args", {})
 
-            try:
-                tool = get_tool_by_name(tool_name)
-                if tool is None:
-                    result_content = f"Error: Tool '{tool_name}' not found"
-                    logger.error(f"Tool '{tool_name}' not found")
-                else:
-                    logger.info(f"Invoking tool '{tool_name}'")
-                    if hasattr(tool, "ainvoke"):
-                        result_content = await tool.ainvoke(tool_args)
-                    else:
-                        result_content = tool.invoke(tool_args)
-                    logger.info(f"Tool '{tool_name}' executed successfully")
-            except Exception as e:
-                result_content = f"Error executing tool '{tool_name}': {e!s}"
-                logger.error(f"Tool execution failed: {tool_name}", exc_info=True)
+            # Use fallback chain for execution (v7)
+            result_content, execution_source = await execute_tool_with_fallback(
+                tool_name=tool_name,
+                tool_args=tool_args,
+                tool_preference=tool_preference,
+                model_name=model_name,
+            )
+
+            if execution_source != "error":
+                logger.info(
+                    f"Tool '{tool_name}' executed via {execution_source}",
+                    extra={"tool_name": tool_name, "source": execution_source},
+                )
 
             tool_message = ToolMessage(
                 content=str(result_content),
@@ -885,14 +1060,28 @@ def build_agent_graph(
 
         return tool_messages
 
-    async def _execute_tools_parallel(tool_calls: list[dict], max_parallel: int) -> list:  # type: ignore[type-arg]
-        """Execute tools in parallel."""
+    async def _execute_tools_parallel(
+        tool_calls: list[dict[str, Any]],
+        max_parallel: int,
+        tool_preference: str = "auto",
+    ) -> list[Any]:
+        """Execute tools in parallel with fallback chain support (v7).
+
+        When native tools are enabled and tool_preference allows, uses the
+        fallback chain to automatically fall back to builtin tools on failure.
+
+        Args:
+            tool_calls: List of tool calls from the LLM
+            max_parallel: Maximum number of tools to execute in parallel
+            tool_preference: User preference (auto/native/builtin/mcp)
+        """
         from langchain_core.messages import ToolMessage
 
         from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation
-        from mcp_server_langgraph.tools import get_tool_by_name
+        from mcp_server_langgraph.core.tool_executor import execute_tool_with_fallback
 
         executor = ParallelToolExecutor(max_parallelism=max_parallel)
+        model_name = effective_settings.model_name
 
         invocations = [
             ToolInvocation(
@@ -905,12 +1094,19 @@ def build_agent_graph(
         ]
 
         async def execute_single_tool(tool_name: str, arguments: dict) -> Any:  # type: ignore[type-arg]
-            tool = get_tool_by_name(tool_name)
-            if tool is None:
-                raise ValueError(f"Tool '{tool_name}' not found")
-            if hasattr(tool, "ainvoke"):
-                return await tool.ainvoke(arguments)
-            return tool.invoke(arguments)
+            """Execute a single tool via the fallback chain (v7)."""
+            result_content, execution_source = await execute_tool_with_fallback(
+                tool_name=tool_name,
+                tool_args=arguments,
+                tool_preference=tool_preference,
+                model_name=model_name,
+            )
+            if execution_source != "error":
+                logger.debug(
+                    f"Tool '{tool_name}' executed via {execution_source} (parallel)",
+                    extra={"tool_name": tool_name, "source": execution_source},
+                )
+            return result_content
 
         try:
             results = await executor.execute_parallel(invocations, execute_single_tool)
@@ -926,13 +1122,14 @@ def build_agent_graph(
             return tool_messages
         except Exception as e:
             logger.error(f"Parallel tool execution failed: {e}", exc_info=True)
-            return await _execute_tools_serial(tool_calls)
+            return await _execute_tools_serial(tool_calls, tool_preference)
 
     async def generate_response(state: AgentState) -> AgentState:
         """Generate final response using LLM with dynamic tool binding (ADR-0099).
 
         When semantic tool selection is enabled, this node uses only the tools
         selected by the retrieve_tools node, reducing token usage significantly.
+        Also supports v7 native tools (Anthropic, Google, OpenAI via Responses API).
         """
         return await _generate_response_impl(
             state=dict(state),
@@ -940,6 +1137,7 @@ def build_agent_graph(
             bound_tools=bound_tools,
             model_with_tools=model_with_tools,
             pydantic_agent=pydantic_agent,
+            config=config,
         )  # type: ignore[return-value]
 
     async def verify_response(state: AgentState) -> AgentState:

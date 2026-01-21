@@ -8,6 +8,7 @@ Provides standardized WebSocket infrastructure for all endpoints including:
 - Server-initiated heartbeat
 - Rate limiting
 - OpenTelemetry metrics and tracing
+- BroadcasterMixin for standardized subscription state management
 
 Usage:
     from mcp_server_langgraph.websocket import (
@@ -15,6 +16,7 @@ Usage:
         WebSocketConfig,
         AuthUser,
         MessageEnvelope,
+        BroadcasterMixin,
     )
 
     class MyWebSocket(WebSocketBase):
@@ -28,6 +30,18 @@ Usage:
         async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
             # Handle custom message types
             return None
+
+    # For handlers with broadcaster integration:
+    class MyBroadcastHandler(WebSocketBase, BroadcasterMixin):
+        def __init__(self, config, broadcaster):
+            super().__init__(config=config)
+            self._broadcaster = broadcaster
+
+        async def on_connect(self, user):
+            await self.subscribe(user_id=user.id)
+
+        async def on_disconnect(self):
+            await self.unsubscribe()
 """
 
 from typing import Any
@@ -161,6 +175,11 @@ def __getattr__(name: str) -> Any:
         from mcp_server_langgraph.websocket.protocols import PROTOCOL_VERSION
 
         return PROTOCOL_VERSION
+    # Mixins
+    if name == "BroadcasterMixin":
+        from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
+
+        return BroadcasterMixin
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -219,4 +238,6 @@ __all__ = [
     "validate_protocol_version",
     "is_version_compatible",
     "PROTOCOL_VERSION",
+    # Mixins
+    "BroadcasterMixin",
 ]

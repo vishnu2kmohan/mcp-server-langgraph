@@ -204,6 +204,8 @@ class Settings(BaseSettings):
     )
 
     # Dedicated Models for Cost/Performance Optimization
+    # MIGRATION: use_dedicated_*_model flags also available in FeatureFlags as
+    # FF_DEDICATED_SUMMARIZATION_MODEL_ENABLED and FF_DEDICATED_VERIFICATION_MODEL_ENABLED
     # Summarization Model (lighter/cheaper model for context compaction)
     use_dedicated_summarization_model: bool = True
     summarization_model_name: str | None = "gemini-2.5-flash"  # Lighter/cheaper for summarization
@@ -237,20 +239,24 @@ class Settings(BaseSettings):
 
     # Agent
     max_iterations: int = 10
+    # MIGRATION: enable_checkpointing also available as FF_CHECKPOINTING_ENABLED
     enable_checkpointing: bool = True
 
     # Agentic Loop Configuration (Anthropic Best Practices)
     # Context Management
+    # MIGRATION: enable_context_compaction also available as FF_CONTEXT_COMPACTION_ENABLED
     enable_context_compaction: bool = True  # Enable conversation compaction
     compaction_threshold: int = 8000  # Token count that triggers compaction
     target_after_compaction: int = 4000  # Target token count after compaction
     recent_message_count: int = 5  # Number of recent messages to keep uncompacted
 
     # Work Verification
+    # MIGRATION: enable_verification also available as FF_VERIFICATION_ENABLED
     enable_verification: bool = True  # Enable LLM-as-judge verification
     verification_quality_threshold: float = 0.7  # Minimum score to pass (0.0-1.0)
     max_refinement_attempts: int = 3  # Maximum refinement iterations
     verification_mode: str = "standard"  # "standard", "strict", "lenient"
+    # MIGRATION: enable_visual_verification also available as FF_VISUAL_VERIFICATION_ENABLED
     enable_visual_verification: bool = False  # Enable visual verification with screenshots
     visual_verification_text_weight: float = 0.6  # Weight for text verification (0.0-1.0)
     visual_verification_visual_weight: float = 0.4  # Weight for visual verification (0.0-1.0)
@@ -258,6 +264,7 @@ class Settings(BaseSettings):
     visual_verification_url_priority: str = "last"  # "first", "last", or "all"
 
     # Dynamic Context Loading (Just-in-Time) - Anthropic Best Practice
+    # MIGRATION: enable_dynamic_context_loading also available as FF_DYNAMIC_CONTEXT_LOADING_ENABLED
     enable_dynamic_context_loading: bool = False  # Enable semantic search-based context loading
     qdrant_url: str = "localhost"  # Qdrant server URL
     qdrant_port: int = 6333  # Qdrant server port
@@ -291,16 +298,70 @@ class Settings(BaseSettings):
     enable_multi_tenant_isolation: bool = False  # Use separate collections per tenant
 
     # Parallel Tool Execution - Anthropic Best Practice
+    # MIGRATION: enable_parallel_execution also available as FF_PARALLEL_TOOL_EXECUTION_ENABLED
     enable_parallel_execution: bool = False  # Enable parallel tool execution
     max_parallel_tools: int = 5  # Maximum concurrent tool executions
 
-    # Semantic Search for Tools, Skills, and Memories - ADR-0099
-    # Uses vector embeddings to select relevant capabilities before binding to LLM
-    # Reduces token usage with many tools (50+) by 34-64% (Anthropic Tool Search Tool pattern)
-    # Graph nodes added: retrieve_tools, retrieve_skills, retrieve_memories
-    enable_semantic_tool_search: bool = False  # FF_ENABLE_SEMANTIC_TOOL_SEARCH
-    enable_semantic_skill_search: bool = False  # FF_ENABLE_SEMANTIC_SKILL_SEARCH
-    enable_semantic_memory_search: bool = False  # FF_ENABLE_SEMANTIC_MEMORY_SEARCH
+    # ==========================================================================
+    # Native LLM Provider Tools Configuration (v7)
+    # ==========================================================================
+    # Configuration for native tool rate limits, timeouts, and circuit breaker.
+    # These are operational tuning parameters, not feature toggles.
+    # Feature toggles remain in FeatureFlags (e.g., native_tools_enabled).
+    #
+    # Native Tool Rate Limits
+    # Per-provider rate limits for native tool API calls.
+    # These limits help prevent hitting provider quotas and ensure fair usage.
+    native_tool_rate_limit_anthropic: int = Field(
+        default=30,
+        ge=1,
+        le=1000,
+        description="Rate limit for Anthropic native tools (requests per minute). "
+        "Default 30 rpm aligns with Anthropic's web_search tier limits.",
+    )
+    native_tool_rate_limit_google: int = Field(
+        default=60,
+        ge=1,
+        le=1000,
+        description="Rate limit for Google native tools (requests per minute). "
+        "Default 60 rpm for Google grounded search.",
+    )
+    native_tool_rate_limit_openai: int = Field(
+        default=60,
+        ge=1,
+        le=1000,
+        description="Rate limit for OpenAI native tools (requests per minute). "
+        "Default 60 rpm for OpenAI Responses API native tools.",
+    )
+    # Native Tool Timeout
+    native_tool_timeout_seconds: int = Field(
+        default=30,
+        ge=5,
+        le=120,
+        description="Timeout for native tool execution in seconds (5-120). "
+        "Native tools may be slower than builtins due to external API calls.",
+    )
+    # Native Tool Circuit Breaker
+    # Prevents cascading failures by temporarily disabling native tools
+    # when a provider experiences consecutive failures.
+    native_tool_circuit_breaker_threshold: int = Field(
+        default=5,
+        ge=1,
+        le=20,
+        description="Number of consecutive failures before circuit breaker opens (1-20). "
+        "Higher values allow more retries before disabling native tools.",
+    )
+    native_tool_circuit_breaker_reset_seconds: int = Field(
+        default=60,
+        ge=10,
+        le=600,
+        description="Seconds before circuit breaker resets to half-open state (10-600). "
+        "After this time, native tools will be tried again.",
+    )
+
+    # Semantic Search Configuration - ADR-0099
+    # Feature toggles moved to FeatureFlags (FF_ENABLE_SEMANTIC_TOOL_SEARCH, etc.)
+    # These are operational configuration values for semantic search
     max_selected_tools: int = 10  # Maximum tools to select via semantic search
     max_selected_skills: int = 5  # Maximum skills to select via semantic search
     max_retrieved_memories: int = 10  # Maximum memories to retrieve via semantic search
@@ -320,6 +381,7 @@ class Settings(BaseSettings):
     streaming_token_validation_interval: int = 300  # Interval in seconds for JWT token validation during connections (5 min)
 
     # Enhanced Note-Taking - Anthropic Best Practice
+    # MIGRATION: enable_llm_extraction also available as FF_LLM_EXTRACTION_ENABLED
     enable_llm_extraction: bool = False  # Use LLM for structured note extraction
     extraction_categories: list[str] = [
         "decisions",
@@ -332,6 +394,7 @@ class Settings(BaseSettings):
 
     # Code Execution Configuration (Anthropic Best Practice - Progressive Disclosure)
     # SECURITY: Disabled by default - must be explicitly enabled
+    # MIGRATION: enable_code_execution also available as FF_CODE_EXECUTION_ENABLED
     enable_code_execution: bool = False  # Enable sandboxed code execution
     code_execution_backend: str = "process"  # Backend: docker-engine, kubernetes, process
     code_execution_timeout: int = 30  # Execution timeout in seconds (1-600)
@@ -445,6 +508,7 @@ class Settings(BaseSettings):
     code_execution_k8s_job_ttl: int = 300  # Kubernetes job TTL in seconds (cleanup)
 
     # Sandbox tool surface (high-risk tools like bash/edit/write/computer-use)
+    # MIGRATION: enable_sandbox_tools also available as FF_SANDBOX_TOOLS_ENABLED
     enable_sandbox_tools: bool = False
 
     # Conversation Checkpointing (for distributed state across replicas)

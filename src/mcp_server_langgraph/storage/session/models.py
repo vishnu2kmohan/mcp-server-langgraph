@@ -45,6 +45,10 @@ class Message(BaseModel):
     content: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     metadata: dict[str, Any] = Field(default_factory=dict)
+    sources: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Source citations for the message (web search results, KB references)",
+    )
 
 
 class Session(BaseModel):

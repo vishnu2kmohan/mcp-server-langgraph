@@ -200,10 +200,9 @@ class MCPTaskWebSocketHandler(WebSocketBase):
         if task_id:
             self.subscriptions.discard(task_id)
 
-        return MessageEnvelope(
-            type="unsubscribed",
-            payload={"task_id": task_id},
-            id=message.id,
+        return self.create_unsubscribed_response(
+            correlation_id=message.id,
+            extra_payload={"task_id": task_id},
         )
 
     async def _handle_refresh(self, message: MessageEnvelope) -> MessageEnvelope:

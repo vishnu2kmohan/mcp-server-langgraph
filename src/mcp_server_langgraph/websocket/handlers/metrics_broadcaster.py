@@ -463,7 +463,6 @@ class MetricsHandler:
         self._broadcaster = broadcaster
         self._metrics = metrics
         self._websocket: Any = None
-        self._user_id: str | None = None
         self._session_id: str | None = None
         self._subscribed: bool = False
 
@@ -492,7 +491,6 @@ class _MetricsInnerHandler:
         self._broadcaster = broadcaster
         self._ws_metrics = metrics
         self._websocket: Any = None
-        self._user_id: str | None = None
         self._session_id: str | None = None
         self._subscribed: bool = False
 
@@ -514,14 +512,14 @@ class _MetricsInnerHandler:
             try:
                 payload = decode_jwt_token(token)
                 if payload:
-                    self._user_id = payload.get("sub") or payload.get("user_id")
+                    self.user_id = payload.get("sub") or payload.get("user_id")
             except Exception:
                 pass
 
         # Subscribe to broadcaster
         await self._broadcaster.subscribe(
             websocket,
-            user_id=self._user_id,
+            user_id=self.user_id,
             session_id=self._session_id,
         )
         self._subscribed = True
@@ -555,7 +553,7 @@ class _MetricsInnerHandler:
                 await self._broadcaster.unsubscribe(self._websocket)
             await self._broadcaster.subscribe(
                 self._websocket,
-                user_id=self._user_id,
+                user_id=self.user_id,
                 session_id=self._session_id,
             )
             self._subscribed = True

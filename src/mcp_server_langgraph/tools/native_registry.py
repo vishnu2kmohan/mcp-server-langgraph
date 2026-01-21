@@ -62,6 +62,22 @@ NATIVE_TOOLS: dict[tuple[str, str], NativeToolDef] = {
         description="Execute code in Anthropic's remote sandbox",
         fallback_builtin="execute_python",
     ),
+    # OpenAI native tools (via Responses API)
+    # Note: Uses web_search_preview until LiteLLM #14011 is fixed for GA web_search
+    ("web_search", "openai"): NativeToolDef(
+        name="web_search",
+        provider="openai",
+        provider_type="web_search_preview",
+        description="Search the web using OpenAI's native tool via Responses API",
+        fallback_builtin="web_search",
+    ),
+    ("code_execution", "openai"): NativeToolDef(
+        name="code_execution",
+        provider="openai",
+        provider_type="code_interpreter",
+        description="Execute code in OpenAI's container sandbox via Responses API",
+        fallback_builtin="execute_python",
+    ),
 }
 
 

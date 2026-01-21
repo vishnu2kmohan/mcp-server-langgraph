@@ -95,8 +95,6 @@ class NotificationWebSocketHandler(WebSocketBase):
         """
         super().__init__(config=config, metrics=metrics)
         self._broadcaster = broadcaster
-        self._user_id: str | None = None
-
     async def on_connect(self, user: AuthUser) -> None:
         """
         Handle connection establishment.
@@ -106,13 +104,11 @@ class NotificationWebSocketHandler(WebSocketBase):
         Args:
             user: The authenticated user.
         """
-        self._user_id = user.id
-
         if self._websocket:
-            await self._broadcaster.subscribe(self._websocket, user_id=self._user_id)
+            await self._broadcaster.subscribe(self._websocket, user_id=self.user_id)
             logger.info(
-                f"Notification stream connected: user={self._user_id}",
-                extra={"user_id": self._user_id},
+                f"Notification stream connected: user={self.user_id}",
+                extra={"user_id": self.user_id},
             )
 
     async def on_disconnect(self) -> None:
@@ -124,8 +120,8 @@ class NotificationWebSocketHandler(WebSocketBase):
         if self._websocket:
             await self._broadcaster.unsubscribe(self._websocket)
             logger.info(
-                f"Notification stream disconnected: user={self._user_id}",
-                extra={"user_id": self._user_id},
+                f"Notification stream disconnected: user={self.user_id}",
+                extra={"user_id": self.user_id},
             )
 
     async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
@@ -147,6 +143,6 @@ class NotificationWebSocketHandler(WebSocketBase):
         # Ping/pong is handled by the base class
         logger.debug(
             f"Received message type: {message.type}",
-            extra={"message_type": message.type, "user_id": self._user_id},
+            extra={"message_type": message.type, "user_id": self.user_id},
         )
         return None
