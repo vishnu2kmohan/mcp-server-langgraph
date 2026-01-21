@@ -594,23 +594,26 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
  * The input-group container is used for password fields with visibility toggle.
  * It must have identical dimensions to standalone inputs (username field).
  *
- * CRITICAL: Use overflow:visible so focus ring isn't clipped.
- * The toggle button is positioned absolutely inside the container.
+ * CRITICAL: Use position:relative so utilities wrapper can be absolutely positioned.
+ * Using high-specificity selectors to override PatternFly defaults.
  */
 .pf-c-input-group,
 .pf-v5-c-input-group,
 .pf-c-text-input-group,
-.pf-v5-c-text-input-group {
-  display: flex !important;
-  align-items: center !important;
-  position: relative !important;  /* For absolute positioning of toggle button */
+.pf-v5-c-text-input-group,
+#kc-form .pf-v5-c-text-input-group,
+#kc-form .pf-c-text-input-group,
+#kc-form-login .pf-v5-c-text-input-group,
+#kc-form-login .pf-c-text-input-group {
+  display: block !important;  /* CHANGED: Use block, not flex - let children handle layout */
+  position: relative !important;  /* CRITICAL: Positioning context for absolute utilities */
   width: 100% !important;
   max-width: 100% !important;
   background-color: var(--kc-input-bg) !important;
   background: var(--kc-input-bg) !important;
   border: none !important;
   border-radius: var(--kc-radius-md) !important;  /* 6px - STYLE.md aligned */
-  overflow: visible !important;  /* CHANGED: Allow focus ring to show outside container */
+  overflow: visible !important;  /* Allow focus ring to show outside container */
   box-shadow: none !important;
   outline: none !important;
   padding: 0 !important;  /* No wrapper padding - input handles its own padding */
@@ -629,15 +632,22 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
   --pf-c-input-group--BorderColor: transparent !important;
   --pf-c-text-input-group--BorderWidth: 0 !important;
   --pf-c-text-input-group--BorderColor: transparent !important;
+  /* Override display-related variables */
+  --pf-v5-c-text-input-group--Display: block !important;
+  --pf-c-text-input-group--Display: block !important;
 }
 
-/* Text input group main wrapper - reset any extra padding */
+/* Text input group main wrapper - fills container, contains the actual input
+ * Using high-specificity selectors to override PatternFly defaults.
+ */
 .pf-c-text-input-group__main,
-.pf-v5-c-text-input-group__main {
-  display: flex !important;
-  align-items: center !important;
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
+.pf-v5-c-text-input-group__main,
+#kc-form .pf-v5-c-text-input-group__main,
+#kc-form .pf-c-text-input-group__main,
+#kc-form-login .pf-v5-c-text-input-group__main,
+#kc-form-login .pf-c-text-input-group__main {
+  display: block !important;  /* Block to fill container width */
+  width: 100% !important;
   padding: 0 !important;
   margin: 0 !important;
   background: transparent !important;
@@ -645,59 +655,86 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
   min-height: var(--kc-size-input) !important;  /* Match standalone input min-height */
   height: 100% !important;
   border-radius: var(--kc-radius-md) !important;  /* Match container radius */
-  overflow: hidden !important;  /* Clip content to rounded corners */
+  box-sizing: border-box !important;
 }
 
-/* Text input inside text-input-group - MUST match standalone input exactly */
+/* Text input inside text-input-group - MUST match standalone input exactly
+ * Using high-specificity selectors to override PatternFly defaults.
+ */
 .pf-c-text-input-group__text-input,
-.pf-v5-c-text-input-group__text-input {
-  flex: 1 1 auto !important;
+.pf-v5-c-text-input-group__text-input,
+#kc-form .pf-v5-c-text-input-group__text-input,
+#kc-form .pf-c-text-input-group__text-input,
+#kc-form-login .pf-v5-c-text-input-group__text-input,
+#kc-form-login .pf-c-text-input-group__text-input,
+.pf-v5-c-text-input-group input[type="password"],
+.pf-c-text-input-group input[type="password"] {
+  display: block !important;
   width: 100% !important;
-  min-width: 0 !important;
   /* Same padding as standalone input, extra right padding for toggle button */
   padding: 0.625rem 0.875rem !important;
   padding-right: 2.75rem !important;  /* Space for absolute-positioned toggle button */
   min-height: var(--kc-size-input) !important;  /* Match standalone input */
+  height: var(--kc-size-input) !important;  /* Fixed height */
   background: transparent !important;
   border: none !important;
+  border-radius: var(--kc-radius-md) !important;
   color: var(--kc-input-text) !important;
   font-family: var(--kc-font-family) !important;
   font-size: var(--kc-font-size-base) !important;
   line-height: 1.25 !important;  /* Match standalone input line-height */
   box-sizing: border-box !important;
+  outline: none !important;
 }
 
-/* Input inside input-group - MUST match standalone input exactly */
+/* Input inside input-group - MUST match standalone input exactly
+ * Using high-specificity selectors to override PatternFly defaults.
+ */
 .pf-c-input-group .pf-c-form-control,
 .pf-v5-c-input-group .pf-v5-c-form-control,
 .pf-c-input-group input,
 .pf-v5-c-input-group input,
 .pf-c-text-input-group input,
-.pf-v5-c-text-input-group input {
-  /* Same styling as standalone inputs */
-  border-radius: 0 !important;  /* Container has border-radius */
+.pf-v5-c-text-input-group input,
+#kc-form .pf-v5-c-text-input-group input,
+#kc-form .pf-c-text-input-group input,
+#kc-form-login .pf-v5-c-text-input-group input,
+#kc-form-login .pf-c-text-input-group input {
+  /* Block display to fill container width */
+  display: block !important;
+  border-radius: var(--kc-radius-md) !important;  /* Match standalone input */
   background: transparent !important;
   background-color: transparent !important;
-  flex: 1 1 auto !important;
   width: 100% !important;
-  min-width: 0 !important;  /* Allow shrinking */
   min-height: var(--kc-size-input) !important;  /* Match standalone input */
+  height: var(--kc-size-input) !important;  /* Fixed height */
   margin: 0 !important;
   /* Same padding as standalone input, extra right padding for toggle button */
   padding: 0.625rem 0.875rem !important;
   padding-right: 2.75rem !important;  /* Space for absolute-positioned toggle button */
   box-sizing: border-box !important;
-  transition: box-shadow var(--kc-duration-normal) var(--kc-easing-out) !important;
+  border: none !important;
+  outline: none !important;
+  color: var(--kc-input-text) !important;
+  font-family: var(--kc-font-family) !important;
+  font-size: var(--kc-font-size-base) !important;
 }
 
-/* Focus ring on INPUT-GROUP CONTAINER when child has focus (not inner input) */
+/* Focus ring on INPUT-GROUP CONTAINER when child has focus (not inner input)
+ * Using high-specificity selectors to override PatternFly defaults.
+ */
 .pf-c-input-group:focus-within,
 .pf-v5-c-input-group:focus-within,
 .pf-c-text-input-group:focus-within,
-.pf-v5-c-text-input-group:focus-within {
+.pf-v5-c-text-input-group:focus-within,
+#kc-form .pf-v5-c-text-input-group:focus-within,
+#kc-form .pf-c-text-input-group:focus-within,
+#kc-form-login .pf-v5-c-text-input-group:focus-within,
+#kc-form-login .pf-c-text-input-group:focus-within {
   /* Outer focus ring - matches standalone input focus styling */
   box-shadow: 0 0 0 2px var(--kc-focus-ring) !important;
   outline: none !important;
+  border: none !important;
 }
 
 /* Remove focus ring from inner input - container handles it */
@@ -713,32 +750,50 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
   outline: none !important;
 }
 
-/* Password visibility toggle wrapper - positioned INSIDE the input field */
+/* Password visibility toggle wrapper - positioned INSIDE the input field
+ * Using high-specificity selectors to override PatternFly defaults
+ */
 .pf-c-input-group__item,
 .pf-v5-c-input-group__item,
 .pf-c-text-input-group__utilities,
-.pf-v5-c-text-input-group__utilities {
+.pf-v5-c-text-input-group__utilities,
+#kc-form .pf-v5-c-text-input-group__utilities,
+#kc-form .pf-c-text-input-group__utilities,
+#kc-form-login .pf-v5-c-text-input-group__utilities,
+#kc-form-login .pf-c-text-input-group__utilities,
+.pf-v5-c-text-input-group > .pf-v5-c-text-input-group__utilities,
+.pf-c-text-input-group > .pf-c-text-input-group__utilities {
   background: transparent !important;
   background-color: transparent !important;
   border: none !important;
   border-left: none !important;
   box-shadow: none !important;
-  /* Position inside the input field */
+  /* CRITICAL: Position INSIDE the input field - remove from flex flow */
   position: absolute !important;
   right: 0 !important;
   top: 0 !important;
   bottom: 0 !important;
+  left: auto !important;  /* Ensure it's anchored to right */
+  width: auto !important;  /* Don't stretch */
+  flex: 0 0 auto !important;  /* Don't participate in flex sizing */
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   margin: 0 !important;
   padding: 0 !important;
-  z-index: 1 !important;  /* Above the input */
+  z-index: 10 !important;  /* Above the input */
+  /* Override PatternFly variables */
+  --pf-v5-c-text-input-group__utilities--MarginLeft: 0 !important;
+  --pf-c-text-input-group__utilities--MarginLeft: 0 !important;
 }
 
-/* Toggle button base styles */
+/* Toggle button base styles - includes both pf-m-control AND pf-m-plain variants */
 .pf-c-button.pf-m-control,
-.pf-v5-c-button.pf-m-control {
+.pf-v5-c-button.pf-m-control,
+.pf-c-button.pf-m-plain,
+.pf-v5-c-button.pf-m-plain,
+.pf-v5-c-text-input-group__utilities button,
+.pf-c-text-input-group__utilities button {
   background: transparent !important;
   background-color: transparent !important;
   border: none !important;
@@ -749,7 +804,11 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
 }
 
 .pf-c-button.pf-m-control:hover,
-.pf-v5-c-button.pf-m-control:hover {
+.pf-v5-c-button.pf-m-control:hover,
+.pf-c-button.pf-m-plain:hover,
+.pf-v5-c-button.pf-m-plain:hover,
+.pf-v5-c-text-input-group__utilities button:hover,
+.pf-c-text-input-group__utilities button:hover {
   color: var(--kc-text-secondary) !important;
   background: transparent !important;
 }
@@ -757,7 +816,13 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
 .pf-c-button.pf-m-control:focus,
 .pf-v5-c-button.pf-m-control:focus,
 .pf-c-button.pf-m-control:focus-visible,
-.pf-v5-c-button.pf-m-control:focus-visible {
+.pf-v5-c-button.pf-m-control:focus-visible,
+.pf-c-button.pf-m-plain:focus,
+.pf-v5-c-button.pf-m-plain:focus,
+.pf-c-button.pf-m-plain:focus-visible,
+.pf-v5-c-button.pf-m-plain:focus-visible,
+.pf-v5-c-text-input-group__utilities button:focus,
+.pf-c-text-input-group__utilities button:focus {
   outline: none !important;
   box-shadow: none !important;
 }
@@ -794,13 +859,23 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
   content: none !important;
 }
 
-/* Password toggle icon styling - consistent sizing for both states */
+/* Password toggle icon styling - consistent sizing for both states
+ * Includes both pf-m-control AND pf-m-plain variants used by different PatternFly versions.
+ */
 .pf-c-button.pf-m-control svg,
 .pf-v5-c-button.pf-m-control svg,
+.pf-c-button.pf-m-plain svg,
+.pf-v5-c-button.pf-m-plain svg,
 .pf-c-button.pf-m-control .pf-v5-c-icon,
 .pf-v5-c-button.pf-m-control .pf-v5-c-icon,
+.pf-c-button.pf-m-plain .pf-v5-c-icon,
+.pf-v5-c-button.pf-m-plain .pf-v5-c-icon,
 .pf-c-button.pf-m-control i,
-.pf-v5-c-button.pf-m-control i {
+.pf-v5-c-button.pf-m-control i,
+.pf-c-button.pf-m-plain i,
+.pf-v5-c-button.pf-m-plain i,
+.pf-v5-c-text-input-group__utilities button svg,
+.pf-c-text-input-group__utilities button svg {
   width: var(--kc-size-icon) !important;  /* 16px */
   height: var(--kc-size-icon) !important;  /* 16px */
   font-size: var(--kc-size-icon) !important;  /* 16px */
@@ -811,9 +886,17 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
 
 /* Ensure toggle button has FIXED width to prevent layout shift between icon states
  * The Eye and EyeOff icons may have slightly different widths, so we fix the button size.
+ *
+ * NOTE: Button is NOT position:absolute - the utilities WRAPPER handles absolute positioning.
+ * Button uses position:relative (set below) for pseudo-element support.
+ * This includes both pf-m-control AND pf-m-plain variants used by different PatternFly versions.
  */
 .pf-c-button.pf-m-control,
-.pf-v5-c-button.pf-m-control {
+.pf-v5-c-button.pf-m-control,
+.pf-c-button.pf-m-plain,
+.pf-v5-c-button.pf-m-plain,
+.pf-v5-c-text-input-group__utilities button,
+.pf-c-text-input-group__utilities button {
   /* Fixed dimensions to prevent any shift */
   width: var(--kc-size-input) !important;  /* 40px */
   min-width: var(--kc-size-input) !important;  /* 40px */
@@ -824,16 +907,17 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  /* Positioning */
-  position: absolute !important;
-  right: 0 !important;
-  top: 0 !important;
-  bottom: 0 !important;
+  /* NO position:absolute here - wrapper handles positioning
+   * position:relative is set in the next rule block for pseudo-element support */
   transform: none !important;
   /* No padding variance */
   padding: 0 !important;
   margin: 0 !important;
   cursor: pointer !important;
+  /* Reset background */
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
 }
 
 /* =============================================================================
@@ -850,9 +934,15 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
  * - aria-label="Show password" = password IS hidden → show SLASHED eye
  */
 
-/* Base: position the button for pseudo-element replacement */
+/* Base: position the button for pseudo-element replacement
+ * Includes both pf-m-control AND pf-m-plain variants used by different PatternFly versions.
+ */
 .pf-c-button.pf-m-control,
-.pf-v5-c-button.pf-m-control {
+.pf-v5-c-button.pf-m-control,
+.pf-c-button.pf-m-plain,
+.pf-v5-c-button.pf-m-plain,
+.pf-v5-c-text-input-group__utilities button,
+.pf-c-text-input-group__utilities button {
   position: relative !important;
   overflow: visible !important;
 }
@@ -860,8 +950,14 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
 /* Hide the original PatternFly SVG icon completely */
 .pf-c-button.pf-m-control svg,
 .pf-v5-c-button.pf-m-control svg,
+.pf-c-button.pf-m-plain svg,
+.pf-v5-c-button.pf-m-plain svg,
 .pf-c-button.pf-m-control .pf-v5-c-icon,
-.pf-v5-c-button.pf-m-control .pf-v5-c-icon {
+.pf-v5-c-button.pf-m-control .pf-v5-c-icon,
+.pf-c-button.pf-m-plain .pf-v5-c-icon,
+.pf-v5-c-button.pf-m-plain .pf-v5-c-icon,
+.pf-v5-c-text-input-group__utilities button svg,
+.pf-c-text-input-group__utilities button svg {
   opacity: 0 !important;
   visibility: hidden !important;
   position: absolute !important;
@@ -869,7 +965,11 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
 
 /* Create the replacement icon container */
 .pf-c-button.pf-m-control::before,
-.pf-v5-c-button.pf-m-control::before {
+.pf-v5-c-button.pf-m-control::before,
+.pf-c-button.pf-m-plain::before,
+.pf-v5-c-button.pf-m-plain::before,
+.pf-v5-c-text-input-group__utilities button::before,
+.pf-c-text-input-group__utilities button::before {
   content: "" !important;
   display: block !important;
   width: var(--kc-size-icon) !important;  /* 16px */
@@ -885,6 +985,10 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
  */
 .pf-c-button.pf-m-control[aria-label*="Hide"]::before,
 .pf-v5-c-button.pf-m-control[aria-label*="Hide"]::before,
+.pf-c-button.pf-m-plain[aria-label*="Hide"]::before,
+.pf-v5-c-button.pf-m-plain[aria-label*="Hide"]::before,
+.pf-v5-c-text-input-group__utilities button[aria-label*="Hide"]::before,
+.pf-c-text-input-group__utilities button[aria-label*="Hide"]::before,
 button[aria-label*="Hide password"]::before {
   /* Open eye SVG - slate-10 color (#777b84) */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23777b84' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") !important;
@@ -895,6 +999,10 @@ button[aria-label*="Hide password"]::before {
  */
 .pf-c-button.pf-m-control[aria-label*="Show"]::before,
 .pf-v5-c-button.pf-m-control[aria-label*="Show"]::before,
+.pf-c-button.pf-m-plain[aria-label*="Show"]::before,
+.pf-v5-c-button.pf-m-plain[aria-label*="Show"]::before,
+.pf-v5-c-text-input-group__utilities button[aria-label*="Show"]::before,
+.pf-c-text-input-group__utilities button[aria-label*="Show"]::before,
 button[aria-label*="Show password"]::before {
   /* Slashed eye SVG - slate-10 color (#777b84) */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23777b84' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49'/%3E%3Cpath d='M14.084 14.158a3 3 0 0 1-4.242-4.242'/%3E%3Cpath d='M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143'/%3E%3Cpath d='m2 2 20 20'/%3E%3C/svg%3E") !important;
@@ -902,19 +1010,31 @@ button[aria-label*="Show password"]::before {
 
 /* Remove any ::after pseudo-elements that might interfere */
 .pf-c-button.pf-m-control::after,
-.pf-v5-c-button.pf-m-control::after {
+.pf-v5-c-button.pf-m-control::after,
+.pf-c-button.pf-m-plain::after,
+.pf-v5-c-button.pf-m-plain::after,
+.pf-v5-c-text-input-group__utilities button::after,
+.pf-c-text-input-group__utilities button::after {
   display: none !important;
   content: none !important;
 }
 
 /* Hover states - use brighter color (slate-11 = #b0b4ba) */
 .pf-c-button.pf-m-control:hover[aria-label*="Hide"]::before,
-.pf-v5-c-button.pf-m-control:hover[aria-label*="Hide"]::before {
+.pf-v5-c-button.pf-m-control:hover[aria-label*="Hide"]::before,
+.pf-c-button.pf-m-plain:hover[aria-label*="Hide"]::before,
+.pf-v5-c-button.pf-m-plain:hover[aria-label*="Hide"]::before,
+.pf-v5-c-text-input-group__utilities button:hover[aria-label*="Hide"]::before,
+.pf-c-text-input-group__utilities button:hover[aria-label*="Hide"]::before {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23b0b4ba' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") !important;
 }
 
 .pf-c-button.pf-m-control:hover[aria-label*="Show"]::before,
-.pf-v5-c-button.pf-m-control:hover[aria-label*="Show"]::before {
+.pf-v5-c-button.pf-m-control:hover[aria-label*="Show"]::before,
+.pf-c-button.pf-m-plain:hover[aria-label*="Show"]::before,
+.pf-v5-c-button.pf-m-plain:hover[aria-label*="Show"]::before,
+.pf-v5-c-text-input-group__utilities button:hover[aria-label*="Show"]::before,
+.pf-c-text-input-group__utilities button:hover[aria-label*="Show"]::before {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23b0b4ba' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49'/%3E%3Cpath d='M14.084 14.158a3 3 0 0 1-4.242-4.242'/%3E%3Cpath d='M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143'/%3E%3Cpath d='m2 2 20 20'/%3E%3C/svg%3E") !important;
 }
 
