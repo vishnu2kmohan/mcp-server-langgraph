@@ -85,6 +85,8 @@ class TestNotificationWebSocketHandler:
         handler._websocket = mock_websocket
 
         user = AuthUser(id="test-user", username="testuser")
+        # Set _user to simulate what run() does before calling on_connect()
+        handler._user = user
         await handler.on_connect(user)
 
         mock_broadcaster.subscribe.assert_called_once()

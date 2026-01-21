@@ -247,3 +247,154 @@ class TestAgentRequestHandler:
         )
 
         mock_websocket.send_json.assert_not_called()
+
+
+@pytest.mark.xdist_group(name="agent_request_ws")
+class TestAgentRequestSessionIdFromQueryParams:
+    """Test session_id extraction from WebSocket query parameters.
+
+    These tests verify that AgentRequestHandler properly extracts session_id
+    from URL query parameters during on_connect, instead of defaulting to "global".
+
+    This is critical for session-scoped HITL notifications where the frontend
+    connects with ?session_id=<session_id> in the URL.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_on_connect_extracts_session_id_from_query_params(
+        self, mock_hitl_broadcaster: MagicMock
+    ) -> None:
+        """
+        GIVEN a WebSocket connection with session_id in query params
+        WHEN on_connect is called
+        THEN the handler should extract and use the session_id (not "global").
+        """
+        from mcp_server_langgraph.websocket.handlers.agent_request import (
+            AgentRequestHandler,
+        )
+        from mcp_server_langgraph.websocket.types import AuthUser
+
+        # Create websocket with session_id in query params
+        ws = MagicMock()
+        ws.accept = AsyncMock()
+        ws.close = AsyncMock()
+        ws.send_json = AsyncMock()
+        ws.query_params = {"v": "1.0.0", "session_id": "session-from-url"}
+        ws.headers = {}
+
+        handler = AgentRequestHandler(
+            config=WebSocketConfig(require_auth=False, endpoint_name="agent-request"),
+            broadcaster=mock_hitl_broadcaster,
+            # No session_id passed to constructor
+        )
+        handler._websocket = ws
+
+        user = AuthUser(id="test-user", username="testuser")
+        await handler.on_connect(user)
+
+        # Verify session_id was extracted from query params (not "global")
+        assert handler._session_id == "session-from-url"
+
+    @pytest.mark.asyncio
+    async def test_on_connect_passes_session_id_to_broadcaster(
+        self, mock_hitl_broadcaster: MagicMock
+    ) -> None:
+        """
+        GIVEN a WebSocket connection with session_id in query params
+        WHEN on_connect calls broadcaster.connect
+        THEN the session_id from query params should be passed to broadcaster.
+        """
+        from mcp_server_langgraph.websocket.handlers.agent_request import (
+            AgentRequestHandler,
+        )
+        from mcp_server_langgraph.websocket.types import AuthUser
+
+        # Create websocket with session_id in query params
+        ws = MagicMock()
+        ws.accept = AsyncMock()
+        ws.close = AsyncMock()
+        ws.send_json = AsyncMock()
+        ws.query_params = {"v": "1.0.0", "session_id": "session-xyz-789"}
+        ws.headers = {}
+
+        handler = AgentRequestHandler(
+            config=WebSocketConfig(require_auth=False, endpoint_name="agent-request"),
+            broadcaster=mock_hitl_broadcaster,
+        )
+        handler._websocket = ws
+
+        user = AuthUser(id="test-user", username="testuser")
+        await handler.on_connect(user)
+
+        # Verify broadcaster.connect was called with the session_id from URL
+        mock_hitl_broadcaster.connect.assert_called_once()
+        call_args = mock_hitl_broadcaster.connect.call_args
+        # broadcaster.connect(websocket, session_id, user_id, accept=False)
+        assert call_args[0][1] == "session-xyz-789"  # session_id is second positional arg
+
+    @pytest.mark.asyncio
+    async def test_constructor_session_id_takes_precedence(
+        self, mock_hitl_broadcaster: MagicMock
+    ) -> None:
+        """
+        GIVEN a handler with session_id from constructor and query params
+        WHEN on_connect is called
+        THEN constructor session_id should take precedence over query params.
+        """
+        from mcp_server_langgraph.websocket.handlers.agent_request import (
+            AgentRequestHandler,
+        )
+        from mcp_server_langgraph.websocket.types import AuthUser
+
+        # Create websocket with session_id in query params
+        ws = MagicMock()
+        ws.accept = AsyncMock()
+        ws.close = AsyncMock()
+        ws.send_json = AsyncMock()
+        ws.query_params = {"v": "1.0.0", "session_id": "session-from-url"}
+        ws.headers = {}
+
+        handler = AgentRequestHandler(
+            config=WebSocketConfig(require_auth=False, endpoint_name="agent-request"),
+            broadcaster=mock_hitl_broadcaster,
+            session_id="session-from-constructor",  # Explicit constructor value
+        )
+        handler._websocket = ws
+
+        user = AuthUser(id="test-user", username="testuser")
+        await handler.on_connect(user)
+
+        # Constructor value should take precedence
+        assert handler._session_id == "session-from-constructor"
+
+    @pytest.mark.asyncio
+    async def test_defaults_to_global_when_no_session_id_anywhere(
+        self, mock_websocket: MagicMock, mock_hitl_broadcaster: MagicMock
+    ) -> None:
+        """
+        GIVEN a handler without session_id in constructor or query params
+        WHEN on_connect is called
+        THEN it should still default to "global" for backward compatibility.
+        """
+        from mcp_server_langgraph.websocket.handlers.agent_request import (
+            AgentRequestHandler,
+        )
+        from mcp_server_langgraph.websocket.types import AuthUser
+
+        # mock_websocket has query_params = {} (no session_id)
+        handler = AgentRequestHandler(
+            config=WebSocketConfig(require_auth=False, endpoint_name="agent-request"),
+            broadcaster=mock_hitl_broadcaster,
+            # No session_id
+        )
+        handler._websocket = mock_websocket
+
+        user = AuthUser(id="test-user", username="testuser")
+        await handler.on_connect(user)
+
+        # Should default to "global" when no session_id anywhere
+        assert handler._session_id == "global"

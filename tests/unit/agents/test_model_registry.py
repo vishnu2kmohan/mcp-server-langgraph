@@ -2074,3 +2074,184 @@ class TestModelExtendedThinkingCapabilities:
         caps = registry.get("o1-preview")
 
         assert caps.supports_extended_thinking is True
+
+
+@pytest.mark.unit
+@pytest.mark.agents
+@pytest.mark.xdist_group(name="model_registry_native_tools")
+class TestModelNativeToolCapabilities:
+    """Tests for native LLM provider tool capabilities (v7).
+
+    Verifies that models correctly report their native tool support:
+    - Anthropic: web_search_20250305, code_execution_20250825
+    - Google: googleSearch (grounded search)
+    - OpenAI: web_search, code_interpreter (via Responses API)
+
+    Also tests Vertex AI variants which have different capabilities.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    # =========================================================================
+    # Direct API Models (Full Native Tool Support)
+    # =========================================================================
+
+    def test_claude_opus_4_5_supports_native_web_search(self) -> None:
+        """Test Claude Opus 4.5 (direct API) supports native web search."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-opus-4-5-20251101")
+
+        assert caps.supports_native_web_search is True
+        assert caps.native_provider == "anthropic"
+
+    def test_claude_opus_4_5_supports_native_code_execution(self) -> None:
+        """Test Claude Opus 4.5 (direct API) supports native code execution."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-opus-4-5-20251101")
+
+        assert caps.supports_native_code_execution is True
+
+    def test_gemini_3_flash_supports_native_web_search(self) -> None:
+        """Test Gemini 3 Flash (direct API) supports native web search."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-3-flash")
+
+        assert caps.supports_native_web_search is True
+        assert caps.native_provider == "google"
+
+    def test_gpt_5_2_supports_native_web_search(self) -> None:
+        """Test GPT-5.2 supports native web search via Responses API."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gpt-5.2")
+
+        assert caps.supports_native_web_search is True
+        assert caps.native_provider == "openai"
+
+    def test_gpt_5_2_supports_native_code_execution(self) -> None:
+        """Test GPT-5.2 supports native code interpreter via Responses API."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gpt-5.2")
+
+        assert caps.supports_native_code_execution is True
+
+    # =========================================================================
+    # Vertex AI Anthropic Models (Web Search Only, No Code Execution)
+    # =========================================================================
+
+    def test_vertex_ai_claude_opus_supports_native_web_search(self) -> None:
+        """Test Claude Opus 4.5 via Vertex AI supports native web search."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-opus-4-5@20251101")
+
+        assert caps.supports_native_web_search is True
+        assert caps.native_provider == "anthropic"
+        assert caps.vendor == "vertex_ai_anthropic"
+
+    def test_vertex_ai_claude_opus_no_code_execution(self) -> None:
+        """Test Claude Opus 4.5 via Vertex AI does NOT support code execution.
+
+        Code execution is only available via direct Anthropic API or AWS Bedrock,
+        not through Google Cloud Vertex AI.
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-opus-4-5@20251101")
+
+        # Code execution NOT supported on Vertex AI
+        assert caps.supports_native_code_execution is False
+
+    def test_vertex_ai_claude_sonnet_supports_native_web_search(self) -> None:
+        """Test Claude Sonnet 4.5 via Vertex AI supports native web search."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-sonnet-4-5@20250929")
+
+        assert caps.supports_native_web_search is True
+        assert caps.native_provider == "anthropic"
+
+    def test_vertex_ai_claude_haiku_supports_native_web_search(self) -> None:
+        """Test Claude Haiku 4.5 via Vertex AI supports native web search."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-haiku-4-5@20251001")
+
+        assert caps.supports_native_web_search is True
+        assert caps.native_provider == "anthropic"
+
+    # =========================================================================
+    # Vertex AI Gemini Models (Google Search Grounding)
+    # =========================================================================
+
+    def test_vertex_ai_gemini_3_flash_supports_native_web_search(self) -> None:
+        """Test Gemini 3 Flash via Vertex AI supports googleSearch grounding."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("vertex_ai/gemini-3-flash")
+
+        assert caps.supports_native_web_search is True
+        assert caps.native_provider == "google"
+        assert caps.vendor == "vertex_ai"
+
+    def test_vertex_ai_gemini_3_pro_supports_native_web_search(self) -> None:
+        """Test Gemini 3 Pro via Vertex AI supports googleSearch grounding."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("vertex_ai/gemini-3-pro")
+
+        assert caps.supports_native_web_search is True
+        assert caps.native_provider == "google"
+
+    def test_vertex_ai_gemini_3_flash_preview_supports_native_web_search(self) -> None:
+        """Test Gemini 3 Flash Preview via Vertex AI supports googleSearch."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("vertex_ai/gemini-3-flash-preview")
+
+        assert caps.supports_native_web_search is True
+        assert caps.native_provider == "google"
+
+    def test_vertex_ai_gemini_3_pro_preview_supports_native_web_search(self) -> None:
+        """Test Gemini 3 Pro Preview via Vertex AI supports googleSearch."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("vertex_ai/gemini-3-pro-preview")
+
+        assert caps.supports_native_web_search is True
+        assert caps.native_provider == "google"
+
+    # =========================================================================
+    # Models Without Native Tool Support
+    # =========================================================================
+
+    def test_legacy_model_no_native_tools(self) -> None:
+        """Test legacy models don't have native tool support."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        # GPT-4 Turbo is a legacy model without native tools
+        caps = registry.get("gpt-4-turbo")
+
+        assert caps.supports_native_web_search is False
+        assert caps.supports_native_code_execution is False
+        assert caps.native_provider is None

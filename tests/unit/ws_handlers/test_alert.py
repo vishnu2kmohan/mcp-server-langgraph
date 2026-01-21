@@ -68,6 +68,20 @@ class TestAlertHandler:
         assert issubclass(AlertHandler, WebSocketBase)
 
     @pytest.mark.asyncio
+    async def test_handler_uses_broadcaster_mixin(self) -> None:
+        """
+        GIVEN the AlertHandler class
+        WHEN checking its base classes
+        THEN it should use BroadcasterMixin for subscription state management.
+        """
+        from mcp_server_langgraph.websocket.handlers.alert import (
+            AlertHandler,
+        )
+        from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
+
+        assert issubclass(AlertHandler, BroadcasterMixin)
+
+    @pytest.mark.asyncio
     async def test_handles_subscribe_message(self, mock_websocket: MagicMock, mock_alert_broadcaster: MagicMock) -> None:
         """
         GIVEN an active admin connection

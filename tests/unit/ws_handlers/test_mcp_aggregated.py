@@ -79,6 +79,19 @@ class TestMCPAggregatedHandlerConstruction:
         )
         assert isinstance(handler, WebSocketBase)
 
+    def test_handler_uses_broadcaster_mixin(self, mock_broadcaster: MagicMock) -> None:
+        """
+        GIVEN the MCPAggregatedHandler class
+        WHEN checking its base classes
+        THEN it should use BroadcasterMixin for subscription state management.
+        """
+        from mcp_server_langgraph.websocket.handlers.mcp_aggregated import (
+            MCPAggregatedHandler,
+        )
+        from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
+
+        assert issubclass(MCPAggregatedHandler, BroadcasterMixin)
+
     def test_handler_has_handle_message_method(
         self, mock_broadcaster: MagicMock
     ) -> None:
@@ -128,9 +141,12 @@ class TestMCPAggregatedLifecycle:
         handler._websocket = mock_websocket
 
         user = AuthUser(id="test-user", username="testuser")
+        # Set _user to simulate what run() does before calling on_connect()
+        handler._user = user
         await handler.on_connect(user)
 
-        assert handler._user_id == "test-user"
+        # Use public user_id property from base class
+        assert handler.user_id == "test-user"
         mock_broadcaster.subscribe.assert_called_once()
 
     @pytest.mark.asyncio

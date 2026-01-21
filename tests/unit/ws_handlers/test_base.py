@@ -606,3 +606,1052 @@ class TestWebSocketBaseConfig:
         assert config.rate_limit_per_minute == 1000
         assert config.authz_resource_type == "workflow"
         assert config.authz_required_relation == "executor"
+
+
+@pytest.mark.xdist_group(name="websocket_base")
+class TestWebSocketBaseContextExtraction:
+    """Test WebSocketBase context_id extraction from query parameters.
+
+    These tests verify that WebSocketBase automatically extracts context_id
+    and session_id from URL query parameters, making them available to all
+    handler subclasses without duplicating extraction logic.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_extracts_context_id_from_query_params(self, mock_websocket: MagicMock) -> None:
+        """
+        GIVEN a WebSocket connection with context_id in query params
+        WHEN run() is called and connection established
+        THEN _context_id should be populated from query params.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        mock_websocket.query_params = {"v": "1.0.0", "context_id": "ctx-abc-123"}
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
+
+        ws = TestWebSocket(config=WebSocketConfig(require_auth=False, endpoint_name="test"))
+        await ws.run(mock_websocket)
+
+        assert ws.context_id == "ctx-abc-123"
+
+    @pytest.mark.asyncio
+    async def test_extracts_session_id_from_query_params(self, mock_websocket: MagicMock) -> None:
+        """
+        GIVEN a WebSocket connection with session_id in query params
+        WHEN run() is called and connection established
+        THEN _session_id should be populated from query params.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        mock_websocket.query_params = {"v": "1.0.0", "session_id": "sess-xyz-789"}
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
+
+        ws = TestWebSocket(config=WebSocketConfig(require_auth=False, endpoint_name="test"))
+        await ws.run(mock_websocket)
+
+        assert ws.session_id == "sess-xyz-789"
+
+    @pytest.mark.asyncio
+    async def test_context_id_takes_precedence_over_session_id(self, mock_websocket: MagicMock) -> None:
+        """
+        GIVEN a WebSocket connection with both context_id and session_id
+        WHEN run() is called
+        THEN context_id should be accessible as context_id and session_id separately.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        mock_websocket.query_params = {
+            "v": "1.0.0",
+            "context_id": "ctx-from-url",
+            "session_id": "sess-from-url",
+        }
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
+
+        ws = TestWebSocket(config=WebSocketConfig(require_auth=False, endpoint_name="test"))
+        await ws.run(mock_websocket)
+
+        # Both should be accessible
+        assert ws.context_id == "ctx-from-url"
+        assert ws.session_id == "sess-from-url"
+
+    @pytest.mark.asyncio
+    async def test_context_id_defaults_to_none(self, mock_websocket: MagicMock) -> None:
+        """
+        GIVEN a WebSocket connection without context_id in query params
+        WHEN run() is called
+        THEN context_id should be None.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        mock_websocket.query_params = {"v": "1.0.0"}
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
+
+        ws = TestWebSocket(config=WebSocketConfig(require_auth=False, endpoint_name="test"))
+        await ws.run(mock_websocket)
+
+        assert ws.context_id is None
+        assert ws.session_id is None
+
+    @pytest.mark.asyncio
+    async def test_context_available_in_on_connect(self, mock_websocket: MagicMock) -> None:
+        """
+        GIVEN a WebSocket connection with context_id in query params
+        WHEN on_connect() is called
+        THEN context_id should be available in the hook.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        context_in_hook: str | None = None
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+            async def on_connect(self, user: AuthUser) -> None:
+                nonlocal context_in_hook
+                context_in_hook = self.context_id
+
+        mock_websocket.query_params = {"v": "1.0.0", "context_id": "ctx-in-hook"}
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
+
+        ws = TestWebSocket(config=WebSocketConfig(require_auth=False, endpoint_name="test"))
+        await ws.run(mock_websocket)
+
+        assert context_in_hook == "ctx-in-hook"
+
+
+@pytest.mark.xdist_group(name="websocket_base")
+class TestWebSocketBaseUserIdProperty:
+    """Test user_id convenience property.
+
+    Many handlers store `self._user_id = user.id` redundantly when the base class
+    already has the `_user` object. This property provides convenient access.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_user_id_returns_user_id_when_authenticated(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a WebSocket with authenticated user
+        WHEN user_id property is accessed
+        THEN it should return the user's ID.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        user_id_in_hook: str | None = None
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+            async def on_connect(self, user: AuthUser) -> None:
+                nonlocal user_id_in_hook
+                user_id_in_hook = self.user_id
+
+        mock_websocket.query_params = {"v": "1.0.0"}
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
+
+        ws = TestWebSocket(config=WebSocketConfig(require_auth=False, endpoint_name="test"))
+        await ws.run(mock_websocket)
+
+        # Anonymous user has id="anonymous" when auth is disabled
+        assert user_id_in_hook == "anonymous"
+
+    @pytest.mark.asyncio
+    async def test_user_id_returns_none_before_authentication(self) -> None:
+        """
+        GIVEN a WebSocket before authentication
+        WHEN user_id property is accessed
+        THEN it should return None.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(require_auth=False, endpoint_name="test"))
+
+        # Before run() is called, user_id should be None
+        assert ws.user_id is None
+
+
+@pytest.mark.xdist_group(name="websocket_base")
+class TestWebSocketBaseErrorHelpers:
+    """Test error response helper methods.
+
+    These helpers reduce boilerplate for creating standardized error responses
+    that follow the MessageEnvelope pattern.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_create_error_response_returns_message_envelope(self) -> None:
+        """
+        GIVEN a WebSocketBase instance
+        WHEN create_error_response is called
+        THEN it should return a properly formatted MessageEnvelope.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+
+        response = ws.create_error_response(
+            code="validation_failed",
+            message="Invalid input data",
+            correlation_id="msg-123",
+        )
+
+        assert isinstance(response, MessageEnvelope)
+        assert response.type == "error"
+        assert response.payload["code"] == "validation_failed"
+        assert response.payload["message"] == "Invalid input data"
+        assert response.id == "msg-123"
+
+    def test_create_error_response_without_correlation_id(self) -> None:
+        """
+        GIVEN a WebSocketBase instance
+        WHEN create_error_response is called without correlation_id
+        THEN it should return envelope with None id.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+
+        response = ws.create_error_response(
+            code="server_error",
+            message="Something went wrong",
+        )
+
+        assert response.type == "error"
+        assert response.id is None
+
+    def test_create_unknown_message_error_returns_standardized_error(self) -> None:
+        """
+        GIVEN a WebSocketBase instance
+        WHEN create_unknown_message_error is called
+        THEN it should return a standardized "unknown_message_type" error.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+
+        response = ws.create_unknown_message_error(
+            message_type="invalid_action",
+            correlation_id="msg-456",
+        )
+
+        assert isinstance(response, MessageEnvelope)
+        assert response.type == "error"
+        assert response.payload["code"] == "unknown_message_type"
+        assert "invalid_action" in response.payload["message"]
+        assert response.id == "msg-456"
+
+    def test_create_unknown_message_error_usable_in_handle_message(self) -> None:
+        """
+        GIVEN a handler using create_unknown_message_error
+        WHEN handle_message receives unknown type
+        THEN it should return the standardized error.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                if message.type == "known_type":
+                    return MessageEnvelope(type="success", payload={})
+                return self.create_unknown_message_error(message.type, message.id)
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+
+        # Use asyncio.run since handle_message is async
+        import asyncio
+
+        response = asyncio.get_event_loop().run_until_complete(
+            ws.handle_message(MessageEnvelope(type="bogus_type", id="req-1"))
+        )
+
+        assert response is not None
+        assert response.type == "error"
+        assert response.payload["code"] == "unknown_message_type"
+
+
+@pytest.mark.xdist_group(name="websocket_base")
+class TestWebSocketBaseSubscriptionHelpers:
+    """Test subscription state helpers.
+
+    Many handlers use the pattern `if self._websocket and self._subscribed:`
+    before sending messages. These helpers standardize that pattern.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_is_ready_to_send_returns_true_when_connected_and_subscribed(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a connected and subscribed WebSocket handler
+        WHEN is_ready_to_send is checked
+        THEN it should return True.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+        ws._websocket = mock_websocket
+        ws._subscribed = True
+
+        assert ws.is_ready_to_send is True
+
+    @pytest.mark.asyncio
+    async def test_is_ready_to_send_returns_false_when_not_subscribed(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a connected but not subscribed WebSocket handler
+        WHEN is_ready_to_send is checked
+        THEN it should return False.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+        ws._websocket = mock_websocket
+        ws._subscribed = False
+
+        assert ws.is_ready_to_send is False
+
+    @pytest.mark.asyncio
+    async def test_is_ready_to_send_returns_false_when_no_websocket(self) -> None:
+        """
+        GIVEN a handler without websocket connection
+        WHEN is_ready_to_send is checked
+        THEN it should return False.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+        ws._subscribed = True  # Subscribed but no websocket
+
+        assert ws.is_ready_to_send is False
+
+    @pytest.mark.asyncio
+    async def test_send_if_subscribed_sends_when_ready(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a connected and subscribed handler
+        WHEN send_if_subscribed is called
+        THEN it should send the message.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+        ws._websocket = mock_websocket
+        ws._subscribed = True
+
+        message = {"type": "test", "payload": {"data": "value"}}
+        await ws.send_if_subscribed(message)
+
+        mock_websocket.send_json.assert_called_once_with(message)
+
+    @pytest.mark.asyncio
+    async def test_send_if_subscribed_skips_when_not_ready(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a handler that is not subscribed
+        WHEN send_if_subscribed is called
+        THEN it should NOT send the message.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+        ws._websocket = mock_websocket
+        ws._subscribed = False
+
+        message = {"type": "test", "payload": {"data": "value"}}
+        await ws.send_if_subscribed(message)
+
+        mock_websocket.send_json.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_send_if_subscribed_returns_true_when_sent(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a connected and subscribed handler
+        WHEN send_if_subscribed is called
+        THEN it should return True.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+        ws._websocket = mock_websocket
+        ws._subscribed = True
+
+        result = await ws.send_if_subscribed({"type": "test"})
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_send_if_subscribed_returns_false_when_not_sent(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a handler that is not subscribed
+        WHEN send_if_subscribed is called
+        THEN it should return False.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+        ws._websocket = mock_websocket
+        ws._subscribed = False
+
+        result = await ws.send_if_subscribed({"type": "test"})
+        assert result is False
+
+
+@pytest.mark.xdist_group(name="websocket_base")
+class TestWebSocketBaseSuccessResponseHelper:
+    """Test success response helper method.
+
+    This helper creates standardized success responses following the
+    MessageEnvelope pattern, complementing create_error_response.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_create_success_response_returns_message_envelope(self) -> None:
+        """
+        GIVEN a WebSocketBase instance
+        WHEN create_success_response is called
+        THEN it should return a properly formatted MessageEnvelope.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+
+        response = ws.create_success_response(
+            type="subscribed",
+            payload={"message": "Successfully subscribed"},
+            correlation_id="msg-123",
+        )
+
+        assert isinstance(response, MessageEnvelope)
+        assert response.type == "subscribed"
+        assert response.payload["message"] == "Successfully subscribed"
+        assert response.id == "msg-123"
+
+    def test_create_success_response_without_correlation_id(self) -> None:
+        """
+        GIVEN a WebSocketBase instance
+        WHEN create_success_response is called without correlation_id
+        THEN it should return envelope with None id.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+
+        response = ws.create_success_response(
+            type="data_ready",
+            payload={"count": 42},
+        )
+
+        assert response.type == "data_ready"
+        assert response.payload["count"] == 42
+        assert response.id is None
+
+    def test_create_success_response_with_empty_payload(self) -> None:
+        """
+        GIVEN a WebSocketBase instance
+        WHEN create_success_response is called with empty payload
+        THEN it should return envelope with empty dict payload.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+
+        response = ws.create_success_response(
+            type="ack",
+            payload={},
+            correlation_id="req-1",
+        )
+
+        assert response.type == "ack"
+        assert response.payload == {}
+        assert response.id == "req-1"
+
+
+@pytest.mark.xdist_group(name="websocket_base")
+class TestWebSocketBaseLoggingHelpers:
+    """Test logging helper methods.
+
+    These helpers standardize connection/disconnection logging
+    with consistent format and extra fields.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_log_connected_logs_with_endpoint_and_user(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a connected WebSocket handler
+        WHEN log_connected is called
+        THEN it should log with endpoint and user_id.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test-endpoint"))
+        ws._websocket = mock_websocket
+        ws._user = AuthUser(id="user-123", username="testuser")
+
+        with patch("mcp_server_langgraph.websocket.base.logger") as mock_logger:
+            ws.log_connected()
+
+            mock_logger.info.assert_called_once()
+            call_args = mock_logger.info.call_args
+            assert "test-endpoint" in call_args[0][0]
+            assert call_args[1]["extra"]["user_id"] == "user-123"
+            assert call_args[1]["extra"]["endpoint"] == "test-endpoint"
+
+    @pytest.mark.asyncio
+    async def test_log_connected_with_extra_fields(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a connected WebSocket handler
+        WHEN log_connected is called with extra fields
+        THEN it should include those fields in the log.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test-endpoint"))
+        ws._websocket = mock_websocket
+        ws._user = AuthUser(id="user-123", username="testuser")
+
+        with patch("mcp_server_langgraph.websocket.base.logger") as mock_logger:
+            ws.log_connected(extra={"session_id": "sess-abc", "custom": "value"})
+
+            call_args = mock_logger.info.call_args
+            assert call_args[1]["extra"]["session_id"] == "sess-abc"
+            assert call_args[1]["extra"]["custom"] == "value"
+
+    @pytest.mark.asyncio
+    async def test_log_disconnected_logs_with_endpoint_and_user(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a WebSocket handler
+        WHEN log_disconnected is called
+        THEN it should log disconnection with endpoint and user_id.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test-endpoint"))
+        ws._user = AuthUser(id="user-456", username="testuser")
+
+        with patch("mcp_server_langgraph.websocket.base.logger") as mock_logger:
+            ws.log_disconnected()
+
+            mock_logger.info.assert_called_once()
+            call_args = mock_logger.info.call_args
+            assert "disconnected" in call_args[0][0].lower()
+            assert call_args[1]["extra"]["user_id"] == "user-456"
+
+    @pytest.mark.asyncio
+    async def test_log_disconnected_with_extra_fields(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a WebSocket handler
+        WHEN log_disconnected is called with extra fields
+        THEN it should include those fields in the log.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test-endpoint"))
+        ws._user = AuthUser(id="user-456", username="testuser")
+
+        with patch("mcp_server_langgraph.websocket.base.logger") as mock_logger:
+            ws.log_disconnected(extra={"reason": "timeout"})
+
+            call_args = mock_logger.info.call_args
+            assert call_args[1]["extra"]["reason"] == "timeout"
+
+    def test_log_connected_handles_no_user(self) -> None:
+        """
+        GIVEN a WebSocket handler with no authenticated user
+        WHEN log_connected is called
+        THEN it should log with None user_id.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test-endpoint"))
+        # No user set
+
+        with patch("mcp_server_langgraph.websocket.base.logger") as mock_logger:
+            ws.log_connected()
+
+            call_args = mock_logger.info.call_args
+            assert call_args[1]["extra"]["user_id"] is None
+
+
+@pytest.mark.xdist_group(name="websocket_base")
+class TestWebSocketBaseSubscriptionResponseHelpers:
+    """Test subscription response helper methods.
+
+    These helpers create standardized subscribed/unsubscribed responses
+    which are the most common response patterns across handlers.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_create_subscribed_response_basic(self) -> None:
+        """
+        GIVEN a WebSocketBase instance
+        WHEN create_subscribed_response is called
+        THEN it should return a properly formatted subscribed response.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+
+        response = ws.create_subscribed_response(correlation_id="msg-123")
+
+        assert isinstance(response, MessageEnvelope)
+        assert response.type == "subscribed"
+        assert response.payload["message"] == "Successfully subscribed"
+        assert response.id == "msg-123"
+
+    def test_create_subscribed_response_with_extra_payload(self) -> None:
+        """
+        GIVEN a WebSocketBase instance
+        WHEN create_subscribed_response is called with extra payload
+        THEN it should merge extra payload into the response.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+
+        response = ws.create_subscribed_response(
+            correlation_id="msg-123",
+            extra_payload={"connection_id": "conn-abc", "status": "active"},
+        )
+
+        assert response.type == "subscribed"
+        assert response.payload["message"] == "Successfully subscribed"
+        assert response.payload["connection_id"] == "conn-abc"
+        assert response.payload["status"] == "active"
+
+    def test_create_subscribed_response_with_custom_message(self) -> None:
+        """
+        GIVEN a WebSocketBase instance
+        WHEN create_subscribed_response is called with custom message
+        THEN it should use the custom message.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+
+        response = ws.create_subscribed_response(
+            correlation_id="msg-123",
+            message="Subscribed to alerts",
+        )
+
+        assert response.payload["message"] == "Subscribed to alerts"
+
+    def test_create_unsubscribed_response_basic(self) -> None:
+        """
+        GIVEN a WebSocketBase instance
+        WHEN create_unsubscribed_response is called
+        THEN it should return a properly formatted unsubscribed response.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+
+        response = ws.create_unsubscribed_response(correlation_id="msg-456")
+
+        assert isinstance(response, MessageEnvelope)
+        assert response.type == "unsubscribed"
+        assert response.payload["message"] == "Successfully unsubscribed"
+        assert response.id == "msg-456"
+
+    def test_create_unsubscribed_response_with_extra_payload(self) -> None:
+        """
+        GIVEN a WebSocketBase instance
+        WHEN create_unsubscribed_response is called with extra payload
+        THEN it should merge extra payload into the response.
+        """
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+
+        class TestWebSocket(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
+
+        response = ws.create_unsubscribed_response(
+            correlation_id="msg-456",
+            extra_payload={"session_id": "sess-xyz"},
+        )
+
+        assert response.type == "unsubscribed"
+        assert response.payload["message"] == "Successfully unsubscribed"
+        assert response.payload["session_id"] == "sess-xyz"
+
+
+@pytest.mark.xdist_group(name="websocket_base")
+class TestWebSocketBaseBroadcasterMixin:
+    """Test BroadcasterMixin for common broadcaster pattern.
+
+    The mixin provides standardized broadcaster integration with:
+    - Subscription state management
+    - Standard subscribe/unsubscribe methods
+    - Automatic cleanup on disconnect
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_broadcaster_mixin_provides_subscribed_property(self) -> None:
+        """
+        GIVEN a handler using BroadcasterMixin
+        WHEN checking subscribed state
+        THEN it should have a subscribed property.
+        """
+        from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
+
+        class TestHandler(BroadcasterMixin):
+            pass
+
+        handler = TestHandler()
+        assert hasattr(handler, "subscribed")
+        assert handler.subscribed is False
+
+    def test_broadcaster_mixin_set_subscribed(self) -> None:
+        """
+        GIVEN a handler using BroadcasterMixin
+        WHEN setting subscribed state
+        THEN it should update the state.
+        """
+        from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
+
+        class TestHandler(BroadcasterMixin):
+            pass
+
+        handler = TestHandler()
+        handler.subscribed = True
+        assert handler.subscribed is True
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_mixin_subscribe_calls_broadcaster(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a handler with broadcaster
+        WHEN subscribe is called
+        THEN it should call broadcaster.subscribe and set subscribed=True.
+        """
+        from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
+
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.subscribe = AsyncMock()
+
+        class TestHandler(BroadcasterMixin):
+            def __init__(self) -> None:
+                self._broadcaster = mock_broadcaster
+                self._websocket = mock_websocket
+                super().__init__()
+
+        handler = TestHandler()
+        await handler.subscribe()
+
+        mock_broadcaster.subscribe.assert_called_once()
+        assert handler.subscribed is True
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_mixin_unsubscribe_calls_broadcaster(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a subscribed handler with broadcaster
+        WHEN unsubscribe is called
+        THEN it should call broadcaster.unsubscribe and set subscribed=False.
+        """
+        from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
+
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.unsubscribe = AsyncMock()
+
+        class TestHandler(BroadcasterMixin):
+            def __init__(self) -> None:
+                self._broadcaster = mock_broadcaster
+                self._websocket = mock_websocket
+                self._subscribed = True
+                super().__init__()
+
+        handler = TestHandler()
+        await handler.unsubscribe()
+
+        mock_broadcaster.unsubscribe.assert_called_once()
+        assert handler.subscribed is False
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_mixin_unsubscribe_skips_when_not_subscribed(self) -> None:
+        """
+        GIVEN an unsubscribed handler
+        WHEN unsubscribe is called
+        THEN it should skip calling broadcaster.
+        """
+        from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
+
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.unsubscribe = AsyncMock()
+
+        class TestHandler(BroadcasterMixin):
+            def __init__(self) -> None:
+                self._broadcaster = mock_broadcaster
+                self._subscribed = False
+                super().__init__()
+
+        handler = TestHandler()
+        await handler.unsubscribe()
+
+        mock_broadcaster.unsubscribe.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_mixin_subscribe_passes_user_id_kwarg(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a handler using BroadcasterMixin
+        WHEN subscribe is called with user_id kwarg
+        THEN it should pass user_id to broadcaster.subscribe.
+        """
+        from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
+
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.subscribe = AsyncMock()
+
+        class TestHandler(BroadcasterMixin):
+            def __init__(self) -> None:
+                self._broadcaster = mock_broadcaster
+                self._websocket = mock_websocket
+                super().__init__()
+
+        handler = TestHandler()
+        await handler.subscribe(user_id="user-123")
+
+        mock_broadcaster.subscribe.assert_called_once_with(
+            mock_websocket, user_id="user-123"
+        )
+        assert handler.subscribed is True
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_mixin_subscribe_passes_multiple_kwargs(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a handler using BroadcasterMixin
+        WHEN subscribe is called with multiple kwargs
+        THEN it should pass all kwargs to broadcaster.subscribe.
+        """
+        from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
+
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.subscribe = AsyncMock()
+
+        class TestHandler(BroadcasterMixin):
+            def __init__(self) -> None:
+                self._broadcaster = mock_broadcaster
+                self._websocket = mock_websocket
+                super().__init__()
+
+        handler = TestHandler()
+        await handler.subscribe(user_id="user-123", context_entity_id="ctx-456")
+
+        mock_broadcaster.subscribe.assert_called_once_with(
+            mock_websocket, user_id="user-123", context_entity_id="ctx-456"
+        )
+        assert handler.subscribed is True
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_mixin_subscribe_passes_filter_kwarg(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a handler using BroadcasterMixin
+        WHEN subscribe is called with a filter object
+        THEN it should pass the filter to broadcaster.subscribe.
+        """
+        from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
+
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.subscribe = AsyncMock()
+        test_filter = {"service_name": "test", "status": "OK"}
+
+        class TestHandler(BroadcasterMixin):
+            def __init__(self) -> None:
+                self._broadcaster = mock_broadcaster
+                self._websocket = mock_websocket
+                super().__init__()
+
+        handler = TestHandler()
+        await handler.subscribe(filter_=test_filter)
+
+        mock_broadcaster.subscribe.assert_called_once_with(
+            mock_websocket, filter_=test_filter
+        )
+        assert handler.subscribed is True
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_mixin_subscribe_no_kwargs_still_works(
+        self, mock_websocket: MagicMock
+    ) -> None:
+        """
+        GIVEN a handler using BroadcasterMixin
+        WHEN subscribe is called without kwargs (backwards compatible)
+        THEN it should call broadcaster.subscribe with just websocket.
+        """
+        from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
+
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.subscribe = AsyncMock()
+
+        class TestHandler(BroadcasterMixin):
+            def __init__(self) -> None:
+                self._broadcaster = mock_broadcaster
+                self._websocket = mock_websocket
+                super().__init__()
+
+        handler = TestHandler()
+        await handler.subscribe()
+
+        mock_broadcaster.subscribe.assert_called_once_with(mock_websocket)
+        assert handler.subscribed is True

@@ -117,6 +117,8 @@ class MockFeatureFlags:
         context_graph_sampling_rate: float = 1.0,
         precedent_search_min_score: float = 0.5,
         precedent_search_max_results: int = 10,
+        # Source Citation flags
+        enable_source_citations: bool = True,
     ) -> None:
         """Initialize MockFeatureFlags with configurable defaults.
 
@@ -236,6 +238,9 @@ class MockFeatureFlags:
         self.context_graph_sampling_rate = context_graph_sampling_rate
         self.precedent_search_min_score = precedent_search_min_score
         self.precedent_search_max_results = precedent_search_max_results
+
+        # Source Citation flags
+        self.enable_source_citations = enable_source_citations
 
     def is_feature_enabled(self, feature_name: str) -> bool:
         """Check if a feature is enabled.

@@ -959,3 +959,347 @@ class TestNativeToolsIntegration:
                 if tool["source"] == "mcp":
                     expected_id = f"mcp:{tool['name']}"
                     assert tool["tool_id"] == expected_id
+
+
+# =============================================================================
+# Native Capabilities Endpoint Tests
+# =============================================================================
+
+
+class TestNativeCapabilitiesEndpoint:
+    """Tests for GET /api/v1/tools/native-capabilities/{model_id} endpoint.
+
+    v7: Auto-detect native tool support based on model capabilities.
+    """
+
+    @staticmethod
+    def _make_caps(**kwargs: Any) -> "ModelCapabilities":
+        """Create ModelCapabilities with sensible defaults for testing."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        defaults = {
+            "model_id": "test-model",
+            "vendor": "test",
+            "context_limit": 128000,
+            "max_output_tokens": 8192,
+            "input_cost_per_1m": 3.0,
+            "output_cost_per_1m": 15.0,
+        }
+        return ModelCapabilities(**{**defaults, **kwargs})
+
+    @pytest.fixture
+    def native_test_app(
+        self,
+        mock_user: dict[str, Any],
+    ) -> Generator[FastAPI, None, None]:
+        """Create a test app specifically for native capabilities testing."""
+        from mcp_server_langgraph.api.v1.tools import tools_router
+        from mcp_server_langgraph.auth.dependencies import get_current_user
+
+        app = FastAPI()
+        app.include_router(tools_router, prefix="/api/v1")
+
+        async def override_get_current_user() -> dict[str, Any]:
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = override_get_current_user
+
+        yield app
+
+        app.dependency_overrides.clear()
+
+    @pytest.fixture
+    def native_client(self, native_test_app: FastAPI) -> Generator[TestClient, None, None]:
+        """Create a TestClient for native capabilities testing."""
+        with TestClient(native_test_app) as c:
+            yield c
+
+    def test_anthropic_model_has_native_web_search(
+        self,
+        native_client: TestClient,
+    ) -> None:
+        """
+        GIVEN a direct Anthropic Claude model
+        WHEN native capabilities are requested
+        THEN web_search should be supported
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        mock_caps = self._make_caps(
+            supports_native_web_search=True,
+            supports_native_code_execution=True,
+            native_provider="anthropic",
+        )
+
+        with (
+            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch(
+                "mcp_server_langgraph.api.v1.tools.feature_flags"
+            ) as mock_ff,
+        ):
+            mock_ff.native_tools_enabled = True
+            mock_ff.anthropic_native_web_search_enabled = True
+            mock_ff.anthropic_native_code_execution_enabled = True
+
+            response = native_client.get(
+                "/api/v1/tools/native-capabilities/claude-opus-4-5-20251101"
+            )
+            assert response.status_code == 200
+            data = response.json()
+
+            assert data["model_id"] == "claude-opus-4-5-20251101"
+            assert data["native_provider"] == "anthropic"
+            assert data["master_enabled"] is True
+
+            # Find web_search capability
+            web_search = next(
+                (c for c in data["capabilities"] if c["tool_name"] == "web_search"),
+                None,
+            )
+            assert web_search is not None
+            assert web_search["supported"] is True
+            assert web_search["provider_type"] == "web_search_20250305"
+            assert web_search["enabled"] is True
+
+    def test_vertex_ai_anthropic_no_code_execution(
+        self,
+        native_client: TestClient,
+    ) -> None:
+        """
+        GIVEN an Anthropic model on Vertex AI
+        WHEN native capabilities are requested
+        THEN code_execution should NOT be supported (per ADR-0102)
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        # Vertex AI Anthropic: web search YES, code execution NO
+        mock_caps = self._make_caps(
+            supports_native_web_search=True,
+            supports_native_code_execution=False,  # Critical limitation
+            native_provider="anthropic",
+        )
+
+        with (
+            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch(
+                "mcp_server_langgraph.api.v1.tools.feature_flags"
+            ) as mock_ff,
+        ):
+            mock_ff.native_tools_enabled = True
+            mock_ff.anthropic_native_web_search_enabled = True
+            mock_ff.anthropic_native_code_execution_enabled = True
+
+            response = native_client.get(
+                "/api/v1/tools/native-capabilities/claude-opus-4-5@20251101"
+            )
+            assert response.status_code == 200
+            data = response.json()
+
+            # Code execution should NOT be supported
+            code_exec = next(
+                (c for c in data["capabilities"] if c["tool_name"] == "code_execution"),
+                None,
+            )
+            assert code_exec is not None
+            assert code_exec["supported"] is False
+            assert code_exec["provider_type"] is None
+            assert code_exec["enabled"] is False
+
+    def test_google_model_has_native_search(
+        self,
+        native_client: TestClient,
+    ) -> None:
+        """
+        GIVEN a Google Gemini model
+        WHEN native capabilities are requested
+        THEN googleSearch should be available
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        mock_caps = self._make_caps(
+            supports_native_web_search=True,
+            native_provider="google",
+        )
+
+        with (
+            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch(
+                "mcp_server_langgraph.api.v1.tools.feature_flags"
+            ) as mock_ff,
+        ):
+            mock_ff.native_tools_enabled = True
+            mock_ff.google_native_search_enabled = True
+
+            response = native_client.get(
+                "/api/v1/tools/native-capabilities/gemini-3-flash"
+            )
+            assert response.status_code == 200
+            data = response.json()
+
+            assert data["native_provider"] == "google"
+
+            web_search = next(
+                (c for c in data["capabilities"] if c["tool_name"] == "web_search"),
+                None,
+            )
+            assert web_search is not None
+            assert web_search["supported"] is True
+            assert web_search["provider_type"] == "googleSearch"
+            assert web_search["enabled"] is True
+
+    def test_model_without_native_support(
+        self,
+        native_client: TestClient,
+    ) -> None:
+        """
+        GIVEN a model without native tool support
+        WHEN native capabilities are requested
+        THEN no capabilities should be marked as supported
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        mock_caps = self._make_caps(
+            supports_native_web_search=False,
+            supports_native_code_execution=False,
+            native_provider=None,
+        )
+
+        with (
+            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch(
+                "mcp_server_langgraph.api.v1.tools.feature_flags"
+            ) as mock_ff,
+        ):
+            mock_ff.native_tools_enabled = True
+
+            response = native_client.get(
+                "/api/v1/tools/native-capabilities/some-random-model"
+            )
+            assert response.status_code == 200
+            data = response.json()
+
+            assert data["native_provider"] is None
+
+            for cap in data["capabilities"]:
+                assert cap["supported"] is False
+                assert cap["enabled"] is False
+
+    def test_native_tools_disabled_globally(
+        self,
+        native_client: TestClient,
+    ) -> None:
+        """
+        GIVEN native tools are disabled globally
+        WHEN native capabilities are requested
+        THEN all capabilities should show enabled=False
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        mock_caps = self._make_caps(
+            supports_native_web_search=True,
+            supports_native_code_execution=True,
+            native_provider="anthropic",
+        )
+
+        with (
+            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch(
+                "mcp_server_langgraph.api.v1.tools.feature_flags"
+            ) as mock_ff,
+        ):
+            # Master switch is OFF
+            mock_ff.native_tools_enabled = False
+            mock_ff.anthropic_native_web_search_enabled = True
+            mock_ff.anthropic_native_code_execution_enabled = True
+
+            response = native_client.get(
+                "/api/v1/tools/native-capabilities/claude-opus-4-5-20251101"
+            )
+            assert response.status_code == 200
+            data = response.json()
+
+            assert data["master_enabled"] is False
+
+            # All capabilities should be disabled even if supported
+            for cap in data["capabilities"]:
+                if cap["supported"]:
+                    assert cap["enabled"] is False
+
+    def test_openai_model_native_capabilities(
+        self,
+        native_client: TestClient,
+    ) -> None:
+        """
+        GIVEN an OpenAI model with native tool support
+        WHEN native capabilities are requested
+        THEN OpenAI-specific types should be returned
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        mock_caps = self._make_caps(
+            supports_native_web_search=True,
+            supports_native_code_execution=True,
+            native_provider="openai",
+        )
+
+        with (
+            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch(
+                "mcp_server_langgraph.api.v1.tools.feature_flags"
+            ) as mock_ff,
+        ):
+            mock_ff.native_tools_enabled = True
+            mock_ff.openai_native_web_search_enabled = True
+            mock_ff.openai_native_code_interpreter_enabled = True
+            mock_ff.use_responses_api_for_openai = True
+
+            response = native_client.get(
+                "/api/v1/tools/native-capabilities/gpt-5.2"
+            )
+            assert response.status_code == 200
+            data = response.json()
+
+            assert data["native_provider"] == "openai"
+
+            web_search = next(
+                (c for c in data["capabilities"] if c["tool_name"] == "web_search"),
+                None,
+            )
+            assert web_search is not None
+            assert web_search["provider_type"] == "web_search_preview"
+
+            code_exec = next(
+                (c for c in data["capabilities"] if c["tool_name"] == "code_execution"),
+                None,
+            )
+            assert code_exec is not None
+            assert code_exec["provider_type"] == "code_interpreter"
+
+    def test_path_parameter_with_slash(
+        self,
+        native_client: TestClient,
+    ) -> None:
+        """
+        GIVEN a model ID with a slash (e.g., vertex_ai/claude-3-opus)
+        WHEN native capabilities are requested
+        THEN the full model ID should be preserved
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        mock_caps = self._make_caps()
+
+        with (
+            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch(
+                "mcp_server_langgraph.api.v1.tools.feature_flags"
+            ) as mock_ff,
+        ):
+            mock_ff.native_tools_enabled = False
+
+            response = native_client.get(
+                "/api/v1/tools/native-capabilities/vertex_ai/claude-3-opus"
+            )
+            assert response.status_code == 200
+            data = response.json()
+
+            assert data["model_id"] == "vertex_ai/claude-3-opus"

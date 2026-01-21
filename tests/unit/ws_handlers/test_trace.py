@@ -70,6 +70,17 @@ class TestTraceHandlerConstruction:
         )
         assert isinstance(handler, WebSocketBase)
 
+    def test_handler_uses_broadcaster_mixin(self, mock_broadcaster: MagicMock) -> None:
+        """
+        GIVEN the TraceHandler class
+        WHEN checking its base classes
+        THEN it should use BroadcasterMixin for subscription state management.
+        """
+        from mcp_server_langgraph.websocket.handlers.trace import TraceHandler
+        from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
+
+        assert issubclass(TraceHandler, BroadcasterMixin)
+
     def test_handler_has_handle_message_method(
         self, mock_broadcaster: MagicMock
     ) -> None:
@@ -115,9 +126,12 @@ class TestTraceLifecycle:
         handler._websocket = mock_websocket
 
         user = AuthUser(id="test-user", username="testuser")
+        # Set _user to simulate what run() does before calling on_connect()
+        handler._user = user
         await handler.on_connect(user)
 
-        assert handler._user_id == "test-user"
+        # Use public user_id property from base class
+        assert handler.user_id == "test-user"
         mock_broadcaster.subscribe.assert_called_once()
 
     @pytest.mark.asyncio
@@ -328,3 +342,75 @@ class TestTraceMessageHandling:
         assert response is not None
         assert isinstance(response, MessageEnvelope)
         assert response.type == "error"
+
+
+@pytest.mark.xdist_group(name="trace_ws")
+class TestTraceSessionIdFromQueryParams:
+    """Test session_id extraction from WebSocket query parameters.
+
+    These tests verify that TraceHandler properly extracts session_id
+    from URL query parameters during on_connect, enabling session-scoped
+    trace filtering for OTEL spans related to a specific session.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_on_connect_extracts_session_id_from_query_params(
+        self, mock_broadcaster: MagicMock
+    ) -> None:
+        """
+        GIVEN a WebSocket connection with session_id in query params
+        WHEN on_connect is called
+        THEN the handler should extract and store the session_id for filtering.
+        """
+        from mcp_server_langgraph.websocket.handlers.trace import TraceHandler
+        from mcp_server_langgraph.websocket.types import AuthUser
+
+        # Create websocket with session_id in query params
+        ws = MagicMock()
+        ws.accept = AsyncMock()
+        ws.close = AsyncMock()
+        ws.send_json = AsyncMock()
+        ws.query_params = {"v": "1.0.0", "session_id": "session-abc-123"}
+        ws.headers = {}
+
+        handler = TraceHandler(
+            config=WebSocketConfig(endpoint_name="traces"),
+            broadcaster=mock_broadcaster,
+        )
+        handler._websocket = ws
+
+        user = AuthUser(id="test-user", username="testuser")
+        await handler.on_connect(user)
+
+        # Verify session_id was extracted and stored in filter
+        assert handler._session_id == "session-abc-123"
+
+    @pytest.mark.asyncio
+    async def test_on_connect_without_session_id_works(
+        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
+    ) -> None:
+        """
+        GIVEN a WebSocket connection without session_id in query params
+        WHEN on_connect is called
+        THEN the handler should still work with None session_id.
+        """
+        from mcp_server_langgraph.websocket.handlers.trace import TraceHandler
+        from mcp_server_langgraph.websocket.types import AuthUser
+
+        # mock_websocket has query_params = {} (no session_id)
+        handler = TraceHandler(
+            config=WebSocketConfig(endpoint_name="traces"),
+            broadcaster=mock_broadcaster,
+        )
+        handler._websocket = mock_websocket
+
+        user = AuthUser(id="test-user", username="testuser")
+        await handler.on_connect(user)
+
+        # Should work with None session_id (receives all traces)
+        assert handler._session_id is None
+        mock_broadcaster.subscribe.assert_called_once()

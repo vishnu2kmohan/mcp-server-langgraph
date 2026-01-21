@@ -256,11 +256,14 @@ class TestMCPAuthenticationContext:
         mock_user.id = "test-user"
         mock_user.roles = ["admin", "mcp:use"]
 
+        # Set _user to simulate what run() does before calling on_connect()
+        handler._user = mock_user
         await handler.on_connect(mock_user)
 
         # The handler should have created an authenticated MCP handler
         assert handler._mcp_handler is not None
-        assert handler._user_id == "test-user"
+        # Use public user_id property from base class
+        assert handler.user_id == "test-user"
 
 class TestMCPSessionManagement:
     """Test session ID handling for MCP WebSocket."""

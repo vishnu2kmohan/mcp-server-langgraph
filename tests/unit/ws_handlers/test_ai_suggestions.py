@@ -105,9 +105,12 @@ class TestAISuggestionsLifecycle:
         handler._websocket = mock_websocket
 
         user = AuthUser(id="test-user", username="testuser")
+        # Set _user to simulate what run() does before calling on_connect()
+        handler._user = user
         await handler.on_connect(user)
 
-        assert handler._user_id == "test-user"
+        # Use public user_id property from base class
+        assert handler.user_id == "test-user"
 
     @pytest.mark.asyncio
     async def test_on_disconnect_clears_context(self, mock_websocket: MagicMock) -> None:
@@ -207,12 +210,12 @@ class TestAISuggestionsMessageHandling:
         from mcp_server_langgraph.websocket.handlers.ai_suggestions import (
             AISuggestionsHandler,
         )
-        from mcp_server_langgraph.websocket.types import AISuggestionMessageType
+        from mcp_server_langgraph.websocket.types import AISuggestionMessageType, AuthUser
 
         handler = AISuggestionsHandler(
             config=WebSocketConfig(endpoint_name="ai-suggestions")
         )
-        handler._user_id = "test-user"
+        handler._user = AuthUser(id="test-user", username="testuser")
 
         message = MessageEnvelope(
             type=AISuggestionMessageType.SUGGESTION_ACCEPT,
@@ -235,12 +238,12 @@ class TestAISuggestionsMessageHandling:
         from mcp_server_langgraph.websocket.handlers.ai_suggestions import (
             AISuggestionsHandler,
         )
-        from mcp_server_langgraph.websocket.types import AISuggestionMessageType
+        from mcp_server_langgraph.websocket.types import AISuggestionMessageType, AuthUser
 
         handler = AISuggestionsHandler(
             config=WebSocketConfig(endpoint_name="ai-suggestions")
         )
-        handler._user_id = "test-user"
+        handler._user = AuthUser(id="test-user", username="testuser")
 
         message = MessageEnvelope(
             type=AISuggestionMessageType.SUGGESTION_REJECT,
@@ -263,12 +266,12 @@ class TestAISuggestionsMessageHandling:
         from mcp_server_langgraph.websocket.handlers.ai_suggestions import (
             AISuggestionsHandler,
         )
-        from mcp_server_langgraph.websocket.types import AISuggestionMessageType
+        from mcp_server_langgraph.websocket.types import AISuggestionMessageType, AuthUser
 
         handler = AISuggestionsHandler(
             config=WebSocketConfig(endpoint_name="ai-suggestions")
         )
-        handler._user_id = "test-user"
+        handler._user = AuthUser(id="test-user", username="testuser")
 
         message = MessageEnvelope(
             type=AISuggestionMessageType.CONTEXT_UPDATE,

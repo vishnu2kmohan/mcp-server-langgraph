@@ -179,43 +179,48 @@ class TestAgentConfigSemanticSearchFlags:
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="test_settings_semantic_flags")
 class TestSettingsSemanticSearchFlags:
-    """Tests for Settings semantic search flag configuration."""
+    """Tests for Settings semantic search configuration.
+
+    NOTE: enable_semantic_*_search FEATURE TOGGLES have been migrated to FeatureFlags
+    to eliminate duplication. Settings retains operational config like thresholds and limits.
+    See test_feature_flags_settings_migration.py::TestDuplicateSettingsRemoved for validation.
+    """
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_settings_has_enable_semantic_tool_search(self, monkeypatch) -> None:
-        """Settings should have enable_semantic_tool_search attribute."""
+    def test_settings_has_semantic_tool_search_threshold(self, monkeypatch) -> None:
+        """Settings should have semantic_tool_search_threshold (operational config)."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
         from mcp_server_langgraph.core.config import Settings
 
         settings = Settings()
-        assert hasattr(settings, "enable_semantic_tool_search")
-        assert isinstance(settings.enable_semantic_tool_search, bool)
+        assert hasattr(settings, "semantic_tool_search_threshold")
+        assert isinstance(settings.semantic_tool_search_threshold, float)
 
-    def test_settings_has_enable_semantic_skill_search(self, monkeypatch) -> None:
-        """Settings should have enable_semantic_skill_search attribute."""
+    def test_settings_has_max_selected_tools(self, monkeypatch) -> None:
+        """Settings should have max_selected_tools (operational config)."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
         from mcp_server_langgraph.core.config import Settings
 
         settings = Settings()
-        assert hasattr(settings, "enable_semantic_skill_search")
-        assert isinstance(settings.enable_semantic_skill_search, bool)
+        assert hasattr(settings, "max_selected_tools")
+        assert isinstance(settings.max_selected_tools, int)
 
-    def test_settings_has_enable_semantic_memory_search(self, monkeypatch) -> None:
-        """Settings should have enable_semantic_memory_search attribute."""
+    def test_settings_has_max_selected_skills(self, monkeypatch) -> None:
+        """Settings should have max_selected_skills (operational config)."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
         from mcp_server_langgraph.core.config import Settings
 
         settings = Settings()
-        assert hasattr(settings, "enable_semantic_memory_search")
-        assert isinstance(settings.enable_semantic_memory_search, bool)
+        assert hasattr(settings, "max_selected_skills")
+        assert isinstance(settings.max_selected_skills, int)
 
 

@@ -123,6 +123,30 @@ def mock_websocket() -> MagicMock:
 
 
 @pytest.fixture
+def mock_websocket_with_context() -> MagicMock:
+    """Create a mock WebSocket with context_id in query params.
+
+    Use this fixture to test handlers that should extract context_id
+    from URL query parameters during on_connect for session-scoped filtering.
+
+    Returns:
+        MagicMock with query_params containing context_id="test-session-123"
+    """
+    ws = MagicMock()
+    ws.accept = AsyncMock()  # noqa: async-mock-config
+    ws.close = AsyncMock()  # noqa: async-mock-config
+    ws.send_json = AsyncMock()  # noqa: async-mock-config
+    ws.send_text = AsyncMock()  # noqa: async-mock-config
+    ws.receive_json = AsyncMock()  # noqa: async-mock-config
+    ws.receive_text = AsyncMock()  # noqa: async-mock-config
+    # Include context_id for session-scoped filtering tests
+    ws.query_params = {"v": "1.0.0", "context_id": "test-session-123"}
+    ws.headers = {}
+    ws.client_state = MagicMock()
+    return ws
+
+
+@pytest.fixture
 def sample_message() -> MessageEnvelope:
     """Create a sample message envelope."""
     return MessageEnvelope(
