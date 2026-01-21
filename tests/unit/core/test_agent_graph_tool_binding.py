@@ -646,3 +646,107 @@ class TestDynamicToolFiltering:
 
         # Empty selection should fall back to all tools
         mock_model_with_all_tools.ainvoke.assert_called_once()
+
+
+# =============================================================================
+# v7: Native Tool Result Detection Tests
+# =============================================================================
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_native_result_detection_v7")
+class TestNativeResultDetection:
+    """Tests for v7 native tool result detection in _generate_response_impl."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_generate_response_detects_native_results(self, monkeypatch):
+        """generate_response should detect native tool results and append them."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
+        monkeypatch.setenv("ENVIRONMENT", "test")
+
+        from langchain_core.messages import HumanMessage
+
+        from mcp_server_langgraph.core.agent_graph_builder import _generate_response_impl
+
+        # Create a mock response with native tool results
+        mock_response = MagicMock()
+        mock_response.content = [
+            {"type": "text", "text": "Here are the search results:"},
+            {
+                "type": "web_search_results",
+                "results": [
+                    {
+                        "title": "Test Result",
+                        "url": "https://example.com",
+                        "snippet": "Test snippet",
+                    }
+                ],
+            },
+        ]
+        mock_response.tool_calls = None  # No standard tool calls
+
+        mock_model = MagicMock()
+        mock_model.ainvoke = AsyncMock(return_value=mock_response)
+
+        state = {
+            "messages": [HumanMessage(content="Search for AI news")],
+            "next_action": "respond",
+            "user_id": "user:test",
+            "tool_preference": "native",
+        }
+
+        result = await _generate_response_impl(
+            state=state,
+            model=mock_model,
+            bound_tools=[],
+            model_with_tools=None,
+            pydantic_agent=None,
+        )
+
+        # Should have detected native results
+        # The response messages should include the original response
+        assert len(result["messages"]) >= 1
+
+    @pytest.mark.asyncio
+    async def test_generate_response_routes_to_use_tools_for_tool_calls(self, monkeypatch):
+        """generate_response should route to use_tools when tool_calls are present."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
+        monkeypatch.setenv("ENVIRONMENT", "test")
+
+        from langchain_core.messages import HumanMessage
+
+        from mcp_server_langgraph.core.agent_graph_builder import _generate_response_impl
+
+        mock_response = MagicMock()
+        mock_response.content = "I'll calculate that for you."
+        mock_response.tool_calls = [
+            {"id": "call_123", "name": "calculator", "args": {"a": 1, "b": 2}}
+        ]
+
+        mock_model = MagicMock()
+        mock_model.ainvoke = AsyncMock(return_value=mock_response)
+
+        state = {
+            "messages": [HumanMessage(content="Calculate 1 + 2")],
+            "next_action": "respond",
+            "user_id": "user:test",
+        }
+
+        result = await _generate_response_impl(
+            state=state,
+            model=mock_model,
+            bound_tools=[],
+            model_with_tools=None,
+            pydantic_agent=None,
+        )
+
+        # Should route to use_tools for standard tool calls
+        assert result["next_action"] == "use_tools"

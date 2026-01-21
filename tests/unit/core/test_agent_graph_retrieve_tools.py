@@ -300,3 +300,108 @@ class TestSelectToolsGraphFlow:
 
         # The node should exist and have proper edges (verified by graph compilation)
         assert graph is not None
+
+
+# =============================================================================
+# v7: Tests for tool_id support in retrieve_tools
+# =============================================================================
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_retrieve_tools_v7")
+class TestRetrieveToolsV7ToolIds:
+    """Tests for v7 tool_id support in _retrieve_tools_impl."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_retrieve_tools_populates_selected_tool_ids(self, monkeypatch) -> None:
+        """_retrieve_tools_impl should populate both selected_tools and selected_tool_ids."""
+        monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
+        monkeypatch.setenv("ENVIRONMENT", "test")
+
+        from langchain_core.messages import HumanMessage
+
+        from mcp_server_langgraph.core.agent_graph_builder import _retrieve_tools_impl
+        from mcp_server_langgraph.tools.semantic_index import ToolIndexEntry
+
+        # Create mock entries with proper tool_id format
+        mock_entries = [
+            ToolIndexEntry(
+                tool_id="builtin:calculator",
+                name="calculator",
+                description="Perform calculations",
+                category="math",
+            ),
+            ToolIndexEntry(
+                tool_id="builtin:web_search",
+                name="web_search",
+                description="Search the web",
+                category="search",
+            ),
+        ]
+
+        mock_semantic_index = MagicMock()
+        mock_semantic_index.search_tools = AsyncMock(return_value=mock_entries)
+
+        state = {
+            "messages": [HumanMessage(content="Calculate the sum of 1 and 2 then search for news")],
+            "user_id": "test-user",
+        }
+
+        result = await _retrieve_tools_impl(state, mock_semantic_index, max_selected_tools=10)
+
+        # Should have both selected_tools (names) and selected_tool_ids
+        assert "selected_tools" in result
+        assert result["selected_tools"] == ["calculator", "web_search"]
+
+        # v7: Also should have selected_tool_ids for SSE/frontend
+        assert "selected_tool_ids" in result
+        assert result["selected_tool_ids"] == ["builtin:calculator", "builtin:web_search"]
+
+    @pytest.mark.asyncio
+    async def test_retrieve_tools_returns_none_for_both_on_short_query(self, monkeypatch) -> None:
+        """Short queries should set both selected_tools and selected_tool_ids to None."""
+        monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
+        monkeypatch.setenv("ENVIRONMENT", "test")
+
+        from langchain_core.messages import HumanMessage
+
+        from mcp_server_langgraph.core.agent_graph_builder import _retrieve_tools_impl
+
+        mock_semantic_index = MagicMock()
+
+        state = {
+            "messages": [HumanMessage(content="Hi")],  # Too short
+            "user_id": "test-user",
+        }
+
+        result = await _retrieve_tools_impl(state, mock_semantic_index, max_selected_tools=10)
+
+        assert result.get("selected_tools") is None
+        assert result.get("selected_tool_ids") is None
+
+    @pytest.mark.asyncio
+    async def test_retrieve_tools_returns_none_for_both_on_empty_results(self, monkeypatch) -> None:
+        """Empty search results should set both fields to None."""
+        monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
+        monkeypatch.setenv("ENVIRONMENT", "test")
+
+        from langchain_core.messages import HumanMessage
+
+        from mcp_server_langgraph.core.agent_graph_builder import _retrieve_tools_impl
+
+        mock_semantic_index = MagicMock()
+        mock_semantic_index.search_tools = AsyncMock(return_value=[])
+
+        state = {
+            "messages": [HumanMessage(content="Find information about something obscure")],
+            "user_id": "test-user",
+        }
+
+        result = await _retrieve_tools_impl(state, mock_semantic_index, max_selected_tools=10)
+
+        assert result.get("selected_tools") is None
+        assert result.get("selected_tool_ids") is None

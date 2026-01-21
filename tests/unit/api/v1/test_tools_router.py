@@ -683,3 +683,279 @@ class TestToolsSandboxFlag:
             # calculator, search_knowledge_base, web_search, read_file are safe
             for tool in data["tools"]:
                 assert tool["requires_sandbox"] is False
+
+
+# =============================================================================
+# v7: Native Tools Integration Tests
+# =============================================================================
+
+
+@pytest.mark.xdist_group(name="test_tools_router_v7")
+class TestNativeToolsIntegration:
+    """Tests for v7 native LLM provider tools in the tools API."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_list_tools_includes_tool_id_field(
+        self,
+        client: TestClient,
+        mock_builtin_tools: list[MagicMock],
+        mock_cached_registry: MagicMock,
+    ) -> None:
+        """
+        GIVEN tools are available
+        WHEN tools are listed
+        THEN each tool should have a tool_id field in format 'source:name'
+        """
+        with (
+            patch(
+                "mcp_server_langgraph.api.v1.tools.get_all_tools",
+                return_value=mock_builtin_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
+                return_value=mock_cached_registry,
+            ),
+        ):
+            response = client.get("/api/v1/tools")
+            data = response.json()
+
+            for tool in data["tools"]:
+                assert "tool_id" in tool
+                assert ":" in tool["tool_id"]
+
+                # Verify tool_id format matches source:name
+                source = tool["source"]
+                if source == "builtin":
+                    assert tool["tool_id"].startswith("builtin:")
+                elif source == "mcp":
+                    assert tool["tool_id"].startswith("mcp:")
+
+    def test_list_tools_includes_native_count(
+        self,
+        client: TestClient,
+        mock_builtin_tools: list[MagicMock],
+        mock_cached_registry: MagicMock,
+    ) -> None:
+        """
+        GIVEN tools are available
+        WHEN tools are listed
+        THEN response should include native_count field
+        """
+        with (
+            patch(
+                "mcp_server_langgraph.api.v1.tools.get_all_tools",
+                return_value=mock_builtin_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
+                return_value=mock_cached_registry,
+            ),
+        ):
+            response = client.get("/api/v1/tools")
+            data = response.json()
+
+            assert "native_count" in data
+            assert isinstance(data["native_count"], int)
+
+    def test_list_tools_includes_native_tools_when_enabled(
+        self,
+        client: TestClient,
+        mock_builtin_tools: list[MagicMock],
+        mock_cached_registry: MagicMock,
+    ) -> None:
+        """
+        GIVEN native tools feature is enabled
+        WHEN tools are listed
+        THEN native tools should be included with source="native"
+        """
+        with (
+            patch(
+                "mcp_server_langgraph.api.v1.tools.get_all_tools",
+                return_value=mock_builtin_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
+                return_value=mock_cached_registry,
+            ),
+            patch(
+                "mcp_server_langgraph.api.v1.tools.feature_flags"
+            ) as mock_flags,
+        ):
+            mock_flags.native_tools_enabled = True
+            mock_flags.anthropic_native_web_search_enabled = True
+
+            response = client.get("/api/v1/tools")
+            data = response.json()
+
+            native_tools = [t for t in data["tools"] if t["source"] == "native"]
+            assert len(native_tools) >= 1
+            assert data["native_count"] >= 1
+
+            # Check native tool has correct fields
+            for native_tool in native_tools:
+                assert native_tool["tool_id"].startswith("native:")
+                assert "provider" in native_tool
+
+    def test_list_tools_excludes_native_tools_when_disabled(
+        self,
+        client: TestClient,
+        mock_builtin_tools: list[MagicMock],
+        mock_cached_registry: MagicMock,
+    ) -> None:
+        """
+        GIVEN native tools feature is disabled
+        WHEN tools are listed
+        THEN native tools should NOT be included
+        """
+        with (
+            patch(
+                "mcp_server_langgraph.api.v1.tools.get_all_tools",
+                return_value=mock_builtin_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
+                return_value=mock_cached_registry,
+            ),
+            patch(
+                "mcp_server_langgraph.api.v1.tools.feature_flags"
+            ) as mock_flags,
+        ):
+            mock_flags.native_tools_enabled = False
+
+            response = client.get("/api/v1/tools")
+            data = response.json()
+
+            native_tools = [t for t in data["tools"] if t["source"] == "native"]
+            assert len(native_tools) == 0
+            assert data["native_count"] == 0
+
+    def test_list_tools_filter_by_source_native(
+        self,
+        client: TestClient,
+        mock_builtin_tools: list[MagicMock],
+        mock_cached_registry: MagicMock,
+    ) -> None:
+        """
+        GIVEN source=native filter is specified
+        WHEN tools are listed
+        THEN only native tools should be returned
+        """
+        with (
+            patch(
+                "mcp_server_langgraph.api.v1.tools.get_all_tools",
+                return_value=mock_builtin_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
+                return_value=mock_cached_registry,
+            ),
+            patch(
+                "mcp_server_langgraph.api.v1.tools.feature_flags"
+            ) as mock_flags,
+        ):
+            mock_flags.native_tools_enabled = True
+            mock_flags.anthropic_native_web_search_enabled = True
+
+            response = client.get("/api/v1/tools?source=native")
+            data = response.json()
+
+            assert all(t["source"] == "native" for t in data["tools"])
+            assert data["builtin_count"] == 0
+            assert data["mcp_count"] == 0
+
+    def test_native_tools_have_provider_field(
+        self,
+        client: TestClient,
+        mock_builtin_tools: list[MagicMock],
+        mock_cached_registry: MagicMock,
+    ) -> None:
+        """
+        GIVEN native tools are enabled
+        WHEN tools are listed
+        THEN native tools should have a provider field
+        """
+        with (
+            patch(
+                "mcp_server_langgraph.api.v1.tools.get_all_tools",
+                return_value=mock_builtin_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
+                return_value=mock_cached_registry,
+            ),
+            patch(
+                "mcp_server_langgraph.api.v1.tools.feature_flags"
+            ) as mock_flags,
+        ):
+            mock_flags.native_tools_enabled = True
+            mock_flags.anthropic_native_web_search_enabled = True
+
+            response = client.get("/api/v1/tools?source=native")
+            data = response.json()
+
+            for tool in data["tools"]:
+                assert "provider" in tool
+                assert tool["provider"] in ("anthropic", "google", None)
+
+    def test_builtin_tool_id_format(
+        self,
+        client: TestClient,
+        mock_builtin_tools: list[MagicMock],
+        mock_cached_registry: MagicMock,
+    ) -> None:
+        """
+        GIVEN built-in tools are available
+        WHEN tools are listed
+        THEN builtin tool_id should be 'builtin:{name}'
+        """
+        with (
+            patch(
+                "mcp_server_langgraph.api.v1.tools.get_all_tools",
+                return_value=mock_builtin_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
+                return_value=mock_cached_registry,
+            ),
+        ):
+            mock_cached_registry.get_tools = AsyncMock(return_value=[])
+            response = client.get("/api/v1/tools")
+            data = response.json()
+
+            for tool in data["tools"]:
+                if tool["source"] == "builtin":
+                    expected_id = f"builtin:{tool['name']}"
+                    assert tool["tool_id"] == expected_id
+
+    def test_mcp_tool_id_format(
+        self,
+        client: TestClient,
+        mock_builtin_tools: list[MagicMock],
+        mock_mcp_tools: list[dict[str, Any]],
+        mock_cached_registry: MagicMock,
+    ) -> None:
+        """
+        GIVEN MCP tools are available
+        WHEN tools are listed
+        THEN MCP tool_id should be 'mcp:{qualified_name}'
+        """
+        with (
+            patch(
+                "mcp_server_langgraph.api.v1.tools.get_all_tools",
+                return_value=[],
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
+                return_value=mock_cached_registry,
+            ),
+        ):
+            response = client.get("/api/v1/tools")
+            data = response.json()
+
+            for tool in data["tools"]:
+                if tool["source"] == "mcp":
+                    expected_id = f"mcp:{tool['name']}"
+                    assert tool["tool_id"] == expected_id
