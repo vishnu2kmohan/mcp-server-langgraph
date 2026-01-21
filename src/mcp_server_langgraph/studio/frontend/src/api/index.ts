@@ -224,6 +224,9 @@ import type {
   UnifiedToolCamelCase,
   UnifiedToolsListResponse,
   ListToolsParams,
+  // v7: Native capabilities API types
+  NativeCapabilitiesResponse,
+  NativeCapabilitiesResponseCamelCase,
 } from "../types/tools";
 
 // Import generated API types for type safety (prevents type drift)
@@ -1599,6 +1602,153 @@ export const api = createApi({
         },
       providesTags: ["Connection"], // Invalidate when connections change (MCP tools)
       keepUnusedDataFor: 300, // 5 minutes - tools don't change often
+    }),
+
+    /**
+     * Get native tool capabilities for a specific model (v7)
+     *
+     * Returns which native tools are supported by the model and whether
+     * feature flags are enabled for each tool.
+     *
+     * @see GET /api/v1/tools/native-capabilities/{model_id}
+     */
+    getNativeCapabilities: builder.query<
+      NativeCapabilitiesResponseCamelCase,
+      { modelId: string }
+    >({
+      query: ({ modelId }) => `/tools/native-capabilities/${encodeURIComponent(modelId)}`,
+      transformResponse: (response: NativeCapabilitiesResponse) =>
+        transformSnakeToCamel(response) as unknown as NativeCapabilitiesResponseCamelCase,
+      keepUnusedDataFor: 600, // 10 minutes - capabilities change infrequently
+    }),
+
+    /**
+     * Get native vs builtin tool metrics comparison (v7)
+     *
+     * Returns latency, error rates, and selection counts for native and builtin tools.
+     * Used by the Cost/Latency Comparison Dashboard.
+     */
+    getToolMetricsComparison: builder.query<
+      {
+        tools: Array<{
+          toolName: string;
+          native: {
+            provider: string | null;
+            selectionCount: number;
+            executionCount: number;
+            errorCount: number;
+            fallbackCount: number;
+            avgLatencyMs: number;
+            minLatencyMs: number;
+            maxLatencyMs: number;
+            p50LatencyMs: number;
+            p95LatencyMs: number;
+            p99LatencyMs: number;
+            errorRate: number;
+          } | null;
+          builtin: {
+            provider: string | null;
+            selectionCount: number;
+            executionCount: number;
+            errorCount: number;
+            fallbackCount: number;
+            avgLatencyMs: number;
+            minLatencyMs: number;
+            maxLatencyMs: number;
+            p50LatencyMs: number;
+            p95LatencyMs: number;
+            p99LatencyMs: number;
+            errorRate: number;
+          } | null;
+          mcp: {
+            provider: string | null;
+            selectionCount: number;
+            executionCount: number;
+            errorCount: number;
+            fallbackCount: number;
+            avgLatencyMs: number;
+            minLatencyMs: number;
+            maxLatencyMs: number;
+            p50LatencyMs: number;
+            p95LatencyMs: number;
+            p99LatencyMs: number;
+            errorRate: number;
+          } | null;
+        }>;
+        summary: {
+          nativeSelections: number;
+          builtinSelections: number;
+          nativeErrors: number;
+          builtinErrors: number;
+          uptimeSeconds: number;
+        };
+      },
+      void
+    >({
+      query: () => "/tools/metrics/comparison",
+      transformResponse: (response: {
+        tools: Array<{
+          tool_name: string;
+          native: Record<string, unknown> | null;
+          builtin: Record<string, unknown> | null;
+          mcp: Record<string, unknown> | null;
+        }>;
+        summary: Record<string, unknown>;
+      }) => transformSnakeToCamel(response) as {
+        tools: Array<{
+          toolName: string;
+          native: {
+            provider: string | null;
+            selectionCount: number;
+            executionCount: number;
+            errorCount: number;
+            fallbackCount: number;
+            avgLatencyMs: number;
+            minLatencyMs: number;
+            maxLatencyMs: number;
+            p50LatencyMs: number;
+            p95LatencyMs: number;
+            p99LatencyMs: number;
+            errorRate: number;
+          } | null;
+          builtin: {
+            provider: string | null;
+            selectionCount: number;
+            executionCount: number;
+            errorCount: number;
+            fallbackCount: number;
+            avgLatencyMs: number;
+            minLatencyMs: number;
+            maxLatencyMs: number;
+            p50LatencyMs: number;
+            p95LatencyMs: number;
+            p99LatencyMs: number;
+            errorRate: number;
+          } | null;
+          mcp: {
+            provider: string | null;
+            selectionCount: number;
+            executionCount: number;
+            errorCount: number;
+            fallbackCount: number;
+            avgLatencyMs: number;
+            minLatencyMs: number;
+            maxLatencyMs: number;
+            p50LatencyMs: number;
+            p95LatencyMs: number;
+            p99LatencyMs: number;
+            errorRate: number;
+          } | null;
+        }>;
+        summary: {
+          nativeSelections: number;
+          builtinSelections: number;
+          nativeErrors: number;
+          builtinErrors: number;
+          uptimeSeconds: number;
+        };
+      },
+      keepUnusedDataFor: 30, // 30 seconds - metrics change frequently
     }),
 
     // =========================================================================
@@ -4141,6 +4291,9 @@ export const {
   useGetAggregatedPromptQuery,
   useListAggregatedServersQuery,
   useGetServerCapabilitiesQuery,
+  // Native Tool Metrics & Capabilities (v7)
+  useGetNativeCapabilitiesQuery,
+  useGetToolMetricsComparisonQuery,
   // Vectors
   useListVectorCollectionsQuery,
   useCreateVectorCollectionMutation,

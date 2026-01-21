@@ -23,6 +23,8 @@ import type { CanvasArtifact } from "../types/artifacts";
 import { getAttributionType } from "../types/artifacts";
 import { cn } from "../utils/cn";
 
+import { Input } from "@/components/UI";
+
 interface ArtifactTabProps {
   /** The artifact to display */
   artifact: CanvasArtifact;
@@ -155,7 +157,6 @@ export function ArtifactTab({
       >
         <GripVertical className="w-3 h-3" />
       </button>
-
       {/* Attribution indicator (small dot) */}
       {attributionType === "ai-generated" && (
         <span
@@ -169,11 +170,9 @@ export function ArtifactTab({
           className="w-1.5 h-1.5 rounded-full bg-primary-9 mr-1.5"
         />
       )}
-
       {/* Tab title - inline edit or text */}
       {isRenaming ? (
-        <input
-          type="text"
+        <Input
           value={renameValue}
           onChange={(e) => setRenameValue(e.target.value)}
           onKeyDown={handleRenameKeyDown}
@@ -185,12 +184,10 @@ export function ArtifactTab({
             "text-neutral-12"
           )}
           autoFocus
-          onClick={(e) => e.stopPropagation()}
-        />
+          onClick={(e) => e.stopPropagation()} />
       ) : (
         <span className="truncate max-w-[120px]">{displayTitle}</span>
       )}
-
       {/* Close button */}
       <button
         type="button"

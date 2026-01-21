@@ -174,11 +174,11 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
         </div>
         <div className="flex items-center gap-1">
           <Button
+            variant="primary"
             size="sm"
             className="flex px-3 py-1 text-sm rounded"
             onClick={handleCopy}
-            aria-label="Copy code"
-          >
+            aria-label="Copy code">
             {copied ? (
               <>
                 <Check className="w-4 h-4 text-success-9" />

@@ -107,10 +107,10 @@ function TemplateCard({
 }) {
   return (
     <Button
+      variant="primary"
       className="w-full text-left p-4 rounded-lg border"
       type="button"
-      onClick={onClick}
-    >
+      onClick={onClick}>
       <div className="flex items-start justify-between mb-2">
         <h4 className="font-medium text-neutral-12">
           {template.name}
@@ -383,13 +383,13 @@ export function PlanSearch({
             <Tag className="w-4 h-4 text-neutral-9" />
             {allTags.map((tag) => (
               <Button
+                variant="primary"
                 size="sm"
                 className="px-2 py-1 text-xs rounded-full border"
                 key={tag}
                 type="button"
                 onClick={() => handleTagToggle(tag)}
-                disabled={isLoading}
-              >
+                disabled={isLoading}>
                 {tag}
               </Button>
             ))}

@@ -35,6 +35,7 @@ export const mockStreamingChatReturn = {
   thinkingContent: "" as string,
   usage: null,
   thinkingTokens: null as number | null,
+  sources: [] as Array<{ title: string; url: string; snippet?: string }>,
   startStream: vi.fn(),
   stopStream: vi.fn(),
   clearContent: vi.fn(),
@@ -66,6 +67,7 @@ export const resetMocks = () => {
   mockStreamingChatReturn.error = null;
   mockStreamingChatReturn.thinkingContent = "";
   mockStreamingChatReturn.thinkingTokens = null;
+  mockStreamingChatReturn.sources = [];
 
   // Setup fetch mock for API calls
   global.fetch = mockFetch;

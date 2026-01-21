@@ -20,16 +20,18 @@ import { ChevronDown, Search, Loader2, Wrench } from "lucide-react";
 import { cn } from "../../utils/cn";
 import type { ToolSelectionMode } from "@/types/tools";
 
+import { Input } from "@/components/UI";
+
 // =============================================================================
 // Types
 // =============================================================================
 
 /** Simplified tool representation for the selector */
 export interface ToolOption {
-  /** Tool name for execution */
+  /** Tool name for execution (LangChain-compatible name) */
   name: string;
-  /** Unique tool identifier for selection (v7: use tool_id for selection) */
-  toolId?: string;
+  /** Unique tool identifier for selection (v7: REQUIRED - use for selection) */
+  toolId: string;
   displayName: string;
   /** Tool source: builtin, mcp, or native (v7) */
   source: "builtin" | "mcp" | "native";
@@ -41,7 +43,7 @@ export interface ToolOption {
 }
 
 export interface ToolSelectorProps {
-  /** Currently selected tool names */
+  /** Currently selected tool IDs (v7: use tool_id for unique identification) */
   selectedTools: string[];
   /** Callback when selection changes */
   onSelectionChange: (tools: string[]) => void;
@@ -115,14 +117,21 @@ export function ToolSelector({
     );
   }, [availableTools, searchTerm]);
 
-  // Group filtered tools by source
+  // Group filtered tools by source (v7: includes native tools)
   const groupedTools = useMemo(() => {
     const builtin: ToolOption[] = [];
+    const native: Record<string, ToolOption[]> = {}; // Grouped by provider
     const mcp: Record<string, ToolOption[]> = {};
 
     for (const tool of filteredTools) {
       if (tool.source === "builtin") {
         builtin.push(tool);
+      } else if (tool.source === "native" && tool.provider) {
+        // Group native tools by provider (e.g., "anthropic", "google")
+        if (!native[tool.provider]) {
+          native[tool.provider] = [];
+        }
+        native[tool.provider].push(tool);
       } else if (tool.source === "mcp" && tool.serverName) {
         if (!mcp[tool.serverName]) {
           mcp[tool.serverName] = [];
@@ -131,7 +140,7 @@ export function ToolSelector({
       }
     }
 
-    return { builtin, mcp };
+    return { builtin, native, mcp };
   }, [filteredTools]);
 
   // Close dropdown on outside click
@@ -198,12 +207,12 @@ export function ToolSelector({
     [onModeChange, onSelectionChange]
   );
 
-  // Handle tool toggle
+  // Handle tool toggle (v7: uses toolId for unique identification)
   const handleToolToggle = useCallback(
-    (toolName: string) => {
-      const newSelection = selectedTools.includes(toolName)
-        ? selectedTools.filter((t) => t !== toolName)
-        : [...selectedTools, toolName];
+    (toolId: string) => {
+      const newSelection = selectedTools.includes(toolId)
+        ? selectedTools.filter((t) => t !== toolId)
+        : [...selectedTools, toolId];
       onSelectionChange(newSelection);
     },
     [selectedTools, onSelectionChange]
@@ -246,7 +255,6 @@ export function ToolSelector({
           )}
         />
       </button>
-
       {/* Dropdown */}
       {isOpen && (
         <div
@@ -297,9 +305,8 @@ export function ToolSelector({
               <div className="p-2 border-b border-neutral-6">
                 <div className="relative">
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-9" />
-                  <input
+                  <Input
                     ref={searchInputRef}
-                    type="text"
                     placeholder="Search tools..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -308,8 +315,7 @@ export function ToolSelector({
                       "bg-neutral-2 border border-neutral-6 rounded",
                       "text-neutral-12 placeholder:text-neutral-9",
                       "focus:outline-none focus:ring-1 focus:ring-primary-8"
-                    )}
-                  />
+                    )} />
                 </div>
               </div>
 
@@ -329,14 +335,31 @@ export function ToolSelector({
                         </div>
                         {groupedTools.builtin.map((tool) => (
                           <ToolCheckboxItem
-                            key={tool.name}
+                            key={tool.toolId}
                             tool={tool}
-                            isSelected={selectedTools.includes(tool.name)}
-                            onToggle={() => handleToolToggle(tool.name)}
+                            isSelected={selectedTools.includes(tool.toolId)}
+                            onToggle={() => handleToolToggle(tool.toolId)}
                           />
                         ))}
                       </div>
                     )}
+
+                    {/* Native Tools by Provider (v7) */}
+                    {Object.entries(groupedTools.native).map(([provider, tools]) => (
+                      <div key={`native-${provider}`} className="mb-3">
+                        <div className="text-xs font-medium text-neutral-9 mb-1 px-1 capitalize">
+                          {provider} Native
+                        </div>
+                        {tools.map((tool) => (
+                          <ToolCheckboxItem
+                            key={tool.toolId}
+                            tool={tool}
+                            isSelected={selectedTools.includes(tool.toolId)}
+                            onToggle={() => handleToolToggle(tool.toolId)}
+                          />
+                        ))}
+                      </div>
+                    ))}
 
                     {/* MCP Tools by Server */}
                     {Object.entries(groupedTools.mcp).map(([serverName, tools]) => (
@@ -346,10 +369,10 @@ export function ToolSelector({
                         </div>
                         {tools.map((tool) => (
                           <ToolCheckboxItem
-                            key={tool.name}
+                            key={tool.toolId}
                             tool={tool}
-                            isSelected={selectedTools.includes(tool.name)}
-                            onToggle={() => handleToolToggle(tool.name)}
+                            isSelected={selectedTools.includes(tool.toolId)}
+                            onToggle={() => handleToolToggle(tool.toolId)}
                           />
                         ))}
                       </div>

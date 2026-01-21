@@ -273,14 +273,14 @@ export function ProjectDocument({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {resourceLinks.map((resource) => (
                 <Button
+                  variant="ghost"
                   key={resource.label}
                   onClick={() => navigate(resource.path)}
                   className={cn(
                     "p-4 rounded-lg border border-neutral-5",
                     "bg-neutral-1 hover:shadow-md transition-shadow",
                     "text-left",
-                  )}
-                >
+                  )}>
                   <div className="flex items-center justify-between mb-2">
                     <div className={cn("p-2 rounded-lg", resource.bgColor)}>
                       <resource.icon size={20} className={resource.color} />
@@ -316,11 +316,11 @@ export function ProjectDocument({
                 New Session
               </Button>
               <Button
+                variant="primary"
                 className="flex px-3 py-2 text-sm bg-insight-1 text-insight-11 dark:bg-insight-a3 dark:text-insight-9 rounded-lg hover:bg-insight-2 dark:hover:bg-insight-a4"
                 onClick={() =>
                   navigate(`/studio/workflows?project=${projectId}`)
-                }
-              >
+                }>
                 <GitBranch size={16} />
                 Create Workflow
               </Button>

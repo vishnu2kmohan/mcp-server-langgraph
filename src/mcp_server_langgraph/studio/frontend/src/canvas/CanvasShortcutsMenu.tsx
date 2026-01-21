@@ -281,6 +281,7 @@ export function CanvasShortcutsMenu({
     >
       {/* Floating Action Button */}
       <Button
+        variant="primary"
         data-testid="canvas-shortcuts-trigger"
         onClick={toggleMenu}
         disabled={isLoading}
@@ -292,8 +293,7 @@ export function CanvasShortcutsMenu({
           isOpen && "rotate-45",
         )}
         aria-label={isOpen ? "Close shortcuts menu" : "Open shortcuts menu"}
-        aria-expanded={isOpen}
-      >
+        aria-expanded={isOpen}>
         {isLoading ? (
           <span className="block w-5 h-5 animate-spin rounded-full border-2 border-neutral-1 border-t-transparent" />
         ) : (

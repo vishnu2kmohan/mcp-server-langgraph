@@ -119,6 +119,9 @@ export type {
 export { MarkdownContent } from "./MarkdownContent";
 export type { MarkdownContentProps } from "./MarkdownContent";
 
+export { SourceCitations } from "./SourceCitations";
+export type { SourceCitationsProps } from "./SourceCitations";
+
 export { MessageActions } from "./MessageActions";
 export type { MessageActionsProps } from "./MessageActions";
 

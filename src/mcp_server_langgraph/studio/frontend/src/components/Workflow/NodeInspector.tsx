@@ -197,10 +197,10 @@ export function NodeInspector() {
 
         {/* Ask AI Button */}
         <Button
+          variant="ghost"
           className="w-full flex px-4 py-2 rounded-md text-sm"
           data-testid="ask-ai-button"
-          onClick={() => setShowAiChat(!showAiChat)}
-        >
+          onClick={() => setShowAiChat(!showAiChat)}>
           <Sparkles size={16} />
           Ask AI
         </Button>
@@ -243,12 +243,12 @@ export function NodeInspector() {
                 placeholder="Ask about this node config..."
               />
               <Button
+                variant="primary"
                 className="p-2 bg-insight-10 text-neutral-12 rounded-md hover:bg-insight-11"
                 data-testid="send-ai-question"
                 onClick={handleAskAi}
                 disabled={!question.trim() || isLoadingAi}
-                aria-label="Send question to AI assistant"
-              >
+                aria-label="Send question to AI assistant">
                 {isLoadingAi ? (
                   <Loader2 size={16} className="animate-spin" />
                 ) : (

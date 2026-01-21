@@ -184,10 +184,10 @@ export function SessionGoalTracker({
         </div>
         <div className="flex items-center gap-1">
           <Button
+            variant="ghost"
             className="p-1 text-neutral-9 hover:text-neutral-11 rounded"
             onClick={handleEdit}
-            aria-label="Edit"
-          >
+            aria-label="Edit">
             <Edit2 className="w-3.5 h-3.5" />
           </Button>
           <Button size="icon" variant="ghost"

@@ -14,10 +14,11 @@
  */
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { ChevronDown, Check, Loader2, Brain } from "lucide-react";
+import { ChevronDown, Check, Loader2, Brain, Zap, Globe, Code, Search } from "lucide-react";
 import { cn } from "../../utils/cn";
 import type { ReasoningEffortLevel } from "./ReasoningEffortSelector";
 import type { ModelStatus } from "@/types";
+import { useNativeCapabilities } from "@/hooks";
 
 // =============================================================================
 // Types
@@ -27,6 +28,8 @@ export interface ModelOption {
   id: string;
   name: string;
   provider: string;
+  /** Vendor distinguishes native API vs Vertex AI (Issue 5) */
+  vendor?: "anthropic" | "google" | "openai" | "vertex_ai" | "vertex_ai_anthropic" | "azure";
   supportsThinking?: boolean;
   supportsVision?: boolean;
   supportsTools?: boolean;
@@ -51,6 +54,8 @@ export interface HeaderModelSelectorProps {
   disabled?: boolean;
   /** Compact mode for smaller displays */
   compact?: boolean;
+  /** Enable search input for filtering models (Issue 4) */
+  enableSearch?: boolean;
   /** Additional CSS classes */
   className?: string;
 }
@@ -76,6 +81,35 @@ const STATUS_BADGES: Record<string, { label: string; className: string }> = {
       "bg-error-3 text-error-11",
   },
 };
+
+/**
+ * Format model provider display with vendor info for transparency.
+ * Shows "Google (Vertex AI)" when using Vertex AI instead of native API.
+ * Issue 5: Add vendor distinction for Google vs Vertex AI models.
+ */
+function formatProviderDisplay(model: ModelOption): string {
+  const { provider, vendor } = model;
+
+  // Helper to capitalize provider name
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  // No vendor specified - return capitalized provider
+  if (!vendor) return capitalize(provider);
+
+  // Show vendor distinction when it differs from simplified provider
+  if (vendor === "vertex_ai" && provider === "google") {
+    return "Google (Vertex AI)";
+  }
+  if (vendor === "vertex_ai_anthropic" && provider === "anthropic") {
+    return "Anthropic (Vertex AI)";
+  }
+  if (vendor === "azure" && provider === "openai") {
+    return "OpenAI (Azure)";
+  }
+
+  // Default: capitalize provider
+  return capitalize(provider);
+}
 
 const THINKING_LEVELS: {
   value: ReasoningEffortLevel;
@@ -112,10 +146,14 @@ export function HeaderModelSelector({
   isLoading = false,
   disabled = false,
   compact = false,
+  enableSearch = false,
   className,
 }: HeaderModelSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  // Issue 4: Search state for filtering models
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -129,6 +167,33 @@ export function HeaderModelSelector({
 
   // Check if current model supports thinking
   const modelSupportsThinking = selectedModelObj?.supportsThinking ?? false;
+
+  // Issue 4: Filter models based on search query (case-insensitive)
+  const filteredModels = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return availableModels;
+    }
+    const query = searchQuery.toLowerCase();
+    return availableModels.filter(
+      (model) =>
+        model.name.toLowerCase().includes(query) ||
+        model.provider.toLowerCase().includes(query) ||
+        model.id.toLowerCase().includes(query)
+    );
+  }, [availableModels, searchQuery]);
+
+  // Fetch native tool capabilities for the selected model (v7)
+  const {
+    hasNativeTools,
+    supportsWebSearch,
+    supportsCodeExecution,
+    nativeProvider,
+    masterEnabled,
+    isLoading: _nativeCapabilitiesLoading,
+  } = useNativeCapabilities({
+    modelId: selectedModel ?? "",
+    skip: !selectedModel,
+  });
 
   // Get display name (abbreviated in compact mode)
   const displayName = useMemo(() => {
@@ -186,10 +251,12 @@ export function HeaderModelSelector({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
-  // Reset focus when dropdown opens/closes and focus first option
+  // Reset focus and clear search when dropdown closes
   useEffect(() => {
     if (!isOpen) {
       setFocusedIndex(-1);
+      // Issue 4: Clear search when dropdown closes
+      setSearchQuery("");
     }
   }, [isOpen]);
 
@@ -219,32 +286,33 @@ export function HeaderModelSelector({
   );
 
   // Handle keyboard navigation in dropdown
+  // Issue 4: Updated to use filteredModels for search support
   const handleDropdownKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
       switch (event.key) {
         case "ArrowDown":
           event.preventDefault();
           setFocusedIndex((prev) => {
-            const next = prev < 0 ? 0 : Math.min(prev + 1, availableModels.length - 1);
+            const next = prev < 0 ? 0 : Math.min(prev + 1, filteredModels.length - 1);
             return next;
           });
           break;
         case "ArrowUp":
           event.preventDefault();
           setFocusedIndex((prev) => {
-            const next = prev < 0 ? availableModels.length - 1 : Math.max(prev - 1, 0);
+            const next = prev < 0 ? filteredModels.length - 1 : Math.max(prev - 1, 0);
             return next;
           });
           break;
         case "Enter":
           event.preventDefault();
-          if (focusedIndex >= 0 && availableModels[focusedIndex]) {
-            handleModelSelect(availableModels[focusedIndex].id);
+          if (focusedIndex >= 0 && filteredModels[focusedIndex]) {
+            handleModelSelect(filteredModels[focusedIndex].id);
           }
           break;
       }
     },
-    [focusedIndex, availableModels, handleModelSelect]
+    [focusedIndex, filteredModels, handleModelSelect]
   );
 
   const toggleDropdown = useCallback(() => {
@@ -264,10 +332,10 @@ export function HeaderModelSelector({
         setFocusedIndex(0);
       } else if (event.key === "ArrowUp" && isOpen) {
         event.preventDefault();
-        setFocusedIndex(availableModels.length - 1);
+        setFocusedIndex(filteredModels.length - 1);
       }
     },
-    [toggleDropdown, isOpen, availableModels.length]
+    [toggleDropdown, isOpen, filteredModels.length]
   );
 
   return (
@@ -378,12 +446,97 @@ export function HeaderModelSelector({
             </div>
           )}
 
+          {/* Native Tools Section (v7) - Show when native tools are available */}
+          {masterEnabled && hasNativeTools && (
+            <div
+              data-testid="native-tools-section"
+              className="p-3 border-b border-neutral-6"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Zap
+                  size={14}
+                  className="text-warning-11"
+                />
+                <span className="text-xs font-medium text-neutral-11">
+                  Native Tools Available
+                </span>
+                {nativeProvider && (
+                  <span className="text-xs text-neutral-9 capitalize">
+                    ({nativeProvider})
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {supportsWebSearch && (
+                  <div
+                    className={cn(
+                      "inline-flex items-center gap-1 px-2 py-1 text-xs rounded",
+                      "bg-success-3 text-success-11"
+                    )}
+                    data-testid="native-web-search-badge"
+                  >
+                    <Globe size={12} />
+                    <span>Web Search</span>
+                  </div>
+                )}
+                {supportsCodeExecution && (
+                  <div
+                    className={cn(
+                      "inline-flex items-center gap-1 px-2 py-1 text-xs rounded",
+                      "bg-success-3 text-success-11"
+                    )}
+                    data-testid="native-code-execution-badge"
+                  >
+                    <Code size={12} />
+                    <span>Code Execution</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-neutral-9 mt-2">
+                Set tool preference in chat settings to use native tools.
+              </p>
+            </div>
+          )}
+
           {/* Models Section */}
           <div className="py-1">
+            {/* Issue 4: Search input for filtering models */}
+            {enableSearch && (
+              <div className="px-3 py-2 border-b border-neutral-6">
+                <div className="relative">
+                  <Search
+                    size={14}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 text-neutral-9"
+                  />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search models..."
+                    data-testid="model-search-input"
+                    className={cn(
+                      "w-full pl-7 pr-3 py-1.5 text-sm",
+                      "bg-neutral-3 border border-neutral-6 rounded",
+                      "text-neutral-11 placeholder:text-neutral-9",
+                      "focus:outline-none focus:ring-2 focus:ring-primary-9"
+                    )}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => {
+                      // Prevent dropdown from closing on Enter in search input
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            )}
             <div className="px-3 py-1.5 text-xs font-medium text-neutral-10 uppercase tracking-wider">
               Models
             </div>
-            {availableModels.map((model, index) => {
+            {filteredModels.map((model, index) => {
               const isSelected = model.id === selectedModel;
               const statusBadge = model.status && STATUS_BADGES[model.status];
 
@@ -429,8 +582,8 @@ export function HeaderModelSelector({
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-neutral-10 capitalize">
-                      {model.provider}
+                    <div className="text-xs text-neutral-10">
+                      {formatProviderDisplay(model)}
                     </div>
                   </div>
                   {isSelected && (
@@ -442,9 +595,10 @@ export function HeaderModelSelector({
                 </button>
               );
             })}
-            {availableModels.length === 0 && (
+            {/* Issue 4: Updated to show appropriate message for search vs no models */}
+            {filteredModels.length === 0 && (
               <div className="px-3 py-4 text-sm text-center text-neutral-10">
-                No models available
+                {searchQuery.trim() ? "No models found" : "No models available"}
               </div>
             )}
           </div>

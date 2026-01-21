@@ -44,7 +44,13 @@ import {
   clearMessages,
   saveAssistantMessage,
 } from "../store/slices/sessionSlice";
-import { selectExecutionMode } from "../store/slices/executionModeSlice";
+import {
+  selectExecutionMode,
+  selectCurrentPlan,
+  selectShowPlanApproval,
+  setPlanStatus,
+  clearPlan,
+} from "../store/slices/executionModeSlice";
 import { useMessageRevalidation } from "../hooks/useMessageRevalidation";
 import { useSessionAutoName } from "../hooks/useSessionAutoName";
 import { useStreamingChat } from "../hooks/useStreamingChat";
@@ -60,12 +66,13 @@ import { useArtifactExtraction } from "../hooks/useArtifactExtraction";
 import { useInlineSuggestions } from "../hooks/useInlineSuggestions";
 import { useDebounce } from "../hooks/useDebounce";
 import { ConversationPanel } from "./ConversationPanel";
+import { InlinePlanCard } from "./InlinePlanCard";
 import type {
   SlashCommand,
   ModelOption,
 } from "../components/Chat/ChatInput";
 import type { ReasoningEffortLevel } from "../components/Chat/ReasoningEffortSelector";
-import type { KBFocusMode } from "../hooks/useStreamingChat";
+import type { KBFocusMode, ToolPreference } from "../hooks/useStreamingChat";
 import type { ChatLoaderData } from "../router/loaders";
 import { devLogger } from "../utils/devLogger";
 import { cn } from "../utils/cn";
@@ -212,6 +219,9 @@ export const ConnectedConversationPanel = forwardRef<
   // KB focus mode state (lifted from ConnectedChatInputForm for API integration)
   const [kbFocusMode, setKbFocusMode] = useState<KBFocusMode>("all");
 
+  // v7: Tool preference state for native vs builtin execution
+  const [toolPreference, setToolPreference] = useState<ToolPreference>("auto");
+
   // =============================================================================
   // Streaming Chat (LLM Response Generation)
   // =============================================================================
@@ -225,6 +235,7 @@ export const ConnectedConversationPanel = forwardRef<
     thinkingTokens,
     startStream,
     authRequired, // Auth required event from SSE stream (ADR-0102)
+    sources: streamingSources, // Source citations from web search (ADR-0099)
   } = useStreamingChat();
 
   // Reset dismissed error state when a new error occurs
@@ -247,6 +258,7 @@ export const ConnectedConversationPanel = forwardRef<
   const lastStreamedContentRef = useRef<string>("");
   const lastStreamedUsageRef = useRef<typeof streamingUsage>(null);
   const lastThinkingTokensRef = useRef<number | null>(null);
+  const lastStreamedSourcesRef = useRef<typeof streamingSources>([]);
 
   // =============================================================================
   // Artifact Extraction (connects Chat to Canvas)
@@ -367,6 +379,10 @@ export const ConnectedConversationPanel = forwardRef<
   // Get execution mode from Redux (plan/default/auto_accept/bypass)
   const executionMode = useAppSelector(selectExecutionMode);
 
+  // Get current plan and approval status from Redux (Issue 7: Plan Rendering)
+  const currentPlan = useAppSelector(selectCurrentPlan);
+  const showPlanApproval = useAppSelector(selectShowPlanApproval);
+
   // Get pending auth requirements for InlineConnectionCard (ADR-0102)
   const pendingAuthRequirements = useAppSelector(selectPendingAuthRequirements);
 
@@ -374,6 +390,25 @@ export const ConnectedConversationPanel = forwardRef<
   const handleDismissAuthRequirement = useCallback(
     (id: string) => {
       dispatch(dismissAuthRequirement(id));
+    },
+    [dispatch],
+  );
+
+  // Plan approval handlers (Issue 7: Plan Rendering)
+  const handleApprovePlan = useCallback(
+    (_planId: string) => {
+      dispatch(setPlanStatus("approved"));
+      // Clear the plan after a short delay to allow UI feedback
+      setTimeout(() => dispatch(clearPlan()), 500);
+    },
+    [dispatch],
+  );
+
+  const handleRejectPlan = useCallback(
+    (_planId: string) => {
+      dispatch(setPlanStatus("rejected"));
+      // Clear the plan after a short delay to allow UI feedback
+      setTimeout(() => dispatch(clearPlan()), 500);
     },
     [dispatch],
   );
@@ -419,11 +454,12 @@ export const ConnectedConversationPanel = forwardRef<
           content: streamingContent,
           timestamp: Date.now(),
           isStreaming: true,
+          sources: streamingSources, // Source citations from web search
         },
       ];
     }
     return baseMessages;
-  }, [baseMessages, isStreaming, streamingContent]);
+  }, [baseMessages, isStreaming, streamingContent, streamingSources]);
 
   // =============================================================================
   // Session Auto-Naming
@@ -459,10 +495,12 @@ export const ConnectedConversationPanel = forwardRef<
         // Get captured usage data from refs
         const capturedUsage = lastStreamedUsageRef.current;
         const capturedThinkingTokens = lastThinkingTokensRef.current;
+        const capturedSources = lastStreamedSourcesRef.current;
 
         // Clear refs after capturing
         lastStreamedUsageRef.current = null;
         lastThinkingTokensRef.current = null;
+        lastStreamedSourcesRef.current = [];
 
         dispatch(
           saveAssistantMessage({
@@ -471,6 +509,8 @@ export const ConnectedConversationPanel = forwardRef<
             // Include token usage for cost tracking in the UI
             usage: capturedUsage ?? undefined,
             thinkingTokens: capturedThinkingTokens ?? undefined,
+            // Include source citations from web search results
+            sources: capturedSources.length > 0 ? capturedSources : undefined,
           }),
         )
           .unwrap()
@@ -500,11 +540,12 @@ export const ConnectedConversationPanel = forwardRef<
     if (isStreaming && streamingContent) {
       streamingCompleteRef.current = true;
       lastStreamedContentRef.current = streamingContent;
-      // Also capture usage data at stream completion
+      // Also capture usage and sources data at stream completion
       lastStreamedUsageRef.current = streamingUsage;
       lastThinkingTokensRef.current = thinkingTokens;
+      lastStreamedSourcesRef.current = streamingSources;
     }
-  }, [isStreaming, streamingContent, streamingUsage, thinkingTokens]);
+  }, [isStreaming, streamingContent, streamingUsage, thinkingTokens, streamingSources]);
 
   // Get session title for display (currentSession defined earlier for message merging)
   const sessionTitle = currentSession?.name;
@@ -560,13 +601,14 @@ export const ConnectedConversationPanel = forwardRef<
 
         // 2. Start streaming response from LLM
         // This calls POST /api/v1/chat/completions/stream
-        // Pass model, reasoning options, KB focus mode, and execution mode
+        // Pass model, reasoning options, KB focus mode, execution mode, and tool preference
         startStream(effectiveSessionId, content, {
           model: selectedModel,
           reasoningEffort: modelSupportsThinking ? reasoningEffort : undefined,
           enableThinking: modelSupportsThinking ? enableThinking : undefined,
           kbFocus: kbFocusMode,
           executionMode,
+          toolPreference, // v7: Native vs builtin tool preference
         });
 
         // 3. Trigger revalidation to sync loader data
@@ -591,6 +633,7 @@ export const ConnectedConversationPanel = forwardRef<
       enableThinking,
       modelSupportsThinking,
       executionMode,
+      toolPreference, // v7
     ],
   );
 
@@ -718,6 +761,7 @@ export const ConnectedConversationPanel = forwardRef<
               </span>
             )}
             <Button
+              variant="primary"
               className="ml-auto p-1 hover:bg-insight-2 dark:hover:bg-insight-a6 rounded"
               data-testid="toggle-thinking-content"
               onClick={() =>
@@ -727,8 +771,7 @@ export const ConnectedConversationPanel = forwardRef<
                 isThinkingContentCollapsed
                   ? "Expand thinking content"
                   : "Collapse thinking content"
-              }
-            >
+              }>
               {isThinkingContentCollapsed ? (
                 <ChevronDown size={14} />
               ) : (
@@ -871,11 +914,11 @@ export const ConnectedConversationPanel = forwardRef<
               {suggestion.message}
             </div>
             <Button
+              variant="secondary"
               className="p-1 hover:bg-insight-4 dark:hover:bg-insight-11 rounded"
               data-testid="dismiss-suggestion-button"
               onClick={() => dismissSuggestion(suggestion.id)}
-              aria-label="Dismiss suggestion"
-            >
+              aria-label="Dismiss suggestion">
               <X size={14} className="text-insight-9" />
             </Button>
           </div>
@@ -928,6 +971,16 @@ export const ConnectedConversationPanel = forwardRef<
           onDismiss={() => handleDismissAuthRequirement(authReq.id)}
         />
       ))}
+      {/* Inline Plan Card (Issue 7: Execution Plans) */}
+      {showPlanApproval && currentPlan && (
+        <div className="px-4 py-2">
+          <InlinePlanCard
+            plan={currentPlan}
+            onApprove={handleApprovePlan}
+            onReject={handleRejectPlan}
+          />
+        </div>
+      )}
       <ConversationPanel
         data-testid="connected-conversation-panel"
         messages={messages}
@@ -951,6 +1004,9 @@ export const ConnectedConversationPanel = forwardRef<
         // KB Focus mode (controlled - lifted from ConnectedChatInputForm)
         kbFocusValue={kbFocusMode}
         onKBFocusChange={setKbFocusMode}
+        // v7: Tool preference for native vs builtin execution
+        toolPreference={toolPreference}
+        onToolPreferenceChange={setToolPreference}
         // Model selection (Sprint 1)
         showModelSelector={showModelSelector}
         selectedModel={selectedModel}

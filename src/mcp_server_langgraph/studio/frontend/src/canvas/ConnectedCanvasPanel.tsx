@@ -609,6 +609,7 @@ export const ConnectedCanvasPanel = forwardRef<
         selectedArtifactId &&
         !suggestionsPanelVisible && (
           <Button
+            variant="primary"
             type="button"
             onClick={handleSparklesTrigger}
             data-testid="sparkles-trigger"
@@ -621,8 +622,7 @@ export const ConnectedCanvasPanel = forwardRef<
               "text-primary-11 hover:text-primary-11 dark:hover:text-primary-7",
               "hover:bg-primary-1 dark:hover:bg-primary-a3",
               "transition-colors",
-            )}
-          >
+            )}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"

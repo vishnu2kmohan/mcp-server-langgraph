@@ -719,13 +719,13 @@ function NLQueryInput({
           )}
         />
         <Button
+          variant="primary"
           onClick={onSubmit}
           disabled={state.isLoading || !state.query.trim()}
           className={cn(
             "absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded",
             "text-neutral-9 hover:text-primary-9 disabled:opacity-50",
-          )}
-        >
+          )}>
           {state.isLoading ? (
             <Loader2 size={16} className="animate-spin" />
           ) : (
@@ -766,6 +766,7 @@ function NLQueryInput({
       <div data-testid="nl-query-suggestions" className="flex flex-wrap gap-1">
         {SUGGESTED_QUERIES.map((suggestion) => (
           <Button
+            variant="primary"
             key={suggestion}
             onClick={() => onSuggestionClick(suggestion)}
             className={cn(
@@ -773,8 +774,7 @@ function NLQueryInput({
               "bg-neutral-2",
               "hover:bg-neutral-3",
               "text-neutral-11",
-            )}
-          >
+            )}>
             {suggestion}
           </Button>
         ))}
@@ -1053,14 +1053,14 @@ export function AIInsightsTab({
           </h2>
           {enableObservability && (
             <Button
+              variant="primary"
               data-testid="observability-insights-toggle"
               type="button"
               onClick={() => setViewMode("observability")}
               className={cn(
                 "px-2 py-1 text-xs rounded flex items-center gap-1",
                 "hover:bg-neutral-3 text-neutral-10",
-              )}
-            >
+              )}>
               <Activity size={12} />
               Observability
             </Button>
@@ -1118,6 +1118,7 @@ export function AIInsightsTab({
         {/* Observability Toggle */}
         {enableObservability && (
           <Button
+            variant="primary"
             data-testid="observability-insights-toggle"
             type="button"
             onClick={() =>
@@ -1130,8 +1131,7 @@ export function AIInsightsTab({
               viewMode === "observability"
                 ? "bg-primary-3 bg-primary-4 text-primary-10"
                 : "hover:bg-neutral-3 text-neutral-10",
-            )}
-          >
+            )}>
             <Activity size={12} />
             Observability
           </Button>

@@ -275,6 +275,7 @@ export function UserMenuDropdown({
       {/* Persona switcher */}
       <div className="py-1 border-b border-neutral-5">
         <Button
+          variant="ghost"
           type="button"
           data-testid="persona-switcher-button"
           onClick={() => setShowPersonaSwitcher(!showPersonaSwitcher)}
@@ -283,8 +284,7 @@ export function UserMenuDropdown({
             "text-neutral-11",
             "hover:bg-neutral-2",
           )}
-          role="menuitem"
-        >
+          role="menuitem">
           <span className="flex items-center gap-2">
             <Users size={16} />
             Switch Persona
@@ -302,6 +302,7 @@ export function UserMenuDropdown({
           <div className="bg-neutral-1 py-1">
             {SUB_PERSONA_OPTIONS.map((option) => (
               <Button
+                variant="primary"
                 key={option.id}
                 type="button"
                 data-testid={`persona-option-${option.id}`}
@@ -313,8 +314,7 @@ export function UserMenuDropdown({
                   option.id === currentPersona &&
                     "text-primary-10 dark:text-primary-7 font-medium",
                 )}
-                role="menuitem"
-              >
+                role="menuitem">
                 {option.label}
               </Button>
             ))}
@@ -325,6 +325,7 @@ export function UserMenuDropdown({
       <div className="py-1">
         {menuItems.map((item) => (
           <Button
+            variant="primary"
             key={item.id}
             type="button"
             data-testid={`menu-item-${item.id}`}
@@ -335,8 +336,7 @@ export function UserMenuDropdown({
                 ? "text-error-10 dark:text-error-7 hover:bg-error-1 dark:hover:bg-error-a3"
                 : "text-neutral-11 hover:bg-neutral-2",
             )}
-            role="menuitem"
-          >
+            role="menuitem">
             {item.icon}
             {item.label}
           </Button>

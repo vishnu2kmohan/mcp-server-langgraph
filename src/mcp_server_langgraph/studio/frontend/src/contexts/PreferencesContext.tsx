@@ -970,4 +970,39 @@ export function useHITLPreferences() {
   };
 }
 
+/**
+ * Hook to access tool preference with persistence (v7).
+ *
+ * @returns Tool preference value and setter
+ *
+ * @example
+ * ```tsx
+ * const { toolPreference, setToolPreference } = useToolPreference();
+ *
+ * return (
+ *   <Select value={toolPreference} onValueChange={setToolPreference}>
+ *     <SelectItem value="auto">Auto</SelectItem>
+ *     <SelectItem value="native">Native</SelectItem>
+ *     <SelectItem value="builtin">Built-in</SelectItem>
+ *   </Select>
+ * );
+ * ```
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export function useToolPreference() {
+  const { preferences, updateModelDefaults } = usePreferences();
+
+  const setToolPreference = useCallback(
+    (preference: "auto" | "native" | "builtin" | "mcp") => {
+      updateModelDefaults({ defaultToolPreference: preference });
+    },
+    [updateModelDefaults],
+  );
+
+  return {
+    toolPreference: preferences.modelDefaults.defaultToolPreference,
+    setToolPreference,
+  };
+}
+
 export default PreferencesProvider;

@@ -186,11 +186,11 @@ export function ShortcutsPanel({
             />
             {searchQuery && (
               <Button
+                variant="danger"
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-neutral-9 hover:text-neutral-11"
                 type="button"
                 onClick={() => setSearchQuery("")}
-                aria-label="Clear search"
-              >
+                aria-label="Clear search">
                 <X size={14} />
               </Button>
             )}

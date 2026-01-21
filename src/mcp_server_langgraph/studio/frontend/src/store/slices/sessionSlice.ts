@@ -519,6 +519,7 @@ export const saveAssistantMessage = createAsyncThunk<
       totalTokens: number;
     };
     thinkingTokens?: number;
+    sources?: Array<{ title: string; url: string; snippet?: string | null }>;
   },
   { state: { session: SessionState }; rejectValue: string }
 >(
@@ -539,6 +540,8 @@ export const saveAssistantMessage = createAsyncThunk<
       // Include token usage for cost tracking
       usage: messageData.usage,
       thinkingTokens: messageData.thinkingTokens,
+      // Include source citations from web search
+      sources: messageData.sources,
     };
     dispatch(addMessage(assistantMessage));
 
@@ -560,6 +563,8 @@ export const saveAssistantMessage = createAsyncThunk<
                 }
               : undefined,
             thinking_tokens: messageData.thinkingTokens,
+            // Include source citations for backend persistence
+            sources: messageData.sources,
           }),
         },
       );

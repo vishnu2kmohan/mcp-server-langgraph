@@ -64,13 +64,13 @@ export function WorkflowHeader({
             placeholder="Workflow name"
           />
           <Button
+            variant="primary"
             className="p-2 rounded-lg"
             onClick={onToggleDarkMode}
             title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
             aria-label={
               isDarkMode ? "Switch to light mode" : "Switch to dark mode"
-            }
-          >
+            }>
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </Button>
           <Button size="icon" variant="ghost"

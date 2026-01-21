@@ -443,16 +443,16 @@ export function ProjectsPage() {
       <div className="flex-1 overflow-y-auto p-6">
         {projects.length === 0 ? (
           // Empty state - AI-enhanced (Sprint 3 Migration)
-          <AIEmptyState
+          (<AIEmptyState
             context="projects"
             onAction={() => setShowCreateDialog(true)}
             actionLabel="Create Project"
-          />
+          />)
         ) : (
           <>
             {viewMode === "grid" ? (
               /* Grid View */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {projects.map((project) => (
                   <div
                     key={project.id}
@@ -534,10 +534,10 @@ export function ProjectsPage() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </div>)
             ) : (
               /* Table View */
-              <div className="bg-neutral-1 border border-neutral-5 rounded-lg overflow-hidden">
+              (<div className="bg-neutral-1 border border-neutral-5 rounded-lg overflow-hidden">
                 {/* Bulk action bar */}
                 {selectedProjects.size > 0 && (
                   <div className="px-4 py-2 bg-primary-2 border-b border-primary-5 flex items-center justify-between">
@@ -722,7 +722,7 @@ export function ProjectsPage() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </div>)
             )}
 
             {/* Pagination */}
@@ -752,9 +752,9 @@ export function ProjectsPage() {
                 Create New Project
               </h2>
               <Button
+                variant="secondary"
                 className="p-1 text-neutral-9 hover:text-neutral-11"
-                onClick={() => setShowCreateDialog(false)}
-              >
+                onClick={() => setShowCreateDialog(false)}>
                 <X className="w-5 h-5" />
               </Button>
             </div>

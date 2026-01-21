@@ -19,7 +19,7 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
-import { Button } from "@/components/UI";
+import { Button, Input } from "@/components/UI";
 import { useAppDispatch } from "../../store/hooks";
 import {
   startConnectionSetup,
@@ -377,7 +377,6 @@ export function InlineConnectionCard({
           </Button>
         </div>
       </div>
-
       {/* Expandable content */}
       <AnimatePresence>
         {status !== "collapsed" && (
@@ -448,12 +447,12 @@ export function InlineConnectionCard({
                         <span className="text-sm font-medium text-neutral-11">
                           API Key
                         </span>
-                        <input
+                        <Input
+                          className="mt-1 px-3 py-2 shadow-sm bg-neutral-2 text-neutral-12 placeholder-neutral-9 focus:ring-primary-7 -9"
                           type="password"
                           value={apiKey}
                           onChange={(e) => setApiKey(e.target.value)}
                           placeholder="Enter your API key"
-                          className="mt-1 block w-full px-3 py-2 border border-neutral-6 rounded-md shadow-sm bg-neutral-2 text-neutral-12 placeholder-neutral-9 focus:ring-primary-7 focus:border-primary-9"
                           aria-label="API Key"
                         />
                       </label>

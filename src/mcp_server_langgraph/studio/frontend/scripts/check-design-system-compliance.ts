@@ -119,13 +119,15 @@ interface ComplianceMetrics {
   };
 }
 
-function countRgMatches(pattern: string, glob?: string, excludePatterns?: string[]): number {
+function countRgMatches(pattern: string, glob?: string, excludePatterns?: string[], multiline = false): number {
   try {
     const globArg = glob ? `-g '${glob}'` : "";
     const excludeArgs = excludePatterns ? excludePatterns.map((p) => `-g '!${p}'`).join(" ") : "";
     // Use single quotes around pattern to prevent shell interpretation of regex chars
     const escapedPattern = pattern.replace(/'/g, "'\\''");
-    const cmd = `rg -c '${escapedPattern}' src/ ${globArg} ${excludeArgs} 2>/dev/null | awk -F: '{sum += \$2} END {print sum}'`;
+    // Use -U for multiline matching (allows patterns to span line breaks)
+    const multilineArg = multiline ? "-U" : "";
+    const cmd = `rg -c ${multilineArg} '${escapedPattern}' src/ ${globArg} ${excludeArgs} 2>/dev/null | awk -F: '{sum += \$2} END {print sum}'`;
     const result = execSync(cmd, { encoding: "utf-8", cwd: path.join(__dirname, "..") }).trim();
     return parseInt(result, 10) || 0;
   } catch {
@@ -332,7 +334,8 @@ function calculateMetrics(): ComplianceMetrics {
   const neutralUsage = countRgMatches("neutral-\\d+", "*.tsx");
 
   // Count Button variant compliance
-  const buttonWithVariant = countRgMatches("<Button[^>]*\\bvariant=", "*.tsx", PROD_EXCLUSIONS);
+  // Use multiline mode since variant may be on a separate line from <Button
+  const buttonWithVariant = countRgMatches("<Button\\b[^>]*variant=", "*.tsx", PROD_EXCLUSIONS, true);
   const buttonWithoutVariant = buttonComponent - buttonWithVariant;
   const buttonVariantCompliancePercent = Math.round(
     (buttonWithVariant / Math.max(buttonComponent, 1)) * 100

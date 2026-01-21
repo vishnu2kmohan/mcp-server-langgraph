@@ -8,8 +8,10 @@ import { useRef, useEffect, useMemo } from "react";
 import { ChevronDown, Bot, AlertTriangle } from "lucide-react";
 import { MessageBubble, type ChatMessage } from "./MessageBubble";
 import { MarkdownContent } from "../components/Chat/MarkdownContent";
+import { SourceCitations } from "../components/Chat/SourceCitations";
 import { ErrorBoundary } from "../components/ErrorBoundary/ErrorBoundary";
 import { cn } from "../utils/cn";
+import { dedupeByDomain, sortByRelevance } from "./sourceUtils";
 
 import { Button } from "@/components/UI";
 
@@ -25,6 +27,8 @@ export interface MessageListProps {
   groupMessages?: boolean;
   /** Enable rich content rendering for assistant messages (Markdown, diagrams, charts) */
   enableRichContent?: boolean;
+  /** Group source citations by type (web vs knowledge base) */
+  groupSourcesByType?: boolean;
   onScrollToBottom?: () => void;
   className?: string;
 }
@@ -65,6 +69,7 @@ export function MessageList({
   isScrolledUp = false,
   groupMessages = false,
   enableRichContent = true,
+  groupSourcesByType = true,
   onScrollToBottom,
   className,
 }: MessageListProps) {
@@ -147,6 +152,11 @@ export function MessageList({
         isStreaming &&
         (message.isStreaming || message.id === "streaming-message");
 
+      // Deduplicate sources by domain, then sort by relevance for cleaner display
+      const displaySources = message.sources
+        ? sortByRelevance(dedupeByDomain(message.sources))
+        : [];
+
       return (
         <div
           key={message.id}
@@ -159,29 +169,37 @@ export function MessageList({
           >
             <Bot size={16} />
           </div>
-          <div className="text-sm leading-relaxed max-w-none prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:my-2">
-            <ErrorBoundary
-              name="MarkdownContent"
-              fallback={
-                <div
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-warning-10 dark:text-warning-6 bg-warning-3 bg-warning-3 rounded border border-warning-6 dark:border-warning-11"
-                  role="alert"
-                  data-testid="message-render-error"
-                >
-                  <AlertTriangle size={16} className="flex-shrink-0" />
-                  <span>Failed to render message content</span>
-                </div>
-              }
-            >
-              {isStreamingMessage ? (
-                <div className="whitespace-pre-wrap">{message.content}</div>
-              ) : (
-                <MarkdownContent
-                  content={message.content}
-                  enableInteractiveArtifacts
-                />
-              )}
-            </ErrorBoundary>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm leading-relaxed max-w-none prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:my-2">
+              <ErrorBoundary
+                name="MarkdownContent"
+                fallback={
+                  <div
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-warning-10 dark:text-warning-6 bg-warning-3 bg-warning-3 rounded border border-warning-6 dark:border-warning-11"
+                    role="alert"
+                    data-testid="message-render-error"
+                  >
+                    <AlertTriangle size={16} className="flex-shrink-0" />
+                    <span>Failed to render message content</span>
+                  </div>
+                }
+              >
+                {isStreamingMessage ? (
+                  <div className="whitespace-pre-wrap">{message.content}</div>
+                ) : (
+                  <MarkdownContent
+                    content={message.content}
+                    enableInteractiveArtifacts
+                  />
+                )}
+              </ErrorBoundary>
+            </div>
+
+            {/* Source Citations */}
+            <SourceCitations
+              sources={displaySources}
+              groupByType={groupSourcesByType}
+            />
           </div>
         </div>
       );

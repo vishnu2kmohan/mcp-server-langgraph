@@ -425,4 +425,252 @@ describe("MessageList", () => {
       );
     });
   });
+
+  describe("Source Citations", () => {
+    const messageWithSources: ChatMessage = {
+      id: "msg-sources",
+      role: "assistant",
+      content: "Here are my findings.",
+      timestamp: "2024-01-01T12:00:00Z",
+      sources: [
+        {
+          title: "Python Documentation",
+          url: "https://docs.python.org",
+          snippet: "Official Python documentation.",
+        },
+        {
+          title: "Real Python",
+          url: "https://realpython.com",
+          snippet: "Python tutorials and guides.",
+        },
+      ],
+    };
+
+    it("should render sources section for assistant messages with sources", () => {
+      render(<MessageList messages={[messageWithSources]} enableRichContent />);
+      expect(screen.getByTestId("sources-section")).toBeInTheDocument();
+    });
+
+    it("should display source count in sources header", () => {
+      render(<MessageList messages={[messageWithSources]} enableRichContent />);
+      expect(screen.getByText("Sources (2)")).toBeInTheDocument();
+    });
+
+    it("should render source links with titles", () => {
+      render(<MessageList messages={[messageWithSources]} enableRichContent />);
+      expect(screen.getByText("Python Documentation")).toBeInTheDocument();
+      expect(screen.getByText("Real Python")).toBeInTheDocument();
+    });
+
+    it("should have accessible aria-labels on source links", () => {
+      render(<MessageList messages={[messageWithSources]} enableRichContent />);
+      const links = screen.getAllByRole("link");
+      const sourceLinks = links.filter((link) =>
+        link.getAttribute("aria-label")?.includes("Source:"),
+      );
+      expect(sourceLinks.length).toBe(2);
+      expect(sourceLinks[0]).toHaveAttribute(
+        "aria-label",
+        "Source: Python Documentation (opens in new tab)",
+      );
+    });
+
+    it("should open source links in new tab", () => {
+      render(<MessageList messages={[messageWithSources]} enableRichContent />);
+      const link = screen.getByText("Python Documentation").closest("a");
+      expect(link).toHaveAttribute("target", "_blank");
+      expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    });
+
+    it("should not render sources section when message has no sources", () => {
+      const messageNoSources: ChatMessage = {
+        id: "msg-no-sources",
+        role: "assistant",
+        content: "No sources here.",
+        timestamp: "2024-01-01T12:00:00Z",
+      };
+
+      render(<MessageList messages={[messageNoSources]} enableRichContent />);
+      expect(screen.queryByTestId("sources-section")).not.toBeInTheDocument();
+    });
+
+    it("should deduplicate sources by domain", () => {
+      const messageWithDuplicates: ChatMessage = {
+        id: "msg-dupes",
+        role: "assistant",
+        content: "Content",
+        timestamp: "2024-01-01T12:00:00Z",
+        sources: [
+          { title: "Page 1", url: "https://docs.python.org/tutorial" },
+          { title: "Page 2", url: "https://docs.python.org/reference" },
+          { title: "Other", url: "https://realpython.com/guide" },
+        ],
+      };
+
+      render(
+        <MessageList messages={[messageWithDuplicates]} enableRichContent />,
+      );
+      // Should only show 2 sources (deduplicated by domain)
+      expect(screen.getByText("Sources (2)")).toBeInTheDocument();
+    });
+
+    it("should have no accessibility violations with sources", async () => {
+      const { container } = render(
+        <MessageList messages={[messageWithSources]} enableRichContent />,
+      );
+      await waitForSuspense();
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it("should have nav element for source citations", () => {
+      // With grouping disabled, nav has "Source citations" label
+      render(
+        <MessageList
+          messages={[messageWithSources]}
+          enableRichContent
+          groupSourcesByType={false}
+        />,
+      );
+      const nav = screen.getByRole("navigation", { name: "Source citations" });
+      expect(nav).toBeInTheDocument();
+    });
+
+    it("should have nav elements for grouped sources", () => {
+      // With grouping enabled (default), nav has group-specific labels
+      render(<MessageList messages={[messageWithSources]} enableRichContent />);
+      const nav = screen.getByRole("navigation", { name: "Web sources" });
+      expect(nav).toBeInTheDocument();
+    });
+
+    it("should sort sources by relevance score", () => {
+      const messageWithRelevance: ChatMessage = {
+        id: "msg-relevance",
+        role: "assistant",
+        content: "Sorted sources.",
+        timestamp: "2024-01-01T12:00:00Z",
+        sources: [
+          { title: "Low Relevance", url: "https://low.com", relevance_score: 0.3 },
+          { title: "High Relevance", url: "https://high.com", relevance_score: 0.95 },
+          { title: "Medium Relevance", url: "https://medium.com", relevance_score: 0.6 },
+        ],
+      };
+
+      render(
+        <MessageList messages={[messageWithRelevance]} enableRichContent />,
+      );
+
+      const links = screen.getAllByRole("link");
+      const sourceLinks = links.filter((link) =>
+        link.getAttribute("aria-label")?.includes("Source:"),
+      );
+
+      // Sources should be sorted: High (0.95) -> Medium (0.6) -> Low (0.3)
+      expect(sourceLinks[0]).toHaveTextContent("High Relevance");
+      expect(sourceLinks[1]).toHaveTextContent("Medium Relevance");
+      expect(sourceLinks[2]).toHaveTextContent("Low Relevance");
+    });
+
+    it("should group sources by type when enabled", () => {
+      const messageWithMixedSources: ChatMessage = {
+        id: "msg-mixed",
+        role: "assistant",
+        content: "Mixed sources.",
+        timestamp: "2024-01-01T12:00:00Z",
+        sources: [
+          { title: "Web Source", url: "https://example.com" },
+          { title: "KB Source", url: "/kb/docs/guide.md" },
+        ],
+      };
+
+      render(
+        <MessageList
+          messages={[messageWithMixedSources]}
+          enableRichContent
+          groupSourcesByType
+        />,
+      );
+
+      // Should have separate groups for web and KB
+      expect(screen.getByTestId("web-sources-group")).toBeInTheDocument();
+      expect(screen.getByTestId("kb-sources-group")).toBeInTheDocument();
+    });
+
+    it("should group sources by type by default", () => {
+      const messageWithMixedSources: ChatMessage = {
+        id: "msg-mixed-default",
+        role: "assistant",
+        content: "Mixed sources default.",
+        timestamp: "2024-01-01T12:00:00Z",
+        sources: [
+          { title: "Web Source", url: "https://example.com" },
+          { title: "KB Source", url: "/kb/docs/guide.md" },
+        ],
+      };
+
+      render(
+        <MessageList messages={[messageWithMixedSources]} enableRichContent />,
+      );
+
+      // Should have group testids by default (groupSourcesByType defaults to true)
+      expect(screen.getByTestId("web-sources-group")).toBeInTheDocument();
+      expect(screen.getByTestId("kb-sources-group")).toBeInTheDocument();
+    });
+
+    it("should not group sources by type when explicitly disabled", () => {
+      const messageWithMixedSources: ChatMessage = {
+        id: "msg-mixed-disabled",
+        role: "assistant",
+        content: "Mixed sources disabled.",
+        timestamp: "2024-01-01T12:00:00Z",
+        sources: [
+          { title: "Web Source", url: "https://example.com" },
+          { title: "KB Source", url: "/kb/docs/guide.md" },
+        ],
+      };
+
+      render(
+        <MessageList
+          messages={[messageWithMixedSources]}
+          enableRichContent
+          groupSourcesByType={false}
+        />,
+      );
+
+      // Should NOT have group testids when explicitly disabled
+      expect(screen.queryByTestId("web-sources-group")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("kb-sources-group")).not.toBeInTheDocument();
+    });
+
+    it("should apply both deduplication and relevance sorting", () => {
+      const messageWithDupesAndRelevance: ChatMessage = {
+        id: "msg-both",
+        role: "assistant",
+        content: "Deduped and sorted.",
+        timestamp: "2024-01-01T12:00:00Z",
+        sources: [
+          { title: "Low Score", url: "https://example.com/low", relevance_score: 0.2 },
+          { title: "High Score", url: "https://example.com/high", relevance_score: 0.9 },
+          { title: "Other High", url: "https://other.com/page", relevance_score: 0.85 },
+        ],
+      };
+
+      render(
+        <MessageList messages={[messageWithDupesAndRelevance]} enableRichContent />,
+      );
+
+      // Deduplication keeps first per domain: example.com/low (0.2), other.com/page (0.85)
+      // Then sorted by relevance: other.com (0.85) -> example.com (0.2)
+      expect(screen.getByText("Sources (2)")).toBeInTheDocument();
+
+      const links = screen.getAllByRole("link");
+      const sourceLinks = links.filter((link) =>
+        link.getAttribute("aria-label")?.includes("Source:"),
+      );
+
+      // After dedupe + sort: Other High (0.85), Low Score (0.2)
+      expect(sourceLinks[0]).toHaveTextContent("Other High");
+      expect(sourceLinks[1]).toHaveTextContent("Low Score");
+    });
+  });
 });

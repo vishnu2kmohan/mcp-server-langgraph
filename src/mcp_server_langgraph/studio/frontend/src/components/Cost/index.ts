@@ -27,4 +27,5 @@ export {
   LazyOrganizationCostDashboard,
   LazyBudgetStatusCard,
   LazyBudgetForecastChart,
+  LazyNativeToolComparison,
 } from "./lazy";

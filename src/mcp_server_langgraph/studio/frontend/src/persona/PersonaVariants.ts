@@ -169,6 +169,7 @@ export type ModuleId =
  */
 export const PERSONA_VISIBLE_MODULES: Record<string, ModuleId[]> = {
   // === ADMIN PERSONAS (full platform access) ===
+  // Synced with backend user.py PERSONA_VISIBLE_MODULES
   admin: [
     // Core Work
     "projects",
@@ -176,16 +177,15 @@ export const PERSONA_VISIBLE_MODULES: Record<string, ModuleId[]> = {
     "workflows",
     // AI & Data
     "agents",
-    "mcp",
     "vectors",
+    "connections",
     "artifacts",
-    "skills",
-    // Observability
-    "traces",
+    // Observability (includes traces tab)
     "observability",
     "cost",
     // Admin
     "admin",
+    "skills",
     "audit",
     "compliance",
     // Bottom items
@@ -204,9 +204,12 @@ export const PERSONA_VISIBLE_MODULES: Record<string, ModuleId[]> = {
     // Audit-only access
     "audit",
     "compliance",
+    // Bottom items
     "help",
+    "settings",
   ],
   // === ALICE PERSONAS (developer variants) ===
+  // Synced with backend user.py PERSONA_VISIBLE_MODULES
   "alice-builder": [
     // Core Work
     "projects",
@@ -214,12 +217,11 @@ export const PERSONA_VISIBLE_MODULES: Record<string, ModuleId[]> = {
     "workflows",
     // AI & Data
     "agents",
-    "mcp",
     "vectors",
+    "connections",
     "artifacts",
-    "skills",
-    // Observability
-    "traces",
+    // Observability (includes traces tab)
+    "observability",
     "cost",
     // Bottom items
     "settings",
@@ -229,8 +231,7 @@ export const PERSONA_VISIBLE_MODULES: Record<string, ModuleId[]> = {
     // Core Work
     "projects",
     "chat",
-    // Observability focus
-    "traces",
+    // Observability focus (includes traces tab)
     "observability",
     "cost",
     // Bottom items
@@ -243,9 +244,8 @@ export const PERSONA_VISIBLE_MODULES: Record<string, ModuleId[]> = {
     "chat",
     // Infrastructure focus
     "agents",
-    "mcp",
     "connections",
-    "traces",
+    "observability",
     // Bottom items
     "settings",
     "help",
@@ -255,16 +255,20 @@ export const PERSONA_VISIBLE_MODULES: Record<string, ModuleId[]> = {
     // Compliance-focused access
     "audit",
     "compliance",
+    // Bottom items
     "help",
+    "settings",
   ],
   bob: [
     // Core Work only - limited access
     "projects",
     "chat",
     "workflows",
-    // Skills - read-only browsing (viewer access via OpenFGA)
-    "skills",
+    // Observability (limited)
+    "cost",
+    // Bottom items
     "help",
+    "settings",
   ],
 };
 

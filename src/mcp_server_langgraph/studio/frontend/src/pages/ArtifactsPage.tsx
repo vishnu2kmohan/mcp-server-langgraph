@@ -599,6 +599,7 @@ export function ArtifactsPage() {
           {/* View toggle */}
           <div className="flex items-center gap-1 p-1 bg-neutral-3 rounded-lg">
             <Button
+              variant="ghost"
               type="button"
               data-testid="view-grid"
               onClick={() => setViewMode("grid")}
@@ -608,11 +609,11 @@ export function ArtifactsPage() {
                   ? "bg-neutral-2 shadow-sm"
                   : "text-neutral-11 hover:text-neutral-10 dark:hover:text-neutral-5",
               )}
-              aria-label="Grid view"
-            >
+              aria-label="Grid view">
               <Grid size={16} />
             </Button>
             <Button
+              variant="ghost"
               type="button"
               data-testid="view-list"
               onClick={() => setViewMode("list")}
@@ -622,8 +623,7 @@ export function ArtifactsPage() {
                   ? "bg-neutral-2 shadow-sm"
                   : "text-neutral-11 hover:text-neutral-10 dark:hover:text-neutral-5",
               )}
-              aria-label="List view"
-            >
+              aria-label="List view">
               <List size={16} />
             </Button>
           </div>
@@ -633,13 +633,13 @@ export function ArtifactsPage() {
       <div className="flex-1 overflow-auto p-6">
         {filteredFiles.length === 0 ? (
           // Empty state - AI-enhanced (Sprint 3 Migration)
-          <AIEmptyState
+          (<AIEmptyState
             context="artifacts"
             emptyType={searchQuery ? "no-matches" : "empty"}
             searchQuery={searchQuery || undefined}
             variant="compact"
             enableAI={!searchQuery}
-          />
+          />)
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {filteredFiles.map((file) => (

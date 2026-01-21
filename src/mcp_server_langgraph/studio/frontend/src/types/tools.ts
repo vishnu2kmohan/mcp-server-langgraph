@@ -241,3 +241,64 @@ export interface ToolSelectionState {
   /** Search term for filtering tools */
   searchTerm: string;
 }
+
+// =============================================================================
+// Native Capabilities API Types (v7)
+// =============================================================================
+
+/**
+ * Native tool capability for a specific model (snake_case - backend response)
+ * @see GET /api/v1/tools/native-capabilities/{model_id}
+ */
+export interface NativeToolCapability {
+  /** Tool name (e.g., "web_search", "code_execution") */
+  tool_name: string;
+  /** Whether the model supports this native tool */
+  supported: boolean;
+  /** Provider-specific type (e.g., "web_search_20250305", "googleSearch") */
+  provider_type: string | null;
+  /** Whether the feature flag is enabled for this tool */
+  enabled: boolean;
+}
+
+/**
+ * Response from GET /api/v1/tools/native-capabilities/{model_id}
+ */
+export interface NativeCapabilitiesResponse {
+  /** The model ID queried */
+  model_id: string;
+  /** Native tool provider (anthropic, google, openai, or null) */
+  native_provider: string | null;
+  /** Available native tool capabilities */
+  capabilities: NativeToolCapability[];
+  /** Whether native tools are enabled globally (master switch) */
+  master_enabled: boolean;
+}
+
+/**
+ * Native tool capability for frontend use (camelCase)
+ */
+export interface NativeToolCapabilityCamelCase {
+  /** Tool name (e.g., "web_search", "code_execution") */
+  toolName: string;
+  /** Whether the model supports this native tool */
+  supported: boolean;
+  /** Provider-specific type (e.g., "web_search_20250305", "googleSearch") */
+  providerType: string | null;
+  /** Whether the feature flag is enabled for this tool */
+  enabled: boolean;
+}
+
+/**
+ * Native capabilities response for frontend use (camelCase)
+ */
+export interface NativeCapabilitiesResponseCamelCase {
+  /** The model ID queried */
+  modelId: string;
+  /** Native tool provider (anthropic, google, openai, or null) */
+  nativeProvider: string | null;
+  /** Available native tool capabilities */
+  capabilities: NativeToolCapabilityCamelCase[];
+  /** Whether native tools are enabled globally (master switch) */
+  masterEnabled: boolean;
+}

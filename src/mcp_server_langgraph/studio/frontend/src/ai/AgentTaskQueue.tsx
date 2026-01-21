@@ -130,6 +130,7 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
         <div className="flex items-center gap-1">
           {canCancel && (
             <Button
+              variant="secondary"
               type="button"
               onClick={() => onCancel?.(agent.id)}
               aria-label={`Cancel ${agent.name}`}
@@ -137,13 +138,13 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
                 "p-1 rounded",
                 "text-neutral-9 hover:text-neutral-11",
                 "hover:bg-neutral-2",
-              )}
-            >
+              )}>
               <X className="h-4 w-4" />
             </Button>
           )}
           {canDismiss && (
             <Button
+              variant="danger"
               type="button"
               onClick={() => onDismiss(agent.id)}
               aria-label={`Dismiss ${agent.name}`}
@@ -151,8 +152,7 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
                 "p-1 rounded",
                 "text-neutral-9 hover:text-neutral-11",
                 "hover:bg-neutral-2",
-              )}
-            >
+              )}>
               <Trash2 className="h-4 w-4" />
             </Button>
           )}

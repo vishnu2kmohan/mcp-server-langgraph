@@ -154,10 +154,10 @@ export function GuidedTour({
           <div>
             {!isFirstStep && (
               <Button
+                variant="ghost"
                 className="flex px-3 py-1.5 text-sm text-neutral-11 hover:text-neutral-12"
                 onClick={handlePrevious}
-                aria-label="Previous"
-              >
+                aria-label="Previous">
                 <ArrowLeft className="w-3 h-3" />
                 Previous
               </Button>

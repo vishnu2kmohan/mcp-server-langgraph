@@ -171,11 +171,11 @@ export function HelpPanel({
                   {tip.details && (
                     <>
                       <Button
+                        variant="primary"
                         size="sm"
                         className="flex mt-2 text-xs text-primary-10 dark:text-primary-7 hover:text-primary-11"
                         onClick={() => toggleTipExpanded(tip.id)}
-                        aria-label="More"
-                      >
+                        aria-label="More">
                         {expandedTips.has(tip.id) ? (
                           <>
                             <ChevronUp className="w-3 h-3" />

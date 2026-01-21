@@ -65,6 +65,7 @@ export function CodePreviewToggle({
       {...props}
     >
       <Button
+        variant="primary"
         type="button"
         onClick={handleCodeClick}
         aria-pressed={mode === "code"}
@@ -74,11 +75,11 @@ export function CodePreviewToggle({
           mode === "code"
             ? "bg-primary-9 text-neutral-12 shadow-sm"
             : "text-neutral-11 hover:text-neutral-12",
-        )}
-      >
+        )}>
         Code
       </Button>
       <Button
+        variant="primary"
         type="button"
         onClick={handlePreviewClick}
         aria-pressed={mode === "preview"}
@@ -91,8 +92,7 @@ export function CodePreviewToggle({
             ? "bg-primary-9 text-neutral-12 shadow-sm"
             : "text-neutral-11 hover:text-neutral-12",
           !previewSupported && "opacity-50 cursor-not-allowed",
-        )}
-      >
+        )}>
         Preview
       </Button>
     </div>

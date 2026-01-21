@@ -257,21 +257,21 @@ export function DataExplorer({
 
           <div className="flex items-center gap-2">
             <Button
+              variant="ghost"
               className="p-1 text-neutral-10 hover:text-neutral-11"
               data-testid="prev-page"
               type="button"
               onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
+              disabled={currentPage === 1}>
               <ChevronLeft size={18} />
             </Button>
             <Button
+              variant="ghost"
               className="p-1 text-neutral-10 hover:text-neutral-11"
               data-testid="next-page"
               type="button"
               onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
+              disabled={currentPage === totalPages}>
               <ChevronRight size={18} />
             </Button>
           </div>

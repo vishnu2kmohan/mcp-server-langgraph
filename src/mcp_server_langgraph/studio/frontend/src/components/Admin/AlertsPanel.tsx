@@ -164,13 +164,13 @@ function AlertItem({
 
   return (
     <Button
+      variant="primary"
       className={cn(
         "w-full text-left p-3 rounded-lg border",
         isSelected && "border-primary-9 bg-primary-a2",
       )}
       data-testid={`alert-item-${alert.alertId}`}
-      onClick={onClick}
-    >
+      onClick={onClick}>
       <div className="flex items-start gap-3">
         {/* Severity Indicator */}
         <div
@@ -404,19 +404,19 @@ export function AlertsPanel({
         {/* Severity Filters */}
         <div role="group" aria-label="Severity filter" className="flex gap-2">
           <Button
+            variant="primary"
             size="sm"
             className="min-h-8 px-2 py-1 text-xs rounded-full"
             onClick={() => handleSeverityToggle("critical")}
-            aria-pressed={filters.severity.includes("critical")}
-          >
+            aria-pressed={filters.severity.includes("critical")}>
             Critical
           </Button>
           <Button
+            variant="primary"
             size="sm"
             className="min-h-8 px-2 py-1 text-xs rounded-full"
             onClick={() => handleSeverityToggle("warning")}
-            aria-pressed={filters.severity.includes("warning")}
-          >
+            aria-pressed={filters.severity.includes("warning")}>
             Warning
           </Button>
         </div>
@@ -426,19 +426,19 @@ export function AlertsPanel({
         {/* State Filters */}
         <div role="group" aria-label="State filter" className="flex gap-2">
           <Button
+            variant="primary"
             size="sm"
             className="min-h-8 px-2 py-1 text-xs rounded-full"
             onClick={() => handleStateToggle("firing")}
-            aria-pressed={filters.state.includes("firing")}
-          >
+            aria-pressed={filters.state.includes("firing")}>
             Firing
           </Button>
           <Button
+            variant="primary"
             size="sm"
             className="min-h-8 px-2 py-1 text-xs rounded-full"
             onClick={() => handleStateToggle("resolved")}
-            aria-pressed={filters.state.includes("resolved")}
-          >
+            aria-pressed={filters.state.includes("resolved")}>
             Resolved
           </Button>
         </div>
@@ -447,31 +447,28 @@ export function AlertsPanel({
       <div className="flex-1 overflow-y-auto p-4">
         {viewMode === "grouped" ? (
           // Grouped View
-          filteredGroups.length === 0 ? ( // No matches in grouped view - AI-enhanced (Sprint 3 Migration)
-            <AIEmptyState
-              context="alerts"
-              emptyType="no-matches"
-              variant="compact"
-              enableAI={false}
-            />
-          ) : (
-            <AlertGroupsPanel
-              groups={filteredGroups}
-              selectedAlertId={selectedAlertId}
-              onSelectAlert={onSelectAlert}
-              expandedGroups={expandedGroups}
-              onToggleGroup={handleToggleGroup}
-            />
-          )
-        ) : // Flat View
-        filteredAlerts.length === 0 ? (
-          // No matches in flat view - AI-enhanced (Sprint 3 Migration)
-          <AIEmptyState
+          (// No matches in grouped view - AI-enhanced (Sprint 3 Migration)
+          filteredGroups.length === 0 ? (<AIEmptyState
             context="alerts"
             emptyType="no-matches"
             variant="compact"
             enableAI={false}
-          />
+          />) : (<AlertGroupsPanel
+            groups={filteredGroups}
+            selectedAlertId={selectedAlertId}
+            onSelectAlert={onSelectAlert}
+            expandedGroups={expandedGroups}
+            onToggleGroup={handleToggleGroup}
+          />))
+        ) : // Flat View
+        filteredAlerts.length === 0 ? (
+          // No matches in flat view - AI-enhanced (Sprint 3 Migration)
+          (<AIEmptyState
+            context="alerts"
+            emptyType="no-matches"
+            variant="compact"
+            enableAI={false}
+          />)
         ) : (
           <div className="space-y-2">
             {filteredAlerts.map((alert) => (

@@ -133,16 +133,16 @@ export function OrganizationCostDashboard({
       {/* View Mode Tabs */}
       <div className="flex items-center gap-2 border-b border-neutral-5">
         <Button
+          variant="primary"
           className="flex px-4 py-2 border-b-2"
-          onClick={() => setViewMode("organization")}
-        >
+          onClick={() => setViewMode("organization")}>
           <Building2 size={16} />
           Organizations
         </Button>
         <Button
+          variant="ghost"
           className="flex px-4 py-2 border-b-2"
-          onClick={() => setViewMode("project")}
-        >
+          onClick={() => setViewMode("project")}>
           <Folder size={16} />
           Projects
           {selectedOrg && (
@@ -152,9 +152,9 @@ export function OrganizationCostDashboard({
           )}
         </Button>
         <Button
+          variant="ghost"
           className="flex px-4 py-2 border-b-2"
-          onClick={() => setViewMode("team")}
-        >
+          onClick={() => setViewMode("team")}>
           <Users size={16} />
           Teams
           {selectedProject && (

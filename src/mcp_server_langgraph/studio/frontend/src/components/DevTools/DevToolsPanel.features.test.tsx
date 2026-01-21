@@ -103,6 +103,13 @@ vi.mock("../../api", () => ({
     data: { items: [] },
     isLoading: false,
     error: null,
+    refetch: vi.fn(),
+  }),
+  useGetTraceQuery: () => ({
+    data: null,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
   }),
   useGetMetricsQuery: () => ({
     data: null,

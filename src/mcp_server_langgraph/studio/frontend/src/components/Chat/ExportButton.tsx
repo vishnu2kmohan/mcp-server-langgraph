@@ -127,6 +127,7 @@ export function ExportButton({
   return (
     <div className="relative">
       <Button
+        variant="primary"
         onClick={() => setIsOpen(!isOpen)}
         disabled={isLoading}
         className={cn(
@@ -138,8 +139,7 @@ export function ExportButton({
         )}
         aria-label="Export session"
         aria-expanded={isOpen}
-        aria-haspopup="true"
-      >
+        aria-haspopup="true">
         <Download size={16} className={isLoading ? "animate-pulse" : ""} />
         {!compact && <span>Export</span>}
         <ChevronDown
@@ -172,6 +172,7 @@ export function ExportButton({
             {/* Format Options */}
             {formatOptions.map(({ format, icon: Icon, label }) => (
               <Button
+                variant="primary"
                 key={format}
                 onClick={() => handleExport(format)}
                 disabled={isLoading}
@@ -181,8 +182,7 @@ export function ExportButton({
                   "hover:bg-neutral-2",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
                 )}
-                role="menuitem"
-              >
+                role="menuitem">
                 <Icon size={16} />
                 <span>{label}</span>
               </Button>

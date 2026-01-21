@@ -353,12 +353,12 @@ export function ChartArtifact({
             <div className="flex bg-neutral-2 rounded p-0.5">
               {typeButtons.map(({ type, icon, label }) => (
                 <Button
+                  variant="primary"
                   size="sm"
                   className="flex px-2 py-1 text-xs rounded"
                   key={type}
                   onClick={() => setChartType(type)}
-                  aria-label={label}
-                >
+                  aria-label={label}>
                   {icon}
                 </Button>
               ))}

@@ -249,6 +249,7 @@ export function InteractiveForm({
       </div>
       {/* Submit Button */}
       <Button
+        variant="primary"
         type="submit"
         disabled={isSubmitting}
         className={cn(
@@ -258,8 +259,7 @@ export function InteractiveForm({
           "disabled:opacity-50 disabled:cursor-not-allowed",
           "transition-colors",
           "flex items-center justify-center gap-2",
-        )}
-      >
+        )}>
         {isSubmitting && (
           <Loader2
             data-testid="submit-spinner"

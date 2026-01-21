@@ -242,6 +242,7 @@ export function WorkspacePresets({
       {/* Save Custom Preset Button */}
       {allowCustom && (
         <Button
+          variant="primary"
           data-testid="save-custom-preset"
           type="button"
           onClick={onSaveCustom}
@@ -251,8 +252,7 @@ export function WorkspacePresets({
             "text-neutral-10",
             "hover:border-primary-7 hover:text-primary-9",
             "transition-colors",
-          )}
-        >
+          )}>
           <Save size={16} />
           <span className="text-sm">Save Current Layout</span>
         </Button>

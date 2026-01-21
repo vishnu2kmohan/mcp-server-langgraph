@@ -247,6 +247,7 @@ function RequestDetails({ entry }: RequestDetailsProps) {
       <div className="flex border-b border-neutral-5">
         {["headers", "payload", "response"].map((tab) => (
           <Button
+            variant="primary"
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab as typeof activeTab)}
@@ -255,8 +256,7 @@ function RequestDetails({ entry }: RequestDetailsProps) {
               activeTab === tab
                 ? "border-b-2 border-primary-9 text-primary-10"
                 : "text-neutral-10 hover:text-neutral-11",
-            )}
-          >
+            )}>
             {tab}
           </Button>
         ))}
@@ -683,10 +683,10 @@ export function NetworkTab({
                     <th key={header.id} className="px-2 py-1.5 font-medium">
                       {header.isPlaceholder ? null : (
                         <Button
+                          variant="ghost"
                           className="flex"
                           type="button"
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
+                          onClick={header.column.getToggleSortingHandler()}>
                           {flexRender(
                             header.column.columnDef.header,
                             header.getContext(),

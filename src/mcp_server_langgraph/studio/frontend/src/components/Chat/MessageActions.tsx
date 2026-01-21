@@ -326,23 +326,23 @@ export function MessageActions({
               {onFeedback && (
                 <div className="flex items-center px-3 py-2 gap-2 border-t border-neutral-5">
                   <Button
+                    variant="primary"
                     className="p-1.5 rounded"
                     data-testid="action-thumbs-up"
                     onClick={handleThumbsUp}
                     data-active={feedbackState === "positive"}
                     role="menuitem"
-                    aria-label="Thumbs up"
-                  >
+                    aria-label="Thumbs up">
                     <ThumbsUp size={16} />
                   </Button>
                   <Button
+                    variant="primary"
                     className="p-1.5 rounded"
                     data-testid="action-thumbs-down"
                     onClick={handleThumbsDown}
                     data-active={feedbackState === "negative"}
                     role="menuitem"
-                    aria-label="Thumbs down"
-                  >
+                    aria-label="Thumbs down">
                     <ThumbsDown size={16} />
                   </Button>
                 </div>
@@ -351,12 +351,12 @@ export function MessageActions({
               {/* Bookmark Action */}
               {onBookmark && (
                 <Button
+                  variant="ghost"
                   className="w-full flex px-3 py-2 text-sm"
                   data-testid="action-bookmark"
                   onClick={handleBookmark}
                   data-bookmarked={isBookmarked}
-                  role="menuitem"
-                >
+                  role="menuitem">
                   <Bookmark
                     size={16}
                     fill={isBookmarked ? "currentColor" : "none"}

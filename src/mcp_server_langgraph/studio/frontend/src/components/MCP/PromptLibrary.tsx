@@ -187,6 +187,7 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                     <div className="flex items-center gap-2">
                       {prompt.arguments.length > 0 && (
                         <Button
+                          variant="ghost"
                           type="button"
                           onClick={() => toggleExpanded(prompt.qualifiedName)}
                           aria-label="Expand"
@@ -195,12 +196,12 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                             "text-neutral-10",
                             "hover:bg-neutral-2",
                             "focus:outline-none focus:ring-2 focus:ring-brand-primary",
-                          )}
-                        >
+                          )}>
                           <ChevronIcon expanded={isExpanded} />
                         </Button>
                       )}
                       <Button
+                        variant="primary"
                         type="button"
                         onClick={() => handleTest(prompt.qualifiedName)}
                         className={cn(
@@ -209,8 +210,7 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                           "hover:bg-success-10",
                           "focus:outline-none focus:ring-2 focus:ring-success-7 focus:ring-offset-2",
                           "transition-colors",
-                        )}
-                      >
+                        )}>
                         Test
                       </Button>
                     </div>

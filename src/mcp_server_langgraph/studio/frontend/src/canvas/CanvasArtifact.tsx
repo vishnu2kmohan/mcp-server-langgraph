@@ -122,7 +122,7 @@ import {
   getRequiredPackages,
 } from "./pyodidePackages";
 
-import { Button } from "@/components/UI";
+import { Button, Textarea } from "@/components/UI";
 
 let pyodidePromise: Promise<PyodideInterface> | null = null;
 
@@ -660,7 +660,7 @@ _altair_spec
   const renderContent = () => {
     if (isEditing) {
       return (
-        <textarea
+        <Textarea
           data-testid="content-editor"
           value={editContent}
           onChange={handleContentChange}
@@ -876,6 +876,7 @@ _altair_spec
           </span>
           {editable && !isEditing && (
             <Button
+              variant="ghost"
               data-testid="edit-button"
               type="button"
               onClick={handleEdit}
@@ -884,8 +885,7 @@ _altair_spec
                 "p-1.5 rounded transition-colors",
                 "text-neutral-11 hover:text-neutral-11",
                 "hover:bg-neutral-2",
-              )}
-            >
+              )}>
               <Edit2 size={14} />
             </Button>
           )}
@@ -937,6 +937,7 @@ _altair_spec
             )}
             {!hasTriggeredAnalysis && !aiLoading && (
               <Button
+                variant="ghost"
                 type="button"
                 data-testid="analyze-code-button"
                 onClick={() => {
@@ -948,19 +949,18 @@ _altair_spec
                   "bg-primary-3 text-primary-11 hover:bg-primary-4",
                   "bg-primary-4 dark:text-primary-11 dark:hover:bg-primary-a6",
                   "transition-colors",
-                )}
-              >
+                )}>
                 <Sparkles size={12} />
                 Analyze
               </Button>
             )}
             {aiError && hasTriggeredAnalysis && (
               <Button
+                variant="primary"
                 size="sm"
                 className="text-xs text-primary-11 hover:text-primary-11 dark:text-primary-11"
                 type="button"
-                onClick={() => refetchAI()}
-              >
+                onClick={() => refetchAI()}>
                 Retry
               </Button>
             )}
@@ -1102,6 +1102,7 @@ _altair_spec
               </span>
               <div className="flex items-center gap-1">
                 <Button
+                  variant="primary"
                   type="button"
                   onClick={() => setRuntime("sandbox")}
                   className={cn(
@@ -1109,12 +1110,12 @@ _altair_spec
                     runtime === "sandbox"
                       ? "bg-primary-1 bg-primary-4 border-primary-4 dark:border-primary-7 text-primary-11 dark:text-primary-11"
                       : "border-neutral-5 text-neutral-11 hover:bg-neutral-2",
-                  )}
-                >
+                  )}>
                   Server sandbox
                 </Button>
                 {language?.toLowerCase() === "python" && (
                   <Button
+                    variant="primary"
                     type="button"
                     onClick={() => setRuntime("pyodide")}
                     className={cn(
@@ -1122,8 +1123,7 @@ _altair_spec
                       runtime === "pyodide"
                         ? "bg-primary-1 bg-primary-4 border-primary-4 dark:border-primary-7 text-primary-11 dark:text-primary-11"
                         : "border-neutral-5 text-neutral-11 hover:bg-neutral-2",
-                    )}
-                  >
+                    )}>
                     Pyodide (browser)
                   </Button>
                 )}
@@ -1131,6 +1131,7 @@ _altair_spec
             </div>
 
             <Button
+              variant="primary"
               type="button"
               onClick={
                 runtime === "pyodide" ? handleRunPython : handleRunSandbox
@@ -1142,8 +1143,7 @@ _altair_spec
                 "flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium",
                 "bg-success-10 text-neutral-12 hover:bg-success-11",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
-              )}
-            >
+              )}>
               {runtime === "pyodide" ? (
                 isRunningPython ? (
                   <>

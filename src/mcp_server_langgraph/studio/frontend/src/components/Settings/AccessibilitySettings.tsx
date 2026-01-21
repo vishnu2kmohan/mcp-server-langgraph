@@ -105,14 +105,14 @@ function FontSizeSelector({ value, onChange }: FontSizeSelectorProps) {
         >
           {sizes.map((size) => (
             <Button
+              variant="primary"
               className="flex flex-col px-4 py-2 rounded-lg border-2 focus:ring-primary-7 focus:ring-offset-2"
               key={size.key}
               type="button"
               role="radio"
               aria-checked={value === size.key}
               data-testid={`font-size-${size.key}`}
-              onClick={() => onChange(size.key)}
-            >
+              onClick={() => onChange(size.key)}>
               <span
                 className={`font-medium ${
                   size.key === "small"

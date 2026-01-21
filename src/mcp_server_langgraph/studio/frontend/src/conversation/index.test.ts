@@ -15,12 +15,25 @@ describe("Conversation Module Exports", () => {
   describe("Components", () => {
     it("should export MessageBubble", () => {
       expect(conversationModule.MessageBubble).toBeDefined();
-      expect(typeof conversationModule.MessageBubble).toBe("function");
+      // MessageBubble uses React.memo, which returns an object with $$typeof
+      expect(
+        typeof conversationModule.MessageBubble === "function" ||
+          typeof conversationModule.MessageBubble === "object",
+      ).toBe(true);
     });
 
     it("should export MessageList", () => {
       expect(conversationModule.MessageList).toBeDefined();
       expect(typeof conversationModule.MessageList).toBe("function");
+    });
+
+    it("should export UnifiedMessageList", () => {
+      expect(conversationModule.UnifiedMessageList).toBeDefined();
+      // UnifiedMessageList uses React.memo, which returns an object with $$typeof
+      expect(
+        typeof conversationModule.UnifiedMessageList === "function" ||
+          typeof conversationModule.UnifiedMessageList === "object",
+      ).toBe(true);
     });
 
     it("should export ConnectedChatInputForm", () => {
@@ -49,10 +62,11 @@ describe("Conversation Module Exports", () => {
   });
 
   describe("Module Completeness", () => {
-    it("should export exactly 6 components", () => {
+    it("should export exactly 7 components", () => {
       const componentExports = [
         "MessageBubble",
         "MessageList",
+        "UnifiedMessageList",
         "ConnectedChatInputForm",
         "FollowUpSuggestions",
         "ConversationPanel",
@@ -67,9 +81,11 @@ describe("Conversation Module Exports", () => {
     it("should have stable public API", () => {
       // Snapshot of expected exports - update when intentionally changing API
       // Note: ChatInput and SlashCommandMenu were removed in favor of ConnectedChatInputForm
+      // ADR-0104: Added UnifiedMessageList for message rendering consolidation
       const expectedExports = [
         "MessageBubble",
         "MessageList",
+        "UnifiedMessageList",
         "ConnectedChatInputForm",
         "FollowUpSuggestions",
         "ConversationPanel",

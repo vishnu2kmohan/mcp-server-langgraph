@@ -85,6 +85,7 @@ export function FeatureFlagToggle({
     >
       <span className="font-medium">Shell Mode:</span>
       <Button
+        variant="primary"
         type="button"
         role="switch"
         aria-checked={isHybridEnabled}
@@ -96,8 +97,7 @@ export function FeatureFlagToggle({
           isHybridEnabled
             ? "bg-primary-9"
             : "bg-neutral-3",
-        )}
-      >
+        )}>
         <span
           className={cn(
             "absolute w-4 h-4 rounded-full bg-neutral-1 shadow-sm",

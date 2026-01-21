@@ -186,6 +186,7 @@ export function SuggestionChip({
 
   return (
     <Button
+      variant="primary"
       type="button"
       id={id}
       data-testid="suggestion-chip"
@@ -212,8 +213,7 @@ export function SuggestionChip({
         isDisabled && "opacity-50 cursor-not-allowed",
         // Custom classes
         className,
-      )}
-    >
+      )}>
       {/* Loading spinner */}
       {isLoading && (
         <Loader2

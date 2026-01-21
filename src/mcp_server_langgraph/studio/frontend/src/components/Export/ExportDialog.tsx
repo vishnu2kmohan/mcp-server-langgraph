@@ -54,13 +54,13 @@ function FormatButton({
 }: FormatButtonProps) {
   return (
     <Button
+      variant="primary"
       className="flex px-4 py-2 rounded-lg border-2 focus:ring-primary-7"
       type="button"
       data-testid={`format-${format}`}
       role="radio"
       aria-checked={selected}
-      onClick={onClick}
-    >
+      onClick={onClick}>
       {icon}
       <span className="font-medium">{label}</span>
     </Button>

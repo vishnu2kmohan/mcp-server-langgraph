@@ -35,11 +35,13 @@ import {
   ScrollText,
   LayoutGrid,
   RotateCcw,
+  Wrench,
 } from "lucide-react";
 import { AuditEventPanel } from "../components/Settings/AuditEventPanel";
 import { ThemeSettings } from "../components/Settings/ThemeSettings";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
+import { useToolPreference } from "../contexts/PreferencesContext";
 
 // Direct imports to avoid Rollup circular dependency warnings
 // (page chunks end up separate from UI barrel)
@@ -73,6 +75,9 @@ export function SettingsPage() {
   const user = useAppSelector(selectUser);
   const persona = useAppSelector(selectPersona);
   const dispatch = useAppDispatch();
+
+  // v7: Tool preference persistence
+  const { toolPreference, setToolPreference } = useToolPreference();
 
   const handleAuthFailure = useCallback(() => {
     saveCurrentRouteAsIntended();
@@ -322,6 +327,42 @@ export function SettingsPage() {
                     <option value="admin">Admin</option>
                   </Select>
                 </div>
+
+                {/* v7: Tool Preference Setting */}
+                <div className="p-4 bg-neutral-2 rounded-lg border border-neutral-6">
+                  <div className="flex items-start gap-3">
+                    <Wrench
+                      size={24}
+                      className="text-neutral-11 flex-shrink-0 mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-neutral-12 mb-1">
+                        Tool Execution Preference
+                      </h3>
+                      <p className="text-sm text-neutral-11 mb-4">
+                        Choose how tools are executed. Native tools use the LLM
+                        provider&apos;s built-in capabilities (e.g., Anthropic web
+                        search). Built-in tools use the server&apos;s implementations.
+                      </p>
+                      <Select
+                        size="lg"
+                        className="px-4 py-2 text-neutral-12"
+                        value={toolPreference}
+                        onChange={(e) => {
+                          setToolPreference(
+                            e.target.value as "auto" | "native" | "builtin" | "mcp"
+                          );
+                        }}
+                        aria-label="Tool execution preference"
+                      >
+                        <option value="auto">Auto (Prefer Native when available)</option>
+                        <option value="native">Native Only (LLM provider tools)</option>
+                        <option value="builtin">Built-in Only (Server tools)</option>
+                        <option value="mcp">MCP Only (External servers)</option>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -531,9 +572,9 @@ export function SettingsPage() {
                     User API Keys
                   </h3>
                   <Button
+                    variant="ghost"
                     className="flex px-3 py-1.5 text-sm text-neutral-11 hover:text-neutral-12 dark:hover:text-neutral-2"
-                    onClick={loadManagedUsers}
-                  >
+                    onClick={loadManagedUsers}>
                     <RefreshCw
                       size={16}
                       className={isLoadingUsers ? "animate-spin" : ""}

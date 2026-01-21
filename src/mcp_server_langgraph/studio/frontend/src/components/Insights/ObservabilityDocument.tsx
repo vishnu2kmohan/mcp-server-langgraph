@@ -251,10 +251,10 @@ export function ObservabilityDocument({
         <div className="flex gap-1">
           {tabs.map((tab) => (
             <Button
+              variant="primary"
               className="flex px-4 py-2 rounded-lg"
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-            >
+              onClick={() => setActiveTab(tab.id)}>
               <tab.icon size={16} />
               {tab.label}
             </Button>
@@ -269,12 +269,12 @@ export function ObservabilityDocument({
             <div className="flex items-center gap-1">
               {["", "success", "error", "running"].map((status) => (
                 <Button
+                  variant="primary"
                   size="sm"
                   className="px-2 py-1 text-xs rounded"
                   key={status || "all"}
                   onClick={() => setStatusFilter(status)}
-                  aria-pressed={statusFilter === status}
-                >
+                  aria-pressed={statusFilter === status}>
                   {status || "All"}
                 </Button>
               ))}

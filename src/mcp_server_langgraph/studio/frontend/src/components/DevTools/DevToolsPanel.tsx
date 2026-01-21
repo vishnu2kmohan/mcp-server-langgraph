@@ -64,8 +64,10 @@ import { useTraceWebSocket } from "../../hooks/useTraceWebSocket";
 import { useAlertWebSocket } from "../../hooks/useAlertWebSocket";
 import { useDevToolsWebSocket } from "./hooks/useDevToolsWebSocket";
 import { selectAlerts, clearAlerts } from "../../store/slices/alertSlice";
+import { OBSERVABILITY_POLLING_CONFIG } from "../../config/observability";
 import {
   useListTracesQuery,
+  useGetTraceQuery,
   useListLogsQuery,
   useGetMetricsQuery,
   useListAlertsQuery,
@@ -85,6 +87,25 @@ import { Button, Select } from "@/components/UI";
 function cn(...classes: (string | undefined | boolean)[]): string {
   return classes.filter(Boolean).join(" ");
 }
+
+function normalizeTraceSpanStatus(
+  status?: string | null,
+): "ok" | "error" | "unset" {
+  const normalized = status?.toLowerCase();
+  if (normalized === "ok" || normalized === "error" || normalized === "unset") {
+    return normalized;
+  }
+  return "unset";
+}
+
+const {
+  traceListActiveMs,
+  traceListIdleMs,
+  traceDetailMs,
+  metricsMs,
+  logsMs,
+  alertsMs,
+} = OBSERVABILITY_POLLING_CONFIG;
 
 // =============================================================================
 // CVA Variants
@@ -260,6 +281,8 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
 
   // State for trace-log linking
   const [selectedTraceId, setSelectedTraceId] = useState<string | null>(null);
+  const [hasActiveTraces, setHasActiveTraces] = useState(false);
+  const [selectedTraceComplete, setSelectedTraceComplete] = useState(false);
 
   // Trace WebSocket - auto-connect when DevTools is open and traces tab available
   const { spans: rawSpans } = useTraceWebSocket({
@@ -319,12 +342,35 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     };
   }, [context, entityId]);
 
+  const isTracesTabActive = !collapsed && activeTab === "traces";
+  const traceListPollingInterval = isTracesTabActive
+    ? hasActiveTraces
+      ? traceListActiveMs
+      : traceListIdleMs
+    : 0;
+  const traceDetailPollingInterval =
+    isTracesTabActive && selectedTraceId && !selectedTraceComplete
+      ? traceDetailMs
+      : 0;
+
   const {
     data: tracesData,
     isLoading: isTracesLoading,
     error: tracesError,
   } = useListTracesQuery(traceListParams, {
-    skip: collapsed || activeTab !== "traces",
+    skip: !isTracesTabActive,
+    pollingInterval: traceListPollingInterval,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
+
+  const {
+    data: selectedTraceData,
+  } = useGetTraceQuery(selectedTraceId ?? "", {
+    skip: !isTracesTabActive || !selectedTraceId,
+    pollingInterval: traceDetailPollingInterval,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
   });
 
   const {
@@ -333,6 +379,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     error: metricsError,
   } = useGetMetricsQuery(undefined, {
     skip: collapsed || activeTab !== "metrics",
+    pollingInterval:
+      !collapsed && activeTab === "metrics" ? metricsMs : 0,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
   });
 
   const {
@@ -341,7 +391,13 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     error: alertsError,
   } = useListAlertsQuery(
     { limit: 50 },
-    { skip: collapsed || activeTab !== "alerts" },
+    {
+      skip: collapsed || activeTab !== "alerts",
+      pollingInterval:
+        !collapsed && activeTab === "alerts" ? alertsMs : 0,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    },
   );
 
   const {
@@ -350,8 +406,43 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     error: logsError,
   } = useListLogsQuery(
     { limit: 100 },
-    { skip: collapsed || activeTab !== "logs" },
+    {
+      skip: collapsed || activeTab !== "logs",
+      pollingInterval: !collapsed && activeTab === "logs" ? logsMs : 0,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    },
   );
+
+  const nextHasActiveTraces = useMemo(() => {
+    if (!tracesData?.items?.length) return false;
+    return tracesData.items.some((trace) => {
+      const status = trace.status?.toLowerCase();
+      const isRunningStatus = status === "running" || status === "unset";
+      const hasNoEndTime = !trace.endTime;
+      const hasNoDuration = trace.durationMs == null;
+      return isRunningStatus || (hasNoEndTime && hasNoDuration);
+    });
+  }, [tracesData]);
+
+  const nextSelectedTraceComplete = useMemo(() => {
+    if (!selectedTraceId || !selectedTraceData) return false;
+    if (selectedTraceData.endTime) return true;
+    if (!selectedTraceData.spans?.length) return false;
+    return selectedTraceData.spans.every((span) => Boolean(span.endTime));
+  }, [selectedTraceData, selectedTraceId]);
+
+  useEffect(() => {
+    setHasActiveTraces((prev) =>
+      prev === nextHasActiveTraces ? prev : nextHasActiveTraces,
+    );
+  }, [nextHasActiveTraces]);
+
+  useEffect(() => {
+    setSelectedTraceComplete((prev) =>
+      prev === nextSelectedTraceComplete ? prev : nextSelectedTraceComplete,
+    );
+  }, [nextSelectedTraceComplete]);
 
   // Filter WebSocket spans by context (when possible)
   const filteredRawSpans = useMemo(() => {
@@ -381,12 +472,54 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
       durationMs: span.endTime
         ? new Date(span.endTime).getTime() - new Date(span.startTime).getTime()
         : 0,
-      status: span.status.toLowerCase() as "ok" | "error" | "unset",
-      serviceName: (span.attributes?.service_name as string) || undefined,
+      status: normalizeTraceSpanStatus(span.status),
+      serviceName:
+        (span.attributes?.service_name as string | undefined) ??
+        (span.attributes?.["service.name"] as string | undefined),
       depth: 0, // Will be calculated by TracesTab based on parentSpanId
       attributes: span.attributes,
     }));
   }, [filteredRawSpans]);
+
+  const traceDetailSpans: TraceSpan[] = useMemo(() => {
+    if (!selectedTraceId || !selectedTraceData?.spans?.length) return [];
+
+    return selectedTraceData.spans.map((span, index) => {
+      const startTime = span.startTime ? new Date(span.startTime).getTime() : 0;
+      const endTime = span.endTime ? new Date(span.endTime).getTime() : null;
+      const durationMs =
+        span.durationMs ?? (endTime && startTime ? endTime - startTime : 0);
+      const attributes = span.attributes ?? {};
+
+      return {
+        spanId: span.spanId ?? `span-${index}`,
+        traceId: selectedTraceData.traceId ?? selectedTraceId,
+        parentSpanId: span.parentSpanId ?? null,
+        name: span.name || "Unknown",
+        startTime,
+        durationMs: durationMs ?? 0,
+        status: normalizeTraceSpanStatus(span.status),
+        serviceName:
+          (attributes["service.name"] as string | undefined) ??
+          (attributes.service_name as string | undefined),
+        depth: span.depth ?? 0,
+        attributes,
+        errorMessage: span.errorMessage ?? undefined,
+      };
+    });
+  }, [selectedTraceId, selectedTraceData]);
+
+  const mergedTraceSpans: TraceSpan[] = useMemo(() => {
+    if (traceDetailSpans.length === 0) return traceSpans;
+    const spansById = new Map<string, TraceSpan>();
+    for (const span of traceDetailSpans) {
+      spansById.set(span.spanId, span);
+    }
+    for (const span of traceSpans) {
+      spansById.set(span.spanId, span);
+    }
+    return Array.from(spansById.values());
+  }, [traceDetailSpans, traceSpans]);
 
   // Transform API traces to TracesTab format
   const traceList: TraceListItem[] = useMemo(() => {
@@ -625,7 +758,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             <Suspense fallback={<TabContentLoader />}>
               <TracesTabContent
                 traces={traceList}
-                spans={traceSpans}
+                spans={mergedTraceSpans}
                 selectedTraceId={selectedTraceId ?? undefined}
                 onTraceSelect={handleTraceSelect}
                 // Trace list comes from the REST API; real-time spans are optional (WS permission-gated).

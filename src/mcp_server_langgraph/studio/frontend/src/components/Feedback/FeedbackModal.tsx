@@ -107,11 +107,11 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
           <div className="flex flex-wrap gap-2 justify-center">
             {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
               <Button
+                variant="primary"
                 className="w-10 h-10 rounded-lg"
                 key={score}
                 data-testid={`nps-score-${score}`}
-                onClick={() => setNpsScore(score)}
-              >
+                onClick={() => setNpsScore(score)}>
                 {score}
               </Button>
             ))}
@@ -130,11 +130,11 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
           <div className="flex justify-center gap-2">
             {[1, 2, 3, 4, 5].map((star) => (
               <Button
+                variant="ghost"
                 className="p-2"
                 key={star}
                 data-testid={`csat-star-${star}`}
-                onClick={() => setCsatRating(star)}
-              >
+                onClick={() => setCsatRating(star)}>
                 <Star
                   size={32}
                   fill={

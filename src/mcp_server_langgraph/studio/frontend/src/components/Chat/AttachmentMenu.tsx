@@ -313,7 +313,6 @@ export function AttachmentMenu({
         aria-hidden="true"
         data-testid="attachment-file-input"
       />
-
       {/* Plus button trigger */}
       <Button size="icon"
         ref={buttonRef}
@@ -335,7 +334,6 @@ export function AttachmentMenu({
       >
         <Plus className="w-5 h-5" />
       </Button>
-
       {/* Dropdown menu */}
       {isOpen && (
         <div
@@ -356,8 +354,9 @@ export function AttachmentMenu({
           {menuItems.map((item, index) => {
             const Icon = item.icon;
             return (
-              // eslint-disable-next-line react/forbid-elements -- Menu items require native button for role="menuitem" accessibility
-              <button
+               
+              <Button
+                variant="primary"
                 key={item.id}
                 ref={(el) => {
                   menuItemsRef.current[index] = el;
@@ -381,14 +380,13 @@ export function AttachmentMenu({
                   "focus:bg-neutral-2",
                   "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-9 focus-visible:ring-inset",
                   "transition-colors"
-                )}
-              >
+                )}>
                 <Icon className="w-4 h-4 text-neutral-10" />
                 <span className="flex-1">{item.label}</span>
                 {item.hasSubmenu && (
                   <ChevronRight className="w-4 h-4 text-neutral-9" />
                 )}
-              </button>
+              </Button>
             );
           })}
 
@@ -410,8 +408,9 @@ export function AttachmentMenu({
                 const Icon = option.icon;
                 const isSelected = kbFocusValue === option.value;
                 return (
-                  // eslint-disable-next-line react/forbid-elements -- Menu items require native button for role="menuitem" accessibility
-                  <button
+                   
+                  <Button
+                    variant="primary"
                     key={option.value}
                     role="menuitem"
                     onClick={() => handleKBFocusSelect(option.value)}
@@ -424,8 +423,7 @@ export function AttachmentMenu({
                         "bg-neutral-4",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-9 focus-visible:ring-inset",
                       "transition-colors"
-                    )}
-                  >
+                    )}>
                     <Icon className="w-4 h-4 text-neutral-10" />
                     <span className="flex-1">{option.label}</span>
                     {isSelected && (
@@ -434,7 +432,7 @@ export function AttachmentMenu({
                         data-testid={`kb-focus-check-${option.value}`}
                       />
                     )}
-                  </button>
+                  </Button>
                 );
               })}
             </div>

@@ -19,6 +19,7 @@ export const mockRefetchTraces = vi.fn();
 export const mockRefetchLogs = vi.fn();
 export const mockRefetchMetrics = vi.fn();
 export const mockRefetchAlerts = vi.fn();
+export const mockRefetchTraceDetail = vi.fn();
 export const mockRefetchSessions = vi.fn();
 export const mockRefetchWorkflows = vi.fn();
 
@@ -222,6 +223,7 @@ export function resetAllMocks(): void {
   mockRefetchLogs.mockReset();
   mockRefetchMetrics.mockReset();
   mockRefetchAlerts.mockReset();
+  mockRefetchTraceDetail.mockReset();
   mockRefetchSessions.mockReset();
   mockRefetchWorkflows.mockReset();
   mockTraceSummary.refetch.mockReset();
@@ -273,6 +275,7 @@ export function setupDefaultMocks(mocks: {
     data: null,
     isLoading: false,
     error: null,
+    refetch: mockRefetchTraceDetail,
   });
 
   mocks.useListSessionsQuery.mockReturnValue({

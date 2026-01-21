@@ -60,6 +60,7 @@ function TabButton({
 }) {
   return (
     <Button
+      variant="primary"
       type="button"
       role="tab"
       aria-selected={active}
@@ -70,8 +71,7 @@ function TabButton({
         active
           ? "bg-neutral-1 text-brand-primary border-b-2 border-brand-primary"
           : "text-neutral-11 hover:text-neutral-12",
-      )}
-    >
+      )}>
       {label}
     </Button>
   );
@@ -177,14 +177,14 @@ export function AggregatedCapabilitiesPanel({
             Failed to load aggregated capabilities.
           </p>
           <Button
+            variant="primary"
             type="button"
             onClick={() => refetch()}
             className={cn(
               "px-4 py-2 text-sm font-medium rounded-md",
               "bg-brand-primary text-neutral-12",
               "hover:bg-brand-primary/90",
-            )}
-          >
+            )}>
             Retry
           </Button>
         </div>

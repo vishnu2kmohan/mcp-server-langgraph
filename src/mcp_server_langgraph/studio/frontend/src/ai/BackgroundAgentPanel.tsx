@@ -134,6 +134,7 @@ export function BackgroundAgentPanel({
     >
       {/* Header */}
       <Button
+        variant="primary"
         type="button"
         aria-label={collapsed ? "Expand agents" : "Collapse agents"}
         onClick={() => setCollapsed(!collapsed)}
@@ -141,8 +142,7 @@ export function BackgroundAgentPanel({
           "w-full flex items-center justify-between px-3 py-2",
           "hover:bg-neutral-1",
           "transition-colors",
-        )}
-      >
+        )}>
         <div className="flex items-center gap-2">
           <Bot size={16} className="text-primary-9" />
           <span className="text-sm font-medium text-neutral-11">
@@ -239,6 +239,7 @@ export function BackgroundAgentPanel({
                     {(agent.status === "running" ||
                       agent.status === "queued") && (
                       <Button
+                        variant="secondary"
                         type="button"
                         aria-label="Cancel agent"
                         onClick={() => onCancel(agent.id)}
@@ -247,13 +248,13 @@ export function BackgroundAgentPanel({
                           "text-neutral-9 hover:text-error-9",
                           "hover:bg-error-3 dark:hover:bg-error-a4",
                           "transition-colors",
-                        )}
-                      >
+                        )}>
                         <X size={14} />
                       </Button>
                     )}
                     {agent.status === "failed" && (
                       <Button
+                        variant="ghost"
                         type="button"
                         aria-label="Retry agent"
                         onClick={() => onRetry(agent.id)}
@@ -262,8 +263,7 @@ export function BackgroundAgentPanel({
                           "text-neutral-9 hover:text-primary-9",
                           "hover:bg-primary-3 dark:hover:bg-primary-a4",
                           "transition-colors",
-                        )}
-                      >
+                        )}>
                         <RefreshCw size={14} />
                       </Button>
                     )}

@@ -783,4 +783,63 @@ describe("ConversationPanel", () => {
       );
     });
   });
+
+  // ===========================================================================
+  // Source Citations Grouping Tests
+  // ===========================================================================
+
+  describe("Source Citations Grouping", () => {
+    const messageWithMixedSources: ChatMessage[] = [
+      {
+        id: "msg-sources",
+        role: "assistant",
+        content: "Here are my findings.",
+        timestamp: new Date("2024-01-15T10:00:00Z"),
+        sources: [
+          { title: "Web Source", url: "https://example.com" },
+          { title: "KB Source", url: "/kb/docs/guide.md" },
+        ],
+      },
+    ];
+
+    it("should group sources by type by default", () => {
+      render(
+        <ConversationPanel
+          {...defaultProps}
+          messages={messageWithMixedSources}
+        />,
+      );
+
+      // Default is groupSourcesByType=true, so groups should be present
+      expect(screen.getByTestId("web-sources-group")).toBeInTheDocument();
+      expect(screen.getByTestId("kb-sources-group")).toBeInTheDocument();
+    });
+
+    it("should not group sources when groupSourcesByType is false", () => {
+      render(
+        <ConversationPanel
+          {...defaultProps}
+          messages={messageWithMixedSources}
+          groupSourcesByType={false}
+        />,
+      );
+
+      // When explicitly disabled, groups should not be present
+      expect(screen.queryByTestId("web-sources-group")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("kb-sources-group")).not.toBeInTheDocument();
+    });
+
+    it("should pass groupSourcesByType prop to MessageList", () => {
+      render(
+        <ConversationPanel
+          {...defaultProps}
+          messages={messageWithMixedSources}
+          groupSourcesByType={false}
+        />,
+      );
+
+      // The prop should affect rendering - no groups when disabled
+      expect(screen.queryByTestId("web-sources-group")).not.toBeInTheDocument();
+    });
+  });
 });

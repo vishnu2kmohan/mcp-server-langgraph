@@ -152,10 +152,10 @@ export function MCPServerCard({
       className={cn("min-w-[200px]", className)}
     >
       <Button
+        variant="primary"
         className="w-full text-left focus:ring-brand-primary focus:ring-offset-2 rounded-md"
         type="button"
-        onClick={handleClick}
-      >
+        onClick={handleClick}>
         {/* Server name */}
         <div className="mb-3">
           <h4 className="text-base font-semibold text-neutral-12 truncate">

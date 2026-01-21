@@ -219,12 +219,12 @@ export function HallucinationIndicator({
                 <div role="radiogroup" aria-required="true">
                   {categoryOptions.map((option) => (
                     <Button
+                      variant="primary"
                       className="w-full text-left p-3 rounded-lg border-2"
                       key={option.id}
                       onClick={() => setSelectedCategory(option.id)}
                       role="radio"
-                      aria-checked={selectedCategory === option.id}
-                    >
+                      aria-checked={selectedCategory === option.id}>
                       <div className="font-medium text-sm text-neutral-12">
                         {option.label}
                       </div>

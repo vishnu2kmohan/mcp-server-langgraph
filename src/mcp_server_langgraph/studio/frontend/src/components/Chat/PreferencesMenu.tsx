@@ -17,12 +17,14 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Settings2, ChevronDown, Check, Brain, Wrench, Database, Loader2, Cpu, Sparkles, MessageSquare } from "lucide-react";
+import { Settings2, ChevronDown, Check, Brain, Wrench, Database, Loader2, Cpu, Sparkles, MessageSquare, Zap } from "lucide-react";
 import { cn } from "../../utils/cn";
 import type { ReasoningEffortLevel } from "./ReasoningEffortSelector";
 import type { KBFocusMode } from "./KnowledgeBaseFocus";
-import type { ToolSelectionMode } from "@/types/tools";
+import type { ToolSelectionMode, ToolPreference } from "@/types/tools";
 import type { ModelOption } from "./ChatInput";
+
+import { Button } from "@/components/UI";
 
 // =============================================================================
 // Types
@@ -53,6 +55,11 @@ export interface PreferencesMenuProps {
   kbFocusMode?: KBFocusMode;
   /** Callback when KB focus mode changes */
   onKBFocusChange?: (mode: KBFocusMode) => void;
+  // v7: Native tool preference
+  /** Current tool preference (auto/native/builtin/mcp) */
+  toolPreference?: ToolPreference;
+  /** Callback when tool preference changes */
+  onToolPreferenceChange?: (preference: ToolPreference) => void;
   /** Whether the menu is loading */
   isLoading?: boolean;
   /** Whether the menu is disabled */
@@ -99,6 +106,14 @@ const KB_FOCUS_MODES: { value: KBFocusMode; label: string }[] = [
   { value: "none", label: "None" },
 ];
 
+// v7: Tool preference modes for native vs builtin execution
+const TOOL_PREFERENCE_MODES: { value: ToolPreference; label: string; description: string }[] = [
+  { value: "auto", label: "Auto", description: "Prefer native when available" },
+  { value: "native", label: "Native Only", description: "Use LLM provider tools" },
+  { value: "builtin", label: "Built-in Only", description: "Use server-side tools" },
+  { value: "mcp", label: "MCP Only", description: "Use MCP server tools" },
+];
+
 // =============================================================================
 // Helpers
 // =============================================================================
@@ -143,6 +158,9 @@ export function PreferencesMenu({
   onToolsChange: _onToolsChange,
   kbFocusMode = "all",
   onKBFocusChange,
+  // v7: Native tool preference
+  toolPreference = "auto",
+  onToolPreferenceChange,
   isLoading = false,
   disabled = false,
   compact = false,
@@ -213,6 +231,14 @@ export function PreferencesMenu({
     [onKBFocusChange]
   );
 
+  // v7: Handle tool preference change
+  const handleToolPreferenceChange = useCallback(
+    (preference: ToolPreference) => {
+      onToolPreferenceChange?.(preference);
+    },
+    [onToolPreferenceChange]
+  );
+
   const handleModelChange = useCallback(
     (modelId: string) => {
       onModelChange?.(modelId);
@@ -242,8 +268,9 @@ export function PreferencesMenu({
       onKeyDown={handleKeyDown}
     >
       {/* Trigger Button */}
-      {/* eslint-disable-next-line react/forbid-elements -- Custom dropdown trigger with aria-expanded/aria-haspopup */}
-      <button
+      { }
+      <Button
+        variant="ghost"
         ref={buttonRef}
         type="button"
         data-testid="preferences-menu-trigger"
@@ -259,8 +286,7 @@ export function PreferencesMenu({
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7 focus-visible:ring-offset-2",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           compact ? "px-2" : "px-3"
-        )}
-      >
+        )}>
         {isLoading ? (
           <Loader2
             className="h-4 w-4 animate-spin"
@@ -278,8 +304,7 @@ export function PreferencesMenu({
           )}
           aria-hidden="true"
         />
-      </button>
-
+      </Button>
       {/* Dropdown Menu */}
       {isOpen && (
         <div
@@ -308,21 +333,21 @@ export function PreferencesMenu({
                 ) : (
                   <div className="space-y-1 max-h-[200px] overflow-y-auto" role="listbox" aria-label="Model selection">
                     {availableModels.map((model) => (
-                      // eslint-disable-next-line react/forbid-elements -- Custom listbox option with role="option" and aria-selected
-                      <button
-                        key={model.id}
-                        type="button"
-                        role="option"
-                        aria-selected={selectedModel === model.id}
-                        onClick={() => handleModelChange(model.id)}
-                        className={cn(
-                          "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                          "hover:bg-neutral-4 transition-colors",
-                          selectedModel === model.id
-                            ? "text-primary-11 bg-primary-3"
-                            : "text-neutral-12"
-                        )}
-                      >
+                       
+                      (<Button
+                      variant="primary"
+                      key={model.id}
+                      type="button"
+                      role="option"
+                      aria-selected={selectedModel === model.id}
+                      onClick={() => handleModelChange(model.id)}
+                      className={cn(
+                        "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                        "hover:bg-neutral-4 transition-colors",
+                        selectedModel === model.id
+                          ? "text-primary-11 bg-primary-3"
+                          : "text-neutral-12"
+                      )}>
                         <div className="flex flex-col items-start gap-0.5">
                           <span className="font-medium">{model.name}</span>
                           <span className="text-xs text-neutral-10">{formatProviderDisplay(model)}</span>
@@ -330,7 +355,7 @@ export function PreferencesMenu({
                         {selectedModel === model.id && (
                           <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
                         )}
-                      </button>
+                      </Button>)
                     ))}
                   </div>
                 )}
@@ -353,8 +378,9 @@ export function PreferencesMenu({
                 </p>
                 <div className="space-y-1 max-h-[150px] overflow-y-auto" role="listbox" aria-label="Executor model selection">
                   {/* Auto option */}
-                  {/* eslint-disable-next-line react/forbid-elements -- Custom listbox option with role="option" and aria-selected */}
-                  <button
+                  { }
+                  <Button
+                    variant="primary"
                     type="button"
                     role="option"
                     aria-selected={executorModel === null || executorModel === undefined}
@@ -365,29 +391,28 @@ export function PreferencesMenu({
                       (executorModel === null || executorModel === undefined)
                         ? "text-primary-11 bg-primary-3"
                         : "text-neutral-12"
-                    )}
-                  >
+                    )}>
                     <span className="font-medium">Auto (based on complexity)</span>
                     {(executorModel === null || executorModel === undefined) && (
                       <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
                     )}
-                  </button>
+                  </Button>
                   {availableModels.map((model) => (
-                    // eslint-disable-next-line react/forbid-elements -- Custom listbox option with role="option" and aria-selected
-                    <button
-                      key={model.id}
-                      type="button"
-                      role="option"
-                      aria-selected={executorModel === model.id}
-                      onClick={() => handleExecutorModelChange(model.id)}
-                      className={cn(
-                        "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                        "hover:bg-neutral-4 transition-colors",
-                        executorModel === model.id
-                          ? "text-primary-11 bg-primary-3"
-                          : "text-neutral-12"
-                      )}
-                    >
+                     
+                    (<Button
+                    variant="primary"
+                    key={model.id}
+                    type="button"
+                    role="option"
+                    aria-selected={executorModel === model.id}
+                    onClick={() => handleExecutorModelChange(model.id)}
+                    className={cn(
+                      "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                      "hover:bg-neutral-4 transition-colors",
+                      executorModel === model.id
+                        ? "text-primary-11 bg-primary-3"
+                        : "text-neutral-12"
+                    )}>
                       <div className="flex flex-col items-start gap-0.5">
                         <span className="font-medium">{model.name}</span>
                         <span className="text-xs text-neutral-10">{formatProviderDisplay(model)}</span>
@@ -395,7 +420,7 @@ export function PreferencesMenu({
                       {executorModel === model.id && (
                         <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
                       )}
-                    </button>
+                    </Button>)
                   ))}
                 </div>
               </div>
@@ -413,8 +438,9 @@ export function PreferencesMenu({
                 </p>
                 <div className="space-y-1 max-h-[150px] overflow-y-auto" role="listbox" aria-label="Critic model selection">
                   {/* Auto option */}
-                  {/* eslint-disable-next-line react/forbid-elements -- Custom listbox option with role="option" and aria-selected */}
-                  <button
+                  { }
+                  <Button
+                    variant="primary"
                     type="button"
                     role="option"
                     aria-selected={criticModel === null || criticModel === undefined}
@@ -425,29 +451,28 @@ export function PreferencesMenu({
                       (criticModel === null || criticModel === undefined)
                         ? "text-primary-11 bg-primary-3"
                         : "text-neutral-12"
-                    )}
-                  >
+                    )}>
                     <span className="font-medium">Auto (cross-vendor diversity)</span>
                     {(criticModel === null || criticModel === undefined) && (
                       <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
                     )}
-                  </button>
+                  </Button>
                   {availableModels.map((model) => (
-                    // eslint-disable-next-line react/forbid-elements -- Custom listbox option with role="option" and aria-selected
-                    <button
-                      key={model.id}
-                      type="button"
-                      role="option"
-                      aria-selected={criticModel === model.id}
-                      onClick={() => handleCriticModelChange(model.id)}
-                      className={cn(
-                        "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                        "hover:bg-neutral-4 transition-colors",
-                        criticModel === model.id
-                          ? "text-primary-11 bg-primary-3"
-                          : "text-neutral-12"
-                      )}
-                    >
+                     
+                    (<Button
+                    variant="primary"
+                    key={model.id}
+                    type="button"
+                    role="option"
+                    aria-selected={criticModel === model.id}
+                    onClick={() => handleCriticModelChange(model.id)}
+                    className={cn(
+                      "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                      "hover:bg-neutral-4 transition-colors",
+                      criticModel === model.id
+                        ? "text-primary-11 bg-primary-3"
+                        : "text-neutral-12"
+                    )}>
                       <div className="flex flex-col items-start gap-0.5">
                         <span className="font-medium">{model.name}</span>
                         <span className="text-xs text-neutral-10">{formatProviderDisplay(model)}</span>
@@ -455,7 +480,7 @@ export function PreferencesMenu({
                       {criticModel === model.id && (
                         <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
                       )}
-                    </button>
+                    </Button>)
                   ))}
                 </div>
               </div>
@@ -472,26 +497,26 @@ export function PreferencesMenu({
             </div>
             <div className="space-y-1" role="listbox" aria-label="Thinking level">
               {THINKING_LEVELS.map((level) => (
-                // eslint-disable-next-line react/forbid-elements -- Custom listbox option with role="option" and aria-selected
-                <button
-                  key={level.value}
-                  type="button"
-                  role="option"
-                  aria-selected={thinkingLevel === level.value}
-                  onClick={() => handleThinkingLevelChange(level.value)}
-                  className={cn(
-                    "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                    "hover:bg-neutral-4 transition-colors",
-                    thinkingLevel === level.value
-                      ? "text-primary-11 bg-primary-3"
-                      : "text-neutral-12"
-                  )}
-                >
+                 
+                (<Button
+                variant="primary"
+                key={level.value}
+                type="button"
+                role="option"
+                aria-selected={thinkingLevel === level.value}
+                onClick={() => handleThinkingLevelChange(level.value)}
+                className={cn(
+                  "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                  "hover:bg-neutral-4 transition-colors",
+                  thinkingLevel === level.value
+                    ? "text-primary-11 bg-primary-3"
+                    : "text-neutral-12"
+                )}>
                   <span>{level.label}</span>
                   {thinkingLevel === level.value && (
                     <Check className="h-4 w-4" aria-hidden="true" />
                   )}
-                </button>
+                </Button>)
               ))}
             </div>
           </div>
@@ -506,26 +531,66 @@ export function PreferencesMenu({
             </div>
             <div className="space-y-1" role="listbox" aria-label="Tool mode">
               {TOOL_MODES.map((mode) => (
-                // eslint-disable-next-line react/forbid-elements -- Custom listbox option with role="option" and aria-selected
-                <button
-                  key={mode.value}
-                  type="button"
-                  role="option"
-                  aria-selected={toolMode === mode.value}
-                  onClick={() => handleToolModeChange(mode.value)}
-                  className={cn(
-                    "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                    "hover:bg-neutral-4 transition-colors",
-                    toolMode === mode.value
-                      ? "text-primary-11 bg-primary-3"
-                      : "text-neutral-12"
-                  )}
-                >
+                 
+                (<Button
+                variant="primary"
+                key={mode.value}
+                type="button"
+                role="option"
+                aria-selected={toolMode === mode.value}
+                onClick={() => handleToolModeChange(mode.value)}
+                className={cn(
+                  "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                  "hover:bg-neutral-4 transition-colors",
+                  toolMode === mode.value
+                    ? "text-primary-11 bg-primary-3"
+                    : "text-neutral-12"
+                )}>
                   <span>{mode.label}</span>
                   {toolMode === mode.value && (
                     <Check className="h-4 w-4" aria-hidden="true" />
                   )}
-                </button>
+                </Button>)
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-neutral-6 my-2" />
+
+          {/* v7: Tool Provider Preference Section */}
+          <div className="px-3 py-2">
+            <div className="flex items-center gap-2 text-xs font-semibold text-neutral-11 uppercase tracking-wide mb-2">
+              <Zap className="h-3 w-3" aria-hidden="true" />
+              Tool Provider
+            </div>
+            <p className="text-xs text-neutral-10 mb-2">
+              Choose between native LLM tools or server-side execution
+            </p>
+            <div className="space-y-1" role="listbox" aria-label="Tool provider preference">
+              {TOOL_PREFERENCE_MODES.map((pref) => (
+                 
+                (<Button
+                variant="primary"
+                key={pref.value}
+                type="button"
+                role="option"
+                aria-selected={toolPreference === pref.value}
+                onClick={() => handleToolPreferenceChange(pref.value)}
+                className={cn(
+                  "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                  "hover:bg-neutral-4 transition-colors",
+                  toolPreference === pref.value
+                    ? "text-primary-11 bg-primary-3"
+                    : "text-neutral-12"
+                )}>
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className="font-medium">{pref.label}</span>
+                    <span className="text-xs text-neutral-10">{pref.description}</span>
+                  </div>
+                  {toolPreference === pref.value && (
+                    <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                  )}
+                </Button>)
               ))}
             </div>
           </div>
@@ -540,26 +605,26 @@ export function PreferencesMenu({
             </div>
             <div className="space-y-1" role="listbox" aria-label="KB focus mode">
               {KB_FOCUS_MODES.map((mode) => (
-                // eslint-disable-next-line react/forbid-elements -- Custom listbox option with role="option" and aria-selected
-                <button
-                  key={mode.value}
-                  type="button"
-                  role="option"
-                  aria-selected={kbFocusMode === mode.value}
-                  onClick={() => handleKBFocusChange(mode.value)}
-                  className={cn(
-                    "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                    "hover:bg-neutral-4 transition-colors",
-                    kbFocusMode === mode.value
-                      ? "text-primary-11 bg-primary-3"
-                      : "text-neutral-12"
-                  )}
-                >
+                 
+                (<Button
+                variant="primary"
+                key={mode.value}
+                type="button"
+                role="option"
+                aria-selected={kbFocusMode === mode.value}
+                onClick={() => handleKBFocusChange(mode.value)}
+                className={cn(
+                  "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                  "hover:bg-neutral-4 transition-colors",
+                  kbFocusMode === mode.value
+                    ? "text-primary-11 bg-primary-3"
+                    : "text-neutral-12"
+                )}>
                   <span>{mode.label}</span>
                   {kbFocusMode === mode.value && (
                     <Check className="h-4 w-4" aria-hidden="true" />
                   )}
-                </button>
+                </Button>)
               ))}
             </div>
           </div>

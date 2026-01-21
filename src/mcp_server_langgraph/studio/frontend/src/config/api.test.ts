@@ -179,15 +179,33 @@ describe("API Configuration", () => {
 });
 
 describe("Environment Variable Documentation", () => {
-  it("should document all supported VITE_* environment variables", async () => {
+  it("should document all supported environment variables", async () => {
     // This test serves as documentation for required env vars
     const supportedEnvVars = [
       "VITE_API_BASE_URL", // API base URL (e.g., https://api.example.com/v1)
       "VITE_WS_BASE_URL", // WebSocket base URL (e.g., wss://ws.example.com/v1)
+      "OBSERVABILITY_TRACE_LIST_POLLING_ACTIVE_MS", // Trace list polling (active) in ms
+      "OBSERVABILITY_TRACE_LIST_POLLING_IDLE_MS", // Trace list polling (idle) in ms
+      "OBSERVABILITY_TRACE_DETAIL_POLLING_MS", // Trace detail polling in ms
+      "OBSERVABILITY_METRICS_POLLING_MS", // Metrics polling in ms
+      "OBSERVABILITY_LOGS_POLLING_MS", // Logs polling in ms
+      "OBSERVABILITY_ALERTS_POLLING_MS", // Alerts polling in ms
     ];
 
     // Verify these are the documented env vars
     expect(supportedEnvVars).toContain("VITE_API_BASE_URL");
     expect(supportedEnvVars).toContain("VITE_WS_BASE_URL");
+    expect(supportedEnvVars).toContain(
+      "OBSERVABILITY_TRACE_LIST_POLLING_ACTIVE_MS",
+    );
+    expect(supportedEnvVars).toContain(
+      "OBSERVABILITY_TRACE_LIST_POLLING_IDLE_MS",
+    );
+    expect(supportedEnvVars).toContain(
+      "OBSERVABILITY_TRACE_DETAIL_POLLING_MS",
+    );
+    expect(supportedEnvVars).toContain("OBSERVABILITY_METRICS_POLLING_MS");
+    expect(supportedEnvVars).toContain("OBSERVABILITY_LOGS_POLLING_MS");
+    expect(supportedEnvVars).toContain("OBSERVABILITY_ALERTS_POLLING_MS");
   });
 });

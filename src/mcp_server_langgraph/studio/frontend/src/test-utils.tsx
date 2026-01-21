@@ -119,7 +119,7 @@ export function createMotionMock() {
         ...props
       }: React.ComponentProps<"button"> & Record<string, unknown>) => (
         // eslint-disable-next-line react/forbid-elements -- motion component mock requires raw element
-        <button {...filterMotionProps(props)}>{children}</button>
+        (<button {...filterMotionProps(props)}>{children}</button>)
       ),
       span: ({
         children,
@@ -182,12 +182,12 @@ export function createMotionMock() {
         <form {...filterMotionProps(props)}>{children}</form>
       ),
       input: (props: React.ComponentProps<"input"> & Record<string, unknown>) => (
-        // eslint-disable-next-line react/forbid-elements -- motion component mock requires raw element
-        <input {...filterMotionProps(props)} />
+         
+        (<Input {...filterMotionProps(props)} />)
       ),
       textarea: (props: React.ComponentProps<"textarea"> & Record<string, unknown>) => (
-        // eslint-disable-next-line react/forbid-elements -- motion component mock requires raw element
-        <textarea {...filterMotionProps(props)} />
+         
+        (<Textarea {...filterMotionProps(props)} />)
       ),
       label: ({
         children,
@@ -362,6 +362,8 @@ import complianceReducer from "./store/slices/complianceSlice";
 import helpReducer from "./store/slices/helpSlice";
 import alertReducer from "./store/slices/alertSlice";
 import { TelemetryProvider } from "./contexts/TelemetryContext";
+
+import { Input, Textarea } from "@/components/UI";
 
 /**
  * Props for TestRouter component.

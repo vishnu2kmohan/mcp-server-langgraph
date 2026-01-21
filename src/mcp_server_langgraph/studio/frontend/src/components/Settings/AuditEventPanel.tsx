@@ -228,6 +228,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
 
           {/* Filter button with active indicator */}
           <Button
+            variant="ghost"
             data-testid="filter-toggle"
             onClick={() => setIsFilterOpen(!isFilterOpen)}
             className={cn(
@@ -236,8 +237,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
                 ? "text-primary-10 bg-primary-1 bg-primary-4"
                 : "text-neutral-11 hover:bg-neutral-2",
             )}
-            title="Filter events"
-          >
+            title="Filter events">
             <Filter className="w-4 h-4" />
             {hasActiveFilter && (
               <span
@@ -262,6 +262,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
 
           {/* Pause/Resume button */}
           <Button
+            variant="primary"
             data-testid="pause-button"
             onClick={isPaused ? resume : pause}
             className={cn(
@@ -270,8 +271,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
                 ? "text-success-10 hover:bg-success-1 dark:hover:bg-success-a4"
                 : "text-neutral-11 hover:bg-neutral-2",
             )}
-            title={isPaused ? "Resume" : "Pause"}
-          >
+            title={isPaused ? "Resume" : "Pause"}>
             {isPaused ? (
               <Play className="w-4 h-4" />
             ) : (

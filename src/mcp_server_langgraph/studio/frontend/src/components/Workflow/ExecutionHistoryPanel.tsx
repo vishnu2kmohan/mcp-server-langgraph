@@ -128,11 +128,11 @@ export function ExecutionHistoryPanel({
           {(["all", "completed", "failed", "running"] as StatusFilter[]).map(
             (filter) => (
               <Button
+                variant="primary"
                 size="sm"
                 className="px-3 py-1 text-sm rounded-full"
                 key={filter}
-                onClick={() => setStatusFilter(filter)}
-              >
+                onClick={() => setStatusFilter(filter)}>
                 {filter.charAt(0).toUpperCase() + filter.slice(1)}
               </Button>
             ),

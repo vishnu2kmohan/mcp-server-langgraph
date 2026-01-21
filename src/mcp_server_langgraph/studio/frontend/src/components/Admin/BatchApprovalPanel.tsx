@@ -189,6 +189,7 @@ export function BatchApprovalPanel({
         {/* Batch action buttons */}
         <div className="flex items-center gap-2">
           <Button
+            variant="primary"
             type="button"
             data-testid="batch-approve-btn"
             onClick={handleBatchApprove}
@@ -199,8 +200,7 @@ export function BatchApprovalPanel({
               "bg-success-10 text-neutral-12 hover:bg-success-11",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               "transition-colors",
-            )}
-          >
+            )}>
             {isApproving ? (
               <Loader2
                 className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
@@ -212,6 +212,7 @@ export function BatchApprovalPanel({
             Approve selected
           </Button>
           <Button
+            variant="primary"
             type="button"
             data-testid="batch-reject-btn"
             onClick={handleBatchReject}
@@ -222,8 +223,7 @@ export function BatchApprovalPanel({
               "bg-error-10 text-neutral-12 hover:bg-error-11",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               "transition-colors",
-            )}
-          >
+            )}>
             {isRejecting ? (
               <Loader2
                 className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}

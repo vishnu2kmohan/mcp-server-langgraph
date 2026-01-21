@@ -192,6 +192,7 @@ function ExportMenu({ onExport, onClose }: ExportMenuProps) {
     >
       {formats.map(({ format, label }) => (
         <Button
+          variant="primary"
           key={format}
           type="button"
           onClick={() => {
@@ -203,8 +204,7 @@ function ExportMenu({ onExport, onClose }: ExportMenuProps) {
             "text-neutral-11",
             "hover:bg-neutral-2",
             "transition-colors",
-          )}
-        >
+          )}>
           {label}
         </Button>
       ))}
@@ -237,6 +237,7 @@ function ActionButton({
 }: ActionButtonProps) {
   return (
     <Button
+      variant="primary"
       data-testid={testId}
       type="button"
       disabled={disabled}
@@ -251,8 +252,7 @@ function ActionButton({
         variant === "danger" &&
           "text-error-11 dark:text-error-11 hover:bg-error-3 dark:hover:bg-error-a4",
         disabled && "opacity-50 cursor-not-allowed",
-      )}
-    >
+      )}>
       <Icon size={14} data-testid={`${testId?.replace("-button", "")}-icon`} />
       {!compact && <span>{label}</span>}
     </Button>
@@ -366,6 +366,7 @@ export function ArtifactActions({
       {/* Export button with dropdown */}
       <div className="relative">
         <Button
+          variant="primary"
           type="button"
           disabled={disabled}
           onClick={() => setShowExportMenu(!showExportMenu)}
@@ -376,8 +377,7 @@ export function ArtifactActions({
             "transition-colors focus:outline-none focus:ring-2 focus:ring-primary-7",
             "text-neutral-11 hover:bg-neutral-2",
             disabled && "opacity-50 cursor-not-allowed",
-          )}
-        >
+          )}>
           <Download size={14} data-testid="export-icon" />
           {!compact && <span>Export</span>}
           <ChevronDown size={12} />
@@ -430,6 +430,7 @@ export function ArtifactActions({
             />
             {relevantAIActions.map((action) => (
               <Button
+                variant="primary"
                 key={action.id}
                 type="button"
                 data-testid={`ai-action-${action.id}`}
@@ -446,8 +447,7 @@ export function ArtifactActions({
                   "focus:outline-none focus:ring-2 focus:ring-primary-7",
                   (disabled || aiActionLoading) &&
                     "opacity-50 cursor-not-allowed",
-                )}
-              >
+                )}>
                 <action.icon size={16} />
               </Button>
             ))}

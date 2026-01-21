@@ -322,6 +322,7 @@ export function MobileDrawer({
               {sessions.slice(0, 5).map((session) => (
                 <li key={session.id}>
                   <Button
+                    variant="ghost"
                     type="button"
                     onClick={() => handleSessionClick(session)}
                     className={cn(
@@ -329,8 +330,7 @@ export function MobileDrawer({
                       !prefersReducedMotion && "transition-colors",
                       "focus:outline-none focus:ring-2 focus:ring-primary-9",
                       "text-neutral-11 hover:bg-neutral-3",
-                    )}
-                  >
+                    )}>
                     <MessageSquare className="w-4 h-4 text-neutral-9 flex-shrink-0" />
                     <span className="text-sm truncate">
                       {session.name || `Session ${session.id.slice(0, 8)}`}

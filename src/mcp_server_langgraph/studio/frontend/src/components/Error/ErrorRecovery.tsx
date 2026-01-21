@@ -208,21 +208,21 @@ export function ErrorRecovery({
         )}
         {onDismiss && (
           <Button
+            variant="secondary"
             className=".5 px-3 py-1.5 text-sm text-neutral-11 hover:text-neutral-12 focus:ring-primary-7"
             type="button"
-            onClick={onDismiss}
-          >
+            onClick={onDismiss}>
             <X size={14} />
             Dismiss
           </Button>
         )}
         <Button
+          variant="primary"
           size="sm"
           className="px-2 py-1 text-xs text-neutral-10 hover:text-neutral-11 focus:ring-primary-7"
           type="button"
           onClick={() => setShowDetails(!showDetails)}
-          aria-label={showDetails ? "Hide details" : "Show details"}
-        >
+          aria-label={showDetails ? "Hide details" : "Show details"}>
           {showDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           Details
         </Button>

@@ -11,6 +11,8 @@ import { MemoryRouter } from 'react-router';
 import { ReferencePopover } from './ReferencePopover';
 import type { ResolvedReference } from '@/types/references';
 
+import { Button } from "@/components/UI";
+
 const meta: Meta<typeof ReferencePopover> = {
   title: 'References/ReferencePopover',
   component: ReferencePopover,
@@ -363,13 +365,13 @@ export const Interactive: Story = {
 
     return (
       <div className="relative">
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
+        <Button
+          variant="primary"
           className="px-3 py-1.5 bg-primary-3 text-primary-11 rounded text-sm"
-        >
+          type="button"
+          onClick={() => setIsOpen(true)}>
           Show Popover
-        </button>
+        </Button>
         <div className="absolute top-full left-0 mt-2">
           <ReferencePopover
             reference={toolReference}

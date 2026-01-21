@@ -24,12 +24,12 @@ export function AgentTraceToggleButton({
 }: AgentTraceToggleButtonProps) {
   return (
     <Button
+      variant="primary"
       className="p-1.5 rounded"
       onClick={onToggle}
       aria-expanded={isExpanded}
       aria-label="Toggle agent execution trace"
-      title={isExpanded ? "Hide execution trace" : "Show execution trace"}
-    >
+      title={isExpanded ? "Hide execution trace" : "Show execution trace"}>
       <GitBranch size={14} />
     </Button>
   );

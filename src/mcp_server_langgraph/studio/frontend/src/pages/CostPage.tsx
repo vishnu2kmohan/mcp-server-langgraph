@@ -39,6 +39,7 @@ import {
   LazyOrganizationCostDashboard,
   LazyBudgetStatusCard,
   LazyBudgetForecastChart,
+  LazyNativeToolComparison,
 } from "../components/Cost";
 import type { BudgetStatus, CostForecast } from "../components/Cost";
 import {
@@ -424,6 +425,7 @@ export function CostPage({
 
               {/* Toggle Custom Date Range */}
               <Button
+                variant="ghost"
                 className="flex .5 px-3 py-2 rounded-lg text-sm"
                 onClick={() => {
                   setUseCustomDateRange(!useCustomDateRange);
@@ -438,8 +440,7 @@ export function CostPage({
                   useCustomDateRange
                     ? "Use preset periods"
                     : "Use custom date range"
-                }
-              >
+                }>
                 <Calendar size={16} />
                 {useCustomDateRange ? "Preset" : "Custom"}
               </Button>
@@ -452,16 +453,16 @@ export function CostPage({
         <div className="px-6 py-2 bg-neutral-2 border-b border-neutral-6">
           <div className="flex items-center gap-2">
             <Button
+              variant="primary"
               className="flex px-4 py-2 rounded-lg text-sm"
-              onClick={() => setDashboardView("personal")}
-            >
+              onClick={() => setDashboardView("personal")}>
               <DollarSign size={16} />
               Personal Costs
             </Button>
             <Button
+              variant="primary"
               className="flex px-4 py-2 rounded-lg text-sm"
-              onClick={() => setDashboardView("organizational")}
-            >
+              onClick={() => setDashboardView("organizational")}>
               <Building2 size={16} />
               Organizational View
             </Button>
@@ -488,10 +489,10 @@ export function CostPage({
               </p>
             </div>
             <Button
+              variant="secondary"
               className="text-warning-9 hover:text-warning-10 dark:hover:text-warning-6"
               onClick={clearBudgetWarnings}
-              aria-label="Dismiss warning"
-            >
+              aria-label="Dismiss warning">
               <X size={16} />
             </Button>
           </div>
@@ -560,7 +561,10 @@ export function CostPage({
                 {budgetAlerts[budgetAlerts.length - 1].percentUsed}% used
               </p>
             </div>
-            <Button onClick={clearBudgetAlerts} aria-label="Dismiss alert">
+            <Button
+              variant="secondary"
+              onClick={clearBudgetAlerts}
+              aria-label="Dismiss alert">
               <X size={16} />
             </Button>
           </div>
@@ -796,6 +800,28 @@ export function CostPage({
                 />
               </Suspense>
             )}
+
+            {/* Native vs Builtin Tool Comparison (v7) */}
+            <Suspense
+              fallback={
+                <div
+                  data-testid="native-tool-comparison-skeleton"
+                  className="p-6 rounded-lg border border-neutral-6"
+                >
+                  <div className="space-y-4">
+                    <Skeleton className="w-48 h-6" />
+                    <div className="grid grid-cols-3 gap-4">
+                      <Skeleton className="h-24" />
+                      <Skeleton className="h-24" />
+                      <Skeleton className="h-24" />
+                    </div>
+                    <Skeleton className="w-full h-64" />
+                  </div>
+                </div>
+              }
+            >
+              <LazyNativeToolComparison pollingInterval={30000} />
+            </Suspense>
 
             {/* Live Session Costs */}
             {enableRealtime && liveSessionCostsList.length > 0 && (

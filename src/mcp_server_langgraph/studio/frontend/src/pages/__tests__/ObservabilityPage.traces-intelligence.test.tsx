@@ -133,6 +133,7 @@ describe("ObservabilityPage - Trace Intelligence", () => {
       },
       isLoading: false,
       error: null,
+      refetch: vi.fn(),
     });
   });
 

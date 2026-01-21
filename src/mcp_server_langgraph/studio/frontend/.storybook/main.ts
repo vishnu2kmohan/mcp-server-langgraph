@@ -1,4 +1,8 @@
 import type { StorybookConfig } from "@storybook/react-vite";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
@@ -42,6 +46,18 @@ const config: StorybookConfig = {
 
       config.plugins = config.plugins.filter(filterPlugin);
     }
+
+    // Add alias for PWA virtual module that's removed when filtering PWA plugin
+    // This provides a mock implementation for Storybook builds
+    config.resolve = config.resolve || {};
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "virtual:pwa-register/react": path.resolve(
+        __dirname,
+        "./pwa-register-mock.ts",
+      ),
+    };
+
     return config;
   },
 };

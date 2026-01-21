@@ -8,7 +8,7 @@
 import { forwardRef } from 'react';
 import { cva } from 'class-variance-authority';
 import { Wrench, Sparkles, FileCode, Brain, ListTodo } from 'lucide-react';
-import { Tooltip } from '@/components/UI';
+import { Tooltip, Button } from '@/components/UI';
 import { useReferenceResolver } from '@/contexts/ReferenceResolverContext';
 import { getReferenceKey } from '@/types/references';
 import type { ReferenceType, ReferenceStatus, ReferenceChipProps } from '@/types/references';
@@ -108,17 +108,16 @@ export const ReferenceChip = forwardRef<HTMLButtonElement, ReferenceChipProps>(
     const tooltipContent = resolved?.description || 'Loading...';
 
     const chip = (
-      // eslint-disable-next-line react/forbid-elements -- Custom chip styling requires raw button with CVA variants
-      <button
-        ref={ref}
-        type="button"
-        className={cn(chipVariants({ type, status }))}
-        aria-label={ariaLabel}
-        disabled={status === 'not_found' || status === 'unauthorized'}
-      >
+      <Button
+      variant="primary"
+      ref={ref}
+      type="button"
+      className={cn(chipVariants({ type, status }))}
+      aria-label={ariaLabel}
+      disabled={status === 'not_found' || status === 'unauthorized'}>
         <Icon className="w-3 h-3" aria-hidden="true" />
         <span>{displayName}</span>
-      </button>
+      </Button>
     );
 
     // Wrap with tooltip if we have content to show

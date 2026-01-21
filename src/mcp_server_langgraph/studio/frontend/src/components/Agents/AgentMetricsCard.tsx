@@ -133,10 +133,10 @@ export function AgentMetricsCard() {
             {data.timeRangeHours}h
           </span>
           <Button
+            variant="ghost"
             className="p-1 text-neutral-10 hover:text-neutral-11 rounded"
             onClick={() => refetch()}
-            aria-label="Refresh metrics"
-          >
+            aria-label="Refresh metrics">
             <RefreshCw size={16} />
           </Button>
         </div>

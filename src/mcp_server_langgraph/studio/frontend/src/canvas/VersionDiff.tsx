@@ -248,6 +248,7 @@ export function VersionDiff({
         <div className="flex items-center gap-2">
           {onRestore && (
             <Button
+              variant="primary"
               type="button"
               onClick={() => onRestore(baseVersion)}
               className={cn(
@@ -255,8 +256,7 @@ export function VersionDiff({
                 "bg-primary-1 text-primary-11 hover:bg-primary-3",
                 "bg-primary-4 dark:text-primary-11 dark:hover:bg-primary-a6",
                 "transition-colors",
-              )}
-            >
+              )}>
               <RotateCcw size={14} />
               Restore v{baseVersion.version}
             </Button>
@@ -292,6 +292,7 @@ export function VersionDiff({
             )}
             {!hasTriggeredAnalysis && !aiLoading && (
               <Button
+                variant="ghost"
                 type="button"
                 data-testid="analyze-diff-button"
                 onClick={() => {
@@ -303,19 +304,18 @@ export function VersionDiff({
                   "bg-primary-3 text-primary-11 hover:bg-primary-4",
                   "bg-primary-4 dark:text-primary-11 dark:hover:bg-primary-a6",
                   "transition-colors",
-                )}
-              >
+                )}>
                 <Sparkles size={12} />
                 Analyze
               </Button>
             )}
             {aiError && hasTriggeredAnalysis && (
               <Button
+                variant="primary"
                 size="sm"
                 className="text-xs text-primary-11 hover:text-primary-11 dark:text-primary-11"
                 type="button"
-                onClick={() => refetchAI()}
-              >
+                onClick={() => refetchAI()}>
                 Retry
               </Button>
             )}
@@ -446,7 +446,7 @@ export function VersionDiff({
           </div>
         ) : (
           // Split view
-          <>
+          (<>
             <div className="border-r border-neutral-5 pr-4">
               <div className="text-xs text-neutral-11 mb-2">
                 v{baseVersion.version}
@@ -489,7 +489,7 @@ export function VersionDiff({
                   </div>
                 ))}
             </div>
-          </>
+          </>)
         )}
       </div>
     </div>

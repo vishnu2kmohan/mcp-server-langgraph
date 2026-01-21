@@ -50,12 +50,12 @@ import {
 import type { UploadFile, DragHandlers } from "../../hooks/useFileUpload";
 import type { ReasoningEffortLevel } from "./ReasoningEffortSelector";
 import { ToolSelector, type ToolOption } from "./ToolSelector";
-import type { ToolSelectionMode } from "@/types/tools";
+import type { ToolSelectionMode, ToolPreference } from "@/types/tools";
 import { ExecutionModeIndicator } from "./ExecutionModeIndicator";
 import { PreferencesMenu } from "./PreferencesMenu";
 import type { KBFocusMode } from "./KnowledgeBaseFocus";
 
-import { Button, Textarea } from "@/components/UI";
+import { Button, Textarea, Input } from "@/components/UI";
 import { SegmentedControl, SegmentedControlItem } from "@/components/UI/SegmentedControl";
 import { ShieldCheck } from "lucide-react";
 import { cn } from "../../utils/cn";
@@ -148,6 +148,12 @@ export interface ChatInputProps {
   onToolSelectionModeChange?: (mode: ToolSelectionMode) => void;
   /** Available tools for manual selection */
   availableTools?: ToolOption[];
+
+  // v7: Tool preference for native vs builtin execution
+  /** Current tool preference (auto/native/builtin/mcp) */
+  toolPreference?: ToolPreference;
+  /** Callback when tool preference changes */
+  onToolPreferenceChange?: (preference: ToolPreference) => void;
 
   // KB Focus props
   /** Whether to show the KB Focus dropdown */
@@ -353,6 +359,10 @@ export function ChatInput({
   toolSelectionMode = "auto",
   onToolSelectionModeChange,
   availableTools = [],
+
+  // v7: Tool preference
+  toolPreference = "auto",
+  onToolPreferenceChange,
 
   // KB Focus
   showKBFocus = false,
@@ -767,7 +777,6 @@ export function ChatInput({
           <p className="text-primary-11 font-medium">Drop files here</p>
         </div>
       )}
-
       {/* P0: Error states */}
       {voiceError && !dismissedVoiceError && (
         <div className="px-3 pt-3 flex items-center gap-2 text-sm text-error-11 bg-error-3 rounded-t-2xl">
@@ -790,7 +799,6 @@ export function ChatInput({
           <span>{fileError}</span>
         </div>
       )}
-
       {/* P0: Upload indicator */}
       {isUploading && (
         <div
@@ -801,7 +809,6 @@ export function ChatInput({
           <span>Uploading...</span>
         </div>
       )}
-
       {/* P1: URL fetch loading */}
       {enableUrlFetch && urlFetchLoading.length > 0 && (
         <div
@@ -812,7 +819,6 @@ export function ChatInput({
           <span>Fetching URL content...</span>
         </div>
       )}
-
       {/* P1: Fetched URL badges */}
       {enableUrlFetch && fetchedUrls.length > 0 && (
         <div className="px-3 pt-3 flex flex-wrap gap-2">
@@ -838,7 +844,6 @@ export function ChatInput({
           ))}
         </div>
       )}
-
       {/* File previews */}
       {uploadFiles.length > 0 && (
         <div className="px-3 pt-3 flex flex-wrap gap-2">
@@ -869,7 +874,6 @@ export function ChatInput({
           ))}
         </div>
       )}
-
       {/* Textarea area */}
       <div className="relative px-3 pt-3">
         {/* Inline suggestion ghost text */}
@@ -965,7 +969,6 @@ export function ChatInput({
           </div>
         )}
       </div>
-
       {/* P2: Character count */}
       {maxLength && (
         <div className="px-3 flex justify-end">
@@ -977,7 +980,6 @@ export function ChatInput({
           </span>
         </div>
       )}
-
       {/* Controls row */}
       <div
         data-testid="controls-row"
@@ -1091,13 +1093,11 @@ export function ChatInput({
                     <div className="px-2 pb-2">
                       <div className="relative">
                         <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-9" />
-                        <input
-                          type="text"
+                        <Input
+                          className="pl-8 pr-2 py-1.5 text-sm bg-neutral-2 focus:ring-primary-7"
                           placeholder="Search models..."
                           value={modelSearchQuery}
-                          onChange={(e) => setModelSearchQuery(e.target.value)}
-                          className="w-full pl-8 pr-2 py-1.5 text-sm border border-neutral-5 rounded bg-neutral-2 focus:outline-none focus:ring-1 focus:ring-primary-7"
-                        />
+                          onChange={(e) => setModelSearchQuery(e.target.value)} />
                       </div>
                     </div>
                   )}
@@ -1269,6 +1269,9 @@ export function ChatInput({
               onToolsChange={onSelectedToolsChange}
               kbFocusMode={kbFocusMode}
               onKBFocusChange={onKBFocusModeChange}
+              // v7: Tool preference for native vs builtin execution
+              toolPreference={toolPreference}
+              onToolPreferenceChange={onToolPreferenceChange}
               disabled={disabled}
               compact
               // Executor/Critic model selection (Critique Loop)

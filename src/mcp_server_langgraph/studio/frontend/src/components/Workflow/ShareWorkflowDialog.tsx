@@ -271,10 +271,10 @@ export function ShareWorkflowDialog({
                       </div>
                     </div>
                     <Button
+                      variant="danger"
                       className="p-1 text-neutral-10 hover:text-error-10 dark:hover:text-error-7 rounded"
                       onClick={() => handleRemoveShare(share.userId)}
-                      aria-label="Remove"
-                    >
+                      aria-label="Remove">
                       <Trash2 size={16} />
                     </Button>
                   </div>
@@ -300,10 +300,10 @@ export function ShareWorkflowDialog({
                 </span>
               </div>
               <Button
+                variant="primary"
                 className="relative h-6 w-11 rounded-full"
                 data-testid="public-toggle"
-                onClick={handleTogglePublic}
-              >
+                onClick={handleTogglePublic}>
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-neutral-1 transition-transform ${
                     isPublic ? "translate-x-6" : "translate-x-1"

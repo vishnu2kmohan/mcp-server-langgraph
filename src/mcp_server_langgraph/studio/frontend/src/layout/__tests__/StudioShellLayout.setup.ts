@@ -587,7 +587,14 @@ export const mockImplementations = {
       isError: false,
       error: null,
     }),
-    api: { reducerPath: "api", reducer: () => ({}), middleware: () => [] },
+    api: {
+      reducerPath: "api",
+      reducer: (state = {}) => state,
+      // RTK Query middleware is a function: store => next => action => result
+      middleware:
+        (() => (next: (action: unknown) => unknown) => (action: unknown) =>
+          next(action)) as unknown,
+    },
   },
 
   useKBStatus: {

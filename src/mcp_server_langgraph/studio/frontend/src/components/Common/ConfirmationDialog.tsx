@@ -251,12 +251,12 @@ export function ConfirmationDialog({
             {cancelLabel}
           </Button>
           <Button
+            variant="primary"
             className="px-4 py-2 text-sm text-neutral-12 rounded-md focus:ring-offset-2 flex"
             ref={confirmButtonRef}
             type="button"
             onClick={handleConfirm}
-            disabled={isConfirmDisabled}
-          >
+            disabled={isConfirmDisabled}>
             {isLoading && (
               <Loader2
                 data-testid="loading-spinner"

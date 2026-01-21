@@ -479,3 +479,167 @@ export const ThinkingLevelComparison: Story = {
     },
   },
 };
+
+// =============================================================================
+// Native Tools Stories (v7)
+// =============================================================================
+
+/**
+ * NOTE: Native tools stories require mocking the useNativeCapabilities hook.
+ * The HeaderModelSelector component displays a "Native Tools Available" section
+ * when the selected model supports native LLM provider tools.
+ *
+ * In the actual application, this data comes from the /api/v1/tools/native-capabilities
+ * endpoint. For Storybook, we need to mock the RTK Query hook.
+ *
+ * To see native tools in action:
+ * 1. Use mock MSW handlers in .storybook/preview.tsx
+ * 2. Or wrap stories with a mock provider
+ *
+ * The native tools section shows:
+ * - Provider name (Anthropic, Google, OpenAI)
+ * - Available capabilities (Web Search, Code Execution)
+ * - Help text about tool preferences
+ */
+export const WithNativeToolsInfo: Story = {
+  render: () => (
+    <div className="space-y-4 p-4 max-w-md">
+      <h3 className="text-sm font-semibold text-neutral-11">
+        Native Tools Support (v7)
+      </h3>
+      <p className="text-xs text-neutral-10">
+        When a model supports native LLM provider tools, the dropdown shows a
+        "Native Tools Available" section with badges for each capability:
+      </p>
+      <ul className="text-xs text-neutral-10 list-disc list-inside space-y-1">
+        <li>
+          <strong>Anthropic Claude:</strong> Web Search, Code Execution
+        </li>
+        <li>
+          <strong>Google Gemini:</strong> Web Search (googleSearch)
+        </li>
+        <li>
+          <strong>OpenAI GPT:</strong> Web Search, Code Interpreter (via
+          Responses API)
+        </li>
+      </ul>
+      <div className="pt-4 border-t border-neutral-6">
+        <p className="text-xs text-neutral-10 mb-2">
+          Select Claude Opus 4.5 and open the dropdown to see native tools:
+        </p>
+        <HeaderModelSelector
+          selectedModel="claude-opus-4.5"
+          availableModels={SAMPLE_MODELS}
+          thinkingLevel="medium"
+          onModelChange={(id) => console.log("Model changed to:", id)}
+          onThinkingLevelChange={(level) =>
+            console.log("Thinking level changed to:", level)
+          }
+        />
+      </div>
+      <div className="bg-neutral-4 rounded p-3 text-xs text-neutral-11">
+        <strong>Note:</strong> In Storybook, native tools section visibility
+        depends on the useNativeCapabilities hook mock. In production, it
+        auto-detects based on the selected model's capabilities and feature
+        flags.
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Documentation story explaining native tools support in HeaderModelSelector. " +
+          "The native tools section appears when useNativeCapabilities returns capabilities " +
+          "for the selected model.",
+      },
+    },
+  },
+};
+
+export const NativeToolsProviderComparison: Story = {
+  render: () => (
+    <div className="space-y-6 p-4">
+      <h3 className="text-sm font-semibold text-neutral-11">
+        Native Tools by Provider
+      </h3>
+
+      <div className="space-y-4">
+        {/* Anthropic */}
+        <div className="border border-neutral-6 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-medium text-neutral-12">
+              Anthropic Claude
+            </span>
+            <span className="text-xs px-1.5 py-0.5 bg-success-3 text-success-11 rounded">
+              Full Support
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2 mb-2">
+            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-success-3 text-success-11">
+              Web Search
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-success-3 text-success-11">
+              Code Execution
+            </span>
+          </div>
+          <p className="text-xs text-neutral-10">
+            Direct API and Bedrock support both tools. Vertex AI Anthropic only
+            supports web search.
+          </p>
+        </div>
+
+        {/* Google */}
+        <div className="border border-neutral-6 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-medium text-neutral-12">
+              Google Gemini
+            </span>
+            <span className="text-xs px-1.5 py-0.5 bg-info-3 text-info-11 rounded">
+              Web Search
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2 mb-2">
+            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-success-3 text-success-11">
+              Web Search (googleSearch)
+            </span>
+          </div>
+          <p className="text-xs text-neutral-10">
+            Grounded search with citations from Google's index.
+          </p>
+        </div>
+
+        {/* OpenAI */}
+        <div className="border border-neutral-6 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-medium text-neutral-12">
+              OpenAI GPT
+            </span>
+            <span className="text-xs px-1.5 py-0.5 bg-warning-3 text-warning-11 rounded">
+              Responses API
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2 mb-2">
+            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-success-3 text-success-11">
+              Web Search (Preview)
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-success-3 text-success-11">
+              Code Interpreter
+            </span>
+          </div>
+          <p className="text-xs text-neutral-10">
+            Requires Responses API flag enabled. Uses LiteLLM aresponses().
+          </p>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Visual comparison of native tool capabilities across different LLM providers.",
+      },
+    },
+  },
+};

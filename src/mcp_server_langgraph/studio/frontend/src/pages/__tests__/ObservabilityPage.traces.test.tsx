@@ -352,6 +352,7 @@ describe("ObservabilityPage - Traces", () => {
       await waitFor(() => {
         expect(mockUseListTracesQuery).toHaveBeenCalledWith(
           expect.objectContaining({ status: "error" }),
+          expect.any(Object),
         );
       });
     });
@@ -402,6 +403,7 @@ describe("ObservabilityPage - Traces", () => {
       await waitFor(() => {
         expect(mockUseListTracesQuery).toHaveBeenCalledWith(
           expect.objectContaining({ start_time: expect.any(String) }),
+          expect.any(Object),
         );
       });
     });
@@ -427,6 +429,7 @@ describe("ObservabilityPage - Traces", () => {
       await waitFor(() => {
         expect(mockUseListTracesQuery).toHaveBeenCalledWith(
           expect.objectContaining({ start_time: expect.any(String) }),
+          expect.any(Object),
         );
       });
     });
@@ -452,6 +455,7 @@ describe("ObservabilityPage - Traces", () => {
       await waitFor(() => {
         expect(mockUseListTracesQuery).toHaveBeenCalledWith(
           expect.objectContaining({ start_time: expect.any(String) }),
+          expect.any(Object),
         );
       });
     });
@@ -477,6 +481,7 @@ describe("ObservabilityPage - Traces", () => {
       await waitFor(() => {
         expect(mockUseListTracesQuery).toHaveBeenCalledWith(
           expect.objectContaining({ start_time: undefined }),
+          expect.any(Object),
         );
       });
     });
@@ -593,6 +598,7 @@ describe("ObservabilityPage - Traces", () => {
       await waitFor(() => {
         expect(mockUseListTracesQuery).toHaveBeenCalledWith(
           expect.objectContaining({ status: "running" }),
+          expect.any(Object),
         );
       });
     });
@@ -670,6 +676,7 @@ describe("ObservabilityPage - Traces", () => {
       await waitFor(() => {
         expect(mockUseListTracesQuery).toHaveBeenCalledWith(
           expect.objectContaining({ user_id: "user-123" }),
+          expect.any(Object),
         );
       });
     });
@@ -693,6 +700,7 @@ describe("ObservabilityPage - Traces", () => {
       await waitFor(() => {
         expect(mockUseListTracesQuery).toHaveBeenCalledWith(
           expect.objectContaining({ workflow_id: "workflow-456" }),
+          expect.any(Object),
         );
       });
     });
@@ -716,6 +724,7 @@ describe("ObservabilityPage - Traces", () => {
       await waitFor(() => {
         expect(mockUseListTracesQuery).toHaveBeenCalledWith(
           expect.objectContaining({ project_id: "project-789" }),
+          expect.any(Object),
         );
       });
     });
@@ -835,6 +844,7 @@ describe("ObservabilityPage - Traces", () => {
         },
         isLoading: false,
         error: null,
+        refetch: vi.fn(),
       });
 
       render(
@@ -868,6 +878,7 @@ describe("ObservabilityPage - Traces", () => {
         },
         isLoading: false,
         error: null,
+        refetch: vi.fn(),
       });
 
       render(

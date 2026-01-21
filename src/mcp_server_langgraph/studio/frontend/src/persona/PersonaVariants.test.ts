@@ -92,6 +92,42 @@ describe("PersonaVariants", () => {
       expect(bobModules).toContain("projects");
       expect(bobModules).not.toContain("admin");
     });
+
+    // Issue 9: Verify persona modules match backend/OpenFGA model
+    // These tests ensure frontend fallback matches user.py PERSONA_VISIBLE_MODULES
+    describe("OpenFGA alignment", () => {
+      it("admin should include 'connections' module", () => {
+        const adminModules = PERSONA_VISIBLE_MODULES.admin;
+        expect(adminModules).toContain("connections");
+      });
+
+      it("alice-builder should include 'connections' and 'observability' modules", () => {
+        const aliceBuilderModules = PERSONA_VISIBLE_MODULES["alice-builder"];
+        expect(aliceBuilderModules).toContain("connections");
+        expect(aliceBuilderModules).toContain("observability");
+      });
+
+      it("alice-analyst should include 'observability' module", () => {
+        const aliceAnalystModules = PERSONA_VISIBLE_MODULES["alice-analyst"];
+        expect(aliceAnalystModules).toContain("observability");
+      });
+
+      it("alice-devops should include 'observability' module", () => {
+        const aliceDevopsModules = PERSONA_VISIBLE_MODULES["alice-devops"];
+        expect(aliceDevopsModules).toContain("observability");
+      });
+
+      it("bob should include 'cost' module", () => {
+        const bobModules = PERSONA_VISIBLE_MODULES.bob;
+        expect(bobModules).toContain("cost");
+      });
+
+      it("admin should use 'connections' not 'mcp' for module naming", () => {
+        // 'mcp' is deprecated naming, 'connections' is the normalized module ID
+        const adminModules = PERSONA_VISIBLE_MODULES.admin;
+        expect(adminModules).toContain("connections");
+      });
+    });
   });
 
   describe("getPersonaById", () => {

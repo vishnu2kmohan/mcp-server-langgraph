@@ -139,10 +139,10 @@ export function CrossInsightsPanel({
       <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-5">
         <div className="flex items-center gap-2">
           <Button
+            variant="primary"
             className="flex text-neutral-11 hover:text-neutral-12 dark:hover:text-neutral-12"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            aria-label="Toggle insights panel"
-          >
+            aria-label="Toggle insights panel">
             {isCollapsed ? (
               <ChevronRight className="w-4 h-4" />
             ) : (

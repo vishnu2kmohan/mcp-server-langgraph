@@ -196,14 +196,14 @@ export function ReasoningEffortSelector({
           const isSelected = value === level.value;
           return (
             <Button
+              variant="primary"
               className="rounded"
               key={level.value}
               onClick={() => handleSelect(level.value)}
               onKeyDown={(e) => handleKeyDown(e, level.value)}
               disabled={isDisabled}
               title={level.tooltip}
-              aria-pressed={isSelected}
-            >
+              aria-pressed={isSelected}>
               {compact ? level.shortLabel : level.label}
             </Button>
           );

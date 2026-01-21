@@ -27,6 +27,7 @@ import {
   setCurrentSessionId,
   type LangGraphNode as ReduxLangGraphNode,
 } from "../store/slices/langGraphSlice";
+import { setPlan, type ExecutionPlan } from "../store/slices/executionModeSlice";
 
 /**
  * Token usage information from streaming response
@@ -80,6 +81,16 @@ export interface PlanGeneratedEvent {
 }
 
 /**
+ * Source citation from web search results
+ * Displayed in chat UI as clickable source links
+ */
+export interface SourceCitation {
+  title: string;
+  url: string;
+  snippet?: string | null;
+}
+
+/**
  * Knowledge Base focus mode for context retrieval
  */
 export type KBFocusMode = "all" | "kb_only" | "web_only" | "none";
@@ -88,6 +99,11 @@ export type KBFocusMode = "all" | "kb_only" | "web_only" | "none";
  * Tool selection mode for chat requests
  */
 export type ToolSelectionMode = "auto" | "manual" | "none";
+
+/**
+ * Tool preference for native vs builtin execution (v7)
+ */
+export type ToolPreference = "auto" | "native" | "builtin" | "mcp";
 
 /**
  * Options for starting a stream
@@ -112,6 +128,8 @@ export interface StartStreamOptions {
   selectedTools?: string[];
   /** Execution mode for plan approval workflow (Ctrl/Cmd+Shift+M toggle) */
   executionMode?: ExecutionModeType;
+  /** Tool preference for native vs builtin execution (v7) */
+  toolPreference?: ToolPreference;
 }
 
 /**
@@ -163,6 +181,8 @@ interface StreamingChatState {
   totalAvailableTools: number | null;
   /** Auth required event from stream (ADR-0102) */
   authRequired: AuthRequiredEvent | null;
+  /** Source citations from web search results */
+  sources: SourceCitation[];
 }
 
 /**
@@ -218,6 +238,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
     selectionScores: {},
     totalAvailableTools: null,
     authRequired: null,
+    sources: [],
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -246,6 +267,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
       totalAvailableTools?: number;
       authRequired?: AuthRequiredEvent;
       planGenerated?: PlanGeneratedEvent;
+      sources?: SourceCitation[];
     } | null => {
       // Check for done signal
       if (line === "data: [DONE]") {
@@ -273,6 +295,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
             totalAvailableTools?: number;
             authRequired?: AuthRequiredEvent;
             planGenerated?: PlanGeneratedEvent;
+            sources?: SourceCitation[];
           } = {};
 
           // Handle content - support both direct content and delta.content formats
@@ -373,6 +396,17 @@ export function useStreamingChat(): UseStreamingChatReturn {
             };
           }
 
+          // Handle source citations from web search results
+          if (data.sources && Array.isArray(data.sources)) {
+            result.sources = data.sources.map(
+              (s: { title: string; url: string; snippet?: string | null }) => ({
+                title: s.title,
+                url: s.url,
+                snippet: s.snippet ?? null,
+              }),
+            );
+          }
+
           return result;
         } catch {
           // Ignore non-JSON data lines
@@ -423,6 +457,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
         selectionScores: {},
         totalAvailableTools: null,
         authRequired: null,
+        sources: [],
       });
 
       // Build request body matching ChatCompletionRequest
@@ -468,6 +503,11 @@ export function useStreamingChat(): UseStreamingChatReturn {
       // Add execution mode for plan approval workflow (Ctrl/Cmd+Shift+M toggle)
       if (options?.executionMode) {
         requestBody.execution_mode = options.executionMode;
+      }
+
+      // v7: Add tool preference for native vs builtin execution
+      if (options?.toolPreference) {
+        requestBody.tool_preference = options.toolPreference;
       }
 
       // Start the fetch + stream processing
@@ -540,6 +580,28 @@ export function useStreamingChat(): UseStreamingChatReturn {
                   startTime: Date.now(),
                 };
                 dispatch(addNode(reduxNode));
+              }
+
+              // Dispatch plan_generated to Redux (Issue 7: Wire up plan rendering)
+              if (parsed.planGenerated && sessionIdRef.current) {
+                const plan: ExecutionPlan = {
+                  planId: parsed.planGenerated.planId,
+                  sessionId: sessionIdRef.current,
+                  status: parsed.planGenerated.status,
+                  complexity: parsed.planGenerated.complexity,
+                  riskLevel: parsed.planGenerated.riskLevel,
+                  taskType: parsed.planGenerated.taskType,
+                  executorModel: parsed.planGenerated.executorModel,
+                  criticModel: "", // Optional field, not always in SSE
+                  estimatedCost: parsed.planGenerated.estimatedCost,
+                  message: "", // Optional field, not always in SSE
+                  toolsNeeded: parsed.planGenerated.toolsNeeded,
+                  thinkingBudget: parsed.planGenerated.thinkingBudget,
+                  critiqueRounds: parsed.planGenerated.critiqueRounds,
+                  orchestrator: "", // Optional field, not always in SSE
+                  requiresApproval: parsed.planGenerated.requiresApproval,
+                };
+                dispatch(setPlan(plan));
               }
 
               setState((prev) => {
@@ -626,6 +688,18 @@ export function useStreamingChat(): UseStreamingChatReturn {
                   updates.authRequired = parsed.authRequired;
                 }
 
+                // Handle source citations from web search results
+                if (parsed.sources !== undefined && parsed.sources.length > 0) {
+                  // Append new sources (deduplicate by URL)
+                  const existingUrls = new Set(prev.sources.map((s) => s.url));
+                  const newSources = parsed.sources.filter(
+                    (s) => !existingUrls.has(s.url),
+                  );
+                  if (newSources.length > 0) {
+                    updates.sources = [...prev.sources, ...newSources];
+                  }
+                }
+
                 return { ...prev, ...updates };
               });
             }
@@ -681,6 +755,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
       selectionScores: {},
       totalAvailableTools: null,
       authRequired: null,
+      sources: [],
     }));
   }, []);
 

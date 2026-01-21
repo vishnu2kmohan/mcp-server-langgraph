@@ -370,6 +370,7 @@ export function CanvasWorkspace({
                   <>
                     {!hasTriggeredCodeAnalysis && !codeAnalysis.isLoading ? (
                       <Button
+                        variant="ghost"
                         type="button"
                         data-testid="analyze-code-trigger"
                         onClick={() => {
@@ -381,8 +382,7 @@ export function CanvasWorkspace({
                           "bg-primary-3 text-primary-11 hover:bg-primary-4",
                           "bg-primary-4 dark:text-primary-11 dark:hover:bg-primary-a6",
                           "transition-colors",
-                        )}
-                      >
+                        )}>
                         <Sparkles size={12} aria-hidden="true" />
                         Analyze
                       </Button>
@@ -452,6 +452,7 @@ export function CanvasWorkspace({
                     {!hasTriggeredDiagramAnalysis &&
                     !diagramAnalysis.isLoading ? (
                       <Button
+                        variant="ghost"
                         type="button"
                         data-testid="analyze-diagram-trigger"
                         onClick={() => {
@@ -463,8 +464,7 @@ export function CanvasWorkspace({
                           "bg-primary-3 text-primary-11 hover:bg-primary-4",
                           "bg-primary-4 dark:text-primary-11 dark:hover:bg-primary-a6",
                           "transition-colors",
-                        )}
-                      >
+                        )}>
                         <Sparkles size={12} aria-hidden="true" />
                         Validate
                       </Button>

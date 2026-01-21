@@ -319,6 +319,7 @@ function MessageBubbleImpl({
             {/* Copy button on hover */}
             {isHovered && !hasCodeBlock && (
               <Button
+                variant="primary"
                 data-testid="copy-message-button"
                 type="button"
                 onClick={handleCopy}
@@ -327,8 +328,7 @@ function MessageBubbleImpl({
                   "bg-neutral-1 shadow-md",
                   "text-neutral-10 hover:text-neutral-11",
                   "transition-all",
-                )}
-              >
+                )}>
                 {copied ? <Check size={12} /> : <Copy size={12} />}
               </Button>
             )}

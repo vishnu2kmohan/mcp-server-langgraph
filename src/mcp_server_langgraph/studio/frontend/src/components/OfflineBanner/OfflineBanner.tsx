@@ -132,12 +132,12 @@ export function OfflineBanner({
         {/* Sync Button */}
         {showSyncButton && (
           <Button
+            variant="primary"
             className="offline-banner__sync-btn"
             type="button"
             onClick={onSync}
             disabled={isSyncing}
-            aria-label={isSyncing ? "Syncing..." : "Sync now"}
-          >
+            aria-label={isSyncing ? "Syncing..." : "Sync now"}>
             {isSyncing ? "Syncing..." : "Sync Now"}
           </Button>
         )}
@@ -145,11 +145,11 @@ export function OfflineBanner({
         {/* Dismiss Button */}
         {onDismiss && (
           <Button
+            variant="secondary"
             className="offline-banner__dismiss-btn"
             type="button"
             onClick={onDismiss}
-            aria-label="Dismiss offline banner"
-          >
+            aria-label="Dismiss offline banner">
             ×
           </Button>
         )}

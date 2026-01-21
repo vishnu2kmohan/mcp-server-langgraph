@@ -193,14 +193,14 @@ export function StepProgress({
               {/* Step circle */}
               {isClickable ? (
                 <Button
+                  variant="primary"
                   className="flex rounded-full border-2"
                   type="button"
                   data-testid={`step-${step.id}`}
                   data-status={status}
                   aria-current={status === "current" ? "step" : undefined}
                   aria-label={getStepAriaLabel(step, status)}
-                  onClick={() => handleStepClick(index, status)}
-                >
+                  onClick={() => handleStepClick(index, status)}>
                   {status === "completed" ? (
                     <Check
                       data-testid="step-completed-icon"

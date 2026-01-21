@@ -323,12 +323,12 @@ export function NodePalette({
         <h2 className="sr-only">Node Types</h2>
         {NODE_TEMPLATES.map((template) => (
           <Button
+            variant="primary"
             className="w-12 h-12 rounded-lg text-neutral-12 flex hover:opacity-90 -opacity focus:ring-primary-7 focus:ring-offset-2"
             key={template.type}
             onClick={() => onAddNode?.(template.type)}
             title={`Add ${template.label}: ${template.description}`}
-            aria-label={`Add ${template.label} node`}
-          >
+            aria-label={`Add ${template.label} node`}>
             {template.icon}
           </Button>
         ))}

@@ -303,10 +303,10 @@ export function SettingsDocument({
                 <div className="grid grid-cols-3 gap-4">
                   {(["light", "dark", "system"] as const).map((t) => (
                     <Button
+                      variant="primary"
                       className="p-4 rounded-lg border-2"
                       key={t}
-                      onClick={() => setTheme(t)}
-                    >
+                      onClick={() => setTheme(t)}>
                       <div className="text-center">
                         <Palette size={24} className="mx-auto mb-2" />
                         <span className="capitalize text-sm">{t}</span>

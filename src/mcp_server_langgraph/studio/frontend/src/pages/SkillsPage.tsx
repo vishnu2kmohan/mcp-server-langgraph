@@ -254,10 +254,10 @@ export function SkillsPage() {
         </div>
 
         <Button
+          variant="ghost"
           className="flex px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary rounded-md"
           onClick={handleRefresh}
-          disabled={isLoading}
-        >
+          disabled={isLoading}>
           <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           Refresh
         </Button>
@@ -266,10 +266,10 @@ export function SkillsPage() {
       <div className="flex items-center gap-1 px-6 py-2 border-b border-border-primary bg-surface-secondary/50">
         {tabs.map((tab) => (
           <Button
+            variant="primary"
             className="flex px-4 py-2 text-sm rounded-md"
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-          >
+            onClick={() => setActiveTab(tab.id)}>
             <tab.icon className="w-4 h-4" />
             {tab.label}
             {tab.count > 0 && (
@@ -299,6 +299,7 @@ export function SkillsPage() {
               <div className="flex gap-1 flex-wrap">
                 {availableTags.slice(0, 5).map((tag) => (
                   <Button
+                    variant="primary"
                     size="sm"
                     className="px-2 py-1 text-xs rounded-full"
                     key={tag}
@@ -308,8 +309,7 @@ export function SkillsPage() {
                           ? prev.filter((t) => t !== tag)
                           : [...prev, tag],
                       )
-                    }
-                  >
+                    }>
                     {tag}
                   </Button>
                 ))}
@@ -329,10 +329,10 @@ export function SkillsPage() {
             <p className="text-sm text-text-secondary mt-1">{actionError}</p>
           </div>
           <Button
+            variant="secondary"
             className="text-text-tertiary hover:text-text-primary"
             onClick={() => setActionError(null)}
-            aria-label="Dismiss error"
-          >
+            aria-label="Dismiss error">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -474,10 +474,10 @@ function InstalledContent({
             <CheckCircle className="w-4 h-4 text-semantic-success" />
           </div>
           <Button
+            variant="danger"
             className="flex px-3 py-1.5 text-sm text-semantic-error hover:bg-semantic-error/10 rounded-md"
             onClick={() => onUninstall(skillName)}
-            disabled={isUninstalling}
-          >
+            disabled={isUninstalling}>
             <Trash2 className="w-4 h-4" />
             Uninstall
           </Button>

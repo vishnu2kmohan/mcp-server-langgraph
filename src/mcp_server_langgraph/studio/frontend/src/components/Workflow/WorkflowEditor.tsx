@@ -271,6 +271,7 @@ export function WorkflowEditor({
         {/* View tabs */}
         <div className="flex items-center gap-1 bg-neutral-2 rounded-md p-0.5">
           <Button
+            variant="ghost"
             data-testid="visual-tab"
             data-active={currentView === "visual"}
             type="button"
@@ -281,12 +282,12 @@ export function WorkflowEditor({
               currentView === "visual"
                 ? "bg-neutral-1 text-neutral-12 shadow-sm"
                 : "text-neutral-10 hover:text-neutral-11",
-            )}
-          >
+            )}>
             <LayoutGrid size={12} />
             Visual
           </Button>
           <Button
+            variant="ghost"
             data-testid="code-tab"
             data-active={currentView === "code"}
             type="button"
@@ -297,8 +298,7 @@ export function WorkflowEditor({
               currentView === "code"
                 ? "bg-neutral-1 text-neutral-12 shadow-sm"
                 : "text-neutral-10 hover:text-neutral-11",
-            )}
-          >
+            )}>
             <Code size={12} />
             Code
           </Button>

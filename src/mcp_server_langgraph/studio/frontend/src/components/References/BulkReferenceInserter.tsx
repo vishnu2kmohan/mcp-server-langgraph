@@ -9,7 +9,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef, useId } from 'react';
 import { Search, Wrench, Sparkles, FileCode, X } from 'lucide-react';
-import { Button, Checkbox } from '@/components/UI';
+import { Button, Checkbox, Input } from '@/components/UI';
 import { cn } from '@/utils/cn';
 
 export type ReferenceType = 'tool' | 'skill' | 'artifact';
@@ -208,8 +208,8 @@ export function BulkReferenceInserter({
               className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-9"
               aria-hidden
             />
-{/* eslint-disable-next-line react/forbid-elements -- Custom search with ref for focus management, SearchInput doesn't support refs */}
-            <input
+{ }
+            <Input
               ref={searchRef}
               type="search"
               role="searchbox"
@@ -230,21 +230,20 @@ export function BulkReferenceInserter({
         <div className="px-4 py-2 border-b border-neutral-6">
           <div role="tablist" className="flex gap-1">
             {tabs.map((tab) => (
-              // eslint-disable-next-line react/forbid-elements -- Custom tab with role="tab" and aria-selected
-              <button
-                key={tab.value}
-                role="tab"
-                aria-selected={activeTab === tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className={cn(
-                  'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-                  activeTab === tab.value
-                    ? 'bg-primary-3 text-primary-11'
-                    : 'text-neutral-11 hover:bg-neutral-2'
-                )}
-              >
-                {tab.label} ({tab.count})
-              </button>
+              (<Button
+              variant="ghost"
+              key={tab.value}
+              role="tab"
+              aria-selected={activeTab === tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                activeTab === tab.value
+                  ? 'bg-primary-3 text-primary-11'
+                  : 'text-neutral-11 hover:bg-neutral-2'
+              )}>
+                {tab.label}({tab.count})
+                              </Button>)
             ))}
           </div>
         </div>

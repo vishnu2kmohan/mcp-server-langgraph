@@ -405,8 +405,13 @@ export function StudioShellLayout() {
   });
 
   // Fetch server config for default model (12-Factor App compliance)
-  const { data: serverConfig, isLoading: isServerConfigLoading } =
-    useGetServerConfigQuery();
+  // Issue 1 fix: Added isSuccess to prevent race condition where fallback
+  // effect fires before serverConfig is populated
+  const {
+    data: serverConfig,
+    isLoading: isServerConfigLoading,
+    isSuccess: isServerConfigSuccess,
+  } = useGetServerConfigQuery();
 
   // Fetch available models from API (12-Factor App - single source of truth)
   const {
@@ -481,12 +486,15 @@ export function StudioShellLayout() {
     }
   }, [serverConfig?.modelName, selectedModel]);
 
-  // Fallback: if server config doesn't load, use model marked as default or first available
+  // Fallback: if server config doesn't have a modelName, use model marked as default or first available
+  // Issue 1 fix: Use isServerConfigSuccess to ensure server config was successfully fetched
+  // before applying the fallback. This prevents the race condition where fallback fires
+  // before serverConfig data is populated.
   useEffect(() => {
     if (
       !hasSetDefaultModel.current &&
-      !isServerConfigLoading &&
-      !serverConfig?.modelName &&
+      isServerConfigSuccess && // Wait for successful fetch, not just done loading
+      !serverConfig?.modelName && // Server explicitly has no model configured
       effectiveModels.length > 0 &&
       !selectedModel
     ) {
@@ -504,7 +512,7 @@ export function StudioShellLayout() {
       }
     }
   }, [
-    isServerConfigLoading,
+    isServerConfigSuccess,
     serverConfig?.modelName,
     effectiveModels,
     selectedModel,
@@ -1393,7 +1401,7 @@ export function StudioShellLayout() {
               data-testid={
                 focusModeEnabled ? "main-content-focus" : "left-sidebar"
               }
-              className="flex h-full overflow-hidden"
+              className="flex h-full"
             >
               {/* Activity Bar - fixed width (hidden in focus mode) */}
               {/* Sprint 4: AI-native navigation predictions enabled via feature flag */}
@@ -1410,7 +1418,7 @@ export function StudioShellLayout() {
               {/* This prevents PanelGroup state from persisting across route type changes */}
               {isChatRoute ? (
                 /* Chat routes: 3-panel canvas layout */
-                <PanelGroup
+                (<PanelGroup
                   key="chat-canvas-layout"
                   direction="horizontal"
                   onLayout={handlePanelResize}
@@ -1525,11 +1533,11 @@ export function StudioShellLayout() {
                       </Panel>
                     </>
                   )}
-                </PanelGroup>
+                </PanelGroup>)
               ) : (
                 /* Full-page routes: Render the routed component via Outlet */
                 /* Suspense boundary handles lazy-loaded routes (e.g., WorkflowsPage, ObservabilityPage) */
-                <div
+                (<div
                   key="full-page-outlet"
                   data-testid="route-outlet"
                   className="flex-1 h-full overflow-auto bg-neutral-1"
@@ -1551,7 +1559,7 @@ export function StudioShellLayout() {
                   >
                     <Outlet />
                   </Suspense>
-                </div>
+                </div>)
               )}
             </div>
           </Panel>
@@ -1683,10 +1691,10 @@ export function StudioShellLayout() {
                     )}
                   </div>
                   <Button
+                    variant="secondary"
                     className="flex-shrink-0 p-1 text-insight-9 hover:text-insight-10 dark:hover:text-insight-4"
                     onClick={() => setPersonaBannerDismissed(true)}
-                    aria-label="Dismiss persona suggestion"
-                  >
+                    aria-label="Dismiss persona suggestion">
                     <svg
                       className="w-4 h-4"
                       fill="none"

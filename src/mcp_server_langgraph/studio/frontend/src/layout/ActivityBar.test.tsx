@@ -447,7 +447,7 @@ describe("ActivityBar", () => {
 
       // AI & Data group should initially show its items
       expect(screen.getByTestId("nav-agents")).toBeInTheDocument();
-      expect(screen.getByTestId("nav-mcp")).toBeInTheDocument();
+      expect(screen.getByTestId("nav-connections")).toBeInTheDocument();
 
       // Click the AI & Data group header to collapse it
       const aiDataHeader = screen.getByTestId("nav-group-ai-data");
@@ -455,7 +455,7 @@ describe("ActivityBar", () => {
 
       // Items should be hidden after collapse
       expect(screen.queryByTestId("nav-agents")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("nav-mcp")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("nav-connections")).not.toBeInTheDocument();
     });
 
     it("should expand collapsed group when group header is clicked again", async () => {
@@ -515,7 +515,7 @@ describe("ActivityBar", () => {
 
       // AI & Data items should be hidden (group is collapsed from storage)
       expect(screen.queryByTestId("nav-agents")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("nav-mcp")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("nav-connections")).not.toBeInTheDocument();
 
       // Core items should still be visible (not collapsed)
       expect(screen.getByTestId("nav-chat")).toBeInTheDocument();

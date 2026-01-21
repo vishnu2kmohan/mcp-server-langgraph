@@ -105,6 +105,7 @@ export function ExecutableCanvas({
           {/* View mode toggles */}
           <div className="flex items-center border border-neutral-5 rounded">
             <Button
+              variant="primary"
               data-testid="view-split"
               type="button"
               onClick={() => setViewMode("split")}
@@ -114,11 +115,11 @@ export function ExecutableCanvas({
                   ? "bg-neutral-3"
                   : "hover:bg-neutral-2",
               )}
-              aria-label="Split view"
-            >
+              aria-label="Split view">
               <Columns size={14} />
             </Button>
             <Button
+              variant="ghost"
               data-testid="view-code-only"
               type="button"
               onClick={() => setViewMode("code")}
@@ -128,11 +129,11 @@ export function ExecutableCanvas({
                   ? "bg-neutral-3"
                   : "hover:bg-neutral-2",
               )}
-              aria-label="Code only"
-            >
+              aria-label="Code only">
               <Code size={14} />
             </Button>
             <Button
+              variant="ghost"
               data-testid="view-preview-only"
               type="button"
               onClick={() => setViewMode("preview")}
@@ -142,8 +143,7 @@ export function ExecutableCanvas({
                   ? "bg-neutral-3"
                   : "hover:bg-neutral-2",
               )}
-              aria-label="Preview only"
-            >
+              aria-label="Preview only">
               <Eye size={14} />
             </Button>
           </div>

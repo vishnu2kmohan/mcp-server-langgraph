@@ -326,10 +326,12 @@ export const handlers = [
         supports_tools: true,
         status: "current",
       },
+      // Issue 5: vendor field distinguishes native API vs Vertex AI
       {
         id: "gemini-2.5-flash",
         name: "Gemini 2.5 Flash",
         provider: "google",
+        vendor: "vertex_ai", // Uses Vertex AI (not native Google API)
         supports_thinking: false,
         supports_vision: true,
         supports_tools: true,
@@ -341,6 +343,7 @@ export const handlers = [
         id: "gemini-3-flash-preview",
         name: "Gemini 3 Flash Preview",
         provider: "google",
+        vendor: "vertex_ai", // Uses Vertex AI
         supports_thinking: true,
         supports_vision: true,
         supports_tools: true,

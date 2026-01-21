@@ -154,12 +154,29 @@ export interface CostBreakdown {
 }
 
 /** Agent transparency metadata */
+/** Agent execution step metadata */
+export interface AgentStep {
+  name: string;
+  status: string;
+}
+
 export interface AgentMetadata {
   confidence?: number;
   reasoning?: string;
   responseFormat?: "concise" | "detailed";
   verificationScore?: number;
   refinementAttempts?: number;
+  /** Agent execution steps for trace display */
+  steps?: AgentStep[];
+}
+
+/** Source citation from web search results */
+export interface SourceCitation {
+  title: string;
+  url: string;
+  snippet?: string | null;
+  /** Relevance score for ranking (0.0 to 1.0) */
+  relevance_score?: number | null;
 }
 
 /** Chat message */
@@ -178,6 +195,8 @@ export interface ChatMessage {
   thinkingTokens?: number;
   /** Model name that generated this message */
   modelName?: string;
+  /** Source citations from web search results */
+  sources?: SourceCitation[];
 }
 
 // ==============================================================================

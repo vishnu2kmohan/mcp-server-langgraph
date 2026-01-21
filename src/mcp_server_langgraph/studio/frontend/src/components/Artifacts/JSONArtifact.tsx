@@ -132,10 +132,10 @@ function JSONTreeNode({
       >
         {!isEmpty && (
           <Button
+            variant="primary"
             className="mr-1 mt-0.5 hover:opacity-70"
             onClick={toggleCollapse}
-            aria-label="Toggle collapse"
-          >
+            aria-label="Toggle collapse">
             {isCollapsed ? (
               <ChevronRight className="w-4 h-4" />
             ) : (
@@ -261,11 +261,11 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
         </div>
         <div className="flex items-center gap-1">
           <Button
+            variant="primary"
             size="sm"
             className="flex px-3 py-1 text-sm rounded"
             onClick={handleCopy}
-            aria-label="Copy JSON"
-          >
+            aria-label="Copy JSON">
             {copied ? (
               <>
                 <Check className="w-4 h-4 text-success-9" />

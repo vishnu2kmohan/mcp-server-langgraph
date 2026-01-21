@@ -151,6 +151,7 @@ export function ResourceBrowser({
 
                 {/* View button */}
                 <Button
+                  variant="primary"
                   type="button"
                   onClick={() => handleView(resource.qualifiedName)}
                   className={cn(
@@ -159,8 +160,7 @@ export function ResourceBrowser({
                     "hover:bg-neutral-3",
                     "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2",
                     "transition-colors",
-                  )}
-                >
+                  )}>
                   View
                 </Button>
               </div>

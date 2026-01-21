@@ -14,7 +14,9 @@
 import { useState, useCallback } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { MessageList } from "./MessageList";
+import { UnifiedMessageList } from "./UnifiedMessageList";
 import { ConnectedChatInputForm } from "./ConnectedChatInputForm";
+import { useFeatureFlags } from "../contexts/FeatureFlagContext";
 import {
   type SlashCommand,
   type ModelOption,
@@ -123,6 +125,16 @@ export interface ConversationPanelProps {
   enableThinking?: boolean;
   /** Callback when thinking enabled state changes */
   onEnableThinkingChange?: (enabled: boolean) => void;
+
+  // v7: Tool preference for native vs builtin execution
+  /** Current tool preference */
+  toolPreference?: "auto" | "native" | "builtin" | "mcp";
+  /** Callback when tool preference changes */
+  onToolPreferenceChange?: (preference: "auto" | "native" | "builtin" | "mcp") => void;
+
+  // Source Citations
+  /** Group source citations by type (web vs knowledge base). Defaults to true. */
+  groupSourcesByType?: boolean;
 }
 
 // =============================================================================
@@ -234,8 +246,17 @@ export function ConversationPanel({
   onReasoningEffortChange,
   enableThinking = false,
   onEnableThinkingChange,
+  // v7: Tool preference
+  toolPreference = "auto",
+  onToolPreferenceChange,
+  // Source Citations
+  groupSourcesByType,
 }: ConversationPanelProps) {
   const [inputValue, setInputValue] = useState("");
+
+  // Feature flag: ADR-0104 UnifiedMessageList consolidation
+  const { isEnabled } = useFeatureFlags();
+  const useUnifiedMessageList = isEnabled("unified_message_list");
 
   // Handle sending a message
   const handleSendMessage = useCallback(
@@ -305,15 +326,25 @@ export function ConversationPanel({
         />
       )}
 
-      {/* Message List */}
-      <MessageList
-        messages={messages}
-        isLoading={isLoading}
-        isStreaming={isStreaming}
-        isScrolledUp={isScrolledUp}
-        onScrollToBottom={onScrollToBottom}
-        className="flex-1"
-      />
+      {/* Message List - ADR-0104: Conditional rendering based on feature flag */}
+      {useUnifiedMessageList ? (
+        <UnifiedMessageList
+          messages={messages}
+          isLoading={isLoading}
+          isStreaming={isStreaming}
+          className="flex-1"
+        />
+      ) : (
+        <MessageList
+          messages={messages}
+          isLoading={isLoading}
+          isStreaming={isStreaming}
+          isScrolledUp={isScrolledUp}
+          onScrollToBottom={onScrollToBottom}
+          groupSourcesByType={groupSourcesByType}
+          className="flex-1"
+        />
+      )}
 
       {/* Follow-up Suggestions */}
       {showSuggestions && (
@@ -360,6 +391,9 @@ export function ConversationPanel({
           onReasoningEffortChange={onReasoningEffortChange}
           enableThinking={enableThinking}
           onEnableThinkingChange={onEnableThinkingChange}
+          // v7: Tool preference for native vs builtin execution
+          toolPreference={toolPreference}
+          onToolPreferenceChange={onToolPreferenceChange}
         />
       </div>
     </div>

@@ -392,11 +392,11 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
             />
           ) : (
             <Button
+              variant="primary"
               className="w-full text-left truncate"
               type="button"
               onClick={handleClick}
-              onDoubleClick={handleDoubleClick}
-            >
+              onDoubleClick={handleDoubleClick}>
               {displayName}
             </Button>
           )}

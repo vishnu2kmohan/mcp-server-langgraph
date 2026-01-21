@@ -438,10 +438,10 @@ export function MetricsTab({
           {/* Grafana button */}
           {grafanaUrl && (
             <Button
+              variant="primary"
               className="px-3 py-1.5 text-sm bg-grafana-9 text-neutral-12 rounded-md hover:bg-grafana-10 flex"
               onClick={handleOpenGrafana}
-              aria-label="View in Grafana"
-            >
+              aria-label="View in Grafana">
               <svg
                 className="w-4 h-4"
                 fill="none"

@@ -390,6 +390,7 @@ export function SharedWorkflowsList({
                   </Button>
                   {/* Edit button - disabled for viewer, enabled for editor */}
                   <Button
+                    variant="ghost"
                     className="flex .5 px-3 py-1.5 text-sm rounded-lg"
                     onClick={() =>
                       canEdit(workflow.permission) && onEdit?.(workflow.id)
@@ -400,8 +401,7 @@ export function SharedWorkflowsList({
                       canEdit(workflow.permission)
                         ? "Edit workflow"
                         : "Shared with you as read-only"
-                    }
-                  >
+                    }>
                     <Edit3 size={14} />
                     Edit
                   </Button>

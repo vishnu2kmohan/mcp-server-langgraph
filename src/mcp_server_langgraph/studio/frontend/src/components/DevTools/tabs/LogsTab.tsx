@@ -189,6 +189,7 @@ function FilterDropdown({
               exit="hidden"
             >
               <Button
+                variant="primary"
                 type="button"
                 role="option"
                 aria-selected={!value}
@@ -197,12 +198,12 @@ function FilterDropdown({
                   setIsOpen(false);
                 }}
                 className={filterOptionVariants({ selected: !value })}
-                aria-label="All"
-              >
+                aria-label="All">
                 All
               </Button>
               {options.map((option) => (
                 <Button
+                  variant="primary"
                   key={option}
                   type="button"
                   role="option"
@@ -212,8 +213,7 @@ function FilterDropdown({
                     setIsOpen(false);
                   }}
                   className={filterOptionVariants({ selected: value === option })}
-                  aria-label={option}
-                >
+                  aria-label={option}>
                   {option}
                 </Button>
               ))}
@@ -534,14 +534,14 @@ export function LogsTab({
         {/* Clear filters */}
         {(searchTerm || levelFilter || serviceFilter) && (
           <Button
+            variant="danger"
             size="sm"
             className="px-2 py-1 text-sm text-primary-10 dark:text-primary-7 hover:underline"
             onClick={() => {
               setSearchTerm("");
               setLevelFilter("");
               setServiceFilter("");
-            }}
-          >
+            }}>
             Clear
           </Button>
         )}

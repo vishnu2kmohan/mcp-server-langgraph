@@ -38,6 +38,17 @@ export const LazyBudgetForecastChart = lazy(() =>
   })),
 );
 
+/**
+ * Lazy-loaded NativeToolComparison (v7)
+ *
+ * Use for comparing native vs builtin tool performance in the cost dashboard.
+ */
+export const LazyNativeToolComparison = lazy(() =>
+  import("./NativeToolComparison").then((module) => ({
+    default: module.NativeToolComparison,
+  })),
+);
+
 // Re-export types for convenience
 export type { OrganizationCostDashboardProps } from "./OrganizationCostDashboard";
 export type { BudgetStatus, BudgetStatusCardProps } from "./BudgetStatusCard";

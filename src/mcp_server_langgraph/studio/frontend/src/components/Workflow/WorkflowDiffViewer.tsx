@@ -155,6 +155,7 @@ export function WorkflowDiffViewer({
             className="flex items-center gap-1 bg-neutral-2 rounded-md p-0.5"
           >
             <Button
+              variant="primary"
               type="button"
               onClick={() => handleModeChange("side-by-side")}
               className={cn(
@@ -163,12 +164,12 @@ export function WorkflowDiffViewer({
                 mode === "side-by-side"
                   ? "bg-neutral-1 text-neutral-12 shadow-sm"
                   : "text-neutral-10 hover:text-neutral-11",
-              )}
-            >
+              )}>
               <Columns size={12} />
               Split
             </Button>
             <Button
+              variant="ghost"
               type="button"
               aria-label="Unified"
               onClick={() => handleModeChange("unified")}
@@ -178,8 +179,7 @@ export function WorkflowDiffViewer({
                 mode === "unified"
                   ? "bg-neutral-1 text-neutral-12 shadow-sm"
                   : "text-neutral-10 hover:text-neutral-11",
-              )}
-            >
+              )}>
               <List size={12} />
               Unified
             </Button>

@@ -129,10 +129,10 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
           )}
           {executionLogs.length > 0 && (
             <Button
+              variant="danger"
               size="sm"
               className="text-xs px-2 py-1 text-neutral-11 hover:text-neutral-12"
-              onClick={() => dispatch(clearExecutionLogs())}
-            >
+              onClick={() => dispatch(clearExecutionLogs())}>
               Clear
             </Button>
           )}

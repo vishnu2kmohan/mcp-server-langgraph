@@ -160,16 +160,20 @@ vi.mock("../hooks/useConnectorSuggestions", () => ({
 }));
 
 // Mock RTK Query hooks for InlineConnectionCard
-vi.mock("../api", () => ({
-  useListConnectionTemplatesQuery: () => ({
-    data: { templates: [] },
-    isLoading: false,
-    error: null,
-  }),
-  useCreateConnectionMutation: () => [vi.fn(), { isLoading: false }],
-  useTestConnectionMutation: () => [vi.fn(), { isLoading: false }],
-  useStartOAuth2FlowMutation: () => [vi.fn(), { isLoading: false }],
-}));
+vi.mock("../api", async () => {
+  const actual = await vi.importActual<typeof import("../api")>("../api");
+  return {
+    ...actual,
+    useListConnectionTemplatesQuery: () => ({
+      data: { templates: [] },
+      isLoading: false,
+      error: null,
+    }),
+    useCreateConnectionMutation: () => [vi.fn(), { isLoading: false }],
+    useTestConnectionMutation: () => [vi.fn(), { isLoading: false }],
+    useStartOAuth2FlowMutation: () => [vi.fn(), { isLoading: false }],
+  };
+});
 
 // =============================================================================
 // Tests
@@ -304,5 +308,182 @@ describe("ConnectedConversationPanel - Thinking Content Display", () => {
         screen.queryByText(/Extended thinking process/i),
       ).not.toBeInTheDocument();
     });
+  });
+});
+
+describe("ConnectedConversationPanel - Streaming Sources Display", () => {
+  beforeEach(() => {
+    resetMocks();
+    global.fetch = mockFetch;
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it("should include sources in streaming message when sources are available", () => {
+    const store = createTestStore();
+
+    mockStreamingChatReturn.isStreaming = true;
+    mockStreamingChatReturn.streamingContent = "Here are the search results...";
+    mockStreamingChatReturn.sources = [
+      {
+        title: "Python Documentation",
+        url: "https://docs.python.org",
+        snippet: "Official Python documentation",
+      },
+    ];
+
+    render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+    // The streaming message should include sources section
+    expect(screen.getByTestId("sources-section")).toBeInTheDocument();
+    expect(screen.getByText("Python Documentation")).toBeInTheDocument();
+  });
+
+  it("should display multiple sources during streaming", () => {
+    const store = createTestStore();
+
+    mockStreamingChatReturn.isStreaming = true;
+    mockStreamingChatReturn.streamingContent = "Based on my research...";
+    mockStreamingChatReturn.sources = [
+      {
+        title: "Python Docs",
+        url: "https://docs.python.org",
+        snippet: "Official documentation",
+      },
+      {
+        title: "Real Python",
+        url: "https://realpython.com",
+        snippet: "Python tutorials",
+      },
+      {
+        title: "Stack Overflow",
+        url: "https://stackoverflow.com/questions/python",
+        snippet: "Q&A community",
+      },
+    ];
+
+    render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+    expect(screen.getByText("Sources (3)")).toBeInTheDocument();
+    expect(screen.getByText("Python Docs")).toBeInTheDocument();
+    expect(screen.getByText("Real Python")).toBeInTheDocument();
+    expect(screen.getByText("Stack Overflow")).toBeInTheDocument();
+  });
+
+  it("should deduplicate sources by domain during streaming", () => {
+    const store = createTestStore();
+
+    mockStreamingChatReturn.isStreaming = true;
+    mockStreamingChatReturn.streamingContent = "Search results...";
+    mockStreamingChatReturn.sources = [
+      {
+        title: "Page 1",
+        url: "https://docs.python.org/tutorial",
+      },
+      {
+        title: "Page 2",
+        url: "https://docs.python.org/reference",
+      },
+      {
+        title: "Other Site",
+        url: "https://realpython.com/guide",
+      },
+    ];
+
+    render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+    // Should deduplicate by domain - only 2 unique domains
+    expect(screen.getByText("Sources (2)")).toBeInTheDocument();
+    // First occurrence from each domain should be shown
+    expect(screen.getByText("Page 1")).toBeInTheDocument();
+    expect(screen.getByText("Other Site")).toBeInTheDocument();
+    expect(screen.queryByText("Page 2")).not.toBeInTheDocument();
+  });
+
+  it("should not display sources section when sources array is empty", () => {
+    const store = createTestStore();
+
+    mockStreamingChatReturn.isStreaming = true;
+    mockStreamingChatReturn.streamingContent = "Response without sources...";
+    mockStreamingChatReturn.sources = [];
+
+    render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+    expect(screen.queryByTestId("sources-section")).not.toBeInTheDocument();
+  });
+
+  it("should display source links with correct attributes", () => {
+    const store = createTestStore();
+
+    mockStreamingChatReturn.isStreaming = true;
+    mockStreamingChatReturn.streamingContent = "Found this information...";
+    mockStreamingChatReturn.sources = [
+      {
+        title: "Python Tutorial",
+        url: "https://docs.python.org/3/tutorial",
+        snippet: "The Python Tutorial",
+      },
+    ];
+
+    render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+    const sourceLink = screen.getByText("Python Tutorial").closest("a");
+    expect(sourceLink).toHaveAttribute("href", "https://docs.python.org/3/tutorial");
+    expect(sourceLink).toHaveAttribute("target", "_blank");
+    expect(sourceLink).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("should have accessible aria-labels on source links", () => {
+    const store = createTestStore();
+
+    mockStreamingChatReturn.isStreaming = true;
+    mockStreamingChatReturn.streamingContent = "Research results...";
+    mockStreamingChatReturn.sources = [
+      {
+        title: "MDN Web Docs",
+        url: "https://developer.mozilla.org",
+      },
+    ];
+
+    render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+    const sourceLink = screen.getByText("MDN Web Docs").closest("a");
+    expect(sourceLink).toHaveAttribute(
+      "aria-label",
+      "Source: MDN Web Docs (opens in new tab)"
+    );
+  });
+
+  it("should clear sources when streaming ends and new message starts", () => {
+    const store = createTestStore();
+
+    // First render with sources
+    mockStreamingChatReturn.isStreaming = true;
+    mockStreamingChatReturn.streamingContent = "First response...";
+    mockStreamingChatReturn.sources = [
+      {
+        title: "First Source",
+        url: "https://example.com",
+      },
+    ];
+
+    const { rerender } = render(<ConnectedConversationPanel />, {
+      wrapper: createWrapper(store),
+    });
+
+    expect(screen.getByText("First Source")).toBeInTheDocument();
+
+    // Simulate streaming end and new message
+    mockStreamingChatReturn.isStreaming = false;
+    mockStreamingChatReturn.streamingContent = "";
+    mockStreamingChatReturn.sources = [];
+
+    rerender(<ConnectedConversationPanel />);
+
+    // Sources should no longer be visible
+    expect(screen.queryByTestId("sources-section")).not.toBeInTheDocument();
   });
 });

@@ -165,13 +165,13 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
         </p>
         <div className="flex gap-4 mt-4">
           <Button
+            variant="ghost"
             onClick={() => navigate(defaultRoute)}
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-md",
               "bg-primary-10 text-neutral-12",
               "hover:bg-primary-11 transition-colors",
-            )}
-          >
+            )}>
             Go to Home
             <ArrowRight className="h-4 w-4" />
           </Button>

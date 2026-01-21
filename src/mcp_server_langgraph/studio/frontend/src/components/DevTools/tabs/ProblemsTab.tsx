@@ -210,6 +210,7 @@ export function ProblemsTab({
         {/* Filter buttons */}
         <div className="flex items-center gap-1">
           <Button
+            variant="primary"
             data-testid="filter-all"
             type="button"
             onClick={() => setFilter("all")}
@@ -218,11 +219,11 @@ export function ProblemsTab({
               filter === "all"
                 ? "bg-primary-3 bg-primary-4 text-primary-11 dark:text-primary-5"
                 : "hover:bg-neutral-3",
-            )}
-          >
+            )}>
             All
           </Button>
           <Button
+            variant="ghost"
             data-testid="filter-errors"
             type="button"
             onClick={() => setFilter("errors")}
@@ -231,12 +232,12 @@ export function ProblemsTab({
               filter === "errors"
                 ? "bg-error-3 bg-error-4 text-error-11 dark:text-error-9"
                 : "hover:bg-neutral-3",
-            )}
-          >
+            )}>
             <AlertCircle size={12} />
             Errors
           </Button>
           <Button
+            variant="ghost"
             data-testid="filter-warnings"
             type="button"
             onClick={() => setFilter("warnings")}
@@ -245,8 +246,7 @@ export function ProblemsTab({
               filter === "warnings"
                 ? "bg-warning-3 dark:bg-warning-a4 text-warning-10 dark:text-warning-6"
                 : "hover:bg-neutral-3",
-            )}
-          >
+            )}>
             <AlertTriangle size={12} />
             Warnings
           </Button>

@@ -16,6 +16,12 @@ interface ImportMetaEnv {
   readonly VITE_KEYCLOAK_REALM: string;
   readonly VITE_KEYCLOAK_CLIENT_ID: string;
   readonly VITE_VAPID_PUBLIC_KEY: string;
+  readonly VITE_OBSERVABILITY_TRACE_LIST_POLLING_ACTIVE_MS: string;
+  readonly VITE_OBSERVABILITY_TRACE_LIST_POLLING_IDLE_MS: string;
+  readonly VITE_OBSERVABILITY_TRACE_DETAIL_POLLING_MS: string;
+  readonly VITE_OBSERVABILITY_METRICS_POLLING_MS: string;
+  readonly VITE_OBSERVABILITY_LOGS_POLLING_MS: string;
+  readonly VITE_OBSERVABILITY_ALERTS_POLLING_MS: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

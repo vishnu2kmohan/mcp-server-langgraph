@@ -203,6 +203,7 @@ export function PersonaSwitcher({
     >
       {/* Trigger Button */}
       <Button
+        variant="ghost"
         data-testid="persona-trigger"
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -213,8 +214,7 @@ export function PersonaSwitcher({
           "transition-colors",
         )}
         aria-haspopup="listbox"
-        aria-expanded={isOpen}
-      >
+        aria-expanded={isOpen}>
         <CurrentIcon
           size={16}
           className="text-neutral-10"

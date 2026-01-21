@@ -246,6 +246,7 @@ export function AuditExporter({
         >
           {EXPORT_FORMATS.map(({ value, label, icon: Icon }) => (
             <Button
+              variant="primary"
               key={value}
               type="button"
               role="radio"
@@ -257,8 +258,7 @@ export function AuditExporter({
                 selectedFormat === value
                   ? "selected border-primary-9 bg-primary-1 dark:bg-primary-a3 text-primary-11 dark:text-primary-5"
                   : "border-neutral-5 text-neutral-11 hover:border-neutral-5 dark:hover:border-neutral-6",
-              )}
-            >
+              )}>
               <Icon size={16} />
               <span className="text-sm font-medium">{label}</span>
             </Button>
@@ -297,6 +297,7 @@ export function AuditExporter({
       )}
       {/* Export Button */}
       <Button
+        variant="primary"
         type="button"
         data-testid="export-button"
         onClick={handleExport}
@@ -306,8 +307,7 @@ export function AuditExporter({
           canExport
             ? "bg-primary-9 text-neutral-12 hover:bg-primary-10"
             : "bg-neutral-3 text-neutral-10 cursor-not-allowed",
-        )}
-      >
+        )}>
         {isExporting ? (
           <>
             <Loader2

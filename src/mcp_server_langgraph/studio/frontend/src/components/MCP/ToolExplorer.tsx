@@ -136,6 +136,7 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
 
                 {/* Invoke button */}
                 <Button
+                  variant="primary"
                   type="button"
                   onClick={() => handleInvoke(tool.qualifiedName)}
                   className={cn(
@@ -144,8 +145,7 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
                     "hover:bg-brand-primary/90",
                     "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2",
                     "transition-colors",
-                  )}
-                >
+                  )}>
                   Invoke
                 </Button>
               </div>

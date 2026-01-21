@@ -134,6 +134,7 @@ function VersionItem({
       {/* Restore button (shown on hover) */}
       {!isCurrent && isHovered && onRestore && (
         <Button
+          variant="primary"
           data-testid={`restore-button-${version.version}`}
           type="button"
           onClick={(e) => {
@@ -145,8 +146,7 @@ function VersionItem({
             "p-1.5 rounded transition-colors",
             "text-neutral-11 hover:text-primary-11",
             "hover:bg-primary-3 dark:hover:bg-primary-a4",
-          )}
-        >
+          )}>
           <RotateCcw size={14} />
         </Button>
       )}
@@ -255,6 +255,7 @@ export function VersionTimeline({
       {/* Show more/less button */}
       {shouldCollapse && (
         <Button
+          variant="primary"
           data-testid="show-more-button"
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
@@ -262,8 +263,7 @@ export function VersionTimeline({
             "flex items-center justify-center gap-1 mt-2 py-1.5 text-sm",
             "text-neutral-11 hover:text-neutral-11",
             "transition-colors",
-          )}
-        >
+          )}>
           {isExpanded ? (
             <>
               <ChevronUp size={14} />

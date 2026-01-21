@@ -11,6 +11,11 @@ export {
 } from "./MessageBubble";
 export { MessageList, type MessageListProps } from "./MessageList";
 export {
+  UnifiedMessageList,
+  type UnifiedMessageListProps,
+  type FollowUpSuggestion,
+} from "./UnifiedMessageList";
+export {
   ConnectedChatInputForm,
   type ConnectedChatInputFormProps,
 } from "./ConnectedChatInputForm";

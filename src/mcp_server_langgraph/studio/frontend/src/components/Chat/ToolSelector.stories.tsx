@@ -24,6 +24,7 @@ const SAMPLE_TOOLS: ToolOption[] = [
   // Built-in tools
   {
     name: "calculator",
+    toolId: "builtin:calculator",
     displayName: "Calculator",
     source: "builtin",
     description: "Perform mathematical calculations",
@@ -31,6 +32,7 @@ const SAMPLE_TOOLS: ToolOption[] = [
   },
   {
     name: "search_knowledge_base",
+    toolId: "builtin:search_knowledge_base",
     displayName: "Search Knowledge Base",
     source: "builtin",
     description: "Search the knowledge base for relevant information",
@@ -38,6 +40,7 @@ const SAMPLE_TOOLS: ToolOption[] = [
   },
   {
     name: "web_search",
+    toolId: "builtin:web_search",
     displayName: "Web Search",
     source: "builtin",
     description: "Search the web for information",
@@ -45,6 +48,7 @@ const SAMPLE_TOOLS: ToolOption[] = [
   },
   {
     name: "read_file",
+    toolId: "builtin:read_file",
     displayName: "Read File",
     source: "builtin",
     description: "Read contents of a file",
@@ -52,6 +56,7 @@ const SAMPLE_TOOLS: ToolOption[] = [
   },
   {
     name: "list_directory",
+    toolId: "builtin:list_directory",
     displayName: "List Directory",
     source: "builtin",
     description: "List files in a directory",
@@ -60,6 +65,7 @@ const SAMPLE_TOOLS: ToolOption[] = [
   // MCP tools - GitHub server
   {
     name: "github:create_issue",
+    toolId: "github:create_issue",
     displayName: "Create Issue",
     source: "mcp",
     serverName: "github",
@@ -68,6 +74,7 @@ const SAMPLE_TOOLS: ToolOption[] = [
   },
   {
     name: "github:list_repos",
+    toolId: "github:list_repos",
     displayName: "List Repositories",
     source: "mcp",
     serverName: "github",
@@ -76,6 +83,7 @@ const SAMPLE_TOOLS: ToolOption[] = [
   },
   {
     name: "github:create_pr",
+    toolId: "github:create_pr",
     displayName: "Create Pull Request",
     source: "mcp",
     serverName: "github",
@@ -85,6 +93,7 @@ const SAMPLE_TOOLS: ToolOption[] = [
   // MCP tools - Slack server
   {
     name: "slack:send_message",
+    toolId: "slack:send_message",
     displayName: "Send Message",
     source: "mcp",
     serverName: "slack",
@@ -93,6 +102,7 @@ const SAMPLE_TOOLS: ToolOption[] = [
   },
   {
     name: "slack:list_channels",
+    toolId: "slack:list_channels",
     displayName: "List Channels",
     source: "mcp",
     serverName: "slack",
@@ -470,6 +480,7 @@ const MANY_TOOLS: ToolOption[] = [
   ...SAMPLE_TOOLS,
   {
     name: "execute_python",
+    toolId: "builtin:execute_python",
     displayName: "Execute Python",
     source: "builtin",
     description: "Execute Python code in a sandbox",
@@ -477,6 +488,7 @@ const MANY_TOOLS: ToolOption[] = [
   },
   {
     name: "execute_bash",
+    toolId: "builtin:execute_bash",
     displayName: "Execute Bash",
     source: "builtin",
     description: "Execute Bash commands in a sandbox",
@@ -484,6 +496,7 @@ const MANY_TOOLS: ToolOption[] = [
   },
   {
     name: "write_file",
+    toolId: "builtin:write_file",
     displayName: "Write File",
     source: "builtin",
     description: "Write content to a file",
@@ -491,6 +504,7 @@ const MANY_TOOLS: ToolOption[] = [
   },
   {
     name: "edit_file",
+    toolId: "builtin:edit_file",
     displayName: "Edit File",
     source: "builtin",
     description: "Edit an existing file",
@@ -498,6 +512,7 @@ const MANY_TOOLS: ToolOption[] = [
   },
   {
     name: "jira:create_ticket",
+    toolId: "jira:create_ticket",
     displayName: "Create Ticket",
     source: "mcp",
     serverName: "jira",
@@ -505,6 +520,7 @@ const MANY_TOOLS: ToolOption[] = [
   },
   {
     name: "jira:update_ticket",
+    toolId: "jira:update_ticket",
     displayName: "Update Ticket",
     source: "mcp",
     serverName: "jira",
@@ -512,6 +528,7 @@ const MANY_TOOLS: ToolOption[] = [
   },
   {
     name: "confluence:create_page",
+    toolId: "confluence:create_page",
     displayName: "Create Page",
     source: "mcp",
     serverName: "confluence",

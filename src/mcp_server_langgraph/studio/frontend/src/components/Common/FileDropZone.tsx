@@ -188,11 +188,11 @@ export function FileDropZone({
 
           {!isDragging && (
             <Button
+              variant="primary"
               className="px-4 py-2 text-sm text-primary-10 dark:text-primary-7 hover:text-primary-11 dark:hover:text-primary-5 focus:underline"
               type="button"
               onClick={handleBrowseClick}
-              disabled={disabled}
-            >
+              disabled={disabled}>
               Browse files
             </Button>
           )}

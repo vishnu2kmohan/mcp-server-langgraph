@@ -626,11 +626,11 @@ export function ChatInputForm({
                 <span className="text-error-9 text-xs">{file.error}</span>
               )}
               <Button
+                variant="danger"
                 className="text-neutral-9 hover:text-error-9"
                 type="button"
                 onClick={() => onRemoveFile(file.id)}
-                aria-label="Remove file"
-              >
+                aria-label="Remove file">
                 <X className="w-3.5 h-3.5" />
               </Button>
             </div>
@@ -658,11 +658,11 @@ export function ChatInputForm({
             </span>
           </div>
           <Button
+            variant="secondary"
             className="p-1 text-warning-9 hover:text-warning-11"
             type="button"
             onClick={() => setIsVoiceBannerDismissed(true)}
-            aria-label="Dismiss"
-          >
+            aria-label="Dismiss">
             <X className="w-4 h-4" />
           </Button>
         </div>
@@ -1097,14 +1097,14 @@ export function ChatInputForm({
 
                 {isVoiceSupported && (
                   <Button
+                    variant="primary"
                     className="p-2 rounded-lg"
                     type="button"
                     onClick={isListening ? onStopListening : onStartListening}
                     disabled={isProcessing}
                     aria-label={
                       isListening ? "Stop voice input" : "Start voice input"
-                    }
-                  >
+                    }>
                     {isListening ? (
                       <MicOff className="w-5 h-5" />
                     ) : (
@@ -1190,7 +1190,7 @@ export function ChatInputForm({
           </div>
         ) : (
           /* Legacy Mode: Plain textarea with existing styling */
-          <div
+          (<div
             data-testid="input-wrapper"
             className="flex items-end gap-2 p-2 bg-neutral-1 border border-neutral-5 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-primary-7 focus-within:border-transparent transition-all"
           >
@@ -1282,14 +1282,14 @@ export function ChatInputForm({
             <div className="flex items-center gap-1 pb-1">
               {isVoiceSupported && (
                 <Button
+                  variant="primary"
                   className="p-2 rounded-lg"
                   type="button"
                   onClick={isListening ? onStopListening : onStartListening}
                   disabled={isProcessing}
                   aria-label={
                     isListening ? "Stop voice input" : "Start voice input"
-                  }
-                >
+                  }>
                   {isListening ? (
                     <MicOff className="w-5 h-5" />
                   ) : (
@@ -1330,7 +1330,7 @@ export function ChatInputForm({
                 </Button>
               )}
             </div>
-          </div>
+          </div>)
         )}
       </form>
       {/* Reasoning Effort Selector and Thinking Toggle - only in Legacy mode */}

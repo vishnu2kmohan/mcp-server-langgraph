@@ -559,3 +559,19 @@ export {
   type UseMetricsHistoryOptions,
   type UseMetricsHistoryResult,
 } from "./useMetricsHistory";
+
+// =============================================================================
+// Tools Hooks (Manual Tool Selection)
+// =============================================================================
+
+export {
+  useAvailableTools,
+  type UseAvailableToolsOptions,
+  type UseAvailableToolsResult,
+} from "./useAvailableTools";
+
+export {
+  useNativeCapabilities,
+  type UseNativeCapabilitiesOptions,
+  type UseNativeCapabilitiesResult,
+} from "./useNativeCapabilities";

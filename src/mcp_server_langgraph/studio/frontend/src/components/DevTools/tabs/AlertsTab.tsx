@@ -179,6 +179,7 @@ function FilterDropdown({
               exit="hidden"
             >
               <Button
+                variant="primary"
                 type="button"
                 role="option"
                 aria-selected={!value}
@@ -187,12 +188,12 @@ function FilterDropdown({
                   setIsOpen(false);
                 }}
                 className={filterOptionVariants({ selected: !value })}
-                aria-label="All"
-              >
+                aria-label="All">
                 All
               </Button>
               {options.map((option) => (
                 <Button
+                  variant="primary"
                   key={option}
                   type="button"
                   role="option"
@@ -202,8 +203,7 @@ function FilterDropdown({
                     setIsOpen(false);
                   }}
                   className={filterOptionVariants({ selected: value === option })}
-                  aria-label={option}
-                >
+                  aria-label={option}>
                   {option}
                 </Button>
               ))}
@@ -273,11 +273,11 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
       <div className="mt-3 flex items-center gap-2 flex-wrap">
         {canOpenInGrafana && (
           <Button
+            variant="ghost"
             size="sm"
             className="px-3 py-1 text-sm bg-grafana-9 text-neutral-12 rounded hover:bg-grafana-10 flex gap-1"
             onClick={handleOpenGrafana}
-            aria-label="View in Grafana"
-          >
+            aria-label="View in Grafana">
             <ExternalLink className="w-3 h-3" aria-hidden="true" />
             View in Grafana
           </Button>
@@ -562,14 +562,14 @@ export function AlertsTab({
         {/* Active filter count */}
         {(stateFilter || severityFilter || serviceFilter) && (
           <Button
+            variant="danger"
             size="sm"
             className="px-2 py-1 text-sm text-primary-10 dark:text-primary-7 hover:underline"
             onClick={() => {
               setStateFilter("");
               setSeverityFilter("");
               setServiceFilter("");
-            }}
-          >
+            }}>
             Clear filters
           </Button>
         )}

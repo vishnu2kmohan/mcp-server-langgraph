@@ -179,9 +179,9 @@ describe("ToolSelector", () => {
 
   describe("tool list", () => {
     const mockTools = [
-      { name: "calculator", displayName: "Calculator", source: "builtin" as const },
-      { name: "web_search", displayName: "Web Search", source: "builtin" as const },
-      { name: "github:create_issue", displayName: "Create Issue", source: "mcp" as const, serverName: "github" },
+      { toolId: "builtin:calculator", name: "calculator", displayName: "Calculator", source: "builtin" as const },
+      { toolId: "builtin:web_search", name: "web_search", displayName: "Web Search", source: "builtin" as const },
+      { toolId: "mcp:github:create_issue", name: "github_create_issue", displayName: "Create Issue", source: "mcp" as const, serverName: "github" },
     ];
 
     it("should show tool list when mode is manual", async () => {
@@ -238,7 +238,7 @@ describe("ToolSelector", () => {
         <ToolSelector
           {...defaultProps}
           mode="manual"
-          selectedTools={["calculator"]}
+          selectedTools={["builtin:calculator"]}  // v7: Uses toolId
           availableTools={mockTools}
         />
       );
@@ -256,8 +256,8 @@ describe("ToolSelector", () => {
 
   describe("tool selection", () => {
     const mockTools = [
-      { name: "calculator", displayName: "Calculator", source: "builtin" as const },
-      { name: "web_search", displayName: "Web Search", source: "builtin" as const },
+      { toolId: "builtin:calculator", name: "calculator", displayName: "Calculator", source: "builtin" as const },
+      { toolId: "builtin:web_search", name: "web_search", displayName: "Web Search", source: "builtin" as const },
     ];
 
     it("should call onSelectionChange when tool is selected", async () => {
@@ -275,7 +275,8 @@ describe("ToolSelector", () => {
       await user.click(screen.getByRole("button", { name: /tools/i }));
       await user.click(screen.getByRole("checkbox", { name: /calculator/i }));
 
-      expect(onSelectionChange).toHaveBeenCalledWith(["calculator"]);
+      // v7: Uses toolId for selection
+      expect(onSelectionChange).toHaveBeenCalledWith(["builtin:calculator"]);
     });
 
     it("should call onSelectionChange when tool is deselected", async () => {
@@ -285,7 +286,7 @@ describe("ToolSelector", () => {
         <ToolSelector
           {...defaultProps}
           mode="manual"
-          selectedTools={["calculator"]}
+          selectedTools={["builtin:calculator"]}  // v7: Uses toolId
           onSelectionChange={onSelectionChange}
           availableTools={mockTools}
         />
@@ -304,7 +305,7 @@ describe("ToolSelector", () => {
         <ToolSelector
           {...defaultProps}
           mode="manual"
-          selectedTools={["calculator"]}
+          selectedTools={["builtin:calculator"]}  // v7: Uses toolId
           onSelectionChange={onSelectionChange}
           availableTools={mockTools}
         />
@@ -313,7 +314,8 @@ describe("ToolSelector", () => {
       await user.click(screen.getByRole("button", { name: /tools/i }));
       await user.click(screen.getByRole("checkbox", { name: /web search/i }));
 
-      expect(onSelectionChange).toHaveBeenCalledWith(["calculator", "web_search"]);
+      // v7: Uses toolIds for selection
+      expect(onSelectionChange).toHaveBeenCalledWith(["builtin:calculator", "builtin:web_search"]);
     });
   });
 
@@ -323,9 +325,9 @@ describe("ToolSelector", () => {
 
   describe("search filtering", () => {
     const mockTools = [
-      { name: "calculator", displayName: "Calculator", source: "builtin" as const },
-      { name: "web_search", displayName: "Web Search", source: "builtin" as const },
-      { name: "github:create_issue", displayName: "Create Issue", source: "mcp" as const, serverName: "github" },
+      { toolId: "builtin:calculator", name: "calculator", displayName: "Calculator", source: "builtin" as const },
+      { toolId: "builtin:web_search", name: "web_search", displayName: "Web Search", source: "builtin" as const },
+      { toolId: "mcp:github:create_issue", name: "github_create_issue", displayName: "Create Issue", source: "mcp" as const, serverName: "github" },
     ];
 
     it("should show search input in dropdown", async () => {

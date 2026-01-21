@@ -107,6 +107,7 @@ export function SuggestionsPanel({
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-5">
         <Button
+          variant="ghost"
           type="button"
           onClick={onToggleExpand}
           className={cn(
@@ -115,8 +116,7 @@ export function SuggestionsPanel({
             "hover:text-neutral-12",
             "transition-colors",
           )}
-          aria-label="AI Suggestions"
-        >
+          aria-label="AI Suggestions">
           {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           <Sparkles size={14} className="text-primary-9" />
           <span>AI Suggestions</span>
@@ -230,6 +230,7 @@ export function SuggestionsPanel({
                     <td className="py-2 px-2">
                       <div className="flex items-center justify-end gap-1">
                         <Button
+                          variant="primary"
                           type="button"
                           onClick={() => onAccept(suggestion)}
                           aria-label="Accept suggestion"
@@ -237,11 +238,11 @@ export function SuggestionsPanel({
                             "h-6 w-6 min-h-6 min-w-6 p-1 rounded",
                             "text-success-10 hover:bg-success-3 dark:hover:bg-success-a4",
                             "transition-colors",
-                          )}
-                        >
+                          )}>
                           <Check size={16} />
                         </Button>
                         <Button
+                          variant="secondary"
                           type="button"
                           onClick={() => onDismiss(suggestion)}
                           aria-label="Dismiss suggestion"
@@ -249,8 +250,7 @@ export function SuggestionsPanel({
                             "h-6 w-6 min-h-6 min-w-6 p-1 rounded",
                             "text-neutral-9 hover:text-error-9 hover:bg-error-3 dark:hover:bg-error-a4",
                             "transition-colors",
-                          )}
-                        >
+                          )}>
                           <X size={16} />
                         </Button>
                       </div>

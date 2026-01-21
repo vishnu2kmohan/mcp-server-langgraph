@@ -140,11 +140,11 @@ export function SimilarSessionsPanel({
 
           return (
             <Button
+              variant="primary"
               className="w-full text-left group p-2 rounded-md border border-neutral-5 hover:border-insight-5 dark:hover:border-insight-10 hover:bg-insight-1 dark:hover:bg-insight-a2 focus:ring-insight-7"
               key={session.sessionId}
               type="button"
-              onClick={() => onSessionSelect?.(session.sessionId)}
-            >
+              onClick={() => onSessionSelect?.(session.sessionId)}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium text-neutral-12 truncate flex-1">
                   {sessionName}

@@ -174,12 +174,12 @@ export function GenerativeWidget({
           {config.title}
         </h3>
         <Button
+          variant="ghost"
           className="p-1 text-neutral-9 hover:text-neutral-11"
           data-testid="refresh-button"
           type="button"
           onClick={() => onRefresh?.(config.id)}
-          aria-label="Refresh widget"
-        >
+          aria-label="Refresh widget">
           <RefreshCw size={14} />
         </Button>
       </div>

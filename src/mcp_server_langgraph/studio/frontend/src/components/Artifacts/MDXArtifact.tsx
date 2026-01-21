@@ -240,10 +240,10 @@ function Tabs({ children }: TabsProps) {
       <div className="flex border-b border-neutral-5">
         {tabs.map((tab, index) => (
           <Button
+            variant="primary"
             className="px-4 py-2 text-sm border-b-2"
             key={index}
-            onClick={() => setActiveTab(index)}
-          >
+            onClick={() => setActiveTab(index)}>
             {tab.title}
           </Button>
         ))}
@@ -357,9 +357,9 @@ function Expandable({ title, children }: ExpandableProps) {
   return (
     <div className="my-4">
       <Button
+        variant="primary"
         className="flex text-primary-10 dark:text-primary-7 hover:underline"
-        onClick={() => setIsOpen(!isOpen)}
-      >
+        onClick={() => setIsOpen(!isOpen)}>
         {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         <span>{title}</span>
       </Button>

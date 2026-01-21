@@ -16,6 +16,10 @@ import uiReducer from "../store/slices/uiSlice";
 import chatConnectionReducer, {
   type ChatConnectionState,
 } from "../store/slices/chatConnectionSlice";
+import executionModeReducer, {
+  type ExecutionModeState,
+} from "../store/slices/executionModeSlice";
+import { api } from "../api";
 import { createTestUIState } from "../store/slices/__tests__/uiSlice.fixtures";
 import type { SessionState } from "../types/session";
 import type { ChatMessage } from "./MessageBubble";
@@ -47,17 +51,31 @@ const initialChatConnectionState: ChatConnectionState = {
   configuredTemplateIds: [],
 };
 
+// Default execution mode state
+const initialExecutionModeState: ExecutionModeState = {
+  executionMode: "default",
+  currentPlan: null,
+  planStatus: "idle",
+  userIsAdmin: false,
+  hasBypassPermission: false,
+};
+
 // Create test store helper
 export const createTestStore = (preloadedState?: {
   session?: Partial<SessionState>;
   chatConnection?: Partial<ChatConnectionState>;
+  executionMode?: Partial<ExecutionModeState>;
 }) => {
   return configureStore({
     reducer: {
+      [api.reducerPath]: api.reducer,
       session: sessionReducer,
       ui: uiReducer,
       chatConnection: chatConnectionReducer,
+      executionMode: executionModeReducer,
     },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(api.middleware),
     preloadedState: {
       session: preloadedState?.session
         ? { ...initialSessionState, ...preloadedState.session }
@@ -66,6 +84,9 @@ export const createTestStore = (preloadedState?: {
       chatConnection: preloadedState?.chatConnection
         ? { ...initialChatConnectionState, ...preloadedState.chatConnection }
         : initialChatConnectionState,
+      executionMode: preloadedState?.executionMode
+        ? { ...initialExecutionModeState, ...preloadedState.executionMode }
+        : initialExecutionModeState,
     },
   });
 };

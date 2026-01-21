@@ -164,11 +164,11 @@ export function HelpPane({
           />
           {searchQuery && (
             <Button
+              variant="danger"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-9 hover:text-neutral-11"
               type="button"
               aria-label="Clear search"
-              onClick={() => setSearchQuery("")}
-            >
+              onClick={() => setSearchQuery("")}>
               <X size={16} />
             </Button>
           )}
@@ -189,6 +189,7 @@ export function HelpPane({
               <div className="flex flex-wrap gap-1.5">
                 {quickActions.map((action, index) => (
                   <Button
+                    variant="ghost"
                     key={`${action.label}-${index}`}
                     type="button"
                     onClick={() =>
@@ -204,8 +205,7 @@ export function HelpPane({
                       "text-neutral-11",
                       "hover:bg-primary-3 dark:hover:bg-primary-a4",
                       "transition-colors",
-                    )}
-                  >
+                    )}>
                     <Zap size={12} />
                     {action.label}
                   </Button>
@@ -222,6 +222,7 @@ export function HelpPane({
               </div>
               {aiTopics.slice(0, 3).map((topic) => (
                 <Button
+                  variant="primary"
                   key={topic.id}
                   type="button"
                   onClick={() =>
@@ -238,8 +239,7 @@ export function HelpPane({
                     "bg-neutral-1",
                     "hover:bg-primary-1 dark:hover:bg-primary-a3",
                     "transition-colors",
-                  )}
-                >
+                  )}>
                   <span className="text-neutral-11">
                     {topic.title}
                   </span>
@@ -273,6 +273,7 @@ export function HelpPane({
           <div className="space-y-2">
             {filteredTopics.map((topic) => (
               <Button
+                variant="primary"
                 key={topic.id}
                 type="button"
                 onClick={() => onTopicSelect(topic)}
@@ -282,8 +283,7 @@ export function HelpPane({
                   "border border-neutral-5",
                   "hover:border-primary-5 dark:hover:border-primary-7",
                   "transition-colors",
-                )}
-              >
+                )}>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-medium text-neutral-11">
                     {topic.title}

@@ -68,6 +68,7 @@ export interface ApiSourceCitation {
   title: string;
   url?: string | null;
   snippet?: string | null;
+  relevance_score?: number | null;
 }
 
 /**
@@ -339,8 +340,10 @@ export function isApiMessage(value: unknown): value is ApiMessage {
  */
 export interface Source {
   title: string;
-  url?: string;
-  snippet?: string;
+  url: string;
+  snippet?: string | null;
+  /** Relevance score for ranking (0.0 to 1.0) */
+  relevanceScore?: number | null;
 }
 
 /**
@@ -371,11 +374,14 @@ export function transformApiMessageToClient(
       ? new Date(apiMessage.timestamp).getTime()
       : 0,
     sources: apiMessage.sources
-      ? apiMessage.sources.map((s) => ({
-          title: s.title,
-          url: s.url ?? undefined,
-          snippet: s.snippet ?? undefined,
-        }))
+      ? apiMessage.sources
+          .filter((s) => s.url) // Filter out sources without URLs
+          .map((s) => ({
+            title: s.title,
+            url: s.url!, // Safe: filtered above
+            snippet: s.snippet ?? null,
+            relevanceScore: s.relevance_score ?? null,
+          }))
       : undefined,
     thinkingContent: apiMessage.thinking_content ?? undefined,
     thinkingTokens: apiMessage.thinking_tokens ?? undefined,

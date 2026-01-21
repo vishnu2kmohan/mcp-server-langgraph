@@ -73,6 +73,9 @@ export const DEFAULT_ACCESSIBILITY_PREFERENCES: AccessibilityPreferences = {
 // Model Defaults Types
 // ==============================================================================
 
+/** Tool preference for native vs builtin execution (v7) */
+export type ToolPreference = "auto" | "native" | "builtin" | "mcp";
+
 /** Model default preferences */
 export interface ModelDefaultPreferences {
   /** Default LLM model name */
@@ -83,6 +86,8 @@ export interface ModelDefaultPreferences {
   defaultMaxTokens: number;
   /** Default reasoning effort for thinking models */
   defaultReasoningEffort: "low" | "medium" | "high";
+  /** Default tool preference for native vs builtin execution (v7) */
+  defaultToolPreference: ToolPreference;
 }
 
 /** Default model preferences */
@@ -91,6 +96,7 @@ export const DEFAULT_MODEL_PREFERENCES: ModelDefaultPreferences = {
   defaultTemperature: 0.7,
   defaultMaxTokens: 4096,
   defaultReasoningEffort: "medium",
+  defaultToolPreference: "auto",
 };
 
 // ==============================================================================

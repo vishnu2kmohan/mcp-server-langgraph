@@ -237,19 +237,19 @@ export function WorkflowDocument({
 
           <div className="flex items-center gap-2">
             <Button
+              variant="primary"
               className="p-1.5 text-neutral-10 hover:text-neutral-11 rounded"
               onClick={() => dispatch(undo())}
               disabled={!canUndo || isReadOnly}
-              title="Undo"
-            >
+              title="Undo">
               <Undo size={16} />
             </Button>
             <Button
+              variant="primary"
               className="p-1.5 text-neutral-10 hover:text-neutral-11 rounded"
               onClick={() => dispatch(redo())}
               disabled={!canRedo || isReadOnly}
-              title="Redo"
-            >
+              title="Redo">
               <Redo size={16} />
             </Button>
 

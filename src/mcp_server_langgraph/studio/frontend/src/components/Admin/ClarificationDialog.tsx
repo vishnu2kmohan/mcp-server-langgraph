@@ -249,12 +249,12 @@ export function ClarificationDialog({
             <div className="space-y-2">
               {request.options.map((option) => (
                 <Button
+                  variant="primary"
                   className="w-full text-left p-3 border rounded-lg"
                   key={option.id}
                   data-testid={`option-${option.id}`}
                   onClick={() => setSelectedOptionId(option.id)}
-                  disabled={isSubmitting}
-                >
+                  disabled={isSubmitting}>
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-neutral-12">
                       {option.label}

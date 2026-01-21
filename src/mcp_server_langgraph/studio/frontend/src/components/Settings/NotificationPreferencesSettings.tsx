@@ -135,11 +135,11 @@ export function NotificationPreferencesSettings() {
           Real-Time Notification Types
         </h3>
         <Button
+          variant="primary"
           className="flex px-3 py-1.5 text-sm text-neutral-11 hover:text-neutral-12"
           onClick={handleReset}
           disabled={isDisabled}
-          aria-label="Reset to defaults"
-        >
+          aria-label="Reset to defaults">
           <RotateCcw size={14} className={isResetting ? "animate-spin" : ""} />
           Reset to Defaults
         </Button>

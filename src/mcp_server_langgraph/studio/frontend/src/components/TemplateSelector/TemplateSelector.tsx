@@ -80,12 +80,12 @@ function TemplateChip({
 }) {
   return (
     <Button
+      variant="primary"
       className="px-3 py-1.5 text-sm rounded-full border"
       type="button"
       onClick={onClick}
       disabled={disabled}
-      aria-pressed={isSelected}
-    >
+      aria-pressed={isSelected}>
       {template.name}
     </Button>
   );

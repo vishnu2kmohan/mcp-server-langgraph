@@ -252,7 +252,10 @@ export function AgentTraceTab({
   // Timeline integration for time-travel debugging
   const timeline = useTimelineContext();
 
-  const { trace, isLoading, error, refetch } = useAgentTrace({ sessionId });
+  const { trace, isLoading, error, refetch } = useAgentTrace({
+    sessionId,
+    autoRefresh: Boolean(sessionId),
+  });
 
   const mappedExternalNodes: TraceNode[] = useMemo(() => {
     return externalSteps.map((step: TraceStepPayload) => ({
@@ -452,6 +455,7 @@ export function AgentTraceTab({
         {/* View toggle */}
         <div data-testid="view-toggle" className="flex items-center gap-1">
           <Button
+            variant="ghost"
             data-testid="view-list"
             type="button"
             onClick={() => setViewMode("list")}
@@ -462,11 +466,11 @@ export function AgentTraceTab({
                 : "hover:bg-neutral-3 text-neutral-10",
             )}
             aria-label="List view"
-            aria-pressed={viewMode === "list"}
-          >
+            aria-pressed={viewMode === "list"}>
             <List size={14} />
           </Button>
           <Button
+            variant="primary"
             data-testid="view-timeline"
             type="button"
             onClick={() => setViewMode("timeline")}
@@ -477,8 +481,7 @@ export function AgentTraceTab({
                 : "hover:bg-neutral-3 text-neutral-10",
             )}
             aria-label="Timeline view"
-            aria-pressed={viewMode === "timeline"}
-          >
+            aria-pressed={viewMode === "timeline"}>
             <Activity size={14} />
           </Button>
         </div>

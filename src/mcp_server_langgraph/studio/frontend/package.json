@@ -44,6 +44,8 @@
     "test:design-system-contract": "NODE_OPTIONS='--max-old-space-size=8192' vitest run src/design-system/design-system-contract.test.ts",
     "migrate:buttons": "npx jscodeshift --parser=tsx --extensions=tsx -t scripts/codemods/migrate-buttons.ts",
     "migrate:inputs": "npx jscodeshift --parser=tsx --extensions=tsx -t scripts/codemods/migrate-inputs.ts",
+    "fix:button-variants": "npx jscodeshift --parser=tsx --extensions=tsx -t scripts/codemods/fix-button-semantics.ts",
+    "fix:button-variants:dry": "npx jscodeshift --dry --parser=tsx --extensions=tsx -t scripts/codemods/fix-button-semantics.ts",
     "migrate:all": "./scripts/migrate-to-design-system.sh --all",
     "migrate:check": "./scripts/migrate-to-design-system.sh --check",
     "migrate:colors": "python3 scripts/migrate-raw-colors.py",

@@ -170,6 +170,7 @@ export function InlineSuggestions({
           {/* Actions */}
           <div className="flex items-center gap-1 flex-shrink-0">
             <Button
+              variant="primary"
               type="button"
               aria-label="Accept suggestion"
               onClick={() => onAccept(suggestion)}
@@ -177,11 +178,11 @@ export function InlineSuggestions({
                 "h-6 w-6 min-h-6 min-w-6 p-1 rounded",
                 "text-success-10 hover:bg-success-3 dark:hover:bg-success-a4",
                 "transition-colors",
-              )}
-            >
+              )}>
               <Check size={16} />
             </Button>
             <Button
+              variant="secondary"
               type="button"
               aria-label="Dismiss suggestion"
               onClick={() => onDismiss(suggestion)}
@@ -189,8 +190,7 @@ export function InlineSuggestions({
                 "h-6 w-6 min-h-6 min-w-6 p-1 rounded",
                 "text-neutral-9 hover:text-error-9 hover:bg-error-3 dark:hover:bg-error-a4",
                 "transition-colors",
-              )}
-            >
+              )}>
               <X size={16} />
             </Button>
           </div>

@@ -61,6 +61,7 @@ import {
 } from "../hooks/useTraceIntelligence";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
 import { Tooltip } from "../components/UI/Tooltip";
+import { OBSERVABILITY_POLLING_CONFIG } from "../config/observability";
 import {
   setStatusFilter as setStatusFilterAction,
   setSessionIdFilter as setSessionIdFilterAction,
@@ -99,6 +100,15 @@ const VALID_TABS = [
   "alerts",
   "ws-metrics",
 ] as const;
+
+const {
+  traceListActiveMs,
+  traceListIdleMs,
+  traceDetailMs,
+  metricsMs,
+  logsMs,
+  alertsMs,
+} = OBSERVABILITY_POLLING_CONFIG;
 
 // Extract tab from URL path
 function getTabFromPath(pathname: string): ObservabilityTab {
@@ -157,6 +167,8 @@ export function ObservabilityPage() {
 
   // TraceCanvas state (real-time trace visualization)
   const [showTraceCanvas, setShowTraceCanvas] = useState(false);
+  const [hasActiveTraces, setHasActiveTraces] = useState(false);
+  const [selectedTraceComplete, setSelectedTraceComplete] = useState(false);
 
   // Dispatch helpers (wrap actions for cleaner code)
   const setActiveTab = useCallback(
@@ -241,6 +253,17 @@ export function ObservabilityPage() {
     }
   };
 
+  const isTracesTabActive = activeTab === "traces";
+  const traceListPollingInterval = isTracesTabActive
+    ? hasActiveTraces
+      ? traceListActiveMs
+      : traceListIdleMs
+    : 0;
+  const traceDetailPollingInterval =
+    isTracesTabActive && selectedTraceId && !selectedTraceComplete
+      ? traceDetailMs
+      : 0;
+
   // Fetch data with RTK Query - skip based on active tab for lazy loading
   const {
     data: tracesData,
@@ -248,30 +271,51 @@ export function ObservabilityPage() {
     isFetching: isTracesFetching,
     error: tracesError,
     refetch: refetchTraces,
-  } = useListTracesQuery({
-    limit: 50,
-    status: statusFilter || undefined,
-    session_id: sessionIdFilter || undefined,
-    user_id: userIdFilter || undefined,
-    workflow_id: workflowIdFilter || undefined,
-    project_id: projectIdFilter || undefined,
-    start_time: getTimeRange(),
-    cursor,
-  });
+  } = useListTracesQuery(
+    {
+      limit: 50,
+      status: statusFilter || undefined,
+      session_id: sessionIdFilter || undefined,
+      user_id: userIdFilter || undefined,
+      workflow_id: workflowIdFilter || undefined,
+      project_id: projectIdFilter || undefined,
+      start_time: getTimeRange(),
+      cursor,
+    },
+    {
+      skip: activeTab !== "traces",
+      pollingInterval: traceListPollingInterval,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    },
+  );
 
   const {
     data: logsData,
     isLoading: isLogsLoading,
     error: logsError,
     refetch: refetchLogs,
-  } = useListLogsQuery({ limit: 50 }, { skip: activeTab !== "logs" });
+  } = useListLogsQuery(
+    { limit: 50 },
+    {
+      skip: activeTab !== "logs",
+      pollingInterval: activeTab === "logs" ? logsMs : 0,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    },
+  );
 
   const {
     data: metricsData,
     isLoading: isMetricsLoading,
     error: metricsError,
     refetch: refetchMetrics,
-  } = useGetMetricsQuery(undefined, { skip: activeTab !== "metrics" });
+  } = useGetMetricsQuery(undefined, {
+    skip: activeTab !== "metrics",
+    pollingInterval: activeTab === "metrics" ? metricsMs : 0,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
 
   const {
     data: alertsData,
@@ -288,7 +332,12 @@ export function ObservabilityPage() {
         undefined,
       limit: 50,
     },
-    { skip: activeTab !== "alerts" },
+    {
+      skip: activeTab !== "alerts",
+      pollingInterval: activeTab === "alerts" ? alertsMs : 0,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    },
   );
 
   // Fetch sessions for agent execution view
@@ -314,10 +363,46 @@ export function ObservabilityPage() {
   );
 
   // Fetch selected trace details
-  const { data: selectedTraceData, isLoading: isTraceDetailLoading } =
+  const {
+    data: selectedTraceData,
+    isLoading: isTraceDetailLoading,
+  } =
     useGetTraceQuery(selectedTraceId ?? "", {
       skip: !selectedTraceId,
+      pollingInterval: traceDetailPollingInterval,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
     });
+
+  const nextHasActiveTraces = useMemo(() => {
+    if (!tracesData?.items?.length) return false;
+    return tracesData.items.some((trace) => {
+      const status = trace.status?.toLowerCase();
+      const isRunningStatus = status === "running" || status === "unset";
+      const hasNoEndTime = !trace.endTime;
+      const hasNoDuration = trace.durationMs == null;
+      return isRunningStatus || (hasNoEndTime && hasNoDuration);
+    });
+  }, [tracesData]);
+
+  const nextSelectedTraceComplete = useMemo(() => {
+    if (!selectedTraceId || !selectedTraceData) return false;
+    if (selectedTraceData.endTime) return true;
+    if (!selectedTraceData.spans?.length) return false;
+    return selectedTraceData.spans.every((span) => Boolean(span.endTime));
+  }, [selectedTraceData, selectedTraceId]);
+
+  useEffect(() => {
+    setHasActiveTraces((prev) =>
+      prev === nextHasActiveTraces ? prev : nextHasActiveTraces,
+    );
+  }, [nextHasActiveTraces]);
+
+  useEffect(() => {
+    setSelectedTraceComplete((prev) =>
+      prev === nextSelectedTraceComplete ? prev : nextSelectedTraceComplete,
+    );
+  }, [nextSelectedTraceComplete]);
 
   // Map API trace to TraceViewer format
   const selectedTrace: Trace | null = selectedTraceData
@@ -507,10 +592,10 @@ export function ObservabilityPage() {
         <div className="flex gap-1">
           {tabs.map((tab) => (
             <Button
+              variant="primary"
               className="flex px-4 py-2 rounded-lg"
               key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-            >
+              onClick={() => handleTabChange(tab.id)}>
               <tab.icon size={16} />
               {tab.label}
             </Button>
@@ -524,35 +609,35 @@ export function ObservabilityPage() {
             {/* Status filter */}
             <div className="flex items-center gap-1">
               <Button
+                variant="primary"
                 size="sm"
                 className="px-2 py-1 text-xs rounded"
                 onClick={() => setStatusFilter("")}
-                aria-pressed={statusFilter === ""}
-              >
+                aria-pressed={statusFilter === ""}>
                 All
               </Button>
               <Button
+                variant="primary"
                 size="sm"
                 className="px-2 py-1 text-xs rounded"
                 onClick={() => setStatusFilter("success")}
-                aria-pressed={statusFilter === "success"}
-              >
+                aria-pressed={statusFilter === "success"}>
                 Success
               </Button>
               <Button
+                variant="primary"
                 size="sm"
                 className="px-2 py-1 text-xs rounded"
                 onClick={() => setStatusFilter("error")}
-                aria-pressed={statusFilter === "error"}
-              >
+                aria-pressed={statusFilter === "error"}>
                 Error
               </Button>
               <Button
+                variant="primary"
                 size="sm"
                 className="px-2 py-1 text-xs rounded"
                 onClick={() => setStatusFilter("running")}
-                aria-pressed={statusFilter === "running"}
-              >
+                aria-pressed={statusFilter === "running"}>
                 Running
               </Button>
             </div>
@@ -779,9 +864,9 @@ export function ObservabilityPage() {
                     </div>
                   </div>
                   <Button
+                    variant="primary"
                     className="px-4 py-2 rounded-lg text-sm"
-                    onClick={() => setShowTraceCanvas(!showTraceCanvas)}
-                  >
+                    onClick={() => setShowTraceCanvas(!showTraceCanvas)}>
                     {showTraceCanvas ? "Hide Canvas" : "Show Canvas"}
                   </Button>
                 </div>
@@ -871,9 +956,9 @@ export function ObservabilityPage() {
                             Trace Details
                           </span>
                           <Button
+                            variant="secondary"
                             className="text-sm text-neutral-11 hover:text-neutral-10 dark:hover:text-neutral-3"
-                            onClick={() => setSelectedTraceId(null)}
-                          >
+                            onClick={() => setSelectedTraceId(null)}>
                             Close
                           </Button>
                         </div>
@@ -1220,31 +1305,31 @@ export function ObservabilityPage() {
                     </span>
                     <div className="flex items-center gap-1">
                       <Button
+                        variant="primary"
                         size="sm"
                         className="px-2 py-1 text-xs rounded"
-                        onClick={() => setAlertStateFilter("")}
-                      >
+                        onClick={() => setAlertStateFilter("")}>
                         All
                       </Button>
                       <Button
+                        variant="primary"
                         size="sm"
                         className="px-2 py-1 text-xs rounded"
-                        onClick={() => setAlertStateFilter("firing")}
-                      >
+                        onClick={() => setAlertStateFilter("firing")}>
                         Firing
                       </Button>
                       <Button
+                        variant="primary"
                         size="sm"
                         className="px-2 py-1 text-xs rounded"
-                        onClick={() => setAlertStateFilter("pending")}
-                      >
+                        onClick={() => setAlertStateFilter("pending")}>
                         Pending
                       </Button>
                       <Button
+                        variant="primary"
                         size="sm"
                         className="px-2 py-1 text-xs rounded"
-                        onClick={() => setAlertStateFilter("resolved")}
-                      >
+                        onClick={() => setAlertStateFilter("resolved")}>
                         Resolved
                       </Button>
                     </div>

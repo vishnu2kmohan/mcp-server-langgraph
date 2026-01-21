@@ -170,12 +170,12 @@ export function SuggestionChips({
             <RefreshCw className="w-4 h-4" />
           </Button>
           <Button
+            variant="primary"
             className="p-1 text-neutral-10 hover:text-neutral-11"
             onClick={() => setIsExpanded(!isExpanded)}
             aria-label={
               isExpanded ? "Collapse suggestions" : "Expand suggestions"
-            }
-          >
+            }>
             {isExpanded ? (
               <ChevronUp className="w-4 h-4" />
             ) : (
@@ -234,9 +234,9 @@ export function SuggestionChips({
           {hiddenCount > 0 && !showAll && (
             <li className="text-center">
               <Button
+                variant="primary"
                 className="text-sm text-primary-10 dark:text-primary-7 hover:underline"
-                onClick={() => setShowAll(true)}
-              >
+                onClick={() => setShowAll(true)}>
                 Show {hiddenCount} more
               </Button>
             </li>

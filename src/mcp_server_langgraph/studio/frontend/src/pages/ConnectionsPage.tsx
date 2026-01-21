@@ -546,6 +546,7 @@ export function ConnectionsPage() {
         {/* Polling Control */}
         <div className="flex items-center gap-1 border rounded-md">
           <Button
+            variant="primary"
             className="p-2 rounded-l-md"
             onClick={() =>
               setPollingSpeed(pollingSpeed === "off" ? "normal" : "off")
@@ -559,8 +560,7 @@ export function ConnectionsPage() {
               pollingSpeed !== "off"
                 ? "Pause auto-refresh"
                 : "Enable auto-refresh"
-            }
-          >
+            }>
             {pollingSpeed !== "off" ? (
               <Pause className="w-4 h-4" />
             ) : (
@@ -709,10 +709,10 @@ export function ConnectionsPage() {
                     <Zap className="w-4 h-4" />
                   </Button>
                   <Button
+                    variant="ghost"
                     className="p-2 text-insight-10 hover:bg-insight-1 dark:hover:bg-insight-12/50 rounded-md"
                     onClick={() => handleViewAuditLog(connection.id)}
-                    aria-label="Audit Log"
-                  >
+                    aria-label="Audit Log">
                     <FileText className="w-4 h-4" />
                   </Button>
                   <Button
@@ -827,10 +827,10 @@ export function ConnectionsPage() {
               showCustomOption
             />
             <Button
+              variant="secondary"
               className="absolute top-4 right-4 p-2 text-neutral-8 hover:text-neutral-10 dark:hover:text-neutral-5"
               onClick={() => setTemplateSelectorOpen(false)}
-              aria-label="Close"
-            >
+              aria-label="Close">
               ×
             </Button>
           </div>
@@ -846,10 +846,10 @@ export function ConnectionsPage() {
           <div className="relative bg-neutral-2 rounded-lg shadow-xl p-6 max-w-3xl mx-4 max-h-[80vh] overflow-y-auto">
             <ConnectionAuditLog connectionId={auditLogConnectionId} />
             <Button
+              variant="secondary"
               className="absolute top-4 right-4 p-2 text-neutral-8 hover:text-neutral-10 dark:hover:text-neutral-5"
               onClick={() => setAuditLogConnectionId(null)}
-              aria-label="Close"
-            >
+              aria-label="Close">
               ×
             </Button>
           </div>

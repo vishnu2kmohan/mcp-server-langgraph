@@ -181,23 +181,23 @@ export function OrganizationManager({
               </div>
               <div className="flex items-center gap-2">
                 <Button
+                  variant="ghost"
                   className="p-2 text-neutral-10 hover:text-primary-10"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEdit(org);
                   }}
-                  aria-label="Edit"
-                >
+                  aria-label="Edit">
                   <Edit2 className="w-4 h-4" />
                 </Button>
                 <Button
+                  variant="danger"
                   className="p-2 text-neutral-10 hover:text-error-10"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteClick(org.id);
                   }}
-                  aria-label="Delete"
-                >
+                  aria-label="Delete">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>

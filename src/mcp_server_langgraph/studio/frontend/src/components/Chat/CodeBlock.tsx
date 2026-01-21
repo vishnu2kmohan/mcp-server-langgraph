@@ -150,12 +150,12 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
         aria-label="Code block actions"
       >
         <Button
+          variant="primary"
           className="p-1.5 rounded focus:ring-primary-7"
           onClick={handleToggleWordWrap}
           title="Toggle word wrap"
           aria-label={wordWrap ? "Disable word wrap" : "Enable word wrap"}
-          aria-pressed={wordWrap}
-        >
+          aria-pressed={wordWrap}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="14"

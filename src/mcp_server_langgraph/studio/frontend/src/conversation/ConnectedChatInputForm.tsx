@@ -35,6 +35,7 @@ import { useAISuggestionsWebSocket } from "../hooks/useAISuggestionsWebSocket";
 import { useAvailableTools } from "../hooks/useAvailableTools";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
 import { useSessionTelemetry } from "../contexts/TelemetryContext";
+import { useToolPreference } from "../contexts/PreferencesContext";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { selectSubmitOnEnter } from "../store/slices/uiSlice";
 import { useConnectorSuggestions } from "../hooks/useConnectorSuggestions";
@@ -146,6 +147,12 @@ export interface ConnectedChatInputFormProps {
   toolSelectionMode?: ToolSelectionMode;
   /** Callback when tool selection mode changes (for lifting state to parent) */
   onToolSelectionModeChange?: (mode: ToolSelectionMode) => void;
+
+  // v7: Tool preference for native vs builtin execution
+  /** Controlled tool preference (for lifting state to parent) */
+  toolPreference?: "auto" | "native" | "builtin" | "mcp";
+  /** Callback when tool preference changes (for lifting state to parent) */
+  onToolPreferenceChange?: (preference: "auto" | "native" | "builtin" | "mcp") => void;
 }
 
 // =============================================================================
@@ -208,6 +215,9 @@ export function ConnectedChatInputForm({
   onSelectedToolsChange,
   toolSelectionMode: toolSelectionModeProp,
   onToolSelectionModeChange,
+  // v7: Tool preference for native vs builtin execution
+  toolPreference: toolPreferenceProp,
+  onToolPreferenceChange,
 }: ConnectedChatInputFormProps) {
   // =============================================================================
   // Feature Flags & UI State
@@ -289,9 +299,24 @@ export function ConnectedChatInputForm({
   const [internalSelectedTools, setInternalSelectedTools] = useState<string[]>([]);
   const [internalToolSelectionMode, setInternalToolSelectionMode] = useState<ToolSelectionMode>("auto");
 
+  // v7: Tool preference with persistence (native vs builtin)
+  // Get persisted preference from preferences context
+  const { toolPreference: persistedToolPreference, setToolPreference: persistToolPreference } = useToolPreference();
+  // Internal state initialized from persisted preference
+  const [internalToolPreference, setInternalToolPreference] = useState<"auto" | "native" | "builtin" | "mcp">(persistedToolPreference);
+
+  // Sync internal state when persisted preference changes (e.g., from settings page)
+  useEffect(() => {
+    if (persistedToolPreference !== internalToolPreference) {
+      setInternalToolPreference(persistedToolPreference);
+    }
+  }, [persistedToolPreference]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Use controlled values if provided, otherwise use internal state
   const selectedTools = selectedToolsProp ?? internalSelectedTools;
   const toolSelectionMode = toolSelectionModeProp ?? internalToolSelectionMode;
+  // v7: Use controlled value if provided, otherwise use internal state (persisted)
+  const toolPreference = toolPreferenceProp ?? internalToolPreference;
 
   // Fetch available tools (only when feature is enabled)
   const { tools: availableToolsData, isLoading: isToolsLoading } = useAvailableTools({
@@ -329,6 +354,18 @@ export function ConnectedChatInputForm({
       onToolSelectionModeChange?.(mode);
     },
     [onToolSelectionModeChange],
+  );
+
+  // v7: Handle tool preference change (native vs builtin execution)
+  // Persists the change to localStorage via preferences context
+  const handleToolPreferenceChange = useCallback(
+    (preference: "auto" | "native" | "builtin" | "mcp") => {
+      setInternalToolPreference(preference);
+      // Persist to localStorage via preferences context
+      persistToolPreference(preference);
+      onToolPreferenceChange?.(preference);
+    },
+    [onToolPreferenceChange, persistToolPreference],
   );
 
   // =============================================================================
@@ -738,6 +775,9 @@ export function ConnectedChatInputForm({
         onToolSelectionModeChange={handleToolSelectionModeChange}
         availableTools={availableTools}
         isToolsLoading={isToolsLoading}
+        // v7: Tool preference for native vs builtin execution
+        toolPreference={toolPreference}
+        onToolPreferenceChange={handleToolPreferenceChange}
         // Cursor position tracking for WebSocket suggestions
         onCursorPositionChange={(pos) => {
           cursorPositionRef.current = pos;

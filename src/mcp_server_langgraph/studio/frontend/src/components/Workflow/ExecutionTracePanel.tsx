@@ -306,18 +306,18 @@ export const ExecutionTracePanel = memo(
           {/* Level filters */}
           <div className="flex items-center gap-1">
             <Button
+              variant="primary"
               size="sm"
               className="px-2 py-1 text-xs rounded"
-              onClick={() => setLevelFilter("all")}
-            >
+              onClick={() => setLevelFilter("all")}>
               All
             </Button>
             <Button
+              variant="primary"
               size="sm"
               className="px-2 py-1 text-xs rounded"
               onClick={() => setLevelFilter("error")}
-              aria-label="Errors"
-            >
+              aria-label="Errors">
               Errors
             </Button>
           </div>
@@ -333,11 +333,11 @@ export const ExecutionTracePanel = memo(
 
           {/* Actions */}
           <Button
+            variant="ghost"
             className="p-1.5 rounded"
             onClick={() => setAutoScroll(!autoScroll)}
             aria-label="Auto-scroll"
-            aria-pressed={autoScroll}
-          >
+            aria-pressed={autoScroll}>
             <ArrowDownToLine className="w-4 h-4" />
           </Button>
 

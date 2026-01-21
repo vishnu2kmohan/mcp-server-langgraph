@@ -39,14 +39,14 @@ function CollapsibleSection({
 
   return (
     <div className="border-b border-neutral-3 last:border-b-0">
-      <button
+      <Button
+        variant="secondary"
+        className="flex w-full p-2 bg-transparent border-none text-sm text-neutral-12 hover:bg-neutral-2"
         type="button"
-        className="flex items-center w-full p-2 bg-transparent border-none cursor-pointer font-semibold text-sm text-neutral-12 hover:bg-neutral-2 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
-      >
+        onClick={() => setIsOpen(!isOpen)}>
         <span className="mr-2">{isOpen ? "▼" : "▶"}</span>
         {title}
-      </button>
+      </Button>
       {isOpen && <div className="py-2 px-2 pl-6">{children}</div>}
     </div>
   );

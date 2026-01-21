@@ -117,6 +117,7 @@ export function OnboardingModal({
           <div className="px-6 py-3 border-b border-neutral-6 flex gap-2 overflow-x-auto">
             {categories.map((cat) => (
               <Button
+                variant="primary"
                 className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
                   selectedCategory === cat
                     ? "bg-primary-3 text-primary-11"
@@ -124,8 +125,7 @@ export function OnboardingModal({
                 }`}
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                aria-label={cat === "all" ? "All categories" : cat}
-              >
+                aria-label={cat === "all" ? "All categories" : cat}>
                 {cat === "all"
                   ? "All"
                   : cat.charAt(0).toUpperCase() + cat.slice(1)}

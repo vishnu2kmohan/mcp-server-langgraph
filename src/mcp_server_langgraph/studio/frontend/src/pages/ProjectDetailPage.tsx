@@ -66,9 +66,9 @@ function Dialog({ isOpen, onClose, title, children }: DialogProps) {
             {title}
           </h3>
           <Button
+            variant="secondary"
             className="p-1 text-neutral-8 hover:text-neutral-10 dark:hover:text-neutral-3"
-            onClick={onClose}
-          >
+            onClick={onClose}>
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -445,11 +445,11 @@ export function ProjectDetailPage() {
         <div className="flex gap-1">
           {tabs.map((tab) => (
             <Button
+              variant="primary"
               size="lg"
               className="flex px-4 py-3 text-sm border-b-2"
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-            >
+              onClick={() => setActiveTab(tab.id)}>
               {tab.icon}
               <span>{tab.label}</span>
               {tab.count !== undefined && (
