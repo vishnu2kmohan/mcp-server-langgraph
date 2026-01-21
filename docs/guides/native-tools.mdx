@@ -1,0 +1,455 @@
+---
+title: Native LLM Provider Tools
+description: 'Use native search and code execution capabilities from LLM providers'
+icon: 'sparkles'
+seoTitle: "Native LLM Provider Tools - MCP Server with LangGraph"
+seoDescription: "Learn how to use native web search and code execution from Anthropic, Google, and OpenAI for faster, higher-quality results"
+keywords: ["native tools", "web search", "code execution", "Anthropic", "Google", "OpenAI", "grounded search"]
+contentType: "tutorial"
+---
+
+## Overview
+
+**Native LLM Provider Tools** are search and code execution capabilities that run directly within the LLM provider's infrastructure. These tools offer advantages over custom implementations:
+
+<CardGroup cols={2}>
+  <Card title="Lower Latency" icon="bolt">
+    No round-trip for results - provider handles execution
+  </Card>
+  <Card title="Higher Quality" icon="star">
+    Provider-maintained reliability and search quality
+  </Card>
+  <Card title="Source Citations" icon="quote-left">
+    Automatic source attribution for search results
+  </Card>
+  <Card title="Token Efficiency" icon="chart-pie">
+    Results are summarized, reducing token usage
+  </Card>
+</CardGroup>
+
+---
+
+## Supported Native Tools
+
+### Web Search
+
+Native web search provides grounded, up-to-date information directly from provider infrastructure.
+
+| Provider | Tool Type | Feature Flag |
+|----------|-----------|--------------|
+| Anthropic | `web_search_20250305` | `anthropic_native_web_search` |
+| Google | `googleSearch` | `google_native_search` |
+| OpenAI | `web_search_preview` | `openai_native_web_search` |
+
+### Code Execution
+
+Native code execution runs Python code in a secure remote sandbox managed by the provider.
+
+| Provider | Tool Type | Feature Flag |
+|----------|-----------|--------------|
+| Anthropic | `code_execution_20250825` | `anthropic_native_code_execution` |
+| OpenAI | `code_interpreter` | `openai_native_code_interpreter` |
+
+<Warning>
+Google does not currently offer native code execution. Use the built-in `execute_python` tool with sandbox mode for Google models.
+</Warning>
+
+---
+
+## Provider Support Matrix
+
+Not all providers and platforms support the same native tools. Here's the complete compatibility matrix:
+
+| Provider | Platform | Web Search | Code Execution |
+|----------|----------|:----------:|:--------------:|
+| Anthropic | Direct API | ✅ | ✅ |
+| Anthropic | Vertex AI | ✅ | ❌ |
+| Anthropic | Bedrock | ✅ | ✅ |
+| Google | Direct API | ✅ | ❌ |
+| Google | Vertex AI | ✅ | ❌ |
+| OpenAI | Direct API | ✅ | ✅ |
+
+<Note>
+**Vertex AI Limitation**: Anthropic code execution (`code_execution_20250825`) is NOT supported when using Claude models via Vertex AI. Only web search is available. The system automatically falls back to the built-in `execute_python` tool when code execution is requested on Vertex AI.
+</Note>
+
+---
+
+## Tool Preference Modes
+
+You can control whether native tools are used via the **Tool Preference** setting:
+
+<AccordionGroup>
+  <Accordion title="Auto (Recommended)" icon="robot">
+    The system automatically chooses the best tool implementation based on:
+    - Model capabilities
+    - Feature flag settings
+    - Platform availability
+
+    Native tools are preferred when available and enabled.
+  </Accordion>
+
+  <Accordion title="Native Only" icon="sparkles">
+    Force the use of native tools only. If native tools aren't available for the selected model:
+    - A warning is logged
+    - The request may fail or fall back gracefully
+
+    Use this for testing native tool behavior specifically.
+  </Accordion>
+
+  <Accordion title="Built-in Only" icon="wrench">
+    Always use built-in tool implementations (`web_search`, `execute_python`).
+    Native tools are not used even if available.
+
+    Use this for:
+    - Consistent behavior across models
+    - Testing built-in tool implementations
+    - Avoiding provider-specific tool behavior
+  </Accordion>
+
+  <Accordion title="MCP Only" icon="plug">
+    Only use tools from connected MCP servers.
+    Both native and built-in tools are excluded.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## How to Use Native Tools
+
+### In the Agent Studio
+
+<Steps>
+  <Step title="Select a Compatible Model">
+    Choose a model that supports native tools (e.g., `claude-opus-4-5`, `gemini-3-flash`).
+    The model selector dropdown shows a "Native Tools Available" section with:
+    - Provider name (Anthropic, Google, OpenAI)
+    - Available capabilities: **Web Search**, **Code Execution**
+    - Status badges indicating which tools are enabled
+  </Step>
+  <Step title="Set Tool Preference">
+    In the chat input area, click the **Preferences** menu and select your tool preference:
+    - **Auto** for automatic selection
+    - **Native** to force native tools
+  </Step>
+  <Step title="Send Your Request">
+    Type a request that would benefit from search or code execution.
+    The agent will use native tools when available and preferred.
+  </Step>
+  <Step title="View Source Citations">
+    For web search results, source citations appear automatically in the response.
+    Click on citations to view the original sources.
+  </Step>
+</Steps>
+
+### Source Citations
+
+When using native web search, the response includes automatically extracted source citations. Citations appear as clickable references that link to the original sources.
+
+<Tip>
+**Anthropic Citations**: Citations appear as `[1]`, `[2]`, etc. and are extracted from the `web_search_results` content block.
+
+**Google Citations**: Grounded search results include `groundingMetadata` with source URLs.
+
+**OpenAI Citations**: Web search preview results include source attribution in the output blocks.
+</Tip>
+
+### Via API
+
+Specify tool preference in your chat completion request:
+
+```json
+{
+  "message": "Search for the latest AI research papers",
+  "session_id": "session123",
+  "tool_preference": "native"
+}
+```
+
+#### Request Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `tool_preference` | `string` | One of `"auto"`, `"native"`, `"builtin"`, or `"mcp"` |
+
+#### Example: Auto Mode (Default)
+
+```bash
+curl -X POST /api/v1/chat/completions/stream \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "What are the latest developments in quantum computing?",
+    "session_id": "session123"
+  }'
+```
+
+#### Example: Native Only
+
+```bash
+curl -X POST /api/v1/chat/completions/stream \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Search for today'\''s stock market news",
+    "session_id": "session123",
+    "tool_preference": "native"
+  }'
+```
+
+---
+
+## Detecting Native Tool Support
+
+Use the Native Capabilities API to check what native tools are available for a specific model:
+
+```bash
+curl -X GET /api/v1/tools/native-capabilities/claude-opus-4-5-20251101 \
+  -H "Authorization: Bearer <token>"
+```
+
+Response:
+
+```json
+{
+  "model_id": "claude-opus-4-5-20251101",
+  "native_provider": "anthropic",
+  "master_enabled": true,
+  "capabilities": [
+    {
+      "tool_name": "web_search",
+      "supported": true,
+      "provider_type": "web_search_20250305",
+      "enabled": true
+    },
+    {
+      "tool_name": "code_execution",
+      "supported": true,
+      "provider_type": "code_execution_20250825",
+      "enabled": true
+    }
+  ]
+}
+```
+
+---
+
+## Feature Flags
+
+Native tools are controlled by feature flags for gradual rollout:
+
+```python
+# Master switch
+native_tools_enabled: bool = False
+
+# Per-provider web search
+anthropic_native_web_search_enabled: bool = False
+google_native_search_enabled: bool = False
+openai_native_web_search_enabled: bool = False
+
+# Code execution (security-sensitive)
+anthropic_native_code_execution_enabled: bool = False
+openai_native_code_interpreter_enabled: bool = False
+```
+
+<Warning>
+**Security Note**: Native code execution tools run code in remote sandboxes managed by the provider. Review your security requirements before enabling code execution in production.
+</Warning>
+
+To enable native tools, configure these flags in your environment:
+
+```bash
+export FF_NATIVE_TOOLS_ENABLED=true
+export FF_ANTHROPIC_NATIVE_WEB_SEARCH_ENABLED=true
+export FF_GOOGLE_NATIVE_SEARCH_ENABLED=true
+```
+
+See [Feature Flags](/guides/feature-flags) for more information on managing feature flags.
+
+---
+
+## Fallback Behavior
+
+When native tools are unavailable or disabled, the system automatically falls back to built-in equivalents:
+
+| Native Tool | Fallback Built-in |
+|-------------|-------------------|
+| `web_search` (all providers) | `web_search` |
+| `code_execution` (Anthropic) | `execute_python` |
+| `code_interpreter` (OpenAI) | `execute_python` |
+
+The fallback is automatic and transparent. You'll see the built-in tool used in the response metadata.
+
+### Circuit Breaker Resilience
+
+Native tools include a circuit breaker pattern for resilience. If a provider experiences consecutive failures:
+
+1. **Closed State**: Normal operation - native tools are used
+2. **Open State**: After threshold failures, native tools are temporarily disabled
+3. **Half-Open State**: After timeout, a single retry is allowed
+
+The circuit breaker protects against cascading failures and automatically falls back to built-in tools when native tools are unreliable.
+
+Configuration (operational settings):
+```bash
+# Number of failures before opening circuit
+NATIVE_TOOL_CIRCUIT_BREAKER_THRESHOLD=5
+
+# Seconds before allowing retry after circuit opens
+NATIVE_TOOL_CIRCUIT_BREAKER_RESET_SECONDS=60
+```
+
+### OpenAI Responses API
+
+For OpenAI models, native tools are accessed via the **Responses API** rather than the standard Chat Completions API. This requires:
+
+1. Enable the feature flag: `use_responses_api_for_openai=true`
+2. Enable native tools: `openai_native_web_search_enabled=true`
+
+The Responses API uses different parameter names:
+- `input` instead of `messages`
+- `max_output_tokens` instead of `max_tokens`
+- Returns `output` array instead of `choices`
+
+The system handles this translation automatically.
+
+---
+
+## Monitoring & Observability
+
+Native tool usage is tracked in the observability stack:
+
+### Metrics
+
+- `native_tool_invocations_total` - Total native tool calls by provider/tool
+- `native_tool_latency_seconds` - Latency histogram for native tools
+- `native_tool_fallback_total` - Fallback counts when native unavailable
+- `native_tool_errors_total` - Error counts by type
+
+### Grafana Dashboard
+
+Access the Native Tools dashboard at:
+
+```
+/grafana/d/native-tools/native-tool-metrics
+```
+
+### Alerts
+
+Pre-configured alerts notify you of:
+- High error rates
+- Elevated latency
+- Frequent fallbacks
+
+See [Alert Management](/guides/alert-management) for alert configuration.
+
+---
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Start with Auto Mode" icon="lightbulb">
+    Let the system choose the best tool implementation. Auto mode selects native tools when they're available and enabled, providing the best experience with automatic fallback.
+  </Accordion>
+
+  <Accordion title="Enable Web Search First" icon="search">
+    Web search is the lowest-risk native tool. Enable it first to gain experience before enabling code execution:
+
+    1. Enable `native_tools_enabled` and `anthropic_native_web_search_enabled`
+    2. Monitor metrics and user feedback
+    3. Expand to other providers
+    4. Enable code execution after security review
+  </Accordion>
+
+  <Accordion title="Review Code Execution Security" icon="shield">
+    Before enabling native code execution:
+    - Understand that code runs in provider-managed sandboxes
+    - Review your data governance requirements
+    - Consider which users should have access
+    - Set up monitoring for unusual patterns
+  </Accordion>
+
+  <Accordion title="Use Vertex AI Consciously" icon="cloud">
+    If using Claude models via Vertex AI:
+    - Know that code execution is NOT available
+    - Plan for built-in `execute_python` fallback
+    - Consider direct API if code execution is critical
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Native tools not appearing" icon="eye-slash">
+    **Cause**: Feature flags may be disabled or the model doesn't support native tools.
+
+    **Solution**:
+    1. Check `native_tools_enabled` is `true`
+    2. Check provider-specific flags are enabled
+    3. Verify the model supports native tools via the capabilities API
+    4. Check you're not using Vertex AI with code execution
+  </Accordion>
+
+  <Accordion title="Fallback always used" icon="rotate">
+    **Cause**: Native tools may be disabled at the provider level or there's a configuration issue.
+
+    **Solution**:
+    1. Check all relevant feature flags
+    2. Verify API keys are configured for the provider
+    3. Check provider status pages for outages
+    4. Review logs for specific error messages
+  </Accordion>
+
+  <Accordion title="Source citations not showing" icon="link-slash">
+    **Cause**: Not all search results include citations.
+
+    **Solution**:
+    1. Ensure native web search is being used (not fallback)
+    2. Check the response metadata for citation data
+    3. Some queries may not return citeable sources
+  </Accordion>
+
+  <Accordion title="Code execution fails on Vertex AI" icon="triangle-exclamation">
+    **Cause**: Anthropic code execution is not supported on Vertex AI.
+
+    **Solution**:
+    1. This is expected behavior - see the support matrix above
+    2. Use built-in `execute_python` with sandbox mode
+    3. Or switch to direct Anthropic API for code execution
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Tool Selection" icon="wrench" href="/guides/tool-selection">
+    Control which tools the agent uses
+  </Card>
+  <Card title="Code Execution" icon="code" href="/guides/code-execution">
+    Python code execution in sandboxes
+  </Card>
+  <Card title="Feature Flags" icon="flag" href="/guides/feature-flags">
+    Manage feature availability
+  </Card>
+  <Card title="Multi-LLM Setup" icon="layer-group" href="/guides/multi-llm-setup">
+    Configure multiple LLM providers
+  </Card>
+</CardGroup>
+
+---
+
+## Technical Reference
+
+For implementation details, see:
+- **ADR-0102**: Native LLM Provider Tools Integration
+- **ModelRegistry**: `src/mcp_server_langgraph/agents/model_registry.py`
+- **NativeToolHandler**: `src/mcp_server_langgraph/tools/native_handler.py`
+- **API Endpoint**: `GET /api/v1/tools/native-capabilities/{model_id}`
+
+---
+
+<Check>
+**Ready to try!** Select a Claude or Gemini model and ask a question that requires current information. Native web search will automatically provide grounded results with source citations.
+</Check>

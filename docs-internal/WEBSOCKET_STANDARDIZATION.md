@@ -785,6 +785,199 @@ async def test_websocket():
 asyncio.run(test_websocket())
 ```
 
+### WebSocketBase API Reference
+
+The `WebSocketBase` class provides several helper properties and methods to reduce boilerplate
+in handler implementations. Always prefer these over direct attribute access.
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `user_id` | `str \| None` | Authenticated user's ID (from `_user.id`) |
+| `context_id` | `str \| None` | Context ID from query params (for scoped operations) |
+| `session_id` | `str \| None` | Session ID from query params (for session-scoped filtering) |
+| `is_ready_to_send` | `bool` | True when websocket connected AND client subscribed |
+
+#### Helper Methods
+
+**Response Helpers**:
+
+```python
+# Create standardized error response
+def create_error_response(
+    self,
+    code: str,
+    message: str,
+    correlation_id: str | None = None,
+) -> MessageEnvelope
+
+# Create unknown message type error (most common error pattern)
+def create_unknown_message_error(
+    self,
+    message_type: str,
+    correlation_id: str | None = None,
+) -> MessageEnvelope
+
+# Create standardized success response
+def create_success_response(
+    self,
+    type: str,
+    payload: dict[str, Any],
+    correlation_id: str | None = None,
+) -> MessageEnvelope
+
+# Create standardized subscribed response
+def create_subscribed_response(
+    self,
+    correlation_id: str | None = None,
+    message: str = "Successfully subscribed",
+    extra_payload: dict[str, Any] | None = None,
+) -> MessageEnvelope
+
+# Create standardized unsubscribed response
+def create_unsubscribed_response(
+    self,
+    correlation_id: str | None = None,
+    message: str = "Successfully unsubscribed",
+    extra_payload: dict[str, Any] | None = None,
+) -> MessageEnvelope
+```
+
+**Subscription Helpers**:
+
+```python
+# Check if ready to send (websocket connected AND subscribed)
+@property
+def is_ready_to_send(self) -> bool
+
+# Send message only if subscribed (returns True if sent)
+async def send_if_subscribed(self, message: dict[str, Any]) -> bool
+```
+
+**Logging Helpers**:
+
+```python
+# Log standardized connection event
+def log_connected(self, extra: dict[str, Any] | None = None) -> None
+
+# Log standardized disconnection event
+def log_disconnected(self, extra: dict[str, Any] | None = None) -> None
+```
+
+#### BroadcasterMixin
+
+For handlers that integrate with a broadcaster pattern, use `BroadcasterMixin`:
+
+```python
+from mcp_server_langgraph.websocket import BroadcasterMixin, WebSocketBase
+
+class AlertHandler(WebSocketBase, BroadcasterMixin):
+    def __init__(self, config: WebSocketConfig, broadcaster: Broadcaster):
+        super().__init__(config)
+        self._broadcaster = broadcaster
+
+    async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+        if message.type == "subscribe":
+            # Simple subscribe (no extra args)
+            await self.subscribe()
+
+            # Or with custom arguments for user filtering
+            await self.subscribe(user_id=self.user_id)
+
+            # Or with multiple arguments for context filtering
+            await self.subscribe(user_id=self.user_id, context_entity_id="ctx-123")
+
+            # Or with filter objects
+            await self.subscribe(filter_=my_filter)
+
+            return self.create_subscribed_response(correlation_id=message.id)
+        elif message.type == "unsubscribe":
+            await self.unsubscribe()  # Calls broadcaster.unsubscribe if subscribed
+            return self.create_unsubscribed_response(correlation_id=message.id)
+        ...
+```
+
+The mixin provides:
+- `subscribed` property: Get/set subscription state
+- `subscribe(**kwargs)` method: Call broadcaster.subscribe with optional kwargs and set subscribed=True
+- `unsubscribe()` method: Call broadcaster.unsubscribe if subscribed, set subscribed=False
+
+**Supported kwargs for subscribe()**:
+- `user_id`: Filter broadcasts by user ID
+- `context_entity_id`: Filter by context/session/workflow ID
+- `filter_`: Custom filter object for trace/audit filtering
+- Any other kwargs your broadcaster accepts
+
+**Handlers using BroadcasterMixin**:
+
+| Handler | File | Kwargs Used |
+|---------|------|-------------|
+| `AlertHandler` | `handlers/alert.py` | `user_id` |
+| `TraceHandler` | `handlers/trace.py` | `filter_` |
+| `DevToolsHandler` | `handlers/devtools.py` | `user_id`, `context_entity_id` |
+| `MCPAggregatedHandler` | `handlers/mcp_aggregated.py` | `user_id` |
+| `OrchestratorStatusHandler` | `handlers/orchestrator_status.py` | `user_id` |
+
+#### Best Practices
+
+**DO use WebSocketBase helpers**:
+
+```python
+# Good: Use user_id property
+logger.info(f"User {self.user_id} subscribed")
+
+# Good: Use create_unknown_message_error
+return self.create_unknown_message_error(message.type, message.id)
+
+# Good: Use send_if_subscribed for push notifications
+await self.send_if_subscribed({
+    "type": "notification",
+    "payload": {"event": "new_data"}
+})
+
+# Good: Use logging helpers
+self.log_connected(extra={"session_id": self.session_id})
+```
+
+**DON'T use deprecated patterns**:
+
+```python
+# Bad: Store _user_id manually (DEPRECATED)
+self._user_id = user.id  # Use self.user_id property instead
+
+# Bad: Verbose subscription guard (DEPRECATED when followed by send_json)
+if self._websocket and self._subscribed:
+    await self._websocket.send_json({...})
+# Use: await self.send_if_subscribed({...})
+
+# Bad: Verbose error envelope (DEPRECATED)
+return MessageEnvelope(
+    type="error",
+    payload={"code": "unknown_message_type", ...},
+    id=message.id,
+)
+# Use: return self.create_unknown_message_error(message.type, message.id)
+
+# Bad: Verbose subscription response (DEPRECATED)
+return MessageEnvelope(
+    type="subscribed",
+    payload={"message": "Successfully subscribed"},
+    id=message.id,
+)
+# Use: return self.create_subscribed_response(correlation_id=message.id)
+
+# Bad: Verbose unsubscription response (DEPRECATED)
+return MessageEnvelope(
+    type="unsubscribed",
+    payload={"message": "Successfully unsubscribed"},
+    id=message.id,
+)
+# Use: return self.create_unsubscribed_response(correlation_id=message.id)
+```
+
+A pre-commit hook (`check-websocket-deprecated-patterns`) enforces these patterns.
+
 ---
 
 ## Migration Status
