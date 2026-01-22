@@ -65,6 +65,10 @@ import type { Suggestion } from "../hooks/useAIRealTimeSuggestions";
 import { useArtifactExtraction } from "../hooks/useArtifactExtraction";
 import { useInlineSuggestions } from "../hooks/useInlineSuggestions";
 import { useDebounce } from "../hooks/useDebounce";
+import {
+  useSubmitMessageRatingMutation,
+  useSubmitHallucinationReportMutation,
+} from "../api";
 import { ConversationPanel } from "./ConversationPanel";
 import { InlinePlanCard } from "./InlinePlanCard";
 import type {
@@ -140,6 +144,29 @@ export interface ConnectedConversationPanelProps {
   enableThinking?: boolean;
   /** Callback when thinking enabled state changes */
   onEnableThinkingChange?: (enabled: boolean) => void;
+
+  // ===========================================================================
+  // UnifiedMessageList Props (ADR-0104)
+  // ===========================================================================
+
+  /** Show user/assistant avatars */
+  showAvatars?: boolean;
+  /** Show token usage per message */
+  showTokenUsage?: boolean;
+  /** Show agent execution traces per message */
+  showAgentTraces?: boolean;
+  /** Show rating controls for assistant messages */
+  showRating?: boolean;
+  /** Enable hallucination reporting */
+  enableHallucinationReporting?: boolean;
+  /** Enable AI-powered trace intelligence */
+  enableTraceAI?: boolean;
+  /** Model provider for cost calculation */
+  modelProvider?: "openai" | "anthropic" | "google" | "azure";
+  /** Show cost estimation */
+  showCost?: boolean;
+  /** User initials for avatar */
+  userInitials?: string;
 }
 
 // =============================================================================
@@ -197,6 +224,16 @@ export const ConnectedConversationPanel = forwardRef<
     onReasoningEffortChange,
     enableThinking = false,
     onEnableThinkingChange,
+    // UnifiedMessageList (ADR-0104)
+    showAvatars = false,
+    showTokenUsage = false,
+    showAgentTraces = false,
+    showRating = false,
+    enableHallucinationReporting = false,
+    enableTraceAI = false,
+    modelProvider = "openai",
+    showCost = false,
+    userInitials,
   },
   ref,
 ) {
@@ -221,6 +258,20 @@ export const ConnectedConversationPanel = forwardRef<
 
   // v7: Tool preference state for native vs builtin execution
   const [toolPreference, setToolPreference] = useState<ToolPreference>("auto");
+
+  // =============================================================================
+  // Message Ratings & Actions State (ADR-0104 UnifiedMessageList)
+  // =============================================================================
+
+  const [messageRatings, setMessageRatings] = useState<
+    Record<string, "up" | "down" | null>
+  >({});
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
+  // RTK Query mutations for feedback APIs
+  const [submitRating, { isLoading: isRatingSubmitting }] =
+    useSubmitMessageRatingMutation();
+  const [submitHallucinationReport] = useSubmitHallucinationReportMutation();
 
   // =============================================================================
   // Streaming Chat (LLM Response Generation)
@@ -702,6 +753,113 @@ export const ConnectedConversationPanel = forwardRef<
     [dispatch, navigate, revalidateMessages],
   );
 
+  // =============================================================================
+  // Message Rating & Action Handlers (ADR-0104 UnifiedMessageList)
+  // =============================================================================
+
+  // Handle message rating (thumbs up/down)
+  const handleRateMessage = useCallback(
+    async (messageId: string, rating: "up" | "down" | null) => {
+      if (!sessionId || !rating) return;
+
+      // Optimistic update
+      setMessageRatings((prev) => ({ ...prev, [messageId]: rating }));
+
+      try {
+        await submitRating({
+          session_id: sessionId,
+          message_id: messageId,
+          rating,
+        }).unwrap();
+        logger.debug("Message rated", { messageId, rating });
+      } catch (error) {
+        // Revert on error
+        setMessageRatings((prev) => ({ ...prev, [messageId]: null }));
+        logger.error("Failed to submit rating", error);
+      }
+    },
+    [sessionId, submitRating],
+  );
+
+  // Handle rating feedback (text feedback after negative rating)
+  const handleRatingFeedback = useCallback(
+    async (messageId: string, feedback: string) => {
+      if (!sessionId) return;
+
+      try {
+        // Re-submit rating with feedback text
+        await submitRating({
+          session_id: sessionId,
+          message_id: messageId,
+          rating: messageRatings[messageId] ?? "down",
+          feedback,
+        }).unwrap();
+        logger.debug("Rating feedback submitted", { messageId, feedback });
+      } catch (error) {
+        logger.error("Failed to submit rating feedback", error);
+      }
+    },
+    [sessionId, submitRating, messageRatings],
+  );
+
+  // Handle message edit
+  const handleEditMessage = useCallback(
+    (messageId: string) => {
+      // TODO: Implement message editing when supported
+      logger.debug("Edit message requested", { messageId });
+    },
+    [],
+  );
+
+  // Handle message deletion
+  const handleDeleteMessage = useCallback(
+    (messageId: string) => {
+      // TODO: Implement message deletion when supported
+      logger.debug("Delete message requested", { messageId });
+    },
+    [],
+  );
+
+  // Handle message regeneration
+  const handleRegenerateMessage = useCallback(
+    (messageId: string) => {
+      setIsRegenerating(true);
+      // TODO: Implement message regeneration when supported
+      logger.debug("Regenerate message requested", { messageId });
+      setIsRegenerating(false);
+    },
+    [],
+  );
+
+  // Handle hallucination report
+  const handleReportHallucination = useCallback(
+    async (report: {
+      messageId: string;
+      category: string;
+      details: string;
+      timestamp: number;
+    }) => {
+      if (!sessionId) return;
+
+      try {
+        await submitHallucinationReport({
+          message_id: report.messageId,
+          session_id: sessionId,
+          category: report.category as
+            | "factual_error"
+            | "outdated_info"
+            | "made_up_source"
+            | "other",
+          description: report.details,
+        }).unwrap();
+        logger.debug("Hallucination reported", report);
+      } catch (error) {
+        logger.error("Failed to submit hallucination report", error);
+      }
+    },
+    [sessionId, submitHallucinationReport],
+  );
+
   // Should show context warning when usage is high (>80%)
   const shouldShowContextWarning =
     enableAI &&
@@ -1021,6 +1179,26 @@ export const ConnectedConversationPanel = forwardRef<
         onReasoningEffortChange={onReasoningEffortChange}
         enableThinking={enableThinking}
         onEnableThinkingChange={onEnableThinkingChange}
+        // UnifiedMessageList props (ADR-0104)
+        showAvatars={showAvatars}
+        showTokenUsage={showTokenUsage}
+        showAgentTraces={showAgentTraces}
+        showRating={showRating}
+        enableHallucinationReporting={enableHallucinationReporting}
+        enableTraceAI={enableTraceAI}
+        modelProvider={modelProvider}
+        showCost={showCost}
+        userInitials={userInitials}
+        userId={userId}
+        messageRatings={messageRatings}
+        onRateMessage={handleRateMessage}
+        onRatingFeedback={handleRatingFeedback}
+        isRatingSubmitting={isRatingSubmitting}
+        onEditMessage={handleEditMessage}
+        onDeleteMessage={handleDeleteMessage}
+        onRegenerateMessage={handleRegenerateMessage}
+        onReportHallucination={handleReportHallucination}
+        isRegenerating={isRegenerating}
       />
     </div>
   );

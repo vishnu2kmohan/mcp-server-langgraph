@@ -131,6 +131,10 @@ export interface AgentExecutionTrace {
   startTime?: number;
   /** Trace end timestamp in milliseconds (for time-travel debugging) */
   endTime?: number;
+  /** OTEL trace ID for correlation with backend traces */
+  traceId?: string;
+  /** OTEL span ID for correlation with backend spans */
+  spanId?: string;
 }
 
 /**

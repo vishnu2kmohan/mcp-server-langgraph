@@ -158,7 +158,11 @@ export interface CostBreakdown {
 export interface AgentStep {
   name: string;
   status: string;
+  duration?: number;
 }
+
+// Re-export AgentExecutionTrace from types/chat for backwards compatibility
+export type { AgentExecutionTrace } from "./chat";
 
 export interface AgentMetadata {
   confidence?: number;
@@ -168,6 +172,8 @@ export interface AgentMetadata {
   refinementAttempts?: number;
   /** Agent execution steps for trace display */
   steps?: AgentStep[];
+  /** Full execution trace with OTEL correlation (per-message traces) */
+  executionTrace?: import("./chat").AgentExecutionTrace;
 }
 
 /** Source citation from web search results */
@@ -197,6 +203,8 @@ export interface ChatMessage {
   modelName?: string;
   /** Source citations from web search results */
   sources?: SourceCitation[];
+  /** Whether this message has been reported as hallucination */
+  isReported?: boolean;
 }
 
 // ==============================================================================

@@ -24,7 +24,9 @@ import {
 import type { ReasoningEffortLevel } from "../components/Chat/ReasoningEffortSelector";
 import { FollowUpSuggestions, type Suggestion } from "./FollowUpSuggestions";
 import { GenerateWorkflowButton } from "./GenerateWorkflowButton";
-import type { ChatMessage } from "./MessageBubble";
+import type { ChatMessage, ModelProvider } from "../types/session";
+import type { RatingValue } from "./UnifiedMessageList";
+import type { HallucinationReport } from "@/components/Chat/HallucinationIndicator";
 import { cn } from "../utils/cn";
 
 import { Button } from "@/components/UI";
@@ -73,6 +75,59 @@ export interface ConversationPanelProps {
   onInputChange?: (value: string) => void;
   /** Additional class name */
   className?: string;
+
+  // ===========================================================================
+  // UnifiedMessageList Enhanced Props (v3)
+  // ===========================================================================
+
+  /** Show user/assistant avatars */
+  showAvatars?: boolean;
+  /** Show token usage per message */
+  showTokenUsage?: boolean;
+  /** Show agent execution traces per message */
+  showAgentTraces?: boolean;
+  /** Show rating controls for assistant messages */
+  showRating?: boolean;
+  /** Enable interactive artifacts in markdown */
+  enableInteractiveArtifacts?: boolean;
+  /** Enable hallucination reporting */
+  enableHallucinationReporting?: boolean;
+  /** Enable AI-powered trace intelligence */
+  enableTraceAI?: boolean;
+
+  // Ratings
+  /** Message ratings map (messageId -> rating) */
+  messageRatings?: Record<string, RatingValue>;
+  /** Callback when user rates a message */
+  onRateMessage?: (messageId: string, rating: RatingValue) => void;
+  /** Callback when user provides rating feedback */
+  onRatingFeedback?: (messageId: string, feedback: string) => void;
+  /** Whether rating submission is in progress */
+  isRatingSubmitting?: boolean;
+
+  // Token usage
+  /** Model provider for cost calculation */
+  modelProvider?: ModelProvider;
+  /** Show cost estimation */
+  showCost?: boolean;
+
+  // Actions
+  /** Callback when user edits a message */
+  onEditMessage?: (messageId: string) => void;
+  /** Callback when user deletes a message */
+  onDeleteMessage?: (messageId: string) => void;
+  /** Callback when user regenerates a message */
+  onRegenerateMessage?: (messageId: string) => void;
+  /** Callback when user reports hallucination */
+  onReportHallucination?: (report: HallucinationReport) => void;
+  /** Whether regeneration is in progress */
+  isRegenerating?: boolean;
+
+  // User info
+  /** Current user ID */
+  userId?: string;
+  /** User initials for avatar */
+  userInitials?: string;
   // Inline AI Suggestions props (Sprint 6 - VSCode Copilot style)
   /** Enable inline ghost text suggestions */
   enableInlineSuggestions?: boolean;
@@ -222,6 +277,27 @@ export function ConversationPanel({
   onSuggestionUsed,
   onInputChange,
   className,
+  // UnifiedMessageList Enhanced Props (v3)
+  showAvatars = false,
+  showTokenUsage = false,
+  showAgentTraces = false,
+  showRating = false,
+  enableInteractiveArtifacts = true,
+  enableHallucinationReporting = false,
+  enableTraceAI = false,
+  messageRatings,
+  onRateMessage,
+  onRatingFeedback,
+  isRatingSubmitting = false,
+  modelProvider = "openai",
+  showCost = false,
+  onEditMessage,
+  onDeleteMessage,
+  onRegenerateMessage,
+  onReportHallucination,
+  isRegenerating = false,
+  userId,
+  userInitials,
   // Inline AI suggestions
   enableInlineSuggestions = false,
   useInlineSuggestionsHook = false,
@@ -332,6 +408,34 @@ export function ConversationPanel({
           messages={messages}
           isLoading={isLoading}
           isStreaming={isStreaming}
+          isScrolledUp={isScrolledUp}
+          onScrollToBottom={onScrollToBottom}
+          // Features
+          showAvatars={showAvatars}
+          showTokenUsage={showTokenUsage}
+          showAgentTraces={showAgentTraces}
+          showRating={showRating}
+          enableInteractiveArtifacts={enableInteractiveArtifacts}
+          enableHallucinationReporting={enableHallucinationReporting}
+          enableTraceAI={enableTraceAI}
+          // Ratings
+          messageRatings={messageRatings}
+          onRateMessage={onRateMessage}
+          onRatingFeedback={onRatingFeedback}
+          isRatingSubmitting={isRatingSubmitting}
+          // Token usage
+          modelProvider={modelProvider}
+          showCost={showCost}
+          // Actions
+          onEditMessage={onEditMessage}
+          onDeleteMessage={onDeleteMessage}
+          onRegenerateMessage={onRegenerateMessage}
+          onReportHallucination={onReportHallucination}
+          isRegenerating={isRegenerating}
+          // Session context
+          sessionId={sessionId}
+          userId={userId}
+          userInitials={userInitials}
           className="flex-1"
         />
       ) : (

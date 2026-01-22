@@ -21,8 +21,7 @@ import executionModeReducer, {
 } from "../store/slices/executionModeSlice";
 import { api } from "../api";
 import { createTestUIState } from "../store/slices/__tests__/uiSlice.fixtures";
-import type { SessionState } from "../types/session";
-import type { ChatMessage } from "./MessageBubble";
+import type { SessionState, ChatMessage } from "../types/session";
 import { TelemetryProvider } from "../contexts/TelemetryContext";
 
 // Default mock for streaming chat hook

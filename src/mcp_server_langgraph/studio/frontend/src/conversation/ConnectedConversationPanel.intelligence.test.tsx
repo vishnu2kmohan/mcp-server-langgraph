@@ -171,25 +171,20 @@ vi.mock("../hooks/useConnectorSuggestions", () => ({
 }));
 
 // Mock RTK Query hooks for InlineConnectionCard
-vi.mock("../api", () => ({
-  useListConnectionTemplatesQuery: () => ({
-    data: { templates: [] },
-    isLoading: false,
-    error: null,
-  }),
-  useCreateConnectionMutation: () => [
-    vi.fn(),
-    { isLoading: false },
-  ],
-  useTestConnectionMutation: () => [
-    vi.fn(),
-    { isLoading: false },
-  ],
-  useStartOAuth2FlowMutation: () => [
-    vi.fn(),
-    { isLoading: false },
-  ],
-}));
+vi.mock("../api", async () => {
+  const actual = await vi.importActual<typeof import("../api")>("../api");
+  return {
+    ...actual,
+    useListConnectionTemplatesQuery: () => ({
+      data: { templates: [] },
+      isLoading: false,
+      error: null,
+    }),
+    useCreateConnectionMutation: () => [vi.fn(), { isLoading: false }],
+    useTestConnectionMutation: () => [vi.fn(), { isLoading: false }],
+    useStartOAuth2FlowMutation: () => [vi.fn(), { isLoading: false }],
+  };
+});
 
 // =============================================================================
 // Tests

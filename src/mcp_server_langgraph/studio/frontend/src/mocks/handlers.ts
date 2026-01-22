@@ -200,6 +200,7 @@ export const mockFeatureFlags: FeatureFlags = {
   code_export: true,
   ai_suggestions: true,
   show_chat_avatars: true, // Chat UI avatars for user and assistant
+  unified_message_list: true, // ADR-0104: Consolidated message rendering
   llm_suggestions: true, // DEPRECATED: use suggestion_strategy
   suggestion_strategy: "llm", // Sprint Block 5: "llm" | "heuristic" | "hybrid"
   multi_agent_strategy: "orchestrator", // Sprint Block 5: "orchestrator" | "peer" | "hybrid"

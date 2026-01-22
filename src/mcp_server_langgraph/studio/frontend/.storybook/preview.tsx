@@ -15,6 +15,16 @@ import {
 } from "@storybook/addon-themes";
 import "../src/index.css"; // Import Tailwind CSS with Radix colors
 
+// Mock clipboard for MessageActions copy functionality
+if (typeof navigator !== "undefined" && !navigator.clipboard) {
+  Object.assign(navigator, {
+    clipboard: {
+      writeText: () => Promise.resolve(),
+      readText: () => Promise.resolve(""),
+    },
+  });
+}
+
 const preview: Preview = {
   parameters: {
     controls: {

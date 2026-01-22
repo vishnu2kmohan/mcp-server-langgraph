@@ -620,11 +620,11 @@ class FeatureFlags(BaseSettings):
 
     # Message Rendering Consolidation (ADR-0104)
     unified_message_list: bool = Field(
-        default=False,
+        default=True,
         description="Use UnifiedMessageList for consolidated message rendering. "
         "Merges MessageList and ChatMessages into a single component with full feature support: "
         "thinking traces, source citations, rating, agent traces, follow-up suggestions, token usage. "
-        "Set FF_UNIFIED_MESSAGE_LIST=true to enable (ADR-0104).",
+        "Set FF_UNIFIED_MESSAGE_LIST=false to disable (ADR-0104).",
     )
 
     # Shell-specific features (Sprint 4 - Chat Input Feature Gap)
