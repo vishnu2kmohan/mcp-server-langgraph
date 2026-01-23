@@ -72,6 +72,23 @@ ObservabilityAdmin = Annotated[dict[str, Any], Depends(require_observability_adm
 # Response Models
 
 
+class SpanThinkingResponse(BaseModel):
+    """Thinking content from extended thinking LLM spans.
+
+    Structured format for LLM reasoning/thinking metadata.
+    Used by SpanResponse for trace visualization.
+    """
+
+    content: str | None = Field(
+        default=None,
+        description="Internal reasoning/thinking content from extended thinking LLM spans",
+    )
+    tokens: int | None = Field(
+        default=None,
+        description="Number of tokens used for thinking/reasoning in this span",
+    )
+
+
 class SpanResponse(BaseModel):
     """Response model for a span.
 
@@ -87,13 +104,9 @@ class SpanResponse(BaseModel):
     duration_ms: float | None = Field(default=None, description="Duration in milliseconds")
     status: str = Field(default="OK", description="Span status")
     attributes: dict[str, Any] = Field(default_factory=dict, description="Span attributes")
-    thinking_content: str | None = Field(
+    thinking: SpanThinkingResponse | None = Field(
         default=None,
-        description="Internal reasoning/thinking content from extended thinking LLM spans",
-    )
-    thinking_tokens: int | None = Field(
-        default=None,
-        description="Number of tokens used for thinking/reasoning in this span",
+        description="Extended thinking content with content and tokens",
     )
     model_name: str | None = Field(
         default=None,
@@ -556,7 +569,13 @@ class ObservabilityServiceImpl(ObservabilityService):
         return self._alerting
 
     def _trace_info_to_dict(self, trace: Any) -> dict[str, Any]:
-        """Convert TraceInfo dataclass to dict matching TraceListItem/TraceResponse format."""
+        """Convert TraceInfo dataclass to dict matching TraceListItem/TraceResponse format.
+
+        Note: This reads raw OTEL span attributes (thinking_content, thinking_tokens)
+        written by LLM instrumentation. These are aggregated for TraceListItem.
+        For individual span responses, see _trace_info_to_full_dict which converts
+        to the structured SpanResponse.thinking object format.
+        """
         # Determine status from trace info
         status = "ok"
         if hasattr(trace, "has_errors") and trace.has_errors:
@@ -564,7 +583,7 @@ class ObservabilityServiceImpl(ObservabilityService):
         elif hasattr(trace, "status"):
             status = trace.status
 
-        # Check for thinking content in spans
+        # Check for thinking content in spans (reads raw OTEL attributes)
         has_thinking = False
         thinking_tokens_total = 0
         if hasattr(trace, "spans"):
@@ -588,21 +607,43 @@ class ObservabilityServiceImpl(ObservabilityService):
             "thinking_tokens_total": thinking_tokens_total if thinking_tokens_total > 0 else None,
         }
 
+    def _span_to_dict(self, span: Any) -> dict[str, Any]:
+        """Convert SpanInfo to dict matching SpanResponse format.
+
+        Transforms raw OTEL attributes (thinking_content, thinking_tokens) to
+        structured SpanResponse.thinking object format.
+        """
+        attributes = span.attributes if hasattr(span, "attributes") else {}
+
+        # Extract thinking from raw OTEL attributes and convert to object format
+        thinking = None
+        thinking_content = attributes.get("thinking_content")
+        thinking_tokens = attributes.get("thinking_tokens")
+        if thinking_content or thinking_tokens:
+            thinking = {
+                "content": thinking_content,
+                "tokens": int(thinking_tokens) if thinking_tokens else None,
+            }
+
+        # Extract model_name from attributes if present
+        model_name = attributes.get("model_name") or attributes.get("llm.model")
+
+        return {
+            "span_id": span.span_id,
+            "parent_span_id": span.parent_span_id,
+            "name": span.operation_name,
+            "start_time": span.start_time.isoformat() if span.start_time else None,
+            "duration_ms": span.duration_ms,
+            "status": span.status_code.value if hasattr(span, "status_code") else "OK",
+            "attributes": attributes,
+            "thinking": thinking,
+            "model_name": model_name,
+        }
+
     def _trace_info_to_full_dict(self, trace: Any) -> dict[str, Any]:
         """Convert TraceInfo with spans to full dict matching TraceResponse format."""
         result = self._trace_info_to_dict(trace)
-        result["spans"] = [
-            {
-                "span_id": span.span_id,
-                "parent_span_id": span.parent_span_id,
-                "name": span.operation_name,
-                "start_time": span.start_time.isoformat() if span.start_time else None,
-                "duration_ms": span.duration_ms,
-                "status": span.status_code.value if hasattr(span, "status_code") else "OK",
-                "attributes": span.attributes if hasattr(span, "attributes") else {},
-            }
-            for span in trace.spans
-        ]
+        result["spans"] = [self._span_to_dict(span) for span in trace.spans]
         return result
 
     async def list_traces(
