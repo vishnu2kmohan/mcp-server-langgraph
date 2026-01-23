@@ -322,3 +322,182 @@ class TestSessionTraceSecurityIntegration:
             session = await get_session_service().get_session("non-existent-session", "wrong-user")
 
             assert session is None
+
+
+class TestSpanThinkingObjectIntegration:
+    """Integration tests for span thinking object format (Pattern 12).
+
+    Verifies the transformation pipeline:
+    OTEL attributes (thinking_content, thinking_tokens)
+      → API response (thinking: { content, tokens })
+
+    References:
+    - .claude/context/code-patterns.md (Pattern 12: Thinking Field Conventions)
+    - src/mcp_server_langgraph/api/v1/observability.py (_span_to_dict)
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_span_to_dict_converts_thinking_attributes_to_object(self) -> None:
+        """
+        GIVEN span with thinking_content and thinking_tokens OTEL attributes
+        WHEN converting to SpanResponse format via _span_to_dict
+        THEN thinking should be object with content and tokens fields.
+        """
+        from dataclasses import dataclass
+        from enum import Enum
+
+        from mcp_server_langgraph.api.v1.observability import ObservabilityServiceImpl
+
+        class StatusCode(Enum):
+            OK = "OK"
+
+        @dataclass
+        class MockSpan:
+            span_id: str = "span-integration-123"
+            parent_span_id: str | None = None
+            operation_name: str = "llm-call"
+            start_time: datetime = datetime.now(UTC)
+            duration_ms: float = 1500.0
+            status_code: StatusCode = StatusCode.OK
+            attributes: dict = None
+
+            def __post_init__(self):
+                if self.attributes is None:
+                    self.attributes = {}
+
+        service = ObservabilityServiceImpl()
+        span = MockSpan(
+            attributes={
+                "thinking_content": "Let me analyze this step by step...",
+                "thinking_tokens": 250,
+                "model_name": "claude-opus-4-5-20250514",
+            }
+        )
+
+        result = service._span_to_dict(span)
+
+        # Verify thinking is object format (not flat fields)
+        assert "thinking" in result
+        assert result["thinking"] is not None
+        assert result["thinking"]["content"] == "Let me analyze this step by step..."
+        assert result["thinking"]["tokens"] == 250
+
+        # Verify model_name is extracted
+        assert result["model_name"] == "claude-opus-4-5-20250514"
+
+        # Verify flat fields do NOT exist in result
+        assert "thinking_content" not in result
+        assert "thinking_tokens" not in result
+
+    @pytest.mark.asyncio
+    async def test_span_to_dict_without_thinking_returns_none(self) -> None:
+        """
+        GIVEN span without thinking OTEL attributes
+        WHEN converting to SpanResponse format
+        THEN thinking should be None.
+        """
+        from dataclasses import dataclass
+        from enum import Enum
+
+        from mcp_server_langgraph.api.v1.observability import ObservabilityServiceImpl
+
+        class StatusCode(Enum):
+            OK = "OK"
+
+        @dataclass
+        class MockSpan:
+            span_id: str = "span-no-thinking"
+            parent_span_id: str | None = None
+            operation_name: str = "tool-call"
+            start_time: datetime = datetime.now(UTC)
+            duration_ms: float = 200.0
+            status_code: StatusCode = StatusCode.OK
+            attributes: dict = None
+
+            def __post_init__(self):
+                if self.attributes is None:
+                    self.attributes = {}
+
+        service = ObservabilityServiceImpl()
+        span = MockSpan(attributes={"tool.name": "web_search"})
+
+        result = service._span_to_dict(span)
+
+        # Thinking should be None when no thinking attributes
+        assert result["thinking"] is None
+
+    @pytest.mark.asyncio
+    async def test_span_to_dict_with_llm_model_fallback(self) -> None:
+        """
+        GIVEN span with llm.model attribute (not model_name)
+        WHEN converting to SpanResponse format
+        THEN model_name should use llm.model as fallback.
+        """
+        from dataclasses import dataclass
+        from enum import Enum
+
+        from mcp_server_langgraph.api.v1.observability import ObservabilityServiceImpl
+
+        class StatusCode(Enum):
+            OK = "OK"
+
+        @dataclass
+        class MockSpan:
+            span_id: str = "span-llm-model"
+            parent_span_id: str | None = None
+            operation_name: str = "llm-call"
+            start_time: datetime = datetime.now(UTC)
+            duration_ms: float = 800.0
+            status_code: StatusCode = StatusCode.OK
+            attributes: dict = None
+
+            def __post_init__(self):
+                if self.attributes is None:
+                    self.attributes = {}
+
+        service = ObservabilityServiceImpl()
+        span = MockSpan(attributes={"llm.model": "gpt-4-turbo"})
+
+        result = service._span_to_dict(span)
+
+        # model_name should use llm.model fallback
+        assert result["model_name"] == "gpt-4-turbo"
+
+    @pytest.mark.asyncio
+    async def test_span_response_schema_has_thinking_object(self) -> None:
+        """
+        GIVEN SpanResponse schema
+        WHEN examining JSON schema
+        THEN should have thinking field as optional object (not flat fields).
+        """
+        from mcp_server_langgraph.api.v1.observability import SpanResponse
+
+        schema = SpanResponse.model_json_schema()
+        properties = schema.get("properties", {})
+
+        # Verify thinking is in schema
+        assert "thinking" in properties
+
+        # Verify legacy flat fields do NOT exist
+        assert "thinking_content" not in properties
+        assert "thinking_tokens" not in properties
+
+    @pytest.mark.asyncio
+    async def test_span_thinking_response_schema_structure(self) -> None:
+        """
+        GIVEN SpanThinkingResponse schema
+        WHEN examining JSON schema
+        THEN should have content and tokens fields.
+        """
+        from mcp_server_langgraph.api.v1.observability import SpanThinkingResponse
+
+        schema = SpanThinkingResponse.model_json_schema()
+        properties = schema.get("properties", {})
+
+        # Verify required fields
+        assert "content" in properties
+        assert "tokens" in properties
