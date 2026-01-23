@@ -72,6 +72,32 @@ We will implement a **centralized API response transformation layer** using RTK 
 | **Workflow** | `transformWorkflow` | `ownerId`, `organizationId`, `nodeCount`, `edgeCount` |
 | **Generic** | `transformSnakeToCamel<T>`, `transformCamelToSnake<T>` | Bidirectional recursive conversion |
 
+### Special Case: Extended Thinking Fields (Pattern 12)
+
+The extended thinking feature (chain-of-thought from LLMs) requires special handling across
+the transformation pipeline. See **Pattern 12** in `.claude/context/code-patterns.md` for
+complete documentation.
+
+**Transformation Flow:**
+
+| Layer | Format | Field Names |
+|-------|--------|-------------|
+| OTEL Span Attributes | snake_case flat | `thinking_content`, `thinking_tokens` |
+| API Schemas (Pydantic) | object | `thinking: { content, tokens }` |
+| Frontend Generated Types | matches API | `thinking?.content`, `thinking?.tokens` |
+| Frontend Client Types | camelCase | `thinkingContent`, `thinkingTokens` |
+
+**Key Rules:**
+1. OTEL attributes remain flat snake_case (internal telemetry)
+2. API schemas use structured object format (`thinking: { content, tokens }`)
+3. Frontend transforms object to flat camelCase for component usage
+4. Never add legacy flat fields back to API schemas
+
+**Related Files:**
+- `src/mcp_server_langgraph/api/v1/observability.py` - `SpanResponse`, `SpanThinkingResponse`
+- `src/mcp_server_langgraph/api/v1/sessions.py` - `MessageResponse`, `ThinkingResponse`
+- `src/mcp_server_langgraph/studio/frontend/src/utils/apiTransforms.ts` - Frontend transforms
+
 ## Phase 5: RTK Query Migration (Complete)
 
 ### Implementation Status
@@ -621,6 +647,7 @@ with warnings.catch_warnings(record=True) as w:
 
 - ADR-0088: Frontend Hook Selection Guidance
 - ADR-0045: RTK Query API Design (if exists)
+- **Pattern 12**: Thinking Field Conventions Across Layers (`.claude/context/code-patterns.md`)
 
 ## References
 

@@ -1,8 +1,8 @@
 # Code Patterns Context
 
-**Last Updated**: 2026-01-06
+**Last Updated**: 2026-01-23
 **Purpose**: Common code patterns and conventions in mcp-server-langgraph
-**Codebase Size**: ~100 source files, 81 ADRs, 77 doc pages
+**Codebase Size**: ~100 source files, 101+ ADRs, 77 doc pages
 
 ---
 
@@ -708,6 +708,130 @@ const handleMessage = useCallback((data: unknown) => {
 
 ---
 
+### Pattern 12: Thinking Field Conventions Across Layers
+
+**Location**: Backend → API → Frontend transformation pipeline
+
+When working with extended thinking (chain-of-thought) from LLMs, field names vary by layer. Each layer has specific conventions that must be followed.
+
+**Layer 1: OTEL Span Attributes (Internal Telemetry)**
+```python
+# src/mcp_server_langgraph/observability/telemetry.py
+span.set_attribute("thinking_content", thinking_text)   # snake_case
+span.set_attribute("thinking_tokens", token_count)      # snake_case
+span.set_attribute("model_name", model)                 # or "llm.model"
+```
+
+**Layer 2: API Response Schemas (Pydantic Models)**
+```python
+# src/mcp_server_langgraph/api/v1/sessions.py, observability.py
+class ThinkingResponse(BaseModel):
+    """Structured thinking object format."""
+    content: str | None = None
+    tokens: int | None = None
+
+class MessageResponse(BaseModel):
+    # Object format for API responses
+    thinking: ThinkingResponse | None = None
+    model_name: str | None = None
+
+class SpanResponse(BaseModel):
+    # Uses SpanThinkingResponse (same structure)
+    thinking: SpanThinkingResponse | None = None
+    model_name: str | None = None
+```
+
+**Layer 3: Frontend Types (TypeScript)**
+```typescript
+// src/.../types/generated-api.ts (auto-generated)
+interface MessageResponse {
+  thinking?: {
+    content?: string | null;
+    tokens?: number | null;
+  } | null;
+  model_name?: string | null;  // snake_case in API
+}
+
+// src/.../types/api.ts (manual types after transform)
+interface Message {
+  thinkingContent?: string | null;  // camelCase for client use
+  thinkingTokens?: number | null;
+  modelName?: string | null;
+}
+```
+
+**Transformation Flow:**
+```
+OTEL Attributes          API Response              Frontend Client
+─────────────────        ────────────────          ───────────────
+thinking_content    →    thinking.content     →    thinkingContent
+thinking_tokens     →    thinking.tokens      →    thinkingTokens
+model_name          →    model_name           →    modelName
+```
+
+**Backend Conversion (_span_to_dict):**
+```python
+# src/mcp_server_langgraph/api/v1/observability.py
+def _span_to_dict(self, span: Any) -> dict[str, Any]:
+    """Convert OTEL attributes to SpanResponse format."""
+    attributes = span.attributes if hasattr(span, "attributes") else {}
+
+    # Extract flat OTEL attributes into thinking object
+    thinking = None
+    thinking_content = attributes.get("thinking_content")
+    thinking_tokens = attributes.get("thinking_tokens")
+    if thinking_content or thinking_tokens:
+        thinking = {
+            "content": thinking_content,
+            "tokens": int(thinking_tokens) if thinking_tokens else None,
+        }
+
+    # Model name fallback chain
+    model_name = attributes.get("model_name") or attributes.get("llm.model")
+
+    return {
+        "thinking": thinking,
+        "model_name": model_name,
+        # ... other fields
+    }
+```
+
+**Frontend Transform (apiTransforms.ts):**
+```typescript
+// src/.../utils/apiTransforms.ts
+export function transformMessageResponse(raw: ApiMessageResponse): Message {
+  return {
+    // ... other fields
+    thinkingContent: raw.thinking?.content ?? null,
+    thinkingTokens: raw.thinking?.tokens ?? null,
+    modelName: raw.model_name ?? null,
+  };
+}
+```
+
+**Aggregation Fields (TraceListItem):**
+```python
+# For trace list aggregation, use descriptive suffix
+class TraceListItem(BaseModel):
+    thinking_tokens_total: int | None = None  # Sum across spans
+```
+
+**Key Rules:**
+1. **OTEL attributes**: Always `snake_case` flat fields (`thinking_content`)
+2. **API schemas**: Always object format (`thinking: { content, tokens }`)
+3. **Frontend raw types**: Match API exactly (generated from OpenAPI)
+4. **Frontend client types**: `camelCase` after transform
+5. **Never mix formats**: Don't add flat fields back to API schemas
+6. **Aggregation**: Use `_total` suffix for summed values
+
+**Related Files:**
+- `src/mcp_server_langgraph/api/v1/observability.py` - SpanResponse, SpanThinkingResponse
+- `src/mcp_server_langgraph/api/v1/sessions.py` - MessageResponse, ThinkingResponse
+- `src/mcp_server_langgraph/studio/frontend/src/types/api.ts` - Manual client types
+- `src/mcp_server_langgraph/studio/frontend/src/utils/apiTransforms.ts` - Transforms
+
+---
+
 ## 🎨 Coding Conventions
 
 ### Imports
@@ -829,4 +953,4 @@ else:
 ---
 
 **Auto-Update**: Review and update when new patterns emerge
-**Last Review**: 2026-01-06
+**Last Review**: 2026-01-23
