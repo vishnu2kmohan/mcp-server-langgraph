@@ -346,8 +346,10 @@ describe("apiTransforms", () => {
       content: "Hello, how can I help you?",
       timestamp: "2025-01-15T10:00:00Z",
       sources: [{ title: "Documentation", url: "https://example.com/docs" }],
-      thinking_content: "Let me think about this...",
-      thinking_tokens: 150,
+      thinking: {
+        content: "Let me think about this...",
+        tokens: 150,
+      },
       model_name: "gpt-4",
     };
 
@@ -412,8 +414,10 @@ describe("apiTransforms", () => {
           snippet: "Relevant info",
         },
       ],
-      thinking_content: "Let me think about this...",
-      thinking_tokens: 150,
+      thinking: {
+        content: "Let me think about this...",
+        tokens: 150,
+      },
       model_name: "gpt-4",
     };
 
@@ -468,14 +472,39 @@ describe("apiTransforms", () => {
       expect(result.sources).toBeUndefined();
     });
 
-    it("should transform thinking_content to thinkingContent", () => {
+    // Thinking object format (only format supported - legacy fields deprecated)
+    it("should transform thinking object to thinkingContent and thinkingTokens", () => {
       const result = transformApiMessageToClient(validApiMessage);
       expect(result.thinkingContent).toBe("Let me think about this...");
+      expect(result.thinkingTokens).toBe(150);
     });
 
-    it("should transform thinking_tokens to thinkingTokens", () => {
-      const result = transformApiMessageToClient(validApiMessage);
-      expect(result.thinkingTokens).toBe(150);
+    it("should handle thinking object without tokens", () => {
+      const messageWithPartialThinking: ApiMessage = {
+        message_id: "msg-partial",
+        role: "assistant",
+        content: "Response",
+        timestamp: "2025-01-15T10:00:00Z",
+        thinking: {
+          content: "Just thinking content, no tokens",
+        },
+      };
+      const result = transformApiMessageToClient(messageWithPartialThinking);
+      expect(result.thinkingContent).toBe("Just thinking content, no tokens");
+      expect(result.thinkingTokens).toBeUndefined();
+    });
+
+    it("should handle null thinking object", () => {
+      const messageWithNullThinking: ApiMessage = {
+        message_id: "msg-null-thinking",
+        role: "assistant",
+        content: "Response",
+        timestamp: "2025-01-15T10:00:00Z",
+        thinking: null,
+      };
+      const result = transformApiMessageToClient(messageWithNullThinking);
+      expect(result.thinkingContent).toBeUndefined();
+      expect(result.thinkingTokens).toBeUndefined();
     });
 
     it("should transform model_name to modelName", () => {
@@ -497,6 +526,152 @@ describe("apiTransforms", () => {
       expect(result.thinkingContent).toBeUndefined();
       expect(result.thinkingTokens).toBeUndefined();
       expect(result.modelName).toBeUndefined();
+    });
+  });
+
+  // ===========================================================================
+  // Pattern 12: Thinking Field Conventions Across Layers
+  // ===========================================================================
+  // Documents the transformation pipeline for extended thinking fields:
+  // OTEL (thinking_content) → API (thinking: {content, tokens}) → Client (thinkingContent)
+  //
+  // Reference: .claude/context/code-patterns.md (Pattern 12)
+  // Reference: adr/adr-0091-api-response-transformation-strategy.md
+
+  describe("Pattern 12: Thinking Object Transformation", () => {
+    describe("Message thinking object → camelCase", () => {
+      // These tests verify the transformation documented in Pattern 12
+      it("should transform thinking object to flat camelCase fields", () => {
+        const apiMessage: ApiMessage = {
+          message_id: "msg-thinking",
+          role: "assistant",
+          content: "Response with thinking",
+          timestamp: "2025-01-15T10:00:00Z",
+          thinking: {
+            content: "Let me reason through this step by step...",
+            tokens: 250,
+          },
+          model_name: "claude-opus-4-5-20250514",
+        };
+
+        const result = transformApiMessageToClient(apiMessage);
+
+        // Pattern 12: API object format → Client camelCase flat fields
+        expect(result.thinkingContent).toBe(
+          "Let me reason through this step by step...",
+        );
+        expect(result.thinkingTokens).toBe(250);
+        expect(result.modelName).toBe("claude-opus-4-5-20250514");
+      });
+
+      it("should handle thinking with only content (no tokens)", () => {
+        const apiMessage: ApiMessage = {
+          message_id: "msg-content-only",
+          role: "assistant",
+          content: "Response",
+          timestamp: "2025-01-15T10:00:00Z",
+          thinking: {
+            content: "Thinking without token count",
+            // tokens intentionally omitted
+          },
+        };
+
+        const result = transformApiMessageToClient(apiMessage);
+
+        expect(result.thinkingContent).toBe("Thinking without token count");
+        expect(result.thinkingTokens).toBeUndefined();
+      });
+
+      it("should handle null thinking object", () => {
+        const apiMessage: ApiMessage = {
+          message_id: "msg-no-thinking",
+          role: "assistant",
+          content: "Response without thinking",
+          timestamp: "2025-01-15T10:00:00Z",
+          thinking: null,
+        };
+
+        const result = transformApiMessageToClient(apiMessage);
+
+        expect(result.thinkingContent).toBeUndefined();
+        expect(result.thinkingTokens).toBeUndefined();
+      });
+
+      it("should handle undefined thinking (field not present)", () => {
+        const apiMessage: ApiMessage = {
+          message_id: "msg-undefined-thinking",
+          role: "user",
+          content: "User message",
+          timestamp: "2025-01-15T10:00:00Z",
+          // thinking field not present
+        };
+
+        const result = transformApiMessageToClient(apiMessage);
+
+        expect(result.thinkingContent).toBeUndefined();
+        expect(result.thinkingTokens).toBeUndefined();
+      });
+    });
+
+    describe("Span thinking object structure", () => {
+      // These tests verify the SpanResponse thinking object format matches Pattern 12
+      it("should accept span with thinking object structure", () => {
+        // SpanResponse format from API (matches generated-api.ts)
+        const apiSpan = {
+          span_id: "span-123",
+          parent_span_id: null,
+          name: "llm-call",
+          start_time: "2025-01-15T10:00:00Z",
+          duration_ms: 1500,
+          status: "OK",
+          attributes: {},
+          thinking: {
+            content: "Analyzing the problem...",
+            tokens: 150,
+          },
+          model_name: "claude-opus-4-5-20250514",
+        };
+
+        // Verify thinking object structure
+        expect(apiSpan.thinking).toBeDefined();
+        expect(apiSpan.thinking?.content).toBe("Analyzing the problem...");
+        expect(apiSpan.thinking?.tokens).toBe(150);
+        expect(apiSpan.model_name).toBe("claude-opus-4-5-20250514");
+      });
+
+      it("should accept span without thinking (tool calls, etc)", () => {
+        const apiSpan = {
+          span_id: "span-456",
+          parent_span_id: "span-123",
+          name: "tool-call",
+          start_time: "2025-01-15T10:00:01Z",
+          duration_ms: 200,
+          status: "OK",
+          attributes: { "tool.name": "web_search" },
+          thinking: null,
+          model_name: null,
+        };
+
+        expect(apiSpan.thinking).toBeNull();
+        expect(apiSpan.model_name).toBeNull();
+      });
+    });
+
+    describe("TraceListItem aggregation fields", () => {
+      // Pattern 12: Aggregation uses _total suffix for summed values
+      it("should support thinking_tokens_total for trace aggregation", () => {
+        const traceListItem = {
+          trace_id: "trace-123",
+          start_time: "2025-01-15T10:00:00Z",
+          duration_ms: 5000,
+          span_count: 10,
+          has_thinking: true,
+          thinking_tokens_total: 750, // Sum across all spans
+        };
+
+        expect(traceListItem.has_thinking).toBe(true);
+        expect(traceListItem.thinking_tokens_total).toBe(750);
+      });
     });
   });
 
