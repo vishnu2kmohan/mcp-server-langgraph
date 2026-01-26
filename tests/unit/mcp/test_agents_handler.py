@@ -36,7 +36,7 @@ class TestAgentsToolHandler:
 
         assert AgentsToolHandler is not None
 
-    def test_handler_initialization(self) -> None:
+    def test_handler_initialization_sets_defaults(self) -> None:
         """Test handler initialization with dependencies."""
         from mcp_server_langgraph.mcp.handlers.agents import AgentsToolHandler
 

@@ -1568,9 +1568,9 @@ class TestStudioOrchestratorBroadcasterIntegration:
         )
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.broadcast_task_started = AsyncMock()  # noqa: async-mock-config
-        mock_broadcaster.broadcast_status = AsyncMock()  # noqa: async-mock-config
-        mock_broadcaster.broadcast_task_completed = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_started = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_broadcaster.broadcast_status = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_completed = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         orchestrator = StudioOrchestrator(
             status_broadcaster=mock_broadcaster,
@@ -1602,9 +1602,9 @@ class TestStudioOrchestratorBroadcasterIntegration:
         )
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.broadcast_task_started = AsyncMock()  # noqa: async-mock-config
-        mock_broadcaster.broadcast_status = AsyncMock()  # noqa: async-mock-config
-        mock_broadcaster.broadcast_task_completed = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_started = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_broadcaster.broadcast_status = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_completed = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         orchestrator = StudioOrchestrator(
             status_broadcaster=mock_broadcaster,
@@ -1634,9 +1634,9 @@ class TestStudioOrchestratorBroadcasterIntegration:
         )
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.broadcast_task_started = AsyncMock()  # noqa: async-mock-config
-        mock_broadcaster.broadcast_status = AsyncMock()  # noqa: async-mock-config
-        mock_broadcaster.broadcast_task_completed = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_started = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_broadcaster.broadcast_status = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_completed = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         orchestrator = StudioOrchestrator(
             status_broadcaster=mock_broadcaster,
@@ -1685,9 +1685,9 @@ class TestStudioOrchestratorBroadcasterIntegration:
         )
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.broadcast_task_started = AsyncMock()  # noqa: async-mock-config
-        mock_broadcaster.broadcast_status = AsyncMock()  # noqa: async-mock-config
-        mock_broadcaster.broadcast_task_completed = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_started = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_broadcaster.broadcast_status = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_completed = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         orchestrator = StudioOrchestrator(
             status_broadcaster=mock_broadcaster,
@@ -1717,9 +1717,9 @@ class TestStudioOrchestratorBroadcasterIntegration:
         )
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.broadcast_task_started = AsyncMock()  # noqa: async-mock-config
-        mock_broadcaster.broadcast_status = AsyncMock()  # noqa: async-mock-config
-        mock_broadcaster.broadcast_task_completed = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_started = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_broadcaster.broadcast_status = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_completed = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         orchestrator = StudioOrchestrator(
             status_broadcaster=mock_broadcaster,
@@ -1755,9 +1755,9 @@ class TestStudioOrchestratorBroadcasterIntegration:
         )
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.broadcast_task_started = AsyncMock()  # noqa: async-mock-config
-        mock_broadcaster.broadcast_status = AsyncMock()  # noqa: async-mock-config
-        mock_broadcaster.broadcast_task_completed = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_started = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_broadcaster.broadcast_status = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_completed = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         orchestrator = StudioOrchestrator(
             status_broadcaster=mock_broadcaster,

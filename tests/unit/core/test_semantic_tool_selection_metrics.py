@@ -97,7 +97,7 @@ class TestSearchToolsMetricsIntegration:
         }
         mock_point.score = 0.95
 
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
         mock_qdrant.query_points = AsyncMock(
             return_value=MagicMock(points=[mock_point])
         )
@@ -133,7 +133,7 @@ class TestSearchToolsMetricsIntegration:
         from mcp_server_langgraph.tools.semantic_index import ToolIndexEntry
 
         mock_embedder = MagicMock()
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,

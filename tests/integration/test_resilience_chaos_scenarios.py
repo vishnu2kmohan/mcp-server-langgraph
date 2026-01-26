@@ -304,7 +304,7 @@ class TestPrometheusChaosScenario:
         async def mock_get_always_fails(*args, **kwargs):
             raise httpx.ConnectError("Prometheus unavailable")
 
-        mock_http_client = AsyncMock()  # noqa: async-mock-config (configured via get below)
+        mock_http_client = AsyncMock(return_value=None)  # noqa: async-mock-config (configured via get below)
         mock_http_client.get = mock_get_always_fails
         client.client = mock_http_client
         client._initialized = True

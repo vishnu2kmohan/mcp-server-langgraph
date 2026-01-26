@@ -65,7 +65,7 @@ class TestBypassApprovalMetrics:
             complexity="complicated",
         )
 
-    def test_record_rejection(self):
+    def test_record_rejection_increments_counter(self):
         """Recording rejection should increment rejection counter."""
         from mcp_server_langgraph.execution.bypass_prometheus_metrics import (
             record_bypass_rejection,

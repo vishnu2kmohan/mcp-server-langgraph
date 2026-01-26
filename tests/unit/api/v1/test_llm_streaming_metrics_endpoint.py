@@ -117,7 +117,7 @@ class TestLLMStreamingMetricsEndpointBehavior:
         """
         from mcp_server_langgraph.api.v1.observability import get_llm_streaming_metrics
 
-        mock_service = AsyncMock()  # noqa: async-mock-config (method configured below)
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config (method configured below)
         mock_service.get_llm_streaming_metrics = AsyncMock(
             return_value={
                 "ttfc_p95_seconds": 1.5,
@@ -152,7 +152,7 @@ class TestLLMStreamingMetricsEndpointBehavior:
         """
         from mcp_server_langgraph.api.v1.observability import get_llm_streaming_metrics
 
-        mock_service = AsyncMock()  # noqa: async-mock-config (method configured below)
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config (method configured below)
         mock_service.get_llm_streaming_metrics = AsyncMock(side_effect=Exception("Prometheus unavailable"))
 
         with (

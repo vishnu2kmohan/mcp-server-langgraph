@@ -41,11 +41,11 @@ class TestConnectionRepository:
     @pytest.fixture
     def mock_session(self) -> AsyncMock:
         """Create a mock SQLAlchemy async session."""
-        session = AsyncMock()  # async-mock-configured
+        session = AsyncMock(return_value=None)  # async-mock-configured
         session.add = MagicMock()
-        session.flush = AsyncMock()  # async-mock-configured
-        session.delete = AsyncMock()  # async-mock-configured
-        session.commit = AsyncMock()  # async-mock-configured
+        session.flush = AsyncMock(return_value=None)  # async-mock-configured
+        session.delete = AsyncMock(return_value=None)  # async-mock-configured
+        session.commit = AsyncMock(return_value=None)  # async-mock-configured
         # execute returns an awaitable that resolves to result
         # Make it return a MagicMock by default
         mock_result = MagicMock()
@@ -57,10 +57,10 @@ class TestConnectionRepository:
     @pytest.fixture
     def mock_secrets(self) -> AsyncMock:
         """Create a mock secrets provider."""
-        secrets = AsyncMock()  # async-mock-configured
-        secrets.set_secret = AsyncMock()  # async-mock-configured
+        secrets = AsyncMock(return_value=None)  # async-mock-configured
+        secrets.set_secret = AsyncMock(return_value=None)  # async-mock-configured
         secrets.get_secret = AsyncMock(return_value=None)
-        secrets.delete_secret = AsyncMock()  # async-mock-configured
+        secrets.delete_secret = AsyncMock(return_value=None)  # async-mock-configured
         return secrets
 
     @pytest.fixture

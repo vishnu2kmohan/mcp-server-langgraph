@@ -92,7 +92,7 @@ class TestStreamingMetricsContextBroadcasterIntegration:
         from mcp_server_langgraph.llm.streaming_metrics import StreamingMetricsContext
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.broadcast_streaming_started = AsyncMock()
+        mock_broadcaster.broadcast_streaming_started = AsyncMock(return_value=None)
 
         with patch(
             "mcp_server_langgraph.llm.streaming_metrics.get_llm_streaming_broadcaster",
@@ -124,7 +124,7 @@ class TestStreamingMetricsContextBroadcasterIntegration:
         from mcp_server_langgraph.llm.streaming_metrics import StreamingMetricsContext
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.broadcast_streaming_started = AsyncMock()
+        mock_broadcaster.broadcast_streaming_started = AsyncMock(return_value=None)
 
         with patch(
             "mcp_server_langgraph.llm.streaming_metrics.get_llm_streaming_broadcaster",
@@ -151,8 +151,8 @@ class TestStreamingMetricsContextBroadcasterIntegration:
         from mcp_server_langgraph.llm.streaming_metrics import StreamingMetricsContext
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.broadcast_streaming_started = AsyncMock()
-        mock_broadcaster.broadcast_first_chunk = AsyncMock()
+        mock_broadcaster.broadcast_streaming_started = AsyncMock(return_value=None)
+        mock_broadcaster.broadcast_first_chunk = AsyncMock(return_value=None)
 
         with patch(
             "mcp_server_langgraph.llm.streaming_metrics.get_llm_streaming_broadcaster",
@@ -186,9 +186,9 @@ class TestStreamingMetricsContextBroadcasterIntegration:
         from mcp_server_langgraph.llm.streaming_metrics import StreamingMetricsContext
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.broadcast_streaming_started = AsyncMock()
-        mock_broadcaster.broadcast_first_chunk = AsyncMock()
-        mock_broadcaster.broadcast_chunk_received = AsyncMock()
+        mock_broadcaster.broadcast_streaming_started = AsyncMock(return_value=None)
+        mock_broadcaster.broadcast_first_chunk = AsyncMock(return_value=None)
+        mock_broadcaster.broadcast_chunk_received = AsyncMock(return_value=None)
 
         with patch(
             "mcp_server_langgraph.llm.streaming_metrics.get_llm_streaming_broadcaster",
@@ -224,9 +224,9 @@ class TestStreamingMetricsContextBroadcasterIntegration:
         from mcp_server_langgraph.llm.streaming_metrics import StreamingMetricsContext
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.broadcast_streaming_started = AsyncMock()
-        mock_broadcaster.broadcast_first_chunk = AsyncMock()
-        mock_broadcaster.broadcast_streaming_completed = AsyncMock()
+        mock_broadcaster.broadcast_streaming_started = AsyncMock(return_value=None)
+        mock_broadcaster.broadcast_first_chunk = AsyncMock(return_value=None)
+        mock_broadcaster.broadcast_streaming_completed = AsyncMock(return_value=None)
 
         with patch(
             "mcp_server_langgraph.llm.streaming_metrics.get_llm_streaming_broadcaster",
@@ -263,8 +263,8 @@ class TestStreamingMetricsContextBroadcasterIntegration:
         from mcp_server_langgraph.llm.streaming_metrics import StreamingMetricsContext
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.broadcast_streaming_started = AsyncMock()
-        mock_broadcaster.broadcast_streaming_completed = AsyncMock()
+        mock_broadcaster.broadcast_streaming_started = AsyncMock(return_value=None)
+        mock_broadcaster.broadcast_streaming_completed = AsyncMock(return_value=None)
 
         with patch(
             "mcp_server_langgraph.llm.streaming_metrics.get_llm_streaming_broadcaster",

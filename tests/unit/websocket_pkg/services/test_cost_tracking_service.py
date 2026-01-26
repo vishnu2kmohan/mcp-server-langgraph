@@ -37,7 +37,7 @@ class TestCostTrackingServiceAdapter:
     @pytest.mark.asyncio
     async def test_get_session_cost_returns_cached_data(self) -> None:
         """get_session_cost returns data from Redis cache when available."""
-        mock_cache = AsyncMock()  # noqa: async-mock-config
+        mock_cache = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_cache.aget.return_value = {
             "session_id": "session-123",
             "total_cost": 0.05,
@@ -56,7 +56,7 @@ class TestCostTrackingServiceAdapter:
     @pytest.mark.asyncio
     async def test_get_session_cost_falls_back_to_memory_on_redis_error(self) -> None:
         """get_session_cost falls back to in-memory cache on Redis error."""
-        mock_cache = AsyncMock()  # noqa: async-mock-config
+        mock_cache = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_cache.aget.side_effect = Exception("Redis connection failed")
 
         adapter = CostTrackingServiceAdapter(cache=mock_cache)
@@ -75,7 +75,7 @@ class TestCostTrackingServiceAdapter:
     @pytest.mark.asyncio
     async def test_get_session_cost_returns_zeros_when_no_data(self) -> None:
         """get_session_cost returns zero cost when no cached data exists."""
-        mock_cache = AsyncMock()  # noqa: async-mock-config
+        mock_cache = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_cache.aget.return_value = None
 
         adapter = CostTrackingServiceAdapter(cache=mock_cache)
@@ -91,7 +91,7 @@ class TestCostTrackingServiceAdapter:
     @pytest.mark.asyncio
     async def test_update_session_cost_async_updates_cache(self) -> None:
         """update_session_cost_async updates both Redis and in-memory cache."""
-        mock_cache = AsyncMock()  # noqa: async-mock-config
+        mock_cache = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_cache.aget.return_value = None
 
         adapter = CostTrackingServiceAdapter(cache=mock_cache)
@@ -105,7 +105,7 @@ class TestCostTrackingServiceAdapter:
     @pytest.mark.asyncio
     async def test_update_session_cost_async_accumulates_costs(self) -> None:
         """update_session_cost_async adds to existing costs."""
-        mock_cache = AsyncMock()  # noqa: async-mock-config
+        mock_cache = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_cache.aget.return_value = {
             "session_id": "session-acc",
             "total_cost": 0.05,
@@ -167,7 +167,7 @@ class TestCostTrackingUserBudget:
     @pytest.mark.asyncio
     async def test_invalidate_session_cost_clears_cache(self) -> None:
         """invalidate_session_cost removes session from both caches."""
-        mock_cache = AsyncMock()  # noqa: async-mock-config
+        mock_cache = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         adapter = CostTrackingServiceAdapter(cache=mock_cache)
         adapter._session_costs["session-delete"] = {
@@ -201,11 +201,11 @@ class TestCostTrackingDatabaseFallback:
         """get_session_cost queries TokenUsageRecord on cache miss."""
         from decimal import Decimal
 
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock(return_value=None)
         mock_cache.aget.return_value = None  # Cache miss
 
         # Mock database session and query
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_result = MagicMock()
         # Simulate database aggregation result: (total_cost, total_tokens)
         mock_result.one_or_none.return_value = (Decimal("0.0542"), 2500)
@@ -235,11 +235,11 @@ class TestCostTrackingDatabaseFallback:
     @pytest.mark.asyncio
     async def test_get_session_cost_returns_zeros_when_database_empty(self) -> None:
         """get_session_cost returns zeros when no database records exist."""
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock(return_value=None)
         mock_cache.aget.return_value = None  # Cache miss
 
         # Mock database session returning None (no records)
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_result.one_or_none.return_value = None
         mock_session.execute.return_value = mock_result
@@ -265,7 +265,7 @@ class TestCostTrackingDatabaseFallback:
     @pytest.mark.asyncio
     async def test_get_session_cost_handles_database_error_gracefully(self) -> None:
         """get_session_cost returns zeros on database error."""
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock(return_value=None)
         mock_cache.aget.return_value = None  # Cache miss
 
         adapter = CostTrackingServiceAdapter(cache=mock_cache)

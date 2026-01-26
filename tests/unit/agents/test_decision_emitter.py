@@ -35,7 +35,7 @@ class TestDecisionEmitterBasics:
         """DecisionEmitter should accept a repository."""
         from mcp_server_langgraph.agents.decision_emitter import DecisionEmitter
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         emitter = DecisionEmitter(repository=mock_repo)
 
         assert emitter._repository is mock_repo
@@ -120,7 +120,7 @@ class TestDecisionEmitterEmit:
             DecisionEmitter,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         emitter = DecisionEmitter(repository=mock_repo)
 
         ctx = DecisionContext(
@@ -157,7 +157,7 @@ class TestDecisionEmitterEmit:
             DecisionEmitter,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         emitter = DecisionEmitter(repository=mock_repo)
 
         ctx = DecisionContext(
@@ -200,7 +200,7 @@ class TestDecisionEmitterEmit:
             DecisionEmitter,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         emitter = DecisionEmitter(repository=mock_repo)
 
         ctx = DecisionContext(
@@ -244,7 +244,7 @@ class TestDecisionEmitterEmit:
             DecisionEmitter,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         emitter = DecisionEmitter(repository=mock_repo)
 
         ctx = DecisionContext(
@@ -296,7 +296,7 @@ class TestDecisionEmitterSampling:
             DecisionEmitter,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         emitter = DecisionEmitter(repository=mock_repo)
 
         ctx = DecisionContext(
@@ -344,7 +344,7 @@ class TestDecisionEmitterSequencing:
             DecisionEmitter,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         emitter = DecisionEmitter(repository=mock_repo)
 
         ctx = DecisionContext(
@@ -405,7 +405,7 @@ class TestDecisionEmitterAsync:
             DecisionEmitter,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         emitter = DecisionEmitter(repository=mock_repo)
 
         ctx = DecisionContext(
@@ -453,7 +453,7 @@ class TestDecisionEmitterLifecycle:
         """start() should create a background worker task."""
         from mcp_server_langgraph.agents.decision_emitter import DecisionEmitter
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         emitter = DecisionEmitter(repository=mock_repo)
 
         await emitter.start()
@@ -469,7 +469,7 @@ class TestDecisionEmitterLifecycle:
         """stop() should cancel the worker task."""
         from mcp_server_langgraph.agents.decision_emitter import DecisionEmitter
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         emitter = DecisionEmitter(repository=mock_repo)
 
         await emitter.start()

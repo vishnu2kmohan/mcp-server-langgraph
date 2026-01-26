@@ -219,7 +219,7 @@ class TestCapabilityCacheRedisIntegration:
         """Test get uses Redis client when provided."""
         from mcp_server_langgraph.capabilities.cache import CapabilityCache
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_redis.get.return_value = '{"tools": ["tool-1"]}'
 
         cache = CapabilityCache(redis=mock_redis)
@@ -233,7 +233,7 @@ class TestCapabilityCacheRedisIntegration:
         """Test set uses Redis setex for TTL."""
         from mcp_server_langgraph.capabilities.cache import CapabilityCache
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
         cache = CapabilityCache(redis=mock_redis, default_ttl=300)
 
         await cache.set("test-key", {"tools": ["tool-1"]})
@@ -248,7 +248,7 @@ class TestCapabilityCacheRedisIntegration:
         """Test invalidate uses Redis delete."""
         from mcp_server_langgraph.capabilities.cache import CapabilityCache
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
         cache = CapabilityCache(redis=mock_redis)
 
         await cache.invalidate("test-key")
@@ -260,7 +260,7 @@ class TestCapabilityCacheRedisIntegration:
         """Test cache handles Redis errors without raising."""
         from mcp_server_langgraph.capabilities.cache import CapabilityCache
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_redis.get.side_effect = Exception("Redis connection error")
 
         cache = CapabilityCache(redis=mock_redis)

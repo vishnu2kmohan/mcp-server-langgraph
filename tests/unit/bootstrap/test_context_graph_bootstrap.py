@@ -119,8 +119,8 @@ class TestInitContextGraph:
             mock_flags.enable_context_graph = True
 
             # Mock emitter
-            mock_emitter = AsyncMock()
-            mock_emitter.start = AsyncMock()
+            mock_emitter = AsyncMock(return_value=None)
+            mock_emitter.start = AsyncMock(return_value=None)
             mock_emitter_cls.return_value = mock_emitter
 
             # Mock repository
@@ -153,8 +153,8 @@ class TestContextGraphStateCleanup:
         """cleanup() should stop the emitter."""
         from mcp_server_langgraph.bootstrap.context_graph import ContextGraphState
 
-        mock_emitter = AsyncMock()
-        mock_emitter.stop = AsyncMock()
+        mock_emitter = AsyncMock(return_value=None)
+        mock_emitter.stop = AsyncMock(return_value=None)
 
         state = ContextGraphState(
             emitter=mock_emitter,

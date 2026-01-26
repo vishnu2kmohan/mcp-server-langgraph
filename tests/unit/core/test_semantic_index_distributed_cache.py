@@ -31,7 +31,7 @@ def mock_embedder() -> MagicMock:
 @pytest.fixture
 def mock_qdrant_client() -> AsyncMock:
     """Create a mock Qdrant client."""
-    client = AsyncMock()
+    client = AsyncMock(return_value=None)
     client.get_collections = AsyncMock(return_value=MagicMock(collections=[]))
     mock_response = MagicMock()
     mock_response.points = []
@@ -42,7 +42,7 @@ def mock_qdrant_client() -> AsyncMock:
 @pytest.fixture
 def mock_openfga_client() -> AsyncMock:
     """Create a mock OpenFGA client."""
-    client = AsyncMock()
+    client = AsyncMock(return_value=None)
     client.check_permission = AsyncMock(return_value=True)
     return client
 
@@ -54,9 +54,9 @@ def mock_cache_service() -> MagicMock:
     cache.get = MagicMock(return_value=None)
     cache.set = MagicMock()
     cache.aget = AsyncMock(return_value=None)
-    cache.aset = AsyncMock()
+    cache.aset = AsyncMock(return_value=None)
     cache.delete = MagicMock()
-    cache.adelete = AsyncMock()
+    cache.adelete = AsyncMock(return_value=None)
     return cache
 
 

@@ -76,7 +76,7 @@ class TestAIRecommendationTracking:
         )
 
         # Mock LLM factory
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(
@@ -88,7 +88,7 @@ class TestAIRecommendationTracking:
         )
 
         # Mock feedback store with examples
-        mock_feedback_store = AsyncMock()
+        mock_feedback_store = AsyncMock(return_value=None)
         mock_feedback_store.get_approved_examples.return_value = [
             MagicMock(alert_type="HighCPU", alert_labels={}, execution_time_seconds=10, admin_notes="Fixed"),
         ]
@@ -128,7 +128,7 @@ class TestAIRecommendationTracking:
         )
 
         # Mock LLM factory
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(
@@ -140,7 +140,7 @@ class TestAIRecommendationTracking:
         )
 
         # Mock feedback store with rejection patterns (>2 threshold triggers constraints)
-        mock_feedback_store = AsyncMock()
+        mock_feedback_store = AsyncMock(return_value=None)
         mock_feedback_store.get_approved_examples.return_value = []
         mock_feedback_store.get_rejection_patterns.return_value = {
             RejectionReason.TOO_RISKY: 5,  # Above threshold of 2
@@ -179,7 +179,7 @@ class TestAIRecommendationTracking:
         )
 
         # Mock LLM factory
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(

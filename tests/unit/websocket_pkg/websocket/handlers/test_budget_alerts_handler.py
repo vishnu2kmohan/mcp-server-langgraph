@@ -210,7 +210,7 @@ class TestBudgetAlertsHandlerPush:
 
         # Mock websocket
         mock_websocket = MagicMock()
-        mock_websocket.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_websocket.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_websocket
 
         budget = Budget(
@@ -252,7 +252,7 @@ class TestBudgetAlertsHandlerPush:
 
         # Mock websocket
         mock_websocket = MagicMock()
-        mock_websocket.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_websocket.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_websocket
 
         # Alert for different org
@@ -295,7 +295,7 @@ class TestBudgetAlertsHandlerPush:
 
         # Mock websocket
         mock_websocket = MagicMock()
-        mock_websocket.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_websocket.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_websocket
 
         budget = Budget(

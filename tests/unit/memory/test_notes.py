@@ -188,7 +188,7 @@ class TestNotesManager:
         assert manager.notes_path == notes_file
         assert len(manager.list_notes()) == 0
 
-    def test_add_note(self, tmp_path: Path) -> None:
+    def test_add_note_persists_content(self, tmp_path: Path) -> None:
         """Test adding a note."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
@@ -229,7 +229,7 @@ class TestNotesManager:
 
         assert result is None
 
-    def test_delete_note(self, tmp_path: Path) -> None:
+    def test_delete_note_removes_from_storage(self, tmp_path: Path) -> None:
         """Test deleting a note."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
@@ -429,7 +429,7 @@ class TestCheckpoint:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_checkpoint_creation(self) -> None:
+    def test_checkpoint_creation_saves_state(self) -> None:
         """Test creating a checkpoint."""
         from mcp_server_langgraph.memory.checkpoints import Checkpoint
 
@@ -479,7 +479,7 @@ class TestCheckpointManager:
         assert manager.storage_dir == tmp_path
         assert len(manager.list_checkpoints()) == 0
 
-    def test_create_checkpoint(self, tmp_path: Path) -> None:
+    def test_create_checkpoint_returns_id(self, tmp_path: Path) -> None:
         """Test creating a checkpoint."""
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
 
@@ -542,7 +542,7 @@ class TestCheckpointManager:
         assert len(impl_checkpoints) == 2
         assert len(test_checkpoints) == 1
 
-    def test_checkpoint_persistence(self, tmp_path: Path) -> None:
+    def test_checkpoint_persistence_survives_restart(self, tmp_path: Path) -> None:
         """Test checkpoint persistence to storage."""
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
 
@@ -557,7 +557,7 @@ class TestCheckpointManager:
         assert len(checkpoints) == 1
         assert checkpoints[0].summary == "Persistent checkpoint"
 
-    def test_delete_checkpoint(self, tmp_path: Path) -> None:
+    def test_delete_checkpoint_removes_state(self, tmp_path: Path) -> None:
         """Test deleting a checkpoint."""
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
 
@@ -570,7 +570,7 @@ class TestCheckpointManager:
 
         assert len(manager.list_checkpoints()) == 0
 
-    def test_summarize_session(self, tmp_path: Path) -> None:
+    def test_summarize_session_generates_overview(self, tmp_path: Path) -> None:
         """Test generating session summary from checkpoints."""
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
 
@@ -786,7 +786,7 @@ class TestNotesManagerLargeContent:
         assert loaded is not None
         assert len(loaded.content) == len(large_content)
 
-    def test_many_notes(self, tmp_path: Path) -> None:
+    def test_many_notes_handled_efficiently(self, tmp_path: Path) -> None:
         """Test handling many notes."""
         from mcp_server_langgraph.memory.notes import NotesManager
 

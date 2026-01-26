@@ -375,8 +375,8 @@ class TestWebSocketHeartbeat:
         manager = HeartbeatManager(interval=1)
 
         # Mock WebSocket
-        mock_websocket = AsyncMock()
-        mock_websocket.send_json = AsyncMock()
+        mock_websocket = AsyncMock(return_value=None)
+        mock_websocket.send_json = AsyncMock(return_value=None)
 
         task = await manager.start(mock_websocket)
 
@@ -390,8 +390,8 @@ class TestWebSocketHeartbeat:
         """GIVEN running heartbeat WHEN stop called THEN task cancelled."""
         manager = HeartbeatManager(interval=1)
 
-        mock_websocket = AsyncMock()
-        mock_websocket.send_json = AsyncMock()
+        mock_websocket = AsyncMock(return_value=None)
+        mock_websocket.send_json = AsyncMock(return_value=None)
 
         task = await manager.start(mock_websocket)
         assert not task.done()
@@ -425,8 +425,8 @@ class TestWebSocketHeartbeat:
         """GIVEN running manager WHEN interval elapses THEN sends heartbeat."""
         manager = HeartbeatManager(interval=0.1)  # Very short for testing
 
-        mock_websocket = AsyncMock()
-        mock_websocket.send_json = AsyncMock()
+        mock_websocket = AsyncMock(return_value=None)
+        mock_websocket.send_json = AsyncMock(return_value=None)
 
         await manager.start(mock_websocket)
 
@@ -454,8 +454,8 @@ class TestWebSocketHeartbeat:
         # Very short intervals for testing
         manager = HeartbeatManager(interval=0.1, timeout=0.2, on_timeout=on_timeout)
 
-        mock_websocket = AsyncMock()
-        mock_websocket.send_json = AsyncMock()
+        mock_websocket = AsyncMock(return_value=None)
+        mock_websocket.send_json = AsyncMock(return_value=None)
 
         await manager.start(mock_websocket)
 

@@ -41,7 +41,7 @@ class TestHybridCloudStorageServiceUpload:
             HybridCloudStorageService,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         service = HybridCloudStorageService(
             client=mock_client,
             bucket=TEST_BUCKET,
@@ -71,7 +71,7 @@ class TestHybridCloudStorageServiceUpload:
             HybridCloudStorageService,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         service = HybridCloudStorageService(
             client=mock_client,
             bucket=TEST_BUCKET,
@@ -100,7 +100,7 @@ class TestHybridCloudStorageServiceUpload:
             HybridCloudStorageService,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         service = HybridCloudStorageService(
             client=mock_client,
             bucket=TEST_BUCKET,
@@ -140,7 +140,7 @@ class TestHybridCloudStorageServiceDownload:
             HybridCloudStorageService,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.get_object.return_value = b"cloud content"
 
         service = HybridCloudStorageService(
@@ -169,7 +169,7 @@ class TestHybridCloudStorageServiceDownload:
             HybridCloudStorageService,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.get_object.side_effect = Exception("Key not found")
 
         service = HybridCloudStorageService(
@@ -202,7 +202,7 @@ class TestHybridCloudStorageServiceDelete:
             HybridCloudStorageService,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.delete_object.return_value = True
 
         service = HybridCloudStorageService(
@@ -228,7 +228,7 @@ class TestHybridCloudStorageServiceDelete:
             HybridCloudStorageService,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.delete_object.side_effect = Exception("Key not found")
 
         service = HybridCloudStorageService(
@@ -261,7 +261,7 @@ class TestHybridCloudStorageServiceProviders:
             HybridCloudStorageService,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         service = HybridCloudStorageService(
             client=mock_client,
             bucket=TEST_BUCKET,
@@ -287,7 +287,7 @@ class TestHybridCloudStorageServiceProviders:
             HybridCloudStorageService,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         service = HybridCloudStorageService(
             client=mock_client,
             bucket=TEST_BUCKET,
@@ -313,7 +313,7 @@ class TestHybridCloudStorageServiceProviders:
             HybridCloudStorageService,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         service = HybridCloudStorageService(
             client=mock_client,
             bucket=TEST_BUCKET,  # Called "container" in Azure
@@ -349,7 +349,7 @@ class TestHybridCloudStorageServiceContentHash:
             HybridCloudStorageService,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         service = HybridCloudStorageService(
             client=mock_client,
             bucket=TEST_BUCKET,

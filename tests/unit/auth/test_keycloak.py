@@ -171,7 +171,7 @@ class TestTokenValidator:
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -189,7 +189,7 @@ class TestTokenValidator:
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -207,7 +207,7 @@ class TestTokenValidator:
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -225,7 +225,7 @@ class TestTokenValidator:
                 "Error", request=MagicMock(), response=MagicMock()
             )
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -254,7 +254,7 @@ class TestTokenValidator:
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -283,7 +283,7 @@ class TestTokenValidator:
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -311,7 +311,7 @@ class TestTokenValidator:
             mock_response.json.return_value = {"keys": []}
             mock_response.raise_for_status = MagicMock()
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -346,7 +346,7 @@ class TestTokenValidator:
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -376,7 +376,7 @@ class TestTokenValidator:
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -411,7 +411,7 @@ class TestTokenValidator:
             mock_response.json.return_value = jwks_response
             mock_response.raise_for_status = MagicMock()
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -755,7 +755,7 @@ class TestTokenValidatorErrorPaths:
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
         with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get.side_effect = Exception("Network error")
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager

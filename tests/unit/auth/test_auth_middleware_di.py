@@ -93,7 +93,7 @@ class TestGetCurrentUserDI:
         from mcp_server_langgraph.auth.dependencies import get_current_user
 
         # Create mock auth middleware with verify_token
-        mock_auth = AsyncMock()  # noqa: async-mock-config
+        mock_auth = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_auth.verify_token = AsyncMock(
             return_value=MagicMock(
                 valid=True,

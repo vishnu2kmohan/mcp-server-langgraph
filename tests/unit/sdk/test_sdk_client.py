@@ -35,7 +35,7 @@ class TestLangGraphAgentClient:
 
         assert LangGraphAgentClient is not None
 
-    def test_client_initialization(self) -> None:
+    def test_client_initialization_configures_connection(self) -> None:
         """Test client initialization with default settings."""
         from mcp_server_langgraph.sdk.client import LangGraphAgentClient
 
@@ -261,7 +261,7 @@ class TestInProcessToolServer:
         assert server.name == "test-server"
         assert server.version == "1.0.0"
 
-    def test_register_tool(self) -> None:
+    def test_register_tool_adds_to_client(self) -> None:
         """Test registering a tool."""
         from mcp_server_langgraph.sdk.tools import InProcessToolServer
 

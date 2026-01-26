@@ -47,7 +47,7 @@ class TestSemanticIndexManagerDependencyInjection:
         )
 
         # Create mock semantic index manager
-        mock_semantic_index = AsyncMock()
+        mock_semantic_index = AsyncMock(return_value=None)
         mock_semantic_index.search_tools = AsyncMock(return_value=[])
 
         # Should not raise - parameter should be accepted
@@ -120,7 +120,7 @@ class TestSelectToolsCallsSemanticIndexManager:
         ]
 
         # Create mock semantic index manager
-        mock_semantic_index = AsyncMock()
+        mock_semantic_index = AsyncMock(return_value=None)
         mock_semantic_index.search_tools = AsyncMock(return_value=mock_entries)
 
         # Create test state with a message
@@ -172,7 +172,7 @@ class TestSelectToolsCallsSemanticIndexManager:
         ]
 
         # Create mock semantic index manager
-        mock_semantic_index = AsyncMock()
+        mock_semantic_index = AsyncMock(return_value=None)
         mock_semantic_index.search_tools = AsyncMock(return_value=mock_entries)
 
         # Create test state
@@ -202,7 +202,7 @@ class TestSelectToolsCallsSemanticIndexManager:
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_tools_impl
 
         # Create mock semantic index manager
-        mock_semantic_index = AsyncMock()
+        mock_semantic_index = AsyncMock(return_value=None)
         mock_semantic_index.search_tools = AsyncMock(return_value=[])
 
         # Create test state
@@ -272,7 +272,7 @@ class TestSelectToolsFallbackBehavior:
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_tools_impl
 
         # Create mock that raises an error
-        mock_semantic_index = AsyncMock()
+        mock_semantic_index = AsyncMock(return_value=None)
         mock_semantic_index.search_tools = AsyncMock(
             side_effect=Exception("Search failed")
         )
@@ -304,7 +304,7 @@ class TestSelectToolsFallbackBehavior:
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_tools_impl
 
         # Create mock that returns empty list
-        mock_semantic_index = AsyncMock()
+        mock_semantic_index = AsyncMock(return_value=None)
         mock_semantic_index.search_tools = AsyncMock(return_value=[])
 
         # Create test state

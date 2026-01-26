@@ -30,8 +30,8 @@ pytestmark = [
 @pytest.fixture
 def mock_http_client():
     """Create a mock HTTP client."""
-    client = AsyncMock()
-    client.post = AsyncMock()
+    client = AsyncMock(return_value=None)
+    client.post = AsyncMock(return_value=None)
     return client
 
 

@@ -119,7 +119,7 @@ class TestPostgresDecisionTraceRepository:
             PostgresDecisionTraceRepository,
         )
 
-        mock_factory = AsyncMock()
+        mock_factory = AsyncMock(return_value=None)
         repo = PostgresDecisionTraceRepository(session_factory=mock_factory)
         assert repo._session_factory is mock_factory
 
@@ -134,7 +134,7 @@ class TestPostgresDecisionTraceRepository:
 
         # Create mock session
         mock_session = AsyncMock(spec=AsyncSession)
-        mock_session.commit = AsyncMock()
+        mock_session.commit = AsyncMock(return_value=None)
         mock_session.add = MagicMock()
 
         # Create async context manager factory
@@ -175,7 +175,7 @@ class TestPostgresDecisionTraceRepository:
         )
 
         mock_session = AsyncMock(spec=AsyncSession)
-        mock_session.commit = AsyncMock()
+        mock_session.commit = AsyncMock(return_value=None)
         mock_session.add_all = MagicMock()
 
         @asynccontextmanager
@@ -215,7 +215,7 @@ class TestPostgresDecisionTraceRepository:
             PostgresDecisionTraceRepository,
         )
 
-        mock_factory = AsyncMock()
+        mock_factory = AsyncMock(return_value=None)
         repo = PostgresDecisionTraceRepository(session_factory=mock_factory)
 
         count = await repo.create_batch([])
@@ -386,7 +386,7 @@ class TestPostgresDecisionTraceRepository:
 
         mock_session = AsyncMock(spec=AsyncSession)
         mock_session.execute = AsyncMock(return_value=mock_result)
-        mock_session.commit = AsyncMock()
+        mock_session.commit = AsyncMock(return_value=None)
 
         @asynccontextmanager
         async def mock_factory():
@@ -413,7 +413,7 @@ class TestPostgresDecisionTraceRepository:
 
         mock_session = AsyncMock(spec=AsyncSession)
         mock_session.execute = AsyncMock(return_value=mock_result)
-        mock_session.commit = AsyncMock()
+        mock_session.commit = AsyncMock(return_value=None)
 
         @asynccontextmanager
         async def mock_factory():

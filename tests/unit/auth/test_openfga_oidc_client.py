@@ -219,7 +219,7 @@ class TestOpenFGAClientOIDCTokenAcquisition:
         mock_response.raise_for_status = MagicMock()
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_client.post.return_value = mock_response
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
@@ -265,7 +265,7 @@ class TestOpenFGAClientOIDCTokenAcquisition:
         mock_response.raise_for_status = MagicMock()
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_client.post.return_value = mock_response
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
@@ -337,7 +337,7 @@ class TestOpenFGAClientOIDCTokenAcquisition:
         mock_response.raise_for_status = MagicMock()
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_client.post.return_value = mock_response
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
@@ -375,7 +375,7 @@ class TestOpenFGAClientOIDCTokenAcquisition:
         )
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_client.post.return_value = mock_response
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
@@ -410,7 +410,7 @@ class TestOpenFGAClientOIDCTokenAcquisition:
         mock_response.raise_for_status = MagicMock()
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_client.post.return_value = mock_response
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
@@ -458,7 +458,7 @@ class TestOpenFGAClientAuthenticationPriority:
         mock_response.raise_for_status = MagicMock()
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_client.post.return_value = mock_response
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
@@ -527,7 +527,7 @@ class TestOpenFGAClientOIDCRetryLogic:
             return mock_success_response
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.post = mock_post
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
@@ -570,7 +570,7 @@ class TestOpenFGAClientOIDCRetryLogic:
             raise httpx.ConnectError("All connection attempts failed")
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.post = mock_post_always_fails
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
@@ -611,7 +611,7 @@ class TestOpenFGAClientOIDCRetryLogic:
             return mock_response
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.post = mock_post
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
@@ -657,7 +657,7 @@ class TestOpenFGAClientOIDCRetryLogic:
             return mock_success_response
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.post = mock_post
             mock_client_class.return_value.__aenter__.return_value = mock_client
 

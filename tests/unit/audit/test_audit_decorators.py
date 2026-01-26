@@ -32,7 +32,7 @@ class TestAuditActionDecorator:
         from mcp_server_langgraph.audit.decorators import audit_action
         from mcp_server_langgraph.audit.models import AuditEventCategory, AuditEventType
 
-        mock_service = AsyncMock()  # async-mock-configured
+        mock_service = AsyncMock(return_value=None)  # async-mock-configured
 
         @audit_action(
             category=AuditEventCategory.DATA_MODIFICATION,

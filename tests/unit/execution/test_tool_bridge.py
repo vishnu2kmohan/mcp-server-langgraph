@@ -55,7 +55,7 @@ class TestToolBridgeRegistration:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_register_tool(self):
+    def test_register_tool_adds_to_bridge(self):
         """GIVEN a ToolBridge
         WHEN registering a tool
         THEN the tool should be available
@@ -91,7 +91,7 @@ class TestToolBridgeRegistration:
 
         assert len(bridge.registered_tools) == 2
 
-    def test_unregister_tool(self):
+    def test_unregister_tool_removes_from_bridge(self):
         """GIVEN a ToolBridge with registered tools
         WHEN unregistering a tool
         THEN the tool should be removed

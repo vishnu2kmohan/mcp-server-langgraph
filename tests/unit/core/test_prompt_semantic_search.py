@@ -253,7 +253,7 @@ class TestPromptSearchWithMockEmbeddings:
         """Verify search calls embedding service for query."""
         from mcp_server_langgraph.core.prompts.search import PromptIndex
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.embed = AsyncMock(return_value=[0.1, 0.2, 0.3])
         mock_service.embed_batch = AsyncMock(return_value=[[0.1, 0.2, 0.3]])
 
@@ -323,7 +323,7 @@ class TestPromptSearchGracefulDegradation:
         """Verify search handles embedding service errors gracefully."""
         from mcp_server_langgraph.core.prompts.search import PromptIndex, search_prompts
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.embed = AsyncMock(side_effect=Exception("Embedding service unavailable"))
         mock_service.embed_batch = AsyncMock(return_value=[[0.1, 0.2, 0.3]])
 
@@ -339,7 +339,7 @@ class TestPromptSearchGracefulDegradation:
         """Verify fallback to keyword-based search when embeddings fail."""
         from mcp_server_langgraph.core.prompts.search import PromptIndex, search_prompts
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.embed = AsyncMock(side_effect=Exception("Embedding unavailable"))
         mock_service.embed_batch = AsyncMock(return_value=[[0.1, 0.2, 0.3]])
 
@@ -371,7 +371,7 @@ class TestPromptIndexBuildEdgeCases:
         """Verify build handles empty prompt registry gracefully."""
         from mcp_server_langgraph.core.prompts.search import PromptIndex
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.embed_batch = AsyncMock(return_value=[])
 
         index = PromptIndex(embedding_service=mock_service)
@@ -388,7 +388,7 @@ class TestPromptIndexBuildEdgeCases:
         """Verify build skips prompts that raise ValueError."""
         from mcp_server_langgraph.core.prompts.search import PromptIndex
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.embed_batch = AsyncMock(return_value=[[0.1, 0.2]])
 
         index = PromptIndex(embedding_service=mock_service)
@@ -407,7 +407,7 @@ class TestPromptIndexBuildEdgeCases:
         """Verify build creates entries without embeddings on batch exception."""
         from mcp_server_langgraph.core.prompts.search import PromptIndex
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.embed_batch = AsyncMock(side_effect=Exception("Embedding service error"))
 
         index = PromptIndex(embedding_service=mock_service)
@@ -431,7 +431,7 @@ class TestPromptIndexSearchEdgeCases:
         """Verify search skips entries that have no embeddings."""
         from mcp_server_langgraph.core.prompts.search import PromptIndex, _PromptEntry
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.embed = AsyncMock(return_value=[0.1, 0.2, 0.3])
         mock_service.embed_batch = AsyncMock(return_value=[])
 
@@ -458,7 +458,7 @@ class TestPromptIndexSearchEdgeCases:
         """Verify search correctly filters by category."""
         from mcp_server_langgraph.core.prompts.search import PromptIndex, _PromptEntry
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.embed = AsyncMock(return_value=[0.1, 0.2, 0.3])
 
         index = PromptIndex(embedding_service=mock_service)
@@ -536,7 +536,7 @@ class TestKeywordSearchEdgeCases:
         """Verify keyword matches in name are weighted higher than content."""
         from mcp_server_langgraph.core.prompts.search import PromptIndex, _PromptEntry
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         index = PromptIndex(embedding_service=mock_service)
 
         index._entries = [
@@ -565,7 +565,7 @@ class TestKeywordSearchEdgeCases:
         """Verify keyword search filters by category."""
         from mcp_server_langgraph.core.prompts.search import PromptIndex, _PromptEntry
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         index = PromptIndex(embedding_service=mock_service)
 
         index._entries = [
@@ -594,7 +594,7 @@ class TestKeywordSearchEdgeCases:
         """Verify keyword search returns empty when no matches."""
         from mcp_server_langgraph.core.prompts.search import PromptIndex, _PromptEntry
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         index = PromptIndex(embedding_service=mock_service)
 
         index._entries = [
@@ -625,7 +625,7 @@ class TestSearchPromptsEdgeCases:
         """Verify search_prompts returns empty when allow_fallback=False and error occurs."""
         from mcp_server_langgraph.core.prompts.search import PromptIndex, search_prompts
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.embed = AsyncMock(side_effect=Exception("Embedding error"))
         mock_service.embed_batch = AsyncMock(return_value=[[0.1, 0.2, 0.3]])
 
@@ -646,7 +646,7 @@ class TestSearchPromptsEdgeCases:
         """Verify search_prompts falls back on exception when allow_fallback=True."""
         from mcp_server_langgraph.core.prompts.search import PromptIndex, search_prompts
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.embed_batch = AsyncMock(return_value=[[0.1, 0.2, 0.3]])
 
         index = PromptIndex(embedding_service=mock_service)

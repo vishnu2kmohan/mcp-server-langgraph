@@ -61,7 +61,7 @@ def analytics_app() -> Generator[tuple[FastAPI, AsyncMock], None, None]:
     app.dependency_overrides[get_current_user] = get_auth_user
 
     # Configure mock with spec to satisfy async-mock-config hook
-    mock_service = AsyncMock()  # noqa: async-mock-config
+    mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
     mock_service.track_happiness.return_value = {"id": "metric-default"}
     mock_service.track_engagement.return_value = {"id": "metric-default"}
     mock_service.track_adoption.return_value = {"id": "metric-default"}
@@ -96,7 +96,7 @@ def analytics_admin_app() -> Generator[tuple[FastAPI, AsyncMock], None, None]:
     app.dependency_overrides[get_current_user] = get_admin
 
     # Configure mock with spec to satisfy async-mock-config hook
-    mock_service = AsyncMock()  # noqa: async-mock-config
+    mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
     mock_service.track_happiness.return_value = {"id": "metric-default"}
     mock_service.track_engagement.return_value = {"id": "metric-default"}
     mock_service.track_adoption.return_value = {"id": "metric-default"}

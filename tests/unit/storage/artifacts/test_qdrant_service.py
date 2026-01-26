@@ -66,8 +66,8 @@ class TestQdrantArtifactVectorServiceIndex:
             QdrantArtifactVectorService,
         )
 
-        mock_qdrant = AsyncMock()
-        mock_embedder = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
+        mock_embedder = AsyncMock(return_value=None)
         mock_embedder.embed.return_value = create_mock_embedding()
 
         service = QdrantArtifactVectorService(
@@ -93,8 +93,8 @@ class TestQdrantArtifactVectorServiceIndex:
             QdrantArtifactVectorService,
         )
 
-        mock_qdrant = AsyncMock()
-        mock_embedder = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
+        mock_embedder = AsyncMock(return_value=None)
         mock_embedder.embed.return_value = create_mock_embedding()
 
         service = QdrantArtifactVectorService(
@@ -120,8 +120,8 @@ class TestQdrantArtifactVectorServiceIndex:
             QdrantArtifactVectorService,
         )
 
-        mock_qdrant = AsyncMock()
-        mock_embedder = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
+        mock_embedder = AsyncMock(return_value=None)
         mock_embedder.embed.side_effect = Exception("Embedding API error")
 
         service = QdrantArtifactVectorService(
@@ -155,8 +155,8 @@ class TestQdrantArtifactVectorServiceSearch:
             QdrantArtifactVectorService,
         )
 
-        mock_qdrant = AsyncMock()
-        mock_embedder = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
+        mock_embedder = AsyncMock(return_value=None)
         mock_embedder.embed.return_value = create_mock_embedding()
 
         # Mock search results
@@ -192,8 +192,8 @@ class TestQdrantArtifactVectorServiceSearch:
             QdrantArtifactVectorService,
         )
 
-        mock_qdrant = AsyncMock()
-        mock_embedder = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
+        mock_embedder = AsyncMock(return_value=None)
         mock_embedder.embed.return_value = create_mock_embedding()
         mock_qdrant.search.return_value = []
 
@@ -219,8 +219,8 @@ class TestQdrantArtifactVectorServiceSearch:
             QdrantArtifactVectorService,
         )
 
-        mock_qdrant = AsyncMock()
-        mock_embedder = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
+        mock_embedder = AsyncMock(return_value=None)
         mock_embedder.embed.return_value = create_mock_embedding()
         mock_qdrant.search.return_value = []
 
@@ -257,8 +257,8 @@ class TestQdrantArtifactVectorServiceSimilar:
             QdrantArtifactVectorService,
         )
 
-        mock_qdrant = AsyncMock()
-        mock_embedder = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
+        mock_embedder = AsyncMock(return_value=None)
 
         # Mock stored point retrieval
         mock_point = MagicMock()
@@ -291,8 +291,8 @@ class TestQdrantArtifactVectorServiceSimilar:
             QdrantArtifactVectorService,
         )
 
-        mock_qdrant = AsyncMock()
-        mock_embedder = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
+        mock_embedder = AsyncMock(return_value=None)
 
         mock_point = MagicMock()
         mock_point.vector = create_mock_embedding()
@@ -339,8 +339,8 @@ class TestQdrantArtifactVectorServiceDelete:
             QdrantArtifactVectorService,
         )
 
-        mock_qdrant = AsyncMock()
-        mock_embedder = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
+        mock_embedder = AsyncMock(return_value=None)
 
         service = QdrantArtifactVectorService(
             client=mock_qdrant,
@@ -362,9 +362,9 @@ class TestQdrantArtifactVectorServiceDelete:
             QdrantArtifactVectorService,
         )
 
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
         mock_qdrant.delete.side_effect = Exception("Qdrant error")
-        mock_embedder = AsyncMock()
+        mock_embedder = AsyncMock(return_value=None)
 
         service = QdrantArtifactVectorService(
             client=mock_qdrant,

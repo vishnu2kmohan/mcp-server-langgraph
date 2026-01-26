@@ -295,12 +295,12 @@ class TestProxyConnectionHandler:
         handler = ProxyConnectionHandler(config)
 
         # Mock reader/writer
-        reader = AsyncMock()
+        reader = AsyncMock(return_value=None)
         writer = MagicMock()
         writer.write = MagicMock()
-        writer.drain = AsyncMock()
+        writer.drain = AsyncMock(return_value=None)
         writer.close = MagicMock()
-        writer.wait_closed = AsyncMock()
+        writer.wait_closed = AsyncMock(return_value=None)
 
         request = b"CONNECT api.example.com:443 HTTP/1.1\r\nHost: api.example.com:443\r\n\r\n"
         reader.read = AsyncMock(return_value=request)

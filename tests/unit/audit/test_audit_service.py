@@ -41,7 +41,7 @@ class TestUnifiedAuditServiceLogEvent:
         )
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         service = UnifiedAuditService(
             repository=mock_repo,
             integrity_secret="test-secret",
@@ -80,7 +80,7 @@ class TestUnifiedAuditServiceLogEvent:
             nonlocal captured_event
             captured_event = event
 
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.create = mock_create
 
         service = UnifiedAuditService(
@@ -123,7 +123,7 @@ class TestUnifiedAuditServiceLogEvent:
         async def mock_create(event):
             captured_events.append(event)
 
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.create = mock_create
 
         service = UnifiedAuditService(
@@ -174,7 +174,7 @@ class TestUnifiedAuditServiceLogEvent:
         )
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-        mock_repo = AsyncMock()  # async-mock-configured (return_value/side_effect set below)
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured (return_value/side_effect set below)
         mock_repo.create.side_effect = Exception("Database connection lost")
 
         service = UnifiedAuditService(
@@ -220,7 +220,7 @@ class TestUnifiedAuditServiceBatchLog:
         )
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         service = UnifiedAuditService(
             repository=mock_repo,
             integrity_secret="test-secret",
@@ -264,7 +264,7 @@ class TestUnifiedAuditServiceBatchLog:
             nonlocal captured_events
             captured_events = events
 
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.bulk_create = mock_bulk_create
 
         service = UnifiedAuditService(
@@ -314,7 +314,7 @@ class TestUnifiedAuditServiceQuery:
         from mcp_server_langgraph.audit.constants import Regulation
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-        mock_repo = AsyncMock()  # async-mock-configured (return_value/side_effect set below)
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured (return_value/side_effect set below)
         mock_repo.query_by_regulation.return_value = []
 
         service = UnifiedAuditService(
@@ -332,7 +332,7 @@ class TestUnifiedAuditServiceQuery:
         from mcp_server_langgraph.audit.constants import Regulation
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-        mock_repo = AsyncMock()  # async-mock-configured (return_value/side_effect set below)
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured (return_value/side_effect set below)
         mock_repo.query_by_regulation.return_value = []
 
         service = UnifiedAuditService(
@@ -353,7 +353,7 @@ class TestUnifiedAuditServiceQuery:
         from mcp_server_langgraph.audit.models import AuditEventCategory
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-        mock_repo = AsyncMock()  # async-mock-configured (return_value/side_effect set below)
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured (return_value/side_effect set below)
         mock_repo.query_by_category.return_value = []
 
         service = UnifiedAuditService(
@@ -370,7 +370,7 @@ class TestUnifiedAuditServiceQuery:
         """GIVEN actor_id WHEN querying THEN filters by actor."""
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-        mock_repo = AsyncMock()  # async-mock-configured (return_value/side_effect set below)
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured (return_value/side_effect set below)
         mock_repo.query_by_actor.return_value = []
 
         service = UnifiedAuditService(
@@ -423,7 +423,7 @@ class TestUnifiedAuditServiceIntegrity:
             )
             events.append(builder.add_to_chain(event))
 
-        mock_repo = AsyncMock()  # async-mock-configured (return_value/side_effect set below)
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured (return_value/side_effect set below)
         mock_repo.get_events_in_range.return_value = events
 
         service = UnifiedAuditService(
@@ -474,7 +474,7 @@ class TestUnifiedAuditServiceIntegrity:
         # Tamper with an event
         events[1] = events[1].model_copy(update={"action": "TAMPERED ACTION"})
 
-        mock_repo = AsyncMock()  # async-mock-configured (return_value/side_effect set below)
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured (return_value/side_effect set below)
         mock_repo.get_events_in_range.return_value = events
 
         service = UnifiedAuditService(
@@ -495,7 +495,7 @@ class TestUnifiedAuditServiceIntegrity:
         """GIVEN time range WHEN getting report THEN returns full report."""
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-        mock_repo = AsyncMock()  # async-mock-configured (return_value/side_effect set below)
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured (return_value/side_effect set below)
         mock_repo.get_events_in_range.return_value = []
         mock_repo.get_event_count.return_value = 0
 
@@ -531,7 +531,7 @@ class TestUnifiedAuditServiceRetention:
         from mcp_server_langgraph.audit.constants import Regulation
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-        mock_repo = AsyncMock()  # async-mock-configured (return_value/side_effect set below)
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured (return_value/side_effect set below)
         mock_repo.delete_expired_by_regulation.return_value = 100
 
         service = UnifiedAuditService(
@@ -549,7 +549,7 @@ class TestUnifiedAuditServiceRetention:
         """GIVEN audit events WHEN checking status THEN returns per-regulation counts."""
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-        mock_repo = AsyncMock()  # async-mock-configured (return_value/side_effect set below)
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured (return_value/side_effect set below)
         mock_repo.get_retention_status.return_value = {
             "GDPR": {"total": 1000, "expiring_soon": 50},
             "HIPAA": {"total": 500, "expiring_soon": 10},
@@ -589,7 +589,7 @@ class TestUnifiedAuditServiceAlertDetector:
         )
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_detector = MagicMock(spec=AuditAlertDetector)
         mock_detector.process_event_async = AsyncMock(return_value=[])
 
@@ -627,7 +627,7 @@ class TestUnifiedAuditServiceAlertDetector:
         )
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
 
         service = UnifiedAuditService(
             repository=mock_repo,
@@ -664,7 +664,7 @@ class TestUnifiedAuditServiceAlertDetector:
         )
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_detector = MagicMock(spec=AuditAlertDetector)
         mock_detector.process_event_async = AsyncMock(side_effect=Exception("Alert detection failed"))
 

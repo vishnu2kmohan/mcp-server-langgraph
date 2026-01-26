@@ -105,7 +105,7 @@ class TestLLMStreamingBroadcasterStreamingStart:
 
         broadcaster = LLMStreamingBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(mock_ws, session_id="session-123")
 
@@ -148,7 +148,7 @@ class TestLLMStreamingBroadcasterFirstChunk:
 
         broadcaster = LLMStreamingBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(mock_ws, session_id="session-123")
 
@@ -190,7 +190,7 @@ class TestLLMStreamingBroadcasterChunkReceived:
 
         broadcaster = LLMStreamingBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(mock_ws, session_id="session-123")
 
@@ -234,7 +234,7 @@ class TestLLMStreamingBroadcasterStreamingCompleted:
 
         broadcaster = LLMStreamingBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(mock_ws, session_id="session-123")
 
@@ -283,9 +283,9 @@ class TestLLMStreamingBroadcasterSessionFiltering:
         broadcaster = LLMStreamingBroadcaster()
 
         mock_ws1 = MagicMock()
-        mock_ws1.send_json = AsyncMock()
+        mock_ws1.send_json = AsyncMock(return_value=None)
         mock_ws2 = MagicMock()
-        mock_ws2.send_json = AsyncMock()
+        mock_ws2.send_json = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(mock_ws1, session_id="session-A")
         await broadcaster.subscribe(mock_ws2, session_id="session-B")
@@ -355,7 +355,7 @@ class TestLLMStreamingBroadcasterMetricsIntegration:
 
         broadcaster = LLMStreamingBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(mock_ws, session_id="session-123")
 
@@ -386,12 +386,12 @@ class TestLLMStreamingBroadcasterMetricsIntegration:
 
         metrics_broadcaster = MetricsBroadcaster()
         metrics_ws = MagicMock()
-        metrics_ws.send_json = AsyncMock()
+        metrics_ws.send_json = AsyncMock(return_value=None)
         await metrics_broadcaster.subscribe(metrics_ws, session_id="session-123")
 
         broadcaster = LLMStreamingBroadcaster(metrics_broadcaster=metrics_broadcaster)
         stream_ws = MagicMock()
-        stream_ws.send_json = AsyncMock()
+        stream_ws.send_json = AsyncMock(return_value=None)
         await broadcaster.subscribe(stream_ws, session_id="session-123")
 
         await broadcaster.broadcast_first_chunk(

@@ -106,7 +106,7 @@ class TestPostgresCostStorageStore:
         from mcp_server_langgraph.monitoring.cost_storage import PostgresCostStorage
 
         # Arrange - mock session with async context manager behavior
-        mock_session = AsyncMock()  # async-mock-configured (mock for session context)
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured (mock for session context)
         mock_session.add = MagicMock(return_value=None)
         mock_session.commit = AsyncMock(return_value=None)
 
@@ -133,7 +133,7 @@ class TestPostgresCostStorageStore:
         from mcp_server_langgraph.monitoring.cost_storage import PostgresCostStorage
 
         # Arrange - mock session with async context manager behavior
-        mock_session = AsyncMock()  # async-mock-configured (mock for session context)
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured (mock for session context)
         mock_session.add = MagicMock(return_value=None)
         mock_session.commit = AsyncMock(return_value=None)
 
@@ -172,7 +172,7 @@ class TestPostgresCostStorageGetRecords:
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = []
 
-        mock_session = AsyncMock()  # async-mock-configured (mock for session context)
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured (mock for session context)
         mock_session.execute = AsyncMock(return_value=mock_result)
 
         with patch("mcp_server_langgraph.database.get_async_session") as mock_get_session:
@@ -202,7 +202,7 @@ class TestPostgresCostStorageGetRecords:
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = []
 
-        mock_session = AsyncMock()  # async-mock-configured (mock for session context)
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured (mock for session context)
         mock_session.execute = AsyncMock(return_value=mock_result)
 
         with patch("mcp_server_langgraph.database.get_async_session") as mock_get_session:
@@ -242,7 +242,7 @@ class TestPostgresCostStorageDeleteRecords:
         mock_result = MagicMock()
         mock_result.rowcount = 5
 
-        mock_session = AsyncMock()  # async-mock-configured (mock for session context)
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured (mock for session context)
         mock_session.execute = AsyncMock(return_value=mock_result)
         mock_session.commit = AsyncMock(return_value=None)
 
@@ -281,7 +281,7 @@ class TestPostgresCostStorageGetLatest:
         mock_result = MagicMock()
         mock_result.scalars.return_value.first.return_value = None
 
-        mock_session = AsyncMock()  # async-mock-configured (mock for session context)
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured (mock for session context)
         mock_session.execute = AsyncMock(return_value=mock_result)
 
         with patch("mcp_server_langgraph.database.get_async_session") as mock_get_session:

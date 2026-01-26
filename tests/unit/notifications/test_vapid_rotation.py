@@ -89,8 +89,8 @@ class TestVAPIDKeyStorage:
             VAPIDKeyPair,
         )
 
-        mock_repo = AsyncMock()
-        mock_repo.save = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
+        mock_repo.save = AsyncMock(return_value=None)
 
         service = VAPIDKeyRotationService(key_repository=mock_repo)
         key_pair = VAPIDKeyPair(
@@ -120,7 +120,7 @@ class TestVAPIDKeyStorage:
             is_active=True,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_active = AsyncMock(return_value=current_key)
 
         service = VAPIDKeyRotationService(key_repository=mock_repo)
@@ -144,7 +144,7 @@ class TestVAPIDKeyStorage:
             created_at=datetime.now(UTC),
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_id = AsyncMock(return_value=key)
 
         service = VAPIDKeyRotationService(key_repository=mock_repo)
@@ -171,7 +171,7 @@ class TestVAPIDKeyStorage:
             for i in range(3)
         ]
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.list_all = AsyncMock(return_value=keys)
 
         service = VAPIDKeyRotationService(key_repository=mock_repo)
@@ -206,10 +206,10 @@ class TestVAPIDKeyRotation:
             is_active=True,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_active = AsyncMock(return_value=old_key)
-        mock_repo.save = AsyncMock()
-        mock_repo.deactivate = AsyncMock()
+        mock_repo.save = AsyncMock(return_value=None)
+        mock_repo.deactivate = AsyncMock(return_value=None)
 
         service = VAPIDKeyRotationService(key_repository=mock_repo)
         new_key = await service.rotate()
@@ -235,11 +235,11 @@ class TestVAPIDKeyRotation:
             is_active=True,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_active = AsyncMock(return_value=old_key)
-        mock_repo.save = AsyncMock()
-        mock_repo.deactivate = AsyncMock()
-        mock_repo.set_expiry = AsyncMock()
+        mock_repo.save = AsyncMock(return_value=None)
+        mock_repo.deactivate = AsyncMock(return_value=None)
+        mock_repo.set_expiry = AsyncMock(return_value=None)
 
         service = VAPIDKeyRotationService(
             key_repository=mock_repo,
@@ -257,9 +257,9 @@ class TestVAPIDKeyRotation:
         """Test that rotate works when no existing key (first rotation)."""
         from mcp_server_langgraph.notifications.vapid_rotation import VAPIDKeyRotationService
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_active = AsyncMock(return_value=None)
-        mock_repo.save = AsyncMock()
+        mock_repo.save = AsyncMock(return_value=None)
 
         service = VAPIDKeyRotationService(key_repository=mock_repo)
         new_key = await service.rotate()
@@ -284,7 +284,7 @@ class TestVAPIDKeyExpiration:
         """Test that cleanup removes expired keys."""
         from mcp_server_langgraph.notifications.vapid_rotation import VAPIDKeyRotationService
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.delete_expired = AsyncMock(return_value=3)
 
         service = VAPIDKeyRotationService(key_repository=mock_repo)
@@ -310,7 +310,7 @@ class TestVAPIDKeyExpiration:
             is_active=True,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_active = AsyncMock(return_value=old_key)
 
         service = VAPIDKeyRotationService(
@@ -338,7 +338,7 @@ class TestVAPIDKeyExpiration:
             is_active=True,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_active = AsyncMock(return_value=new_key)
 
         service = VAPIDKeyRotationService(
@@ -354,7 +354,7 @@ class TestVAPIDKeyExpiration:
         """Test that should_rotate returns True when no key exists."""
         from mcp_server_langgraph.notifications.vapid_rotation import VAPIDKeyRotationService
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_active = AsyncMock(return_value=None)
 
         service = VAPIDKeyRotationService(key_repository=mock_repo)

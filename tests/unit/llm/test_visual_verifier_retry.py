@@ -46,7 +46,7 @@ class TestVisualVerificationRetry:
 
         # Create verifier with mocked LLM
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -73,7 +73,7 @@ class TestVisualVerificationRetry:
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             # Mock LLM response for verification
@@ -119,7 +119,7 @@ Page looks good."""
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -145,7 +145,7 @@ Page looks good."""
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             mock_llm.ainvoke.return_value = MagicMock(
@@ -178,7 +178,7 @@ Looks good."""
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -199,7 +199,7 @@ Looks good."""
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             result = await verifier.verify_with_visual(
@@ -220,7 +220,7 @@ Looks good."""
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -240,7 +240,7 @@ Looks good."""
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             # LLM fails once then succeeds
@@ -281,7 +281,7 @@ OK"""
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -300,7 +300,7 @@ OK"""
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             # Simulate 529 overload error (LiteLLM pattern)
@@ -347,7 +347,7 @@ OK"""
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -368,7 +368,7 @@ OK"""
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             result = await verifier.verify_with_visual(
@@ -396,7 +396,7 @@ class TestVisualVerificationRetryMetrics:
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -420,7 +420,7 @@ class TestVisualVerificationRetryMetrics:
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             mock_llm.ainvoke.return_value = MagicMock(content="OVERALL: 0.9\nFEEDBACK: Good")
@@ -449,7 +449,7 @@ class TestVisualVerificationRetryConfig:
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             # Configure verifier with custom retry settings
@@ -471,7 +471,7 @@ class TestVisualVerificationRetryConfig:
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             # Use custom retry config via method parameter (if supported)

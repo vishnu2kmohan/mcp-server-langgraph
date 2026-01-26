@@ -59,12 +59,12 @@ class TestAuditHandlerLifecycle:
         from mcp_server_langgraph.websocket.types import AuthUser, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="audit")
-        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         user = AuthUser(id="user-123", username="testuser")
 
@@ -80,12 +80,12 @@ class TestAuditHandlerLifecycle:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="audit")
-        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler._user_id = "user-123"
 
@@ -109,12 +109,12 @@ class TestAuditHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="audit")
-        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
 
         message = MessageEnvelope(
@@ -142,12 +142,12 @@ class TestAuditHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="audit")
-        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler._current_filter.categories = ["old_category"]
 
@@ -167,7 +167,7 @@ class TestAuditHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="audit")
-        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
@@ -195,12 +195,12 @@ class TestAuditHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="audit")
-        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
 
         event = {"id": "event-1", "category": "security", "action": "login"}
@@ -218,7 +218,7 @@ class TestAuditHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="audit")
-        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)

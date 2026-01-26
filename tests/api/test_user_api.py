@@ -129,7 +129,7 @@ def _create_test_app_with_user(user_data: dict[str, Any] | None = None) -> FastA
 def mock_auth_middleware():
     """Create a mock auth middleware."""
     mock = MagicMock()
-    mock.verify_token = AsyncMock()  # async-mock-configured
+    mock.verify_token = AsyncMock(return_value=None)  # async-mock-configured
     return mock
 
 

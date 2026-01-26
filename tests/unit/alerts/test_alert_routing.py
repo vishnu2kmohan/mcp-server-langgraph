@@ -218,7 +218,7 @@ class TestSubscriptionRouting:
             ),
         ]
 
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
         mock_store.get_subscriptions = AsyncMock(return_value=subscriptions)
 
         router = AlertRouter(subscription_store=mock_store)
@@ -259,7 +259,7 @@ class TestSubscriptionRouting:
             ),
         ]
 
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
         mock_store.get_subscriptions = AsyncMock(return_value=subscriptions)
 
         router = AlertRouter(subscription_store=mock_store)
@@ -356,7 +356,7 @@ class TestRoutingModels:
         """Force GC to prevent memory accumulation."""
         gc.collect()
 
-    def test_alert_model(self) -> None:
+    def test_alert_model_validates_fields(self) -> None:
         """Test Alert model creation."""
         from mcp_server_langgraph.alerts.routing import Alert
 
@@ -388,7 +388,7 @@ class TestRoutingModels:
         assert result.routed is True
         assert len(result.target_tenants) == 1
 
-    def test_subscription_model(self) -> None:
+    def test_subscription_model_validates_fields(self) -> None:
         """Test Subscription model."""
         from mcp_server_langgraph.alerts.routing import Subscription
 

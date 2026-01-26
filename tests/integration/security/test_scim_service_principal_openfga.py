@@ -50,7 +50,7 @@ class TestSCIMOpenFGAIntegration:
         - OpenFGA relation: user:alice can_provision_users organization:acme
         """
         # Mock OpenFGA client
-        mock_openfga = AsyncMock()  # async-mock-configured (return_value set below)
+        mock_openfga = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
         mock_openfga.check_permission.return_value = True
 
         # User with OpenFGA relation but not admin/scim-provisioner role
@@ -82,7 +82,7 @@ class TestSCIMOpenFGAIntegration:
 
         Even if user has generic "user" role, should be denied if no can_provision_users relation.
         """
-        mock_openfga = AsyncMock()  # async-mock-configured (return_value set below)
+        mock_openfga = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
         mock_openfga.check_permission.return_value = False  # Deny
 
         current_user = {
@@ -136,7 +136,7 @@ class TestServicePrincipalOpenFGAIntegration:
         - user:alice can_manage_service_principals user:bob (delegation)
         - user:alice can_manage_service_principals organization:acme (org-level)
         """
-        mock_openfga = AsyncMock()  # async-mock-configured (return_value set below)
+        mock_openfga = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
         mock_openfga.check_permission.return_value = True
 
         # User trying to create SP for another user
@@ -167,7 +167,7 @@ class TestServicePrincipalOpenFGAIntegration:
         2. They're admin, OR
         3. They have can_manage_service_principals relation (new)
         """
-        mock_openfga = AsyncMock()  # async-mock-configured (return_value set below)
+        mock_openfga = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
         mock_openfga.check_permission.return_value = False  # Deny delegation
 
         current_user = {

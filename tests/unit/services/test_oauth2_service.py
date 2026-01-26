@@ -230,7 +230,7 @@ class TestOAuth2Service:
     async def test_exchange_code_returns_tokens(self, service: OAuth2Service) -> None:
         """Test: Exchange returns token dictionary."""
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
             mock_response = MagicMock()
@@ -258,7 +258,7 @@ class TestOAuth2Service:
     async def test_exchange_code_includes_grant_type(self, service: OAuth2Service) -> None:
         """Test: Exchange request includes authorization_code grant type."""
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
             mock_response = MagicMock()
@@ -283,7 +283,7 @@ class TestOAuth2Service:
     async def test_exchange_code_includes_code_verifier(self, service: OAuth2Service) -> None:
         """Test: Exchange request includes PKCE code verifier."""
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
             mock_response = MagicMock()
@@ -307,7 +307,7 @@ class TestOAuth2Service:
     async def test_exchange_code_includes_client_secret_when_provided(self, service: OAuth2Service) -> None:
         """Test: Exchange includes client_secret when provided."""
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
             mock_response = MagicMock()
@@ -331,7 +331,7 @@ class TestOAuth2Service:
     async def test_exchange_code_omits_client_secret_when_none(self, service: OAuth2Service) -> None:
         """Test: Exchange omits client_secret when not provided."""
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
             mock_response = MagicMock()
@@ -355,7 +355,7 @@ class TestOAuth2Service:
     async def test_exchange_code_returns_refresh_token(self, service: OAuth2Service) -> None:
         """Test: Exchange returns refresh token when provided by server."""
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
             mock_response = MagicMock()

@@ -28,7 +28,7 @@ def mock_embedder() -> MagicMock:
 @pytest.fixture
 def mock_qdrant_client() -> AsyncMock:
     """Create a mock Qdrant client."""
-    client = AsyncMock()
+    client = AsyncMock(return_value=None)
     client.get_collections = AsyncMock(return_value=MagicMock(collections=[]))
     mock_response = MagicMock()
     mock_response.points = []
@@ -39,7 +39,7 @@ def mock_qdrant_client() -> AsyncMock:
 @pytest.fixture
 def mock_openfga_client() -> AsyncMock:
     """Create a mock OpenFGA client."""
-    client = AsyncMock()
+    client = AsyncMock(return_value=None)
     client.check_permission = AsyncMock(return_value=True)
     return client
 
@@ -110,7 +110,7 @@ class TestCacheWarmingMethod:
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
         # Mock that returns True for first call, False for second
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
         mock_openfga.check_permission = AsyncMock(side_effect=[True, False])
 
         manager = SemanticIndexManager(
@@ -156,7 +156,7 @@ class TestCacheWarmingWithDistributedCache:
 
         mock_cache_service = MagicMock()
         mock_cache_service.aget = AsyncMock(return_value=None)
-        mock_cache_service.aset = AsyncMock()
+        mock_cache_service.aset = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -243,7 +243,7 @@ class TestCacheWarmingStatistics:
         """warm_cache should handle OpenFGA errors gracefully."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
         mock_openfga.check_permission = AsyncMock(
             side_effect=[True, Exception("Connection error"), True]
         )

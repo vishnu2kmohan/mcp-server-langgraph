@@ -215,7 +215,7 @@ class TestConnectionsRealtimeServiceIntegration:
             ConnectionsRealtimeWebSocketHandler,
         )
 
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_connection.return_value = {
             "id": "conn-123",
             "name": "Test Connection",
@@ -242,7 +242,7 @@ class TestConnectionsRealtimeServiceIntegration:
             ConnectionsRealtimeWebSocketHandler,
         )
 
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_connection.return_value = None
 
         handler = ConnectionsRealtimeWebSocketHandler()
@@ -267,7 +267,7 @@ class TestConnectionsRealtimeServiceIntegration:
             {"id": "conn-1", "name": "Connection 1", "status": "connected"},
             {"id": "conn-2", "name": "Connection 2", "status": "disconnected"},
         ]
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.list_connections.return_value = mock_connections
 
         handler = ConnectionsRealtimeWebSocketHandler()
@@ -289,7 +289,7 @@ class TestConnectionsRealtimeServiceIntegration:
             ConnectionsRealtimeWebSocketHandler,
         )
 
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_connection_health.return_value = {
             "connection_id": "conn-123",
             "healthy": True,
@@ -314,7 +314,7 @@ class TestConnectionsRealtimeServiceIntegration:
             ConnectionsRealtimeWebSocketHandler,
         )
 
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.list_connections.side_effect = Exception("Service unavailable")
 
         handler = ConnectionsRealtimeWebSocketHandler()

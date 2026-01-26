@@ -90,7 +90,7 @@ def mock_websocket() -> MagicMock:
 @pytest.fixture
 def mock_push_sender() -> AsyncMock:
     """Create a mock push notification sender."""
-    sender = AsyncMock()  # noqa: async-mock-config (configured via send_critical_alert below)
+    sender = AsyncMock(return_value=None)  # noqa: async-mock-config (configured via send_critical_alert below)
     sender.send_critical_alert = AsyncMock(return_value=5)  # 5 notifications sent
     return sender
 

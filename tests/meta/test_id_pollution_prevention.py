@@ -220,7 +220,7 @@ class TestWithMocks:
 
     async def test_async_mock_config(self):
         # ✅ AsyncMock configuration
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.fetch_user = AsyncMock(return_value={"user_id": "user:bob"})
 
         result = await mock_client.fetch_user()

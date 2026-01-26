@@ -212,7 +212,7 @@ class TestAuthorizationServiceConditions:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Mock OpenFGA client
-        mock_openfga = AsyncMock()  # noqa: async-mock-config
+        mock_openfga = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         # Mock settings with conditions enabled

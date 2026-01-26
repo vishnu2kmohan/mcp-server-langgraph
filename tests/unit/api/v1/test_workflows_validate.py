@@ -158,7 +158,7 @@ class TestValidateValidWorkflow:
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.get_workflow.return_value = make_valid_workflow()
         app.dependency_overrides[get_workflow_service] = lambda: mock_service
 
@@ -199,7 +199,7 @@ class TestValidateValidWorkflow:
         workflow["edges"][0]["target"] = "custom"
         workflow["edges"].insert(1, {"source": "custom", "target": "llm1"})
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.get_workflow.return_value = workflow
         app.dependency_overrides[get_workflow_service] = lambda: mock_service
 
@@ -249,7 +249,7 @@ class TestValidateInvalidWorkflow:
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.get_workflow.return_value = make_invalid_workflow()
         app.dependency_overrides[get_workflow_service] = lambda: mock_service
 
@@ -290,7 +290,7 @@ class TestValidateInvalidWorkflow:
         workflow["nodes"].append({"id": "orphan", "type": "llm", "label": "Orphan"})
         # No edges to orphan
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.get_workflow.return_value = workflow
         app.dependency_overrides[get_workflow_service] = lambda: mock_service
 
@@ -339,7 +339,7 @@ class TestValidateWorkflowNotFound:
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.get_workflow.return_value = None  # Not found
         app.dependency_overrides[get_workflow_service] = lambda: mock_service
 
@@ -384,7 +384,7 @@ class TestValidateUsesCentralizedValidator:
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.get_workflow.return_value = make_valid_workflow()
         app.dependency_overrides[get_workflow_service] = lambda: mock_service
 
@@ -396,7 +396,7 @@ class TestValidateUsesCentralizedValidator:
             ),
             patch("mcp_server_langgraph.api.v1.workflows.WorkflowValidator") as mock_validator_cls,
         ):
-            mock_validator = AsyncMock()
+            mock_validator = AsyncMock(return_value=None)
             mock_validator.validate.return_value = MagicMock(
                 valid=True,
                 errors=[],

@@ -9,7 +9,7 @@ The middleware should:
 - Log events should be forwarded via DevToolsLoggingHandler
 
 Note: This file uses AsyncMock extensively for mocking broadcaster methods.
-The mocks are configured via method assignment (e.g., mock.method = AsyncMock())
+The mocks are configured via method assignment (e.g., mock.method = AsyncMock(return_value=None))
 which is the appropriate pattern for these tests.
 # noqa: async-mock-config (file-level suppression for broadcaster mocks)
 """

@@ -31,12 +31,12 @@ def mock_embedder():
 @pytest.fixture
 def mock_qdrant_client():
     """Create a mock Qdrant client."""
-    client = AsyncMock()
+    client = AsyncMock(return_value=None)
     client.get_collections = AsyncMock(
         return_value=MagicMock(collections=[])
     )
-    client.create_collection = AsyncMock()
-    client.upsert = AsyncMock()
+    client.create_collection = AsyncMock(return_value=None)
+    client.upsert = AsyncMock(return_value=None)
 
     # Mock query_points response
     mock_response = MagicMock()

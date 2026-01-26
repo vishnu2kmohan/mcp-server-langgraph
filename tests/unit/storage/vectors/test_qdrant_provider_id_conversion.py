@@ -148,7 +148,7 @@ class TestQdrantVectorProviderUpsertIdConversion:
         )
 
         # Mock the Qdrant client
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
 
         provider = QdrantVectorProvider(client=mock_client, vector_size=768)
 
@@ -183,7 +183,7 @@ class TestQdrantVectorProviderUpsertIdConversion:
             QdrantVectorProvider,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         provider = QdrantVectorProvider(client=mock_client, vector_size=768)
 
         original_uuid = str(uuid.uuid4())
@@ -225,7 +225,7 @@ class TestQdrantVectorProviderDeleteIdConversion:
             string_to_qdrant_id,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         provider = QdrantVectorProvider(client=mock_client, vector_size=768)
 
         with patch(
@@ -269,7 +269,7 @@ class TestQdrantVectorProviderErrorHandling:
             QdrantVectorProvider,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.upsert.side_effect = RuntimeError("Connection failed")
 
         provider = QdrantVectorProvider(client=mock_client, vector_size=768)
@@ -292,7 +292,7 @@ class TestQdrantVectorProviderErrorHandling:
             QdrantVectorProvider,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.query_points.side_effect = RuntimeError("Query failed")
 
         provider = QdrantVectorProvider(client=mock_client, vector_size=768)
@@ -316,7 +316,7 @@ class TestQdrantVectorProviderErrorHandling:
             QdrantVectorProvider,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.delete.side_effect = RuntimeError("Delete failed")
 
         provider = QdrantVectorProvider(client=mock_client, vector_size=768)
@@ -337,7 +337,7 @@ class TestQdrantVectorProviderErrorHandling:
             QdrantVectorProvider,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         provider = QdrantVectorProvider(client=mock_client, vector_size=768)
 
         with patch.dict("sys.modules", {"qdrant_client.models": None}):
@@ -359,7 +359,7 @@ class TestQdrantVectorProviderErrorHandling:
             QdrantVectorProvider,
         )
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_response = MagicMock()
         mock_response.points = []
         mock_client.query_points.return_value = mock_response

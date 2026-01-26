@@ -109,7 +109,7 @@ class TestUptimeMeasurement:
     async def test_measure_uptime_meeting_sla(self, mock_prom_client, sla_monitor):
         """Test uptime measurement meeting SLA"""
         # Mock Prometheus to return 0 downtime (100% uptime)
-        mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+        mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
         mock_client.query_downtime.return_value = 0
         mock_prom_client.return_value = mock_client
 
@@ -127,7 +127,7 @@ class TestUptimeMeasurement:
     async def test_measure_uptime_structure(self, mock_prom_client, sla_monitor):
         """Test uptime measurement structure"""
         # Mock Prometheus
-        mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+        mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
         mock_client.query_downtime.return_value = 0
         mock_prom_client.return_value = mock_client
 
@@ -173,7 +173,7 @@ class TestResponseTimeMeasurement:
     @patch("mcp_server_langgraph.monitoring.sla.get_prometheus_client")
     async def test_measure_response_time_meeting_sla(self, mock_prom_client, sla_monitor):
         """Test response time measurement meeting SLA"""
-        mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+        mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
         mock_client.query_percentiles.return_value = {95: 0.350}  # 350ms
         mock_prom_client.return_value = mock_client
 
@@ -190,7 +190,7 @@ class TestResponseTimeMeasurement:
     @patch("mcp_server_langgraph.monitoring.sla.get_prometheus_client")
     async def test_measure_response_time_p95(self, mock_prom_client, sla_monitor):
         """Test p95 response time measurement"""
-        mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+        mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
         mock_client.query_percentiles.return_value = {95: 0.350}
         mock_prom_client.return_value = mock_client
 
@@ -206,7 +206,7 @@ class TestResponseTimeMeasurement:
     @patch("mcp_server_langgraph.monitoring.sla.get_prometheus_client")
     async def test_measure_response_time_different_percentiles(self, mock_prom_client, sla_monitor):
         """Test different percentile measurements"""
-        mock_client = AsyncMock()  # async-mock-configured (side_effect set below)
+        mock_client = AsyncMock(return_value=None)  # async-mock-configured (side_effect set below)
         # Different response times for different percentiles
         mock_client.query_percentiles.side_effect = [
             {50: 0.200},
@@ -624,7 +624,7 @@ class TestBreachDetection:
     async def test_alert_on_breach(self, mock_prom_client, sla_monitor):
         """Test alerting on SLA breach"""
         # Mock Prometheus to return low uptime (will breach 100% target)
-        mock_client = AsyncMock()  # async-mock-configured (return_value set below)
+        mock_client = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
         mock_client.query_downtime.return_value = 1440  # 24 minutes downtime = 98.3% uptime
         mock_prom_client.return_value = mock_client
 
@@ -787,7 +787,7 @@ class TestSLAAlertExceptionHandling:
             patch("mcp_server_langgraph.monitoring.sla.AlertingService") as mock_service_class,
             patch("mcp_server_langgraph.monitoring.sla.logger") as mock_logger,
         ):
-            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_service.initialize = AsyncMock(side_effect=Exception("Service initialization failed"))
             mock_service_class.return_value = mock_service
 
@@ -812,8 +812,8 @@ class TestSLAAlertExceptionHandling:
             patch("mcp_server_langgraph.monitoring.sla.AlertingService") as mock_service_class,
             patch("mcp_server_langgraph.monitoring.sla.logger") as mock_logger,
         ):
-            mock_service = AsyncMock()  # noqa: async-mock-config
-            mock_service.initialize = AsyncMock()  # noqa: async-mock-config
+            mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
+            mock_service.initialize = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_service.send_alert = AsyncMock(side_effect=Exception("Network error sending alert"))
             mock_service_class.return_value = mock_service
 
@@ -838,9 +838,9 @@ class TestSLAAlertExceptionHandling:
             patch("mcp_server_langgraph.monitoring.sla.AlertingService") as mock_service_class,
             patch("mcp_server_langgraph.monitoring.sla.logger") as mock_logger,
         ):
-            mock_service = AsyncMock()  # noqa: async-mock-config
-            mock_service.initialize = AsyncMock()  # noqa: async-mock-config
-            mock_service.send_alert = AsyncMock()  # noqa: async-mock-config
+            mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
+            mock_service.initialize = AsyncMock(return_value=None)  # noqa: async-mock-config
+            mock_service.send_alert = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_service_class.return_value = mock_service
 
             # Act
@@ -863,9 +863,9 @@ class TestSLAAlertExceptionHandling:
         THEN it calls AlertingService.send_alert()
         """
         with patch("mcp_server_langgraph.monitoring.sla.AlertingService") as mock_service_class:
-            mock_service = AsyncMock()  # noqa: async-mock-config
-            mock_service.initialize = AsyncMock()  # noqa: async-mock-config
-            mock_service.send_alert = AsyncMock()  # noqa: async-mock-config
+            mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
+            mock_service.initialize = AsyncMock(return_value=None)  # noqa: async-mock-config
+            mock_service.send_alert = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_service_class.return_value = mock_service
 
             # Act

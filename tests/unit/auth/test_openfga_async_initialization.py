@@ -207,7 +207,7 @@ class TestOpenFGAAsyncInitializationEnsures:
 
         # Mock _ensure_initialized to track if it's called
         _original_ensure = original_ensure = client._ensure_initialized  # noqa: F841
-        client._ensure_initialized = AsyncMock()  # noqa: async-mock-config
+        client._ensure_initialized = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         # Act: Call ensure_initialized (simulating what lifespan should do)
         await client._ensure_initialized()
@@ -242,7 +242,7 @@ class TestOpenFGALifespanCleanup:
         )
 
         client = OpenFGAClient(config=config)
-        client.close = AsyncMock()  # noqa: async-mock-config
+        client.close = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         # Act: Close client (simulating shutdown)
         await client.close()

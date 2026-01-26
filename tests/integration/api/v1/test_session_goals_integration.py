@@ -103,7 +103,7 @@ class TestSessionGoalIntegration:
         with patch(
             "mcp_server_langgraph.api.v1.sessions.get_session_service"
         ) as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.get_session.return_value = MagicMock(**mock_session)
             mock_get_service.return_value = mock_service
 
@@ -156,7 +156,7 @@ class TestSessionGoalIntegration:
         with patch(
             "mcp_server_langgraph.api.v1.sessions.get_session_service"
         ) as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.get_session.return_value = MagicMock(**mock_session)
             mock_get_service.return_value = mock_service
 
@@ -198,7 +198,7 @@ class TestSessionGoalIntegration:
         with patch(
             "mcp_server_langgraph.api.v1.sessions.get_session_service"
         ) as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.get_session.return_value = MagicMock(**mock_session)
             mock_get_service.return_value = mock_service
 
@@ -237,7 +237,7 @@ class TestSessionGoalIntegration:
         with patch(
             "mcp_server_langgraph.api.v1.sessions.get_session_service"
         ) as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.get_session.return_value = None
             mock_get_service.return_value = mock_service
 
@@ -261,7 +261,7 @@ class TestSessionGoalIntegration:
         with patch(
             "mcp_server_langgraph.api.v1.sessions.get_session_service"
         ) as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.get_session.return_value = None
             mock_get_service.return_value = mock_service
 
@@ -326,7 +326,7 @@ class TestSessionGoalIntegration:
         with patch(
             "mcp_server_langgraph.api.v1.sessions.get_session_service"
         ) as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.get_session.return_value = MagicMock(**mock_session)
             mock_get_service.return_value = mock_service
 

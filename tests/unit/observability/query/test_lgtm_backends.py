@@ -53,7 +53,7 @@ class TestTempoTracingClient:
 
             # Mock the underlying TempoClient
             client._client = MagicMock()
-            client._client.initialize = AsyncMock()  # noqa: async-mock-config
+            client._client.initialize = AsyncMock(return_value=None)  # noqa: async-mock-config
 
             # WHEN
             await client.initialize()
@@ -73,8 +73,8 @@ class TestTempoTracingClient:
         with patch.dict("os.environ", {"TEMPO_URL": "http://localhost:3200"}):
             client = TempoTracingClient()
             client._client = MagicMock()
-            client._client.initialize = AsyncMock()  # noqa: async-mock-config
-            client._client.close = AsyncMock()  # noqa: async-mock-config
+            client._client.initialize = AsyncMock(return_value=None)  # noqa: async-mock-config
+            client._client.close = AsyncMock(return_value=None)  # noqa: async-mock-config
 
             await client.initialize()
 
@@ -506,7 +506,7 @@ class TestLokiLoggingClient:
             client._initialized = True
 
             # Mock search_logs to capture the query
-            client.search_logs = AsyncMock()  # type: ignore[method-assign]  # noqa: async-mock-config
+            client.search_logs = AsyncMock(return_value=None)  # type: ignore[method-assign]  # noqa: async-mock-config
 
             # WHEN
             await client.get_logs_for_trace("trace-abc123")
@@ -569,8 +569,8 @@ class TestPrometheusMetricsClient:
 
             # Mock the underlying PrometheusClient
             client._client = MagicMock()
-            client._client.initialize = AsyncMock()  # noqa: async-mock-config
-            client._client.close = AsyncMock()  # noqa: async-mock-config
+            client._client.initialize = AsyncMock(return_value=None)  # noqa: async-mock-config
+            client._client.close = AsyncMock(return_value=None)  # noqa: async-mock-config
 
             # WHEN
             await client.initialize()
@@ -593,8 +593,8 @@ class TestPrometheusMetricsClient:
         with patch.dict("os.environ", {"PROMETHEUS_URL": "http://localhost:9090"}):
             client = PrometheusMetricsClient()
             client._client = MagicMock()
-            client._client.initialize = AsyncMock()  # noqa: async-mock-config
-            client._client.close = AsyncMock()  # noqa: async-mock-config
+            client._client.initialize = AsyncMock(return_value=None)  # noqa: async-mock-config
+            client._client.close = AsyncMock(return_value=None)  # noqa: async-mock-config
 
             await client.initialize()
 

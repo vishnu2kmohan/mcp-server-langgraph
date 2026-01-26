@@ -255,7 +255,7 @@ class TestFromChatSuccessfulGeneration:
         mock_flags_obj.enable_workflow_from_chat = True
 
         # Mock workflow service
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.generate_from_chat.return_value = make_generated_workflow()
 
         # Override service dependency
@@ -298,7 +298,7 @@ class TestFromChatSuccessfulGeneration:
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.generate_from_chat.return_value = make_generated_workflow()
         app.dependency_overrides[get_workflow_service] = lambda: mock_service
 
@@ -335,7 +335,7 @@ class TestFromChatSuccessfulGeneration:
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         generated = make_generated_workflow()
         generated["workflow"]["version"] = 1
         mock_service.generate_from_chat.return_value = generated
@@ -438,7 +438,7 @@ class TestFromChatValidation:
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.generate_from_chat.side_effect = ValueError("Session not found")
         app.dependency_overrides[get_workflow_service] = lambda: mock_service
 
@@ -483,7 +483,7 @@ class TestFromChatRefinementModes:
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.generate_from_chat.return_value = make_generated_workflow()
         app.dependency_overrides[get_workflow_service] = lambda: mock_service
 
@@ -518,7 +518,7 @@ class TestFromChatRefinementModes:
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         generated = make_generated_workflow()
         generated["plan"] = {
             "id": "plan-123",
@@ -571,7 +571,7 @@ class TestFromChatSanitization:
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.generate_from_chat.return_value = make_generated_workflow()
         app.dependency_overrides[get_workflow_service] = lambda: mock_service
 

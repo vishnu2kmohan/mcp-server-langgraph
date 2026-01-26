@@ -211,7 +211,7 @@ class TestExampleIntegration:
         redis = redis_client_clean
 
         # GIVEN: Mocked external service
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.generate.return_value = {  # EXPLICIT!
             "text": "Generated response",
             "tokens": 150,

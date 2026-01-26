@@ -52,7 +52,7 @@ class TestListTemplatesEndpoint:
         """Test list templates returns a list."""
         from mcp_server_langgraph.api.v1.plan_templates import list_templates
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.list_all.return_value = []
 
         result = await list_templates(
@@ -68,7 +68,7 @@ class TestListTemplatesEndpoint:
         """Test list templates respects limit parameter."""
         from mcp_server_langgraph.api.v1.plan_templates import list_templates
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.list_all.return_value = []
 
         await list_templates(
@@ -104,7 +104,7 @@ class TestGetTemplateEndpoint:
             auto_approve=False,
             created_by="user@example.com",
         )
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get.return_value = mock_template
 
         result = await get_template(
@@ -123,7 +123,7 @@ class TestGetTemplateEndpoint:
 
         from mcp_server_langgraph.api.v1.plan_templates import get_template
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get.return_value = None
 
         with pytest.raises(HTTPException) as exc_info:
@@ -153,7 +153,7 @@ class TestCreateTemplateEndpoint:
         )
         from mcp_server_langgraph.core.models.plan_template import PlanTemplate
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.create.return_value = PlanTemplate(
             template_id="tmpl-new",
             name="New Template",
@@ -198,7 +198,7 @@ class TestDeleteTemplateEndpoint:
         """Test deleting a template."""
         from mcp_server_langgraph.api.v1.plan_templates import delete_template
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.delete.return_value = True
 
         result = await delete_template(
@@ -216,7 +216,7 @@ class TestDeleteTemplateEndpoint:
 
         from mcp_server_langgraph.api.v1.plan_templates import delete_template
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.delete.return_value = False
 
         with pytest.raises(HTTPException) as exc_info:
@@ -254,7 +254,7 @@ class TestSearchTemplatesEndpoint:
             created_by="user@example.com",
             tags=["code", "review"],
         )
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.find_by_tags.return_value = [mock_template]
 
         result = await search_templates(
@@ -283,7 +283,7 @@ class TestSearchTemplatesEndpoint:
             auto_approve=False,
             created_by="user@example.com",
         )
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.find_by_orchestrator.return_value = [mock_template]
 
         result = await search_templates(
@@ -313,7 +313,7 @@ class TestRecordUsageEndpoint:
             record_usage,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
 
         result = await record_usage(
             template_id="tmpl-123",
@@ -333,7 +333,7 @@ class TestRecordUsageEndpoint:
             record_usage,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
 
         await record_usage(
             template_id="tmpl-123",

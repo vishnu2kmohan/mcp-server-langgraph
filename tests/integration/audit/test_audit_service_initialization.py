@@ -221,9 +221,9 @@ class TestRetentionSchedulerIntegration:
         )
 
         with patch("mcp_server_langgraph.app.create_retention_scheduler") as mock_create_scheduler:
-            mock_scheduler = AsyncMock()  # async-mock-configured
-            mock_scheduler.start = AsyncMock()  # async-mock-configured
-            mock_scheduler.stop = AsyncMock()  # async-mock-configured
+            mock_scheduler = AsyncMock(return_value=None)  # async-mock-configured
+            mock_scheduler.start = AsyncMock(return_value=None)  # async-mock-configured
+            mock_scheduler.stop = AsyncMock(return_value=None)  # async-mock-configured
             mock_create_scheduler.return_value = mock_scheduler
 
             app = create_app(
@@ -283,9 +283,9 @@ class TestRetentionSchedulerIntegration:
         )
 
         with patch("mcp_server_langgraph.app.create_retention_scheduler") as mock_create_scheduler:
-            mock_scheduler = AsyncMock()  # async-mock-configured
-            mock_scheduler.start = AsyncMock()  # async-mock-configured
-            mock_scheduler.stop = AsyncMock()  # async-mock-configured
+            mock_scheduler = AsyncMock(return_value=None)  # async-mock-configured
+            mock_scheduler.start = AsyncMock(return_value=None)  # async-mock-configured
+            mock_scheduler.stop = AsyncMock(return_value=None)  # async-mock-configured
             mock_create_scheduler.return_value = mock_scheduler
 
             app = create_app(
@@ -315,9 +315,9 @@ class TestRetentionSchedulerIntegration:
         )
 
         with patch("mcp_server_langgraph.app.create_retention_scheduler") as mock_create_scheduler:
-            mock_scheduler = AsyncMock()  # async-mock-configured
-            mock_scheduler.start = AsyncMock()  # async-mock-configured
-            mock_scheduler.stop = AsyncMock()  # async-mock-configured
+            mock_scheduler = AsyncMock(return_value=None)  # async-mock-configured
+            mock_scheduler.start = AsyncMock(return_value=None)  # async-mock-configured
+            mock_scheduler.stop = AsyncMock(return_value=None)  # async-mock-configured
             mock_create_scheduler.return_value = mock_scheduler
 
             app = create_app(

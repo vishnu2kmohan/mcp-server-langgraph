@@ -114,12 +114,12 @@ class TestHookedChatModelBeforeModelHook:
             mock_flags.enable_llm_hooks = True
 
             with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket") as mock_bucket:
-                mock_bucket.return_value.acquire = AsyncMock()
+                mock_bucket.return_value.acquire = AsyncMock(return_value=None)
 
                 with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead") as mock_bulkhead:
                     mock_semaphore = MagicMock()
-                    mock_semaphore.__aenter__ = AsyncMock()
-                    mock_semaphore.__aexit__ = AsyncMock()
+                    mock_semaphore.__aenter__ = AsyncMock(return_value=None)
+                    mock_semaphore.__aexit__ = AsyncMock(return_value=None)
                     mock_bulkhead.return_value.get_semaphore.return_value = mock_semaphore
                     mock_bulkhead.return_value.record_success = MagicMock()
 
@@ -166,7 +166,7 @@ class TestHookedChatModelBeforeModelHook:
         from mcp_server_langgraph.core.hooks import HookResult
 
         mock_inner = MagicMock()
-        mock_inner._agenerate = AsyncMock()  # Should NOT be called
+        mock_inner._agenerate = AsyncMock(return_value=None)  # Should NOT be called
         mock_inner._llm_type = "test"
 
         mock_dispatcher = MagicMock()
@@ -218,12 +218,12 @@ class TestHookedChatModelBeforeModelHook:
             mock_flags.enable_llm_hooks = True
 
             with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket") as mock_bucket:
-                mock_bucket.return_value.acquire = AsyncMock()
+                mock_bucket.return_value.acquire = AsyncMock(return_value=None)
 
                 with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead") as mock_bulkhead:
                     mock_semaphore = MagicMock()
-                    mock_semaphore.__aenter__ = AsyncMock()
-                    mock_semaphore.__aexit__ = AsyncMock()
+                    mock_semaphore.__aenter__ = AsyncMock(return_value=None)
+                    mock_semaphore.__aexit__ = AsyncMock(return_value=None)
                     mock_bulkhead.return_value.get_semaphore.return_value = mock_semaphore
                     mock_bulkhead.return_value.record_success = MagicMock()
 
@@ -266,12 +266,12 @@ class TestHookedChatModelAfterModelHook:
             mock_flags.enable_llm_hooks = True
 
             with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket") as mock_bucket:
-                mock_bucket.return_value.acquire = AsyncMock()
+                mock_bucket.return_value.acquire = AsyncMock(return_value=None)
 
                 with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead") as mock_bulkhead:
                     mock_semaphore = MagicMock()
-                    mock_semaphore.__aenter__ = AsyncMock()
-                    mock_semaphore.__aexit__ = AsyncMock()
+                    mock_semaphore.__aenter__ = AsyncMock(return_value=None)
+                    mock_semaphore.__aexit__ = AsyncMock(return_value=None)
                     mock_bulkhead.return_value.get_semaphore.return_value = mock_semaphore
                     mock_bulkhead.return_value.record_success = MagicMock()
 
@@ -299,12 +299,12 @@ class TestHookedChatModelResilience:
             mock_flags.enable_llm_hooks = False
 
             with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket") as mock_bucket:
-                mock_bucket.return_value.acquire = AsyncMock()
+                mock_bucket.return_value.acquire = AsyncMock(return_value=None)
 
                 with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead") as mock_bulkhead:
                     mock_semaphore = MagicMock()
-                    mock_semaphore.__aenter__ = AsyncMock()
-                    mock_semaphore.__aexit__ = AsyncMock()
+                    mock_semaphore.__aenter__ = AsyncMock(return_value=None)
+                    mock_semaphore.__aexit__ = AsyncMock(return_value=None)
                     mock_bulkhead.return_value.get_semaphore.return_value = mock_semaphore
                     mock_bulkhead.return_value.record_success = MagicMock()
                     mock_bulkhead.return_value.record_error = MagicMock()
@@ -329,11 +329,11 @@ class TestHookedChatModelResilience:
             mock_flags.enable_llm_hooks = False
 
             with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket") as mock_bucket:
-                mock_bucket.return_value.acquire = AsyncMock()
+                mock_bucket.return_value.acquire = AsyncMock(return_value=None)
 
                 with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead") as mock_bulkhead:
                     mock_semaphore = MagicMock()
-                    mock_semaphore.__aenter__ = AsyncMock()
+                    mock_semaphore.__aenter__ = AsyncMock(return_value=None)
                     # Return False to not suppress exceptions
                     mock_semaphore.__aexit__ = AsyncMock(return_value=False)
                     mock_bulkhead.return_value.get_semaphore.return_value = mock_semaphore
@@ -401,12 +401,12 @@ class TestHookedChatModelNativeTools:
             mock_flags.enable_llm_hooks = False
 
             with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket") as mock_bucket:
-                mock_bucket.return_value.acquire = AsyncMock()
+                mock_bucket.return_value.acquire = AsyncMock(return_value=None)
 
                 with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead") as mock_bulkhead:
                     mock_semaphore = MagicMock()
-                    mock_semaphore.__aenter__ = AsyncMock()
-                    mock_semaphore.__aexit__ = AsyncMock()
+                    mock_semaphore.__aenter__ = AsyncMock(return_value=None)
+                    mock_semaphore.__aexit__ = AsyncMock(return_value=None)
                     mock_bulkhead.return_value.get_semaphore.return_value = mock_semaphore
                     mock_bulkhead.return_value.record_success = MagicMock()
 

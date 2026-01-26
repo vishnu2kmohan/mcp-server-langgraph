@@ -239,7 +239,7 @@ class TestHttpBootstrap:
         """HttpState.cleanup() should close the http client."""
         from mcp_server_langgraph.bootstrap.http import HttpState
 
-        mock_manager = AsyncMock()  # async-mock-configured
+        mock_manager = AsyncMock(return_value=None)  # async-mock-configured
         state = HttpState(http_client_manager=mock_manager)
 
         await state.cleanup()
@@ -281,9 +281,9 @@ class TestBootstrapLifecycle:
         """AppState.cleanup() should cleanup all components."""
         from mcp_server_langgraph.bootstrap import AppState
 
-        mock_security = AsyncMock()  # async-mock-configured
-        mock_storage = AsyncMock()  # async-mock-configured
-        mock_http = AsyncMock()  # async-mock-configured
+        mock_security = AsyncMock(return_value=None)  # async-mock-configured
+        mock_storage = AsyncMock(return_value=None)  # async-mock-configured
+        mock_http = AsyncMock(return_value=None)  # async-mock-configured
 
         state = AppState(
             security=mock_security,
@@ -334,7 +334,7 @@ class TestBootstrapStreamingSettingsWiring:
             captured_settings.append(streaming_settings)
             # Return a mock WebSocketState
             mock_state = MagicMock()
-            mock_state.cleanup = AsyncMock()  # async-mock-configured
+            mock_state.cleanup = AsyncMock(return_value=None)  # async-mock-configured
             return mock_state
 
         with patch(
@@ -375,7 +375,7 @@ class TestBootstrapStreamingSettingsWiring:
         async def mock_init_websocket(streaming_settings=None):
             captured_settings.append(streaming_settings)
             mock_state = MagicMock()
-            mock_state.cleanup = AsyncMock()  # async-mock-configured
+            mock_state.cleanup = AsyncMock(return_value=None)  # async-mock-configured
             return mock_state
 
         with patch(
@@ -502,7 +502,7 @@ class TestSkillsBootstrap:
         from mcp_server_langgraph.bootstrap.skills import SkillsState
 
         mock_scheduler = MagicMock()
-        mock_scheduler.stop = AsyncMock()
+        mock_scheduler.stop = AsyncMock(return_value=None)
         state = SkillsState(auto_update_scheduler=mock_scheduler)
 
         await state.cleanup()
@@ -534,7 +534,7 @@ class TestSkillsBootstrap:
         with patch("mcp_server_langgraph.skills.auto_update.is_auto_update_enabled", return_value=True):
             with patch("mcp_server_langgraph.skills.auto_update.AutoUpdateScheduler") as mock_scheduler_class:
                 mock_scheduler = MagicMock()
-                mock_scheduler.start = AsyncMock()
+                mock_scheduler.start = AsyncMock(return_value=None)
                 mock_scheduler_class.return_value = mock_scheduler
 
                 result = await init_skills(settings)

@@ -539,10 +539,10 @@ class TestPushSenderFallbackQueue:
     @pytest.fixture
     def mock_fallback_queue(self) -> AsyncMock:
         """Create a mock fallback queue."""
-        queue = AsyncMock()  # noqa: async-mock-config
-        queue.enqueue = AsyncMock()  # noqa: async-mock-config
+        queue = AsyncMock(return_value=None)  # noqa: async-mock-config
+        queue.enqueue = AsyncMock(return_value=None)  # noqa: async-mock-config
         queue.dequeue_batch = AsyncMock(return_value=[])
-        queue.requeue = AsyncMock()  # noqa: async-mock-config
+        queue.requeue = AsyncMock(return_value=None)  # noqa: async-mock-config
         return queue
 
     @pytest.fixture
@@ -831,8 +831,8 @@ class TestPushSenderAnalyticsIntegration:
     @pytest.fixture
     def mock_analytics(self) -> AsyncMock:
         """Create a mock PushAnalytics instance."""
-        analytics = AsyncMock()  # noqa: async-mock-config
-        analytics.record_delivery = AsyncMock()  # noqa: async-mock-config
+        analytics = AsyncMock(return_value=None)  # noqa: async-mock-config
+        analytics.record_delivery = AsyncMock(return_value=None)  # noqa: async-mock-config
         return analytics
 
     @pytest.fixture

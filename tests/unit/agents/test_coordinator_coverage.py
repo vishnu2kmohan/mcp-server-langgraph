@@ -55,7 +55,7 @@ class TestCoordinatorLifecycle:
         coordinator = Coordinator(artifact_storage=storage)
         assert coordinator.artifact_storage is storage
 
-    def test_register_subagent(self) -> None:
+    def test_register_subagent_adds_to_coordinator(self) -> None:
         """Test registering a subagent."""
         coordinator = Coordinator()
         subagent = create_mock_subagent("task-1")
@@ -74,7 +74,7 @@ class TestCoordinatorLifecycle:
 
         assert len(coordinator.list_subagents()) == 5
 
-    def test_unregister_subagent(self) -> None:
+    def test_unregister_subagent_removes_from_coordinator(self) -> None:
         """Test unregistering a subagent."""
         coordinator = Coordinator()
         subagent = create_mock_subagent("task-1")
@@ -256,7 +256,7 @@ class TestCoordinatorArtifacts:
         """Force GC to prevent memory accumulation."""
         gc.collect()
 
-    def test_store_artifact(self) -> None:
+    def test_store_artifact_persists_data(self) -> None:
         """Test storing an artifact."""
         coordinator = Coordinator()
 
@@ -323,7 +323,7 @@ class TestCoordinatorCancel:
         running2.cancel.assert_called_once()
         pending.cancel.assert_not_called()
 
-    def test_clear(self) -> None:
+    def test_clear_removes_all_artifacts(self) -> None:
         """Test clearing all subagents and artifacts."""
         coordinator = Coordinator()
         subagent = create_mock_subagent("task-1")

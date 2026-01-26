@@ -707,7 +707,7 @@ class TestRemediationApprovalAuditTrail:
         )
         from mcp_server_langgraph.audit.models import AuditEventType
 
-        mock_audit_service = AsyncMock()  # noqa: async-mock-config
+        mock_audit_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await log_remediation_audit_event(
             audit_service=mock_audit_service,

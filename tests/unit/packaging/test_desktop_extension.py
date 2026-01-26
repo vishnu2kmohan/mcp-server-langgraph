@@ -162,7 +162,7 @@ class TestExtensionBuilder:
 
         assert ExtensionBuilder is not None
 
-    def test_builder_initialization(self):
+    def test_builder_initialization_sets_defaults(self):
         """Builder should initialize with project directory."""
         from mcp_server_langgraph.packaging import ExtensionBuilder
 

@@ -189,7 +189,7 @@ class TestMCPClientSessionNullChecksHTTP:
         # Mock the HTTP client - must patch aiohttp.ClientSession since _connect_http creates its own
         mock_http_client = MagicMock()
         mock_http_client.post = MagicMock(return_value=mock_context)
-        mock_http_client.close = AsyncMock()
+        mock_http_client.close = AsyncMock(return_value=None)
 
         with patch("aiohttp.ClientSession", return_value=mock_http_client):
             with pytest.raises(ConnectionError) as exc_info:

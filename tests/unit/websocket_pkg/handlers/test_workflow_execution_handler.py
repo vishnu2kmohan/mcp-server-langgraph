@@ -88,7 +88,7 @@ class TestWorkflowExecutionHandlerLifecycle:
         from mcp_server_langgraph.websocket.types import AuthUser, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = WorkflowExecutionHandler(
@@ -111,7 +111,7 @@ class TestWorkflowExecutionHandlerLifecycle:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = WorkflowExecutionHandler(
@@ -141,7 +141,7 @@ class TestWorkflowExecutionHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.start_execution.return_value = "exec-123"
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -170,7 +170,7 @@ class TestWorkflowExecutionHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.start_execution.return_value = "exec-123"
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -196,7 +196,7 @@ class TestWorkflowExecutionHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.start_execution.side_effect = Exception("Workflow not found")
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -222,7 +222,7 @@ class TestWorkflowExecutionHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.stop_execution.return_value = True
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -252,7 +252,7 @@ class TestWorkflowExecutionHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.stop_execution.return_value = False
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -278,7 +278,7 @@ class TestWorkflowExecutionHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.stop_execution.side_effect = Exception("Stop failed")
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -304,7 +304,7 @@ class TestWorkflowExecutionHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_execution_status.return_value = {
             "state": "running",
             "current_node": "process_data",
@@ -337,7 +337,7 @@ class TestWorkflowExecutionHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_execution_status.side_effect = Exception("Status unavailable")
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -363,7 +363,7 @@ class TestWorkflowExecutionHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = WorkflowExecutionHandler(
@@ -397,7 +397,7 @@ class TestWorkflowExecutionHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = WorkflowExecutionHandler(
@@ -406,7 +406,7 @@ class TestWorkflowExecutionHandlerPush:
                 workflow_id="workflow-123",
             )
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
 
         await handler.push_node_update("node-1", "started", {"input": "data"})
@@ -425,7 +425,7 @@ class TestWorkflowExecutionHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = WorkflowExecutionHandler(
@@ -434,7 +434,7 @@ class TestWorkflowExecutionHandlerPush:
                 workflow_id="workflow-123",
             )
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
 
         await handler.push_node_update("node-1", "completed")
@@ -452,7 +452,7 @@ class TestWorkflowExecutionHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = WorkflowExecutionHandler(
@@ -474,7 +474,7 @@ class TestWorkflowExecutionHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = WorkflowExecutionHandler(
@@ -483,7 +483,7 @@ class TestWorkflowExecutionHandlerPush:
                 workflow_id="workflow-123",
             )
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
 
         await handler.push_log("info", "Processing started", "node-1")
@@ -504,7 +504,7 @@ class TestWorkflowExecutionHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = WorkflowExecutionHandler(
@@ -513,7 +513,7 @@ class TestWorkflowExecutionHandlerPush:
                 workflow_id="workflow-123",
             )
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
 
         await handler.push_log("warning", "Warning message")
@@ -531,7 +531,7 @@ class TestWorkflowExecutionHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = WorkflowExecutionHandler(
@@ -540,7 +540,7 @@ class TestWorkflowExecutionHandlerPush:
                 workflow_id="workflow-123",
             )
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
 
         await handler.push_execution_completed({"output": "result"})
@@ -560,7 +560,7 @@ class TestWorkflowExecutionHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = WorkflowExecutionHandler(
@@ -569,7 +569,7 @@ class TestWorkflowExecutionHandlerPush:
                 workflow_id="workflow-123",
             )
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
 
         await handler.push_execution_completed()
@@ -587,7 +587,7 @@ class TestWorkflowExecutionHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="workflow-execution")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = WorkflowExecutionHandler(
@@ -596,7 +596,7 @@ class TestWorkflowExecutionHandlerPush:
                 workflow_id="workflow-123",
             )
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
 
         await handler.push_execution_error("Node failed: timeout")

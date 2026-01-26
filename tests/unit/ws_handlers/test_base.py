@@ -446,7 +446,7 @@ class TestWebSocketBaseAuthorization:
             )
             mock_auth.return_value = mock_middleware
 
-            mock_fga_client = AsyncMock()  # noqa: async-mock-config
+            mock_fga_client = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_fga_client.check_permission = AsyncMock(return_value=True)  # noqa: async-mock-config
             mock_fga.return_value = mock_fga_client
 
@@ -492,7 +492,7 @@ class TestWebSocketBaseAuthorization:
             )
             mock_auth.return_value = mock_middleware
 
-            mock_fga_client = AsyncMock()  # noqa: async-mock-config
+            mock_fga_client = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_fga_client.check_permission = AsyncMock(return_value=False)  # noqa: async-mock-config
             mock_fga.return_value = mock_fga_client
 
@@ -546,7 +546,7 @@ class TestWebSocketBaseAuthorization:
             )
             mock_auth.return_value = mock_middleware
 
-            mock_fga_client = AsyncMock()  # noqa: async-mock-config
+            mock_fga_client = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_fga_client.check_permission = AsyncMock(side_effect=Exception("OpenFGA unavailable"))  # noqa: async-mock-config
             mock_fga.return_value = mock_fga_client
 
@@ -1481,7 +1481,7 @@ class TestWebSocketBaseBroadcasterMixin:
         from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.subscribe = AsyncMock()
+        mock_broadcaster.subscribe = AsyncMock(return_value=None)
 
         class TestHandler(BroadcasterMixin):
             def __init__(self) -> None:
@@ -1507,7 +1507,7 @@ class TestWebSocketBaseBroadcasterMixin:
         from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.unsubscribe = AsyncMock()
+        mock_broadcaster.unsubscribe = AsyncMock(return_value=None)
 
         class TestHandler(BroadcasterMixin):
             def __init__(self) -> None:
@@ -1532,7 +1532,7 @@ class TestWebSocketBaseBroadcasterMixin:
         from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.unsubscribe = AsyncMock()
+        mock_broadcaster.unsubscribe = AsyncMock(return_value=None)
 
         class TestHandler(BroadcasterMixin):
             def __init__(self) -> None:
@@ -1557,7 +1557,7 @@ class TestWebSocketBaseBroadcasterMixin:
         from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.subscribe = AsyncMock()
+        mock_broadcaster.subscribe = AsyncMock(return_value=None)
 
         class TestHandler(BroadcasterMixin):
             def __init__(self) -> None:
@@ -1585,7 +1585,7 @@ class TestWebSocketBaseBroadcasterMixin:
         from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.subscribe = AsyncMock()
+        mock_broadcaster.subscribe = AsyncMock(return_value=None)
 
         class TestHandler(BroadcasterMixin):
             def __init__(self) -> None:
@@ -1613,7 +1613,7 @@ class TestWebSocketBaseBroadcasterMixin:
         from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.subscribe = AsyncMock()
+        mock_broadcaster.subscribe = AsyncMock(return_value=None)
         test_filter = {"service_name": "test", "status": "OK"}
 
         class TestHandler(BroadcasterMixin):
@@ -1642,7 +1642,7 @@ class TestWebSocketBaseBroadcasterMixin:
         from mcp_server_langgraph.websocket.mixins import BroadcasterMixin
 
         mock_broadcaster = MagicMock()
-        mock_broadcaster.subscribe = AsyncMock()
+        mock_broadcaster.subscribe = AsyncMock(return_value=None)
 
         class TestHandler(BroadcasterMixin):
             def __init__(self) -> None:

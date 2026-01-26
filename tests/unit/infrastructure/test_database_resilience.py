@@ -63,7 +63,7 @@ class TestDatabaseConnectivityCircuitBreaker:
                 raise OSError("Connection refused")
             # Return a mock connection
             mock_conn = MagicMock()
-            mock_conn.close = AsyncMock()
+            mock_conn.close = AsyncMock(return_value=None)
             return mock_conn
 
         with (

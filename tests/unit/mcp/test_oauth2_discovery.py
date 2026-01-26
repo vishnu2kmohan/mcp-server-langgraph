@@ -50,7 +50,7 @@ class TestOAuth2DiscoveryService:
     @pytest.fixture
     def mock_http_client(self) -> AsyncMock:
         """Create a mock HTTP client."""
-        client = AsyncMock()  # noqa: async-mock-config
+        client = AsyncMock(return_value=None)  # noqa: async-mock-config
         return client
 
     @pytest.fixture

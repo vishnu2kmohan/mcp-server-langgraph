@@ -49,7 +49,7 @@ class TestCreatePreferencesRepository:
             RedisPreferencesRepository,
         )
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         repo = create_preferences_repository(redis_client=mock_redis)
 
@@ -78,7 +78,7 @@ class TestCreatePreferencesRepository:
         """
         from mcp_server_langgraph.bootstrap.storage import create_preferences_repository
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         repo = create_preferences_repository(redis_client=mock_redis)
 

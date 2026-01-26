@@ -40,7 +40,7 @@ class TestPushFallbackQueueEnqueue:
         )
         from mcp_server_langgraph.notifications.push_sender import PushMessage
 
-        redis = AsyncMock()
+        redis = AsyncMock(return_value=None)
         redis.lpush = AsyncMock(return_value=1)
         redis.expire = AsyncMock(return_value=True)
 
@@ -68,7 +68,7 @@ class TestPushFallbackQueueEnqueue:
         )
         from mcp_server_langgraph.notifications.push_sender import PushMessage
 
-        redis = AsyncMock()
+        redis = AsyncMock(return_value=None)
         captured_data = None
 
         async def capture_lpush(key: str, data: str) -> int:
@@ -110,7 +110,7 @@ class TestPushFallbackQueueEnqueue:
         )
         from mcp_server_langgraph.notifications.push_sender import PushMessage
 
-        redis = AsyncMock()
+        redis = AsyncMock(return_value=None)
         redis.llen = AsyncMock(return_value=10000)  # At max
         redis.lpush = AsyncMock(return_value=10001)
         redis.expire = AsyncMock(return_value=True)
@@ -149,7 +149,7 @@ class TestPushFallbackQueueDequeue:
             PushFallbackQueue,
         )
 
-        redis = AsyncMock()
+        redis = AsyncMock(return_value=None)
         stored_message = json.dumps(
             {
                 "message_id": "msg-123",
@@ -180,7 +180,7 @@ class TestPushFallbackQueueDequeue:
             PushFallbackQueue,
         )
 
-        redis = AsyncMock()
+        redis = AsyncMock(return_value=None)
         redis.rpop = AsyncMock(return_value=None)
 
         queue = PushFallbackQueue(redis=redis, queue_key="push:queue", ttl_seconds=3600)
@@ -196,7 +196,7 @@ class TestPushFallbackQueueDequeue:
             PushFallbackQueue,
         )
 
-        redis = AsyncMock()
+        redis = AsyncMock(return_value=None)
         messages = [
             json.dumps(
                 {
@@ -241,7 +241,7 @@ class TestPushFallbackQueueRetry:
         )
         from mcp_server_langgraph.notifications.push_sender import PushMessage
 
-        redis = AsyncMock()
+        redis = AsyncMock(return_value=None)
         redis.lpush = AsyncMock(return_value=1)
         redis.expire = AsyncMock(return_value=True)
 
@@ -271,7 +271,7 @@ class TestPushFallbackQueueRetry:
         )
         from mcp_server_langgraph.notifications.push_sender import PushMessage
 
-        redis = AsyncMock()
+        redis = AsyncMock(return_value=None)
 
         queue = PushFallbackQueue(
             redis=redis,
@@ -311,7 +311,7 @@ class TestPushFallbackQueueMetrics:
             PushFallbackQueue,
         )
 
-        redis = AsyncMock()
+        redis = AsyncMock(return_value=None)
         redis.llen = AsyncMock(return_value=42)
 
         queue = PushFallbackQueue(redis=redis, queue_key="push:queue", ttl_seconds=3600)
@@ -328,7 +328,7 @@ class TestPushFallbackQueueMetrics:
             PushFallbackQueue,
         )
 
-        redis = AsyncMock()
+        redis = AsyncMock(return_value=None)
         redis.delete = AsyncMock(return_value=1)
 
         queue = PushFallbackQueue(redis=redis, queue_key="push:queue", ttl_seconds=3600)
@@ -368,7 +368,7 @@ class TestPushFallbackQueueIntegration:
                 return queue_data.pop()
             return None
 
-        redis = AsyncMock()
+        redis = AsyncMock(return_value=None)
         redis.lpush = AsyncMock(side_effect=mock_lpush)
         redis.rpop = AsyncMock(side_effect=mock_rpop)
         redis.expire = AsyncMock(return_value=True)

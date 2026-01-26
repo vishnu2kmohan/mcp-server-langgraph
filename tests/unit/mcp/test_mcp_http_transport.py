@@ -66,7 +66,7 @@ class TestMCPHTTPTransportConnect:
         # Mock the HTTP client - post() returns async context manager
         mock_client = MagicMock()
         mock_client.post = MagicMock(return_value=mock_response)
-        mock_client.close = AsyncMock()
+        mock_client.close = AsyncMock(return_value=None)
 
         with patch("aiohttp.ClientSession", return_value=mock_client):
             await session.connect()
@@ -112,7 +112,7 @@ class TestMCPHTTPTransportConnect:
 
         mock_client = MagicMock()
         mock_client.post = MagicMock(return_value=mock_response)
-        mock_client.close = AsyncMock()
+        mock_client.close = AsyncMock(return_value=None)
 
         with patch("aiohttp.ClientSession", return_value=mock_client):
             await session.connect()
@@ -160,7 +160,7 @@ class TestMCPHTTPTransportConnect:
 
         mock_client = MagicMock()
         mock_client.post = MagicMock(return_value=mock_response)
-        mock_client.close = AsyncMock()
+        mock_client.close = AsyncMock(return_value=None)
 
         with patch("aiohttp.ClientSession", return_value=mock_client):
             await session.connect()
@@ -205,7 +205,7 @@ class TestMCPHTTPTransportConnect:
 
         mock_client = MagicMock()
         mock_client.post = MagicMock(return_value=mock_response)
-        mock_client.close = AsyncMock()
+        mock_client.close = AsyncMock(return_value=None)
 
         with patch("aiohttp.ClientSession", return_value=mock_client):
             await session.connect()
@@ -259,7 +259,7 @@ class TestMCPHTTPTransportToolOperations:
 
         mock_client = MagicMock()
         mock_client.post = MagicMock(side_effect=track_request)
-        mock_client.close = AsyncMock()
+        mock_client.close = AsyncMock(return_value=None)
 
         with patch("aiohttp.ClientSession", return_value=mock_client):
             await session.connect()
@@ -308,7 +308,7 @@ class TestMCPHTTPTransportToolOperations:
 
         mock_client = MagicMock()
         mock_client.post = MagicMock(side_effect=track_request)
-        mock_client.close = AsyncMock()
+        mock_client.close = AsyncMock(return_value=None)
 
         with patch("aiohttp.ClientSession", return_value=mock_client):
             await session.connect()
@@ -353,7 +353,7 @@ class TestMCPHTTPTransportErrorHandling:
 
         mock_client = MagicMock()
         mock_client.post = MagicMock(return_value=mock_response)
-        mock_client.close = AsyncMock()
+        mock_client.close = AsyncMock(return_value=None)
 
         with patch("aiohttp.ClientSession", return_value=mock_client):
             with pytest.raises(ConnectionError, match="HTTP error|status"):
@@ -393,7 +393,7 @@ class TestMCPHTTPTransportErrorHandling:
 
         mock_client = MagicMock()
         mock_client.post = MagicMock(return_value=mock_response)
-        mock_client.close = AsyncMock()
+        mock_client.close = AsyncMock(return_value=None)
 
         with patch("aiohttp.ClientSession", return_value=mock_client):
             with pytest.raises(ConnectionError, match="Initialize failed"):

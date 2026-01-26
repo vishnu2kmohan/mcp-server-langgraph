@@ -385,7 +385,7 @@ class TestVisualVerificationRetryIntegration:
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -410,7 +410,7 @@ class TestVisualVerificationRetryIntegration:
 
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             mock_llm.ainvoke.return_value = MagicMock(content="OVERALL: 0.9\nFEEDBACK: OK")
@@ -443,7 +443,7 @@ class TestVisualVerificationRetryIntegration:
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -467,7 +467,7 @@ class TestVisualVerificationRetryIntegration:
 
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             mock_llm.ainvoke.return_value = MagicMock(content="OVERALL: 0.9\nFEEDBACK: OK")
@@ -500,7 +500,7 @@ class TestVisualVerificationCacheHitIntegration:
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -518,7 +518,7 @@ class TestVisualVerificationCacheHitIntegration:
             # Simulate cache hit
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=cached_screenshot)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             mock_llm.ainvoke.return_value = MagicMock(
@@ -558,7 +558,7 @@ FEEDBACK: OK"""
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -578,7 +578,7 @@ FEEDBACK: OK"""
             # Simulate cache miss
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             mock_llm.ainvoke.return_value = MagicMock(content="OVERALL: 0.9\nFEEDBACK: OK")
@@ -607,7 +607,7 @@ FEEDBACK: OK"""
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -624,8 +624,8 @@ FEEDBACK: OK"""
             mock_capture.ainvoke = AsyncMock(return_value=screenshot_result)
 
             mock_cache = MagicMock()
-            mock_cache.aget = AsyncMock()
-            mock_cache.aset = AsyncMock()
+            mock_cache.aget = AsyncMock(return_value=None)
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             mock_llm.ainvoke.return_value = MagicMock(content="OVERALL: 0.9\nFEEDBACK: OK")

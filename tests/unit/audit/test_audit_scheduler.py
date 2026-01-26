@@ -32,7 +32,7 @@ class TestAuditIntegrityScheduler:
         """GIVEN scheduler WHEN running daily THEN verifies last 24 hours."""
         from mcp_server_langgraph.audit.scheduler import AuditIntegrityScheduler
 
-        mock_service = AsyncMock()  # async-mock-configured
+        mock_service = AsyncMock(return_value=None)  # async-mock-configured
         mock_service.verify_integrity = AsyncMock(
             return_value={
                 "valid": True,
@@ -56,7 +56,7 @@ class TestAuditIntegrityScheduler:
         """GIVEN verification failure WHEN running THEN alert triggered."""
         from mcp_server_langgraph.audit.scheduler import AuditIntegrityScheduler
 
-        mock_service = AsyncMock()  # async-mock-configured
+        mock_service = AsyncMock(return_value=None)  # async-mock-configured
         mock_service.verify_integrity = AsyncMock(
             return_value={
                 "valid": False,
@@ -65,7 +65,7 @@ class TestAuditIntegrityScheduler:
             }
         )
 
-        mock_alert_callback = AsyncMock()  # async-mock-configured
+        mock_alert_callback = AsyncMock(return_value=None)  # async-mock-configured
 
         scheduler = AuditIntegrityScheduler(
             audit_service=mock_service,
@@ -82,7 +82,7 @@ class TestAuditIntegrityScheduler:
         """GIVEN verification WHEN completed THEN metrics recorded."""
         from mcp_server_langgraph.audit.scheduler import AuditIntegrityScheduler
 
-        mock_service = AsyncMock()  # async-mock-configured
+        mock_service = AsyncMock(return_value=None)  # async-mock-configured
         mock_service.verify_integrity = AsyncMock(
             return_value={
                 "valid": True,
@@ -116,7 +116,7 @@ class TestAuditSchedulerConfiguration:
         """GIVEN no config WHEN created THEN uses default schedule."""
         from mcp_server_langgraph.audit.scheduler import AuditIntegrityScheduler
 
-        mock_service = AsyncMock()  # async-mock-configured
+        mock_service = AsyncMock(return_value=None)  # async-mock-configured
 
         scheduler = AuditIntegrityScheduler(audit_service=mock_service)
 
@@ -127,7 +127,7 @@ class TestAuditSchedulerConfiguration:
         """GIVEN custom config WHEN created THEN uses custom schedule."""
         from mcp_server_langgraph.audit.scheduler import AuditIntegrityScheduler
 
-        mock_service = AsyncMock()  # async-mock-configured
+        mock_service = AsyncMock(return_value=None)  # async-mock-configured
 
         scheduler = AuditIntegrityScheduler(
             audit_service=mock_service,
@@ -140,7 +140,7 @@ class TestAuditSchedulerConfiguration:
         """GIVEN scheduler WHEN started THEN runs without error."""
         from mcp_server_langgraph.audit.scheduler import AuditIntegrityScheduler
 
-        mock_service = AsyncMock()  # async-mock-configured
+        mock_service = AsyncMock(return_value=None)  # async-mock-configured
 
         scheduler = AuditIntegrityScheduler(audit_service=mock_service)
 
@@ -151,7 +151,7 @@ class TestAuditSchedulerConfiguration:
         """GIVEN running scheduler WHEN stopped THEN stops gracefully."""
         from mcp_server_langgraph.audit.scheduler import AuditIntegrityScheduler
 
-        mock_service = AsyncMock()  # async-mock-configured
+        mock_service = AsyncMock(return_value=None)  # async-mock-configured
 
         scheduler = AuditIntegrityScheduler(audit_service=mock_service)
         scheduler.stop()

@@ -24,7 +24,7 @@ pytestmark = [
 @pytest.fixture
 def mock_workflow_storage() -> AsyncMock:
     """Create a mock workflow storage."""
-    storage = AsyncMock()  # async-mock-configured
+    storage = AsyncMock(return_value=None)  # async-mock-configured
     storage.get_workflow = AsyncMock(
         return_value=StoredWorkflow(
             id="wf-123",

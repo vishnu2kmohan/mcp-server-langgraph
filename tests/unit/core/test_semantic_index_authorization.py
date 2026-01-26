@@ -30,9 +30,9 @@ def mock_embedder() -> MagicMock:
 @pytest.fixture
 def mock_qdrant_client() -> AsyncMock:
     """Create a mock Qdrant async client."""
-    client = AsyncMock()
+    client = AsyncMock(return_value=None)
     client.get_collections = AsyncMock(return_value=MagicMock(collections=[]))
-    client.create_collection = AsyncMock()
+    client.create_collection = AsyncMock(return_value=None)
     client.upsert = AsyncMock(return_value=None)
     mock_response = MagicMock()
     mock_response.points = []
@@ -43,7 +43,7 @@ def mock_qdrant_client() -> AsyncMock:
 @pytest.fixture
 def mock_openfga_client() -> AsyncMock:
     """Create a mock OpenFGA client for authorization checks."""
-    client = AsyncMock()
+    client = AsyncMock(return_value=None)
     # Default: deny all - tests will configure allowed permissions
     # The actual OpenFGAClient uses check_permission which returns bool directly
     client.check_permission = AsyncMock(return_value=False)

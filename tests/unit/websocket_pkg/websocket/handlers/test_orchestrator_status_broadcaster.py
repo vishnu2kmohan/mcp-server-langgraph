@@ -51,7 +51,7 @@ class TestOrchestratorStatusBroadcaster:
     async def test_subscribe_adds_websocket(self) -> None:
         """Subscribing adds WebSocket to subscribers list."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(ws, user_id="user-123")
 
@@ -61,7 +61,7 @@ class TestOrchestratorStatusBroadcaster:
     async def test_unsubscribe_removes_websocket(self) -> None:
         """Unsubscribing removes WebSocket from subscribers list."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(ws, user_id="user-123")
         await broadcaster.unsubscribe(ws)
@@ -72,9 +72,9 @@ class TestOrchestratorStatusBroadcaster:
     async def test_multiple_subscribers(self) -> None:
         """Multiple WebSockets can subscribe."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws1 = AsyncMock()  # noqa: async-mock-config
-        ws2 = AsyncMock()  # noqa: async-mock-config
-        ws3 = AsyncMock()  # noqa: async-mock-config
+        ws1 = AsyncMock(return_value=None)  # noqa: async-mock-config
+        ws2 = AsyncMock(return_value=None)  # noqa: async-mock-config
+        ws3 = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(ws1, user_id="user-1")
         await broadcaster.subscribe(ws2, user_id="user-2")
@@ -86,7 +86,7 @@ class TestOrchestratorStatusBroadcaster:
     async def test_unsubscribe_nonexistent_does_nothing(self) -> None:
         """Unsubscribing a non-subscribed WebSocket doesn't error."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         # Should not raise
         await broadcaster.unsubscribe(ws)
@@ -101,8 +101,8 @@ class TestOrchestratorStatusBroadcaster:
     async def test_broadcast_orchestrator_status(self) -> None:
         """Broadcasting status sends to all subscribers."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws1 = AsyncMock()  # noqa: async-mock-config
-        ws2 = AsyncMock()  # noqa: async-mock-config
+        ws1 = AsyncMock(return_value=None)  # noqa: async-mock-config
+        ws2 = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(ws1, user_id="user-1")
         await broadcaster.subscribe(ws2, user_id="user-2")
@@ -130,7 +130,7 @@ class TestOrchestratorStatusBroadcaster:
     async def test_broadcast_task_started(self) -> None:
         """Broadcasting task_started sends correct message."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(ws, user_id="user-1")
 
@@ -154,7 +154,7 @@ class TestOrchestratorStatusBroadcaster:
     async def test_broadcast_task_completed(self) -> None:
         """Broadcasting task_completed sends correct message."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(ws, user_id="user-1")
 
@@ -179,7 +179,7 @@ class TestOrchestratorStatusBroadcaster:
     async def test_broadcast_task_failed(self) -> None:
         """Broadcasting task_failed sends correct message."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(ws, user_id="user-1")
 
@@ -209,7 +209,7 @@ class TestOrchestratorStatusBroadcaster:
     async def test_failed_send_removes_subscriber(self) -> None:
         """Failed WebSocket send removes the subscriber."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         ws.send_json.side_effect = Exception("Connection closed")
 
         await broadcaster.subscribe(ws, user_id="user-1")
@@ -226,9 +226,9 @@ class TestOrchestratorStatusBroadcaster:
     async def test_one_failed_subscriber_doesnt_affect_others(self) -> None:
         """One failed subscriber doesn't prevent others from receiving."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws1 = AsyncMock()  # noqa: async-mock-config
+        ws1 = AsyncMock(return_value=None)  # noqa: async-mock-config
         ws1.send_json.side_effect = Exception("Connection closed")
-        ws2 = AsyncMock()  # noqa: async-mock-config
+        ws2 = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(ws1, user_id="user-1")
         await broadcaster.subscribe(ws2, user_id="user-2")
@@ -250,8 +250,8 @@ class TestOrchestratorStatusBroadcaster:
     async def test_broadcast_to_specific_user(self) -> None:
         """Broadcasting to specific user only sends to that user."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws1 = AsyncMock()  # noqa: async-mock-config
-        ws2 = AsyncMock()  # noqa: async-mock-config
+        ws1 = AsyncMock(return_value=None)  # noqa: async-mock-config
+        ws2 = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(ws1, user_id="user-1")
         await broadcaster.subscribe(ws2, user_id="user-2")
@@ -270,8 +270,8 @@ class TestOrchestratorStatusBroadcaster:
     async def test_broadcast_to_all_users_when_no_filter(self) -> None:
         """Broadcasting without user filter sends to all."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws1 = AsyncMock()  # noqa: async-mock-config
-        ws2 = AsyncMock()  # noqa: async-mock-config
+        ws1 = AsyncMock(return_value=None)  # noqa: async-mock-config
+        ws2 = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(ws1, user_id="user-1")
         await broadcaster.subscribe(ws2, user_id="user-2")
@@ -306,7 +306,7 @@ class TestOrchestratorStatusBroadcaster:
     async def test_all_task_categories_broadcast(self, category: TaskCategory) -> None:
         """All task categories can be broadcast."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(ws, user_id="user-1")
 
@@ -503,7 +503,7 @@ class TestOrchestratorStatusHandler:
         handler = OrchestratorStatusHandler(config=config, broadcaster=broadcaster)
 
         # Simulate WebSocket connection
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = ws
 
         user = AuthUser(id="user-123", username="user123", email="test@example.com")
@@ -520,7 +520,7 @@ class TestOrchestratorStatusHandler:
         config = WebSocketConfig(endpoint_name="orchestrator-status")
         handler = OrchestratorStatusHandler(config=config, broadcaster=broadcaster)
 
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = ws
 
         user = AuthUser(id="admin-user", username="admin", email="admin@example.com")
@@ -539,7 +539,7 @@ class TestOrchestratorStatusHandler:
         config = WebSocketConfig(endpoint_name="orchestrator-status")
         handler = OrchestratorStatusHandler(config=config, broadcaster=broadcaster)
 
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = ws
 
         # First connect
@@ -558,7 +558,7 @@ class TestOrchestratorStatusHandler:
         config = WebSocketConfig(endpoint_name="orchestrator-status")
         handler = OrchestratorStatusHandler(config=config, broadcaster=broadcaster)
 
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = ws
         handler._subscribed = False
 
@@ -577,7 +577,7 @@ class TestOrchestratorStatusHandler:
         config = WebSocketConfig(endpoint_name="orchestrator-status")
         handler = OrchestratorStatusHandler(config=config, broadcaster=broadcaster)
 
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = ws
         handler._user_id = "user-789"
         handler._subscribed = False
@@ -597,7 +597,7 @@ class TestOrchestratorStatusHandler:
         config = WebSocketConfig(endpoint_name="orchestrator-status")
         handler = OrchestratorStatusHandler(config=config, broadcaster=broadcaster)
 
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = ws
         handler._user_id = "user-789"
 
@@ -620,7 +620,7 @@ class TestOrchestratorStatusHandler:
         config = WebSocketConfig(endpoint_name="orchestrator-status")
         handler = OrchestratorStatusHandler(config=config, broadcaster=broadcaster)
 
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = ws
 
         message = MessageEnvelope(type="unknown_type", id="msg-3")
@@ -635,7 +635,7 @@ class TestOrchestratorStatusHandler:
         config = WebSocketConfig(endpoint_name="orchestrator-status")
         handler = OrchestratorStatusHandler(config=config, broadcaster=broadcaster)
 
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = ws
 
         message = MessageEnvelope(type="get_status", id="msg-4")
@@ -856,7 +856,7 @@ class TestTaskProgress:
     async def test_broadcast_task_progress_sends_event(self) -> None:
         """Broadcaster should have broadcast_task_progress method."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         await broadcaster.subscribe(ws)
 
         task_info = TaskInfo(
@@ -965,7 +965,7 @@ class TestTaskQueueDepth:
     async def test_broadcast_queue_update_sends_event(self) -> None:
         """Broadcaster should send queue_update when queue changes."""
         broadcaster = OrchestratorStatusBroadcaster()
-        ws = AsyncMock()  # noqa: async-mock-config
+        ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         await broadcaster.subscribe(ws)
 
         await broadcaster.queue_task(

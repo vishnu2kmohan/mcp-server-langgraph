@@ -237,7 +237,7 @@ class TestContextFilter:
         assert filtered[-1]["content"] == "msg5"
 
     @pytest.mark.unit
-    def test_chain_filters(self):
+    def test_chain_filters_apply_sequentially(self):
         """GIVEN multiple filters
         WHEN chained together
         THEN they compose correctly"""

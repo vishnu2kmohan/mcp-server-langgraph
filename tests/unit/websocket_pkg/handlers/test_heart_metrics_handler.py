@@ -79,7 +79,7 @@ class TestHeartMetricsHandlerLifecycle:
         from mcp_server_langgraph.websocket.types import AuthUser, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_current_snapshot.return_value = {
             "happiness": 0.85,
             "engagement": 0.72,
@@ -91,7 +91,7 @@ class TestHeartMetricsHandlerLifecycle:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         user = AuthUser(id="user-123", username="testuser")
 
@@ -112,7 +112,7 @@ class TestHeartMetricsHandlerLifecycle:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
@@ -141,7 +141,7 @@ class TestHeartMetricsHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_current_snapshot.return_value = {"happiness": 0.85}
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -165,7 +165,7 @@ class TestHeartMetricsHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
@@ -186,7 +186,7 @@ class TestHeartMetricsHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_current_snapshot.return_value = {"happiness": 0.85}
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -208,7 +208,7 @@ class TestHeartMetricsHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_dimension_metrics.return_value = {
             "value": 0.85,
             "trend": "up",
@@ -236,7 +236,7 @@ class TestHeartMetricsHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
@@ -257,7 +257,7 @@ class TestHeartMetricsHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
@@ -278,7 +278,7 @@ class TestHeartMetricsHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
@@ -302,7 +302,7 @@ class TestHeartMetricsHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
@@ -332,12 +332,12 @@ class TestHeartMetricsHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler.subscribed_dimensions.add("happiness")
 
@@ -354,12 +354,12 @@ class TestHeartMetricsHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         # Not subscribed
 
@@ -376,12 +376,12 @@ class TestHeartMetricsHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
 
         await handler.push_threshold_alert("engagement", "low", 0.45)
@@ -402,7 +402,7 @@ class TestHeartMetricsHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="heart-metrics")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)

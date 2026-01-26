@@ -84,7 +84,7 @@ class TestBootstrapCacheWarming:
         mock_settings.auth_cache_maxsize = 1000
 
         # Mock the semantic index manager
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
         mock_manager.warm_cache = AsyncMock(return_value=1)
 
         with patch(
@@ -108,7 +108,7 @@ class TestBootstrapCacheWarming:
         mock_settings = MagicMock(spec=Settings)
         mock_settings.auth_cache_warm_entries = []
 
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
         mock_manager.warm_cache = AsyncMock(return_value=0)
 
         with patch(

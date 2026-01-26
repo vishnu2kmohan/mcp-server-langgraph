@@ -58,7 +58,7 @@ class TestContextGraphTraceAuthorization:
         from mcp_server_langgraph.api.v1.context_graph import get_trace
 
         # GIVEN a trace that belongs to session-123
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_id = AsyncMock(
             return_value=MagicMock(
                 trace_id="trace-001",
@@ -72,7 +72,7 @@ class TestContextGraphTraceAuthorization:
         mock_user = {"sub": "user-alice", "organization_id": "org-001"}
 
         # AND authorization is granted
-        mock_auth_service = AsyncMock()
+        mock_auth_service = AsyncMock(return_value=None)
         mock_auth_service.authorize = AsyncMock(return_value=True)
 
         mock_request = _create_mock_request(mock_auth_service)
@@ -100,7 +100,7 @@ class TestContextGraphTraceAuthorization:
         from mcp_server_langgraph.api.v1.context_graph import get_trace
 
         # GIVEN a trace that belongs to session-123
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_id = AsyncMock(
             return_value=MagicMock(
                 trace_id="trace-001",
@@ -114,7 +114,7 @@ class TestContextGraphTraceAuthorization:
         mock_user = {"sub": "user-bob", "organization_id": "org-002"}
 
         # AND authorization is denied
-        mock_auth_service = AsyncMock()
+        mock_auth_service = AsyncMock(return_value=None)
         mock_auth_service.authorize = AsyncMock(return_value=False)
 
         mock_request = _create_mock_request(mock_auth_service)
@@ -138,7 +138,7 @@ class TestContextGraphTraceAuthorization:
         from mcp_server_langgraph.api.v1.context_graph import get_trace
 
         # GIVEN a trace that doesn't exist
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_id = AsyncMock(return_value=None)
 
         mock_user = {"sub": "user-alice", "organization_id": "org-001"}
@@ -170,14 +170,14 @@ class TestContextGraphSessionTracesAuthorization:
         from mcp_server_langgraph.api.v1.context_graph import get_session_traces
 
         # GIVEN a mock repository with traces
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_session = AsyncMock(return_value=[])
 
         # AND a user who has viewer access
         mock_user = {"sub": "user-alice", "organization_id": "org-001"}
 
         # AND authorization is granted
-        mock_auth_service = AsyncMock()
+        mock_auth_service = AsyncMock(return_value=None)
         mock_auth_service.authorize = AsyncMock(return_value=True)
 
         mock_request = _create_mock_request(mock_auth_service)
@@ -203,11 +203,11 @@ class TestContextGraphSessionTracesAuthorization:
         """User without session access should get 403 Forbidden."""
         from mcp_server_langgraph.api.v1.context_graph import get_session_traces
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_user = {"sub": "user-bob", "organization_id": "org-002"}
 
         # AND authorization is denied
-        mock_auth_service = AsyncMock()
+        mock_auth_service = AsyncMock(return_value=None)
         mock_auth_service.authorize = AsyncMock(return_value=False)
 
         mock_request = _create_mock_request(mock_auth_service)
@@ -253,7 +253,7 @@ class TestContextGraphPrecedentSearchAuthorization:
             enable_precedent_search=True,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_request = _create_mock_request()
 
         request_body = PrecedentSearchRequest(query="test query", limit=10)
@@ -285,7 +285,7 @@ class TestContextGraphPrecedentSearchAuthorization:
         from mcp_server_langgraph.storage.models import PrecedentSearchRequest
 
         mock_user = {"sub": "user-alice", "organization_id": "org-001"}
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_request = _create_mock_request()
 
         # AND precedent search is disabled
@@ -325,7 +325,7 @@ class TestContextGraphAuthorizationMetrics:
         """Authorization denial should be logged for audit compliance."""
         from mcp_server_langgraph.api.v1.context_graph import get_trace
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_id = AsyncMock(
             return_value=MagicMock(
                 trace_id="trace-001",
@@ -337,7 +337,7 @@ class TestContextGraphAuthorizationMetrics:
 
         mock_user = {"sub": "user-bob", "organization_id": "org-002"}
 
-        mock_auth_service = AsyncMock()
+        mock_auth_service = AsyncMock(return_value=None)
         mock_auth_service.authorize = AsyncMock(return_value=False)
 
         mock_request = _create_mock_request(mock_auth_service)

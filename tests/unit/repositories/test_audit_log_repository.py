@@ -39,10 +39,10 @@ def in_memory_repo():
 @pytest.fixture
 def mock_session():
     """Create a mock SQLAlchemy async session."""
-    session = AsyncMock()  # async-mock-configured
+    session = AsyncMock(return_value=None)  # async-mock-configured
     session.add = MagicMock()
-    session.flush = AsyncMock()  # async-mock-configured
-    session.execute = AsyncMock()  # async-mock-configured
+    session.flush = AsyncMock(return_value=None)  # async-mock-configured
+    session.execute = AsyncMock(return_value=None)  # async-mock-configured
     return session
 
 

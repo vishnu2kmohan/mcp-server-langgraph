@@ -105,7 +105,7 @@ class TestExecutionCheckpointIntegration:
         """execute_python should clear checkpoint after successful execution."""
         from mcp_server_langgraph.core.file_rewind import FileRewind
 
-        mock_journal = AsyncMock()
+        mock_journal = AsyncMock(return_value=None)
         mock_rewind = FileRewind(journal=mock_journal)
         mock_journal.checkpoint.return_value = "cp_test456"
         mock_journal.get_changes.return_value = []

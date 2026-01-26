@@ -148,8 +148,8 @@ class TestSkillIndexingOnInstall:
         """
         from mcp_server_langgraph.skills.installer import SkillInstaller
 
-        mock_tool = AsyncMock()
-        mock_tool.index_skill = AsyncMock()
+        mock_tool = AsyncMock(return_value=None)
+        mock_tool.index_skill = AsyncMock(return_value=None)
 
         installer = SkillInstaller(skill_search_tool=mock_tool)
 
@@ -212,8 +212,8 @@ class TestSkillDeindexingOnUninstall:
         """
         from mcp_server_langgraph.skills.installer import SkillInstaller
 
-        mock_tool = AsyncMock()
-        mock_tool.remove_skill = AsyncMock()
+        mock_tool = AsyncMock(return_value=None)
+        mock_tool.remove_skill = AsyncMock(return_value=None)
 
         installer = SkillInstaller(
             install_path=tmp_path,
@@ -278,7 +278,7 @@ class TestExistingSkillsIndexing:
         mock_installer_class = MagicMock(return_value=mock_installer_instance)
 
         mock_scheduler = MagicMock()
-        mock_scheduler.start = AsyncMock()
+        mock_scheduler.start = AsyncMock(return_value=None)
 
         with (
             patch(

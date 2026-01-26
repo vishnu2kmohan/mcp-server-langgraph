@@ -101,7 +101,7 @@ class TestMCPMessageHandling:
         handler = MCPWebSocketHandler()
 
         # Mock the internal MCP handler
-        mock_mcp_handler = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_mcp_handler = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         mock_mcp_handler.handle = AsyncMock(return_value={"jsonrpc": "2.0", "id": 1, "result": {"initialized": True}})
         handler._mcp_handler = mock_mcp_handler
 
@@ -302,7 +302,7 @@ class TestMCPStreamingSupport:
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
         handler = MCPWebSocketHandler()
-        handler._websocket = AsyncMock()  # noqa: async-mock-config - mock websocket for notifications
+        handler._websocket = AsyncMock(return_value=None)  # noqa: async-mock-config - mock websocket for notifications
 
         # Mock user to enable authenticated features
         mock_user = MagicMock()
@@ -452,7 +452,7 @@ class TestMCPErrorHandling:
         handler = MCPWebSocketHandler()
 
         # Mock internal handler to raise exception
-        mock_mcp_handler = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_mcp_handler = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         mock_mcp_handler.handle = AsyncMock(side_effect=Exception("Internal failure"))
         handler._mcp_handler = mock_mcp_handler
 

@@ -38,7 +38,7 @@ class TestQueryResultCaching:
 
         mock_embedder = MagicMock()
         mock_embedder.embed_documents = MagicMock(return_value=[[0.1] * 384])
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -96,7 +96,7 @@ class TestQueryResultCaching:
         }
         mock_point.score = 0.95
 
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
         mock_qdrant.query_points = AsyncMock(
             return_value=MagicMock(points=[mock_point])
         )
@@ -137,7 +137,7 @@ class TestQueryResultCaching:
         )
 
         mock_embedder = MagicMock()
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -171,7 +171,7 @@ class TestQueryResultCaching:
         )
 
         mock_embedder = MagicMock()
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -208,7 +208,7 @@ class TestQueryCacheMetrics:
         from mcp_server_langgraph.tools.semantic_index import ToolIndexEntry
 
         mock_embedder = MagicMock()
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -246,7 +246,7 @@ class TestQueryCacheMetrics:
         )
 
         mock_embedder = MagicMock()
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,

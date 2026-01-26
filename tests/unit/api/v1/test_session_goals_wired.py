@@ -52,7 +52,7 @@ def mock_goal_repository() -> MagicMock:
 def mock_audit_repository() -> MagicMock:
     """Mock audit log repository."""
     repo = MagicMock()
-    repo.log_event = AsyncMock()
+    repo.log_event = AsyncMock(return_value=None)
     return repo
 
 

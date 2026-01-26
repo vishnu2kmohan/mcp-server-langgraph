@@ -30,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.chat]
 @pytest.fixture
 def mock_session_repository() -> AsyncMock:
     """Create a mock session repository that tracks add_message calls."""
-    repo = AsyncMock()
+    repo = AsyncMock(return_value=None)
     repo.persisted_messages: list[dict[str, Any]] = []
 
     async def track_add_message(session_id: str, message: dict[str, Any]) -> None:
@@ -93,8 +93,8 @@ class TestStreamingMessagePersistence:
 
         # Mock dependencies
         mock_current_user = {"user_id": "user:test", "preferred_username": "test"}
-        mock_openfga = AsyncMock()
-        mock_audit = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
+        mock_audit = AsyncMock(return_value=None)
 
         with (
             patch(
@@ -161,8 +161,8 @@ class TestStreamingMessagePersistence:
         )
 
         mock_current_user = {"user_id": "user:test", "preferred_username": "test"}
-        mock_openfga = AsyncMock()
-        mock_audit = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
+        mock_audit = AsyncMock(return_value=None)
 
         with (
             patch(
@@ -225,8 +225,8 @@ class TestStreamingMessagePersistence:
         )
 
         mock_current_user = {"user_id": "user:test", "preferred_username": "test"}
-        mock_openfga = AsyncMock()
-        mock_audit = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
+        mock_audit = AsyncMock(return_value=None)
 
         with (
             patch(
@@ -298,8 +298,8 @@ class TestStreamingMessagePersistence:
         )
 
         mock_current_user = {"user_id": "user:test", "preferred_username": "test"}
-        mock_openfga = AsyncMock()
-        mock_audit = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
+        mock_audit = AsyncMock(return_value=None)
 
         with (
             patch(
@@ -354,7 +354,7 @@ class TestStreamingMessagePersistence:
         )
 
         # Create mock repository that raises exceptions
-        failing_repo = AsyncMock()
+        failing_repo = AsyncMock(return_value=None)
         failing_repo.add_message = AsyncMock(
             side_effect=Exception("Database connection failed")
         )
@@ -365,8 +365,8 @@ class TestStreamingMessagePersistence:
         )
 
         mock_current_user = {"user_id": "user:test", "preferred_username": "test"}
-        mock_openfga = AsyncMock()
-        mock_audit = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
+        mock_audit = AsyncMock(return_value=None)
 
         with (
             patch(
@@ -425,8 +425,8 @@ class TestStreamingMessagePersistence:
         )
 
         mock_current_user = {"user_id": "user:test", "preferred_username": "test"}
-        mock_openfga = AsyncMock()
-        mock_audit = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
+        mock_audit = AsyncMock(return_value=None)
 
         with (
             patch(
@@ -494,8 +494,8 @@ class TestStreamingMessagePersistence:
         )
 
         mock_current_user = {"user_id": "user:test", "preferred_username": "test"}
-        mock_openfga = AsyncMock()
-        mock_audit = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
+        mock_audit = AsyncMock(return_value=None)
 
         with (
             patch(
@@ -548,7 +548,7 @@ class TestPersistenceAndProgressiveLoadingCompatibility:
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
         # Create mock storage with existing message
-        mock_storage = AsyncMock()
+        mock_storage = AsyncMock(return_value=None)
         mock_storage.get_messages = AsyncMock(
             return_value=[
                 {"role": "user", "content": "Hello"},
@@ -600,7 +600,7 @@ class TestPersistenceAndProgressiveLoadingCompatibility:
         original_messages = [
             {"role": "user", "content": f"Message {i}"} for i in range(10)
         ]
-        mock_storage = AsyncMock()
+        mock_storage = AsyncMock(return_value=None)
         mock_storage.get_messages = AsyncMock(return_value=original_messages.copy())
 
         async def mock_stream(session_id: str, messages: list[dict[str, Any]], **kwargs: Any):
@@ -674,8 +674,8 @@ class TestThinkingContentPersistence:
         )
 
         mock_current_user = {"user_id": "user:test", "preferred_username": "test"}
-        mock_openfga = AsyncMock()
-        mock_audit = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
+        mock_audit = AsyncMock(return_value=None)
 
         with (
             patch(
@@ -748,8 +748,8 @@ class TestThinkingContentPersistence:
         )
 
         mock_current_user = {"user_id": "user:test", "preferred_username": "test"}
-        mock_openfga = AsyncMock()
-        mock_audit = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
+        mock_audit = AsyncMock(return_value=None)
 
         with (
             patch(
@@ -824,8 +824,8 @@ class TestThinkingContentPersistence:
         )
 
         mock_current_user = {"user_id": "user:test", "preferred_username": "test"}
-        mock_openfga = AsyncMock()
-        mock_audit = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
+        mock_audit = AsyncMock(return_value=None)
 
         with (
             patch(
@@ -899,8 +899,8 @@ class TestThinkingContentPersistence:
         )
 
         mock_current_user = {"user_id": "user:test", "preferred_username": "test"}
-        mock_openfga = AsyncMock()
-        mock_audit = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
+        mock_audit = AsyncMock(return_value=None)
 
         with (
             patch(

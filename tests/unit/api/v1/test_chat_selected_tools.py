@@ -67,7 +67,7 @@ class TestChatSelectedToolsParameter:
         THEN request should be accepted (not validation error)
         """
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.create_completion.return_value = {
                 "id": str(uuid4()),
                 "message": {"role": "assistant", "content": "Using calculator..."},
@@ -94,7 +94,7 @@ class TestChatSelectedToolsParameter:
         THEN request should be accepted
         """
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.create_completion.return_value = {
                 "id": str(uuid4()),
                 "message": {"role": "assistant", "content": "Created issue..."},
@@ -121,7 +121,7 @@ class TestChatSelectedToolsParameter:
         THEN semantic search should be used (auto mode)
         """
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.create_completion.return_value = {
                 "id": str(uuid4()),
                 "message": {"role": "assistant", "content": "Hello!"},
@@ -157,7 +157,7 @@ class TestToolSelectionMode:
         THEN request should use semantic search
         """
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.create_completion.return_value = {
                 "id": str(uuid4()),
                 "message": {"role": "assistant", "content": "Using semantic search..."},
@@ -184,7 +184,7 @@ class TestToolSelectionMode:
         THEN only selected tools should be used
         """
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.create_completion.return_value = {
                 "id": str(uuid4()),
                 "message": {"role": "assistant", "content": "Using selected tools..."},
@@ -212,7 +212,7 @@ class TestToolSelectionMode:
         THEN no tools should be used
         """
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.create_completion.return_value = {
                 "id": str(uuid4()),
                 "message": {"role": "assistant", "content": "No tools used."},
@@ -257,7 +257,7 @@ class TestToolSelectionMode:
         THEN default should be "auto" (semantic search)
         """
         with patch("mcp_server_langgraph.api.v1.chat.get_chat_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.create_completion.return_value = {
                 "id": str(uuid4()),
                 "message": {"role": "assistant", "content": "Default mode"},

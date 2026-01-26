@@ -185,7 +185,7 @@ class TestBypassModeEndToEndFlow:
         assert decision.auto_approved is True
 
         # Mock audit service to verify it's called correctly
-        audit_service = AsyncMock()
+        audit_service = AsyncMock(return_value=None)
         current_user = {
             "user_id": "user:integration-test-user",
             "username": "test-user",

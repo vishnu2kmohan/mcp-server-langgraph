@@ -31,7 +31,7 @@ class TestWebSocketAuthorizationMiddleware:
         """GIVEN a user with valid permission WHEN checking connection THEN returns True."""
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(return_value=True)
 
         authz = WebSocketAuthorizationMiddleware(
@@ -58,7 +58,7 @@ class TestWebSocketAuthorizationMiddleware:
         """GIVEN a user without permission WHEN checking connection THEN returns False."""
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(return_value=False)
 
         authz = WebSocketAuthorizationMiddleware(
@@ -80,7 +80,7 @@ class TestWebSocketAuthorizationMiddleware:
         """GIVEN no resource_id WHEN checking connection THEN uses wildcard."""
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(return_value=True)
 
         authz = WebSocketAuthorizationMiddleware(
@@ -115,7 +115,7 @@ class TestAuthorizationFailClosed:
         """GIVEN OpenFGA error WHEN fail_closed=True THEN denies access."""
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(side_effect=Exception("Connection refused"))
 
         authz = WebSocketAuthorizationMiddleware(
@@ -158,7 +158,7 @@ class TestAuthorizationFailClosed:
         """GIVEN OpenFGA error WHEN fail_closed=False THEN allows access."""
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(side_effect=Exception("Connection refused"))
 
         authz = WebSocketAuthorizationMiddleware(
@@ -190,7 +190,7 @@ class TestSubscriptionAuthorization:
         """GIVEN subscription request WHEN authorized THEN checks specific resource."""
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(return_value=True)
 
         authz = WebSocketAuthorizationMiddleware(
@@ -217,7 +217,7 @@ class TestSubscriptionAuthorization:
         """GIVEN subscription to another user's resource WHEN not permitted THEN denies."""
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(return_value=False)
 
         authz = WebSocketAuthorizationMiddleware(
@@ -248,7 +248,7 @@ class TestActionAuthorization:
         """GIVEN custom action relation WHEN checking THEN uses custom relation."""
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(return_value=True)
 
         authz = WebSocketAuthorizationMiddleware(
@@ -276,7 +276,7 @@ class TestActionAuthorization:
         """GIVEN no custom action relation WHEN checking THEN uses default relation."""
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(return_value=True)
 
         authz = WebSocketAuthorizationMiddleware(
@@ -317,7 +317,7 @@ class TestSampleTuplesValidation:
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
         # Simulate what OpenFGA would return based on sample-tuples.json
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(return_value=True)
 
         authz = WebSocketAuthorizationMiddleware(
@@ -340,7 +340,7 @@ class TestSampleTuplesValidation:
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
         # Based on sample-tuples.json, bob has no tuples for dashboard:alerts
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(return_value=False)
 
         authz = WebSocketAuthorizationMiddleware(
@@ -363,7 +363,7 @@ class TestSampleTuplesValidation:
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
         # alice has: viewer relation to logs:audit in sample-tuples.json
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(return_value=True)
 
         authz = WebSocketAuthorizationMiddleware(
@@ -386,7 +386,7 @@ class TestSampleTuplesValidation:
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
         # All users (admin, alice, bob) have viewer relation to chat:notifications
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(return_value=True)
 
         authz = WebSocketAuthorizationMiddleware(
@@ -409,7 +409,7 @@ class TestSampleTuplesValidation:
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
         # bob has no editor relation to workflow:hitl in sample-tuples.json
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(return_value=False)
 
         authz = WebSocketAuthorizationMiddleware(
@@ -440,7 +440,7 @@ class TestGetOpenFGAClient:
         """GIVEN OpenFGA is configured WHEN getting client THEN returns client."""
         from mcp_server_langgraph.websocket import authz
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.auth.openfga.get_openfga_client",
             return_value=mock_client,
@@ -516,7 +516,7 @@ class TestSubscriptionFailScenarios:
         """GIVEN OpenFGA error WHEN fail_closed=True THEN denies access."""
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(side_effect=Exception("Connection failed"))
 
         authz = WebSocketAuthorizationMiddleware(
@@ -539,7 +539,7 @@ class TestSubscriptionFailScenarios:
         """GIVEN OpenFGA error WHEN fail_closed=False THEN allows access."""
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(side_effect=Exception("Connection failed"))
 
         authz = WebSocketAuthorizationMiddleware(
@@ -611,7 +611,7 @@ class TestActionFailScenarios:
         """GIVEN OpenFGA error WHEN fail_closed=True THEN denies access."""
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(side_effect=Exception("Connection failed"))
 
         authz = WebSocketAuthorizationMiddleware(
@@ -634,7 +634,7 @@ class TestActionFailScenarios:
         """GIVEN OpenFGA error WHEN fail_closed=False THEN allows access."""
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_client.check_permission = AsyncMock(side_effect=Exception("Connection failed"))
 
         authz = WebSocketAuthorizationMiddleware(

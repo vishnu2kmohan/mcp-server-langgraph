@@ -80,7 +80,7 @@ class TestBroadcasterTracing:
             broadcaster = AlertBroadcaster()
 
             # Mock a WebSocket subscriber
-            mock_ws = AsyncMock()
+            mock_ws = AsyncMock(return_value=None)
             await broadcaster.subscribe(mock_ws, "admin-user-1")
 
             # Broadcast alert
@@ -112,7 +112,7 @@ class TestBroadcasterTracing:
         with mock_tracer("mcp_server_langgraph.alerts.broadcaster") as (mock_tracer_obj, mock_span):
             broadcaster = AlertBroadcaster()
 
-            mock_ws = AsyncMock()
+            mock_ws = AsyncMock(return_value=None)
             await broadcaster.subscribe(mock_ws, "admin-user-1")
 
             alert = create_test_alert()

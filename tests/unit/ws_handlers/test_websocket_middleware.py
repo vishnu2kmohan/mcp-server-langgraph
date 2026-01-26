@@ -384,7 +384,7 @@ class TestValidateWebSocketAuth:
         mock_ws.query_params = {"token": "valid-token"}
         mock_ws.headers = {}
 
-        mock_auth = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_auth = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         mock_auth.verify_token = AsyncMock(
             return_value=MagicMock(
                 valid=True,
@@ -417,7 +417,7 @@ class TestValidateWebSocketAuth:
         mock_ws.query_params = {"token": "invalid-token"}
         mock_ws.headers = {}
 
-        mock_auth = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_auth = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         mock_auth.verify_token = AsyncMock(
             return_value=MagicMock(
                 valid=False,
@@ -443,7 +443,7 @@ class TestValidateWebSocketAuth:
         mock_ws.app.state = MagicMock()
         mock_ws.app.state.auth_middleware = None
 
-        mock_global_auth = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_global_auth = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         mock_global_auth.verify_token = AsyncMock(
             return_value=MagicMock(
                 valid=True,
@@ -471,7 +471,7 @@ class TestValidateWebSocketAuth:
         mock_ws.query_params = {"token": "valid-token"}
         mock_ws.headers = {}
 
-        mock_auth = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_auth = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         mock_auth.verify_token = AsyncMock(side_effect=Exception("Network error"))
         mock_ws.app = MagicMock()
         mock_ws.app.state = MagicMock()
@@ -493,7 +493,7 @@ class TestValidateWebSocketToken:
     @pytest.mark.asyncio
     async def test_returns_payload_for_valid_token(self) -> None:
         """Should return payload for valid token."""
-        mock_auth = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_auth = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         mock_auth.verify_token = AsyncMock(
             return_value=MagicMock(
                 valid=True,
@@ -514,7 +514,7 @@ class TestValidateWebSocketToken:
     @pytest.mark.asyncio
     async def test_returns_none_for_invalid_token(self) -> None:
         """Should return None for invalid token."""
-        mock_auth = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_auth = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         mock_auth.verify_token = AsyncMock(
             return_value=MagicMock(
                 valid=False,
@@ -534,7 +534,7 @@ class TestValidateWebSocketToken:
     @pytest.mark.asyncio
     async def test_returns_none_on_exception(self) -> None:
         """Should return None when verification raises exception."""
-        mock_auth = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_auth = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         mock_auth.verify_token = AsyncMock(side_effect=Exception("Auth service down"))
 
         with patch(

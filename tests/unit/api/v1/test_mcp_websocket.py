@@ -1161,7 +1161,7 @@ class TestMCPWebSocketKeycloakIntegration:
         """
         from mcp_server_langgraph.api.v1.mcp_websocket import validate_websocket_token
 
-        mock_validator = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_validator = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_validator.validate_token = AsyncMock(
             return_value={
                 "sub": "user-uuid-123",
@@ -1192,7 +1192,7 @@ class TestMCPWebSocketKeycloakIntegration:
 
         from mcp_server_langgraph.api.v1.mcp_websocket import validate_websocket_token
 
-        mock_validator = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_validator = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_validator.validate_token = AsyncMock(side_effect=jwt.ExpiredSignatureError("Token expired"))
 
         with patch(
@@ -1214,7 +1214,7 @@ class TestMCPWebSocketKeycloakIntegration:
 
         from mcp_server_langgraph.api.v1.mcp_websocket import validate_websocket_token
 
-        mock_validator = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_validator = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_validator.validate_token = AsyncMock(side_effect=jwt.InvalidTokenError("Invalid token"))
 
         with patch(
@@ -1243,7 +1243,7 @@ class TestMCPWebSocketOpenFGAIntegration:
         """
         from mcp_server_langgraph.api.v1.mcp_websocket import check_mcp_permission
 
-        mock_openfga = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_openfga = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_check_result = MagicMock()
         mock_check_result.allowed = True
         mock_openfga.check = AsyncMock(return_value=mock_check_result)
@@ -1270,7 +1270,7 @@ class TestMCPWebSocketOpenFGAIntegration:
         """
         from mcp_server_langgraph.api.v1.mcp_websocket import check_mcp_permission
 
-        mock_openfga = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_openfga = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_openfga.check = AsyncMock(return_value=False)
 
         with patch(
@@ -1393,7 +1393,7 @@ class TestMCPWebSocketMCPBridgeIntegration:
         )
 
         # Mock the MCPBridge
-        mock_bridge = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_bridge = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_bridge.send_chat_message = AsyncMock(return_value=MagicMock(content="Agent response from MCPBridge"))
         mock_bridge.is_configured = True
 
@@ -1456,7 +1456,7 @@ class TestMCPWebSocketMCPBridgeIntegration:
             roles=["user"],
         )
 
-        mock_bridge = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_bridge = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_bridge.send_chat_message = AsyncMock(side_effect=ChatError("MCP server unavailable"))
         mock_bridge.is_configured = True
 
@@ -2444,8 +2444,8 @@ class TestMCPWebSocketLifespan:
 
         # Create a mock lifecycle manager
         mock_manager = MagicMock(spec=MCPWebSocketLifecycleManager)
-        mock_manager.startup = AsyncMock()  # noqa: async-mock-config
-        mock_manager.shutdown = AsyncMock()  # noqa: async-mock-config
+        mock_manager.startup = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_manager.shutdown = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         # Create a mock app
         mock_app = MagicMock()

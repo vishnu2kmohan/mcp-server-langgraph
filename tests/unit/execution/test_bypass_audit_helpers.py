@@ -198,7 +198,7 @@ class TestLogBypassAuditEvent:
     async def test_logs_event_when_audit_service_provided(self):
         """Should log event when audit_service is available."""
         # GIVEN: Audit service mock
-        audit_service = AsyncMock()
+        audit_service = AsyncMock(return_value=None)
         current_user = {"user_id": "user:alice", "username": "alice"}
 
         # WHEN: Logging a bypass event
@@ -237,7 +237,7 @@ class TestLogBypassAuditEvent:
     async def test_handles_audit_service_exception(self):
         """Should not propagate audit service exceptions."""
         # GIVEN: Audit service that raises
-        audit_service = AsyncMock()
+        audit_service = AsyncMock(return_value=None)
         audit_service.log_event.side_effect = Exception("Audit DB error")
         current_user = {"user_id": "user:alice"}
 
@@ -256,7 +256,7 @@ class TestLogBypassAuditEvent:
     async def test_passes_all_details_to_event(self):
         """Should pass through all details to the event."""
         # GIVEN: Audit service and details
-        audit_service = AsyncMock()
+        audit_service = AsyncMock(return_value=None)
         current_user = {"user_id": "user:alice", "username": "alice"}
         details = {
             "risk_level": "medium",
@@ -294,7 +294,7 @@ class TestLogBypassAuditEventPrometheusMetrics:
         THEN record_bypass_activation should be called with user ID.
         """
         mock_record = mocker.patch("mcp_server_langgraph.execution.bypass_audit.record_bypass_activation")
-        audit_service = AsyncMock()
+        audit_service = AsyncMock(return_value=None)
         current_user = {"user_id": "user:alice", "username": "alice"}
 
         await log_bypass_audit_event(
@@ -314,7 +314,7 @@ class TestLogBypassAuditEventPrometheusMetrics:
         THEN record_bypass_approval should be called with 'auto' type.
         """
         mock_record = mocker.patch("mcp_server_langgraph.execution.bypass_audit.record_bypass_approval")
-        audit_service = AsyncMock()
+        audit_service = AsyncMock(return_value=None)
         current_user = {"user_id": "user:alice"}
 
         await log_bypass_audit_event(
@@ -339,7 +339,7 @@ class TestLogBypassAuditEventPrometheusMetrics:
         THEN record_bypass_approval should be called with 'user' type.
         """
         mock_record = mocker.patch("mcp_server_langgraph.execution.bypass_audit.record_bypass_approval")
-        audit_service = AsyncMock()
+        audit_service = AsyncMock(return_value=None)
         current_user = {"user_id": "user:bob"}
 
         await log_bypass_audit_event(
@@ -364,7 +364,7 @@ class TestLogBypassAuditEventPrometheusMetrics:
         THEN record_bypass_rejection should be called.
         """
         mock_record = mocker.patch("mcp_server_langgraph.execution.bypass_audit.record_bypass_rejection")
-        audit_service = AsyncMock()
+        audit_service = AsyncMock(return_value=None)
         current_user = {"user_id": "user:alice"}
 
         await log_bypass_audit_event(
@@ -410,7 +410,7 @@ class TestLogBypassAuditEventPrometheusMetrics:
         mock_activation = mocker.patch("mcp_server_langgraph.execution.bypass_audit.record_bypass_activation")
         mock_approval = mocker.patch("mcp_server_langgraph.execution.bypass_audit.record_bypass_approval")
         mock_rejection = mocker.patch("mcp_server_langgraph.execution.bypass_audit.record_bypass_rejection")
-        audit_service = AsyncMock()
+        audit_service = AsyncMock(return_value=None)
         current_user = {"user_id": "user:alice"}
 
         # Use SANDBOXED_EXECUTION_AUTO_ALLOWED which is not one of the 4 bypass types

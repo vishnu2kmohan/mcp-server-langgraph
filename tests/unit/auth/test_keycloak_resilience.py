@@ -95,7 +95,7 @@ class TestTokenValidatorRetryLogic:
 
         with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = mock_get
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -128,7 +128,7 @@ class TestTokenValidatorRetryLogic:
 
         with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = mock_get_always_fails
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -162,7 +162,7 @@ class TestTokenValidatorRetryLogic:
 
         with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = mock_get
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -206,7 +206,7 @@ class TestTokenValidatorCircuitBreaker:
 
         with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = mock_get_always_fails
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -253,7 +253,7 @@ class TestTokenValidatorConnectionPooling:
 
         with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get.return_value = mock_response
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager
@@ -296,7 +296,7 @@ class TestTokenValidatorTimeout:
 
         with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_manager = MagicMock()
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = mock_slow_get
             mock_manager.get_client = AsyncMock(return_value=mock_client)
             mock_get_manager.return_value = mock_manager

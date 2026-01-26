@@ -37,11 +37,11 @@ class TestPostgresProjectRepository:
     @pytest.fixture
     def mock_session(self) -> AsyncMock:
         """Create a mock async database session."""
-        session = AsyncMock()  # async-mock-configured
+        session = AsyncMock(return_value=None)  # async-mock-configured
         session.add = MagicMock()
-        session.delete = AsyncMock()  # async-mock-configured
-        session.flush = AsyncMock()  # async-mock-configured
-        session.execute = AsyncMock()  # async-mock-configured
+        session.delete = AsyncMock(return_value=None)  # async-mock-configured
+        session.flush = AsyncMock(return_value=None)  # async-mock-configured
+        session.execute = AsyncMock(return_value=None)  # async-mock-configured
         return session
 
     @pytest.fixture

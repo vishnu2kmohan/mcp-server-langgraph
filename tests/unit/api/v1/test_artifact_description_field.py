@@ -68,7 +68,7 @@ class TestArtifactDescriptionField:
         session_id = f"session-{uuid4().hex[:8]}"
 
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_service.create_artifact.return_value = {
                 "id": artifact_id,
                 "type": "code",
@@ -110,7 +110,7 @@ class TestArtifactDescriptionField:
         session_id = f"session-{uuid4().hex[:8]}"
 
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_service.create_artifact.return_value = {
                 "id": artifact_id,
                 "type": "code",
@@ -151,7 +151,7 @@ class TestArtifactDescriptionField:
         session_id = f"session-{uuid4().hex[:8]}"
 
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_service.get_artifact.return_value = {
                 "id": artifact_id,
                 "type": "code",
@@ -199,7 +199,7 @@ class TestArtifactDescriptionField:
         session_id = f"session-{uuid4().hex[:8]}"
 
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_service.get_artifact.return_value = {
                 "id": artifact_id,
                 "type": "mermaid",
@@ -230,7 +230,7 @@ class TestArtifactDescriptionField:
         session_id = f"session-{uuid4().hex[:8]}"
 
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
             # list_artifacts returns (items, next_cursor, has_more)
             mock_service.list_artifacts.return_value = (
                 [

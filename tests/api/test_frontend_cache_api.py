@@ -29,8 +29,8 @@ def mock_cache_service() -> MagicMock:
     """Create a mock CacheService for testing."""
     cache = MagicMock(spec=CacheService)
     cache.aget = AsyncMock(return_value=None)
-    cache.aset = AsyncMock()
-    cache.adelete = AsyncMock()
+    cache.aset = AsyncMock(return_value=None)
+    cache.adelete = AsyncMock(return_value=None)
     cache.adelete_pattern = AsyncMock(return_value=0)
     return cache
 

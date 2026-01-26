@@ -151,7 +151,7 @@ def mock_jwt_validator():
 def mock_openfga_client():
     """Mock OpenFGA client for authorization checks."""
     with patch("mcp_server_langgraph.websocket.authz.get_openfga_client") as mock_get:
-        mock_client = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
 
         # Define authorization rules matching sample-tuples.json
         # Note: parameter name must be 'object' to match authz.py keyword argument
@@ -375,7 +375,7 @@ class TestAuthorizationFailClosed:
     async def test_fail_closed_on_openfga_error(self):
         """GIVEN OpenFGA unavailable WHEN checking auth THEN deny access."""
         with patch("mcp_server_langgraph.websocket.authz.get_openfga_client") as mock_get:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.check_permission.side_effect = Exception("Connection refused")
             mock_get.return_value = mock_client
 
@@ -391,7 +391,7 @@ class TestAuthorizationFailClosed:
     async def test_fail_open_when_configured(self):
         """GIVEN fail_closed=False WHEN OpenFGA unavailable THEN allow access."""
         with patch("mcp_server_langgraph.websocket.authz.get_openfga_client") as mock_get:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.check_permission.side_effect = Exception("Connection refused")
             mock_get.return_value = mock_client
 

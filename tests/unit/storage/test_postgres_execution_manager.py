@@ -22,12 +22,12 @@ def mock_session():
     These mocks are intentionally unconfigured here as individual tests
     configure the return_value or side_effect as needed.
     """
-    mock = AsyncMock()  # noqa: async-mock-config
+    mock = AsyncMock(return_value=None)  # noqa: async-mock-config
     mock.__aenter__ = AsyncMock(return_value=mock)
-    mock.__aexit__ = AsyncMock()  # noqa: async-mock-config
-    mock.execute = AsyncMock()  # noqa: async-mock-config
-    mock.commit = AsyncMock()  # noqa: async-mock-config
-    mock.rollback = AsyncMock()  # noqa: async-mock-config
+    mock.__aexit__ = AsyncMock(return_value=None)  # noqa: async-mock-config
+    mock.execute = AsyncMock(return_value=None)  # noqa: async-mock-config
+    mock.commit = AsyncMock(return_value=None)  # noqa: async-mock-config
+    mock.rollback = AsyncMock(return_value=None)  # noqa: async-mock-config
     mock.add = MagicMock()
     return mock
 

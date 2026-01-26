@@ -53,7 +53,7 @@ class TestValidatorConsistency:
 
                 class TestSomething:
                     def test_method(self):
-                        mock = AsyncMock()  # Violation - no xdist_group
+                        mock = AsyncMock(return_value=None)  # Violation - no xdist_group
                         assert mock
                 """
             )
@@ -87,7 +87,7 @@ class TestValidatorConsistency:
                         gc.collect()
 
                     def test_method(self):
-                        mock = AsyncMock()
+                        mock = AsyncMock(return_value=None)
                         assert mock
                 """
             )
@@ -169,7 +169,7 @@ class TestValidatorConsistency:
                 from unittest.mock import AsyncMock
 
                 def test_something():
-                    mock = AsyncMock()  # Unconfigured violation
+                    mock = AsyncMock(return_value=None)  # Unconfigured violation
                     assert mock
                 """
             )

@@ -25,7 +25,7 @@ pytestmark = pytest.mark.unit
 
 def _create_mock_audit_service() -> AsyncMock:
     """Create a mock UnifiedAuditService."""
-    mock = AsyncMock()  # async-mock-configured
+    mock = AsyncMock(return_value=None)  # async-mock-configured
     mock.query_events = AsyncMock(return_value=([], 0))
     mock.get_event_count = AsyncMock(return_value=0)
     return mock

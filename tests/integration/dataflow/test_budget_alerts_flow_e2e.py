@@ -75,8 +75,8 @@ def create_test_budget():
 def mock_websocket_connection():
     """Create a mock WebSocket connection."""
     connection = MagicMock()
-    connection.send_json = AsyncMock()
-    connection.close = AsyncMock()
+    connection.send_json = AsyncMock(return_value=None)
+    connection.close = AsyncMock(return_value=None)
     return connection
 
 

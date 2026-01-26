@@ -38,13 +38,13 @@ def mock_keycloak_client():
     """
     mock_client = MagicMock()
     # Mocks configured per-test with return_value or side_effect
-    mock_client.get_users = AsyncMock()  # noqa: async-mock-config
-    mock_client.create_user = AsyncMock()  # noqa: async-mock-config
-    mock_client.update_user = AsyncMock()  # noqa: async-mock-config
-    mock_client.delete_user = AsyncMock()  # noqa: async-mock-config
-    mock_client.get_user_by_username = AsyncMock()  # noqa: async-mock-config
-    mock_client.get_user = AsyncMock()  # noqa: async-mock-config
-    mock_client.set_user_password = AsyncMock()  # noqa: async-mock-config
+    mock_client.get_users = AsyncMock(return_value=None)  # noqa: async-mock-config
+    mock_client.create_user = AsyncMock(return_value=None)  # noqa: async-mock-config
+    mock_client.update_user = AsyncMock(return_value=None)  # noqa: async-mock-config
+    mock_client.delete_user = AsyncMock(return_value=None)  # noqa: async-mock-config
+    mock_client.get_user_by_username = AsyncMock(return_value=None)  # noqa: async-mock-config
+    mock_client.get_user = AsyncMock(return_value=None)  # noqa: async-mock-config
+    mock_client.set_user_password = AsyncMock(return_value=None)  # noqa: async-mock-config
     mock_client._get_user_realm_roles = AsyncMock(return_value=[])
     mock_client._get_user_client_roles = AsyncMock(return_value={})
     mock_client._get_user_groups = AsyncMock(return_value=[])

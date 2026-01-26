@@ -314,9 +314,9 @@ class TestScoringHistoryRepository:
             FeedbackData,
         )
 
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
         mock_store.get_history = AsyncMock(return_value=None)
-        mock_store.save_history = AsyncMock()
+        mock_store.save_history = AsyncMock(return_value=None)
 
         repo = ScoringHistoryRepository(store=mock_store)
 
@@ -339,7 +339,7 @@ class TestScoringHistoryRepository:
             ScoringHistory,
         )
 
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
         expected_history = ScoringHistory(
             alert_type="CachedAlert",
             total_recommendations=50,
@@ -364,7 +364,7 @@ class TestScoringHistoryRepository:
             ScoringHistory,
         )
 
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
         histories = [
             ScoringHistory(
                 alert_type=f"Alert{i}",

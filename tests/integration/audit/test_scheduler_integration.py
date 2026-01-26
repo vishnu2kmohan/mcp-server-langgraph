@@ -40,7 +40,7 @@ class TestSchedulerAppLifecycle:
             create_audit_scheduler,
         )
 
-        mock_service = AsyncMock()  # async-mock-configured
+        mock_service = AsyncMock(return_value=None)  # async-mock-configured
 
         scheduler = create_audit_scheduler(
             audit_service=mock_service,
@@ -53,8 +53,8 @@ class TestSchedulerAppLifecycle:
         """GIVEN factory with callback WHEN created THEN callback configured."""
         from mcp_server_langgraph.audit import create_audit_scheduler
 
-        mock_service = AsyncMock()  # async-mock-configured
-        mock_callback = AsyncMock()  # async-mock-configured
+        mock_service = AsyncMock(return_value=None)  # async-mock-configured
+        mock_callback = AsyncMock(return_value=None)  # async-mock-configured
 
         scheduler = create_audit_scheduler(
             audit_service=mock_service,
@@ -67,7 +67,7 @@ class TestSchedulerAppLifecycle:
         """GIVEN factory with metrics WHEN created THEN metrics configured."""
         from mcp_server_langgraph.audit import AuditMetrics, create_audit_scheduler
 
-        mock_service = AsyncMock()  # async-mock-configured
+        mock_service = AsyncMock(return_value=None)  # async-mock-configured
         mock_metrics = MagicMock(spec=AuditMetrics)
 
         scheduler = create_audit_scheduler(
@@ -132,12 +132,12 @@ class TestSchedulerLifespanStartStop:
         from mcp_server_langgraph.audit.scheduler import AuditIntegrityScheduler
 
         scheduler = AuditIntegrityScheduler(
-            audit_service=AsyncMock(),  # async-mock-configured
+            audit_service=AsyncMock(return_value=None),  # async-mock-configured
             schedule_hours=24,
         )
 
         # Mock the start method to track if it's called
-        scheduler.start = AsyncMock()  # async-mock-configured
+        scheduler.start = AsyncMock(return_value=None)  # async-mock-configured
 
         await scheduler.start()
 
@@ -149,7 +149,7 @@ class TestSchedulerLifespanStartStop:
         from mcp_server_langgraph.audit.scheduler import AuditIntegrityScheduler
 
         scheduler = AuditIntegrityScheduler(
-            audit_service=AsyncMock(),  # async-mock-configured
+            audit_service=AsyncMock(return_value=None),  # async-mock-configured
             schedule_hours=24,
         )
 

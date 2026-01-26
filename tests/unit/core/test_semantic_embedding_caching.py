@@ -49,7 +49,7 @@ class TestEmbeddingCaching:
         }
         mock_point.score = 0.95
 
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
         mock_qdrant.query_points = AsyncMock(
             return_value=MagicMock(points=[mock_point])
         )
@@ -105,7 +105,7 @@ class TestEmbeddingCaching:
         }
         mock_point.score = 0.95
 
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
         mock_qdrant.query_points = AsyncMock(
             return_value=MagicMock(points=[mock_point])
         )
@@ -142,7 +142,7 @@ class TestEmbeddingCaching:
         )
 
         mock_embedder = MagicMock()
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -175,7 +175,7 @@ class TestEmbeddingCaching:
         )
 
         mock_embedder = MagicMock()
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -202,7 +202,7 @@ class TestEmbeddingCaching:
         )
 
         mock_embedder = MagicMock()
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -231,7 +231,7 @@ class TestEmbeddingCacheMetrics:
         )
 
         mock_embedder = MagicMock()
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -271,7 +271,7 @@ class TestEmbeddingCacheMetrics:
         }
         mock_point.score = 0.95
 
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
         mock_qdrant.query_points = AsyncMock(
             return_value=MagicMock(points=[mock_point])
         )

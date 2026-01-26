@@ -400,7 +400,7 @@ class TestPostgresBudgetStorage:
         from mcp_server_langgraph.monitoring.budget_storage import PostgresBudgetStorage
 
         # Mock the session maker
-        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_session.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None)))
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
@@ -438,7 +438,7 @@ class TestPostgresBudgetStorage:
         mock_result = MagicMock()
         mock_result.scalar_one_or_none = MagicMock(return_value=mock_record)
 
-        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_session.execute = AsyncMock(return_value=mock_result)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
@@ -467,9 +467,9 @@ class TestPostgresBudgetStorage:
         from mcp_server_langgraph.monitoring.cost_budget import Budget
 
         # Mock the session
-        mock_session = AsyncMock()  # noqa: async-mock-config
-        mock_session.merge = AsyncMock()  # noqa: async-mock-config
-        mock_session.commit = AsyncMock()  # noqa: async-mock-config
+        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_session.merge = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_session.commit = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
@@ -517,7 +517,7 @@ class TestPostgresBudgetStorage:
         mock_result = MagicMock()
         mock_result.scalars = MagicMock(return_value=MagicMock(all=MagicMock(return_value=mock_records)))
 
-        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_session.execute = AsyncMock(return_value=mock_result)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
@@ -547,10 +547,10 @@ class TestPostgresBudgetStorage:
         mock_result = MagicMock()
         mock_result.scalar_one_or_none = MagicMock(return_value=mock_record)
 
-        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_session.execute = AsyncMock(return_value=mock_result)
-        mock_session.delete = AsyncMock()  # noqa: async-mock-config
-        mock_session.commit = AsyncMock()  # noqa: async-mock-config
+        mock_session.delete = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_session.commit = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
@@ -576,7 +576,7 @@ class TestPostgresBudgetStorage:
         mock_result = MagicMock()
         mock_result.scalar_one_or_none = MagicMock(return_value=None)
 
-        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_session.execute = AsyncMock(return_value=mock_result)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)

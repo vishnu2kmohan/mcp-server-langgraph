@@ -96,9 +96,9 @@ class TestAIExplanationE2EFlow:
             why_uncertain="Cached: Input is ambiguous",
             what_could_go_wrong="Cached: Wrong files deleted",
         )
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock(return_value=None)
         mock_cache.get = AsyncMock(return_value=cached_explanation.model_dump_json())
-        mock_cache.set = AsyncMock()
+        mock_cache.set = AsyncMock(return_value=None)
 
         orchestrator = CachedExplanationOrchestrator(
             llm_factory=mock_llm,
@@ -139,9 +139,9 @@ class TestAIExplanationE2EFlow:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
 
         # Create mock cache with cache miss
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock(return_value=None)
         mock_cache.get = AsyncMock(return_value=None)  # Cache miss
-        mock_cache.set = AsyncMock()
+        mock_cache.set = AsyncMock(return_value=None)
 
         orchestrator = CachedExplanationOrchestrator(
             llm_factory=mock_llm,
@@ -226,9 +226,9 @@ class TestAIExplanationE2EFlow:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
 
         # Create mock cache with miss
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock(return_value=None)
         mock_cache.get = AsyncMock(return_value=None)
-        mock_cache.set = AsyncMock()
+        mock_cache.set = AsyncMock(return_value=None)
 
         orchestrator = CachedExplanationOrchestrator(
             llm_factory=mock_llm,

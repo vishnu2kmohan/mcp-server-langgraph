@@ -87,7 +87,7 @@ class TestPrometheusClientRetryLogic:
 
             mock_sleep.side_effect = track_delay
 
-            mock_http_client = AsyncMock()
+            mock_http_client = AsyncMock(return_value=None)
             mock_http_client.get = mock_get
             client.client = mock_http_client
             client._initialized = True
@@ -138,7 +138,7 @@ class TestPrometheusClientRetryLogic:
             raise httpx.ConnectError("Prometheus down")
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            mock_http_client = AsyncMock()
+            mock_http_client = AsyncMock(return_value=None)
             mock_http_client.get = mock_get_always_fails
             client.client = mock_http_client
             client._initialized = True
@@ -225,7 +225,7 @@ class TestTempoClientResilience:
             return mock_response
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            mock_http_client = AsyncMock()
+            mock_http_client = AsyncMock(return_value=None)
             mock_http_client.get = mock_get
             client.client = mock_http_client
             client._initialized = True
@@ -270,7 +270,7 @@ class TestTempoClientResilience:
             raise httpx.ConnectError("Tempo down")
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            mock_http_client = AsyncMock()
+            mock_http_client = AsyncMock(return_value=None)
             mock_http_client.get = mock_get_always_fails
             client.client = mock_http_client
             client._initialized = True
@@ -334,7 +334,7 @@ class TestLokiClientResilience:
             return mock_response
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            mock_http_client = AsyncMock()
+            mock_http_client = AsyncMock(return_value=None)
             mock_http_client.get = mock_get
             client._client = mock_http_client
             client._initialized = True
@@ -376,7 +376,7 @@ class TestLokiClientResilience:
             raise httpx.ConnectError("Loki down")
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            mock_http_client = AsyncMock()
+            mock_http_client = AsyncMock(return_value=None)
             mock_http_client.get = mock_get_always_fails
             client._client = mock_http_client
             client._initialized = True

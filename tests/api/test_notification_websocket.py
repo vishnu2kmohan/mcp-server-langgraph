@@ -40,7 +40,7 @@ class TestNotificationBroadcaster:
         from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
 
         broadcaster = NotificationBroadcaster()
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_ws)
 
@@ -56,7 +56,7 @@ class TestNotificationBroadcaster:
         from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
 
         broadcaster = NotificationBroadcaster()
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_ws)
         await broadcaster.unsubscribe(mock_ws)
@@ -73,8 +73,8 @@ class TestNotificationBroadcaster:
         from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
 
         broadcaster = NotificationBroadcaster()
-        mock_ws1 = AsyncMock()  # noqa: async-mock-config
-        mock_ws2 = AsyncMock()  # noqa: async-mock-config
+        mock_ws1 = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_ws2 = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_ws1)
         await broadcaster.subscribe(mock_ws2)
@@ -108,7 +108,7 @@ class TestNotificationBroadcaster:
         from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
 
         broadcaster = NotificationBroadcaster()
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_ws)
 
@@ -142,7 +142,7 @@ class TestNotificationBroadcaster:
         from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
 
         broadcaster = NotificationBroadcaster()
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.send_json.side_effect = Exception("Connection closed")
 
         await broadcaster.subscribe(mock_ws)
@@ -167,8 +167,8 @@ class TestNotificationBroadcaster:
         from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
 
         broadcaster = NotificationBroadcaster()
-        mock_ws_user1 = AsyncMock()  # noqa: async-mock-config
-        mock_ws_user2 = AsyncMock()  # noqa: async-mock-config
+        mock_ws_user1 = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_ws_user2 = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_ws_user1, user_id="user-001")
         await broadcaster.subscribe(mock_ws_user2, user_id="user-002")
@@ -209,7 +209,7 @@ class TestNotificationTypes:
         from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
 
         broadcaster = NotificationBroadcaster()
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_ws)
 
@@ -232,7 +232,7 @@ class TestNotificationTypes:
         from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
 
         broadcaster = NotificationBroadcaster()
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_ws)
 
@@ -265,7 +265,7 @@ class TestNotificationWebSocketLifecycle:
         broadcaster = NotificationBroadcaster()
 
         # Simulate connection with configured mock
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.send_json.return_value = None
         await broadcaster.subscribe(mock_ws, user_id="user-001")
 
@@ -281,7 +281,7 @@ class TestNotificationWebSocketLifecycle:
         from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
 
         broadcaster = NotificationBroadcaster()
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.send_json.return_value = None
 
         await broadcaster.subscribe(mock_ws, user_id="user-001")
@@ -299,11 +299,11 @@ class TestNotificationWebSocketLifecycle:
         from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
 
         broadcaster = NotificationBroadcaster()
-        mock_ws1 = AsyncMock()  # noqa: async-mock-config
+        mock_ws1 = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws1.send_json.return_value = None
-        mock_ws2 = AsyncMock()  # noqa: async-mock-config
+        mock_ws2 = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws2.send_json.return_value = None
-        mock_ws3 = AsyncMock()  # noqa: async-mock-config
+        mock_ws3 = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws3.send_json.return_value = None
 
         # User 1 has 2 connections, User 2 has 1

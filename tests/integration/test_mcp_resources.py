@@ -368,7 +368,7 @@ class TestResourceSubscriptions:
             provider=provider,
         )
 
-        callback = AsyncMock()  # async-mock-configured
+        callback = AsyncMock(return_value=None)  # async-mock-configured
         handler.subscribe(
             uri="studio://session/abc/logs",
             callback=callback,

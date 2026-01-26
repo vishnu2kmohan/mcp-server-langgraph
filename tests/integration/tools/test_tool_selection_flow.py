@@ -107,7 +107,7 @@ class TestRetrieveToolsIntegration:
         from langchain_core.messages import HumanMessage
 
         # Mock semantic index manager
-        mock_semantic_index = AsyncMock()
+        mock_semantic_index = AsyncMock(return_value=None)
         mock_entry = MagicMock()
         mock_entry.name = "calculator"
         mock_entry.tool_id = "builtin:calculator"
@@ -136,7 +136,7 @@ class TestRetrieveToolsIntegration:
     @pytest.mark.asyncio
     async def test_retrieve_tools_skips_for_manual_mode(self):
         """retrieve_tools should skip semantic search in manual mode."""
-        mock_semantic_index = AsyncMock()
+        mock_semantic_index = AsyncMock(return_value=None)
 
         state = {
             "tool_selection_mode": "manual",
@@ -158,7 +158,7 @@ class TestRetrieveToolsIntegration:
     @pytest.mark.asyncio
     async def test_retrieve_tools_returns_empty_or_none_for_none_mode(self):
         """retrieve_tools should return empty/None for none mode (no tools selected)."""
-        mock_semantic_index = AsyncMock()
+        mock_semantic_index = AsyncMock(return_value=None)
 
         state = {
             "tool_selection_mode": "none",

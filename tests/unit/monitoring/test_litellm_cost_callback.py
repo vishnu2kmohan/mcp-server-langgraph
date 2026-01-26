@@ -92,7 +92,7 @@ class TestCostTrackingCallback:
         end_time = datetime.now(UTC)
 
         # Mock the cost collector
-        mock_collector = AsyncMock()  # noqa: async-mock-config
+        mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
             return_value=mock_collector,
@@ -146,7 +146,7 @@ class TestCostTrackingCallback:
         start_time = datetime.now(UTC)
         end_time = datetime.now(UTC)
 
-        mock_collector = AsyncMock()  # noqa: async-mock-config
+        mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
             return_value=mock_collector,
@@ -186,7 +186,7 @@ class TestCostTrackingCallback:
         start_time = datetime.now(UTC)
         end_time = datetime.now(UTC)
 
-        mock_collector = AsyncMock()  # noqa: async-mock-config
+        mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
             return_value=mock_collector,
@@ -229,7 +229,7 @@ class TestCostTrackingCallback:
         start_time = datetime.now(UTC)
         end_time = datetime.now(UTC)
 
-        mock_collector = AsyncMock()  # noqa: async-mock-config
+        mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
             return_value=mock_collector,
@@ -281,7 +281,7 @@ class TestCostTrackingCallback:
         start_time = datetime.now(UTC)
         end_time = datetime.now(UTC)
 
-        mock_collector = AsyncMock()  # noqa: async-mock-config
+        mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
             return_value=mock_collector,
@@ -329,7 +329,7 @@ class TestCostTrackingCallback:
         start_time = datetime.now(UTC)
         end_time = datetime.now(UTC)
 
-        mock_collector = AsyncMock()  # noqa: async-mock-config
+        mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
             return_value=mock_collector,
@@ -374,7 +374,7 @@ class TestCostTrackingCallback:
         start_time = datetime.now(UTC)
         end_time = datetime.now(UTC)
 
-        mock_collector = AsyncMock()  # noqa: async-mock-config
+        mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
             return_value=mock_collector,
@@ -423,7 +423,7 @@ class TestCostTrackingCallback:
         start_time = datetime.now(UTC)
         end_time = datetime.now(UTC)
 
-        mock_collector = AsyncMock()  # noqa: async-mock-config
+        mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
             return_value=mock_collector,

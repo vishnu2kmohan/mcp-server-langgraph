@@ -121,7 +121,7 @@ The page appears to be correctly rendered with all expected elements visible.
             patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_create_llm,
         ):
             mock_screenshot.ainvoke = AsyncMock(return_value=mock_screenshot_result)
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_llm.ainvoke = AsyncMock(return_value=mock_llm_response)
             mock_create_llm.return_value = mock_llm
 
@@ -159,7 +159,7 @@ The page appears to be correctly rendered with all expected elements visible.
             patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_create_llm,
         ):
             mock_screenshot.ainvoke = AsyncMock(return_value=mock_screenshot_result)
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_create_llm.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -196,7 +196,7 @@ class TestVisualVerificationVerifierIntegration:
         )
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_create_llm:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_create_llm.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -237,7 +237,7 @@ class TestVisualVerificationVerifierIntegration:
         )
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_create_llm:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_create_llm.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -265,7 +265,7 @@ class TestVisualVerificationVerifierIntegration:
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_create_llm:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_create_llm.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -360,7 +360,7 @@ Visual verification passed all criteria.
             patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_create_llm,
         ):
             mock_screenshot.ainvoke = AsyncMock(return_value=mock_screenshot_result)
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_llm.ainvoke = AsyncMock(return_value=mock_llm_response)
             mock_create_llm.return_value = mock_llm
 
@@ -424,7 +424,7 @@ The page displays a critical server error and cannot be used.
             patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_create_llm,
         ):
             mock_screenshot.ainvoke = AsyncMock(return_value=mock_screenshot_result)
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_llm.ainvoke = AsyncMock(return_value=mock_llm_response)
             mock_create_llm.return_value = mock_llm
 

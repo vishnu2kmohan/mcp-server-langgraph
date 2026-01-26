@@ -169,7 +169,7 @@ class TestAuthorizationServiceOrgContext:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Create mock OpenFGA client
-        mock_openfga = AsyncMock()  # noqa: async-mock-config
+        mock_openfga = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         service = AuthorizationService(openfga_client=mock_openfga)
@@ -196,7 +196,7 @@ class TestAuthorizationServiceOrgContext:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Create mock OpenFGA client
-        mock_openfga = AsyncMock()  # noqa: async-mock-config
+        mock_openfga = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         # Create mock settings with flag enabled
@@ -242,7 +242,7 @@ class TestAuthorizationServiceOrgContext:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Create mock OpenFGA client
-        mock_openfga = AsyncMock()  # noqa: async-mock-config
+        mock_openfga = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         # Create mock settings with flag disabled
@@ -292,7 +292,7 @@ class TestMultiOrgUserContext:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Create mock OpenFGA client that checks contextual tuples
-        mock_openfga = AsyncMock()  # noqa: async-mock-config
+        mock_openfga = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         async def check_permission_side_effect(
             user: str, relation: str, object: str, context: dict | None = None, **kwargs: Any
@@ -339,7 +339,7 @@ class TestMultiOrgUserContext:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Create mock OpenFGA client
-        mock_openfga = AsyncMock()  # noqa: async-mock-config
+        mock_openfga = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         # Create mock settings with flag enabled AND fail_closed_on_missing_context
@@ -369,7 +369,7 @@ class TestMultiOrgUserContext:
         from mcp_server_langgraph.auth.authorization import AuthorizationService
 
         # Create mock OpenFGA client
-        mock_openfga = AsyncMock()  # noqa: async-mock-config
+        mock_openfga = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_openfga.check_permission = AsyncMock(return_value=True)
 
         # Create mock settings with flag disabled

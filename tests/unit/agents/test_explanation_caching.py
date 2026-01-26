@@ -115,12 +115,12 @@ class TestExplanationCacheOperations:
             CachedExplanationOrchestrator,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.ainvoke = AsyncMock(return_value=MagicMock(content="Test explanation"))
 
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock(return_value=None)
         mock_cache.get = AsyncMock(return_value=None)  # Cache miss
-        mock_cache.set = AsyncMock()
+        mock_cache.set = AsyncMock(return_value=None)
 
         orchestrator = CachedExplanationOrchestrator(
             llm_factory=mock_llm,
@@ -149,8 +149,8 @@ class TestExplanationCacheOperations:
         )
         from mcp_server_langgraph.core.interrupts.ai_explanation import AIExplanation
 
-        mock_llm = AsyncMock()
-        mock_llm.ainvoke = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
+        mock_llm.ainvoke = AsyncMock(return_value=None)
 
         # Create a cached explanation
         cached_explanation = AIExplanation(
@@ -158,7 +158,7 @@ class TestExplanationCacheOperations:
             what_could_go_wrong="Cached risk",
         )
 
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock(return_value=None)
         mock_cache.get = AsyncMock(return_value=cached_explanation.model_dump_json())
 
         orchestrator = CachedExplanationOrchestrator(
@@ -189,12 +189,12 @@ class TestExplanationCacheOperations:
             EXPLANATION_CACHE_TTL,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.ainvoke = AsyncMock(return_value=MagicMock(content="Test"))
 
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock(return_value=None)
         mock_cache.get = AsyncMock(return_value=None)
-        mock_cache.set = AsyncMock()
+        mock_cache.set = AsyncMock(return_value=None)
 
         orchestrator = CachedExplanationOrchestrator(
             llm_factory=mock_llm,
@@ -235,7 +235,7 @@ class TestExplanationCacheInvalidation:
             CachedExplanationOrchestrator,
         )
 
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock(return_value=None)
         mock_cache.delete = AsyncMock(return_value=True)
 
         orchestrator = CachedExplanationOrchestrator(
@@ -260,10 +260,10 @@ class TestExplanationCacheInvalidation:
             CachedExplanationOrchestrator,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.ainvoke = AsyncMock(return_value=MagicMock(content="Test"))
 
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock(return_value=None)
         mock_cache.get = AsyncMock(side_effect=Exception("Redis connection failed"))
         mock_cache.set = AsyncMock(side_effect=Exception("Redis connection failed"))
 
@@ -304,7 +304,7 @@ class TestExplanationCacheMetrics:
         from mcp_server_langgraph.core.interrupts.ai_explanation import AIExplanation
 
         cached = AIExplanation(why_uncertain="Cached", what_could_go_wrong="Cached risk")
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock(return_value=None)
         mock_cache.get = AsyncMock(return_value=cached.model_dump_json())
 
         orchestrator = CachedExplanationOrchestrator(
@@ -333,12 +333,12 @@ class TestExplanationCacheMetrics:
             CachedExplanationOrchestrator,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.ainvoke = AsyncMock(return_value=MagicMock(content="Test"))
 
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock(return_value=None)
         mock_cache.get = AsyncMock(return_value=None)
-        mock_cache.set = AsyncMock()
+        mock_cache.set = AsyncMock(return_value=None)
 
         orchestrator = CachedExplanationOrchestrator(
             llm_factory=mock_llm,

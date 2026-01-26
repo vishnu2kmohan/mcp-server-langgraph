@@ -45,7 +45,7 @@ class TestTraceBroadcasterSessionFilter:
 
         broadcaster = TraceBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         # Subscribe with session_id filter
         await broadcaster.subscribe(
@@ -81,7 +81,7 @@ class TestTraceBroadcasterSessionFilter:
 
         broadcaster = TraceBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         # Subscribe with session_id filter
         await broadcaster.subscribe(
@@ -114,7 +114,7 @@ class TestTraceBroadcasterSessionFilter:
 
         broadcaster = TraceBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         # Subscribe without session_id filter
         await broadcaster.subscribe(
@@ -149,7 +149,7 @@ class TestTraceBroadcasterSessionFilter:
 
         broadcaster = TraceBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         # Subscribe with combined filter
         await broadcaster.subscribe(

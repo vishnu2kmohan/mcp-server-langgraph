@@ -53,7 +53,7 @@ class TestOpenFGAGlobalInitialization:
         mock_settings.keycloak_realm = "default"
 
         # Mock OpenFGA client
-        mock_openfga_client = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_openfga_client = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         mock_openfga_client.store_id = "test-store-id"
         mock_openfga_client.model_id = "test-model-id"
         mock_openfga_client._ensure_initialized = AsyncMock(return_value=None)
@@ -117,7 +117,7 @@ class TestOpenFGAGlobalInitialization:
         the global OpenFGA client for WebSocket authorization.
         """
         # GIVEN: Mock the OpenFGA client creation
-        mock_openfga_client = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_openfga_client = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         mock_openfga_client.store_id = "test-store-id"
         mock_openfga_client.model_id = "test-model-id"
         mock_openfga_client._ensure_initialized = AsyncMock(return_value=None)
@@ -192,7 +192,7 @@ class TestWebSocketAuthorizationUsesGlobalClient:
         """
         from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 
-        mock_client = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         mock_client.check_permission = AsyncMock(return_value=True)
 
         with patch(

@@ -95,7 +95,7 @@ class TestIDsValidator:
                 from unittest.mock import AsyncMock
 
                 def test_with_mock():
-                    mock = AsyncMock()
+                    mock = AsyncMock(return_value=None)
                     mock.get_user.return_value = {"user_id": "user:alice"}
                     result = mock.get_user()
                     assert result["user_id"] == "user:alice"

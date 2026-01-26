@@ -45,7 +45,7 @@ class TestVisualVerificationScreenshotCache:
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -123,7 +123,7 @@ Looks good."""
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -160,7 +160,7 @@ Looks good."""
             # Cache always returns None (miss)
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             result = await verifier.verify_with_visual(
@@ -179,7 +179,7 @@ Looks good."""
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -207,7 +207,7 @@ FEEDBACK: Good"""
             # Cache always misses
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             # Verify two different URLs
@@ -249,7 +249,7 @@ FEEDBACK: Good"""
         from mcp_server_langgraph.llm.verifier import OutputVerifier, SCREENSHOT_CACHE_TTL
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -273,7 +273,7 @@ FEEDBACK: Good"""
 
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             await verifier.verify_with_visual(
@@ -294,7 +294,7 @@ FEEDBACK: Good"""
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -322,7 +322,7 @@ FEEDBACK: Good"""
 
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             # Call with caching disabled
@@ -353,7 +353,7 @@ class TestVisualVerificationCacheMetrics:
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -400,7 +400,7 @@ FEEDBACK: Good"""
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
         with patch("mcp_server_langgraph.llm.verifier.create_verification_model") as mock_factory:
-            mock_llm = AsyncMock()
+            mock_llm = AsyncMock(return_value=None)
             mock_factory.return_value = mock_llm
 
             verifier = OutputVerifier()
@@ -425,7 +425,7 @@ FEEDBACK: Good"""
             # Cache returns None (miss)
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock(return_value=None)
             mock_get_cache.return_value = mock_cache
 
             await verifier.verify_with_visual(

@@ -255,7 +255,7 @@ class TestOrganizationalCostE2E:
         )
 
         # Mock the cost collector
-        mock_collector = AsyncMock()  # noqa: async-mock-config
+        mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         callback = CostTrackingCallback()
 
@@ -277,8 +277,8 @@ class TestOrganizationalCostE2E:
         }
 
         # Mock response object with usage
-        response_obj = AsyncMock()  # noqa: async-mock-config
-        response_obj.usage = AsyncMock()  # noqa: async-mock-config
+        response_obj = AsyncMock(return_value=None)  # noqa: async-mock-config
+        response_obj.usage = AsyncMock(return_value=None)  # noqa: async-mock-config
         response_obj.usage.prompt_tokens = 100
         response_obj.usage.completion_tokens = 50
 
@@ -476,7 +476,7 @@ class TestAllocationTagsE2E:
             CostTrackingCallback,
         )
 
-        mock_collector = AsyncMock()  # noqa: async-mock-config
+        mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         callback = CostTrackingCallback()
 
         kwargs = {
@@ -497,8 +497,8 @@ class TestAllocationTagsE2E:
             },
         }
 
-        response_obj = AsyncMock()  # noqa: async-mock-config
-        response_obj.usage = AsyncMock()  # noqa: async-mock-config
+        response_obj = AsyncMock(return_value=None)  # noqa: async-mock-config
+        response_obj.usage = AsyncMock(return_value=None)  # noqa: async-mock-config
         response_obj.usage.prompt_tokens = 150
         response_obj.usage.completion_tokens = 75
 

@@ -108,7 +108,7 @@ class TestDynamicContextLoaderExtendedTypes:
             "metadata": {"tool_id": "calculator", "category": "math"},
         }
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.search = AsyncMock(return_value=[mock_result])
         mock_client.get_collections = AsyncMock(return_value=MagicMock(collections=[MagicMock(name="test")]))
 
@@ -154,7 +154,7 @@ class TestDynamicContextLoaderExtendedTypes:
             "metadata": {"skill_id": "code_review", "category": "development"},
         }
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.search = AsyncMock(return_value=[mock_result])
         mock_client.get_collections = AsyncMock(return_value=MagicMock(collections=[MagicMock(name="test")]))
 
@@ -200,7 +200,7 @@ class TestDynamicContextLoaderExtendedTypes:
             "metadata": {"memory_type": "preference", "user_id": "user-123"},
         }
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.search = AsyncMock(return_value=[mock_result])
         mock_client.get_collections = AsyncMock(return_value=MagicMock(collections=[MagicMock(name="test")]))
 
@@ -255,7 +255,7 @@ class TestSemanticSearchRefTypeFiltering:
             "text": "Tool description",
         }
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.search = AsyncMock(return_value=[mock_result])
         mock_client.get_collections = AsyncMock(return_value=MagicMock(collections=[MagicMock(name="test")]))
 
@@ -319,7 +319,7 @@ class TestSemanticSearchRefTypeFiltering:
             ),
         ]
 
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.search = AsyncMock(return_value=mock_results)
         mock_client.get_collections = AsyncMock(return_value=MagicMock(collections=[MagicMock(name="test")]))
 

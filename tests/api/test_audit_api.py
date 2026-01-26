@@ -68,7 +68,7 @@ def audit_app() -> Generator[tuple[FastAPI, AsyncMock], None, None]:
 
     app.dependency_overrides[get_current_user] = get_admin_user
 
-    mock_service = AsyncMock()  # async-mock-configured
+    mock_service = AsyncMock(return_value=None)  # async-mock-configured
     set_audit_service(mock_service)
 
     yield app, mock_service
@@ -93,7 +93,7 @@ def audit_app_unauthorized() -> Generator[tuple[FastAPI, AsyncMock], None, None]
 
     app.dependency_overrides[get_current_user] = get_regular_user
 
-    mock_service = AsyncMock()  # async-mock-configured
+    mock_service = AsyncMock(return_value=None)  # async-mock-configured
     set_audit_service(mock_service)
 
     yield app, mock_service
@@ -118,7 +118,7 @@ def audit_app_compliance_officer() -> Generator[tuple[FastAPI, AsyncMock], None,
 
     app.dependency_overrides[get_current_user] = get_compliance_officer
 
-    mock_service = AsyncMock()  # async-mock-configured
+    mock_service = AsyncMock(return_value=None)  # async-mock-configured
     set_audit_service(mock_service)
 
     yield app, mock_service

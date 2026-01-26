@@ -439,7 +439,7 @@ class TestLLMFactoryAstreamBulkhead:
 
         with patch("mcp_server_langgraph.llm.factory.acompletion") as mock_acompletion:
             with patch("mcp_server_langgraph.llm.factory.get_provider_adaptive_bulkhead") as mock_bulkhead:
-                mock_semaphore = AsyncMock()  # noqa: async-mock-config
+                mock_semaphore = AsyncMock(return_value=None)  # noqa: async-mock-config
                 mock_semaphore.__aenter__ = AsyncMock(return_value=None)
                 mock_semaphore.__aexit__ = AsyncMock(return_value=None)
                 mock_bulkhead.return_value.get_semaphore.return_value = mock_semaphore

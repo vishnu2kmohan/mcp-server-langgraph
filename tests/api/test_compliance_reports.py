@@ -48,7 +48,7 @@ def compliance_app() -> Generator[tuple[FastAPI, AsyncMock], None, None]:
 
     app.dependency_overrides[require_compliance_viewer] = override_require_compliance_viewer
 
-    mock_service = AsyncMock()  # async-mock-configured
+    mock_service = AsyncMock(return_value=None)  # async-mock-configured
     set_compliance_service(mock_service)
 
     yield app, mock_service

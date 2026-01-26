@@ -33,7 +33,7 @@ class TestSkillRegistryBasic:
         registry = SkillRegistry()
         assert registry is not None
 
-    def test_register_skill(self):
+    def test_register_skill_adds_to_registry(self):
         """GIVEN a SkillRegistry
         WHEN registering a skill
         THEN the skill should be stored
@@ -105,7 +105,7 @@ class TestSkillRegistryUnregister:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_unregister_skill(self):
+    def test_unregister_skill_removes_from_registry(self):
         """GIVEN a registry with a skill
         WHEN unregistering the skill
         THEN it should be removed

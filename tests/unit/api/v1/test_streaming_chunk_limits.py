@@ -43,7 +43,7 @@ class TestStreamingHandlerChunkSizeLimit:
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,
-            send_notification=AsyncMock(),  # async-mock-configured (callback)  # noqa: async-mock-config
+            send_notification=AsyncMock(return_value=None),  # async-mock-configured (callback)  # noqa: async-mock-config
             max_chunk_size=32768,
         )
 
@@ -62,7 +62,7 @@ class TestStreamingHandlerChunkSizeLimit:
         )
 
         handler = AuthenticatedMCPHandler(user_id="user:test")
-        send_notification = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        send_notification = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,
@@ -106,7 +106,7 @@ class TestStreamingHandlerChunkSizeLimit:
         )
 
         handler = AuthenticatedMCPHandler(user_id="user:test")
-        send_notification = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        send_notification = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,

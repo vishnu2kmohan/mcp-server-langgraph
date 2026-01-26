@@ -162,7 +162,7 @@ class TestSecurityHookRegistry:
 
         assert SecurityHookRegistry is not None
 
-    def test_registry_initialization(self) -> None:
+    def test_registry_initialization_creates_empty(self) -> None:
         """Test registry initialization."""
         from mcp_server_langgraph.sdk.hooks import SecurityHookRegistry
 
@@ -170,7 +170,7 @@ class TestSecurityHookRegistry:
 
         assert registry is not None
 
-    def test_register_hook(self) -> None:
+    def test_register_hook_adds_callback(self) -> None:
         """Test registering a hook."""
         from mcp_server_langgraph.sdk.hooks import SecurityHookRegistry, HookResult
 

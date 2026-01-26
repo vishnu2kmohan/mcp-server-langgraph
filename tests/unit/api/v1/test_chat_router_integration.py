@@ -70,7 +70,7 @@ def mock_llm_factory() -> MagicMock:
 @pytest.fixture
 def mock_router_agent(mock_router_output: RouterOutput) -> AsyncMock:
     """Create a mock router agent."""
-    agent = AsyncMock()  # noqa: async-mock-config - configured below
+    agent = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
     agent.route = AsyncMock(return_value=mock_router_output)
     return agent
 
@@ -185,7 +185,7 @@ class TestRouterAgentIntegration:
         mock_router_agent.route = AsyncMock(return_value=studio_output)
 
         # Create mock LangGraph agent
-        mock_langgraph = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_langgraph = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
 
         async def mock_astream_events(*args: Any, **kwargs: Any) -> AsyncIterator[dict[str, Any]]:
             yield {"event": "on_chain_start", "name": "test"}
@@ -274,7 +274,7 @@ class TestRouterAgentIntegration:
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
         # Router that fails
-        failing_router = AsyncMock()  # noqa: async-mock-config - configured below
+        failing_router = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         failing_router.route = AsyncMock(side_effect=Exception("Router failed"))
 
         service = ChatServiceImpl(

@@ -281,7 +281,7 @@ class TestAgentRegistry:
         assert "agent2" in agents
         assert "agent3" in agents
 
-    def test_unregister_agent(self) -> None:
+    def test_unregister_agent_removes_from_registry(self) -> None:
         """Should unregister an agent."""
         from mcp_server_langgraph.agents.definition import (
             AgentDefinition,

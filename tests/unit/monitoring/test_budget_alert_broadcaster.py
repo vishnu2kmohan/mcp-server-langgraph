@@ -72,7 +72,7 @@ class TestBudgetAlertBroadcasterSubscription:
 
         # Mock WebSocket connection
         mock_connection = MagicMock()
-        mock_connection.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_connection.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(
             connection=mock_connection,
@@ -93,7 +93,7 @@ class TestBudgetAlertBroadcasterSubscription:
         broadcaster = BudgetAlertBroadcaster()
 
         mock_connection = MagicMock()
-        mock_connection.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_connection.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(
             connection=mock_connection,
@@ -120,7 +120,7 @@ class TestBudgetAlertBroadcasterSubscription:
         broadcaster = BudgetAlertBroadcaster()
 
         mock_connection = MagicMock()
-        mock_connection.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_connection.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(
             connection=mock_connection,
@@ -157,9 +157,9 @@ class TestBudgetAlertBroadcasterBroadcast:
 
         # Add two subscribers
         mock_conn1 = MagicMock()
-        mock_conn1.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_conn1.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_conn2 = MagicMock()
-        mock_conn2.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_conn2.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_conn1, "user:alice")
         await broadcaster.subscribe(mock_conn2, "user:bob")
@@ -200,7 +200,7 @@ class TestBudgetAlertBroadcasterBroadcast:
         broadcaster = BudgetAlertBroadcaster()
 
         mock_connection = MagicMock()
-        mock_connection.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_connection.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_connection, "user:alice")
 
@@ -244,7 +244,7 @@ class TestBudgetAlertBroadcasterBroadcast:
 
         # Subscriber watching organization:acme
         mock_conn1 = MagicMock()
-        mock_conn1.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_conn1.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
         await broadcaster.subscribe(
             mock_conn1,
             "user:alice",
@@ -253,7 +253,7 @@ class TestBudgetAlertBroadcasterBroadcast:
 
         # Subscriber watching organization:other
         mock_conn2 = MagicMock()
-        mock_conn2.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_conn2.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
         await broadcaster.subscribe(
             mock_conn2,
             "user:bob",
@@ -297,7 +297,7 @@ class TestBudgetAlertBroadcasterBroadcast:
 
         # Subscriber watching all (no filter)
         mock_connection = MagicMock()
-        mock_connection.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_connection.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
         await broadcaster.subscribe(mock_connection, "user:admin")
 
         budget = Budget(
@@ -460,7 +460,7 @@ class TestBudgetAlertBroadcasterGraceful:
 
         # Good connection
         mock_conn1 = MagicMock()
-        mock_conn1.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_conn1.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
         await broadcaster.subscribe(mock_conn1, "user:alice")
 
         # Bad connection (will raise exception)

@@ -197,7 +197,7 @@ class TestArtifactSuggestionAgent:
         from mcp_server_langgraph.studio.ai.suggestions import ArtifactSuggestionAgent
 
         # Mock the LLM factory - inject via constructor parameter
-        mock_llm_factory = AsyncMock()  # noqa: async-mock-config - configured below
+        mock_llm_factory = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
         mock_llm_factory.ainvoke = AsyncMock(
             return_value=MagicMock(content='[{"type": "refactor", "content": "Use list comprehension", "confidence": 0.85}]')
         )

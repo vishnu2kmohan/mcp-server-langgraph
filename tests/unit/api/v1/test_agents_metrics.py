@@ -196,7 +196,7 @@ class TestAgentMetricsEndpoint:
         app = create_agents_test_app()
 
         with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
-            mock_client = AsyncMock()  # noqa: async-mock-config - configured below
+            mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
             mock_client.query_instant = AsyncMock(
                 return_value=MagicMock(
                     data=[MagicMock(value=100.0)],
@@ -218,7 +218,7 @@ class TestAgentMetricsEndpoint:
         app = create_agents_test_app()
 
         with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
-            mock_client = AsyncMock()  # noqa: async-mock-config - configured below
+            mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
             mock_client.query_instant = AsyncMock(
                 return_value=MagicMock(
                     data=[MagicMock(value=100.0)],
@@ -243,7 +243,7 @@ class TestAgentMetricsEndpoint:
         app = create_agents_test_app()
 
         with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
-            mock_client = AsyncMock()  # noqa: async-mock-config - configured below
+            mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
             mock_client.query_instant = AsyncMock(
                 return_value=MagicMock(
                     data=[MagicMock(value=100.0)],
@@ -296,7 +296,7 @@ class TestAgentMetricsErrorHandling:
         app = create_agents_test_app()
 
         with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
-            mock_client = AsyncMock()  # noqa: async-mock-config - configured below
+            mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
             # First query succeeds, second fails
             mock_client.query_instant = AsyncMock(
                 side_effect=[

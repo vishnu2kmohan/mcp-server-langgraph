@@ -465,7 +465,7 @@ class TestCheckSkillUpdates:
             ),
         ]
 
-        mock_scheduler = AsyncMock()
+        mock_scheduler = AsyncMock(return_value=None)
         mock_scheduler.check_updates_available = AsyncMock(return_value=mock_updates)
 
         with patch(
@@ -488,7 +488,7 @@ class TestCheckSkillUpdates:
         client: TestClient,
     ) -> None:
         """Test checking for updates returns empty list when no updates available."""
-        mock_scheduler = AsyncMock()
+        mock_scheduler = AsyncMock(return_value=None)
         mock_scheduler.check_updates_available = AsyncMock(return_value=[])
 
         with patch(
@@ -507,7 +507,7 @@ class TestCheckSkillUpdates:
         client: TestClient,
     ) -> None:
         """Test that scheduler errors are handled gracefully."""
-        mock_scheduler = AsyncMock()
+        mock_scheduler = AsyncMock(return_value=None)
         mock_scheduler.check_updates_available = AsyncMock(
             side_effect=RuntimeError("Scheduler unavailable")
         )
@@ -546,7 +546,7 @@ class TestApplySkillUpdates:
             {"skill_name": "code-review", "success": True, "version": "2.1.0"},
         ]
 
-        mock_scheduler = AsyncMock()
+        mock_scheduler = AsyncMock(return_value=None)
         mock_scheduler.apply_updates = AsyncMock(return_value=mock_results)
 
         with patch(
@@ -571,7 +571,7 @@ class TestApplySkillUpdates:
             {"skill_name": "code-review", "success": False, "error": "Network error"},
         ]
 
-        mock_scheduler = AsyncMock()
+        mock_scheduler = AsyncMock(return_value=None)
         mock_scheduler.apply_updates = AsyncMock(return_value=mock_results)
 
         with patch(
@@ -590,7 +590,7 @@ class TestApplySkillUpdates:
         client: TestClient,
     ) -> None:
         """Test applying updates when none available returns empty list."""
-        mock_scheduler = AsyncMock()
+        mock_scheduler = AsyncMock(return_value=None)
         mock_scheduler.apply_updates = AsyncMock(return_value=[])
 
         with patch(
@@ -610,7 +610,7 @@ class TestApplySkillUpdates:
         client: TestClient,
     ) -> None:
         """Test that scheduler errors are handled gracefully."""
-        mock_scheduler = AsyncMock()
+        mock_scheduler = AsyncMock(return_value=None)
         mock_scheduler.apply_updates = AsyncMock(
             side_effect=RuntimeError("Update failed")
         )

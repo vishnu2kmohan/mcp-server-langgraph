@@ -69,9 +69,9 @@ class TestPostgresArtifactsRepositoryCreate:
         )
 
         # Arrange
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.add = MagicMock()  # add is sync
-        mock_session.commit = AsyncMock()  # commit is async
+        mock_session.commit = AsyncMock(return_value=None)  # commit is async
         repo = PostgresArtifactsRepository(session=mock_session)
 
         artifact_data = {
@@ -100,9 +100,9 @@ class TestPostgresArtifactsRepositoryCreate:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.add = MagicMock()
-        mock_session.commit = AsyncMock()
+        mock_session.commit = AsyncMock(return_value=None)
         repo = PostgresArtifactsRepository(session=mock_session)
 
         artifact_data = {
@@ -125,9 +125,9 @@ class TestPostgresArtifactsRepositoryCreate:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.add = MagicMock()
-        mock_session.commit = AsyncMock()
+        mock_session.commit = AsyncMock(return_value=None)
         repo = PostgresArtifactsRepository(session=mock_session)
 
         artifact_data = {
@@ -161,7 +161,7 @@ class TestPostgresArtifactsRepositoryGet:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_artifact = MagicMock()
         mock_artifact.to_dict.return_value = create_mock_artifact_data()
         mock_artifact.user_id = TEST_USER_ID
@@ -187,7 +187,7 @@ class TestPostgresArtifactsRepositoryGet:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute.return_value = mock_result
@@ -207,7 +207,7 @@ class TestPostgresArtifactsRepositoryGet:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_artifact = MagicMock()
         mock_artifact.user_id = "other-user"
 
@@ -240,9 +240,9 @@ class TestPostgresArtifactsRepositoryUpdate:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.add = MagicMock()  # add is sync
-        mock_session.commit = AsyncMock()  # commit is async
+        mock_session.commit = AsyncMock(return_value=None)  # commit is async
         mock_artifact = MagicMock()
         mock_artifact.version = 1
         mock_artifact.user_id = TEST_USER_ID
@@ -273,9 +273,9 @@ class TestPostgresArtifactsRepositoryUpdate:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.add = MagicMock()  # add is sync
-        mock_session.commit = AsyncMock()  # commit is async
+        mock_session.commit = AsyncMock(return_value=None)  # commit is async
         mock_artifact = MagicMock()
         mock_artifact.version = 1
         mock_artifact.user_id = TEST_USER_ID
@@ -305,7 +305,7 @@ class TestPostgresArtifactsRepositoryUpdate:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_artifact = MagicMock()
         mock_artifact.user_id = "other-user"
 
@@ -342,7 +342,7 @@ class TestPostgresArtifactsRepositoryDelete:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_artifact = MagicMock()
         mock_artifact.user_id = TEST_USER_ID
 
@@ -366,7 +366,7 @@ class TestPostgresArtifactsRepositoryDelete:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute.return_value = mock_result
@@ -396,7 +396,7 @@ class TestPostgresArtifactsRepositoryList:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_artifacts = [
             MagicMock(to_dict=lambda: create_mock_artifact_data(artifact_id="art-1")),
             MagicMock(to_dict=lambda: create_mock_artifact_data(artifact_id="art-2")),
@@ -423,7 +423,7 @@ class TestPostgresArtifactsRepositoryList:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_artifact = MagicMock()
         mock_artifact.to_dict.return_value = create_mock_artifact_data()
 
@@ -448,7 +448,7 @@ class TestPostgresArtifactsRepositoryList:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         # Create 3 artifacts to test pagination
         mock_artifacts = [MagicMock(to_dict=lambda i=i: create_mock_artifact_data(artifact_id=f"art-{i}")) for i in range(3)]
 
@@ -481,7 +481,7 @@ class TestPostgresArtifactsRepositoryVersions:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
 
         # Mock artifact exists and belongs to user
         mock_artifact = MagicMock()
@@ -517,7 +517,7 @@ class TestPostgresArtifactsRepositoryVersions:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute.return_value = mock_result
@@ -547,9 +547,9 @@ class TestPostgresArtifactsRepositoryFork:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.add = MagicMock()  # add is sync
-        mock_session.commit = AsyncMock()  # commit is async
+        mock_session.commit = AsyncMock(return_value=None)  # commit is async
 
         # Mock source artifact
         mock_artifact = MagicMock()
@@ -585,9 +585,9 @@ class TestPostgresArtifactsRepositoryFork:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.add = MagicMock()  # add is sync
-        mock_session.commit = AsyncMock()  # commit is async
+        mock_session.commit = AsyncMock(return_value=None)  # commit is async
 
         mock_artifact = MagicMock()
         mock_artifact.id = TEST_ARTIFACT_ID
@@ -621,7 +621,7 @@ class TestPostgresArtifactsRepositoryFork:
             PostgresArtifactsRepository,
         )
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute.return_value = mock_result

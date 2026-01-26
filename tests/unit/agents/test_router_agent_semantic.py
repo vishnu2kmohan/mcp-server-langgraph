@@ -141,7 +141,7 @@ class TestRouterAgentSemanticDiscovery:
             ToolIndexEntry,
         )
 
-        mock = AsyncMock()
+        mock = AsyncMock(return_value=None)
         mock.search_tools = AsyncMock(
             return_value=[
                 ToolIndexEntry(
@@ -269,7 +269,7 @@ class TestRouterAgentSemanticDiscovery:
         """route_with_semantic_discovery should handle empty semantic results."""
         from mcp_server_langgraph.agents.router_agent import RouterAgent
 
-        mock_semantic_index = AsyncMock()
+        mock_semantic_index = AsyncMock(return_value=None)
         mock_semantic_index.search_tools = AsyncMock(return_value=[])
         mock_semantic_index.search_skills = AsyncMock(return_value=[])
 
@@ -289,7 +289,7 @@ class TestRouterAgentSemanticDiscovery:
         """route_with_semantic_discovery should handle semantic search errors gracefully."""
         from mcp_server_langgraph.agents.router_agent import RouterAgent
 
-        mock_semantic_index = AsyncMock()
+        mock_semantic_index = AsyncMock(return_value=None)
         mock_semantic_index.search_tools = AsyncMock(side_effect=Exception("Qdrant unavailable"))
         mock_semantic_index.search_skills = AsyncMock(side_effect=Exception("Qdrant unavailable"))
 

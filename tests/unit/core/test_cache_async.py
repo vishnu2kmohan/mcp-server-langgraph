@@ -130,7 +130,7 @@ class TestCacheServiceAsyncGet:
             cache = CacheService(redis_url="redis://localhost:6379")
 
             # Mock async Redis client
-            mock_async_redis = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_async_redis = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_async_redis.get.return_value = pickle.dumps("l2_value")
             cache.async_redis = mock_async_redis
 
@@ -154,7 +154,7 @@ class TestCacheServiceAsyncGet:
             cache = CacheService(redis_url="redis://localhost:6379")
 
             # Mock async Redis client returning None
-            mock_async_redis = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_async_redis = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_async_redis.get.return_value = None
             cache.async_redis = mock_async_redis
 
@@ -187,7 +187,7 @@ class TestCacheServiceAsyncSet:
             cache = CacheService(redis_url="redis://localhost:6379")
 
             # Mock async Redis client
-            mock_async_redis = AsyncMock()  # noqa: async-mock-config
+            mock_async_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
             cache.async_redis = mock_async_redis
 
             await cache.aset("test_key", "test_value", ttl=300)
@@ -208,7 +208,7 @@ class TestCacheServiceAsyncSet:
             cache = CacheService(redis_url="redis://localhost:6379")
 
             # Mock async Redis client
-            mock_async_redis = AsyncMock()  # noqa: async-mock-config
+            mock_async_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
             cache.async_redis = mock_async_redis
 
             await cache.aset("test_key", "test_value", ttl=300)
@@ -248,7 +248,7 @@ class TestCacheServiceAsyncDelete:
             cache.l1_cache["test_key"] = "test_value"
 
             # Mock async Redis client
-            mock_async_redis = AsyncMock()  # noqa: async-mock-config
+            mock_async_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
             cache.async_redis = mock_async_redis
 
             await cache.adelete("test_key")
@@ -267,7 +267,7 @@ class TestCacheServiceAsyncDelete:
             cache = CacheService(redis_url="redis://localhost:6379")
 
             # Mock async Redis client
-            mock_async_redis = AsyncMock()  # noqa: async-mock-config
+            mock_async_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
             cache.async_redis = mock_async_redis
 
             await cache.adelete("test_key")
@@ -304,7 +304,7 @@ class TestCacheServiceAsyncClear:
             cache.l1_cache["key2"] = "value2"
 
             # Mock async Redis client
-            mock_async_redis = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_async_redis = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_async_redis.keys.return_value = []
             cache.async_redis = mock_async_redis
 
@@ -324,7 +324,7 @@ class TestCacheServiceAsyncClear:
             cache = CacheService(redis_url="redis://localhost:6379")
 
             # Mock async Redis client
-            mock_async_redis = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_async_redis = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
             mock_async_redis.keys.return_value = [b"user:123", b"user:456"]
             cache.async_redis = mock_async_redis
 

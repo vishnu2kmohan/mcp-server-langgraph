@@ -382,7 +382,7 @@ class TestMCPSTDIOFraming:
         gc.collect()
 
     @pytest.mark.unit
-    def test_message_framing(self):
+    def test_message_framing_adds_headers(self):
         """GIVEN a JSON-RPC message
         WHEN framing for STDIO
         THEN it is newline-delimited without embedded newlines"""
@@ -396,7 +396,7 @@ class TestMCPSTDIOFraming:
         assert framed.count("\n") == 1  # Only trailing newline
 
     @pytest.mark.unit
-    def test_message_parsing(self):
+    def test_message_parsing_extracts_payload(self):
         """GIVEN newline-delimited messages
         WHEN parsing
         THEN individual JSON-RPC messages are extracted"""

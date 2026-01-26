@@ -227,7 +227,7 @@ class TestAlertRouterSubscriptions:
         )
 
         # Mock subscription store
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
         mock_store.get_subscriptions.return_value = [
             Subscription(
                 user_id="user-001",
@@ -278,7 +278,7 @@ class TestAlertRouterSubscriptions:
             Subscription,
         )
 
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
         mock_store.get_subscriptions.return_value = [
             Subscription(
                 user_id="user-001",

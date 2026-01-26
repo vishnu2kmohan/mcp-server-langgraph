@@ -92,7 +92,7 @@ class TestRetrieveSkillsNodeBehavior:
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_skills_impl
 
         # Create mock semantic index manager
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
         mock_manager.search_skills.return_value = [
             MagicMock(name="code_review", skill_id="sk1"),
             MagicMock(name="test_generation", skill_id="sk2"),
@@ -119,7 +119,7 @@ class TestRetrieveSkillsNodeBehavior:
         """retrieve_skills should respect max_selected_skills from config."""
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_skills_impl
 
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
         mock_manager.search_skills.return_value = []
 
         state = {
@@ -152,7 +152,7 @@ class TestRetrieveSkillsNodeIntegration:
         """retrieve_skills node should update state with skill names."""
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_skills_impl
 
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
         mock_skill1 = MagicMock()
         mock_skill1.name = "code_review"
         mock_skill2 = MagicMock()
@@ -182,7 +182,7 @@ class TestRetrieveSkillsNodeIntegration:
         """retrieve_skills should fall back gracefully when search fails."""
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_skills_impl
 
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
         mock_manager.search_skills.side_effect = Exception("Qdrant connection failed")
 
         state = {
@@ -205,7 +205,7 @@ class TestRetrieveSkillsNodeIntegration:
         """retrieve_skills should handle empty/short queries gracefully."""
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_skills_impl
 
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
 
         state = {
             "messages": [HumanMessage(content="hi")],

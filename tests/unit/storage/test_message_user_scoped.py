@@ -150,7 +150,7 @@ class TestContextvarStorageAdapter:
         )
 
         # Create mock session service
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.get_session_messages = AsyncMock(return_value=[])
 
         adapter = ContextvarSessionStorageAdapter(session_service=mock_service)
@@ -173,7 +173,7 @@ class TestContextvarStorageAdapter:
             set_current_user_id,
         )
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.get_session_messages = AsyncMock(return_value=[{"content": "test"}])
 
         adapter = ContextvarSessionStorageAdapter(session_service=mock_service)
@@ -200,7 +200,7 @@ class TestContextvarStorageAdapter:
         token = _current_user_id.set("")
 
         try:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             adapter = ContextvarSessionStorageAdapter(session_service=mock_service)
 
             result = await adapter.get_messages("session-123")
@@ -222,7 +222,7 @@ class TestContextvarStorageAdapter:
             set_current_user_id,
         )
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.add_message = AsyncMock(
             return_value={"message_id": "msg-123", "content": "test"}
         )

@@ -41,8 +41,8 @@ class TestStartupToolIndexing:
         mock_settings.embedding_dimensions = 384
         mock_settings.auth_cache_warm_entries = []
 
-        mock_manager = AsyncMock()
-        mock_manager.ensure_collection = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
+        mock_manager.ensure_collection = AsyncMock(return_value=None)
         mock_manager.index_tools_batch = AsyncMock(return_value=None)
 
         # Mock tools
@@ -96,9 +96,9 @@ class TestStartupToolIndexing:
         mock_settings.embedding_dimensions = 384
         mock_settings.auth_cache_warm_entries = []
 
-        mock_manager = AsyncMock()
-        mock_manager.ensure_collection = AsyncMock()
-        mock_manager.index_tools_batch = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
+        mock_manager.ensure_collection = AsyncMock(return_value=None)
+        mock_manager.index_tools_batch = AsyncMock(return_value=None)
 
         with patch(
             "mcp_server_langgraph.bootstrap.semantic.feature_flags"
@@ -141,8 +141,8 @@ class TestStartupToolIndexing:
         mock_settings.embedding_dimensions = 384
         mock_settings.auth_cache_warm_entries = []
 
-        mock_manager = AsyncMock()
-        mock_manager.ensure_collection = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
+        mock_manager.ensure_collection = AsyncMock(return_value=None)
         mock_manager.index_tools_batch = AsyncMock(
             side_effect=Exception("Qdrant connection failed")
         )
@@ -239,8 +239,8 @@ class TestStartupIndexingMetrics:
         mock_settings.embedding_dimensions = 384
         mock_settings.auth_cache_warm_entries = []
 
-        mock_manager = AsyncMock()
-        mock_manager.ensure_collection = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
+        mock_manager.ensure_collection = AsyncMock(return_value=None)
         mock_manager.index_tools_batch = AsyncMock(return_value=None)
 
         mock_tools = [MagicMock(name=f"tool_{i}", description=f"Tool {i}") for i in range(10)]

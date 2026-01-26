@@ -298,7 +298,7 @@ def visual_verifier():
 
     verifier = OutputVerifier(settings=mock_settings)
     # Mock the LLM
-    verifier.llm = AsyncMock()  # noqa: async-mock-config
+    verifier.llm = AsyncMock(return_value=None)  # noqa: async-mock-config
 
     return verifier
 
@@ -526,7 +526,7 @@ class TestVisualVerificationMethod:
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()  # noqa: async-mock-config
+            mock_cache.aset = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_get_cache.return_value = mock_cache
 
             await visual_verifier.verify_with_visual(
@@ -554,7 +554,7 @@ class TestVisualVerificationMethod:
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()  # noqa: async-mock-config
+            mock_cache.aset = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_get_cache.return_value = mock_cache
 
             await visual_verifier.verify_with_visual(
@@ -807,7 +807,7 @@ class TestVisualVerificationMetricsIntegration:
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()  # noqa: async-mock-config
+            mock_cache.aset = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_get_cache.return_value = mock_cache
 
             with patch("mcp_server_langgraph.llm.verifier.record_visual_verification_request") as mock_record:
@@ -908,7 +908,7 @@ class TestVisualVerificationMetricsIntegration:
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()  # noqa: async-mock-config
+            mock_cache.aset = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_get_cache.return_value = mock_cache
 
             with patch("mcp_server_langgraph.llm.verifier.record_visual_verification_request") as mock_record:

@@ -58,7 +58,7 @@ mock_conn.fetchval = AsyncMock  # async-mock-configured(return_value=1)
 from unittest.mock import AsyncMock
 
 mock_conn.fetchval = AsyncMock(return_value=1)
-mock_conn.close = AsyncMock()
+mock_conn.close = AsyncMock(return_value=None)
 mock_conn.method = AsyncMock(side_effect=Exception("error"))
 """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
@@ -81,7 +81,7 @@ mock_conn.method = AsyncMock(side_effect=Exception("error"))
 from unittest.mock import AsyncMock
 
 # This is a comment about AsyncMock
-mock_obj = AsyncMock()  # Create instance, not AsyncMock class
+mock_obj = AsyncMock(return_value=None)  # Create instance, not AsyncMock class
 """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(code_with_comment)
@@ -103,7 +103,7 @@ mock_obj = AsyncMock()  # Create instance, not AsyncMock class
 from unittest.mock import AsyncMock
 
 description = "Use AsyncMock for mocking"
-mock_obj = AsyncMock()
+mock_obj = AsyncMock(return_value=None)
 """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(code_with_string)

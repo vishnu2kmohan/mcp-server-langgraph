@@ -68,7 +68,7 @@ class TestAuditMiddlewareRequestCapture:
             captured_events.append(event)
 
         with patch("mcp_server_langgraph.middleware.audit.get_audit_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured
+            mock_service = AsyncMock(return_value=None)  # async-mock-configured
             mock_service.log_event = mock_log_event
             mock_get_service.return_value = mock_service
 
@@ -88,7 +88,7 @@ class TestAuditMiddlewareRequestCapture:
             captured_events.append(event)
 
         with patch("mcp_server_langgraph.middleware.audit.get_audit_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured
+            mock_service = AsyncMock(return_value=None)  # async-mock-configured
             mock_service.log_event = mock_log_event
             mock_get_service.return_value = mock_service
 
@@ -101,7 +101,7 @@ class TestAuditMiddlewareRequestCapture:
     def test_middleware_excludes_metrics_endpoint(self, audit_test_app: FastAPI) -> None:
         """GIVEN metrics endpoint WHEN accessed THEN not audited."""
         with patch("mcp_server_langgraph.middleware.audit.get_audit_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured
+            mock_service = AsyncMock(return_value=None)  # async-mock-configured
             mock_get_service.return_value = mock_service
 
             client = TestClient(audit_test_app)
@@ -112,7 +112,7 @@ class TestAuditMiddlewareRequestCapture:
     def test_middleware_captures_post_request(self, audit_test_app: FastAPI) -> None:
         """GIVEN POST request WHEN processed THEN method captured."""
         with patch("mcp_server_langgraph.middleware.audit.get_audit_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured
+            mock_service = AsyncMock(return_value=None)  # async-mock-configured
             mock_get_service.return_value = mock_service
 
             client = TestClient(audit_test_app)
@@ -149,7 +149,7 @@ class TestAuditMiddlewareActorExtraction:
             return {"status": "ok"}
 
         with patch("mcp_server_langgraph.middleware.audit.get_audit_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured
+            mock_service = AsyncMock(return_value=None)  # async-mock-configured
             mock_get_service.return_value = mock_service
 
             client = TestClient(app)
@@ -167,7 +167,7 @@ class TestAuditMiddlewareActorExtraction:
             return {"status": "ok"}
 
         with patch("mcp_server_langgraph.middleware.audit.get_audit_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured
+            mock_service = AsyncMock(return_value=None)  # async-mock-configured
             mock_get_service.return_value = mock_service
 
             client = TestClient(app)
@@ -188,7 +188,7 @@ class TestAuditMiddlewareErrorHandling:
     def test_middleware_handles_audit_service_failure(self, audit_test_app: FastAPI) -> None:
         """GIVEN audit service failure WHEN request processed THEN request succeeds."""
         with patch("mcp_server_langgraph.middleware.audit.get_audit_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured
+            mock_service = AsyncMock(return_value=None)  # async-mock-configured
             mock_service.log_event.side_effect = Exception("Audit failed")
             mock_get_service.return_value = mock_service
 
@@ -201,7 +201,7 @@ class TestAuditMiddlewareErrorHandling:
     def test_middleware_captures_error_responses(self, audit_test_app: FastAPI) -> None:
         """GIVEN error response WHEN request fails THEN error status captured."""
         with patch("mcp_server_langgraph.middleware.audit.get_audit_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured
+            mock_service = AsyncMock(return_value=None)  # async-mock-configured
             mock_get_service.return_value = mock_service
 
             client = TestClient(audit_test_app, raise_server_exceptions=False)
@@ -229,7 +229,7 @@ class TestAuditMiddlewareTraceCorrelation:
             return {"status": "ok"}
 
         with patch("mcp_server_langgraph.middleware.audit.get_audit_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured
+            mock_service = AsyncMock(return_value=None)  # async-mock-configured
             mock_get_service.return_value = mock_service
 
             client = TestClient(app)
@@ -251,7 +251,7 @@ class TestAuditMiddlewareTraceCorrelation:
             return {"status": "ok"}
 
         with patch("mcp_server_langgraph.middleware.audit.get_audit_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured
+            mock_service = AsyncMock(return_value=None)  # async-mock-configured
             mock_get_service.return_value = mock_service
 
             client = TestClient(app)

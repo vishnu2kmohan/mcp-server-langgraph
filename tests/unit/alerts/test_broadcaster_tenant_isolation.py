@@ -77,9 +77,9 @@ class TestBroadcasterTenantIsolation:
                 broadcaster = AlertBroadcaster(router=mock_router)
 
                 # Add subscribers from different tenants
-                mock_ws_a1 = AsyncMock()
-                mock_ws_a2 = AsyncMock()
-                mock_ws_b1 = AsyncMock()  # Different tenant
+                mock_ws_a1 = AsyncMock(return_value=None)
+                mock_ws_a2 = AsyncMock(return_value=None)
+                mock_ws_b1 = AsyncMock(return_value=None)  # Different tenant
 
                 await broadcaster.subscribe(mock_ws_a1, "user-a1")
                 await broadcaster.subscribe(mock_ws_a2, "user-a2")
@@ -117,7 +117,7 @@ class TestBroadcasterTenantIsolation:
             with patch("mcp_server_langgraph.alerts.broadcaster.update_websocket_connections"):
                 broadcaster = AlertBroadcaster(router=mock_router)
 
-                mock_ws = AsyncMock()
+                mock_ws = AsyncMock(return_value=None)
                 await broadcaster.subscribe(mock_ws, "user-a1")
 
                 alert = create_test_alert(tenant="tenant-a")
@@ -139,8 +139,8 @@ class TestBroadcasterTenantIsolation:
             with patch("mcp_server_langgraph.alerts.broadcaster.update_websocket_connections"):
                 broadcaster = AlertBroadcaster()  # No router
 
-                mock_ws_a = AsyncMock()
-                mock_ws_b = AsyncMock()
+                mock_ws_a = AsyncMock(return_value=None)
+                mock_ws_b = AsyncMock(return_value=None)
 
                 await broadcaster.subscribe(mock_ws_a, "user-a")
                 await broadcaster.subscribe(mock_ws_b, "user-b")
@@ -175,7 +175,7 @@ class TestBroadcasterTenantIsolation:
             with patch("mcp_server_langgraph.alerts.broadcaster.update_websocket_connections"):
                 broadcaster = AlertBroadcaster(router=mock_router)
 
-                mock_ws = AsyncMock()
+                mock_ws = AsyncMock(return_value=None)
                 await broadcaster.subscribe(mock_ws, "admin-user")
 
                 alert = create_test_alert(tenant="acme-corp")
@@ -204,8 +204,8 @@ class TestBroadcasterTenantIsolation:
             with patch("mcp_server_langgraph.alerts.broadcaster.update_websocket_connections"):
                 broadcaster = AlertBroadcaster(router=mock_router)
 
-                mock_ws_a = AsyncMock()
-                mock_ws_b = AsyncMock()
+                mock_ws_a = AsyncMock(return_value=None)
+                mock_ws_b = AsyncMock(return_value=None)
 
                 await broadcaster.subscribe(mock_ws_a, "user-a")
                 await broadcaster.subscribe(mock_ws_b, "user-b")

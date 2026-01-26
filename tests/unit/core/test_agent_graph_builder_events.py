@@ -62,7 +62,7 @@ class TestDynamicContextLoadedEvent:
             ),
             patch(
                 "langchain_core.callbacks.manager.adispatch_custom_event",
-                new=AsyncMock(),
+                new=AsyncMock(return_value=None),
             ) as mock_dispatch,
         ):
             from mcp_server_langgraph.core.agent_graph_builder import (
@@ -109,7 +109,7 @@ class TestDynamicContextLoadedEvent:
             ),
             patch(
                 "langchain_core.callbacks.manager.adispatch_custom_event",
-                new=AsyncMock(),
+                new=AsyncMock(return_value=None),
             ) as mock_dispatch,
         ):
             from mcp_server_langgraph.core.agent_graph_builder import (
@@ -149,7 +149,7 @@ class TestDynamicContextLoadedEvent:
             ),
             patch(
                 "langchain_core.callbacks.manager.adispatch_custom_event",
-                new=AsyncMock(),
+                new=AsyncMock(return_value=None),
             ) as mock_dispatch,
         ):
             from mcp_server_langgraph.core.agent_graph_builder import (
@@ -197,7 +197,7 @@ class TestDynamicContextLoadedEvent:
             ),
             patch(
                 "langchain_core.callbacks.manager.adispatch_custom_event",
-                new=AsyncMock(),
+                new=AsyncMock(return_value=None),
             ) as mock_dispatch,
         ):
             from mcp_server_langgraph.core.agent_graph_builder import (

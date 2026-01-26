@@ -78,7 +78,7 @@ def test_all_async_mocks_have_return_values():
             f"FIX: Add explicit return_value or side_effect configuration:\n"
             f"{'=' * 80}\n\n"
             f"  # For authorization checks (deny):\n"
-            f"  mock_openfga = AsyncMock()\n"
+            f"  mock_openfga = AsyncMock(return_value=None)\n"
             f"  mock_openfga.check_permission.return_value = False\n\n"
             f"  # For void functions:\n"
             f"  mock.write_tuples.return_value = None\n\n"

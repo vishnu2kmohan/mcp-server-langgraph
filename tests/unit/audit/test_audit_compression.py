@@ -22,10 +22,10 @@ pytestmark = pytest.mark.unit
 
 def _create_mock_connection() -> AsyncMock:
     """Create a mock database connection."""
-    mock = AsyncMock()  # async-mock-configured
+    mock = AsyncMock(return_value=None)  # async-mock-configured
     mock.fetchval = AsyncMock(return_value=True)
     mock.fetch = AsyncMock(return_value=[])
-    mock.execute = AsyncMock()  # async-mock-configured
+    mock.execute = AsyncMock(return_value=None)  # async-mock-configured
     return mock
 
 

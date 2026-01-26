@@ -90,7 +90,7 @@ class TestOpenFGAClientOIDCTokenRefreshDuringOperations:
         mock_response.raise_for_status = MagicMock()
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_http_client = AsyncMock()
+            mock_http_client = AsyncMock(return_value=None)
             mock_http_client.post.return_value = mock_response
             mock_http_client.get.return_value = MagicMock(status_code=200, json=MagicMock(return_value={"stores": []}))
             mock_client_class.return_value.__aenter__.return_value = mock_http_client
@@ -141,7 +141,7 @@ class TestOpenFGAClientOIDCTokenRefreshDuringOperations:
         mock_response.raise_for_status = MagicMock()
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_http_client = AsyncMock()
+            mock_http_client = AsyncMock(return_value=None)
             mock_http_client.post.return_value = mock_response
             mock_http_client.get.return_value = MagicMock(status_code=200, json=MagicMock(return_value={"stores": []}))
             mock_client_class.return_value.__aenter__.return_value = mock_http_client
@@ -225,7 +225,7 @@ class TestOpenFGAClientOIDCTokenRefreshDuringOperations:
         client._oidc_token_expires_at = time.time() - 10  # Expired 10s ago
 
         # Mock SDK client - will be replaced after token refresh
-        mock_sdk_client = AsyncMock()  # noqa: async-mock-config
+        mock_sdk_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_sdk_client.close = AsyncMock(return_value=None)
         client._client = mock_sdk_client
 
@@ -240,7 +240,7 @@ class TestOpenFGAClientOIDCTokenRefreshDuringOperations:
         mock_response.raise_for_status = MagicMock()
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_http_client = AsyncMock()
+            mock_http_client = AsyncMock(return_value=None)
             mock_http_client.post.return_value = mock_response
             mock_http_client.get.return_value = MagicMock(status_code=200, json=MagicMock(return_value={"stores": []}))
             mock_client_class.return_value.__aenter__.return_value = mock_http_client

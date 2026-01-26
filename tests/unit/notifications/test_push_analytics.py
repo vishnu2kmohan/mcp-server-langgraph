@@ -40,8 +40,8 @@ class TestDeliveryTracking:
             DeliveryEvent,
         )
 
-        mock_store = AsyncMock()
-        mock_store.save_event = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
+        mock_store.save_event = AsyncMock(return_value=None)
 
         analytics = PushAnalytics(store=mock_store)
         event = DeliveryEvent(
@@ -63,8 +63,8 @@ class TestDeliveryTracking:
             DeliveryEvent,
         )
 
-        mock_store = AsyncMock()
-        mock_store.save_event = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
+        mock_store.save_event = AsyncMock(return_value=None)
 
         analytics = PushAnalytics(store=mock_store)
         event = DeliveryEvent(
@@ -100,8 +100,8 @@ class TestEngagementTracking:
             EngagementEvent,
         )
 
-        mock_store = AsyncMock()
-        mock_store.save_engagement = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
+        mock_store.save_engagement = AsyncMock(return_value=None)
 
         analytics = PushAnalytics(store=mock_store)
         event = EngagementEvent(
@@ -123,8 +123,8 @@ class TestEngagementTracking:
             EngagementEvent,
         )
 
-        mock_store = AsyncMock()
-        mock_store.save_engagement = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
+        mock_store.save_engagement = AsyncMock(return_value=None)
 
         analytics = PushAnalytics(store=mock_store)
         event = EngagementEvent(
@@ -156,7 +156,7 @@ class TestMetricsCalculation:
             DeliverySummary,
         )
 
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
         mock_store.get_delivery_stats = AsyncMock(
             return_value={
                 "total_sent": 100,
@@ -184,7 +184,7 @@ class TestMetricsCalculation:
             EngagementSummary,
         )
 
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
         mock_store.get_engagement_stats = AsyncMock(
             return_value={
                 "delivered": 100,
@@ -222,8 +222,8 @@ class TestLatencyTracking:
             DeliveryEvent,
         )
 
-        mock_store = AsyncMock()
-        mock_store.save_event = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
+        mock_store.save_event = AsyncMock(return_value=None)
 
         analytics = PushAnalytics(store=mock_store)
         event = DeliveryEvent(
@@ -247,7 +247,7 @@ class TestLatencyTracking:
             LatencySummary,
         )
 
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
         mock_store.get_latency_stats = AsyncMock(
             return_value={
                 "avg_latency_ms": 120,
@@ -285,7 +285,7 @@ class TestReportGeneration:
             AnalyticsReport,
         )
 
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
         mock_store.get_delivery_stats = AsyncMock(return_value={"total_sent": 500, "delivered": 480, "failed": 20})
         mock_store.get_engagement_stats = AsyncMock(
             return_value={

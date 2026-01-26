@@ -31,7 +31,7 @@ class TestUserPreferencesRepository:
     async def test_get_preferences_returns_none_for_nonexistent_user(self) -> None:
         """Getting preferences for a user that doesn't exist should return None."""
         # GIVEN: A repository with a mock session
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         # Create explicit mock result - MagicMock() with explicit return_value prevents auto-attr pollution
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None  # EXPLICIT: Prevents MagicMock attr leak
@@ -53,7 +53,7 @@ class TestUserPreferencesRepository:
             sub_persona="alice-builder",
             feature_flags={"focus_mode": True},
         )
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = mock_prefs
         mock_session.execute.return_value = mock_result
@@ -72,7 +72,7 @@ class TestUserPreferencesRepository:
     async def test_upsert_preferences_creates_new_record(self) -> None:
         """Upserting preferences for a new user should create the record."""
         # GIVEN: A repository with no existing preferences
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute.return_value = mock_result
@@ -99,7 +99,7 @@ class TestUserPreferencesRepository:
             sub_persona="alice-builder",
             feature_flags={"old_flag": True},
         )
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = existing_prefs
         mock_session.execute.return_value = mock_result
@@ -127,7 +127,7 @@ class TestUserPreferencesRepository:
             sub_persona="alice-builder",
             feature_flags={},
         )
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = existing_prefs
         mock_session.execute.return_value = mock_result
@@ -145,7 +145,7 @@ class TestUserPreferencesRepository:
     async def test_delete_preferences_returns_false_for_nonexistent(self) -> None:
         """Deleting nonexistent preferences should return False."""
         # GIVEN: A repository with no preferences for the user
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute.return_value = mock_result

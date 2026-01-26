@@ -47,10 +47,10 @@ def mock_embedder() -> MagicMock:
 @pytest.fixture
 def mock_qdrant_client() -> AsyncMock:
     """Create a mock Qdrant async client."""
-    client = AsyncMock()
+    client = AsyncMock(return_value=None)
     client.get_collections = AsyncMock(return_value=MagicMock(collections=[]))
-    client.create_collection = AsyncMock()
-    client.upsert = AsyncMock()
+    client.create_collection = AsyncMock(return_value=None)
+    client.upsert = AsyncMock(return_value=None)
     mock_response = MagicMock()
     mock_response.points = []
     client.query_points = AsyncMock(return_value=mock_response)
@@ -60,7 +60,7 @@ def mock_qdrant_client() -> AsyncMock:
 @pytest.fixture
 def mock_openfga_client() -> AsyncMock:
     """Create a mock OpenFGA client that always returns True for authorization."""
-    client = AsyncMock()
+    client = AsyncMock(return_value=None)
     client.check_permission = AsyncMock(return_value=True)
     return client
 
@@ -519,7 +519,7 @@ class TestSemanticToolSelectionE2E:
             ]
 
             # Mock OpenFGA to deny access to tool_index
-            mock_openfga = AsyncMock()
+            mock_openfga = AsyncMock(return_value=None)
             mock_openfga.check_permission = AsyncMock(return_value=False)  # Deny access
 
             manager = SemanticIndexManager(

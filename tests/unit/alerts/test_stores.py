@@ -66,7 +66,7 @@ class TestInMemoryAlertStore:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_implements_protocol(self) -> None:
+    def test_implements_protocol_interface(self) -> None:
         """InMemoryAlertStore should implement AlertStoreProtocol."""
         store = InMemoryAlertStore()
         assert isinstance(store, AlertStoreProtocol)
@@ -242,7 +242,7 @@ class TestPostgresAlertStore:
     @pytest.fixture
     def mock_session_maker(self) -> AsyncMock:
         """Create a mock SQLAlchemy async session maker."""
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
         # session.add() is synchronous, not async - use MagicMock to prevent warnings
@@ -253,12 +253,12 @@ class TestPostgresAlertStore:
 
         return mock_maker
 
-    def test_implements_protocol(self, mock_session_maker: AsyncMock) -> None:
+    def test_implements_protocol_interface(self, mock_session_maker: AsyncMock) -> None:
         """PostgresAlertStore should implement AlertStoreProtocol."""
         store = PostgresAlertStore(mock_session_maker)
         assert isinstance(store, AlertStoreProtocol)
 
-    def test_initialization(self, mock_session_maker: AsyncMock) -> None:
+    def test_initialization_creates_default_state(self, mock_session_maker: AsyncMock) -> None:
         """Should initialize with session maker."""
         store = PostgresAlertStore(mock_session_maker)
 
@@ -307,7 +307,7 @@ class TestPostgresAlertStore:
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute = AsyncMock(return_value=mock_result)
-        mock_session.commit = AsyncMock()
+        mock_session.commit = AsyncMock(return_value=None)
 
         store = PostgresAlertStore(mock_session_maker)
         alert = create_test_alert()
@@ -325,7 +325,7 @@ class TestPostgresAlertStore:
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = mock_existing
         mock_session.execute = AsyncMock(return_value=mock_result)
-        mock_session.commit = AsyncMock()
+        mock_session.commit = AsyncMock(return_value=None)
 
         store = PostgresAlertStore(mock_session_maker)
         alert = create_test_alert()
@@ -381,8 +381,8 @@ class TestPostgresAlertStore:
     async def test_remove_alert(self, mock_session_maker: AsyncMock) -> None:
         """Should remove an alert from database."""
         mock_session = mock_session_maker.return_value
-        mock_session.execute = AsyncMock()
-        mock_session.commit = AsyncMock()
+        mock_session.execute = AsyncMock(return_value=None)
+        mock_session.commit = AsyncMock(return_value=None)
 
         store = PostgresAlertStore(mock_session_maker)
 
@@ -450,8 +450,8 @@ class TestPostgresAlertStore:
     async def test_clear(self, mock_session_maker: AsyncMock) -> None:
         """Should clear all alerts from database."""
         mock_session = mock_session_maker.return_value
-        mock_session.execute = AsyncMock()
-        mock_session.commit = AsyncMock()
+        mock_session.execute = AsyncMock(return_value=None)
+        mock_session.commit = AsyncMock(return_value=None)
 
         store = PostgresAlertStore(mock_session_maker)
 

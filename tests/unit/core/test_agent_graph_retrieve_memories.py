@@ -92,7 +92,7 @@ class TestRetrieveMemoriesNodeBehavior:
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_memories_impl
 
         # Create mock semantic index manager
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
         mock_manager.search_memories.return_value = [
             MagicMock(content="Previous conversation context", memory_id="mem1"),
             MagicMock(content="User preference: dark mode", memory_id="mem2"),
@@ -120,7 +120,7 @@ class TestRetrieveMemoriesNodeBehavior:
         """retrieve_memories should respect max_retrieved_memories from config."""
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_memories_impl
 
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
         mock_manager.search_memories.return_value = []
 
         state = {
@@ -154,7 +154,7 @@ class TestRetrieveMemoriesNodeIntegration:
         """retrieve_memories node should update state with memory contents."""
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_memories_impl
 
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
         mock_mem1 = MagicMock()
         mock_mem1.content = "Previous discussion about AI"
         mock_mem2 = MagicMock()
@@ -185,7 +185,7 @@ class TestRetrieveMemoriesNodeIntegration:
         """retrieve_memories should fall back gracefully when search fails."""
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_memories_impl
 
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
         mock_manager.search_memories.side_effect = Exception("Qdrant connection failed")
 
         state = {
@@ -209,7 +209,7 @@ class TestRetrieveMemoriesNodeIntegration:
         """retrieve_memories should handle empty/short queries gracefully."""
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_memories_impl
 
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
 
         state = {
             "messages": [HumanMessage(content="hi")],

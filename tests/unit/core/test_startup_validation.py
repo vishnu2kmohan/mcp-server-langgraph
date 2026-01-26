@@ -258,7 +258,7 @@ class TestLokiValidation:
         from mcp_server_langgraph.core.startup_validation import validate_loki_connection
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # noqa: async-mock-config
+            mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.text = "ready"
@@ -282,7 +282,7 @@ class TestLokiValidation:
         from mcp_server_langgraph.core.startup_validation import validate_loki_connection
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # noqa: async-mock-config
+            mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_client.get = AsyncMock(side_effect=ConnectionError("Connection refused"))
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -325,7 +325,7 @@ class TestTempoValidation:
         from mcp_server_langgraph.core.startup_validation import validate_tempo_connection
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # noqa: async-mock-config
+            mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.text = "ready"
@@ -349,7 +349,7 @@ class TestTempoValidation:
         from mcp_server_langgraph.core.startup_validation import validate_tempo_connection
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # noqa: async-mock-config
+            mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_client.get = AsyncMock(side_effect=ConnectionError("Connection refused"))
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -392,7 +392,7 @@ class TestMimirValidation:
         from mcp_server_langgraph.core.startup_validation import validate_mimir_connection
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # noqa: async-mock-config
+            mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.text = "ready"
@@ -416,7 +416,7 @@ class TestMimirValidation:
         from mcp_server_langgraph.core.startup_validation import validate_mimir_connection
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()  # noqa: async-mock-config
+            mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_client.get = AsyncMock(side_effect=ConnectionError("Connection refused"))
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)

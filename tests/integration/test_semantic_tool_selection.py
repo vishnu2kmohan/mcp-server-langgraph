@@ -18,7 +18,7 @@ pytestmark = pytest.mark.integration
 @pytest.fixture
 def mock_openfga_client() -> AsyncMock:
     """Create a mock OpenFGA client that always returns True for authorization."""
-    client = AsyncMock()
+    client = AsyncMock(return_value=None)
     client.check_permission = AsyncMock(return_value=True)
     return client
 
@@ -35,10 +35,10 @@ def mock_embedder() -> MagicMock:
 @pytest.fixture
 def mock_qdrant_client() -> AsyncMock:
     """Create a mock Qdrant async client."""
-    client = AsyncMock()
+    client = AsyncMock(return_value=None)
     client.get_collections = AsyncMock(return_value=MagicMock(collections=[]))
-    client.create_collection = AsyncMock()
-    client.upsert = AsyncMock()
+    client.create_collection = AsyncMock(return_value=None)
+    client.upsert = AsyncMock(return_value=None)
     # query_points returns response with points attribute (qdrant-client >= 1.7)
     mock_response = MagicMock()
     mock_response.points = []

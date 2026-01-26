@@ -153,7 +153,7 @@ class TestChatServiceImplWithStorage:
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
-        mock_storage = AsyncMock()
+        mock_storage = AsyncMock(return_value=None)
         mock_storage.get_messages = AsyncMock(
             return_value=[
                 {"role": "user", "content": "Previous question"},

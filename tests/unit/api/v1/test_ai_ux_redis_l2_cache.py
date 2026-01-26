@@ -81,7 +81,7 @@ def mock_settings_no_redis():
 @pytest.fixture
 def mock_redis_client():
     """Create mock async Redis client."""
-    redis = AsyncMock()  # noqa: async-mock-config
+    redis = AsyncMock(return_value=None)  # noqa: async-mock-config
     redis.get = AsyncMock(return_value=None)
     redis.setex = AsyncMock(return_value=True)
     return redis

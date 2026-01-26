@@ -341,7 +341,7 @@ class TestOrchestratorHITLCallback:
         THEN the callback should be invoked with approval details
         """
         orchestrator = Orchestrator()
-        callback = AsyncMock()
+        callback = AsyncMock(return_value=None)
 
         decomposition = TaskDecomposition(
             original_task="Test task",
@@ -385,7 +385,7 @@ class TestOrchestratorHITLCallback:
         THEN the callback should NOT be invoked
         """
         orchestrator = Orchestrator()
-        callback = AsyncMock()
+        callback = AsyncMock(return_value=None)
 
         decomposition = TaskDecomposition(
             original_task="Test task",

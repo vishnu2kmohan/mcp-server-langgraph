@@ -50,9 +50,9 @@ class TestPostgresUnifiedAuditRepositoryCreate:
         )
 
         # Create mock session
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         mock_session.add = MagicMock()
-        mock_session.flush = AsyncMock()  # async-mock-configured
+        mock_session.flush = AsyncMock(return_value=None)  # async-mock-configured
 
         repo = PostgresUnifiedAuditRepository(session=mock_session)
 
@@ -92,9 +92,9 @@ class TestPostgresUnifiedAuditRepositoryCreate:
             PostgresUnifiedAuditRepository,
         )
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         mock_session.add_all = MagicMock()
-        mock_session.flush = AsyncMock()  # async-mock-configured
+        mock_session.flush = AsyncMock(return_value=None)  # async-mock-configured
 
         repo = PostgresUnifiedAuditRepository(session=mock_session)
 
@@ -139,7 +139,7 @@ class TestPostgresUnifiedAuditRepositoryQuery:
             PostgresUnifiedAuditRepository,
         )
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = []
         mock_session.execute = AsyncMock(return_value=mock_result)
@@ -167,7 +167,7 @@ class TestPostgresUnifiedAuditRepositoryQuery:
             PostgresUnifiedAuditRepository,
         )
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = []
         mock_session.execute = AsyncMock(return_value=mock_result)
@@ -192,7 +192,7 @@ class TestPostgresUnifiedAuditRepositoryQuery:
             PostgresUnifiedAuditRepository,
         )
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = []
         mock_session.execute = AsyncMock(return_value=mock_result)
@@ -228,7 +228,7 @@ class TestPostgresUnifiedAuditRepositoryIntegrity:
             PostgresUnifiedAuditRepository,
         )
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = []
         mock_session.execute = AsyncMock(return_value=mock_result)
@@ -254,7 +254,7 @@ class TestPostgresUnifiedAuditRepositoryIntegrity:
             PostgresUnifiedAuditRepository,
         )
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         mock_result = MagicMock()
         mock_result.scalar.return_value = 42
         mock_session.execute = AsyncMock(return_value=mock_result)
@@ -277,7 +277,7 @@ class TestPostgresUnifiedAuditRepositoryIntegrity:
             PostgresUnifiedAuditRepository,
         )
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         mock_result = MagicMock()
         mock_result.scalar.return_value = None
         mock_session.execute = AsyncMock(return_value=mock_result)
@@ -309,7 +309,7 @@ class TestPostgresUnifiedAuditRepositoryCount:
             PostgresUnifiedAuditRepository,
         )
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         mock_result = MagicMock()
         mock_result.scalar.return_value = 100
         mock_session.execute = AsyncMock(return_value=mock_result)
@@ -332,7 +332,7 @@ class TestPostgresUnifiedAuditRepositoryCount:
             PostgresUnifiedAuditRepository,
         )
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         mock_result = MagicMock()
         mock_result.scalar.return_value = 25
         mock_session.execute = AsyncMock(return_value=mock_result)

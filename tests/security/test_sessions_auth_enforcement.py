@@ -214,7 +214,7 @@ class TestSessionsUserScoping:
 
         try:
             with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-                mock_service = AsyncMock()  # async-mock-configured (return_value set below)
+                mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
                 mock_service.list_sessions.return_value = ([], None)
                 mock_get_service.return_value = mock_service
 
@@ -269,7 +269,7 @@ class TestSessionsUserScoping:
 
         try:
             with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-                mock_service = AsyncMock()  # async-mock-configured (return_value set below)
+                mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
                 mock_service.create_session.return_value = {
                     "id": str(uuid4()),
                     "name": "Test Session",

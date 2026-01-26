@@ -32,7 +32,7 @@ class TestInferTemplateFromToolName:
         """Test parsing unqualified name with underscore prefix."""
         assert infer_template_from_tool_name("slack_send_message") == "slack"
 
-    def test_known_templates(self) -> None:
+    def test_known_templates_are_recognized(self) -> None:
         """Test all known template mappings."""
         known_templates = [
             ("github:list_prs", "github"),
@@ -50,7 +50,7 @@ class TestInferTemplateFromToolName:
         assert infer_template_from_tool_name("unknown_tool") is None
         assert infer_template_from_tool_name("custom:my_tool") is None
 
-    def test_case_insensitive(self) -> None:
+    def test_case_insensitive_matching(self) -> None:
         """Test case insensitivity."""
         assert infer_template_from_tool_name("GITHUB:list_prs") == "github"
         assert infer_template_from_tool_name("GitHub:list_prs") == "github"

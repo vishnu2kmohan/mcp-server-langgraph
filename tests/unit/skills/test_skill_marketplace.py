@@ -60,7 +60,7 @@ class TestMarketplaceConfig:
         assert config.auto_sync is True
         assert config.requires_approval is False
 
-    def test_marketplace_types(self):
+    def test_marketplace_types_are_valid(self):
         """GIVEN MarketplaceConfig
         WHEN setting type
         THEN valid types should be accepted
@@ -125,7 +125,7 @@ class TestMarketplaceRegistry:
         assert "anthropics/skills" in anthropic.uri
         assert anthropic.trusted is True
 
-    def test_register_marketplace(self):
+    def test_register_marketplace_adds_source(self):
         """GIVEN a MarketplaceRegistry
         WHEN registering a new marketplace
         THEN it should be stored
@@ -174,7 +174,7 @@ class TestMarketplaceRegistry:
         assert "anthropic" in names
         assert "custom" in names
 
-    def test_unregister_marketplace(self):
+    def test_unregister_marketplace_removes_source(self):
         """GIVEN a MarketplaceRegistry with custom marketplace
         WHEN unregistering
         THEN it should be removed
@@ -354,7 +354,7 @@ class TestMarketplaceGitHubAPI:
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -404,7 +404,7 @@ description: Research topics using web search
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -445,7 +445,7 @@ description: Research topics using web search
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -485,7 +485,7 @@ description: Research topics using web search
         mock_response.status_code = 404
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -610,7 +610,7 @@ class TestMarketplaceCoverage:
         )
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
             mock_client_class.return_value = mock_client
@@ -642,7 +642,7 @@ class TestMarketplaceCoverage:
         )
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
             mock_client_class.return_value = mock_client
@@ -675,7 +675,7 @@ class TestMarketplaceCoverage:
         mock_response.status_code = 403  # Rate limited or forbidden
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -706,7 +706,7 @@ class TestMarketplaceCoverage:
         )
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(side_effect=ConnectionError("Network error"))
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -737,7 +737,7 @@ class TestMarketplaceCoverage:
         )
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(side_effect=TimeoutError("Request timed out"))
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -938,7 +938,7 @@ class TestMarketplaceOCI:
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -1002,7 +1002,7 @@ class TestMarketplaceOCI:
         mock_config_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(
                 side_effect=[
                     mock_manifest_response,
@@ -1087,7 +1087,7 @@ class TestMarketplaceOCI:
         mock_response.status_code = 401  # Unauthorized
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -1127,7 +1127,7 @@ class TestMarketplaceOCI:
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -1240,7 +1240,7 @@ class TestMarketplaceRegistryAPI:
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -1286,7 +1286,7 @@ class TestMarketplaceRegistryAPI:
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -1366,7 +1366,7 @@ class TestMarketplaceRegistryAPI:
         mock_response.status_code = 500  # Server error
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -1400,7 +1400,7 @@ class TestMarketplaceRegistryAPI:
         mock_response.status_code = 404
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -1439,7 +1439,7 @@ class TestMarketplaceRegistryAPI:
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -1538,7 +1538,7 @@ author: anthropic
         mock_fetch_code.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(
                 side_effect=[
                     mock_list_response,  # First: list_skills
@@ -1620,7 +1620,7 @@ Instructions here.
             return MagicMock(status_code=404)
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = mock_get
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -1684,7 +1684,7 @@ Content.
         mock_fetch.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(
                 side_effect=[
                     mock_list_response,
@@ -1747,7 +1747,7 @@ Instructions.
         mock_fetch.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = AsyncMock(
                 side_effect=[
                     mock_list_response,
@@ -1831,7 +1831,7 @@ Instructions.
             return MagicMock(status_code=404)
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = mock_get
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -1915,7 +1915,7 @@ class TestMarketplaceRateLimitingAndRetry:
             return mock_success_response
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = mock_get
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -1960,7 +1960,7 @@ class TestMarketplaceRateLimitingAndRetry:
             return mock_fail_response
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = mock_get
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -2003,7 +2003,7 @@ class TestMarketplaceRateLimitingAndRetry:
             return mock_response
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = mock_get
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -2047,7 +2047,7 @@ class TestMarketplaceRateLimitingAndRetry:
             return mock_response
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = mock_get
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -2242,7 +2242,7 @@ Instructions
             return mock_list_response
 
         with patch("httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
+            mock_client = AsyncMock(return_value=None)
             mock_client.get = mock_get
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)

@@ -187,7 +187,7 @@ class TestNativeToolMetricsAggregator:
         get_metrics_aggregator().reset()
         gc.collect()
 
-    def test_aggregator_exists(self):
+    def test_aggregator_exists_returns_true(self):
         """get_metrics_aggregator should return an aggregator instance."""
         from mcp_server_langgraph.tools.native_metrics import get_metrics_aggregator
 
@@ -254,7 +254,7 @@ class TestNativeToolMetricsAggregator:
 
         assert native["fallback_count"] == 1
 
-    def test_aggregator_summary(self):
+    def test_aggregator_summary_includes_stats(self):
         """Aggregator should calculate summary statistics."""
         from mcp_server_langgraph.tools.native_metrics import get_metrics_aggregator
 
@@ -270,7 +270,7 @@ class TestNativeToolMetricsAggregator:
         assert summary["builtin_selections"] == 2
         assert summary["uptime_seconds"] >= 0
 
-    def test_aggregator_reset(self):
+    def test_aggregator_reset_clears_data(self):
         """Aggregator reset should clear all metrics."""
         from mcp_server_langgraph.tools.native_metrics import get_metrics_aggregator
 

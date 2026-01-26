@@ -39,7 +39,7 @@ class TestMCPExecutor:
         registry = MCPToolRegistry()
 
         # Create mock session that will be returned by _create_session
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.is_connected = True
         mock_session.list_tools.return_value = [
             {"name": "screenshot", "description": "Take screenshot", "inputSchema": {}},
@@ -95,7 +95,7 @@ class TestMCPExecutor:
         registry = MCPToolRegistry()
 
         # Create mock that takes too long
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.is_connected = True
         mock_session.list_tools.return_value = [
             {"name": "slow_tool", "description": "Slow", "inputSchema": {}},
@@ -137,7 +137,7 @@ class TestMCPExecutor:
         # Track call order
         call_order: list[str] = []
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.is_connected = True
         mock_session.list_tools.return_value = [
             {"name": "tool_a", "description": "A", "inputSchema": {}},
@@ -183,7 +183,7 @@ class TestMCPExecutor:
 
         registry = MCPToolRegistry()
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.is_connected = True
         mock_session.list_tools.return_value = [
             {"name": "good_tool", "description": "Works", "inputSchema": {}},
@@ -232,7 +232,7 @@ class TestMCPExecutor:
         registry = MCPToolRegistry()
 
         # Session that starts disconnected
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.list_tools.return_value = [
             {"name": "tool", "description": "Tool", "inputSchema": {}},
         ]
@@ -271,7 +271,7 @@ class TestMCPExecutor:
         assert result["result"] == "ok"
 
     @pytest.mark.unit
-    def test_executor_initialization(self):
+    def test_executor_initialization_configures_params(self):
         """GIVEN registry and optional auth provider
         WHEN MCPExecutor is created
         THEN it stores references correctly"""

@@ -84,7 +84,7 @@ def mock_qdrant_client():
     client.search = AsyncMock(return_value=[])
     client.query_points = AsyncMock(return_value=MagicMock(points=[]))
     client.get_collection = AsyncMock(return_value=MagicMock(points_count=0))
-    client.create_collection = AsyncMock()
+    client.create_collection = AsyncMock(return_value=None)
     client.collection_exists = AsyncMock(return_value=True)
     return client
 

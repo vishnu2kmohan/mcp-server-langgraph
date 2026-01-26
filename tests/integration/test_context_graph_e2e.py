@@ -62,7 +62,7 @@ class TestContextGraphIntegration:
         )
 
         # Create mock repository
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.create = AsyncMock(return_value="trace-123")
 
         # Create emitter with mock repo
@@ -114,7 +114,7 @@ class TestContextGraphIntegration:
         ) as mock_flags:
             mock_flags.enable_context_graph = False
 
-            mock_repo = AsyncMock()
+            mock_repo = AsyncMock(return_value=None)
             emitter = DecisionEmitter(mock_repo)
 
             context = DecisionContext(
@@ -155,7 +155,7 @@ class TestContextGraphIntegration:
             mock_flags.context_graph_sampling_rate = 0.0  # 0% sampling
             mock_flags.context_graph_async_persistence = False
 
-            mock_repo = AsyncMock()
+            mock_repo = AsyncMock(return_value=None)
             emitter = DecisionEmitter(mock_repo)
 
             context = DecisionContext(
@@ -190,7 +190,7 @@ class TestContextGraphIntegration:
             MAX_RATIONALE_LENGTH,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.create = AsyncMock(return_value="trace-123")
 
         emitter = DecisionEmitter(mock_repo)
@@ -232,7 +232,7 @@ class TestContextGraphIntegration:
         )
 
         # Create mock request with decision emitter
-        mock_emitter = AsyncMock()
+        mock_emitter = AsyncMock(return_value=None)
         mock_emitter.emit = AsyncMock(return_value="trace-456")
 
         mock_request = MagicMock()
@@ -313,11 +313,11 @@ class TestContextGraphRepository:
         )
 
         # Create mock session
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
         mock_session.add = MagicMock()
-        mock_session.commit = AsyncMock()
+        mock_session.commit = AsyncMock(return_value=None)
 
         def mock_session_factory():
             return mock_session
@@ -379,7 +379,7 @@ class TestContextGraphGDPRIntegration:
             },
         ]
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_user = AsyncMock(return_value=mock_traces)
 
         service = DataExportService()
@@ -400,7 +400,7 @@ class TestContextGraphGDPRIntegration:
             DataDeletionService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.delete_by_user = AsyncMock(return_value=5)
 
         service = DataDeletionService()
@@ -429,7 +429,7 @@ class TestContextGraphRetentionScheduler:
             _retention_loop,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.delete_expired = AsyncMock(return_value=10)
 
         # Run one iteration of the retention loop

@@ -69,7 +69,7 @@ class TestMCPMessageHandlerBasicFunctionality:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_handler_instantiation(self) -> None:
+    def test_handler_instantiation_creates_instance(self) -> None:
         """Test that MCPMessageHandler can be instantiated."""
         from mcp_server_langgraph.mcp.message_handler import MCPMessageHandler
 

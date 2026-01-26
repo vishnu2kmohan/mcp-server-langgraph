@@ -393,8 +393,8 @@ class TestWorkflowShareNotifications:
 
         # Mock the notification broadcaster
         # Implementation uses notify_user(), imported from websocket.registry
-        mock_broadcaster = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
-        mock_broadcaster.notify_user = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
+        mock_broadcaster.notify_user = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
 
         with patch(
             "mcp_server_langgraph.websocket.registry.get_notification_broadcaster",
@@ -440,7 +440,7 @@ class TestWorkflowShareNotifications:
 
         # Mock broadcaster that raises exception
         # Implementation uses notify_user(), imported from websocket.registry
-        mock_broadcaster = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_broadcaster.notify_user = AsyncMock(side_effect=Exception("WebSocket error"))
 
         with patch(
@@ -486,8 +486,8 @@ class TestWorkflowShareNotifications:
 
         request = AddWorkflowShareRequest(email="carol@example.com", permission="execute")
         # Implementation uses notify_user(), imported from websocket.registry
-        mock_broadcaster = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
-        mock_broadcaster.notify_user = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
+        mock_broadcaster.notify_user = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
 
         with patch(
             "mcp_server_langgraph.websocket.registry.get_notification_broadcaster",

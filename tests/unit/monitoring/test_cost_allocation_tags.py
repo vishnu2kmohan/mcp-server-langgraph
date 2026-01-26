@@ -131,7 +131,7 @@ class TestCostAllocationTagsCollector:
 
         with patch("mcp_server_langgraph.monitoring.cost_storage_factory.get_cost_storage_backend") as mock_get_storage:
             mock_storage = MagicMock()
-            mock_storage.store = AsyncMock()  # noqa: async-mock-config
+            mock_storage.store = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_get_storage.return_value = mock_storage
 
             collector = CostMetricsCollector()

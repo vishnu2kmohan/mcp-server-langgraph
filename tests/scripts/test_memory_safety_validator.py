@@ -39,7 +39,7 @@ class TestMemorySafetyValidator:
 
                 class TestSomething:
                     def test_method(self):
-                        mock = AsyncMock()  # Uses AsyncMock but no xdist_group
+                        mock = AsyncMock(return_value=None)  # Uses AsyncMock but no xdist_group
                         assert mock
                 """
             )
@@ -89,7 +89,7 @@ class TestMemorySafetyValidator:
                         gc.collect()
 
                     def test_method(self):
-                        mock = AsyncMock()
+                        mock = AsyncMock(return_value=None)
                         assert mock
                 """
             )
@@ -135,7 +135,7 @@ class TestMemorySafetyValidator:
 
                     def test_performance_metric(self):
                         # Performance test should skip in xdist mode
-                        mock = AsyncMock()
+                        mock = AsyncMock(return_value=None)
                         # ... performance testing logic ...
                         assert mock
                 """
@@ -169,7 +169,7 @@ class TestMemorySafetyValidator:
                         reason="Performance tests skipped in parallel mode"
                     )
                     def test_performance_metric(self):
-                        mock = AsyncMock()
+                        mock = AsyncMock(return_value=None)
                         assert mock
                 """
             )
@@ -189,7 +189,7 @@ class TestMemorySafetyValidator:
 
                 class TestSomething:
                     def test_method(self):
-                        mock = AsyncMock()
+                        mock = AsyncMock(return_value=None)
                         assert mock
                 """
             )
@@ -232,7 +232,7 @@ class TestMemorySafetyValidator:
         assert isinstance(violations, list)
 
     def test_detects_async_mock_instantiation_not_references(self, tmp_path: Path) -> None:
-        """Test that only AsyncMock() instantiation is detected, not name references."""
+        """Test that only AsyncMock(return_value=None) instantiation is detected, not name references."""
         test_file = tmp_path / "test_references.py"
         test_file.write_text(
             dedent(

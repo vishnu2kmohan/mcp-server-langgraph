@@ -76,7 +76,7 @@ def sample_rejected_feedback() -> RemediationFeedback:
 @pytest.fixture
 def mock_session() -> AsyncMock:
     """Create a mock async session."""
-    session = AsyncMock()
+    session = AsyncMock(return_value=None)
     session.__aenter__ = AsyncMock(return_value=session)
     session.__aexit__ = AsyncMock(return_value=None)
     # session.add() is synchronous, not async - use MagicMock to prevent warnings

@@ -249,7 +249,7 @@ class TestFedRAMPQueryCapabilities:
     @pytest.mark.asyncio
     async def test_query_by_fedramp_regulation(self) -> None:
         """GIVEN audit events WHEN queried by FedRAMP THEN filtered correctly."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.query_by_regulation = AsyncMock(return_value=[])
 
         service = UnifiedAuditService(

@@ -228,7 +228,7 @@ class TestEUAIActQueryCapabilities:
     @pytest.mark.asyncio
     async def test_query_by_eu_ai_act_regulation(self) -> None:
         """GIVEN audit events WHEN queried by EU AI Act THEN filtered correctly."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.query_by_regulation = AsyncMock(return_value=[])
 
         service = UnifiedAuditService(
@@ -245,7 +245,7 @@ class TestEUAIActQueryCapabilities:
     @pytest.mark.asyncio
     async def test_query_ai_operations(self) -> None:
         """GIVEN AI operations WHEN queried by category THEN filtered correctly."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.query_by_category = AsyncMock(return_value=[])
 
         service = UnifiedAuditService(

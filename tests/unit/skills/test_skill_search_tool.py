@@ -82,7 +82,7 @@ class TestSkillSearchToolIndex:
         from mcp_server_langgraph.skills.search import SkillSearchTool
 
         mock_provider = MagicMock()
-        mock_provider.upsert = AsyncMock()  # noqa: async-mock-config
+        mock_provider.upsert = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_embeddings = MagicMock()
         mock_embeddings.embed = AsyncMock(return_value=[0.1, 0.2, 0.3])
 
@@ -100,7 +100,7 @@ class TestSkillSearchToolIndex:
         from mcp_server_langgraph.skills.search import SkillSearchTool
 
         mock_provider = MagicMock()
-        mock_provider.upsert = AsyncMock()  # noqa: async-mock-config
+        mock_provider.upsert = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_embeddings = MagicMock()
         mock_embeddings.embed = AsyncMock(return_value=[0.1, 0.2, 0.3])
 

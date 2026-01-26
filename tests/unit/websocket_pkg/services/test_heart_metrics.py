@@ -408,7 +408,7 @@ class TestHeartMetricsPrometheusIntegration:
             HeartMetricsServiceAdapter,
         )
 
-        mock_metrics_client = AsyncMock()  # noqa: async-mock-config
+        mock_metrics_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_metrics_client.query_instant.return_value = MagicMock(series=[MagicMock(values=[MagicMock(value=85.0)])])
 
         adapter = HeartMetricsServiceAdapter()
@@ -435,7 +435,7 @@ class TestHeartMetricsPrometheusIntegration:
             HeartMetricsServiceAdapter,
         )
 
-        mock_metrics_client = AsyncMock()  # noqa: async-mock-config
+        mock_metrics_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_metrics_client.query_instant.side_effect = Exception("Prometheus unavailable")
 
         adapter = HeartMetricsServiceAdapter()
@@ -461,7 +461,7 @@ class TestHeartMetricsPrometheusIntegration:
             HeartMetricsServiceAdapter,
         )
 
-        mock_metrics_client = AsyncMock()  # noqa: async-mock-config
+        mock_metrics_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_metrics_client.query_instant.return_value = MagicMock(series=[MagicMock(values=[MagicMock(value=92.0)])])
 
         adapter = HeartMetricsServiceAdapter()

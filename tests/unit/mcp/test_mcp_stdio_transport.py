@@ -46,12 +46,12 @@ class TestMCPSTDIOTransportConnect:
         session = MCPClientSession(config)
 
         # Mock subprocess creation
-        mock_process = AsyncMock()
+        mock_process = AsyncMock(return_value=None)
         mock_stdin = MagicMock()
         mock_stdin.write = MagicMock()
-        mock_stdin.drain = AsyncMock()
+        mock_stdin.drain = AsyncMock(return_value=None)
         mock_process.stdin = mock_stdin
-        mock_process.stdout = AsyncMock()
+        mock_process.stdout = AsyncMock(return_value=None)
         mock_process.returncode = None
 
         # Mock the initialize response
@@ -96,16 +96,16 @@ class TestMCPSTDIOTransportConnect:
 
         session = MCPClientSession(config)
 
-        mock_process = AsyncMock()
+        mock_process = AsyncMock(return_value=None)
         mock_stdin = MagicMock()
         mock_process.stdin = mock_stdin
-        mock_process.stdout = AsyncMock()
+        mock_process.stdout = AsyncMock(return_value=None)
         mock_process.returncode = None
 
         # Capture what's written to stdin
         written_data: list[bytes] = []
         mock_stdin.write = MagicMock(side_effect=lambda data: written_data.append(data))
-        mock_stdin.drain = AsyncMock()
+        mock_stdin.drain = AsyncMock(return_value=None)
 
         # Mock the initialize response
         init_response = (
@@ -151,16 +151,16 @@ class TestMCPSTDIOTransportConnect:
 
         session = MCPClientSession(config)
 
-        mock_process = AsyncMock()
+        mock_process = AsyncMock(return_value=None)
         mock_stdin = MagicMock()
         mock_process.stdin = mock_stdin
-        mock_process.stdout = AsyncMock()
+        mock_process.stdout = AsyncMock(return_value=None)
         mock_process.returncode = None
 
         # Capture what's written to stdin
         written_data: list[bytes] = []
         mock_stdin.write = MagicMock(side_effect=lambda data: written_data.append(data))
-        mock_stdin.drain = AsyncMock()
+        mock_stdin.drain = AsyncMock(return_value=None)
 
         # Mock the initialize response
         init_response = (
@@ -205,13 +205,13 @@ class TestMCPSTDIOTransportConnect:
 
         session = MCPClientSession(config)
 
-        mock_process = AsyncMock()
+        mock_process = AsyncMock(return_value=None)
         mock_stdin = MagicMock()
         mock_process.stdin = mock_stdin
-        mock_process.stdout = AsyncMock()
+        mock_process.stdout = AsyncMock(return_value=None)
         mock_process.returncode = None
         mock_stdin.write = MagicMock()
-        mock_stdin.drain = AsyncMock()
+        mock_stdin.drain = AsyncMock(return_value=None)
 
         # Mock the initialize response with capabilities
         init_response = (
@@ -268,15 +268,15 @@ class TestMCPSTDIOTransportListTools:
 
         session = MCPClientSession(config)
 
-        mock_process = AsyncMock()
+        mock_process = AsyncMock(return_value=None)
         mock_stdin = MagicMock()
         mock_process.stdin = mock_stdin
-        mock_process.stdout = AsyncMock()
+        mock_process.stdout = AsyncMock(return_value=None)
         mock_process.returncode = None
 
         written_data: list[bytes] = []
         mock_stdin.write = MagicMock(side_effect=lambda data: written_data.append(data))
-        mock_stdin.drain = AsyncMock()
+        mock_stdin.drain = AsyncMock(return_value=None)
 
         # Responses: initialize, then tools/list
         responses = [
@@ -329,13 +329,13 @@ class TestMCPSTDIOTransportListTools:
         config = MCPServerConfig(name="test-server", command="echo", args=[])
         session = MCPClientSession(config)
 
-        mock_process = AsyncMock()
+        mock_process = AsyncMock(return_value=None)
         mock_stdin = MagicMock()
         mock_process.stdin = mock_stdin
-        mock_process.stdout = AsyncMock()
+        mock_process.stdout = AsyncMock(return_value=None)
         mock_process.returncode = None
         mock_stdin.write = MagicMock()
-        mock_stdin.drain = AsyncMock()
+        mock_stdin.drain = AsyncMock(return_value=None)
 
         # Responses: initialize, then tools/list
         responses = [
@@ -408,15 +408,15 @@ class TestMCPSTDIOTransportCallTool:
         config = MCPServerConfig(name="test-server", command="echo", args=[])
         session = MCPClientSession(config)
 
-        mock_process = AsyncMock()
+        mock_process = AsyncMock(return_value=None)
         mock_stdin = MagicMock()
         mock_process.stdin = mock_stdin
-        mock_process.stdout = AsyncMock()
+        mock_process.stdout = AsyncMock(return_value=None)
         mock_process.returncode = None
 
         written_data: list[bytes] = []
         mock_stdin.write = MagicMock(side_effect=lambda data: written_data.append(data))
-        mock_stdin.drain = AsyncMock()
+        mock_stdin.drain = AsyncMock(return_value=None)
 
         # Responses: initialize, then tools/call
         responses = [
@@ -470,13 +470,13 @@ class TestMCPSTDIOTransportCallTool:
         config = MCPServerConfig(name="test-server", command="echo", args=[])
         session = MCPClientSession(config)
 
-        mock_process = AsyncMock()
+        mock_process = AsyncMock(return_value=None)
         mock_stdin = MagicMock()
         mock_process.stdin = mock_stdin
-        mock_process.stdout = AsyncMock()
+        mock_process.stdout = AsyncMock(return_value=None)
         mock_process.returncode = None
         mock_stdin.write = MagicMock()
-        mock_stdin.drain = AsyncMock()
+        mock_stdin.drain = AsyncMock(return_value=None)
 
         # Responses: initialize, then tools/call
         responses = [
@@ -531,13 +531,13 @@ class TestMCPSTDIOTransportCallTool:
         config = MCPServerConfig(name="test-server", command="echo", args=[])
         session = MCPClientSession(config)
 
-        mock_process = AsyncMock()
+        mock_process = AsyncMock(return_value=None)
         mock_stdin = MagicMock()
         mock_process.stdin = mock_stdin
-        mock_process.stdout = AsyncMock()
+        mock_process.stdout = AsyncMock(return_value=None)
         mock_process.returncode = None
         mock_stdin.write = MagicMock()
-        mock_stdin.drain = AsyncMock()
+        mock_stdin.drain = AsyncMock(return_value=None)
 
         # Responses: initialize, then tools/call with error
         responses = [
@@ -598,15 +598,15 @@ class TestMCPSTDIOTransportDisconnect:
         config = MCPServerConfig(name="test-server", command="echo", args=[])
         session = MCPClientSession(config)
 
-        mock_process = AsyncMock()
+        mock_process = AsyncMock(return_value=None)
         mock_stdin = MagicMock()
         mock_process.stdin = mock_stdin
-        mock_process.stdout = AsyncMock()
+        mock_process.stdout = AsyncMock(return_value=None)
         mock_process.returncode = None
         mock_process.terminate = MagicMock()
-        mock_process.wait = AsyncMock()
+        mock_process.wait = AsyncMock(return_value=None)
         mock_stdin.write = MagicMock()
-        mock_stdin.drain = AsyncMock()
+        mock_stdin.drain = AsyncMock(return_value=None)
 
         init_response = (
             json.dumps(
@@ -645,15 +645,15 @@ class TestMCPSTDIOTransportDisconnect:
         config = MCPServerConfig(name="test-server", command="echo", args=[])
         session = MCPClientSession(config)
 
-        mock_process = AsyncMock()
+        mock_process = AsyncMock(return_value=None)
         mock_stdin = MagicMock()
         mock_process.stdin = mock_stdin
-        mock_process.stdout = AsyncMock()
+        mock_process.stdout = AsyncMock(return_value=None)
         mock_process.returncode = None
         mock_process.terminate = MagicMock()
-        mock_process.wait = AsyncMock()
+        mock_process.wait = AsyncMock(return_value=None)
         mock_stdin.write = MagicMock()
-        mock_stdin.drain = AsyncMock()
+        mock_stdin.drain = AsyncMock(return_value=None)
 
         init_response = (
             json.dumps(
@@ -724,14 +724,14 @@ class TestMCPSTDIOTransportErrorHandling:
         config = MCPServerConfig(name="test-server", command="echo", args=[])
         session = MCPClientSession(config)
 
-        mock_process = AsyncMock()
+        mock_process = AsyncMock(return_value=None)
         mock_stdin = MagicMock()
         mock_process.stdin = mock_stdin
-        mock_process.stdout = AsyncMock()
+        mock_process.stdout = AsyncMock(return_value=None)
         mock_process.returncode = None
         mock_process.terminate = MagicMock()
         mock_stdin.write = MagicMock()
-        mock_stdin.drain = AsyncMock()
+        mock_stdin.drain = AsyncMock(return_value=None)
 
         # Return error response
         error_response = (

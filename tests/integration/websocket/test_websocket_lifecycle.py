@@ -277,7 +277,7 @@ class TestWebSocketLifecycleIntegration:
             assert response["type"] == "echo_response"
             assert response["payload"]["echo"]["message"] == "Hello, World!"
 
-    def test_multiple_messages(self, lifecycle_client) -> None:
+    def test_multiple_messages_are_processed_sequentially(self, lifecycle_client) -> None:
         """
         GIVEN a connected WebSocket client
         WHEN sending multiple messages

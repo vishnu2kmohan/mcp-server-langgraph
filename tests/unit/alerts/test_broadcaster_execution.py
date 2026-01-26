@@ -68,8 +68,8 @@ class TestBroadcastExecutionResult:
     @pytest.fixture
     def mock_websocket(self) -> AsyncMock:
         """Create a mock WebSocket connection."""
-        ws = AsyncMock()
-        ws.send_json = AsyncMock()
+        ws = AsyncMock(return_value=None)
+        ws.send_json = AsyncMock(return_value=None)
         return ws
 
     @pytest.fixture
@@ -166,7 +166,7 @@ class TestBroadcastExecutionResult:
         broadcaster = AlertBroadcaster()
 
         # Create a mock that raises an exception
-        failing_ws = AsyncMock()
+        failing_ws = AsyncMock(return_value=None)
         failing_ws.send_json = AsyncMock(side_effect=Exception("Connection lost"))
         await broadcaster.subscribe(failing_ws, user_id="admin-1")
 

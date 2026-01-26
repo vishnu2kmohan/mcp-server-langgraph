@@ -57,7 +57,7 @@ def mock_cache_service():
     cache.aset = AsyncMock(return_value=None)
     cache.adelete = AsyncMock(return_value=None)
     cache.adelete_pattern = AsyncMock(return_value=0)
-    cache.redis = AsyncMock()  # noqa: async-mock-config
+    cache.redis = AsyncMock(return_value=None)  # noqa: async-mock-config
     cache.redis.ttl = AsyncMock(return_value=250)  # 250s remaining TTL
     return cache
 
@@ -76,7 +76,7 @@ def mock_settings():
 def mock_llm_factory():
     """Create mock LLM factory."""
     factory = MagicMock()
-    factory.ainvoke = AsyncMock()  # noqa: async-mock-config
+    factory.ainvoke = AsyncMock(return_value=None)  # noqa: async-mock-config
     return factory
 
 

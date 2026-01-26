@@ -94,7 +94,7 @@ class TestMCPToolProxy:
             },
         )
 
-        mock_executor = AsyncMock()
+        mock_executor = AsyncMock(return_value=None)
         mock_executor.call_tool.return_value = "Navigation complete"
 
         proxy = MCPToolProxy.from_definition(tool_def, mock_executor)
@@ -124,7 +124,7 @@ class TestMCPToolProxy:
             input_schema={"type": "object", "properties": {}},
         )
 
-        mock_executor = AsyncMock()
+        mock_executor = AsyncMock(return_value=None)
         mock_executor.call_tool.side_effect = TimeoutError("Operation timed out")
 
         proxy = MCPToolProxy.from_definition(tool_def, mock_executor)
@@ -149,7 +149,7 @@ class TestMCPToolProxy:
             input_schema={"type": "object", "properties": {}},
         )
 
-        mock_executor = AsyncMock()
+        mock_executor = AsyncMock(return_value=None)
         mock_executor.call_tool.side_effect = ConnectionError("Server disconnected")
 
         proxy = MCPToolProxy.from_definition(tool_def, mock_executor)

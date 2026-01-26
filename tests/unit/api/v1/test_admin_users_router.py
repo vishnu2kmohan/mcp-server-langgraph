@@ -46,7 +46,7 @@ class TestAdminUsersListEndpoint:
 
     def _create_mock_user_provider(self, users: list[UserData] | None = None) -> AsyncMock:
         """Create a mock user provider."""
-        mock_provider = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_provider = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_provider.list_users.return_value = users or []
         return mock_provider
 
@@ -151,7 +151,7 @@ class TestAdminUserGetEndpoint:
 
     def _create_mock_user_provider(self, user: UserData | None = None) -> AsyncMock:
         """Create a mock user provider."""
-        mock_provider = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_provider = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_provider.get_user_by_id.return_value = user
         mock_provider.get_user_by_username.return_value = user
         return mock_provider
@@ -226,7 +226,7 @@ class TestAdminUserCreateEndpoint:
 
     def _create_mock_user_provider(self, created_user: UserData | None = None) -> AsyncMock:
         """Create a mock user provider."""
-        mock_provider = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_provider = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_provider.create_user = AsyncMock(return_value=created_user)
         mock_provider.get_user_by_username = AsyncMock(return_value=None)  # User doesn't exist yet
         return mock_provider
@@ -331,7 +331,7 @@ class TestAdminUserUpdateEndpoint:
 
     def _create_mock_user_provider(self, existing_user: UserData | None = None) -> AsyncMock:
         """Create a mock user provider."""
-        mock_provider = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_provider = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_provider.get_user_by_username = AsyncMock(return_value=existing_user)
         mock_provider.get_user_by_id = AsyncMock(return_value=existing_user)
         mock_provider.update_user = AsyncMock(return_value=existing_user)
@@ -412,7 +412,7 @@ class TestAdminUserDeleteEndpoint:
 
     def _create_mock_user_provider(self, existing_user: UserData | None = None) -> AsyncMock:
         """Create a mock user provider."""
-        mock_provider = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_provider = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_provider.get_user_by_username = AsyncMock(return_value=existing_user)
         mock_provider.get_user_by_id = AsyncMock(return_value=existing_user)
         mock_provider.delete_user = AsyncMock(return_value=True)

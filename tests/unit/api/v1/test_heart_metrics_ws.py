@@ -211,7 +211,7 @@ class TestHeartMetricsServiceIntegration:
         }
 
         with patch("mcp_server_langgraph.api.v1.heart_metrics_ws.get_websocket_heart_metrics_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.get_current_snapshot.return_value = mock_snapshot
             mock_get_service.return_value = mock_service
 
@@ -240,7 +240,7 @@ class TestHeartMetricsServiceIntegration:
         )
 
         with patch("mcp_server_langgraph.api.v1.heart_metrics_ws.get_websocket_heart_metrics_service") as mock_get_service:
-            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_get_service.return_value = mock_service
 
             handler = HeartMetricsWebSocketHandler()

@@ -162,7 +162,7 @@ class TestHashChainWithService:
     @pytest.mark.asyncio
     async def test_service_maintains_chain_across_log_events(self) -> None:
         """GIVEN audit service WHEN logging events THEN chain maintained."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.create = AsyncMock(return_value=None)
         mock_repo.bulk_create = AsyncMock(return_value=None)
         mock_repo.get_events_in_range = AsyncMock(return_value=[])
@@ -198,7 +198,7 @@ class TestHashChainWithService:
     @pytest.mark.asyncio
     async def test_service_batch_maintains_chain(self) -> None:
         """GIVEN batch of events WHEN logged THEN chain maintained."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.bulk_create = AsyncMock(return_value=None)
 
         service = UnifiedAuditService(

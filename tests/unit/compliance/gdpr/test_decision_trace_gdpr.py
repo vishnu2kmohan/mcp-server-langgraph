@@ -78,7 +78,7 @@ class TestDataExportServiceDecisionTraces:
         from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService
 
         # Mock the decision trace repository
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_user = AsyncMock(
             return_value=[
                 {
@@ -127,7 +127,7 @@ class TestDataDeletionServiceDecisionTraces:
         )
 
         # Mock the decision trace repository
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.delete_by_user = AsyncMock(return_value=5)
 
         service = DataDeletionService()

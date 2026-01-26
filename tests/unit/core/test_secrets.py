@@ -520,7 +520,7 @@ class TestGCPSecretManagerProvider:
                 GCPSecretManagerProvider()
             assert "GOOGLE_CLOUD_PROJECT" in str(exc_info.value)
 
-    def test_secret_path(self) -> None:
+    def test_secret_path_formats_correctly(self) -> None:
         """GIVEN GCPSecretManagerProvider
         WHEN calling _secret_path
         THEN should return correct path format

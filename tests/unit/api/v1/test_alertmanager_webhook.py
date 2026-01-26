@@ -428,7 +428,7 @@ class TestAlertmanagerWebhookBroadcasting:
             handle_alertmanager_webhook,
         )
 
-        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         result = await handle_alertmanager_webhook(
             payload=SAMPLE_ALERTMANAGER_PAYLOAD,
@@ -451,7 +451,7 @@ class TestAlertmanagerWebhookBroadcasting:
             handle_alertmanager_webhook,
         )
 
-        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
         payload = {
             **SAMPLE_ALERTMANAGER_PAYLOAD,
             "alerts": [
@@ -483,8 +483,8 @@ class TestAlertmanagerWebhookBroadcasting:
             handle_alertmanager_webhook,
         )
 
-        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
-        mock_ai_queue = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_ai_queue = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         result = await handle_alertmanager_webhook(
             payload=SAMPLE_ALERTMANAGER_PAYLOAD,
@@ -506,8 +506,8 @@ class TestAlertmanagerWebhookBroadcasting:
             handle_alertmanager_webhook,
         )
 
-        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
-        mock_ai_queue = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_ai_queue = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         payload = {
             **SAMPLE_ALERTMANAGER_PAYLOAD,

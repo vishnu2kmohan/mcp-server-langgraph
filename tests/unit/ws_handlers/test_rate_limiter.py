@@ -209,7 +209,7 @@ class TestWebSocketRateLimiter:
         remaining = limiter.get_remaining_quota("user-a")
         assert remaining == 3
 
-    def test_get_stats(self) -> None:
+    def test_get_stats_returns_limit_info(self) -> None:
         """
         GIVEN a WebSocket rate limiter with activity
         WHEN get_stats() is called

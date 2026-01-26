@@ -18,7 +18,7 @@ pytestmark = pytest.mark.unit
 @pytest.fixture
 def mock_openfga_client() -> AsyncMock:
     """Create a mock OpenFGA client for testing."""
-    client = AsyncMock()
+    client = AsyncMock(return_value=None)
     client.check_permission = AsyncMock(return_value=True)
     return client
 

@@ -175,7 +175,7 @@ class TestGetAlertRecommendation:
         mock_service.get_cached_recommendation.return_value = None
         mock_service.generate_recommendation.return_value = sample_recommendation
 
-        mock_store = AsyncMock()  # noqa: async-mock-config
+        mock_store = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_store.get_alert.return_value = sample_alert
 
         result = await get_alert_recommendation(
@@ -198,7 +198,7 @@ class TestGetAlertRecommendation:
 
         mock_service.get_cached_recommendation.return_value = None
 
-        mock_store = AsyncMock()  # noqa: async-mock-config
+        mock_store = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_store.get_alert.return_value = None
 
         with pytest.raises(HTTPException) as exc_info:
@@ -291,7 +291,7 @@ class TestRegenerateRecommendation:
 
         mock_service.generate_recommendation.return_value = sample_recommendation
 
-        mock_store = AsyncMock()  # noqa: async-mock-config
+        mock_store = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_store.get_alert.return_value = sample_alert
 
         result = await regenerate_alert_recommendation(
@@ -312,7 +312,7 @@ class TestRegenerateRecommendation:
             regenerate_alert_recommendation,
         )
 
-        mock_store = AsyncMock()  # noqa: async-mock-config
+        mock_store = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_store.get_alert.return_value = None
 
         with pytest.raises(HTTPException) as exc_info:
@@ -611,7 +611,7 @@ class TestLLMIntegration:
         from datetime import datetime, UTC
 
         # Mock LLM that follows the protocol
-        mock_llm = AsyncMock()  # noqa: async-mock-config
+        mock_llm = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(

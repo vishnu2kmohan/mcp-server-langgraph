@@ -134,9 +134,9 @@ class TestMetricsBroadcasterBroadcasting:
         broadcaster = MetricsBroadcaster()
 
         mock_ws1 = MagicMock()
-        mock_ws1.send_json = AsyncMock()
+        mock_ws1.send_json = AsyncMock(return_value=None)
         mock_ws2 = MagicMock()
-        mock_ws2.send_json = AsyncMock()
+        mock_ws2.send_json = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(mock_ws1, user_id="user-1")
         await broadcaster.subscribe(mock_ws2, user_id="user-2")
@@ -170,9 +170,9 @@ class TestMetricsBroadcasterBroadcasting:
         broadcaster = MetricsBroadcaster()
 
         mock_ws1 = MagicMock()
-        mock_ws1.send_json = AsyncMock()
+        mock_ws1.send_json = AsyncMock(return_value=None)
         mock_ws2 = MagicMock()
-        mock_ws2.send_json = AsyncMock()
+        mock_ws2.send_json = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(mock_ws1, user_id="user-1", session_id="session-A")
         await broadcaster.subscribe(mock_ws2, user_id="user-2", session_id="session-B")
@@ -201,7 +201,7 @@ class TestMetricsBroadcasterBroadcasting:
         broadcaster = MetricsBroadcaster()
 
         mock_ws_good = MagicMock()
-        mock_ws_good.send_json = AsyncMock()
+        mock_ws_good.send_json = AsyncMock(return_value=None)
 
         mock_ws_bad = MagicMock()
         mock_ws_bad.send_json = AsyncMock(side_effect=Exception("Connection closed"))
@@ -239,7 +239,7 @@ class TestMetricsBroadcasterMetricTypes:
 
         broadcaster = MetricsBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(mock_ws, user_id="user-1")
 
@@ -266,7 +266,7 @@ class TestMetricsBroadcasterMetricTypes:
 
         broadcaster = MetricsBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(mock_ws, user_id="user-1")
 
@@ -293,7 +293,7 @@ class TestMetricsBroadcasterMetricTypes:
 
         broadcaster = MetricsBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(mock_ws, user_id="user-1")
 
@@ -334,7 +334,7 @@ class TestMetricsBroadcasterSparklineData:
 
         broadcaster = MetricsBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(mock_ws, user_id="user-1")
 
@@ -364,7 +364,7 @@ class TestMetricsBroadcasterSparklineData:
 
         broadcaster = MetricsBroadcaster(max_sparkline_points=10)
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(mock_ws, user_id="user-1")
 
@@ -406,7 +406,7 @@ class TestMetricsBroadcasterSnapshot:
 
         broadcaster = MetricsBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
         await broadcaster.subscribe(mock_ws, user_id="user-1")
 
         # Accumulate some metrics
@@ -434,7 +434,7 @@ class TestMetricsBroadcasterSnapshot:
 
         broadcaster = MetricsBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
         await broadcaster.subscribe(mock_ws, user_id="user-1")
 
         await broadcaster.broadcast_metric(
@@ -508,7 +508,7 @@ class TestMetricsBroadcasterTrend:
 
         broadcaster = MetricsBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
         await broadcaster.subscribe(mock_ws, user_id="user-1")
 
         # Increasing values = "up" trend
@@ -531,7 +531,7 @@ class TestMetricsBroadcasterTrend:
 
         broadcaster = MetricsBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
         await broadcaster.subscribe(mock_ws, user_id="user-1")
 
         for v in [50, 40, 30, 20, 10]:
@@ -553,7 +553,7 @@ class TestMetricsBroadcasterTrend:
 
         broadcaster = MetricsBroadcaster()
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
         await broadcaster.subscribe(mock_ws, user_id="user-1")
 
         for v in [50, 51, 50, 49, 50]:

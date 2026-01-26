@@ -51,7 +51,7 @@ def feedback_app() -> Generator[tuple[FastAPI, AsyncMock], None, None]:
     app.dependency_overrides[get_current_user] = get_auth_user
 
     # Configure mock with return values to satisfy async-mock-config hook
-    mock_service = AsyncMock()  # noqa: async-mock-config
+    mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
     mock_service.submit_hallucination_report.return_value = {"id": "report-default", "status": "received"}
     mock_service.submit_message_rating.return_value = {"id": "rating-default"}
     mock_service.get_feedback_summary.return_value = {"total": 0}

@@ -35,19 +35,19 @@ def mock_delegate():
     delegate = MagicMock(spec=ConnectionRepository)
 
     # Setup async mocks for all methods
-    delegate.get = AsyncMock()  # async-mock-configured
-    delegate.get_many = AsyncMock()  # async-mock-configured
-    delegate.list = AsyncMock()  # async-mock-configured
-    delegate.create = AsyncMock()  # async-mock-configured
-    delegate.update = AsyncMock()  # async-mock-configured
-    delegate.delete = AsyncMock()  # async-mock-configured
-    delegate.store_api_key = AsyncMock()  # async-mock-configured
-    delegate.get_api_key = AsyncMock()  # async-mock-configured
-    delegate.create_oauth2_state = AsyncMock()  # async-mock-configured
-    delegate.get_and_delete_oauth2_state = AsyncMock()  # async-mock-configured
-    delegate.store_oauth2_tokens = AsyncMock()  # async-mock-configured
-    delegate.get_oauth2_access_token = AsyncMock()  # async-mock-configured
-    delegate.update_status = AsyncMock()  # async-mock-configured
+    delegate.get = AsyncMock(return_value=None)  # async-mock-configured
+    delegate.get_many = AsyncMock(return_value=None)  # async-mock-configured
+    delegate.list = AsyncMock(return_value=None)  # async-mock-configured
+    delegate.create = AsyncMock(return_value=None)  # async-mock-configured
+    delegate.update = AsyncMock(return_value=None)  # async-mock-configured
+    delegate.delete = AsyncMock(return_value=None)  # async-mock-configured
+    delegate.store_api_key = AsyncMock(return_value=None)  # async-mock-configured
+    delegate.get_api_key = AsyncMock(return_value=None)  # async-mock-configured
+    delegate.create_oauth2_state = AsyncMock(return_value=None)  # async-mock-configured
+    delegate.get_and_delete_oauth2_state = AsyncMock(return_value=None)  # async-mock-configured
+    delegate.store_oauth2_tokens = AsyncMock(return_value=None)  # async-mock-configured
+    delegate.get_oauth2_access_token = AsyncMock(return_value=None)  # async-mock-configured
+    delegate.update_status = AsyncMock(return_value=None)  # async-mock-configured
 
     return delegate
 

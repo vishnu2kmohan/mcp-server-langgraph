@@ -80,7 +80,7 @@ class TestTracesUserIdFilter:
         """
         user_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.list_traces.return_value = (
                 [{"trace_id": "abc123", "name": "User Request"}],
                 None,
@@ -104,7 +104,7 @@ class TestTracesUserIdFilter:
         user_id = str(uuid4())
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.list_traces.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -133,7 +133,7 @@ class TestTracesWorkflowIdFilter:
         """
         workflow_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.list_traces.return_value = (
                 [{"trace_id": "def456", "name": "Workflow Execution"}],
                 None,
@@ -164,7 +164,7 @@ class TestTracesProjectIdFilter:
         """
         project_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.list_traces.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -192,7 +192,7 @@ class TestTracesOrganizationIdFilter:
         """
         organization_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.list_traces.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -225,7 +225,7 @@ class TestTracesCombinedEntityFilters:
         organization_id = str(uuid4())
 
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.list_traces.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -269,7 +269,7 @@ class TestLogsUserIdFilter:
         """
         user_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.list_logs.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -297,7 +297,7 @@ class TestLogsWorkflowIdFilter:
         """
         workflow_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.list_logs.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -325,7 +325,7 @@ class TestLogsProjectIdFilter:
         """
         project_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.list_logs.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -358,7 +358,7 @@ class TestMetricsBySession:
         """
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.get_metrics_by_session.return_value = {
                 "total_requests": 10,
                 "total_errors": 1,
@@ -384,7 +384,7 @@ class TestMetricsBySession:
         """
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.get_metrics_by_session.return_value = {
                 "total_requests": 0,
                 "total_errors": 0,
@@ -417,7 +417,7 @@ class TestMetricsByWorkflow:
         """
         workflow_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.get_metrics_by_workflow.return_value = {
                 "total_executions": 50,
                 "total_errors": 5,
@@ -451,7 +451,7 @@ class TestMetricsByUser:
         """
         user_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.get_metrics_by_user.return_value = {
                 "total_requests": 100,
                 "total_sessions": 5,
@@ -490,7 +490,7 @@ class TestAlertsWorkflowIdFilter:
         """
         workflow_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.list_alerts.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -518,7 +518,7 @@ class TestAlertsProjectIdFilter:
         """
         project_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock()  # return_value configured below
+            mock_service = AsyncMock(return_value=None)  # return_value configured below
             mock_service.list_alerts.return_value = ([], None)
             mock_get_service.return_value = mock_service
 

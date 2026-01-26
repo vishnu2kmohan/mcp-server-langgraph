@@ -46,9 +46,9 @@ def unique_notification_id() -> str:
 def mock_websocket_connection():
     """Create a mock WebSocket connection."""
     connection = MagicMock()
-    connection.send_json = AsyncMock()
-    connection.close = AsyncMock()
-    connection.accept = AsyncMock()
+    connection.send_json = AsyncMock(return_value=None)
+    connection.close = AsyncMock(return_value=None)
+    connection.accept = AsyncMock(return_value=None)
     return connection
 
 
@@ -173,7 +173,7 @@ class TestNotificationBroadcasterFlow:
         # Create multiple mock connections
         connections = [MagicMock() for i in range(3)]
         for i, conn in enumerate(connections):
-            conn.send_json = AsyncMock()
+            conn.send_json = AsyncMock(return_value=None)
             await broadcaster.subscribe(connection=conn, user_id=f"user-{i}")
 
         # Broadcast notification
@@ -232,7 +232,7 @@ class TestNotificationTargetedDelivery:
 
         # Subscribe other user
         other_connection = MagicMock()
-        other_connection.send_json = AsyncMock()
+        other_connection.send_json = AsyncMock(return_value=None)
         await broadcaster.subscribe(
             connection=other_connection,
             user_id="other-user",
@@ -603,7 +603,7 @@ class TestNotificationConnectionLifecycle:
         # Create multiple connections for same user
         connections = [MagicMock() for _ in range(3)]
         for conn in connections:
-            conn.send_json = AsyncMock()
+            conn.send_json = AsyncMock(return_value=None)
             await broadcaster.subscribe(
                 connection=conn,
                 user_id=unique_user_id,

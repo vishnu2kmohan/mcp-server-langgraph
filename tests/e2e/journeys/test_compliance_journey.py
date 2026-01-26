@@ -54,7 +54,7 @@ class TestGDPRComplianceJourney:
 
         # Setup mock repository
         mock_repo = MagicMock()
-        mock_repo.create = AsyncMock()  # async-mock-configured
+        mock_repo.create = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.query_by_actor = AsyncMock(return_value=[])
 
         service = UnifiedAuditService(
@@ -110,7 +110,7 @@ class TestGDPRComplianceJourney:
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
         mock_repo = MagicMock()
-        mock_repo.create = AsyncMock()  # async-mock-configured
+        mock_repo.create = AsyncMock(return_value=None)  # async-mock-configured
 
         service = UnifiedAuditService(
             repository=mock_repo,
@@ -178,7 +178,7 @@ class TestHIPAAComplianceJourney:
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
         mock_repo = MagicMock()
-        mock_repo.create = AsyncMock()  # async-mock-configured
+        mock_repo.create = AsyncMock(return_value=None)  # async-mock-configured
 
         service = UnifiedAuditService(
             repository=mock_repo,
@@ -424,7 +424,7 @@ class TestEUAIActComplianceJourney:
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
         mock_repo = MagicMock()
-        mock_repo.create = AsyncMock()  # async-mock-configured
+        mock_repo.create = AsyncMock(return_value=None)  # async-mock-configured
 
         service = UnifiedAuditService(
             repository=mock_repo,
@@ -505,7 +505,7 @@ class TestSOC2ComplianceJourney:
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
         mock_repo = MagicMock()
-        mock_repo.create = AsyncMock()  # async-mock-configured
+        mock_repo.create = AsyncMock(return_value=None)  # async-mock-configured
 
         service = UnifiedAuditService(
             repository=mock_repo,
@@ -562,7 +562,7 @@ class TestSOC2ComplianceJourney:
         from mcp_server_langgraph.audit.service import UnifiedAuditService
 
         mock_repo = MagicMock()
-        mock_repo.create = AsyncMock()  # async-mock-configured
+        mock_repo.create = AsyncMock(return_value=None)  # async-mock-configured
 
         service = UnifiedAuditService(
             repository=mock_repo,

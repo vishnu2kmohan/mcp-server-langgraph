@@ -397,7 +397,7 @@ class TestPgVectorProvider:
             )
 
             mock_pool = MagicMock()
-            mock_conn = AsyncMock()  # noqa: async-mock-config - nested context manager
+            mock_conn = AsyncMock(return_value=None)  # noqa: async-mock-config - nested context manager
 
             # Set up async context manager for pool.acquire()
             mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)

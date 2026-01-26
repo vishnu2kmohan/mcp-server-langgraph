@@ -63,7 +63,7 @@ def store() -> InMemoryPushSubscriptionStore:
 class TestPushSubscription:
     """Tests for the PushSubscription dataclass."""
 
-    def test_create_subscription(self, sample_subscription: PushSubscription) -> None:
+    def test_create_subscription_registers_topic(self, sample_subscription: PushSubscription) -> None:
         """Test creating a subscription with all fields."""
         assert sample_subscription.user_id == "user-001"
         assert sample_subscription.endpoint == "https://push.example.com/p/abc123"
@@ -320,7 +320,7 @@ class TestInMemoryPushSubscriptionStore:
 class TestPushSubscriptionStoreProtocol:
     """Verify InMemoryPushSubscriptionStore implements the protocol."""
 
-    def test_implements_protocol(self) -> None:
+    def test_implements_protocol_interface(self) -> None:
         """Verify the store implements the protocol interface."""
         store = InMemoryPushSubscriptionStore()
         assert isinstance(store, PushSubscriptionStore)

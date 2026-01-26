@@ -45,7 +45,7 @@ class TestRedisCacheIntegration:
         ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
         """
         service = create_test_service()
-        service.redis_cache = AsyncMock()  # noqa: async-mock-config
+        service.redis_cache = AsyncMock(return_value=None)  # noqa: async-mock-config
         service.redis_cache.get = AsyncMock(return_value=None)  # Cache miss
 
         request = ErrorAnalyzeRequest(
@@ -355,7 +355,7 @@ class TestWebSocketHeartbeat:
         service = create_test_service()
 
         # Add a mock connection
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         service._websocket_connections["stale-user"] = mock_ws
 
         # If service has cleanup method, call it

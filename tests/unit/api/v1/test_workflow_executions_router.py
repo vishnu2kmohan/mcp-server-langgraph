@@ -64,7 +64,7 @@ class TestWorkflowExecutionsListEndpoint:
         workflow_exists: bool = True,
     ) -> AsyncMock:
         """Create a mock execution manager."""
-        mock_manager = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_manager = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_manager.get_workflow.return_value = {"id": "wf-1", "name": "Test"} if workflow_exists else None
         mock_manager.list_executions.return_value = executions or []
         return mock_manager
@@ -163,7 +163,7 @@ class TestWorkflowExecutionGetEndpoint:
         workflow_exists: bool = True,
     ) -> AsyncMock:
         """Create a mock execution manager."""
-        mock_manager = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_manager = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_manager.get_workflow.return_value = {"id": "wf-1", "name": "Test"} if workflow_exists else None
         mock_manager.get_execution.return_value = execution
         return mock_manager

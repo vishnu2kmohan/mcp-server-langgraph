@@ -72,7 +72,7 @@ class TestBroadcastingSpanProcessor:
 
         # Create mock broadcaster
         mock_broadcaster = MagicMock()
-        mock_broadcaster.broadcast_span = AsyncMock()
+        mock_broadcaster.broadcast_span = AsyncMock(return_value=None)
 
         processor = BroadcastingSpanProcessor(broadcaster=mock_broadcaster)
 

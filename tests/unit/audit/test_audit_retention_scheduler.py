@@ -87,7 +87,7 @@ class TestPartitionRetentionScheduler:
         )
 
         # Mock the database executor
-        mock_executor = AsyncMock()  # async-mock-configured
+        mock_executor = AsyncMock(return_value=None)  # async-mock-configured
         mock_executor.get_existing_partitions = AsyncMock(
             return_value=[
                 "audit_logs_2017_01",  # Expired (>7 years old)
@@ -97,7 +97,7 @@ class TestPartitionRetentionScheduler:
                 "audit_logs_2025_01",  # Not expired
             ]
         )
-        mock_executor.drop_partition = AsyncMock()  # async-mock-configured
+        mock_executor.drop_partition = AsyncMock(return_value=None)  # async-mock-configured
 
         # Run cleanup with reference date
         reference_date = datetime(2025, 12, 15, tzinfo=UTC)
@@ -127,9 +127,9 @@ class TestPartitionRetentionScheduler:
             schedule_hours=24,
         )
 
-        mock_executor = AsyncMock()  # async-mock-configured
+        mock_executor = AsyncMock(return_value=None)  # async-mock-configured
         mock_executor.get_existing_partitions = AsyncMock(return_value=[])
-        mock_executor.drop_partition = AsyncMock()  # async-mock-configured
+        mock_executor.drop_partition = AsyncMock(return_value=None)  # async-mock-configured
 
         mock_metrics = MagicMock()
         scheduler.set_metrics(mock_metrics)
@@ -165,7 +165,7 @@ class TestPartitionRetentionExecutor:
         )
 
         # Mock async session
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = [
             "audit_logs_2024_01",
@@ -190,7 +190,7 @@ class TestPartitionRetentionExecutor:
             PartitionRetentionExecutor,
         )
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         executor = PartitionRetentionExecutor(session=mock_session)
 
         await executor.drop_partition("audit_logs_2017_01")

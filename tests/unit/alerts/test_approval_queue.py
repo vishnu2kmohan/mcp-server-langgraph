@@ -168,7 +168,7 @@ class TestRemediationApprovalQueueInit:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_queue_initialization(self) -> None:
+    def test_queue_initialization_creates_empty_queue(self) -> None:
         """Should initialize with empty remediations dict."""
         queue = RemediationApprovalQueue()
         assert queue._remediations == {}

@@ -40,8 +40,8 @@ class TestReversibleActionBasic:
             action_id="action-123",
             action_type="file_write",
             description="Write config file",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         assert action.action_id == "action-123"
@@ -54,8 +54,8 @@ class TestReversibleActionBasic:
             action_id="action-123",
             action_type="database_update",
             description="Update user record",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         assert action.action_type == "database_update"
@@ -68,8 +68,8 @@ class TestReversibleActionBasic:
             action_id="action-123",
             action_type="file_write",
             description="Write configuration to config.yaml",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         assert action.description == "Write configuration to config.yaml"
@@ -78,13 +78,13 @@ class TestReversibleActionBasic:
         """Test ReversibleAction has execute_fn callable."""
         from mcp_server_langgraph.hitl.reversible import ReversibleAction
 
-        mock_execute = AsyncMock()  # noqa: async-mock-config
+        mock_execute = AsyncMock(return_value=None)  # noqa: async-mock-config
         action = ReversibleAction(
             action_id="action-123",
             action_type="file_write",
             description="Write file",
             execute_fn=mock_execute,
-            undo_fn=AsyncMock(),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         assert action.execute_fn is mock_execute
@@ -93,12 +93,12 @@ class TestReversibleActionBasic:
         """Test ReversibleAction has undo_fn callable."""
         from mcp_server_langgraph.hitl.reversible import ReversibleAction
 
-        mock_undo = AsyncMock()  # noqa: async-mock-config
+        mock_undo = AsyncMock(return_value=None)  # noqa: async-mock-config
         action = ReversibleAction(
             action_id="action-123",
             action_type="file_write",
             description="Write file",
-            execute_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
             undo_fn=mock_undo,
         )
 
@@ -125,7 +125,7 @@ class TestReversibleActionExecution:
             action_type="file_write",
             description="Write file",
             execute_fn=mock_execute,
-            undo_fn=AsyncMock(),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         result = await action.execute()
@@ -143,7 +143,7 @@ class TestReversibleActionExecution:
             action_id="action-123",
             action_type="file_write",
             description="Write file",
-            execute_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
             undo_fn=mock_undo,
         )
 
@@ -161,8 +161,8 @@ class TestReversibleActionExecution:
             action_id="action-123",
             action_type="file_write",
             description="Write file",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         assert action.executed_at is None
@@ -179,8 +179,8 @@ class TestReversibleActionExecution:
             action_id="action-123",
             action_type="file_write",
             description="Write file",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         assert action.undone_at is None
@@ -206,8 +206,8 @@ class TestReversibleActionState:
             action_id="action-123",
             action_type="file_write",
             description="Write file",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         assert action.state == ActionState.PENDING
@@ -221,8 +221,8 @@ class TestReversibleActionState:
             action_id="action-123",
             action_type="file_write",
             description="Write file",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         await action.execute()
@@ -238,8 +238,8 @@ class TestReversibleActionState:
             action_id="action-123",
             action_type="file_write",
             description="Write file",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         await action.execute()
@@ -257,7 +257,7 @@ class TestReversibleActionState:
             action_type="file_write",
             description="Write file",
             execute_fn=AsyncMock(side_effect=RuntimeError("Write failed")),
-            undo_fn=AsyncMock(),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         with pytest.raises(RuntimeError):
@@ -368,8 +368,8 @@ class TestActionHistoryStoreOperations:
             action_id="action-123",
             action_type="file_write",
             description="Write file",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         store.add(action, session_id="session-456")
@@ -399,15 +399,15 @@ class TestActionHistoryStoreOperations:
             action_id="action-1",
             action_type="file_write",
             description="Write file 1",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
         action2 = ReversibleAction(
             action_id="action-2",
             action_type="file_write",
             description="Write file 2",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         store.add(action1, session_id="session-A")
@@ -431,15 +431,15 @@ class TestActionHistoryStoreOperations:
             action_id="action-1",
             action_type="file_write",
             description="Write file 1",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
         action2 = ReversibleAction(
             action_id="action-2",
             action_type="file_write",
             description="Write file 2",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         store.add(action1, session_id="session-A")
@@ -474,8 +474,8 @@ class TestActionHistoryUndo:
             action_id="action-1",
             action_type="file_write",
             description="Executed action",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
         executed_action._state = ActionState.EXECUTED
 
@@ -483,8 +483,8 @@ class TestActionHistoryUndo:
             action_id="action-2",
             action_type="file_write",
             description="Pending action",
-            execute_fn=AsyncMock(),
-            undo_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
+            undo_fn=AsyncMock(return_value=None),
         )
 
         store.add(executed_action, session_id="session-A")
@@ -512,12 +512,12 @@ class TestActionHistoryUndo:
             ReversibleAction,
         )
 
-        mock_undo = AsyncMock()  # noqa: async-mock-config
+        mock_undo = AsyncMock(return_value=None)  # noqa: async-mock-config
         action = ReversibleAction(
             action_id="action-123",
             action_type="file_write",
             description="Write file",
-            execute_fn=AsyncMock(),
+            execute_fn=AsyncMock(return_value=None),
             undo_fn=mock_undo,
         )
         action._state = ActionState.EXECUTED

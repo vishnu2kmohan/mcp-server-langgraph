@@ -126,7 +126,7 @@ class TestGetHttpClient:
         from mcp_server_langgraph.api.deps import get_http_client
 
         mock_client = MagicMock()
-        mock_manager = AsyncMock()  # async-mock-configured (return_value set below)
+        mock_manager = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
         mock_manager.get_client.return_value = mock_client
 
         mock_request = MagicMock(spec=Request)

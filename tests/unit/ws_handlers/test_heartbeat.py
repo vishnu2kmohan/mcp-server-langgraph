@@ -212,7 +212,7 @@ class TestHeartbeatManagerConfiguration:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_default_configuration(self) -> None:
+    def test_default_configuration_sets_interval(self) -> None:
         """
         GIVEN no custom configuration
         WHEN HeartbeatManager is created
@@ -224,7 +224,7 @@ class TestHeartbeatManagerConfiguration:
         assert manager.interval == 30  # 30 seconds default
         assert manager.timeout == 90  # 3x interval default
 
-    def test_custom_configuration(self) -> None:
+    def test_custom_configuration_overrides_interval(self) -> None:
         """
         GIVEN custom configuration
         WHEN HeartbeatManager is created

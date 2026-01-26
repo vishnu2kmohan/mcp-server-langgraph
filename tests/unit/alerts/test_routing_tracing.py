@@ -93,7 +93,7 @@ class TestRouterTracing:
             Subscription,
         )
 
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
         mock_store.get_subscriptions.return_value = [
             Subscription(
                 user_id="user-001",
@@ -218,7 +218,7 @@ class TestRoutingTracingErrorHandling:
         """
         from mcp_server_langgraph.alerts.routing import Alert, AlertRouter
 
-        mock_store = AsyncMock()
+        mock_store = AsyncMock(return_value=None)
         mock_store.get_subscriptions.side_effect = RuntimeError("Store unavailable")
 
         with mock_tracer("mcp_server_langgraph.alerts.routing") as (mock_tracer_obj, mock_span):

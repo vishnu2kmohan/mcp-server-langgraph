@@ -188,7 +188,7 @@ class TestMCPToolRegistry:
         registry = MCPToolRegistry()
 
         # Mock the session creation and tool discovery
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.list_tools.return_value = [
             {
                 "name": "screenshot",
@@ -201,7 +201,7 @@ class TestMCPToolRegistry:
                 "inputSchema": {"type": "object", "properties": {}},
             },
         ]
-        mock_session.connect = AsyncMock()
+        mock_session.connect = AsyncMock(return_value=None)
         registry._create_session = MagicMock(return_value=mock_session)
 
         config = MCPServerConfig(
@@ -231,7 +231,7 @@ class TestMCPToolRegistry:
         registry = MCPToolRegistry()
 
         # Mock setup
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.list_tools.return_value = [
             {
                 "name": "screenshot",
@@ -239,8 +239,8 @@ class TestMCPToolRegistry:
                 "inputSchema": {"type": "object", "properties": {}},
             },
         ]
-        mock_session.connect = AsyncMock()
-        mock_session.disconnect = AsyncMock()
+        mock_session.connect = AsyncMock(return_value=None)
+        mock_session.disconnect = AsyncMock(return_value=None)
         registry._create_session = MagicMock(return_value=mock_session)
 
         config = MCPServerConfig(name="playwright", command="npx", args=[])
@@ -344,7 +344,7 @@ class TestMCPToolRegistry:
 
         registry = MCPToolRegistry()
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         # Initial tool list
         mock_session.list_tools.return_value = [
             {
@@ -353,7 +353,7 @@ class TestMCPToolRegistry:
                 "inputSchema": {},
             },
         ]
-        mock_session.connect = AsyncMock()
+        mock_session.connect = AsyncMock(return_value=None)
         registry._create_session = MagicMock(return_value=mock_session)
 
         config = MCPServerConfig(name="playwright", command="npx", args=[])
@@ -418,13 +418,13 @@ class TestMCPToolRegistry:
 
         registry = MCPToolRegistry()
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.list_tools.return_value = [
             {"name": "screenshot", "description": "Take screenshot", "inputSchema": {}},
             {"name": "click", "description": "Click element", "inputSchema": {}},
             {"name": "delete", "description": "Delete element", "inputSchema": {}},
         ]
-        mock_session.connect = AsyncMock()
+        mock_session.connect = AsyncMock(return_value=None)
         registry._create_session = MagicMock(return_value=mock_session)
 
         config = MCPServerConfig(
@@ -455,13 +455,13 @@ class TestMCPToolRegistry:
 
         registry = MCPToolRegistry()
 
-        mock_session = AsyncMock()
+        mock_session = AsyncMock(return_value=None)
         mock_session.list_tools.return_value = [
             {"name": "read", "description": "Read file", "inputSchema": {}},
             {"name": "write", "description": "Write file", "inputSchema": {}},
             {"name": "delete", "description": "Delete file", "inputSchema": {}},
         ]
-        mock_session.connect = AsyncMock()
+        mock_session.connect = AsyncMock(return_value=None)
         registry._create_session = MagicMock(return_value=mock_session)
 
         config = MCPServerConfig(

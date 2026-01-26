@@ -113,7 +113,7 @@ class TestGetTraceEndpoint:
         app = FastAPI()
         app.include_router(router)
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_id = AsyncMock(return_value=mock_trace_read)
 
         app.dependency_overrides[get_current_user] = lambda: mock_current_user
@@ -144,7 +144,7 @@ class TestGetTraceEndpoint:
         app = FastAPI()
         app.include_router(router)
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_id = AsyncMock(return_value=None)
 
         app.dependency_overrides[get_current_user] = lambda: mock_current_user
@@ -180,7 +180,7 @@ class TestGetSessionTracesEndpoint:
         app = FastAPI()
         app.include_router(router)
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_session = AsyncMock(
             return_value=[mock_trace_summary, mock_trace_summary]
         )
@@ -213,7 +213,7 @@ class TestGetSessionTracesEndpoint:
         app = FastAPI()
         app.include_router(router)
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_session = AsyncMock(return_value=[mock_trace_summary])
 
         app.dependency_overrides[get_current_user] = lambda: mock_current_user

@@ -36,7 +36,7 @@ class TestSkillsToolHandler:
 
         assert SkillsToolHandler is not None
 
-    def test_handler_initialization(self) -> None:
+    def test_handler_initialization_creates_registry(self) -> None:
         """Test handler initialization with dependencies."""
         from mcp_server_langgraph.mcp.handlers.skills import SkillsToolHandler
 

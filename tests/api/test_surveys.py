@@ -51,7 +51,7 @@ def surveys_app() -> Generator[tuple[FastAPI, AsyncMock], None, None]:
     app.dependency_overrides[get_current_user] = get_auth_user
 
     # Configure mock with return values to satisfy async-mock-config hook
-    mock_service = AsyncMock()  # noqa: async-mock-config
+    mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
     mock_service.submit_sus_survey.return_value = {"id": "survey-default", "sus_score": 68.0}
     mock_service.get_survey_results.return_value = {"total": 0, "average_score": 0.0}
     set_surveys_service(mock_service)

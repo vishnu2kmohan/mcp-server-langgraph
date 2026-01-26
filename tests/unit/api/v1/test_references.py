@@ -38,7 +38,7 @@ def mock_user():
 @pytest.fixture
 def mock_auth_middleware():
     """Mock OpenFGA auth middleware."""
-    mock = AsyncMock()
+    mock = AsyncMock(return_value=None)
     mock.authorize = AsyncMock(return_value=True)
     return mock
 
@@ -61,7 +61,7 @@ def mock_connection():
 @pytest.fixture
 def mock_connection_repo(mock_connection):
     """Mock connection repository."""
-    mock = AsyncMock()
+    mock = AsyncMock(return_value=None)
     mock.get_by_server_name = AsyncMock(return_value=mock_connection)
     return mock
 
@@ -177,7 +177,7 @@ class TestReferencesResolver:
             resolve_references,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_server_name = AsyncMock(return_value=None)
 
         request = MagicMock()
@@ -212,7 +212,7 @@ class TestReferencesResolver:
         )
 
         # Auth middleware that denies access
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=False)
 
         request = MagicMock()
@@ -328,7 +328,7 @@ class TestReferencesResolver:
         )
 
         # Auth middleware that denies artifact access
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=False)
 
         request = MagicMock()
@@ -534,7 +534,7 @@ class TestReferencesResolver:
         mock_manager.get_note = MagicMock(return_value=mock_note)
 
         # Auth middleware that denies session access
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=False)
 
         request = MagicMock()
@@ -577,7 +577,7 @@ class TestReferencesResolver:
         mock_plan.status = "approved"
         mock_plan.tools_needed = ["filesystem:read", "filesystem:write"]
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get = AsyncMock(return_value=mock_plan)
 
         request = MagicMock()
@@ -615,7 +615,7 @@ class TestReferencesResolver:
             resolve_references,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get = AsyncMock(return_value=None)
 
         request = MagicMock()
@@ -652,11 +652,11 @@ class TestReferencesResolver:
         mock_plan.session_id = "session-restricted"
         mock_plan.task_type = "code_generation"
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.get = AsyncMock(return_value=mock_plan)
 
         # Auth middleware that denies session access
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=False)
 
         request = MagicMock()

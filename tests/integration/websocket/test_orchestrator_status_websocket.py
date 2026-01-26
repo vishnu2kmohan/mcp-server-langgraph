@@ -187,7 +187,7 @@ class TestOrchestratorStatusBroadcasting:
         from unittest.mock import AsyncMock, MagicMock
 
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         await test_broadcaster.subscribe(mock_ws)
 
@@ -210,7 +210,7 @@ class TestOrchestratorStatusBroadcasting:
         from unittest.mock import AsyncMock, MagicMock
 
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock(return_value=None)
 
         await test_broadcaster.subscribe(mock_ws)
 
@@ -242,10 +242,10 @@ class TestOrchestratorStatusBroadcasting:
         from unittest.mock import AsyncMock, MagicMock
 
         ws_user1 = MagicMock()
-        ws_user1.send_json = AsyncMock()
+        ws_user1.send_json = AsyncMock(return_value=None)
 
         ws_user2 = MagicMock()
-        ws_user2.send_json = AsyncMock()
+        ws_user2.send_json = AsyncMock(return_value=None)
 
         await test_broadcaster.subscribe(ws_user1, user_id="user-1")
         await test_broadcaster.subscribe(ws_user2, user_id="user-2")

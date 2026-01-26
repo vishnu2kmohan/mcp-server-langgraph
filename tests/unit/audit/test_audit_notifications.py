@@ -189,10 +189,10 @@ class TestNotificationRouter:
         from mcp_server_langgraph.audit.notifications import NotificationRouter
         from mcp_server_langgraph.audit.alerts import AuditAlert
 
-        mock_slack = AsyncMock()  # async-mock-configured
+        mock_slack = AsyncMock(return_value=None)  # async-mock-configured
         mock_slack.send = AsyncMock(return_value=True)
 
-        mock_pagerduty = AsyncMock()  # async-mock-configured
+        mock_pagerduty = AsyncMock(return_value=None)  # async-mock-configured
         mock_pagerduty.send = AsyncMock(return_value=True)
 
         router = NotificationRouter(notifiers=[mock_slack, mock_pagerduty])
@@ -216,11 +216,11 @@ class TestNotificationRouter:
         from mcp_server_langgraph.audit.notifications import NotificationRouter
         from mcp_server_langgraph.audit.alerts import AuditAlert
 
-        mock_slack = AsyncMock()  # async-mock-configured
+        mock_slack = AsyncMock(return_value=None)  # async-mock-configured
         mock_slack.send = AsyncMock(return_value=True)
         mock_slack.min_severity = "info"
 
-        mock_pagerduty = AsyncMock()  # async-mock-configured
+        mock_pagerduty = AsyncMock(return_value=None)  # async-mock-configured
         mock_pagerduty.send = AsyncMock(return_value=True)
         mock_pagerduty.min_severity = "critical"
 
@@ -242,10 +242,10 @@ class TestNotificationRouter:
         from mcp_server_langgraph.audit.notifications import NotificationRouter
         from mcp_server_langgraph.audit.alerts import AuditAlert
 
-        mock_slack = AsyncMock()  # async-mock-configured
+        mock_slack = AsyncMock(return_value=None)  # async-mock-configured
         mock_slack.send = AsyncMock(return_value=True)
 
-        mock_failing = AsyncMock()  # async-mock-configured
+        mock_failing = AsyncMock(return_value=None)  # async-mock-configured
         mock_failing.send = AsyncMock(return_value=False)
 
         router = NotificationRouter(notifiers=[mock_slack, mock_failing])

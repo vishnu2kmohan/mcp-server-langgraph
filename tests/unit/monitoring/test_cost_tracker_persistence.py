@@ -88,7 +88,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
         collector = CostMetricsCollector(database_url="postgresql://fake:5432/test")
 
         # Mock the database session - configure with side_effect for add
-        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_session.add = MagicMock()
 
         captured_record = None
@@ -100,7 +100,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
         mock_session.add.side_effect = capture_add
 
         # Mock the async context manager with explicit return values
-        mock_context = AsyncMock()  # noqa: async-mock-config
+        mock_context = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_context.__aenter__ = AsyncMock(return_value=mock_session)
         mock_context.__aexit__ = AsyncMock(return_value=None)
 
@@ -140,7 +140,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
         collector = CostMetricsCollector(database_url="postgresql://fake:5432/test")
 
         # Mock the database session - configure with side_effect for add
-        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_session.add = MagicMock()
 
         captured_record = None
@@ -152,7 +152,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
         mock_session.add.side_effect = capture_add
 
         # Mock the async context manager with explicit return values
-        mock_context = AsyncMock()  # noqa: async-mock-config
+        mock_context = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_context.__aenter__ = AsyncMock(return_value=mock_session)
         mock_context.__aexit__ = AsyncMock(return_value=None)
 
@@ -192,7 +192,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
         collector = CostMetricsCollector(database_url="postgresql://fake:5432/test")
 
         # Mock the database session - configure with side_effect for add
-        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_session.add = MagicMock()
 
         captured_record = None
@@ -204,7 +204,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
         mock_session.add.side_effect = capture_add
 
         # Mock the async context manager with explicit return values
-        mock_context = AsyncMock()  # noqa: async-mock-config
+        mock_context = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_context.__aenter__ = AsyncMock(return_value=mock_session)
         mock_context.__aexit__ = AsyncMock(return_value=None)
 
@@ -246,7 +246,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
         collector = CostMetricsCollector(database_url="postgresql://fake:5432/test")
 
         # Mock the database session - configure with side_effect for add
-        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_session.add = MagicMock()
 
         captured_record = None
@@ -258,7 +258,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
         mock_session.add.side_effect = capture_add
 
         # Mock the async context manager with explicit return values
-        mock_context = AsyncMock()  # noqa: async-mock-config
+        mock_context = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_context.__aenter__ = AsyncMock(return_value=mock_session)
         mock_context.__aexit__ = AsyncMock(return_value=None)
 
@@ -300,7 +300,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
         collector = CostMetricsCollector(database_url="postgresql://fake:5432/test")
 
         # Mock the database session - configure with side_effect for add
-        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_session.add = MagicMock()
 
         captured_record = None
@@ -312,7 +312,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
         mock_session.add.side_effect = capture_add
 
         # Mock the async context manager with explicit return values
-        mock_context = AsyncMock()  # noqa: async-mock-config
+        mock_context = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_context.__aenter__ = AsyncMock(return_value=mock_session)
         mock_context.__aexit__ = AsyncMock(return_value=None)
 

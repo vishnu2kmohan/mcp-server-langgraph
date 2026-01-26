@@ -42,17 +42,17 @@ class TestObservabilityServiceImpl:
     def mock_tracing_client(self) -> MagicMock:
         """Create a mock TracingQueryClient."""
         client = MagicMock()
-        client.search_traces = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
-        client.get_trace = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
-        client.search_by_attribute = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        client.search_traces = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
+        client.get_trace = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
+        client.search_by_attribute = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         return client
 
     @pytest.fixture
     def mock_metrics_client(self) -> MagicMock:
         """Create a mock MetricsQueryClient."""
         client = MagicMock()
-        client.get_service_metrics = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
-        client.query_instant = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        client.get_service_metrics = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
+        client.query_instant = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         return client
 
     @pytest.fixture

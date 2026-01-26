@@ -47,8 +47,8 @@ def mock_acompletion_response():
 @pytest.fixture
 def mock_cost_metrics_collector():
     """Create a mock CostMetricsCollector."""
-    mock_collector = AsyncMock()
-    mock_collector.record_usage = AsyncMock()
+    mock_collector = AsyncMock(return_value=None)
+    mock_collector.record_usage = AsyncMock(return_value=None)
     return mock_collector
 
 
@@ -107,8 +107,8 @@ class TestLLMFactoryCostRecording:
             patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
         ):
             mock_acompletion.return_value = mock_acompletion_response
-            mock_collector = AsyncMock()
-            mock_collector.record_usage = AsyncMock()
+            mock_collector = AsyncMock(return_value=None)
+            mock_collector.record_usage = AsyncMock(return_value=None)
             mock_get_collector.return_value = mock_collector
             mock_flags.enable_cost_tracking = True
             mock_flags.enable_llm_hooks = False
@@ -155,8 +155,8 @@ class TestLLMFactoryCostRecording:
             mock_acompletion_response.usage.completion_tokens = 250
             mock_acompletion.return_value = mock_acompletion_response
 
-            mock_collector = AsyncMock()
-            mock_collector.record_usage = AsyncMock()
+            mock_collector = AsyncMock(return_value=None)
+            mock_collector.record_usage = AsyncMock(return_value=None)
             mock_get_collector.return_value = mock_collector
             mock_flags.enable_cost_tracking = True
             mock_flags.enable_llm_hooks = False
@@ -195,7 +195,7 @@ class TestLLMFactoryCostRecording:
             mock_acompletion.return_value = mock_acompletion_response
 
             # Make cost recording fail
-            mock_collector = AsyncMock()
+            mock_collector = AsyncMock(return_value=None)
             mock_collector.record_usage = AsyncMock(side_effect=Exception("Database error"))
             mock_get_collector.return_value = mock_collector
             mock_flags.enable_cost_tracking = True
@@ -230,8 +230,8 @@ class TestLLMFactoryCostRecording:
             patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
         ):
             mock_acompletion.return_value = mock_acompletion_response
-            mock_collector = AsyncMock()
-            mock_collector.record_usage = AsyncMock()
+            mock_collector = AsyncMock(return_value=None)
+            mock_collector.record_usage = AsyncMock(return_value=None)
             mock_get_collector.return_value = mock_collector
 
             # Disable cost tracking
@@ -266,8 +266,8 @@ class TestLLMFactoryCostRecording:
             patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
         ):
             mock_acompletion.return_value = mock_acompletion_response
-            mock_collector = AsyncMock()
-            mock_collector.record_usage = AsyncMock()
+            mock_collector = AsyncMock(return_value=None)
+            mock_collector.record_usage = AsyncMock(return_value=None)
             mock_get_collector.return_value = mock_collector
             mock_flags.enable_cost_tracking = True
             mock_flags.enable_llm_hooks = False
@@ -352,8 +352,8 @@ class TestLLMFactoryCostRecordingResponsesAPI:
                 mock_responses_output["output"],
             )
 
-            mock_collector = AsyncMock()
-            mock_collector.record_usage = AsyncMock()
+            mock_collector = AsyncMock(return_value=None)
+            mock_collector.record_usage = AsyncMock(return_value=None)
             mock_get_collector.return_value = mock_collector
             mock_flags.enable_cost_tracking = True
             mock_flags.enable_llm_hooks = False

@@ -67,7 +67,7 @@ class TestServiceAdapterListArtifacts:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         mock_composite.list.return_value = [create_test_artifact()]
 
         adapter = CompositeArtifactsServiceAdapter(mock_composite)
@@ -95,7 +95,7 @@ class TestServiceAdapterListArtifacts:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         # Return 11 items (1 more than limit) to indicate has_more
         mock_composite.list.return_value = [create_test_artifact(artifact_id=f"art-{i}") for i in range(11)]
 
@@ -119,7 +119,7 @@ class TestServiceAdapterListArtifacts:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         # Return fewer items than limit
         mock_composite.list.return_value = [create_test_artifact(artifact_id=f"art-{i}") for i in range(5)]
 
@@ -153,7 +153,7 @@ class TestServiceAdapterGetArtifact:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         artifact = create_test_artifact()
         mock_composite.get.return_value = artifact
 
@@ -186,7 +186,7 @@ class TestServiceAdapterCreateArtifact:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         created_artifact = create_test_artifact()
         mock_composite.create.return_value = created_artifact
 
@@ -219,7 +219,7 @@ class TestServiceAdapterCreateArtifact:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         mock_composite.create.return_value = {
             "id": "art-new-123",
             "version": 1,
@@ -258,7 +258,7 @@ class TestServiceAdapterUpdateArtifact:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         updated_artifact = create_test_artifact(version=2)
         mock_composite.update.return_value = updated_artifact
 
@@ -288,7 +288,7 @@ class TestServiceAdapterUpdateArtifact:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         mock_composite.update.return_value = {
             "id": TEST_ARTIFACT_ID,
             "version": 2,
@@ -327,7 +327,7 @@ class TestServiceAdapterDeleteArtifact:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         mock_composite.delete.return_value = True
 
         adapter = CompositeArtifactsServiceAdapter(mock_composite)
@@ -359,7 +359,7 @@ class TestServiceAdapterVersions:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         versions = [
             {"id": "v1", "version": 1, "content": "..."},
             {"id": "v2", "version": 2, "content": "..."},
@@ -392,7 +392,7 @@ class TestServiceAdapterFork:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         forked = {"id": "art-forked", "version": 1}
         mock_composite.fork.return_value = forked
 
@@ -419,7 +419,7 @@ class TestServiceAdapterFork:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         mock_composite.fork.return_value = {
             "id": "art-forked",
             "version": 1,
@@ -458,7 +458,7 @@ class TestServiceAdapterSemanticSearch:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         mock_composite.semantic_search.return_value = [
             {"artifact_id": "art-1", "score": 0.95},
         ]
@@ -487,7 +487,7 @@ class TestServiceAdapterSemanticSearch:
             CompositeArtifactsServiceAdapter,
         )
 
-        mock_composite = AsyncMock()
+        mock_composite = AsyncMock(return_value=None)
         mock_composite.find_similar.return_value = [
             {"artifact_id": "art-similar", "score": 0.9},
         ]

@@ -79,7 +79,7 @@ class TestCostTrackingHandlerLifecycle:
         from mcp_server_langgraph.websocket.types import AuthUser, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
@@ -98,7 +98,7 @@ class TestCostTrackingHandlerLifecycle:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
@@ -129,7 +129,7 @@ class TestCostTrackingHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_session_cost.return_value = {
             "total_cost": 0.50,
             "total_tokens": 5000,
@@ -157,7 +157,7 @@ class TestCostTrackingHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
@@ -178,7 +178,7 @@ class TestCostTrackingHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_session_cost.side_effect = Exception("Database error")
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -200,7 +200,7 @@ class TestCostTrackingHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_user_budget.return_value = {
             "user_id": "user-1",
             "budget_limit": 100.00,
@@ -229,7 +229,7 @@ class TestCostTrackingHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
@@ -250,7 +250,7 @@ class TestCostTrackingHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_user_budget.side_effect = Exception("User not found")
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -272,7 +272,7 @@ class TestCostTrackingHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
@@ -296,7 +296,7 @@ class TestCostTrackingHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
@@ -320,7 +320,7 @@ class TestCostTrackingHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
@@ -350,12 +350,12 @@ class TestCostTrackingHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler.subscribed_sessions.add("session-1")
 
@@ -372,12 +372,12 @@ class TestCostTrackingHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         # Not subscribed
 
@@ -394,12 +394,12 @@ class TestCostTrackingHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler.subscribed_users.add("user-1")
 
@@ -416,12 +416,12 @@ class TestCostTrackingHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="cost-tracking")
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         # Not subscribed
 

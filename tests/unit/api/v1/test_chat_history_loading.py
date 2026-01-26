@@ -37,7 +37,7 @@ class TestCreateStreamLoadsHistory:
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
         # Create mock storage that returns history
-        mock_storage = AsyncMock()
+        mock_storage = AsyncMock(return_value=None)
         mock_storage.get_messages = AsyncMock(
             return_value=[
                 {"role": "user", "content": "My favorite color is blue"},
@@ -87,7 +87,7 @@ class TestCreateStreamLoadsHistory:
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
-        mock_storage = AsyncMock()
+        mock_storage = AsyncMock(return_value=None)
         mock_storage.get_messages = AsyncMock(
             return_value=[
                 {"role": "user", "content": "First"},
@@ -130,7 +130,7 @@ class TestCreateStreamLoadsHistory:
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
-        mock_storage = AsyncMock()
+        mock_storage = AsyncMock(return_value=None)
         mock_storage.get_messages = AsyncMock(return_value=[])
 
         captured_messages: list[dict[str, Any]] = []
@@ -200,7 +200,7 @@ class TestCreateStreamLoadsHistory:
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
         # History already has the current message (e.g., already saved by frontend)
-        mock_storage = AsyncMock()
+        mock_storage = AsyncMock(return_value=None)
         mock_storage.get_messages = AsyncMock(
             return_value=[
                 {"role": "user", "content": "Previous message"},
@@ -252,7 +252,7 @@ class TestCreateStreamLoadsHistory:
             long_history.append({"role": "user", "content": f"Message {i}: " + "x" * 500})
             long_history.append({"role": "assistant", "content": f"Response {i}: " + "y" * 500})
 
-        mock_storage = AsyncMock()
+        mock_storage = AsyncMock(return_value=None)
         mock_storage.get_messages = AsyncMock(return_value=long_history)
 
         service = ChatServiceImpl.__new__(ChatServiceImpl)

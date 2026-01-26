@@ -41,7 +41,7 @@ class TestAuditRepositoryPersistence:
     @pytest.mark.asyncio
     async def test_log_event_persists_to_repository(self) -> None:
         """GIVEN audit event WHEN logged THEN persisted to repository."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.create = AsyncMock(return_value=None)
 
         service = UnifiedAuditService(
@@ -70,7 +70,7 @@ class TestAuditRepositoryPersistence:
     @pytest.mark.asyncio
     async def test_batch_log_persists_all_events(self) -> None:
         """GIVEN batch of events WHEN logged THEN all persisted."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.bulk_create = AsyncMock(return_value=None)
 
         service = UnifiedAuditService(
@@ -111,7 +111,7 @@ class TestAuditRepositoryQuerying:
     @pytest.mark.asyncio
     async def test_query_by_category(self) -> None:
         """GIVEN events WHEN queried by category THEN filtered correctly."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
 
         # Mock repository to return filtered events
         mock_events = [
@@ -141,7 +141,7 @@ class TestAuditRepositoryQuerying:
     @pytest.mark.asyncio
     async def test_query_by_regulation(self) -> None:
         """GIVEN events WHEN queried by regulation THEN filtered correctly."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
 
         mock_events = [
             {
@@ -164,7 +164,7 @@ class TestAuditRepositoryQuerying:
     @pytest.mark.asyncio
     async def test_query_by_time_range(self) -> None:
         """GIVEN events WHEN queried by time range THEN filtered correctly."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.query_events = AsyncMock(return_value=([], 0))
 
         service = UnifiedAuditService(
@@ -185,7 +185,7 @@ class TestAuditRepositoryQuerying:
     @pytest.mark.asyncio
     async def test_query_with_pagination(self) -> None:
         """GIVEN many events WHEN paginated THEN correct page returned."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
 
         # Page 2 of results
         mock_events = [{"event_id": f"evt-{i}"} for i in range(10, 20)]
@@ -214,7 +214,7 @@ class TestAuditRepositoryRetention:
     @pytest.mark.asyncio
     async def test_apply_retention_deletes_old_events(self) -> None:
         """GIVEN old events WHEN retention applied THEN deleted."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.delete_expired_by_regulation = AsyncMock(return_value=100)
 
         service = UnifiedAuditService(
@@ -230,7 +230,7 @@ class TestAuditRepositoryRetention:
     @pytest.mark.asyncio
     async def test_get_retention_status(self) -> None:
         """GIVEN events WHEN checking status THEN returns statistics."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_repo.get_retention_status = AsyncMock(
             return_value={
                 "gdpr": {"total": 1000, "expiring_soon": 50},
@@ -261,7 +261,7 @@ class TestAuditRepositoryExport:
     @pytest.mark.asyncio
     async def test_export_to_json(self) -> None:
         """GIVEN events WHEN exported to JSON THEN valid JSON returned."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_events = [
             {
                 "event_id": "evt-001",
@@ -290,7 +290,7 @@ class TestAuditRepositoryExport:
     @pytest.mark.asyncio
     async def test_export_to_csv(self) -> None:
         """GIVEN events WHEN exported to CSV THEN valid CSV returned."""
-        mock_repo = AsyncMock()  # async-mock-configured
+        mock_repo = AsyncMock(return_value=None)  # async-mock-configured
         mock_events = [
             {
                 "event_id": "evt-001",

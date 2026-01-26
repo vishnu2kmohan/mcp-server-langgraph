@@ -33,7 +33,7 @@ class TestGenerateResponseImplSelectedToolIds:
             "kb_focus": "all",
         }
 
-        mock_model = AsyncMock()
+        mock_model = AsyncMock(return_value=None)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response"))
         mock_model.model_name = "gpt-5.2"
 
@@ -72,7 +72,7 @@ class TestGenerateResponseImplToolSelectionMode:
             "kb_focus": "all",
         }
 
-        mock_model = AsyncMock()
+        mock_model = AsyncMock(return_value=None)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response"))
         mock_model.model_name = "gpt-5.2"
 
@@ -111,7 +111,7 @@ class TestGenerateResponseImplKbFocus:
             "kb_focus": "kb_only",  # Should exclude web_search
         }
 
-        mock_model = AsyncMock()
+        mock_model = AsyncMock(return_value=None)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="KB results"))
         mock_model.model_name = "gpt-5.2"
 
@@ -162,7 +162,7 @@ class TestGenerateResponseImplVerificationRouting:
             "kb_focus": "all",
         }
 
-        mock_model = AsyncMock()
+        mock_model = AsyncMock(return_value=None)
         mock_model.ainvoke = AsyncMock(return_value=mock_response)
         mock_model.model_name = "gpt-5.2"
 
@@ -203,7 +203,7 @@ class TestGenerateResponseImplVerificationRouting:
             "kb_focus": "all",
         }
 
-        mock_model = AsyncMock()
+        mock_model = AsyncMock(return_value=None)
         mock_model.ainvoke = AsyncMock(return_value=mock_response)
         mock_model.model_name = "gpt-5.2"
 
@@ -248,7 +248,7 @@ class TestGenerateResponseImplNativeConfigsObservability:
             "kb_focus": "all",
         }
 
-        mock_model = AsyncMock()
+        mock_model = AsyncMock(return_value=None)
         mock_model.ainvoke = AsyncMock(return_value=mock_response)
         mock_model.model_name = "gpt-5.2"
 
@@ -304,7 +304,7 @@ class TestGenerateResponseImplAutoDerivation:
             "kb_focus": "all",
         }
 
-        mock_model = AsyncMock()
+        mock_model = AsyncMock(return_value=None)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Results"))
         mock_model.model_name = "gpt-5.2"
         mock_model.bind_tools = MagicMock(return_value=mock_model)

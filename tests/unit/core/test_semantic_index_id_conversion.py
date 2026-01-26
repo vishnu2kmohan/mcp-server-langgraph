@@ -60,7 +60,7 @@ class TestSemanticIndexManagerIdConversion:
         mock_embedder = MagicMock()
         mock_embedder.embed_query = MagicMock(return_value=[0.1] * 384)
 
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -107,7 +107,7 @@ class TestSemanticIndexManagerIdConversion:
         mock_embedder = MagicMock()
         mock_embedder.embed_query = MagicMock(return_value=[0.1] * 384)
 
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -150,7 +150,7 @@ class TestSemanticIndexManagerIdConversion:
         mock_embedder = MagicMock()
         mock_embedder.embed_query = MagicMock(return_value=[0.1] * 384)
 
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -192,7 +192,7 @@ class TestSemanticIndexManagerIdConversion:
         mock_embedder = MagicMock()
         mock_embedder.embed_query = MagicMock(return_value=[0.1] * 384)
 
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -235,7 +235,7 @@ class TestSemanticIndexManagerIdConversion:
             return_value=[[0.1] * 384, [0.2] * 384]
         )
 
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -286,7 +286,7 @@ class TestSemanticIndexManagerIdConversion:
         mock_embedder = MagicMock()
         mock_embedder.embed_query = MagicMock(return_value=[0.1] * 384)
 
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -358,7 +358,7 @@ class TestSemanticIndexManagerSearchIdRestoration:
         mock_response = MagicMock()
         mock_response.points = [mock_point]
 
-        mock_qdrant = AsyncMock()
+        mock_qdrant = AsyncMock(return_value=None)
         mock_qdrant.query_points.return_value = mock_response
 
         manager = SemanticIndexManager(

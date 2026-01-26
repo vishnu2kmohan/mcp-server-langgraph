@@ -266,7 +266,7 @@ class TestWebSocketBaseAuthentication:
         mock_ws.query_params = {"token": "test-token"}
         mock_ws.headers = {}
 
-        mock_auth = AsyncMock()  # noqa: async-mock-config
+        mock_auth = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_result = MagicMock()
         mock_result.valid = True
         mock_result.payload = {"sub": "user-123", "preferred_username": "testuser"}
@@ -306,7 +306,7 @@ class TestWebSocketBaseAuthentication:
         mock_ws.query_params = {}
         mock_ws.headers = {"Authorization": "Bearer header-token"}
 
-        mock_auth = AsyncMock()  # noqa: async-mock-config
+        mock_auth = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_result = MagicMock()
         mock_result.valid = True
         mock_result.payload = {"sub": "user-456", "preferred_username": "headeruser"}
@@ -371,7 +371,7 @@ class TestWebSocketBaseAuthentication:
         mock_ws.query_params = {"token": "invalid-token"}
         mock_ws.headers = {}
 
-        mock_auth = AsyncMock()  # noqa: async-mock-config
+        mock_auth = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_result = MagicMock()
         mock_result.valid = False
         mock_result.payload = None
@@ -472,7 +472,7 @@ class TestWebSocketBaseAuthorization:
         user = AuthUser(id="user-123", username="testuser")
 
         with patch("mcp_server_langgraph.websocket.base.WebSocketAuthorizationMiddleware") as MockAuthz:
-            mock_instance = AsyncMock()  # noqa: async-mock-config
+            mock_instance = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_instance.authorize_connection = AsyncMock(return_value=True)
             MockAuthz.return_value = mock_instance
 
@@ -508,7 +508,7 @@ class TestWebSocketBaseSend:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         message = MessageEnvelope(type="test")
 
         await handler._send_message(mock_ws, message)
@@ -534,7 +534,7 @@ class TestWebSocketBaseSend:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         ping = MessageEnvelope(type="ping", id="ping-123")
 
         await handler._send_pong(mock_ws, ping)
@@ -563,7 +563,7 @@ class TestWebSocketBaseSend:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         rate_limit_info = RateLimitInfo(limit=100, remaining=0, retry_after=30)
 
         await handler._send_error(
@@ -598,7 +598,7 @@ class TestWebSocketBaseSend:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.send_json.side_effect = Exception("Connection closed")
 
         # Should not raise
@@ -784,7 +784,7 @@ class TestWebSocketBaseClose:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         error = AuthenticationError("Token expired")
 
         await handler._close_with_error(mock_ws, error)
@@ -812,7 +812,7 @@ class TestWebSocketBaseClose:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         error = ValueError("Something went wrong")
 
         await handler._close_with_error(mock_ws, error)
@@ -839,7 +839,7 @@ class TestWebSocketBaseClose:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.close.side_effect = Exception("Connection already closed")
 
         # Should not raise
@@ -973,7 +973,7 @@ class TestWebSocketBaseRun:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.client_state = None  # Prevent close attempt
 
         # Simulate disconnect after accept
@@ -1003,7 +1003,7 @@ class TestWebSocketBaseRun:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.query_params = {}
         mock_ws.headers = {}
         mock_ws.client_state = None
@@ -1035,7 +1035,7 @@ class TestWebSocketBaseRun:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.client_state = None
 
         from starlette.websockets import WebSocketDisconnect
@@ -1070,7 +1070,7 @@ class TestWebSocketBaseRun:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.client_state = None
 
         from starlette.websockets import WebSocketDisconnect
@@ -1099,7 +1099,7 @@ class TestWebSocketBaseRun:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.client_state = None
 
         from starlette.websockets import WebSocketDisconnect
@@ -1107,7 +1107,7 @@ class TestWebSocketBaseRun:
         mock_ws.receive_json = AsyncMock(side_effect=WebSocketDisconnect())
 
         # Mock the heartbeat manager
-        handler._heartbeat = AsyncMock()  # noqa: async-mock-config
+        handler._heartbeat = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         await handler.run(mock_ws)
 
@@ -1141,7 +1141,7 @@ class TestWebSocketBaseMessageLoop:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.client_state = None
 
         from starlette.websockets import WebSocketDisconnect
@@ -1181,8 +1181,8 @@ class TestWebSocketBaseMessageLoop:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
-        mock_heartbeat = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_heartbeat = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._heartbeat = mock_heartbeat
 
         from starlette.websockets import WebSocketDisconnect
@@ -1225,7 +1225,7 @@ class TestWebSocketBaseMessageLoop:
             handler._user = MagicMock()
             handler._user.id = "user-123"
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         from starlette.websockets import WebSocketDisconnect
 
@@ -1265,7 +1265,7 @@ class TestWebSocketBaseMessageLoop:
             handler = TestHandler(config)
             handler._user = AuthUser(id="user-123", username="testuser")
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         from starlette.websockets import WebSocketDisconnect
 
@@ -1303,7 +1303,7 @@ class TestWebSocketBaseMessageLoop:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         from starlette.websockets import WebSocketDisconnect
 
@@ -1353,7 +1353,7 @@ class TestWebSocketBaseTokenValidation:
         mock_ws.query_params = {"token": "test-jwt-token"}
         mock_ws.headers = {}
 
-        mock_auth = AsyncMock()  # noqa: async-mock-config
+        mock_auth = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_result = MagicMock()
         mock_result.valid = True
         mock_result.payload = {"sub": "user-123", "preferred_username": "testuser"}
@@ -1390,7 +1390,7 @@ class TestWebSocketBaseTokenValidation:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.client_state = None
 
         from starlette.websockets import WebSocketDisconnect
@@ -1425,13 +1425,13 @@ class TestWebSocketBaseTokenValidation:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.query_params = {"token": "valid-token"}
         mock_ws.headers = {}
         mock_ws.client_state = None
 
         # Mock auth to succeed
-        mock_auth = AsyncMock()  # noqa: async-mock-config
+        mock_auth = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_result = MagicMock()
         mock_result.valid = True
         mock_result.payload = {"sub": "user-123", "preferred_username": "testuser", "exp": 9999999999}
@@ -1481,13 +1481,13 @@ class TestWebSocketBaseTokenValidation:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.query_params = {"token": "expiring-token"}
         mock_ws.headers = {}
         mock_ws.client_state = None
 
         # Mock auth to succeed initially
-        mock_auth = AsyncMock()  # noqa: async-mock-config
+        mock_auth = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_result = MagicMock()
         mock_result.valid = True
         mock_result.payload = {"sub": "user-123", "preferred_username": "testuser", "exp": 1}

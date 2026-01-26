@@ -78,8 +78,8 @@ def mock_mcp_session():
         return_value={"result": "Tool executed successfully", "data": [1, 2, 3]}
     )
     session.list_tools = AsyncMock(return_value=[])
-    session.connect = AsyncMock()
-    session.disconnect = AsyncMock()
+    session.connect = AsyncMock(return_value=None)
+    session.disconnect = AsyncMock(return_value=None)
     return session
 
 

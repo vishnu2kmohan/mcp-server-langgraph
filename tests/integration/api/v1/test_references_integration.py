@@ -57,7 +57,7 @@ class TestReferencesAPIIntegration:
         mock_repo = MagicMock()
         mock_repo.get_by_server_name = AsyncMock(return_value=mock_connection)
 
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=True)
 
         app = create_test_app(user_override=mock_user, repo_override=mock_repo)
@@ -151,7 +151,7 @@ class TestReferencesAPIIntegration:
         mock_repo = MagicMock()
         mock_repo.get_by_server_name = AsyncMock(return_value=mock_connection)
 
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=True)
 
         mock_skill = MagicMock()
@@ -254,7 +254,7 @@ class TestReferencesAPIIntegration:
         mock_repo = MagicMock()
         mock_repo.get_by_server_name = AsyncMock(return_value=None)
 
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=True)
 
         app = create_test_app(user_override=mock_user, repo_override=mock_repo)
@@ -307,7 +307,7 @@ class TestReferencesAPIIntegration:
         mock_repo.get_by_server_name = AsyncMock(return_value=mock_connection)
 
         # Auth middleware that denies access
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=False)
 
         app = create_test_app(user_override=mock_user, repo_override=mock_repo)
@@ -351,7 +351,7 @@ class TestReferencesAPIIntegration:
         """
         mock_user = {"sub": "user:test-user-123", "user_id": "test-user-123"}
 
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=True)
 
         mock_skill = MagicMock()
@@ -408,7 +408,7 @@ class TestReferencesAPIIntegration:
         """
         mock_user = {"sub": "user:test-user-123", "user_id": "test-user-123"}
 
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=True)
 
         mock_note = MagicMock()
@@ -467,7 +467,7 @@ class TestReferencesAPIIntegration:
         """
         mock_user = {"sub": "user:test-user-123", "user_id": "test-user-123"}
 
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=True)
 
         mock_plan = MagicMock()

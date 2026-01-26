@@ -62,9 +62,9 @@ class TestCompositeArtifactsServiceCreate:
             CompositeArtifactsService,
         )
 
-        mock_cached_service = AsyncMock()
-        mock_cloud_storage = AsyncMock()
-        mock_vector_service = AsyncMock()
+        mock_cached_service = AsyncMock(return_value=None)
+        mock_cloud_storage = AsyncMock(return_value=None)
+        mock_vector_service = AsyncMock(return_value=None)
 
         # Mock DB create returns artifact
         created_artifact = create_test_artifact()
@@ -105,9 +105,9 @@ class TestCompositeArtifactsServiceCreate:
             CompositeArtifactsService,
         )
 
-        mock_cached_service = AsyncMock()
-        mock_cloud_storage = AsyncMock()
-        mock_vector_service = AsyncMock()
+        mock_cached_service = AsyncMock(return_value=None)
+        mock_cloud_storage = AsyncMock(return_value=None)
+        mock_vector_service = AsyncMock(return_value=None)
 
         large_content = "x" * 200_000  # 200KB
         created_artifact = create_test_artifact(
@@ -159,9 +159,9 @@ class TestCompositeArtifactsServiceGet:
             CompositeArtifactsService,
         )
 
-        mock_cached_service = AsyncMock()
-        mock_cloud_storage = AsyncMock()
-        mock_vector_service = AsyncMock()
+        mock_cached_service = AsyncMock(return_value=None)
+        mock_cloud_storage = AsyncMock(return_value=None)
+        mock_vector_service = AsyncMock(return_value=None)
 
         artifact = create_test_artifact()
         mock_cached_service.get.return_value = artifact
@@ -187,9 +187,9 @@ class TestCompositeArtifactsServiceGet:
             CompositeArtifactsService,
         )
 
-        mock_cached_service = AsyncMock()
-        mock_cloud_storage = AsyncMock()
-        mock_vector_service = AsyncMock()
+        mock_cached_service = AsyncMock(return_value=None)
+        mock_cloud_storage = AsyncMock(return_value=None)
+        mock_vector_service = AsyncMock(return_value=None)
 
         # Artifact metadata from DB (content is in cloud)
         artifact = create_test_artifact(
@@ -231,9 +231,9 @@ class TestCompositeArtifactsServiceUpdate:
             CompositeArtifactsService,
         )
 
-        mock_cached_service = AsyncMock()
-        mock_cloud_storage = AsyncMock()
-        mock_vector_service = AsyncMock()
+        mock_cached_service = AsyncMock(return_value=None)
+        mock_cloud_storage = AsyncMock(return_value=None)
+        mock_vector_service = AsyncMock(return_value=None)
 
         updated_artifact = create_test_artifact(
             content="updated content",
@@ -283,9 +283,9 @@ class TestCompositeArtifactsServiceDelete:
             CompositeArtifactsService,
         )
 
-        mock_cached_service = AsyncMock()
-        mock_cloud_storage = AsyncMock()
-        mock_vector_service = AsyncMock()
+        mock_cached_service = AsyncMock(return_value=None)
+        mock_cloud_storage = AsyncMock(return_value=None)
+        mock_vector_service = AsyncMock(return_value=None)
 
         # Get returns artifact with cloud storage key
         artifact = create_test_artifact(
@@ -332,9 +332,9 @@ class TestCompositeArtifactsServiceSearch:
             CompositeArtifactsService,
         )
 
-        mock_cached_service = AsyncMock()
-        mock_cloud_storage = AsyncMock()
-        mock_vector_service = AsyncMock()
+        mock_cached_service = AsyncMock(return_value=None)
+        mock_cloud_storage = AsyncMock(return_value=None)
+        mock_vector_service = AsyncMock(return_value=None)
 
         mock_vector_service.search.return_value = [
             {"artifact_id": "art-1", "score": 0.95, "title": "Function Sum"},
@@ -371,9 +371,9 @@ class TestCompositeArtifactsServiceSearch:
             CompositeArtifactsService,
         )
 
-        mock_cached_service = AsyncMock()
-        mock_cloud_storage = AsyncMock()
-        mock_vector_service = AsyncMock()
+        mock_cached_service = AsyncMock(return_value=None)
+        mock_cloud_storage = AsyncMock(return_value=None)
+        mock_vector_service = AsyncMock(return_value=None)
 
         mock_vector_service.find_similar.return_value = [
             {"artifact_id": "art-similar-1", "score": 0.9},
@@ -417,9 +417,9 @@ class TestCompositeArtifactsServiceGracefulDegradation:
             CompositeArtifactsService,
         )
 
-        mock_cached_service = AsyncMock()
-        mock_cloud_storage = AsyncMock()
-        mock_vector_service = AsyncMock()
+        mock_cached_service = AsyncMock(return_value=None)
+        mock_cloud_storage = AsyncMock(return_value=None)
+        mock_vector_service = AsyncMock(return_value=None)
 
         created_artifact = create_test_artifact()
         mock_cached_service.create.return_value = created_artifact
@@ -457,9 +457,9 @@ class TestCompositeArtifactsServiceGracefulDegradation:
             CompositeArtifactsService,
         )
 
-        mock_cached_service = AsyncMock()
-        mock_cloud_storage = AsyncMock()
-        mock_vector_service = AsyncMock()
+        mock_cached_service = AsyncMock(return_value=None)
+        mock_cloud_storage = AsyncMock(return_value=None)
+        mock_vector_service = AsyncMock(return_value=None)
 
         # Vector search fails
         mock_vector_service.search.side_effect = Exception("Qdrant timeout")

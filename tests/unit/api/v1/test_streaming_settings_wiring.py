@@ -501,7 +501,7 @@ class TestCreateHandlerWithSessionId:
 
         # Create mock WebSocket
         mock_websocket = MagicMock()
-        mock_websocket.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_websocket.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         # Call the async function without a token (anonymous handler)
         handler = await create_handler_from_token(
@@ -526,7 +526,7 @@ class TestCreateHandlerWithSessionId:
 
         # Create mock WebSocket
         mock_websocket = MagicMock()
-        mock_websocket.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_websocket.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         handler = await create_anonymous_streaming_handler(
             websocket=mock_websocket,

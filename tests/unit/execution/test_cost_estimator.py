@@ -96,7 +96,7 @@ class TestTokenEstimates:
 class TestCostEstimation:
     """Tests for cost calculation from token estimates."""
 
-    def test_returns_decimal(self):
+    def test_returns_decimal_for_cost_estimate(self):
         """Cost should be returned as Decimal for precision."""
         cost = estimate_execution_cost(
             model="claude-sonnet-4-20250514",

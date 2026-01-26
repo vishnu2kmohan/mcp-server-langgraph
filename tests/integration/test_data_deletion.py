@@ -317,7 +317,7 @@ class TestDataDeletionAuditLogging:
         await gdpr_storage.user_profiles.create(profile)
 
         # Mock a failure in conversation deletion
-        mock_conversation_store = AsyncMock()  # async-mock-configured (side_effect set below)
+        mock_conversation_store = AsyncMock(return_value=None)  # async-mock-configured (side_effect set below)
         mock_conversation_store.delete_user_conversations.side_effect = Exception("DB error")
         gdpr_storage.conversations = mock_conversation_store
 

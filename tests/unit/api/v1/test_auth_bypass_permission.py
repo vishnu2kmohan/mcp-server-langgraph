@@ -42,7 +42,7 @@ class TestBypassPermissionCheck:
         raise_error: Exception | None = None,
     ) -> AsyncMock:
         """Create a mock OpenFGA client."""
-        mock_client = AsyncMock()  # noqa: async-mock-config
+        mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         if raise_error:
             mock_client.check_permission.side_effect = raise_error
         else:

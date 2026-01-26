@@ -25,12 +25,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.websocket]
 def mock_websocket() -> MagicMock:
     """Create a mock WebSocket for testing."""
     ws = MagicMock()
-    ws.accept = AsyncMock()  # noqa: async-mock-config
-    ws.close = AsyncMock()  # noqa: async-mock-config
-    ws.send_json = AsyncMock()  # noqa: async-mock-config
-    ws.send_text = AsyncMock()  # noqa: async-mock-config
-    ws.receive_json = AsyncMock()  # noqa: async-mock-config
-    ws.receive_text = AsyncMock()  # noqa: async-mock-config
+    ws.accept = AsyncMock(return_value=None)  # noqa: async-mock-config
+    ws.close = AsyncMock(return_value=None)  # noqa: async-mock-config
+    ws.send_json = AsyncMock(return_value=None)  # noqa: async-mock-config
+    ws.send_text = AsyncMock(return_value=None)  # noqa: async-mock-config
+    ws.receive_json = AsyncMock(return_value=None)  # noqa: async-mock-config
+    ws.receive_text = AsyncMock(return_value=None)  # noqa: async-mock-config
     ws.query_params = {}
     ws.headers = {}
     ws.client_state = MagicMock()
@@ -41,8 +41,8 @@ def mock_websocket() -> MagicMock:
 def mock_broadcaster() -> MagicMock:
     """Create a mock devtools broadcaster."""
     broadcaster = MagicMock()
-    broadcaster.subscribe = AsyncMock()  # noqa: async-mock-config
-    broadcaster.unsubscribe = AsyncMock()  # noqa: async-mock-config
+    broadcaster.subscribe = AsyncMock(return_value=None)  # noqa: async-mock-config
+    broadcaster.unsubscribe = AsyncMock(return_value=None)  # noqa: async-mock-config
     return broadcaster
 
 
@@ -308,9 +308,9 @@ class TestDevToolsContextIdFromQueryParams:
 
         # Create websocket with context_id in query params
         ws = MagicMock()
-        ws.accept = AsyncMock()
-        ws.close = AsyncMock()
-        ws.send_json = AsyncMock()
+        ws.accept = AsyncMock(return_value=None)
+        ws.close = AsyncMock(return_value=None)
+        ws.send_json = AsyncMock(return_value=None)
         ws.query_params = {"v": "1.0.0", "context_id": "session-abc-123"}
         ws.headers = {}
 
@@ -340,9 +340,9 @@ class TestDevToolsContextIdFromQueryParams:
 
         # Create websocket with context_id in query params
         ws = MagicMock()
-        ws.accept = AsyncMock()
-        ws.close = AsyncMock()
-        ws.send_json = AsyncMock()
+        ws.accept = AsyncMock(return_value=None)
+        ws.close = AsyncMock(return_value=None)
+        ws.send_json = AsyncMock(return_value=None)
         ws.query_params = {"v": "1.0.0", "context_id": "session-xyz-789"}
         ws.headers = {}
 
@@ -400,9 +400,9 @@ class TestDevToolsContextIdFromQueryParams:
 
         # Create websocket with context_id in query params
         ws = MagicMock()
-        ws.accept = AsyncMock()
-        ws.close = AsyncMock()
-        ws.send_json = AsyncMock()
+        ws.accept = AsyncMock(return_value=None)
+        ws.close = AsyncMock(return_value=None)
+        ws.send_json = AsyncMock(return_value=None)
         ws.query_params = {"v": "1.0.0", "context_id": "initial-session"}
         ws.headers = {}
 

@@ -76,7 +76,7 @@ class TestBudgetCRUDEndpoints:
         app = _create_budget_test_app()
 
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
-            mock_storage_instance = AsyncMock()  # noqa: async-mock-config
+            mock_storage_instance = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_storage_instance.list_budgets = AsyncMock(return_value=[])
             mock_storage.return_value = mock_storage_instance
 
@@ -111,7 +111,7 @@ class TestBudgetCRUDEndpoints:
         ]
 
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
-            mock_storage_instance = AsyncMock()  # noqa: async-mock-config
+            mock_storage_instance = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_storage_instance.list_budgets = AsyncMock(return_value=mock_budgets)
             mock_storage.return_value = mock_storage_instance
 
@@ -132,7 +132,7 @@ class TestBudgetCRUDEndpoints:
         app = _create_budget_test_app()
 
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
-            mock_storage_instance = AsyncMock()  # noqa: async-mock-config
+            mock_storage_instance = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_storage_instance.save_budget = AsyncMock(return_value=None)
             mock_storage_instance.get_budget = AsyncMock(return_value=None)
             mock_storage.return_value = mock_storage_instance
@@ -168,7 +168,7 @@ class TestBudgetCRUDEndpoints:
         )
 
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
-            mock_storage_instance = AsyncMock()  # noqa: async-mock-config
+            mock_storage_instance = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_storage_instance.get_budget = AsyncMock(return_value=existing_budget)
             mock_storage.return_value = mock_storage_instance
 
@@ -202,7 +202,7 @@ class TestBudgetCRUDEndpoints:
         )
 
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
-            mock_storage_instance = AsyncMock()  # noqa: async-mock-config
+            mock_storage_instance = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_storage_instance.get_budget = AsyncMock(return_value=existing_budget)
             mock_storage_instance.save_budget = AsyncMock(return_value=None)
             mock_storage.return_value = mock_storage_instance
@@ -229,7 +229,7 @@ class TestBudgetCRUDEndpoints:
         app = _create_budget_test_app()
 
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
-            mock_storage_instance = AsyncMock()  # noqa: async-mock-config
+            mock_storage_instance = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_storage_instance.get_budget = AsyncMock(return_value=None)
             mock_storage.return_value = mock_storage_instance
 
@@ -251,7 +251,7 @@ class TestBudgetCRUDEndpoints:
         app = _create_budget_test_app()
 
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
-            mock_storage_instance = AsyncMock()  # noqa: async-mock-config
+            mock_storage_instance = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_storage_instance.delete_budget = AsyncMock(return_value=True)
             mock_storage.return_value = mock_storage_instance
 
@@ -271,7 +271,7 @@ class TestBudgetCRUDEndpoints:
         app = _create_budget_test_app()
 
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
-            mock_storage_instance = AsyncMock()  # noqa: async-mock-config
+            mock_storage_instance = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_storage_instance.delete_budget = AsyncMock(return_value=False)
             mock_storage.return_value = mock_storage_instance
 

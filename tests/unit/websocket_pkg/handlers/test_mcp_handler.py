@@ -163,7 +163,7 @@ class TestMCPWebSocketHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        mock_mcp_handler = AsyncMock()  # noqa: async-mock-config
+        mock_mcp_handler = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_mcp_handler.handle.return_value = {
             "jsonrpc": "2.0",
             "id": 1,
@@ -220,7 +220,7 @@ class TestMCPWebSocketHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        mock_mcp_handler = AsyncMock()  # noqa: async-mock-config
+        mock_mcp_handler = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_mcp_handler.handle.return_value = None
         handler._mcp_handler = mock_mcp_handler
 
@@ -239,7 +239,7 @@ class TestMCPWebSocketHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        mock_mcp_handler = AsyncMock()  # noqa: async-mock-config
+        mock_mcp_handler = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_mcp_handler.handle.return_value = None
         handler._mcp_handler = mock_mcp_handler
 
@@ -261,7 +261,7 @@ class TestMCPWebSocketHandlerMessages:
         handler._mcp_handler = None
 
         with patch("mcp_server_langgraph.mcp.message_handler.MCPMessageHandler") as mock_handler_class:
-            mock_instance = AsyncMock()  # noqa: async-mock-config
+            mock_instance = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_instance.handle.return_value = {"jsonrpc": "2.0", "id": 1, "result": {}}
             mock_handler_class.return_value = mock_instance
 
@@ -279,7 +279,7 @@ class TestMCPWebSocketHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        mock_mcp_handler = AsyncMock()  # noqa: async-mock-config
+        mock_mcp_handler = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_mcp_handler.handle.side_effect = Exception("Internal error")
         handler._mcp_handler = mock_mcp_handler
 
@@ -427,7 +427,7 @@ class TestMCPWebSocketHandlerNotification:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
 
         notification = {"jsonrpc": "2.0", "method": "progress", "params": {"progress": 50}}

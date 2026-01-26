@@ -35,15 +35,15 @@ pytestmark = pytest.mark.unit
 @pytest.fixture
 def mock_websocket() -> AsyncMock:
     """Create a mock WebSocket connection."""
-    ws = AsyncMock()
-    ws.send_json = AsyncMock()
+    ws = AsyncMock(return_value=None)
+    ws.send_json = AsyncMock(return_value=None)
     return ws
 
 
 @pytest.fixture
 def mock_push_sender() -> AsyncMock:
     """Create a mock PushNotificationSender."""
-    sender = AsyncMock()
+    sender = AsyncMock(return_value=None)
     sender.send_critical_alert = AsyncMock(return_value=5)
     return sender
 
@@ -292,9 +292,9 @@ class TestAlertBroadcasterSubscription:
     @pytest.mark.asyncio
     async def test_subscribe_multiple_connections(self, broadcaster: AlertBroadcaster) -> None:
         """GIVEN broadcaster WHEN subscribing multiple THEN count reflects all."""
-        ws1 = AsyncMock()
-        ws2 = AsyncMock()
-        ws3 = AsyncMock()
+        ws1 = AsyncMock(return_value=None)
+        ws2 = AsyncMock(return_value=None)
+        ws3 = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(ws1, "admin1@example.com")
         await broadcaster.subscribe(ws2, "admin2@example.com")
@@ -321,9 +321,9 @@ class TestAlertBroadcasterSubscription:
     @pytest.mark.asyncio
     async def test_get_subscriber_count_for_user(self, broadcaster: AlertBroadcaster) -> None:
         """GIVEN broadcaster with subscriptions WHEN queried for user THEN correct count."""
-        ws1 = AsyncMock()
-        ws2 = AsyncMock()
-        ws3 = AsyncMock()
+        ws1 = AsyncMock(return_value=None)
+        ws2 = AsyncMock(return_value=None)
+        ws3 = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(ws1, "admin@example.com")
         await broadcaster.subscribe(ws2, "admin@example.com")
@@ -433,9 +433,9 @@ class TestAlertBroadcasterMultipleSubscribers:
         self, broadcaster: AlertBroadcaster, sample_critical_alert: Alert
     ) -> None:
         """GIVEN multiple subscribers WHEN broadcasting THEN all receive alert."""
-        ws1 = AsyncMock()
-        ws2 = AsyncMock()
-        ws3 = AsyncMock()
+        ws1 = AsyncMock(return_value=None)
+        ws2 = AsyncMock(return_value=None)
+        ws3 = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(ws1, "admin1@example.com")
         await broadcaster.subscribe(ws2, "admin2@example.com")
@@ -473,8 +473,8 @@ class TestAlertBroadcasterFailedConnections:
     @pytest.mark.asyncio
     async def test_failed_connection_removed(self, broadcaster: AlertBroadcaster, sample_critical_alert: Alert) -> None:
         """GIVEN failed connection WHEN broadcasting THEN removed from subscribers."""
-        ws_good = AsyncMock()
-        ws_bad = AsyncMock()
+        ws_good = AsyncMock(return_value=None)
+        ws_bad = AsyncMock(return_value=None)
         ws_bad.send_json.side_effect = Exception("Connection closed")
 
         await broadcaster.subscribe(ws_good, "good@example.com")
@@ -491,9 +491,9 @@ class TestAlertBroadcasterFailedConnections:
         self, broadcaster: AlertBroadcaster, sample_critical_alert: Alert
     ) -> None:
         """GIVEN mix of good/bad connections WHEN broadcasting THEN good ones work."""
-        ws_good1 = AsyncMock()
-        ws_bad = AsyncMock()
-        ws_good2 = AsyncMock()
+        ws_good1 = AsyncMock(return_value=None)
+        ws_bad = AsyncMock(return_value=None)
+        ws_good2 = AsyncMock(return_value=None)
         ws_bad.send_json.side_effect = Exception("Connection closed")
 
         await broadcaster.subscribe(ws_good1, "good1@example.com")
@@ -568,8 +568,8 @@ class TestAlertBroadcasterAlertUpdate:
         self, broadcaster: AlertBroadcaster, sample_critical_alert: Alert
     ) -> None:
         """GIVEN failed connection WHEN broadcasting update THEN removed."""
-        ws_good = AsyncMock()
-        ws_bad = AsyncMock()
+        ws_good = AsyncMock(return_value=None)
+        ws_bad = AsyncMock(return_value=None)
         ws_bad.send_json.side_effect = Exception("Connection closed")
 
         await broadcaster.subscribe(ws_good, "good@example.com")
@@ -705,8 +705,8 @@ class TestAlertBroadcasterRouterIntegration:
 
         broadcaster = AlertBroadcaster(router=mock_router)
 
-        ws_subscribed = AsyncMock()
-        ws_not_subscribed = AsyncMock()
+        ws_subscribed = AsyncMock(return_value=None)
+        ws_not_subscribed = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(ws_subscribed, "subscribed@example.com")
         await broadcaster.subscribe(ws_not_subscribed, "not-subscribed@example.com")
@@ -751,8 +751,8 @@ class TestAlertBroadcasterRouterIntegration:
         """GIVEN broadcaster without router WHEN broadcasting THEN all subscribers receive."""
         broadcaster = AlertBroadcaster()  # No router
 
-        ws1 = AsyncMock()
-        ws2 = AsyncMock()
+        ws1 = AsyncMock(return_value=None)
+        ws2 = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(ws1, "admin1@example.com")
         await broadcaster.subscribe(ws2, "admin2@example.com")
@@ -776,8 +776,8 @@ class TestAlertBroadcasterRouterIntegration:
 
         broadcaster = AlertBroadcaster(router=mock_router)
 
-        ws1 = AsyncMock()
-        ws2 = AsyncMock()
+        ws1 = AsyncMock(return_value=None)
+        ws2 = AsyncMock(return_value=None)
 
         await broadcaster.subscribe(ws1, "admin1@example.com")
         await broadcaster.subscribe(ws2, "admin2@example.com")

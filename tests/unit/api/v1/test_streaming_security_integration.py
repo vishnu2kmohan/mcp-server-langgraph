@@ -44,7 +44,7 @@ class TestStreamingWithRateLimiting:
         )
 
         handler = AuthenticatedMCPHandler(user_id="user:test")
-        send_notification = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        send_notification = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         rate_limiter = OutboundRateLimiter(max_notifications_per_second=10)
 
         streaming_handler = StreamingToolCallHandler(
@@ -144,7 +144,7 @@ class TestStreamingWithIdleTimeout:
 
         handler = AuthenticatedMCPHandler(user_id="user:test")
         connection_manager = ConnectionManager()
-        send_notification = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        send_notification = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         session_id = "test-session"
 
         # Simulate a connection
@@ -261,7 +261,7 @@ class TestStreamingWithConnectionLimits:
         handler = AuthenticatedMCPHandler(user_id="user:test")
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,
-            send_notification=AsyncMock(),  # async-mock-configured (callback)  # noqa: async-mock-config
+            send_notification=AsyncMock(return_value=None),  # async-mock-configured (callback)  # noqa: async-mock-config
             connection_manager=manager,
             session_id="session1",
         )
@@ -319,7 +319,7 @@ class TestStreamingWithMessageSizeValidation:
         )
 
         handler = AuthenticatedMCPHandler(user_id="user:test")
-        send_notification = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        send_notification = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,
@@ -380,7 +380,7 @@ class TestFullSecurityStackIntegration:
         connection_manager = ConnectionManager(max_connections_per_user=5)
         rate_limiter = OutboundRateLimiter(max_notifications_per_second=100)
         metrics_collector = StreamingMetricsCollector()
-        send_notification = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        send_notification = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         session_id = "test-session"
 
         # Set up connection

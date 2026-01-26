@@ -117,7 +117,7 @@ class TestExampleFeature:
         THEN: Expected behavior occurs
         """
         # GIVEN: Configure mocks with EXPLICIT return values
-        mock_dependency = AsyncMock()
+        mock_dependency = AsyncMock(return_value=None)
         mock_dependency.some_method.return_value = {"key": "value"}  # EXPLICIT!
 
         # WHEN: Call async function
@@ -138,13 +138,13 @@ class TestExampleFeature:
         Demonstrates proper configuration of multiple AsyncMock objects.
         """
         # GIVEN: Multiple mocks, all with EXPLICIT configuration
-        mock_keycloak = AsyncMock()
+        mock_keycloak = AsyncMock(return_value=None)
         mock_keycloak.get_user.return_value = {  # EXPLICIT!
             "id": "user-123",
             "username": "testuser",
         }
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock(return_value=None)
         mock_redis.get.return_value = None  # EXPLICIT! (cache miss)
         mock_redis.setex.return_value = True  # EXPLICIT!
 
@@ -225,7 +225,7 @@ class TestExampleFeature:
         Demonstrates proper configuration for authorization checks that should DENY.
         """
         # GIVEN: Mock authorization service that denies access
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
         mock_openfga.check_permission.return_value = False  # EXPLICIT False!
 
         # WHEN: Regular user attempts restricted action
@@ -246,7 +246,7 @@ class TestExampleFeature:
         Demonstrates proper configuration for authorization checks that should ALLOW.
         """
         # GIVEN: Mock authorization service that grants access
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock(return_value=None)
         mock_openfga.check_permission.return_value = True  # EXPLICIT True!
 
         # WHEN: Admin user performs restricted action
@@ -266,7 +266,7 @@ class TestExampleFeature:
         Demonstrates using side_effect for exception testing.
         """
         # GIVEN: Mock that raises exception
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.some_method.side_effect = Exception(  # EXPLICIT!
             "Service unavailable"
         )

@@ -45,7 +45,7 @@ class TestAlertMetricsInstruments:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_meter_created(self) -> None:
+    def test_meter_created_with_correct_name(self) -> None:
         """
         GIVEN the metrics module
         WHEN importing meter

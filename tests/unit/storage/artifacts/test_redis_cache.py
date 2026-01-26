@@ -71,7 +71,7 @@ class TestRedisCachedArtifactsServiceGet:
             RedisCachedArtifactsService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_cache = MagicMock()
 
         # Cache hit
@@ -100,12 +100,12 @@ class TestRedisCachedArtifactsServiceGet:
             RedisCachedArtifactsService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_cache = MagicMock()
 
         # Cache miss
         mock_cache.aget = AsyncMock(return_value=None)
-        mock_cache.aset = AsyncMock()
+        mock_cache.aset = AsyncMock(return_value=None)
 
         # DB has the artifact
         db_artifact = create_mock_artifact_dict()
@@ -135,7 +135,7 @@ class TestRedisCachedArtifactsServiceGet:
             RedisCachedArtifactsService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_cache = MagicMock()
 
         # Cache miss
@@ -162,7 +162,7 @@ class TestRedisCachedArtifactsServiceGet:
             RedisCachedArtifactsService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_cache = MagicMock()
 
         cached_artifact = create_mock_artifact_dict()
@@ -201,9 +201,9 @@ class TestRedisCachedArtifactsServiceCreate:
             RedisCachedArtifactsService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_cache = MagicMock()
-        mock_cache.aset = AsyncMock()
+        mock_cache.aset = AsyncMock(return_value=None)
 
         # DB create returns new artifact
         create_result = {"id": "art-new-123", "version": 1, "created_at": "2025-01-01T00:00:00Z"}
@@ -246,9 +246,9 @@ class TestRedisCachedArtifactsServiceUpdate:
             RedisCachedArtifactsService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_cache = MagicMock()
-        mock_cache.adelete = AsyncMock()
+        mock_cache.adelete = AsyncMock(return_value=None)
 
         # DB update returns updated artifact
         update_result = {"id": TEST_ARTIFACT_ID, "version": 2, "updated_at": "2025-01-01T00:00:00Z"}
@@ -279,9 +279,9 @@ class TestRedisCachedArtifactsServiceUpdate:
             RedisCachedArtifactsService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_cache = MagicMock()
-        mock_cache.adelete = AsyncMock()
+        mock_cache.adelete = AsyncMock(return_value=None)
 
         # DB update returns None (not found or not owned)
         mock_repo.update = AsyncMock(return_value=None)
@@ -315,9 +315,9 @@ class TestRedisCachedArtifactsServiceDelete:
             RedisCachedArtifactsService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_cache = MagicMock()
-        mock_cache.adelete = AsyncMock()
+        mock_cache.adelete = AsyncMock(return_value=None)
 
         # DB delete succeeds
         mock_repo.delete = AsyncMock(return_value=True)
@@ -353,7 +353,7 @@ class TestRedisCachedArtifactsServiceList:
             RedisCachedArtifactsService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_cache = MagicMock()
 
         # DB returns list
@@ -390,12 +390,12 @@ class TestRedisCachedArtifactsServiceVersions:
             RedisCachedArtifactsService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_cache = MagicMock()
 
         # Cache miss for versions
         mock_cache.aget = AsyncMock(return_value=None)
-        mock_cache.aset = AsyncMock()
+        mock_cache.aset = AsyncMock(return_value=None)
 
         # DB returns versions
         versions = [{"id": f"ver-{i}", "version": i} for i in range(1, 4)]
@@ -434,7 +434,7 @@ class TestRedisCachedArtifactsServiceFork:
             RedisCachedArtifactsService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_cache = MagicMock()
 
         # DB fork returns new artifact
@@ -472,7 +472,7 @@ class TestRedisCachedArtifactsServiceCacheFailure:
             RedisCachedArtifactsService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_cache = MagicMock()
 
         # Cache raises error
@@ -503,7 +503,7 @@ class TestRedisCachedArtifactsServiceCacheFailure:
             RedisCachedArtifactsService,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_cache = MagicMock()
 
         # Cache miss

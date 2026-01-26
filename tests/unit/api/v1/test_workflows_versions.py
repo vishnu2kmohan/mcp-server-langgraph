@@ -147,7 +147,7 @@ class TestGetWorkflowVersionsEndpoint:
         from mcp_server_langgraph.api.v1.workflows import get_workflow_versions
 
         # Mock dependencies
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.get_workflow_versions.return_value = make_workflow_versions_list()
 
         mock_user = MagicMock()
@@ -171,7 +171,7 @@ class TestGetWorkflowVersionsEndpoint:
         """Versions should be ordered by version_number descending."""
         from mcp_server_langgraph.api.v1.workflows import get_workflow_versions
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.get_workflow_versions.return_value = make_workflow_versions_list()
 
         mock_user = MagicMock()
@@ -195,7 +195,7 @@ class TestGetWorkflowVersionsEndpoint:
         """Should return empty list for workflow with no versions."""
         from mcp_server_langgraph.api.v1.workflows import get_workflow_versions
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.get_workflow_versions.return_value = []
 
         mock_user = MagicMock()
@@ -220,7 +220,7 @@ class TestGetWorkflowVersionsEndpoint:
         from mcp_server_langgraph.api.v1.workflows import get_workflow_versions
 
         # Service not called when feature flag disabled
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_user = MagicMock()
         mock_user.id = "user-123"
 
@@ -241,7 +241,7 @@ class TestGetWorkflowVersionsEndpoint:
         """Versions should include prompt telemetry fields."""
         from mcp_server_langgraph.api.v1.workflows import get_workflow_versions
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         versions = make_workflow_versions_list()
         mock_service.get_workflow_versions.return_value = versions
 
@@ -279,7 +279,7 @@ class TestRestoreWorkflowVersionEndpoint:
         """Should return the workflow with restored state."""
         from mcp_server_langgraph.api.v1.workflows import restore_workflow_version
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.restore_workflow_version.return_value = {
             "id": "wf-456",
             "name": "test-workflow",
@@ -309,7 +309,7 @@ class TestRestoreWorkflowVersionEndpoint:
         """Restore should create a new version, not overwrite existing."""
         from mcp_server_langgraph.api.v1.workflows import restore_workflow_version
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         # Restored workflow has incremented version
         mock_service.restore_workflow_version.return_value = {
             "id": "wf-456",
@@ -346,7 +346,7 @@ class TestRestoreWorkflowVersionEndpoint:
 
         from mcp_server_langgraph.api.v1.workflows import restore_workflow_version
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.restore_workflow_version.side_effect = ValueError("Version not found")
 
         mock_user = MagicMock()
@@ -373,7 +373,7 @@ class TestRestoreWorkflowVersionEndpoint:
         from mcp_server_langgraph.api.v1.workflows import restore_workflow_version
 
         # Service not called when feature flag disabled
-        mock_service = AsyncMock()  # noqa: async-mock-config
+        mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_user = MagicMock()
         mock_user.id = "user-123"
 
@@ -395,7 +395,7 @@ class TestRestoreWorkflowVersionEndpoint:
         """Restore should include commit message about restoration."""
         from mcp_server_langgraph.api.v1.workflows import restore_workflow_version
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.restore_workflow_version.return_value = {
             "id": "wf-456",
             "name": "test-workflow",
@@ -440,7 +440,7 @@ class TestWorkflowVersionsServiceIntegration:
         """Service should be called with correct workflow_id."""
         from mcp_server_langgraph.api.v1.workflows import get_workflow_versions
 
-        mock_service = AsyncMock()
+        mock_service = AsyncMock(return_value=None)
         mock_service.get_workflow_versions.return_value = []
 
         mock_user = MagicMock()

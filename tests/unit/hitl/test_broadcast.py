@@ -372,7 +372,7 @@ class TestAgentRequestBroadcaster:
     async def test_connect(self) -> None:
         """Test connecting a WebSocket."""
         broadcaster = AgentRequestBroadcaster()
-        mock_ws = AsyncMock()  # noqa: async-mock-config - mock used for method call assertions
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config - mock used for method call assertions
 
         await broadcaster.connect(mock_ws, "sess-123", "user-456")
 
@@ -383,7 +383,7 @@ class TestAgentRequestBroadcaster:
     async def test_connect_with_accept_false_skips_accept(self) -> None:
         """Test connecting a WebSocket with accept=False (for WebSocketBase integration)."""
         broadcaster = AgentRequestBroadcaster()
-        mock_ws = AsyncMock()  # noqa: async-mock-config - mock used for method call assertions
+        mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config - mock used for method call assertions
 
         # When using WebSocketBase, the connection is already accepted
         await broadcaster.connect(mock_ws, "sess-123", "user-456", accept=False)
@@ -397,8 +397,8 @@ class TestAgentRequestBroadcaster:
     async def test_connect_multiple(self) -> None:
         """Test connecting multiple WebSockets."""
         broadcaster = AgentRequestBroadcaster()
-        mock_ws1 = AsyncMock()  # noqa: async-mock-config - mock used for connection tracking
-        mock_ws2 = AsyncMock()  # noqa: async-mock-config - mock used for connection tracking
+        mock_ws1 = AsyncMock(return_value=None)  # noqa: async-mock-config - mock used for connection tracking
+        mock_ws2 = AsyncMock(return_value=None)  # noqa: async-mock-config - mock used for connection tracking
 
         await broadcaster.connect(mock_ws1, "sess-1", "user-1")
         await broadcaster.connect(mock_ws2, "sess-2", "user-2")
@@ -428,8 +428,8 @@ class TestAgentRequestBroadcaster:
     async def test_broadcast_to_all(self) -> None:
         """Test broadcasting message to all connections."""
         broadcaster = AgentRequestBroadcaster()
-        mock_ws1 = AsyncMock()  # noqa: async-mock-config - mock for send_json assertions
-        mock_ws2 = AsyncMock()  # noqa: async-mock-config - mock for send_json assertions
+        mock_ws1 = AsyncMock(return_value=None)  # noqa: async-mock-config - mock for send_json assertions
+        mock_ws2 = AsyncMock(return_value=None)  # noqa: async-mock-config - mock for send_json assertions
 
         broadcaster._connections[mock_ws1] = WebSocketConnection(websocket=mock_ws1, session_id="sess-1", user_id="user-1")
         broadcaster._connections[mock_ws2] = WebSocketConnection(websocket=mock_ws2, session_id="sess-2", user_id="user-2")
@@ -444,8 +444,8 @@ class TestAgentRequestBroadcaster:
     async def test_broadcast_removes_disconnected(self) -> None:
         """Test broadcast removes connections that fail."""
         broadcaster = AgentRequestBroadcaster()
-        mock_ws1 = AsyncMock()  # noqa: async-mock-config - mock for connection tracking
-        mock_ws2 = AsyncMock()  # noqa: async-mock-config - configured with side_effect
+        mock_ws1 = AsyncMock(return_value=None)  # noqa: async-mock-config - mock for connection tracking
+        mock_ws2 = AsyncMock(return_value=None)  # noqa: async-mock-config - configured with side_effect
         mock_ws2.send_json.side_effect = Exception("Connection closed")
 
         broadcaster._connections[mock_ws1] = WebSocketConnection(websocket=mock_ws1, session_id="sess-1", user_id="user-1")
@@ -462,9 +462,9 @@ class TestAgentRequestBroadcaster:
     async def test_send_to_session(self) -> None:
         """Test sending message to specific session."""
         broadcaster = AgentRequestBroadcaster()
-        mock_ws1 = AsyncMock()  # noqa: async-mock-config - mock for session routing
-        mock_ws2 = AsyncMock()  # noqa: async-mock-config - mock for session routing
-        mock_ws3 = AsyncMock()  # noqa: async-mock-config - mock for session routing
+        mock_ws1 = AsyncMock(return_value=None)  # noqa: async-mock-config - mock for session routing
+        mock_ws2 = AsyncMock(return_value=None)  # noqa: async-mock-config - mock for session routing
+        mock_ws3 = AsyncMock(return_value=None)  # noqa: async-mock-config - mock for session routing
 
         broadcaster._connections[mock_ws1] = WebSocketConnection(websocket=mock_ws1, session_id="sess-A", user_id="user-1")
         broadcaster._connections[mock_ws2] = WebSocketConnection(websocket=mock_ws2, session_id="sess-B", user_id="user-2")
@@ -482,7 +482,7 @@ class TestAgentRequestBroadcaster:
     async def test_send_to_session_removes_disconnected(self) -> None:
         """Test send_to_session removes failed connections."""
         broadcaster = AgentRequestBroadcaster()
-        mock_ws1 = AsyncMock()  # noqa: async-mock-config - configured with side_effect
+        mock_ws1 = AsyncMock(return_value=None)  # noqa: async-mock-config - configured with side_effect
         mock_ws1.send_json.side_effect = Exception("Closed")
 
         broadcaster._connections[mock_ws1] = WebSocketConnection(websocket=mock_ws1, session_id="sess-A", user_id="user-1")

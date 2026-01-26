@@ -39,7 +39,7 @@ class TestHeartMetricsServiceSnapshot:
     @pytest.mark.asyncio
     async def test_get_current_snapshot_queries_prometheus(self) -> None:
         """get_current_snapshot queries Prometheus when client available."""
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_series = MagicMock()
         mock_value = MagicMock()
@@ -80,7 +80,7 @@ class TestHeartMetricsServiceSnapshot:
     @pytest.mark.asyncio
     async def test_get_current_snapshot_falls_back_on_prometheus_error(self) -> None:
         """get_current_snapshot returns zeros when all Prometheus queries fail."""
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.query_instant.side_effect = Exception("Prometheus connection failed")
 
         adapter = HeartMetricsServiceAdapter(metrics_client=mock_client)
@@ -114,7 +114,7 @@ class TestHeartMetricsServiceSnapshot:
     @pytest.mark.asyncio
     async def test_get_current_snapshot_handles_empty_prometheus_result(self) -> None:
         """get_current_snapshot handles empty Prometheus results gracefully."""
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_result.series = []  # Empty result
         mock_client.query_instant.return_value = mock_result
@@ -147,7 +147,7 @@ class TestHeartMetricsServiceDimension:
     @pytest.mark.asyncio
     async def test_get_dimension_metrics_queries_prometheus(self) -> None:
         """get_dimension_metrics queries specific metric from Prometheus."""
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_series = MagicMock()
         mock_value = MagicMock()
@@ -189,7 +189,7 @@ class TestHeartMetricsServiceDimension:
     @pytest.mark.asyncio
     async def test_get_dimension_metrics_falls_back_on_error(self) -> None:
         """get_dimension_metrics falls back to stub on Prometheus error."""
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_client.query_instant.side_effect = Exception("Query failed")
 
         adapter = HeartMetricsServiceAdapter(metrics_client=mock_client)
@@ -272,7 +272,7 @@ class TestHeartMetricsPrometheusIntegration:
     @pytest.mark.asyncio
     async def test_queries_correct_metric_names(self) -> None:
         """Prometheus queries use correct metric names for each dimension."""
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_result.series = []
         mock_client.query_instant.return_value = mock_result
@@ -294,7 +294,7 @@ class TestHeartMetricsPrometheusIntegration:
     @pytest.mark.asyncio
     async def test_handles_partial_prometheus_failure(self) -> None:
         """Snapshot returns partial data when some metrics fail."""
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
 
         # First call succeeds, rest fail
         mock_result_success = MagicMock()
@@ -326,7 +326,7 @@ class TestHeartMetricsPrometheusIntegration:
     @pytest.mark.asyncio
     async def test_rounds_prometheus_values(self) -> None:
         """Prometheus values are rounded to 1 decimal place."""
-        mock_client = AsyncMock()
+        mock_client = AsyncMock(return_value=None)
         mock_result = MagicMock()
         mock_series = MagicMock()
         mock_value = MagicMock()

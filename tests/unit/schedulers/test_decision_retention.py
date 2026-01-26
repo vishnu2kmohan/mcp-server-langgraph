@@ -42,7 +42,7 @@ class TestDecisionRetentionScheduler:
             start_retention_scheduler,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
 
         task = await start_retention_scheduler(mock_repo)
 
@@ -63,7 +63,7 @@ class TestDecisionRetentionScheduler:
             start_retention_scheduler,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
 
         task = await start_retention_scheduler(mock_repo)
 
@@ -90,7 +90,7 @@ class TestRetentionLoop:
         """_retention_loop should call delete_expired on repository."""
         from mcp_server_langgraph.schedulers.decision_retention import _retention_loop
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.delete_expired = AsyncMock(return_value=0)
 
         with (
@@ -125,7 +125,7 @@ class TestRetentionLoop:
         """_retention_loop should use context_graph_retention_days from feature flags."""
         from mcp_server_langgraph.schedulers.decision_retention import _retention_loop
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         mock_repo.delete_expired = AsyncMock(return_value=10)
 
         with (
@@ -159,7 +159,7 @@ class TestRetentionLoop:
         """_retention_loop should continue after exceptions."""
         from mcp_server_langgraph.schedulers.decision_retention import _retention_loop
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock(return_value=None)
         # First call raises, second succeeds
         mock_repo.delete_expired = AsyncMock(
             side_effect=[Exception("DB error"), 5]

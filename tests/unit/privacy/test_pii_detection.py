@@ -251,7 +251,7 @@ class TestPIIDetectionIPAddress:
         ip_detections = [d for d in detections if d.pii_type == "IP_ADDRESS"]
         assert len(ip_detections) == 1
 
-    def test_ignore_localhost(self):
+    def test_ignore_localhost_bypasses_detection(self):
         """GIVEN text containing localhost IP
         WHEN detecting PII
         THEN localhost should not be flagged as PII

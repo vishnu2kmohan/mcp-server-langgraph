@@ -88,7 +88,7 @@ class TestProjectRepositorySorting:
         # This test will fail until we implement sorting support
         from mcp_server_langgraph.repositories.projects import PostgresProjectRepository
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         repo = PostgresProjectRepository(mock_session)
 
         # The list method should accept sort_by and sort_order parameters
@@ -104,7 +104,7 @@ class TestProjectRepositorySorting:
         """
         from mcp_server_langgraph.repositories.projects import PostgresProjectRepository
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         repo = PostgresProjectRepository(mock_session)
 
         # Default behavior should be created_at desc
@@ -119,7 +119,7 @@ class TestProjectRepositorySorting:
         """
         from mcp_server_langgraph.repositories.projects import PostgresProjectRepository
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         repo = PostgresProjectRepository(mock_session)
 
         assert hasattr(repo, "list")
@@ -142,7 +142,7 @@ class TestProjectRepositorySearch:
         """
         from mcp_server_langgraph.repositories.projects import PostgresProjectRepository
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         repo = PostgresProjectRepository(mock_session)
 
         # The list method should accept a search parameter
@@ -157,7 +157,7 @@ class TestProjectRepositorySearch:
         """
         from mcp_server_langgraph.repositories.projects import PostgresProjectRepository
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         repo = PostgresProjectRepository(mock_session)
 
         assert hasattr(repo, "list")
@@ -171,7 +171,7 @@ class TestProjectRepositorySearch:
         """
         from mcp_server_langgraph.repositories.projects import PostgresProjectRepository
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         repo = PostgresProjectRepository(mock_session)
 
         assert hasattr(repo, "list")
@@ -185,7 +185,7 @@ class TestProjectRepositorySearch:
         """
         from mcp_server_langgraph.repositories.projects import PostgresProjectRepository
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         repo = PostgresProjectRepository(mock_session)
 
         assert hasattr(repo, "list")
@@ -208,7 +208,7 @@ class TestProjectRepositoryCombinedQueries:
         """
         from mcp_server_langgraph.repositories.projects import PostgresProjectRepository
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         repo = PostgresProjectRepository(mock_session)
 
         assert hasattr(repo, "list")
@@ -222,7 +222,7 @@ class TestProjectRepositoryCombinedQueries:
         """
         from mcp_server_langgraph.repositories.projects import PostgresProjectRepository
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         repo = PostgresProjectRepository(mock_session)
 
         assert hasattr(repo, "list")
@@ -236,7 +236,7 @@ class TestProjectRepositoryCombinedQueries:
         """
         from mcp_server_langgraph.repositories.projects import PostgresProjectRepository
 
-        mock_session = AsyncMock()  # async-mock-configured
+        mock_session = AsyncMock(return_value=None)  # async-mock-configured
         repo = PostgresProjectRepository(mock_session)
 
         assert hasattr(repo, "list")

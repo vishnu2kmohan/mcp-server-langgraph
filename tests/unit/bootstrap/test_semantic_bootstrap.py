@@ -105,9 +105,9 @@ class TestSemanticBootstrapInitialization:
         mock_settings.embedding_dimensions = 384
         mock_settings.auth_cache_warm_entries = []
 
-        mock_manager = AsyncMock()
-        mock_manager.ensure_collection = AsyncMock()
-        mock_qdrant = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
+        mock_manager.ensure_collection = AsyncMock(return_value=None)
+        mock_qdrant = AsyncMock(return_value=None)
         mock_embedder = MagicMock()
 
         with patch(
@@ -158,8 +158,8 @@ class TestSemanticBootstrapSingletonWiring:
         mock_settings.embedding_dimensions = 384
         mock_settings.auth_cache_warm_entries = []
 
-        mock_manager = AsyncMock()
-        mock_manager.ensure_collection = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
+        mock_manager.ensure_collection = AsyncMock(return_value=None)
 
         with patch(
             "mcp_server_langgraph.bootstrap.semantic.feature_flags"
@@ -208,7 +208,7 @@ class TestSemanticBootstrapCacheWarming:
             {"user_id": "user:service", "relation": "viewer", "object_type": "tool_index"},
         ]
 
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
         mock_manager.warm_cache = AsyncMock(return_value=1)
 
         with patch(
@@ -249,7 +249,7 @@ class TestSemanticBootstrapCacheWarming:
         mock_settings.embedding_dimensions = 384
         mock_settings.auth_cache_warm_entries = []  # Empty
 
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock(return_value=None)
         mock_manager.warm_cache = AsyncMock(return_value=0)
 
         with patch(

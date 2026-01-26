@@ -300,7 +300,7 @@ class TestCacheServiceAsyncResilience:
             cache = CacheService(**cache_config)
 
             # Mock async redis
-            mock_async_redis = AsyncMock()
+            mock_async_redis = AsyncMock(return_value=None)
             mock_async_redis.get = mock_get
             cache.async_redis = mock_async_redis
 
@@ -373,7 +373,7 @@ class TestCacheServiceTimeout:
             cache.l1_cache["test:key"] = "fallback_value"
 
             # Mock async redis with timeout
-            mock_async_redis = AsyncMock()
+            mock_async_redis = AsyncMock(return_value=None)
             mock_async_redis.get = slow_get
             cache.async_redis = mock_async_redis
 

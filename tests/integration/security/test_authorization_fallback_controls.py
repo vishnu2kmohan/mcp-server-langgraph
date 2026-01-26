@@ -210,7 +210,7 @@ class TestAuthorizationFallbackControls:
         and proper authorization is used
         """
         # Mock OpenFGA client that denies access
-        mock_openfga = AsyncMock()  # async-mock-configured (return_value set below)
+        mock_openfga = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)
         mock_openfga.check_permission.return_value = False
 
         settings = Settings(allow_auth_fallback=True)  # Even with fallback enabled

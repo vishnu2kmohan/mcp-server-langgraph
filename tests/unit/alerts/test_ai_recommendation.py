@@ -182,7 +182,7 @@ class TestAIRecommendationService:
             AIRecommendationService,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(
@@ -233,7 +233,7 @@ class TestAIRecommendationService:
             AIRecommendationService,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(
@@ -272,7 +272,7 @@ class TestAIRecommendationCache:
             AIRecommendationService,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(
@@ -308,7 +308,7 @@ class TestAIRecommendationCache:
             AIRecommendationService,
         )
 
-        service = AIRecommendationService(llm_factory=AsyncMock())
+        service = AIRecommendationService(llm_factory=AsyncMock(return_value=None))
 
         result = await service.get_cached_recommendation("unknown-alert-id")
 
@@ -325,7 +325,7 @@ class TestAIRecommendationCache:
             AIRecommendationService,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(
@@ -367,7 +367,7 @@ class TestAIRecommendationCacheMemoryOptimization:
             AIRecommendationService,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(
@@ -405,7 +405,7 @@ class TestAIRecommendationCacheMemoryOptimization:
             AIRecommendationService,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(
@@ -445,7 +445,7 @@ class TestAIRecommendationCacheMemoryOptimization:
             AlertState,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(
@@ -489,7 +489,7 @@ class TestAIRecommendationCacheMemoryOptimization:
             AIRecommendationService,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(
@@ -885,7 +885,7 @@ class TestAIRecommendationConfidenceScores:
             AIRecommendationService,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(
@@ -1083,7 +1083,7 @@ class TestRunbookAutoLinking:
             AIRecommendationService,
         )
 
-        mock_llm = AsyncMock()
+        mock_llm = AsyncMock(return_value=None)
         mock_llm.acompletion.return_value = MagicMock(
             choices=[
                 MagicMock(

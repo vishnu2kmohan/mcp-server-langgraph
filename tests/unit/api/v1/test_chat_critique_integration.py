@@ -39,11 +39,11 @@ class TestChatCritiqueIntegration:
 
         # Create service with mocked dependencies
         service = ChatServiceImpl.__new__(ChatServiceImpl)
-        service._session_storage = AsyncMock()
+        service._session_storage = AsyncMock(return_value=None)
         service._session_storage.get_messages = AsyncMock(return_value=[])
         service._mcp_bridge = None
         service._langgraph_agent = None
-        service._router_agent = AsyncMock()
+        service._router_agent = AsyncMock(return_value=None)
         service._llm_factory = MagicMock()
 
         # Mock routing decision with high risk
@@ -120,11 +120,11 @@ class TestChatCritiqueIntegration:
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
         service = ChatServiceImpl.__new__(ChatServiceImpl)
-        service._session_storage = AsyncMock()
+        service._session_storage = AsyncMock(return_value=None)
         service._session_storage.get_messages = AsyncMock(return_value=[])
         service._mcp_bridge = None
         service._langgraph_agent = None
-        service._router_agent = AsyncMock()
+        service._router_agent = AsyncMock(return_value=None)
         service._llm_factory = MagicMock()
 
         # Mock routing decision with high risk
@@ -178,11 +178,11 @@ class TestChatCritiqueIntegration:
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
         service = ChatServiceImpl.__new__(ChatServiceImpl)
-        service._session_storage = AsyncMock()
+        service._session_storage = AsyncMock(return_value=None)
         service._session_storage.get_messages = AsyncMock(return_value=[])
         service._mcp_bridge = None
         service._langgraph_agent = None
-        service._router_agent = AsyncMock()
+        service._router_agent = AsyncMock(return_value=None)
         service._llm_factory = MagicMock()
 
         # Mock routing decision with LOW risk
@@ -236,11 +236,11 @@ class TestChatCritiqueIntegration:
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
         service = ChatServiceImpl.__new__(ChatServiceImpl)
-        service._session_storage = AsyncMock()
+        service._session_storage = AsyncMock(return_value=None)
         service._session_storage.get_messages = AsyncMock(return_value=[])
         service._mcp_bridge = None
         service._langgraph_agent = None
-        service._router_agent = AsyncMock()
+        service._router_agent = AsyncMock(return_value=None)
         service._llm_factory = MagicMock()
 
         mock_routing = MagicMock()

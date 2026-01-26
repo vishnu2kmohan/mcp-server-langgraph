@@ -62,7 +62,7 @@ def app_with_mocks(mock_user: dict[str, Any]) -> FastAPI:
 @pytest.fixture
 def mock_session_service() -> AsyncMock:
     """Create a mock session service."""
-    service = AsyncMock()
+    service = AsyncMock(return_value=None)
     return service
 
 

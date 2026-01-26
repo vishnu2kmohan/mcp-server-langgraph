@@ -543,7 +543,7 @@ class TestRedisUserRateLimiterExtras:
 
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_redis.ttl.return_value = 45
 
         limiter = RedisUserRateLimiter(redis_client=mock_redis, max_messages=100, window_seconds=60)
@@ -559,7 +559,7 @@ class TestRedisUserRateLimiterExtras:
 
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_redis.ttl.return_value = -2  # Key doesn't exist
 
         limiter = RedisUserRateLimiter(redis_client=mock_redis, max_messages=100, window_seconds=60)
@@ -575,7 +575,7 @@ class TestRedisUserRateLimiterExtras:
 
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_redis.ttl.return_value = -1  # Key has no expire
 
         limiter = RedisUserRateLimiter(redis_client=mock_redis, max_messages=100, window_seconds=60)
@@ -591,7 +591,7 @@ class TestRedisUserRateLimiterExtras:
 
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_redis.ttl.side_effect = Exception("Redis error")
 
         limiter = RedisUserRateLimiter(redis_client=mock_redis, max_messages=100, window_seconds=60)
@@ -619,7 +619,7 @@ class TestRedisWebSocketRateLimiterExtras:
             RedisWebSocketRateLimiter,
         )
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_redis.incr.return_value = 1
         mock_redis.expire.return_value = True
 
@@ -675,7 +675,7 @@ class TestRedisWebSocketRateLimiterExtras:
             RedisWebSocketRateLimiter,
         )
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_redis.get.return_value = b"10"
 
         limiter = RedisWebSocketRateLimiter(redis_url="redis://localhost:6379/3", messages_per_minute=600)
@@ -697,7 +697,7 @@ class TestRedisWebSocketRateLimiterExtras:
             RateLimitInfo,
         )
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_redis.get.return_value = b"50"
         mock_redis.ttl.return_value = 30
 
@@ -719,7 +719,7 @@ class TestRedisWebSocketRateLimiterExtras:
             RedisWebSocketRateLimiter,
         )
 
-        mock_redis = AsyncMock()  # noqa: async-mock-config
+        mock_redis = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         limiter = RedisWebSocketRateLimiter(redis_url="redis://localhost:6379/3", messages_per_minute=600)
         limiter._redis_client = mock_redis

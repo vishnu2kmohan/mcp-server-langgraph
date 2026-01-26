@@ -23,14 +23,14 @@ pytestmark = [
 @pytest.fixture
 def mock_session() -> AsyncMock:
     """Create a mock async database session."""
-    session = AsyncMock()
+    session = AsyncMock(return_value=None)
     session.add = MagicMock()
-    session.flush = AsyncMock()
-    session.commit = AsyncMock()
-    session.rollback = AsyncMock()
-    session.execute = AsyncMock()
-    session.scalar = AsyncMock()
-    session.scalars = AsyncMock()
+    session.flush = AsyncMock(return_value=None)
+    session.commit = AsyncMock(return_value=None)
+    session.rollback = AsyncMock(return_value=None)
+    session.execute = AsyncMock(return_value=None)
+    session.scalar = AsyncMock(return_value=None)
+    session.scalars = AsyncMock(return_value=None)
     return session
 
 
@@ -64,7 +64,7 @@ class TestSessionGoalRepository:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_repository_initialization(self, mock_session: AsyncMock) -> None:
+    def test_repository_initialization_creates_connection(self, mock_session: AsyncMock) -> None:
         """
         GIVEN a database session
         WHEN creating a SessionGoalRepository
@@ -337,7 +337,7 @@ class TestSessionGoalRepository:
         mock_goal = MagicMock()
         mock_goal.id = goal_id
         mock_session.scalar.return_value = mock_goal
-        mock_session.delete = AsyncMock()
+        mock_session.delete = AsyncMock(return_value=None)
 
         repo = PostgresSessionGoalRepository(mock_session)
 
@@ -434,7 +434,7 @@ class TestSessionGoalModel:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_model_creation(self) -> None:
+    def test_model_creation_sets_fields(self) -> None:
         """
         GIVEN valid session goal data
         WHEN creating a SessionGoal model

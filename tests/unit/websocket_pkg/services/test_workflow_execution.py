@@ -79,7 +79,7 @@ class TestWorkflowExecutionServiceAdapter:
             WorkflowExecutionServiceAdapter,
         )
 
-        mock_manager = AsyncMock()  # noqa: async-mock-config
+        mock_manager = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_manager.get_workflow = AsyncMock(
             return_value={
                 "id": "wf-123",
@@ -120,7 +120,7 @@ class TestWorkflowExecutionServiceAdapter:
             WorkflowExecutionServiceAdapter,
         )
 
-        mock_manager = AsyncMock()  # noqa: async-mock-config
+        mock_manager = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_manager.get_workflow = AsyncMock(side_effect=Exception("DB error"))
 
         adapter = WorkflowExecutionServiceAdapter(execution_manager=mock_manager)
@@ -138,7 +138,7 @@ class TestWorkflowExecutionServiceAdapter:
             WorkflowExecutionServiceAdapter,
         )
 
-        mock_manager = AsyncMock()  # noqa: async-mock-config
+        mock_manager = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_manager.create_execution = AsyncMock(return_value="exec-real-123")
 
         adapter = WorkflowExecutionServiceAdapter(execution_manager=mock_manager)
@@ -186,7 +186,7 @@ class TestWorkflowExecutionServiceAdapter:
             WorkflowExecutionServiceAdapter,
         )
 
-        mock_manager = AsyncMock()  # noqa: async-mock-config
+        mock_manager = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_manager.create_execution = AsyncMock(side_effect=Exception("Failed"))
 
         adapter = WorkflowExecutionServiceAdapter(execution_manager=mock_manager)
@@ -203,8 +203,8 @@ class TestWorkflowExecutionServiceAdapter:
             WorkflowExecutionServiceAdapter,
         )
 
-        mock_manager = AsyncMock()  # noqa: async-mock-config
-        mock_manager.update_execution = AsyncMock()  # noqa: async-mock-config
+        mock_manager = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_manager.update_execution = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         adapter = WorkflowExecutionServiceAdapter(execution_manager=mock_manager)
         result = await adapter.stop_execution("wf-stop")
@@ -254,7 +254,7 @@ class TestWorkflowExecutionServiceAdapter:
             WorkflowExecutionServiceAdapter,
         )
 
-        mock_manager = AsyncMock()  # noqa: async-mock-config
+        mock_manager = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_manager.update_execution = AsyncMock(side_effect=Exception("Error"))
 
         adapter = WorkflowExecutionServiceAdapter(execution_manager=mock_manager)
@@ -271,7 +271,7 @@ class TestWorkflowExecutionServiceAdapter:
             WorkflowExecutionServiceAdapter,
         )
 
-        mock_manager = AsyncMock()  # noqa: async-mock-config
+        mock_manager = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_manager.list_executions = AsyncMock(
             return_value=[
                 {"id": "exec-1", "workflow_id": "wf-1", "status": "running"},
@@ -296,7 +296,7 @@ class TestWorkflowExecutionServiceAdapter:
             WorkflowExecutionServiceAdapter,
         )
 
-        mock_manager = AsyncMock()  # noqa: async-mock-config
+        mock_manager = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_manager.list_executions = AsyncMock(return_value=[])
 
         adapter = WorkflowExecutionServiceAdapter(execution_manager=mock_manager)
@@ -347,7 +347,7 @@ class TestWorkflowExecutionServiceAdapter:
             WorkflowExecutionServiceAdapter,
         )
 
-        mock_manager = AsyncMock()  # noqa: async-mock-config
+        mock_manager = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_manager.list_executions = AsyncMock(side_effect=Exception("DB error"))
 
         adapter = WorkflowExecutionServiceAdapter(execution_manager=mock_manager)

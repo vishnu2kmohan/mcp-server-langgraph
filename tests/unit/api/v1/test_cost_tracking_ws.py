@@ -187,7 +187,7 @@ class TestCostTrackingServiceIntegration:
         }
 
         with patch("mcp_server_langgraph.api.v1.cost_tracking_ws.get_websocket_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.get_session_cost.return_value = mock_session_cost
             mock_get_service.return_value = mock_service
 
@@ -229,7 +229,7 @@ class TestCostTrackingServiceIntegration:
         }
 
         with patch("mcp_server_langgraph.api.v1.cost_tracking_ws.get_websocket_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(return_value=None)
             mock_service.get_user_budget.return_value = mock_user_budget
             mock_get_service.return_value = mock_service
 
@@ -261,7 +261,7 @@ class TestCostTrackingServiceIntegration:
         )
 
         with patch("mcp_server_langgraph.api.v1.cost_tracking_ws.get_websocket_cost_service") as mock_get_service:
-            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
             mock_get_service.return_value = mock_service
 
             handler = CostTrackingWebSocketHandler()
