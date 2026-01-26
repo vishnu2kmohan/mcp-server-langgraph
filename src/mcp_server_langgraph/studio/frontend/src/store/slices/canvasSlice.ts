@@ -86,9 +86,9 @@ export interface CanvasState {
 const CANVAS_STORAGE_KEY = "canvas-state";
 
 const defaultPanelSizes: CanvasPanelSizes = {
-  sessionNav: 15,      // ~180px at 1200px - compact session list
-  conversation: 40,    // 40% - primary focus for chat
-  canvas: 45,          // 45% - larger for artifacts/code
+  sessionNav: 10,      // 10% - minimal session list (expands on hover)
+  conversation: 40,    // 40% - primary focus for chat (dominant in 2-panel: 90%)
+  canvas: 50,          // 50% - larger for artifacts/code
 };  // Total: 100%
 
 const defaultPreferences: CanvasPreferences = {

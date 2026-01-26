@@ -47,6 +47,7 @@ import {
 import {
   selectExecutionMode,
   selectCurrentPlan,
+  selectRoutingDecision,
   selectShowPlanApproval,
   setPlanStatus,
   clearPlan,
@@ -432,6 +433,7 @@ export const ConnectedConversationPanel = forwardRef<
 
   // Get current plan and approval status from Redux (Issue 7: Plan Rendering)
   const currentPlan = useAppSelector(selectCurrentPlan);
+  const routingDecision = useAppSelector(selectRoutingDecision);
   const showPlanApproval = useAppSelector(selectShowPlanApproval);
 
   // Get pending auth requirements for InlineConnectionCard (ADR-0102)
@@ -1134,6 +1136,7 @@ export const ConnectedConversationPanel = forwardRef<
         <div className="px-4 py-2">
           <InlinePlanCard
             plan={currentPlan}
+            routingDecision={routingDecision}
             onApprove={handleApprovePlan}
             onReject={handleRejectPlan}
           />

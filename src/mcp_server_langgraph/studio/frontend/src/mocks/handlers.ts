@@ -210,6 +210,8 @@ export const mockFeatureFlags: FeatureFlags = {
   url_content_fetch: true,
   slash_commands: true,
   style_presets: true,
+  rich_text_chat_input: true, // Rich text in chat input
+  kb_focus: true, // ADR-0094: Perplexity-style KB focus mode
 
   // UX Enhancement Features
   user_preferences_sync: true,
@@ -223,6 +225,23 @@ export const mockFeatureFlags: FeatureFlags = {
   theme_customization: true,
   confirmation_dialogs: true,
   enhanced_model_selector: true, // Sprint 1: recent models, search, capability badges
+  panel_zoom: true, // Sprint 4: Panel zoom/maximize
+  mobile_drawer: true, // Sprint 4: Mobile drawer navigation
+  hallucination_reporting: true, // Hallucination report button in messages
+
+  // DevTools Features
+  devtools_panel: true,
+  devtools_ai_insights: true,
+  devtools_ai_layout: false, // AI-powered layout suggestions (default off)
+  devtools_network_tab: true,
+
+  // Execution Mode Features
+  execution_mode_toggle: true,
+  plan_generation: true,
+  plan_approval_flow: true,
+  bypass_mode_admin_only: false,
+  bypass_risk_aware: true,
+  preferences_menu: true,
 
   // AI UX Features (Phase 6 AI-Native Integration)
   ai_disclosure: true,
@@ -249,6 +268,25 @@ export const mockFeatureFlags: FeatureFlags = {
 
   // Markdown References ([[type:qualifier:id]] syntax)
   markdown_references: true,
+
+  // Session AI Features (SessionNav AI-powered session cards)
+  session_ai: true,
+  session_summary: true,
+  session_topics: true,
+
+  // Studio AI (Granular Intelligence Flags)
+  studio_ai: true,
+  session_intelligence: true,
+  conversation_intelligence: true,
+  canvas_intelligence: true,
+  diagram_intelligence: true,
+  trace_intelligence: true,
+  hitl_ai: true,
+  genui: true,
+
+  // Nudges alias
+  nudges: true,
+  persona_analysis: true,
 };
 
 // =============================================================================

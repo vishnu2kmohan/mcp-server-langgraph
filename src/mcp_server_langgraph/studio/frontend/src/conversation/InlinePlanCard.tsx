@@ -30,10 +30,15 @@ import {
   Cpu,
   DollarSign,
   Brain,
+  Gauge,
+  MessageSquareText,
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { Button } from "@/components/UI";
-import type { ExecutionPlan } from "@/store/slices/executionModeSlice";
+import type {
+  ExecutionPlan,
+  RoutingDecision,
+} from "@/store/slices/executionModeSlice";
 
 // =============================================================================
 // CVA Variants
@@ -124,6 +129,8 @@ export interface InlinePlanCardProps
   extends VariantProps<typeof planCardVariants> {
   /** Execution plan data */
   plan: ExecutionPlan;
+  /** Routing decision data (for debugging/observability) */
+  routingDecision?: RoutingDecision | null;
   /** Callback when user approves the plan */
   onApprove: (planId: string) => void;
   /** Callback when user rejects the plan */
@@ -187,6 +194,7 @@ function getRiskIcon(risk: string) {
  */
 export function InlinePlanCard({
   plan,
+  routingDecision,
   onApprove,
   onReject,
   onEdit: _onEdit,
@@ -327,9 +335,69 @@ export function InlinePlanCard({
       <div className="mb-4">
         <span className="text-xs font-medium text-neutral-11">Tools: </span>
         <span className="text-xs text-neutral-12">
-          {plan.toolsNeeded.join(", ")}
+          {plan.toolsNeeded.length > 0 ? plan.toolsNeeded.join(", ") : "None"}
         </span>
       </div>
+
+      {/* Routing Decision (debugging/observability) */}
+      {routingDecision && (
+        <div className="mb-4 border-t border-neutral-6 pt-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Gauge className="w-4 h-4 text-neutral-11" aria-hidden="true" />
+            <span className="text-xs font-semibold text-neutral-11">
+              Router Classification
+            </span>
+          </div>
+
+          {/* Confidence Score */}
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs text-neutral-11 w-20">Confidence:</span>
+            <div className="flex-1 h-2 bg-neutral-4 rounded-full overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  routingDecision.confidence >= 0.8
+                    ? "bg-success-9"
+                    : routingDecision.confidence >= 0.5
+                      ? "bg-warning-9"
+                      : "bg-error-9",
+                )}
+                style={{ width: `${routingDecision.confidence * 100}%` }}
+                aria-label={`Confidence: ${Math.round(routingDecision.confidence * 100)}%`}
+              />
+            </div>
+            <span className="text-xs font-medium text-neutral-12 w-12 text-right">
+              {Math.round(routingDecision.confidence * 100)}%
+            </span>
+          </div>
+
+          {/* Orchestrator */}
+          <div className="flex items-center gap-1.5 text-xs text-neutral-11 mb-2">
+            <span className="font-medium">Orchestrator:</span>
+            <span className="text-neutral-12 capitalize">
+              {routingDecision.suggestedOrchestrator}
+            </span>
+          </div>
+
+          {/* Routing Rationale */}
+          {routingDecision.routingRationale && (
+            <div className="mt-2">
+              <div className="flex items-center gap-1.5 mb-1">
+                <MessageSquareText
+                  className="w-3.5 h-3.5 text-neutral-11"
+                  aria-hidden="true"
+                />
+                <span className="text-xs font-medium text-neutral-11">
+                  Rationale:
+                </span>
+              </div>
+              <p className="text-xs text-neutral-12 bg-neutral-3 rounded px-2 py-1.5 italic">
+                {routingDecision.routingRationale}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Expandable Edit Section */}
       <AnimatePresence>

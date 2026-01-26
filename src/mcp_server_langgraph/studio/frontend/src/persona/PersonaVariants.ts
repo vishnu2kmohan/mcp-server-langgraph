@@ -307,14 +307,14 @@ export const DEFAULT_PRESETS: WorkspacePreset[] = [
     id: "focus-chat",
     name: "Focus Chat",
     description: "Expanded conversation panel",
-    layout: { sessionNav: 15, conversation: 60, canvas: 25 },
+    layout: { sessionNav: 10, conversation: 65, canvas: 25 },
     icon: "message-square",
   },
   {
     id: "focus-canvas",
     name: "Focus Canvas",
     description: "Expanded canvas panel",
-    layout: { sessionNav: 15, conversation: 25, canvas: 60 },
+    layout: { sessionNav: 10, conversation: 25, canvas: 65 },
     icon: "code",
   },
   {

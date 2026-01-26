@@ -1018,10 +1018,11 @@ export function StudioShellLayout() {
     return maximizedPanelId === "conversation";
   }, [panelZoomEnabled, maximizedPanelId]);
 
-  // Handle panel resize
+  // Handle panel resize - supports both 2-panel (canvas collapsed) and 3-panel layouts
   const handlePanelResize = useCallback(
     (sizes: number[]) => {
       if (sizes.length === 3) {
+        // 3-panel layout: Session Nav + Conversation + Canvas
         const sessionNavSize = sizes[0];
         const conversationSize = sizes[1];
         const canvasSize = sizes[2];
@@ -1037,15 +1038,30 @@ export function StudioShellLayout() {
           };
           dispatch(setPanelSizes(newSizes));
         }
+      } else if (sizes.length === 2) {
+        // 2-panel layout: Session Nav + Conversation (canvas collapsed)
+        const sessionNavSize = sizes[0];
+        const conversationSize = sizes[1];
+        if (sessionNavSize !== undefined && conversationSize !== undefined) {
+          // Preserve the existing canvas size, only update sessionNav
+          dispatch(setPanelSizes({
+            sessionNav: sessionNavSize,
+            conversation: conversationSize,
+            canvas: panelSizes.canvas, // Keep existing canvas size for when it reopens
+          }));
+        }
       }
     },
-    [dispatch],
+    [dispatch, panelSizes.canvas],
   );
 
   // Keyboard shortcuts (using hook instead of manual handling)
   // Note: Define both ctrl+key and meta+key (cmd+key on Mac) for cross-platform support
   const keyboardShortcuts = useMemo(
     () => ({
+      // Toggle session nav sidebar: Ctrl+B (Windows/Linux) or Cmd+B (Mac)
+      "ctrl+b": () => dispatch(toggleSessionNav()),
+      "meta+b": () => dispatch(toggleSessionNav()),
       // Toggle canvas: Ctrl+/ (Windows/Linux) or Cmd+/ (Mac)
       "ctrl+/": () => dispatch(toggleCanvas()),
       "meta+/": () => dispatch(toggleCanvas()),
@@ -1459,6 +1475,7 @@ export function StudioShellLayout() {
                   )}
                   {/* Conversation Panel */}
                   {/* Sprint 4.1: Uses effectiveConversationVisible for maximize support */}
+                  {/* When canvas is collapsed, remove maxSize to allow conversation to expand */}
                   {effectiveConversationVisible && (
                     <Panel
                       id="conversation"
@@ -1467,11 +1484,11 @@ export function StudioShellLayout() {
                         maximizedPanelId === "conversation"
                           ? 100
                           : canvasCollapsed
-                            ? 85
+                            ? 90  // 2-panel: conversation takes 90% (sessionNav 10%)
                             : panelSizes.conversation
                       }
                       minSize={maximizedPanelId ? undefined : 25}
-                      maxSize={maximizedPanelId ? undefined : 50}
+                      maxSize={maximizedPanelId || canvasCollapsed ? undefined : 50}
                     >
                       <ConnectedConversationPanel
                         ref={conversationRef}

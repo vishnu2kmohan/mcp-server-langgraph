@@ -331,8 +331,7 @@ type BatchCompositeResponse = components["schemas"]["BatchCompositeResponse"];
 // =============================================================================
 
 /** Response type for POST /api/v1/login */
-type LoginResponse =
-  components["schemas"]["mcp_server_langgraph__api__v1__user__LoginResponse"];
+type LoginResponse = components["schemas"]["LoginResponse"];
 /** Response type for POST /api/v1/logout */
 type LogoutResponse = components["schemas"]["LogoutResponse"];
 /** Request type for POST /api/v1/logout */

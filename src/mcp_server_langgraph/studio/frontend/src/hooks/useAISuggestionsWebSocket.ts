@@ -17,6 +17,7 @@
  */
 
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import debounce from "lodash/debounce";
 import {
   useRealtimeSync,
   type WebSocketConnectionStatus,
@@ -86,6 +87,8 @@ export interface UseAISuggestionsWebSocketOptions {
   onSuggestion?: (suggestion: AISuggestion) => void;
   /** Callback when an error is received */
   onError?: (error: AISuggestionError) => void;
+  /** Debounce delay for suggestion requests in milliseconds (default: 300) */
+  debounceMs?: number;
 }
 
 /**
@@ -100,12 +103,20 @@ export interface UseAISuggestionsWebSocketReturn {
   isPending: boolean;
   /** Most recent error */
   lastError: AISuggestionError | null;
-  /** Request an AI suggestion */
+  /** Request an AI suggestion (immediate, no debouncing) */
   requestSuggestion: (
     inputText: string,
     cursorPosition: number,
     contextWindow?: number,
   ) => void;
+  /** Request an AI suggestion (debounced - recommended for typing scenarios) */
+  requestSuggestionDebounced: (
+    inputText: string,
+    cursorPosition: number,
+    contextWindow?: number,
+  ) => void;
+  /** Cancel any pending debounced suggestion request */
+  cancelDebouncedRequest: () => void;
   /** Accept the current suggestion */
   acceptSuggestion: (suggestionId: string) => void;
   /** Reject the current suggestion */
@@ -204,7 +215,14 @@ function parseError(payload: Record<string, unknown>): AISuggestionError {
 export function useAISuggestionsWebSocket(
   options: UseAISuggestionsWebSocketOptions = {},
 ): UseAISuggestionsWebSocketReturn {
-  const { url, enabled = true, sessionId, onSuggestion, onError } = options;
+  const {
+    url,
+    enabled = true,
+    sessionId,
+    onSuggestion,
+    onError,
+    debounceMs = 300,
+  } = options;
 
   // Redux dispatch for token expiration handling
   const dispatch = useAppDispatch();
@@ -298,7 +316,7 @@ export function useAISuggestionsWebSocket(
     ? realtimeStatus
     : "disconnected";
 
-  // Request an AI suggestion
+  // Request an AI suggestion (immediate, no debouncing)
   const requestSuggestion = useCallback(
     (
       inputText: string,
@@ -326,6 +344,38 @@ export function useAISuggestionsWebSocket(
     },
     [send],
   );
+
+  // Debounced version of requestSuggestion for typing scenarios
+  // Prevents excessive WebSocket messages during rapid typing
+  const debouncedRequestRef = useRef<ReturnType<typeof debounce> | null>(null);
+
+  // Create/update debounced function when requestSuggestion or debounceMs changes
+  const requestSuggestionDebounced = useMemo(() => {
+    // Cancel previous debounced function if it exists
+    debouncedRequestRef.current?.cancel();
+
+    const debouncedFn = debounce(
+      (inputText: string, cursorPosition: number, contextWindow: number = 500) => {
+        requestSuggestion(inputText, cursorPosition, contextWindow);
+      },
+      debounceMs,
+    );
+
+    debouncedRequestRef.current = debouncedFn;
+    return debouncedFn;
+  }, [requestSuggestion, debounceMs]);
+
+  // Cancel debounced request
+  const cancelDebouncedRequest = useCallback(() => {
+    debouncedRequestRef.current?.cancel();
+  }, []);
+
+  // Cleanup debounced function on unmount
+  useEffect(() => {
+    return () => {
+      debouncedRequestRef.current?.cancel();
+    };
+  }, []);
 
   // Accept a suggestion
   const acceptSuggestion = useCallback(
@@ -385,6 +435,8 @@ export function useAISuggestionsWebSocket(
     isPending,
     lastError,
     requestSuggestion,
+    requestSuggestionDebounced,
+    cancelDebouncedRequest,
     acceptSuggestion,
     rejectSuggestion,
     updateContext,

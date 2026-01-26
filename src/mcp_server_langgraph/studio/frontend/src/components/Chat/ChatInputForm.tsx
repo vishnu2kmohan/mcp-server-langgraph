@@ -882,7 +882,7 @@ export function ChatInputForm({
                   </div>
                   {validatedRecentModels.map((model) => (
                     <Button
-                      variant="primary"
+                      variant="ghost"
                       className="w-full flex justify-between px-3 py-2 text-sm hover:bg-neutral-2 focus:bg-primary-3"
                       key={`recent-${model.id}`}
                       type="button"
@@ -927,7 +927,7 @@ export function ChatInputForm({
               {/* All Models List (filtered when searching) */}
               {filteredModels.map((model, index) => (
                 <Button
-                  variant="primary"
+                  variant="ghost"
                   className="w-full flex flex-col px-3 py-2 text-sm hover:bg-neutral-2 focus:bg-primary-3"
                   key={model.id}
                   id={`model-option-${model.id}`}

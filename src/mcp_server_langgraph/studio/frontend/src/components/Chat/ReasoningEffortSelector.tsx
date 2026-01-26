@@ -196,7 +196,7 @@ export function ReasoningEffortSelector({
           const isSelected = value === level.value;
           return (
             <Button
-              variant="primary"
+              variant="ghost"
               className="rounded"
               key={level.value}
               onClick={() => handleSelect(level.value)}

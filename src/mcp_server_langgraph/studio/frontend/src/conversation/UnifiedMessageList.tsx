@@ -55,7 +55,7 @@ import { AIEmptyState } from "@/components/EmptyState/AIEmptyState";
 import { Button } from "@/components/UI";
 import { cn } from "../utils/cn";
 
-// Lazy load heavy components
+// Lazy load heavy components for code-splitting
 const LLMThinkingTrace = lazy(() =>
   import("@/components/Chat/LLMThinkingTrace").then((mod) => ({
     default: mod.LLMThinkingTrace,

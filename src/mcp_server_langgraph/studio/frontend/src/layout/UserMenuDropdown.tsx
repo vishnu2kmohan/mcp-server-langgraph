@@ -302,7 +302,7 @@ export function UserMenuDropdown({
           <div className="bg-neutral-1 py-1">
             {SUB_PERSONA_OPTIONS.map((option) => (
               <Button
-                variant="primary"
+                variant="ghost"
                 key={option.id}
                 type="button"
                 data-testid={`persona-option-${option.id}`}
@@ -325,7 +325,7 @@ export function UserMenuDropdown({
       <div className="py-1">
         {menuItems.map((item) => (
           <Button
-            variant="primary"
+            variant="ghost"
             key={item.id}
             type="button"
             data-testid={`menu-item-${item.id}`}

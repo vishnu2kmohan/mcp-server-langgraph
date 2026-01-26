@@ -28,8 +28,8 @@ const mockPresets: WorkspacePreset[] = [
     name: "Focus Chat",
     description: "Expanded conversation panel",
     layout: {
-      sessionNav: 15,
-      conversation: 60,
+      sessionNav: 10,
+      conversation: 65,
       canvas: 25,
     },
     icon: "message-square",
@@ -39,9 +39,9 @@ const mockPresets: WorkspacePreset[] = [
     name: "Focus Canvas",
     description: "Expanded canvas panel",
     layout: {
-      sessionNav: 15,
+      sessionNav: 10,
       conversation: 25,
-      canvas: 60,
+      canvas: 65,
     },
     icon: "code",
   },

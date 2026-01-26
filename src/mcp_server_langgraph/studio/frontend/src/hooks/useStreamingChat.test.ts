@@ -604,11 +604,12 @@ describe("useStreamingChat", () => {
       );
     });
 
-    it("should parse thinking_content from Gemini-style response", async () => {
+    // Thinking object format {content, tokens}
+    it("should parse thinking from object format", async () => {
       mockFetch.mockResolvedValue(
         createMockSSEResponse([
-          'data: {"thinking_content":"Analyzing the problem..."}\n\n',
-          'data: {"content":"The answer is 42."}\n\n',
+          'data: {"thinking":{"content":"Structured thinking content","tokens":250}}\n\n',
+          'data: {"content":"Response based on thinking"}\n\n',
           "data: [DONE]\n\n",
         ]),
       );
@@ -620,26 +621,8 @@ describe("useStreamingChat", () => {
         await vi.waitFor(() => !result.current.isStreaming);
       });
 
-      expect(result.current.thinkingContent).toBe("Analyzing the problem...");
-    });
-
-    it("should track thinking tokens when provided", async () => {
-      mockFetch.mockResolvedValue(
-        createMockSSEResponse([
-          'data: {"thinking":"Deep analysis...","thinking_tokens":1500}\n\n',
-          'data: {"content":"Answer","usage":{"prompt_tokens":10,"completion_tokens":5,"total_tokens":15}}\n\n',
-          "data: [DONE]\n\n",
-        ]),
-      );
-
-      const { result } = renderHook(() => useStreamingChat());
-
-      await act(async () => {
-        result.current.startStream("session-123", "Hello");
-        await vi.waitFor(() => !result.current.isStreaming);
-      });
-
-      expect(result.current.thinkingTokens).toBe(1500);
+      expect(result.current.thinkingContent).toBe("Structured thinking content");
+      expect(result.current.thinkingTokens).toBe(250);
     });
 
     it("should reset thinking content when starting new stream", async () => {

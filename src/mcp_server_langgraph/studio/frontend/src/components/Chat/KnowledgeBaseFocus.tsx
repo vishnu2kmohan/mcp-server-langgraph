@@ -288,7 +288,7 @@ export function KnowledgeBaseFocus({
 
             return (
               <Button
-                variant="primary"
+                variant="ghost"
                 key={option.value}
                 type="button"
                 role="option"

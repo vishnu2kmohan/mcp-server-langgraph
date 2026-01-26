@@ -167,12 +167,21 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 // =============================================================================
 
 /**
- * Load list of sessions for the SessionNav panel
+ * Load list of sessions for the SessionNav panel.
+ *
+ * v8 Phase 4: Reads ?status= from URL search params to filter by status.
+ * Defaults to "active" if not specified.
  */
 export async function sessionsLoader(
-  _args: LoaderFunctionArgs,
+  args: LoaderFunctionArgs,
 ): Promise<SessionsLoaderData> {
-  const result = await fetchJson<unknown>(`${API_BASE}/sessions?limit=50`);
+  // v8 Phase 4: Read status from URL search params (defaults to "active")
+  const url = new URL(args.request.url);
+  const status = url.searchParams.get("status") || "active";
+
+  const result = await fetchJson<unknown>(
+    `${API_BASE}/sessions?limit=50&status=${status}`,
+  );
 
   if (!result) {
     return {

@@ -335,7 +335,7 @@ export function PreferencesMenu({
                     {availableModels.map((model) => (
                        
                       (<Button
-                      variant="primary"
+                      variant="ghost"
                       key={model.id}
                       type="button"
                       role="option"
@@ -380,7 +380,7 @@ export function PreferencesMenu({
                   {/* Auto option */}
                   { }
                   <Button
-                    variant="primary"
+                    variant="ghost"
                     type="button"
                     role="option"
                     aria-selected={executorModel === null || executorModel === undefined}
@@ -400,7 +400,7 @@ export function PreferencesMenu({
                   {availableModels.map((model) => (
                      
                     (<Button
-                    variant="primary"
+                    variant="ghost"
                     key={model.id}
                     type="button"
                     role="option"
@@ -440,7 +440,7 @@ export function PreferencesMenu({
                   {/* Auto option */}
                   { }
                   <Button
-                    variant="primary"
+                    variant="ghost"
                     type="button"
                     role="option"
                     aria-selected={criticModel === null || criticModel === undefined}
@@ -460,7 +460,7 @@ export function PreferencesMenu({
                   {availableModels.map((model) => (
                      
                     (<Button
-                    variant="primary"
+                    variant="ghost"
                     key={model.id}
                     type="button"
                     role="option"
@@ -499,7 +499,7 @@ export function PreferencesMenu({
               {THINKING_LEVELS.map((level) => (
                  
                 (<Button
-                variant="primary"
+                variant="ghost"
                 key={level.value}
                 type="button"
                 role="option"
@@ -533,7 +533,7 @@ export function PreferencesMenu({
               {TOOL_MODES.map((mode) => (
                  
                 (<Button
-                variant="primary"
+                variant="ghost"
                 key={mode.value}
                 type="button"
                 role="option"
@@ -570,7 +570,7 @@ export function PreferencesMenu({
               {TOOL_PREFERENCE_MODES.map((pref) => (
                  
                 (<Button
-                variant="primary"
+                variant="ghost"
                 key={pref.value}
                 type="button"
                 role="option"
@@ -607,7 +607,7 @@ export function PreferencesMenu({
               {KB_FOCUS_MODES.map((mode) => (
                  
                 (<Button
-                variant="primary"
+                variant="ghost"
                 key={mode.value}
                 type="button"
                 role="option"

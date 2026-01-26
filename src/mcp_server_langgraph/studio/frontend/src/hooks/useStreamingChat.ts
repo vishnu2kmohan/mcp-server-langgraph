@@ -27,7 +27,12 @@ import {
   setCurrentSessionId,
   type LangGraphNode as ReduxLangGraphNode,
 } from "../store/slices/langGraphSlice";
-import { setPlan, type ExecutionPlan } from "../store/slices/executionModeSlice";
+import {
+  setPlan,
+  setRoutingDecision,
+  type ExecutionPlan,
+  type RoutingDecision,
+} from "../store/slices/executionModeSlice";
 
 /**
  * Token usage information from streaming response
@@ -78,6 +83,25 @@ export interface PlanGeneratedEvent {
   thinkingBudget: string;
   critiqueRounds: number;
   requiresApproval: boolean;
+}
+
+/**
+ * Routing decision event from SSE stream
+ * Emitted when router agent classifies the request
+ * Contains classification factors for debugging/observability
+ */
+export interface RoutingDecisionEvent {
+  complexity: "simple" | "complicated" | "complex";
+  risk: "low" | "medium" | "high";
+  taskType: string;
+  toolsNeeded: string[];
+  suggestedOrchestrator: string;
+  critiqueRounds: number;
+  thinkingBudget: string;
+  confidence: number;
+  skillsNeeded: string[];
+  executionMode: string;
+  routingRationale: string;
 }
 
 /**
@@ -267,6 +291,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
       totalAvailableTools?: number;
       authRequired?: AuthRequiredEvent;
       planGenerated?: PlanGeneratedEvent;
+      routingDecision?: RoutingDecisionEvent;
       sources?: SourceCitation[];
     } | null => {
       // Check for done signal
@@ -295,6 +320,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
             totalAvailableTools?: number;
             authRequired?: AuthRequiredEvent;
             planGenerated?: PlanGeneratedEvent;
+            routingDecision?: RoutingDecisionEvent;
             sources?: SourceCitation[];
           } = {};
 
@@ -305,22 +331,31 @@ export function useStreamingChat(): UseStreamingChatReturn {
             result.content = data.delta.content;
           }
 
-          // Handle thinking content - Claude style (thinking field)
-          if (data.thinking) {
-            result.thinking = data.thinking;
+          // Handle thinking content - object format {content, tokens}
+          if (data.thinking && typeof data.thinking === "object") {
+            // Structured object format
+            if (data.thinking.content) {
+              result.thinking = data.thinking.content;
+            }
+            if (data.thinking.tokens !== undefined) {
+              result.thinkingTokens = data.thinking.tokens;
+            }
           }
-          // Handle thinking content - Gemini style (thinking_content field)
-          else if (data.thinking_content) {
-            result.thinking = data.thinking_content;
+          // Handle thinking content - Claude style (thinking field as string)
+          else if (data.thinking && typeof data.thinking === "string") {
+            result.thinking = data.thinking;
           }
           // Handle thinking content - delta format
           else if (data.delta?.thinking) {
-            result.thinking = data.delta.thinking;
-          }
-
-          // Handle thinking tokens
-          if (data.thinking_tokens !== undefined) {
-            result.thinkingTokens = data.thinking_tokens;
+            // delta.thinking could be object or string
+            if (typeof data.delta.thinking === "object") {
+              result.thinking = data.delta.thinking.content;
+              if (data.delta.thinking.tokens !== undefined) {
+                result.thinkingTokens = data.delta.thinking.tokens;
+              }
+            } else {
+              result.thinking = data.delta.thinking;
+            }
           }
 
           // Handle usage
@@ -393,6 +428,24 @@ export function useStreamingChat(): UseStreamingChatReturn {
               thinkingBudget: data.plan_generated.thinking_budget,
               critiqueRounds: data.plan_generated.critique_rounds,
               requiresApproval: data.plan_generated.requires_approval,
+            };
+          }
+
+          // Handle routing_decision events (Router Agent classification)
+          // Contains complexity, risk, confidence, and rationale for debugging
+          if (data.routing_decision) {
+            result.routingDecision = {
+              complexity: data.routing_decision.complexity,
+              risk: data.routing_decision.risk,
+              taskType: data.routing_decision.task_type,
+              toolsNeeded: data.routing_decision.tools_needed ?? [],
+              suggestedOrchestrator: data.routing_decision.suggested_orchestrator,
+              critiqueRounds: data.routing_decision.critique_rounds,
+              thinkingBudget: data.routing_decision.thinking_budget,
+              confidence: data.routing_decision.confidence,
+              skillsNeeded: data.routing_decision.skills_needed ?? [],
+              executionMode: data.routing_decision.execution_mode,
+              routingRationale: data.routing_decision.routing_rationale ?? "",
             };
           }
 
@@ -602,6 +655,24 @@ export function useStreamingChat(): UseStreamingChatReturn {
                   requiresApproval: parsed.planGenerated.requiresApproval,
                 };
                 dispatch(setPlan(plan));
+              }
+
+              // Dispatch routing_decision to Redux (for debugging/observability)
+              if (parsed.routingDecision) {
+                const routingDecision: RoutingDecision = {
+                  complexity: parsed.routingDecision.complexity,
+                  risk: parsed.routingDecision.risk,
+                  taskType: parsed.routingDecision.taskType,
+                  toolsNeeded: parsed.routingDecision.toolsNeeded,
+                  suggestedOrchestrator: parsed.routingDecision.suggestedOrchestrator,
+                  critiqueRounds: parsed.routingDecision.critiqueRounds,
+                  thinkingBudget: parsed.routingDecision.thinkingBudget,
+                  confidence: parsed.routingDecision.confidence,
+                  skillsNeeded: parsed.routingDecision.skillsNeeded,
+                  executionMode: parsed.routingDecision.executionMode,
+                  routingRationale: parsed.routingDecision.routingRationale,
+                };
+                dispatch(setRoutingDecision(routingDecision));
               }
 
               setState((prev) => {

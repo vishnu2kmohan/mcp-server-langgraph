@@ -876,10 +876,10 @@ export function ChatInput({
       )}
       {/* Textarea area */}
       <div className="relative px-3 pt-3">
-        {/* Inline suggestion ghost text */}
+        {/* Inline suggestion ghost text - must match textarea padding (px-0 py-2) */}
         {enableInlineSuggestions && value && inlineSuggestion && (
           <div
-            className="absolute inset-0 px-3 pt-3 pointer-events-none overflow-hidden whitespace-pre-wrap break-words"
+            className="absolute inset-0 px-0 py-2 pointer-events-none overflow-hidden whitespace-pre-wrap break-words text-base leading-normal"
             aria-hidden="true"
           >
             <span className="invisible">{value}</span>

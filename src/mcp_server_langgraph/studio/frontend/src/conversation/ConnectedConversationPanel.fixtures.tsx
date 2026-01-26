@@ -54,6 +54,7 @@ const initialChatConnectionState: ChatConnectionState = {
 const initialExecutionModeState: ExecutionModeState = {
   executionMode: "default",
   currentPlan: null,
+  currentRoutingDecision: null,
   planStatus: "idle",
   userIsAdmin: false,
   hasBypassPermission: false,

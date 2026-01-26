@@ -14,6 +14,7 @@ import {
   categorizeViolation,
   isLegitimateSizing,
   isLegitimateSpacing,
+  isLegitimateComponent,
   type ViolationCategory,
 } from "../../scripts/lib/audit-patterns";
 
@@ -120,6 +121,90 @@ describe("RIPGREP_PATTERNS", () => {
       expect(pattern.test("duration-300")).toBe(false); // Standard scale
     });
   });
+
+  describe("component patterns", () => {
+    it("should have patterns for primary variant in menu/dropdown contexts", () => {
+      // Find the pattern for primary variant with role="option"
+      const hasMenuOptionPattern = RIPGREP_PATTERNS.component.some(
+        (p) => p.includes('variant') && p.includes('role') && p.includes('option')
+      );
+      expect(hasMenuOptionPattern).toBe(true);
+    });
+
+    it("should match primary variant with role=option (variant first)", () => {
+      // Pattern: variant="primary" ... role="option"
+      const patternStr = RIPGREP_PATTERNS.component.find(
+        (p) => p.includes('variant') && p.includes('primary') && p.includes('option')
+      );
+      expect(patternStr).toBeDefined();
+      const pattern = new RegExp(patternStr!);
+      expect(pattern.test('<Button variant="primary" role="option">')).toBe(true);
+      expect(pattern.test('<Button variant="primary" className="foo" role="option">')).toBe(true);
+    });
+
+    it("should match primary variant with role=option (role first)", () => {
+      // Pattern: role="option" ... variant="primary"
+      const patternStr = RIPGREP_PATTERNS.component.find(
+        (p) => p.includes('role') && p.includes('option') && p.includes('variant') && p.includes('primary') && !p.startsWith('<Button[^>]*variant')
+      );
+      expect(patternStr).toBeDefined();
+      const pattern = new RegExp(patternStr!);
+      expect(pattern.test('<Button role="option" variant="primary">')).toBe(true);
+      expect(pattern.test('<Button role="menuitem" variant="primary">')).toBe(true);
+    });
+
+    it("should match primary variant with role=menuitem", () => {
+      const patternVariantFirst = RIPGREP_PATTERNS.component.find(
+        (p) => p.includes('variant') && p.includes('primary') && p.includes('menuitem')
+      );
+      expect(patternVariantFirst).toBeDefined();
+      const pattern = new RegExp(patternVariantFirst!);
+      expect(pattern.test('<Button variant="primary" role="menuitem">')).toBe(true);
+    });
+
+    it("should NOT match ghost variant with role=option", () => {
+      const patternStr = RIPGREP_PATTERNS.component.find(
+        (p) => p.includes('variant') && p.includes('primary') && p.includes('option')
+      );
+      expect(patternStr).toBeDefined();
+      const pattern = new RegExp(patternStr!);
+      expect(pattern.test('<Button variant="ghost" role="option">')).toBe(false);
+    });
+
+    it("should have patterns for primary variant in navigation list items", () => {
+      const hasNavListPattern = RIPGREP_PATTERNS.component.some(
+        (p) => p.includes('variant') && p.includes('primary') && p.includes('w-full') && p.includes('text-left')
+      );
+      expect(hasNavListPattern).toBe(true);
+    });
+
+    it("should match primary variant with w-full text-left (variant first)", () => {
+      const patternStr = RIPGREP_PATTERNS.component.find(
+        (p) => p.includes('variant') && p.includes('primary') && p.includes('w-full') && p.startsWith('<Button[^>]*variant')
+      );
+      expect(patternStr).toBeDefined();
+      const pattern = new RegExp(patternStr!);
+      expect(pattern.test('<Button variant="primary" className="w-full text-left">')).toBe(true);
+    });
+
+    it("should match primary variant with w-full text-left (className first)", () => {
+      const patternStr = RIPGREP_PATTERNS.component.find(
+        (p) => p.includes('className') && p.includes('w-full') && p.includes('variant') && p.includes('primary') && p.startsWith('<Button[^>]*className')
+      );
+      expect(patternStr).toBeDefined();
+      const pattern = new RegExp(patternStr!);
+      expect(pattern.test('<Button className="w-full text-left truncate" variant="primary">')).toBe(true);
+    });
+
+    it("should NOT match ghost variant with w-full text-left", () => {
+      const patternStr = RIPGREP_PATTERNS.component.find(
+        (p) => p.includes('variant') && p.includes('primary') && p.includes('w-full')
+      );
+      expect(patternStr).toBeDefined();
+      const pattern = new RegExp(patternStr!);
+      expect(pattern.test('<Button variant="ghost" className="w-full text-left">')).toBe(false);
+    });
+  });
 });
 
 // =============================================================================
@@ -212,6 +297,16 @@ describe("getSuggestion", () => {
     const suggestion = getSuggestion("text-[14px]", "typography");
     expect(suggestion).toContain("text-");
   });
+
+  it("should return suggestion for role=option with primary variant", () => {
+    const suggestion = getSuggestion('role="option"', "component");
+    expect(suggestion).toContain("ghost");
+  });
+
+  it("should return suggestion for role=menuitem with primary variant", () => {
+    const suggestion = getSuggestion('role="menuitem"', "component");
+    expect(suggestion).toContain("ghost");
+  });
 });
 
 // =============================================================================
@@ -269,6 +364,20 @@ describe("categorizeViolation", () => {
   it("should return null for unknown patterns", () => {
     expect(categorizeViolation("flex")).toBeNull();
     expect(categorizeViolation("items-center")).toBeNull();
+  });
+
+  it("should categorize primary variant with role=option as component violation", () => {
+    expect(categorizeViolation('<Button variant="primary" role="option">')).toBe("component");
+    expect(categorizeViolation('<Button role="option" variant="primary">')).toBe("component");
+  });
+
+  it("should categorize primary variant with role=menuitem as component violation", () => {
+    expect(categorizeViolation('<Button variant="primary" role="menuitem">')).toBe("component");
+    expect(categorizeViolation('<Button role="menuitem" variant="primary">')).toBe("component");
+  });
+
+  it("should NOT categorize ghost variant with role=option as violation", () => {
+    expect(categorizeViolation('<Button variant="ghost" role="option">')).toBeNull();
   });
 });
 
@@ -380,6 +489,70 @@ describe("isLegitimateSpacing", () => {
   it("should not allow regular arbitrary spacing", () => {
     expect(isLegitimateSpacing('className="p-[20px]"')).toBe(false);
     expect(isLegitimateSpacing("m-[16px] flex")).toBe(false);
+  });
+});
+
+// =============================================================================
+// isLegitimateComponent Tests
+// =============================================================================
+
+describe("isLegitimateComponent", () => {
+  describe("primary variant in menu/dropdown contexts", () => {
+    it("should flag primary variant with role=option as violation", () => {
+      expect(isLegitimateComponent('<Button variant="primary" role="option">')).toBe(false);
+    });
+
+    it("should flag primary variant with role=menuitem as violation", () => {
+      expect(isLegitimateComponent('<Button role="menuitem" variant="primary">')).toBe(false);
+    });
+
+    it("should flag primary variant with role=menuitemradio as violation", () => {
+      expect(isLegitimateComponent('<Button variant="primary" role="menuitemradio">')).toBe(false);
+    });
+
+    it("should flag primary variant with role=menuitemcheckbox as violation", () => {
+      expect(isLegitimateComponent('<Button variant="primary" role="menuitemcheckbox">')).toBe(false);
+    });
+
+    it("should allow ghost variant with role=option (correct usage)", () => {
+      expect(isLegitimateComponent('<Button variant="ghost" role="option">')).toBe(true);
+    });
+
+    it("should allow ghost variant with role=menuitem (correct usage)", () => {
+      expect(isLegitimateComponent('<Button variant="ghost" role="menuitem">')).toBe(true);
+    });
+
+    it("should allow secondary variant with role=option (acceptable)", () => {
+      expect(isLegitimateComponent('<Button variant="secondary" role="option">')).toBe(true);
+    });
+  });
+
+  describe("primary variant in navigation list items", () => {
+    it("should allow ghost variant with w-full text-left (correct usage)", () => {
+      expect(isLegitimateComponent('<Button variant="ghost" className="w-full text-left">')).toBe(true);
+    });
+
+    it("should allow secondary variant with w-full text-left (acceptable)", () => {
+      expect(isLegitimateComponent('<Button variant="secondary" className="w-full justify-start">')).toBe(true);
+    });
+  });
+
+  describe("other component patterns", () => {
+    it("should allow secondary variant with Cancel text", () => {
+      expect(isLegitimateComponent('<Button variant="secondary">Cancel</Button>')).toBe(true);
+    });
+
+    it("should allow danger variant with Delete text", () => {
+      expect(isLegitimateComponent('<Button variant="danger">Delete</Button>')).toBe(true);
+    });
+
+    it("should allow icon button with aria-label", () => {
+      expect(isLegitimateComponent('<Button size="icon" aria-label="Close">')).toBe(true);
+    });
+
+    it("should allow any button with variant prop (non-menu context)", () => {
+      expect(isLegitimateComponent('<Button variant="primary">Submit</Button>')).toBe(true);
+    });
   });
 });
 

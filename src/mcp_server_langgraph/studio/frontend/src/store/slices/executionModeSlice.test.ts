@@ -30,6 +30,7 @@ describe("executionModeSlice", () => {
   const initialState: ExecutionModeState = {
     executionMode: "default",
     currentPlan: null,
+    currentRoutingDecision: null,
     planStatus: "idle",
     userIsAdmin: false,
     hasBypassPermission: false,

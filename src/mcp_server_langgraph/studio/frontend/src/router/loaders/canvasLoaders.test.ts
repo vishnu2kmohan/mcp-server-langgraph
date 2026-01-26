@@ -51,6 +51,124 @@ describe("canvasLoaders", () => {
   // ===========================================================================
 
   describe("sessionsLoader", () => {
+    // =========================================================================
+    // v8 Phase 4: Status Filter from URL Search Params
+    // =========================================================================
+
+    it("should pass status=active from URL search params to API", async () => {
+      // GIVEN: Request with ?status=active in URL
+      const mockApiSessions = [
+        {
+          id: "session-1",
+          name: "Active Session",
+          created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
+          status: "active",
+        },
+      ];
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: mockApiSessions }),
+      });
+
+      const args: LoaderFunctionArgs = {
+        params: {},
+        request: new Request("http://localhost/studio?status=active"),
+        context: undefined,
+      };
+
+      // WHEN: sessionsLoader is called
+      const result = await sessionsLoader(args);
+
+      // THEN: Should include status=active in API call
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/sessions?limit=50&status=active",
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: "Bearer mock-token",
+          }),
+        }),
+      );
+      expect(result.sessions).toHaveLength(1);
+      expect(result.sessions[0].status).toBe("active");
+    });
+
+    it("should pass status=archived from URL search params to API", async () => {
+      // GIVEN: Request with ?status=archived in URL
+      const mockApiSessions = [
+        {
+          id: "session-2",
+          name: "Archived Session",
+          created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
+          status: "archived",
+        },
+      ];
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: mockApiSessions }),
+      });
+
+      const args: LoaderFunctionArgs = {
+        params: {},
+        request: new Request("http://localhost/studio?status=archived"),
+        context: undefined,
+      };
+
+      // WHEN: sessionsLoader is called
+      const result = await sessionsLoader(args);
+
+      // THEN: Should include status=archived in API call
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/sessions?limit=50&status=archived",
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: "Bearer mock-token",
+          }),
+        }),
+      );
+      expect(result.sessions).toHaveLength(1);
+      expect(result.sessions[0].status).toBe("archived");
+    });
+
+    it("should default to status=active when no status param in URL", async () => {
+      // GIVEN: Request with no status param
+      const mockApiSessions = [
+        {
+          id: "session-1",
+          name: "Session 1",
+          created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
+        },
+      ];
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: mockApiSessions }),
+      });
+
+      const args: LoaderFunctionArgs = {
+        params: {},
+        request: new Request("http://localhost/studio"), // No ?status=
+        context: undefined,
+      };
+
+      // WHEN: sessionsLoader is called
+      await sessionsLoader(args);
+
+      // THEN: Should default to status=active
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/sessions?limit=50&status=active",
+        expect.any(Object),
+      );
+    });
+
+    // =========================================================================
+    // Existing tests
+    // =========================================================================
+
     it("should return list of sessions on success", async () => {
       const mockApiSessions = [
         {
@@ -81,8 +199,9 @@ describe("canvasLoaders", () => {
       // Session is transformed to camelCase per ADR-0091
       expect(result.sessions[0].createdAt).toBe("2024-01-01T00:00:00Z");
       expect(result.error).toBeUndefined();
+      // v8 Phase 4: Now includes status=active by default
       expect(mockFetch).toHaveBeenCalledWith(
-        "/api/v1/sessions?limit=50",
+        "/api/v1/sessions?limit=50&status=active",
         expect.objectContaining({
           headers: expect.objectContaining({
             Authorization: "Bearer mock-token",

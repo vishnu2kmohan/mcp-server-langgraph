@@ -10,16 +10,22 @@
  * - Implements useReducedMotion() for accessibility
  * - Uses semantic colors per STYLE.md
  */
-import { useState, useCallback, useMemo, memo } from "react";
+import { useState, useCallback, useMemo, memo, lazy, Suspense } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { cva } from "class-variance-authority";
-import { User, Bot, Copy, Check } from "lucide-react";
+import { User, Bot, Copy, Check, Loader2 } from "lucide-react";
 import type { ChatMessage } from "../types";
 import { cn } from "../utils/cn";
 import { listItemVariants } from "@/design-system/micro-interactions";
 
 import { Button } from "@/components/UI";
-import { LLMThinkingTrace } from "@/components/Chat/LLMThinkingTrace";
+
+// Lazy load LLMThinkingTrace for code-splitting
+const LLMThinkingTrace = lazy(() =>
+  import("@/components/Chat/LLMThinkingTrace").then((mod) => ({
+    default: mod.LLMThinkingTrace,
+  })),
+);
 
 // =============================================================================
 // CVA Variants
@@ -281,14 +287,23 @@ function MessageBubbleImpl({
           <>
             {/* Thinking Trace (collapsed by default for historical messages) */}
             {hasThinkingContent && (
-              <LLMThinkingTrace
-                thinkingContent={message.thinkingContent!}
-                isExpanded={isThinkingExpanded}
-                onToggle={() => setIsThinkingExpanded((prev) => !prev)}
-                thinkingTokens={message.thinkingTokens}
-                modelName={message.modelName}
-                className="mb-2"
-              />
+              <Suspense
+                fallback={
+                  <div className="flex items-center gap-2 text-sm text-neutral-9 mb-2">
+                    <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" />
+                    Loading thinking trace...
+                  </div>
+                }
+              >
+                <LLMThinkingTrace
+                  thinkingContent={message.thinkingContent!}
+                  isExpanded={isThinkingExpanded}
+                  onToggle={() => setIsThinkingExpanded((prev) => !prev)}
+                  thinkingTokens={message.thinkingTokens}
+                  modelName={message.modelName}
+                  className="mb-2"
+                />
+              </Suspense>
             )}
 
             {/* Content */}

@@ -374,6 +374,70 @@ export const renameSession = createAsyncThunk<
 });
 
 /**
+ * Archive a session (soft delete)
+ *
+ * v8 Phase 4: Call POST /api/v1/sessions/{sessionId}/archive
+ * Thunk only makes API call - revalidation is done from component.
+ */
+export const archiveSession = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: string }
+>("session/archiveSession", async (sessionId, { rejectWithValue }) => {
+  try {
+    const response = await authenticatedFetch(
+      `/api/v1/sessions/${sessionId}/archive`,
+      {
+        method: "POST",
+      },
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to archive session");
+    }
+
+    return sessionId;
+  } catch (error) {
+    return rejectWithValue(
+      error instanceof Error ? error.message : "Failed to archive session",
+    );
+  }
+});
+
+/**
+ * Restore an archived session
+ *
+ * v8 Phase 4: Call POST /api/v1/sessions/{sessionId}/restore
+ * Thunk only makes API call - revalidation is done from component.
+ */
+export const restoreSession = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: string }
+>("session/restoreSession", async (sessionId, { rejectWithValue }) => {
+  try {
+    const response = await authenticatedFetch(
+      `/api/v1/sessions/${sessionId}/restore`,
+      {
+        method: "POST",
+      },
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to restore session");
+    }
+
+    return sessionId;
+  } catch (error) {
+    return rejectWithValue(
+      error instanceof Error ? error.message : "Failed to restore session",
+    );
+  }
+});
+
+/**
  * Update session metadata (name and/or description)
  */
 export const updateSession = createAsyncThunk<
@@ -844,6 +908,35 @@ export const sessionSlice = createSlice({
       })
       .addCase(deleteSession.rejected, (state, action) => {
         state.error = action.payload || "Failed to delete session";
+      });
+
+    // archiveSession (v8 Phase 4)
+    // Note: Optimistic removal from list - revalidation from component refreshes full list
+    builder
+      .addCase(archiveSession.fulfilled, (state, action) => {
+        const archivedId = action.payload;
+        // Remove from current list (optimistic - revalidation will refresh)
+        state.sessions = state.sessions.filter((s) => s.id !== archivedId);
+        if (state.currentSession?.id === archivedId) {
+          state.currentSession = null;
+        }
+        state.error = null;
+      })
+      .addCase(archiveSession.rejected, (state, action) => {
+        state.error = action.payload || "Failed to archive session";
+      });
+
+    // restoreSession (v8 Phase 4)
+    // Note: Optimistic removal from archived list - revalidation from component refreshes
+    builder
+      .addCase(restoreSession.fulfilled, (state, action) => {
+        const restoredId = action.payload;
+        // Remove from current list (optimistic - revalidation will refresh)
+        state.sessions = state.sessions.filter((s) => s.id !== restoredId);
+        state.error = null;
+      })
+      .addCase(restoreSession.rejected, (state, action) => {
+        state.error = action.payload || "Failed to restore session";
       });
 
     // renameSession

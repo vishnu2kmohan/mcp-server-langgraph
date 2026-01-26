@@ -221,6 +221,7 @@ export function ContextMenu({
 
               return (
                 <Button
+                  variant="ghost"
                   key={item.id}
                   ref={(el) => {
                     itemRefs.current[currentActionableIndex] = el;

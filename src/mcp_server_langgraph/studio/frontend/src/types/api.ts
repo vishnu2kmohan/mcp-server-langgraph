@@ -319,6 +319,38 @@ export interface FeatureFlags {
   enhanced_model_selector?: boolean;
   /** Enable manual tool selection dropdown in chat input (auto/manual/none modes) */
   manual_tool_selection?: boolean;
+  /** Enable panel zoom/maximize (Sprint 4) */
+  panel_zoom?: boolean;
+  /** Enable mobile drawer navigation (Sprint 4) */
+  mobile_drawer?: boolean;
+  /** Enable KB focus mode (ADR-0094: Perplexity-style) */
+  kb_focus?: boolean;
+  /** Enable AI nudges feature */
+  nudges?: boolean;
+  /** Enable AI persona analysis */
+  persona_analysis?: boolean;
+
+  // ==========================================================================
+  // Session AI Features
+  // ==========================================================================
+  /** Enable AI-powered session cards */
+  session_ai?: boolean;
+  /** Enable AI-generated session summaries */
+  session_summary?: boolean;
+  /** Enable AI-extracted session topics */
+  session_topics?: boolean;
+
+  // ==========================================================================
+  // DevTools Features
+  // ==========================================================================
+  /** Enable DevTools panel */
+  devtools_panel?: boolean;
+  /** Enable AI insights in DevTools */
+  devtools_ai_insights?: boolean;
+  /** Enable AI layout suggestions in DevTools */
+  devtools_ai_layout?: boolean;
+  /** Enable network tab in DevTools */
+  devtools_network_tab?: boolean;
 
   // ==========================================================================
   // Execution Mode Features (Ctrl/Cmd+Shift+M Toggle)
@@ -848,10 +880,14 @@ export interface TraceSpan {
   events?: unknown[];
   error_message?: string;
   depth?: number;
-  /** LLM thinking/reasoning content (from Claude extended thinking, etc.) */
-  thinking_content?: string;
-  /** Number of tokens used for thinking/reasoning */
-  thinking_tokens?: number;
+  /**
+   * Thinking object structure with content and tokens from extended thinking models.
+   * Matches SpanThinkingResponse from generated-api.ts (both fields optional).
+   */
+  thinking?: {
+    content?: string | null;
+    tokens?: number | null;
+  } | null;
   /** Model name that generated this span's content */
   model_name?: string;
 }

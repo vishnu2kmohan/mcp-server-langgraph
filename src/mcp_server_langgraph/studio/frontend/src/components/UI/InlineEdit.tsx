@@ -169,6 +169,7 @@ export const InlineEdit = forwardRef<HTMLDivElement, InlineEditProps>(
             aria-label={ariaLabel}
             className={cn(
               "w-full px-2 py-1 text-sm rounded border",
+              "bg-neutral-1 text-neutral-12",
               "focus:outline-none focus:ring-2 focus:ring-brand-primary",
               hasError
                 ? "border-error-9 focus:ring-error-7"

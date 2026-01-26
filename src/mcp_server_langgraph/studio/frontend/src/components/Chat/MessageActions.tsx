@@ -326,8 +326,8 @@ export function MessageActions({
               {onFeedback && (
                 <div className="flex items-center px-3 py-2 gap-2 border-t border-neutral-5">
                   <Button
-                    variant="primary"
-                    className="p-1.5 rounded"
+                    variant="ghost"
+                    className="p-1.5 rounded text-neutral-11 hover:bg-neutral-2"
                     data-testid="action-thumbs-up"
                     onClick={handleThumbsUp}
                     data-active={feedbackState === "positive"}
@@ -336,8 +336,8 @@ export function MessageActions({
                     <ThumbsUp size={16} />
                   </Button>
                   <Button
-                    variant="primary"
-                    className="p-1.5 rounded"
+                    variant="ghost"
+                    className="p-1.5 rounded text-neutral-11 hover:bg-neutral-2"
                     data-testid="action-thumbs-down"
                     onClick={handleThumbsDown}
                     data-active={feedbackState === "negative"}

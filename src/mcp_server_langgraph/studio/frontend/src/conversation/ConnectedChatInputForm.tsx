@@ -485,7 +485,7 @@ export function ConnectedChatInputForm({
     status: wsStatus,
     currentSuggestion: wsSuggestion,
     isPending: wsIsPending,
-    requestSuggestion: wsRequestSuggestion,
+    requestSuggestionDebounced: wsRequestSuggestionDebounced,
     acceptSuggestion: wsAcceptSuggestion,
     rejectSuggestion: wsRejectSuggestion,
     updateContext: wsUpdateContext,
@@ -493,6 +493,7 @@ export function ConnectedChatInputForm({
   } = useAISuggestionsWebSocket({
     enabled: useWebSocketForSuggestions,
     sessionId,
+    debounceMs: 300, // Built-in debouncing for typing scenarios
     onSuggestion: (suggestion) => {
       // Optionally trigger accept callback when suggestion is received
       onAcceptSuggestionProp?.(suggestion.text);
@@ -501,18 +502,26 @@ export function ConnectedChatInputForm({
 
   // Track cursor position for WebSocket suggestions
   const cursorPositionRef = useRef<number>(0);
+  // Track previous value to avoid redundant requests
+  const prevValueRef = useRef<string>("");
 
-  // Request WebSocket suggestion when input changes (debounced via hook internally)
+  // Request WebSocket suggestion when input changes (uses hook's built-in debouncing)
   useEffect(() => {
+    // Skip if value hasn't changed (prevents redundant requests on cursor-only changes)
+    if (value === prevValueRef.current) {
+      return;
+    }
+    prevValueRef.current = value;
+
     if (
       useWebSocketForSuggestions &&
       wsStatus === "connected" &&
       value.length > 3
     ) {
-      // Only request if we have meaningful input
-      wsRequestSuggestion(value, cursorPositionRef.current);
+      // Request suggestion (hook handles debouncing internally)
+      wsRequestSuggestionDebounced(value, cursorPositionRef.current);
     }
-  }, [value, useWebSocketForSuggestions, wsStatus, wsRequestSuggestion]);
+  }, [value, useWebSocketForSuggestions, wsStatus, wsRequestSuggestionDebounced]);
 
   // Update context when session changes
   useEffect(() => {

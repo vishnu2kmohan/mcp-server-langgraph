@@ -33,6 +33,35 @@ export type ExecutionMode = "default" | "plan" | "auto_accept" | "bypass";
 export type PlanStatus = "idle" | "awaiting_approval" | "approved" | "rejected";
 
 /**
+ * Routing decision from SSE stream
+ * Contains router agent classification factors for debugging/observability
+ */
+export interface RoutingDecision {
+  /** Task complexity assessment */
+  complexity: "simple" | "complicated" | "complex";
+  /** Risk level assessment */
+  risk: "low" | "medium" | "high";
+  /** Type of task detected */
+  taskType: string;
+  /** Tools identified as needed */
+  toolsNeeded: string[];
+  /** Recommended orchestrator pattern */
+  suggestedOrchestrator: string;
+  /** Recommended critique rounds */
+  critiqueRounds: number;
+  /** Recommended thinking budget */
+  thinkingBudget: string;
+  /** Router confidence score (0-1) */
+  confidence: number;
+  /** Skills identified as needed */
+  skillsNeeded: string[];
+  /** Execution mode from router */
+  executionMode: string;
+  /** Explanation of routing decision */
+  routingRationale: string;
+}
+
+/**
  * Execution plan data from SSE stream
  * Matches the plan_generated SSE event structure
  */
@@ -77,6 +106,8 @@ export interface ExecutionModeState {
   executionMode: ExecutionMode;
   /** Current plan awaiting action (if any) */
   currentPlan: ExecutionPlan | null;
+  /** Current routing decision (for debugging/observability) */
+  currentRoutingDecision: RoutingDecision | null;
   /** Current plan approval status */
   planStatus: PlanStatus;
   /** Whether current user has admin role (for bypass mode) - legacy, use hasBypassPermission */
@@ -92,6 +123,7 @@ export interface ExecutionModeState {
 const initialState: ExecutionModeState = {
   executionMode: "default",
   currentPlan: null,
+  currentRoutingDecision: null,
   planStatus: "idle",
   userIsAdmin: false,
   hasBypassPermission: false,
@@ -182,10 +214,19 @@ export const executionModeSlice = createSlice({
     },
 
     /**
-     * Clear current plan and reset status
+     * Set current routing decision from SSE stream
+     * Used for debugging/observability of router classification
+     */
+    setRoutingDecision: (state, action: PayloadAction<RoutingDecision>) => {
+      state.currentRoutingDecision = action.payload;
+    },
+
+    /**
+     * Clear current plan, routing decision, and reset status
      */
     clearPlan: (state) => {
       state.currentPlan = null;
+      state.currentRoutingDecision = null;
       state.planStatus = "idle";
     },
 
@@ -217,6 +258,7 @@ export const {
   setUserIsAdmin,
   setHasBypassPermission,
   setPlan,
+  setRoutingDecision,
   clearPlan,
   setPlanStatus,
 } = executionModeSlice.actions;
@@ -238,6 +280,13 @@ export const selectExecutionMode = (state: {
 export const selectCurrentPlan = (state: {
   executionMode: ExecutionModeState;
 }) => state.executionMode.currentPlan;
+
+/**
+ * Select current routing decision (for debugging/observability)
+ */
+export const selectRoutingDecision = (state: {
+  executionMode: ExecutionModeState;
+}) => state.executionMode.currentRoutingDecision;
 
 /**
  * Select current plan status

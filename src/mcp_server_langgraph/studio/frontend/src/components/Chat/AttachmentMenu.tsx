@@ -356,7 +356,7 @@ export function AttachmentMenu({
             return (
                
               <Button
-                variant="primary"
+                variant="ghost"
                 key={item.id}
                 ref={(el) => {
                   menuItemsRef.current[index] = el;
@@ -410,7 +410,7 @@ export function AttachmentMenu({
                 return (
                    
                   <Button
-                    variant="primary"
+                    variant="ghost"
                     key={option.value}
                     role="menuitem"
                     onClick={() => handleKBFocusSelect(option.value)}

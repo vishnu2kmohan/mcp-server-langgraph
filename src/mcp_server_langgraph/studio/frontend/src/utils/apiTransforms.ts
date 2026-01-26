@@ -75,14 +75,23 @@ export interface ApiSourceCitation {
  * API Message format (snake_case from backend)
  * Matches the generated MessageResponse schema
  */
+/**
+ * Thinking object structure (v8 new format)
+ * Per v8 Q14/Q18: API returns thinking as object with content and tokens
+ */
+export interface ApiThinkingContent {
+  content: string;
+  tokens?: number | null;
+}
+
 export interface ApiMessage {
   message_id: string;
   role: "user" | "assistant" | "system";
   content: string;
   timestamp: string | null;
   sources?: ApiSourceCitation[] | null;
-  thinking_content?: string | null;
-  thinking_tokens?: number | null;
+  /** Thinking object with content and tokens */
+  thinking?: ApiThinkingContent | null;
   model_name?: string | null;
 }
 
@@ -383,8 +392,9 @@ export function transformApiMessageToClient(
             relevanceScore: s.relevance_score ?? null,
           }))
       : undefined,
-    thinkingContent: apiMessage.thinking_content ?? undefined,
-    thinkingTokens: apiMessage.thinking_tokens ?? undefined,
+    // Thinking content from structured object
+    thinkingContent: apiMessage.thinking?.content ?? undefined,
+    thinkingTokens: apiMessage.thinking?.tokens ?? undefined,
     modelName: apiMessage.model_name ?? undefined,
   };
 }

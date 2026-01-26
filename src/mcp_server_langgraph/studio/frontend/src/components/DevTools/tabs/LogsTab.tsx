@@ -189,7 +189,7 @@ function FilterDropdown({
               exit="hidden"
             >
               <Button
-                variant="primary"
+                variant="ghost"
                 type="button"
                 role="option"
                 aria-selected={!value}
@@ -203,7 +203,7 @@ function FilterDropdown({
               </Button>
               {options.map((option) => (
                 <Button
-                  variant="primary"
+                  variant="ghost"
                   key={option}
                   type="button"
                   role="option"

@@ -127,7 +127,7 @@ export function ExportButton({
   return (
     <div className="relative">
       <Button
-        variant="primary"
+        variant="ghost"
         onClick={() => setIsOpen(!isOpen)}
         disabled={isLoading}
         className={cn(
@@ -172,7 +172,7 @@ export function ExportButton({
             {/* Format Options */}
             {formatOptions.map(({ format, icon: Icon, label }) => (
               <Button
-                variant="primary"
+                variant="ghost"
                 key={format}
                 onClick={() => handleExport(format)}
                 disabled={isLoading}

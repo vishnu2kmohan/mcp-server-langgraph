@@ -13,7 +13,13 @@
  */
 /* eslint-disable react-refresh/only-export-components -- Exports groupSessionsByDate utility alongside component */
 import { useCallback, useMemo, useState, forwardRef, useRef } from "react";
-import { useNavigate, useRouteLoaderData, useParams } from "react-router";
+import {
+  useNavigate,
+  useRouteLoaderData,
+  useParams,
+  useSearchParams,
+  useRevalidator,
+} from "react-router";
 import { useReducedMotion } from "motion/react";
 import {
   Plus,
@@ -22,11 +28,19 @@ import {
   Edit2,
   MessageSquare,
   Clock,
+  Archive,
+  RotateCcw,
 } from "lucide-react";
+import { useAppDispatch } from "../store/hooks";
+import {
+  archiveSession,
+  restoreSession,
+} from "../store/slices/sessionSlice";
 import type { SessionsLoaderData } from "../router/loaders";
 import type { SessionCamelCase as Session } from "../types";
 import { cn } from "../utils/cn";
 import { useNewChat } from "../hooks/useNewChat";
+import { useDebouncedCallback } from "../hooks/useDebounce";
 import { AISessionCard } from "./AISessionCard";
 import { SimilarSessionsPanel } from "../components/Session/SimilarSessionsPanel";
 import {
@@ -166,6 +180,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
     ref,
   ) {
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
     const { sessionId: currentSessionId } = useParams();
     const [searchQuery, setSearchQuery] = useState("");
     // WCAG 2.2 AA: Respect user's reduced motion preference
@@ -176,6 +191,18 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
     );
     // Ref to track click timeout for distinguishing single vs double click
     const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // v8 Phase 4: URL search params for archive toggle
+    const [searchParams, setSearchParams] = useSearchParams();
+    const revalidator = useRevalidator();
+    const showArchived = searchParams.get("status") === "archived";
+
+    // v8: Debounced revalidate to prevent rapid successive revalidations
+    // 300ms debounce prevents duplicate API calls when user performs
+    // multiple archive/restore actions in quick succession
+    const debouncedRevalidate = useDebouncedCallback(() => {
+      revalidator.revalidate();
+    }, 300);
 
     // Hook for creating new chat sessions
     const { createNewChat, isCreating } = useNewChat();
@@ -242,6 +269,43 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
       [],
     );
 
+    // v8 Phase 4: Toggle between active and archived sessions
+    const handleStatusToggle = useCallback(
+      (archived: boolean) => {
+        setSearchParams({ status: archived ? "archived" : "active" });
+        // URL change triggers loader revalidation automatically
+      },
+      [setSearchParams],
+    );
+
+    // v8 Phase 4: Archive a session and revalidate
+    const handleArchive = useCallback(
+      async (sessionId: string) => {
+        try {
+          await dispatch(archiveSession(sessionId)).unwrap();
+          // Revalidate with debouncing to prevent duplicate API calls
+          debouncedRevalidate();
+        } catch {
+          // Error is handled by slice (sets state.error)
+        }
+      },
+      [dispatch, debouncedRevalidate],
+    );
+
+    // v8 Phase 4: Restore an archived session and revalidate
+    const handleRestore = useCallback(
+      async (sessionId: string) => {
+        try {
+          await dispatch(restoreSession(sessionId)).unwrap();
+          // Revalidate with debouncing to prevent duplicate API calls
+          debouncedRevalidate();
+        } catch {
+          // Error is handled by slice (sets state.error)
+        }
+      },
+      [dispatch, debouncedRevalidate],
+    );
+
     // Navigate to a similar session when clicked
     const handleSimilarSessionSelect = useCallback(
       (sessionId: string) => {
@@ -271,6 +335,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
       }
 
       // Build context menu items if enabled
+      // v8 Phase 4: Conditional Archive/Restore based on view mode (Finding 6)
       const contextMenuItems: ContextMenuItem[] = enableContextMenu
         ? [
             {
@@ -282,6 +347,21 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
               },
             },
             { id: "divider-1", type: "divider" },
+            // v8 Phase 4: Show Restore when viewing archived, Archive otherwise
+            showArchived
+              ? {
+                  id: "restore",
+                  label: "Restore",
+                  icon: <RotateCcw size={14} />,
+                  action: () => handleRestore(session.id),
+                }
+              : {
+                  id: "archive",
+                  label: "Archive",
+                  icon: <Archive size={14} />,
+                  action: () => handleArchive(session.id),
+                },
+            { id: "divider-2", type: "divider" },
             {
               id: "delete",
               label: "Delete",
@@ -370,37 +450,41 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
 
       // Standard session item with optional inline edit and context menu
       // Single-click navigates, double-click enters edit mode (when enableEdit is true)
-      const sessionContent = (
+      // STYLE.md: Menu items use ghost styling (text-neutral-11, hover:bg-neutral-2, active: bg-primary-4)
+      const sessionContent = isEditing ? (
         <div
           className={cn(
-            "w-full text-left px-3 py-2 rounded-lg text-sm",
+            "w-full px-3 py-2 rounded-lg text-sm",
+            !prefersReducedMotion && "transition-colors",
+            "bg-neutral-2",
+          )}
+        >
+          <InlineEdit
+            value={displayName}
+            onSave={handleRename}
+            onCancel={handleCancelEdit}
+            placeholder="Session name"
+            aria-label={`Rename session ${displayName}`}
+            className="w-full"
+            startInEditMode
+          />
+        </div>
+      ) : (
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={handleClick}
+          onDoubleClick={handleDoubleClick}
+          className={cn(
+            "w-full justify-start px-3 py-2 rounded-lg text-sm truncate",
             !prefersReducedMotion && "transition-colors",
             session.id === currentSessionId
               ? "bg-primary-4 text-primary-11"
               : "text-neutral-11 hover:bg-neutral-2",
           )}
         >
-          {isEditing ? (
-            <InlineEdit
-              value={displayName}
-              onSave={handleRename}
-              onCancel={handleCancelEdit}
-              placeholder="Session name"
-              aria-label={`Rename session ${displayName}`}
-              className="w-full"
-              startInEditMode
-            />
-          ) : (
-            <Button
-              variant="primary"
-              className="w-full text-left truncate"
-              type="button"
-              onClick={handleClick}
-              onDoubleClick={handleDoubleClick}>
-              {displayName}
-            </Button>
-          )}
-        </div>
+          {displayName}
+        </Button>
       );
 
       // Wrap with Tooltip if hover is enabled
@@ -484,11 +568,48 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
             />
           </div>
         </div>
+        {/* v8 Phase 4: Active/Archived Toggle */}
+        <div className="flex gap-1 px-3 py-2 border-b border-neutral-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            data-testid="status-toggle-active"
+            onClick={() => handleStatusToggle(false)}
+            className={cn(
+              "text-xs px-2 py-1",
+              !prefersReducedMotion && "transition-colors",
+              !showArchived
+                ? "bg-primary-3 text-primary-11"
+                : "text-neutral-11 hover:bg-neutral-2",
+            )}
+          >
+            Active
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            data-testid="status-toggle-archived"
+            onClick={() => handleStatusToggle(true)}
+            className={cn(
+              "text-xs px-2 py-1",
+              !prefersReducedMotion && "transition-colors",
+              showArchived
+                ? "bg-primary-3 text-primary-11"
+                : "text-neutral-11 hover:bg-neutral-2",
+            )}
+          >
+            Archived
+          </Button>
+        </div>
         {/* Session list */}
         <div className="flex-1 overflow-y-auto p-2" aria-label="Sessions">
           {filteredSessions.length === 0 ? (
             <div className="text-sm text-neutral-10 italic text-center mt-4">
-              {searchQuery ? "No matching sessions" : "No sessions yet"}
+              {searchQuery
+                ? "No matching sessions"
+                : showArchived
+                  ? "No archived sessions"
+                  : "No sessions yet"}
             </div>
           ) : (
             <>

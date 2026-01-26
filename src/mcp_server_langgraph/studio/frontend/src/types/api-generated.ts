@@ -31,7 +31,8 @@ export type ApiMessageResponse = components["schemas"]["MessageResponse"];
 /**
  * Source citation for a message
  */
-export type ApiSourceCitation = components["schemas"]["SourceCitation"];
+export type ApiSourceCitation =
+  components["schemas"]["mcp_server_langgraph__api__v1__sessions__SourceCitation"];
 
 /**
  * Session response from API (snake_case)
