@@ -1,0 +1,174 @@
+groups:
+- name: message_embedding.success_rate
+  interval: 30s
+  rules:
+  - alert: MessageEmbeddingSuccessRateLow
+    expr: |
+      (
+        sum(rate(embedding_message_success_total[5m]))
+        /
+        (sum(rate(embedding_message_total[5m])) > 0)
+      ) < 0.95
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Message embedding success rate below 95%'
+      description: |
+        Message embedding success rate is {{ $value | humanizePercentage }}.
+        This is below the 95% threshold defined in the rollout strategy.
+
+        Impact: Session similarity search may return fewer/stale results.
+
+        Investigate:
+        1. Check embedding service health
+        2. Check vector store (Qdrant) connectivity
+        3. Review embedding_message_failure_total by reason
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/message-embedding-alerts.md#success-rate-low
+      dashboard_url: '{{ grafana_url }}/d/message-embedding-metrics'
+
+  - alert: MessageEmbeddingFailureSpiked
+    expr: |
+      sum(increase(embedding_message_failure_total[5m])) > 50
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Message embedding failure spike detected'
+      description: |
+        50+ message embedding failures in the last 5 minutes.
+        Check embedding service and vector store immediately.
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/message-embedding-alerts.md#failure-spike
+      dashboard_url: '{{ grafana_url }}/d/message-embedding-metrics'
+
+- name: message_embedding.latency
+  interval: 30s
+  rules:
+  - alert: MessageEmbeddingLatencyHigh
+    expr: |
+      histogram_quantile(0.99, sum(rate(embedding_message_latency_ms_bucket[5m])) by (le)) > 500
+    for: 10m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'High message embedding p99 latency'
+      description: |
+        Message embedding p99 latency is {{ $value | humanizeDuration }}.
+        This exceeds the 500ms threshold defined in the rollout strategy.
+
+        Consider:
+        - Checking vector store performance
+        - Checking embedding model latency
+        - Reviewing batch sizes
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/message-embedding-alerts.md#high-latency
+      dashboard_url: '{{ grafana_url }}/d/message-embedding-metrics'
+
+- name: message_embedding.session_lifecycle
+  interval: 30s
+  rules:
+  - alert: SessionArchiveEmbeddingFailures
+    expr: |
+      sum(rate(embedding_session_archive_total{status="failure"}[5m])) > 0.1
+    for: 10m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Session archive embedding failures'
+      description: |
+        Session archive operations are failing to update embeddings.
+        Archived sessions may appear in similarity search results.
+
+        Check:
+        1. Vector store connectivity
+        2. Session archive endpoint logs
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/message-embedding-alerts.md#session-lifecycle-failures
+      dashboard_url: '{{ grafana_url }}/d/message-embedding-metrics'
+
+  - alert: SessionDeleteEmbeddingFailures
+    expr: |
+      sum(rate(embedding_session_delete_total{status="failure"}[5m])) > 0.1
+    for: 10m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Session delete embedding failures'
+      description: |
+        Session delete operations are failing to remove embeddings.
+        Deleted sessions may still appear in similarity search results.
+
+        This is a data hygiene issue. Check vector store deletion operations.
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/message-embedding-alerts.md#session-lifecycle-failures
+      dashboard_url: '{{ grafana_url }}/d/message-embedding-metrics'
+
+- name: message_embedding.similarity_search
+  interval: 30s
+  rules:
+  - alert: SimilaritySearchLatencyHigh
+    expr: |
+      histogram_quantile(0.95, sum(rate(similarity_session_search_latency_ms_bucket[5m])) by (le)) > 1000
+    for: 10m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'High session similarity search p95 latency'
+      description: |
+        Session similarity search p95 latency is {{ $value | humanizeDuration }}.
+        This exceeds the 1 second threshold.
+
+        Consider:
+        - Checking vector store query performance
+        - Reviewing index size and structure
+        - Checking embedding model response times
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/message-embedding-alerts.md#similarity-search-latency
+      dashboard_url: '{{ grafana_url }}/d/message-embedding-metrics'
+
+  - alert: SimilaritySearchNoResults
+    expr: |
+      avg(similarity_session_search_results_count) < 0.5
+      and
+      sum(rate(similarity_session_search_total[5m])) > 0.1
+    for: 30m
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: 'Session similarity search returning few results'
+      description: |
+        Average similarity search results is below 0.5 per query.
+        This may indicate:
+        - Low embedding density (not enough messages indexed)
+        - High similarity threshold filtering results
+        - Vector store query issues
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/message-embedding-alerts.md#low-results
+      dashboard_url: '{{ grafana_url }}/d/message-embedding-metrics'
+
+- name: message_embedding.feature_flag
+  interval: 1m
+  rules:
+  - alert: MessageEmbeddingDisabledButEnabled
+    expr: |
+      sum(rate(embedding_message_total[5m])) == 0
+      and
+      sum(rate(embedding_message_failure_total[5m])) == 0
+    for: 1h
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: 'No message embedding activity detected'
+      description: |
+        No message embedding operations have occurred in the last hour.
+        This may indicate:
+        - Feature flag `enable_message_embedding` is disabled
+        - No message persistence activity
+        - Embedding service not initialized
+
+        Check feature flag status if session similarity is expected to work.
+      runbook_url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/message-embedding-alerts.md#no-activity
+      dashboard_url: '{{ grafana_url }}/d/message-embedding-metrics'
