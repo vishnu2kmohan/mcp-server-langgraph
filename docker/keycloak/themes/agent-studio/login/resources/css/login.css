@@ -504,15 +504,17 @@ input[type="text"],
 input[type="password"],
 input[type="email"],
 input[type="text"]:not([type]),
-.pf-c-form-control,
-.pf-v5-c-form-control,
+.pf-c-form-control > input,
+.pf-v5-c-form-control > input,
+input.pf-c-form-control,
+input.pf-v5-c-form-control,
 .pf-c-text-input-group__text-input,
 .pf-v5-c-text-input-group__text-input {
   width: 100% !important;
   max-width: 100% !important;
   padding: 0.625rem 0.875rem !important;  /* 10px 14px - compact padding */
-  background-color: var(--kc-input-bg) !important;
-  background: var(--kc-input-bg) !important;
+  background-color: transparent !important;
+  background: transparent !important;
   border: none !important;
   border-radius: var(--kc-radius-md) !important;  /* 6px - rounded-md per STYLE.md */
   color: var(--kc-input-text) !important;
@@ -530,9 +532,39 @@ input[type="text"]:not([type]),
   height: var(--kc-size-input) !important;  /* Fixed height for perfect alignment */
 }
 
+/* Keycloak wraps inputs in a pf-v5-c-form-control span.
+ * Style the wrapper as the visual field and keep inner inputs transparent. */
+.pf-c-form-control:not(input):not(textarea):not(select),
+.pf-v5-c-form-control:not(input):not(textarea):not(select) {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background-color: var(--kc-input-bg) !important;
+  background: var(--kc-input-bg) !important;
+  border: none !important;
+  border-radius: var(--kc-radius-md) !important;
+  min-height: var(--kc-size-input) !important;
+  height: var(--kc-size-input) !important;
+  box-sizing: border-box !important;
+  position: relative !important;  /* Anchor utilities/error icon */
+  overflow: visible !important;
+  box-shadow: none !important;
+}
+
+/* Inputs inside the wrapper should fill it without adding another background. */
+.pf-c-form-control > input,
+.pf-v5-c-form-control > input {
+  height: 100% !important;
+  min-height: 100% !important;
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
 input::placeholder,
-.pf-c-form-control::placeholder,
-.pf-v5-c-form-control::placeholder {
+.pf-c-form-control input::placeholder,
+.pf-v5-c-form-control input::placeholder {
   color: var(--kc-input-placeholder) !important;
   opacity: 1 !important;
 }
@@ -566,6 +598,26 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
   box-shadow: 0 0 0 2px var(--kc-focus-ring) !important;
 }
 
+/* Use the wrapper for the focus ring when Keycloak wraps inputs in spans. */
+.pf-c-form-control:not(input):not(textarea):not(select):focus-within,
+.pf-v5-c-form-control:not(input):not(textarea):not(select):focus-within {
+  box-shadow: 0 0 0 2px var(--kc-focus-ring) !important;
+}
+
+/* Input-group container handles focus ring for password fields. */
+.pf-c-input-group .pf-c-form-control:not(input):not(textarea):not(select):focus-within,
+.pf-v5-c-input-group .pf-v5-c-form-control:not(input):not(textarea):not(select):focus-within {
+  box-shadow: none !important;
+}
+
+/* Prevent double focus rings on inputs inside wrappers. */
+.pf-c-form-control > input:focus,
+.pf-v5-c-form-control > input:focus,
+.pf-c-form-control > input:focus-visible,
+.pf-v5-c-form-control > input:focus-visible {
+  box-shadow: none !important;
+}
+
 /* Inputs INSIDE text-input-group - NO focus ring (container handles it) */
 .pf-c-text-input-group__text-input:focus,
 .pf-v5-c-text-input-group__text-input:focus,
@@ -585,7 +637,15 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
 .pf-c-form__group::after,
 .pf-c-form__group::before,
 .pf-v5-c-form__group::after,
-.pf-v5-c-form__group::before {
+.pf-v5-c-form__group::before,
+.pf-c-input-group::after,
+.pf-c-input-group::before,
+.pf-v5-c-input-group::after,
+.pf-v5-c-input-group::before,
+.pf-c-text-input-group::after,
+.pf-c-text-input-group::before,
+.pf-v5-c-text-input-group::after,
+.pf-v5-c-text-input-group::before {
   display: none !important;
   content: none !important;
 }
@@ -599,14 +659,14 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
  */
 .pf-c-input-group,
 .pf-v5-c-input-group,
-.pf-c-text-input-group,
-.pf-v5-c-text-input-group,
-#kc-form .pf-v5-c-text-input-group,
-#kc-form .pf-c-text-input-group,
-#kc-form-login .pf-v5-c-text-input-group,
-#kc-form-login .pf-c-text-input-group {
-  display: block !important;  /* CHANGED: Use block, not flex - let children handle layout */
-  position: relative !important;  /* CRITICAL: Positioning context for absolute utilities */
+#kc-form .pf-v5-c-input-group,
+#kc-form .pf-c-input-group,
+#kc-form-login .pf-v5-c-input-group,
+#kc-form-login .pf-c-input-group {
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  position: relative !important;
   width: 100% !important;
   max-width: 100% !important;
   background-color: var(--kc-input-bg) !important;
@@ -626,15 +686,76 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
   /* Override ALL PatternFly CSS variables that could create borders */
   --pf-v5-c-input-group--BorderWidth: 0 !important;
   --pf-v5-c-input-group--BorderColor: transparent !important;
-  --pf-v5-c-text-input-group--BorderWidth: 0 !important;
-  --pf-v5-c-text-input-group--BorderColor: transparent !important;
   --pf-c-input-group--BorderWidth: 0 !important;
   --pf-c-input-group--BorderColor: transparent !important;
+}
+
+.pf-c-text-input-group,
+.pf-v5-c-text-input-group,
+#kc-form .pf-v5-c-text-input-group,
+#kc-form .pf-c-text-input-group,
+#kc-form-login .pf-v5-c-text-input-group,
+#kc-form-login .pf-c-text-input-group {
+  display: block !important;  /* Block with absolute-positioned utilities */
+  position: relative !important;  /* Positioning context for utilities */
+  width: 100% !important;
+  max-width: 100% !important;
+  background-color: var(--kc-input-bg) !important;
+  background: var(--kc-input-bg) !important;
+  border: none !important;
+  border-radius: var(--kc-radius-md) !important;  /* 6px - STYLE.md aligned */
+  overflow: visible !important;  /* Allow focus ring to show outside container */
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 !important;  /* No wrapper padding - input handles its own padding */
+  margin: 0 !important;
+  /* FIXED height - MUST match standalone input exactly */
+  min-height: var(--kc-size-input) !important;  /* 40px - same as standalone input */
+  height: var(--kc-size-input) !important;  /* Fixed height for perfect alignment */
+  box-sizing: border-box !important;
+
+  /* Override ALL PatternFly CSS variables that could create borders */
+  --pf-v5-c-text-input-group--BorderWidth: 0 !important;
+  --pf-v5-c-text-input-group--BorderColor: transparent !important;
   --pf-c-text-input-group--BorderWidth: 0 !important;
   --pf-c-text-input-group--BorderColor: transparent !important;
   /* Override display-related variables */
   --pf-v5-c-text-input-group--Display: block !important;
   --pf-c-text-input-group--Display: block !important;
+}
+
+/* Avoid nested fields inside input groups (password field uses wrapper span). */
+.pf-c-input-group .pf-c-form-control:not(input):not(textarea):not(select),
+.pf-v5-c-input-group .pf-v5-c-form-control:not(input):not(textarea):not(select) {
+  background: transparent !important;
+  border-radius: 0 !important;
+  height: 100% !important;
+  min-height: 100% !important;
+}
+
+/* Input group items should align without creating a second container. */
+.pf-c-input-group__item,
+.pf-v5-c-input-group__item {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.pf-c-input-group__item.pf-m-fill,
+.pf-v5-c-input-group__item.pf-m-fill {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.pf-c-input-group__item:not(.pf-m-fill),
+.pf-v5-c-input-group__item:not(.pf-m-fill) {
+  flex: 0 0 auto !important;
 }
 
 /* Text input group main wrapper - fills container, contains the actual input
@@ -690,28 +811,23 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
 /* Input inside input-group - MUST match standalone input exactly
  * Using high-specificity selectors to override PatternFly defaults.
  */
-.pf-c-input-group .pf-c-form-control,
-.pf-v5-c-input-group .pf-v5-c-form-control,
 .pf-c-input-group input,
 .pf-v5-c-input-group input,
-.pf-c-text-input-group input,
-.pf-v5-c-text-input-group input,
-#kc-form .pf-v5-c-text-input-group input,
-#kc-form .pf-c-text-input-group input,
-#kc-form-login .pf-v5-c-text-input-group input,
-#kc-form-login .pf-c-text-input-group input {
+#kc-form .pf-v5-c-input-group input,
+#kc-form .pf-c-input-group input,
+#kc-form-login .pf-v5-c-input-group input,
+#kc-form-login .pf-c-input-group input {
   /* Block display to fill container width */
   display: block !important;
   border-radius: var(--kc-radius-md) !important;  /* Match standalone input */
   background: transparent !important;
   background-color: transparent !important;
   width: 100% !important;
-  min-height: var(--kc-size-input) !important;  /* Match standalone input */
-  height: var(--kc-size-input) !important;  /* Fixed height */
+  min-height: 100% !important;  /* Match container height */
+  height: 100% !important;  /* Fill container */
   margin: 0 !important;
-  /* Same padding as standalone input, extra right padding for toggle button */
+  /* Same padding as standalone input */
   padding: 0.625rem 0.875rem !important;
-  padding-right: 2.75rem !important;  /* Space for absolute-positioned toggle button */
   box-sizing: border-box !important;
   border: none !important;
   outline: none !important;
@@ -753,8 +869,6 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
 /* Password visibility toggle wrapper - positioned INSIDE the input field
  * Using high-specificity selectors to override PatternFly defaults
  */
-.pf-c-input-group__item,
-.pf-v5-c-input-group__item,
 .pf-c-text-input-group__utilities,
 .pf-v5-c-text-input-group__utilities,
 #kc-form .pf-v5-c-text-input-group__utilities,
@@ -957,7 +1071,10 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
 .pf-c-button.pf-m-plain .pf-v5-c-icon,
 .pf-v5-c-button.pf-m-plain .pf-v5-c-icon,
 .pf-v5-c-text-input-group__utilities button svg,
-.pf-c-text-input-group__utilities button svg {
+.pf-c-text-input-group__utilities button svg,
+button[data-password-toggle] i,
+button[data-password-toggle] .pf-v5-c-button__icon,
+button[data-password-toggle] .pf-c-button__icon {
   opacity: 0 !important;
   visibility: hidden !important;
   position: absolute !important;

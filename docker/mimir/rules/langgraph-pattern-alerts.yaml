@@ -1,0 +1,265 @@
+# LangGraph Pattern Orchestration Alerting Rules
+# ================================================
+# These alerts monitor LangGraph multi-agent patterns (Supervisor, Hierarchical, Swarm)
+# introduced in ADR-0105 Phase 3.
+#
+# Reference: adr/adr-0105-orchestrator-selection.md
+# SSE Events Monitored:
+# - langgraph_node (node execution events)
+# - langgraph_supervisor_result (supervisor completion)
+# - langgraph_hierarchical_result (hierarchical completion)
+# - swarm_result (swarm completion)
+
+groups:
+  - name: langgraph-pattern-orchestration
+    interval: 1m
+    rules:
+      # -------------------------------------------------------------------------
+      # Supervisor Pattern Alerts
+      # -------------------------------------------------------------------------
+      - alert: LangGraphSupervisorHighFailureRate
+        expr: |
+          (
+            sum(rate(langgraph_supervisor_result_total{success="false"}[5m]))
+            /
+            sum(rate(langgraph_supervisor_result_total[5m]))
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: langgraph
+          pattern: supervisor
+          team: ai
+        annotations:
+          summary: "LangGraph Supervisor pattern failure rate elevated"
+          description: |
+            Supervisor Pattern Failure: {{ $value | humanizePercentage }} of supervisor executions are failing.
+
+            The supervisor pattern coordinates multiple worker agents. High failure rates indicate:
+            - Worker agent failures
+            - LLM service issues
+            - Timeout or resource constraints
+
+            Recommended Actions:
+            1. Check worker error metrics: langgraph_worker_errors_total
+            2. Review LLM service health
+            3. Check for timeout issues in worker invocations
+            4. Review recent deployments affecting agents/router_agent.py
+
+            Impact: Multi-agent coordination may be degraded.
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/langgraph-patterns.md#supervisor-failures"
+          dashboard_url: "{{ grafana_url }}/d/langgraph-pattern-orchestration/langgraph-pattern-orchestration"
+
+      - alert: LangGraphSupervisorHighLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(langgraph_node_duration_seconds_bucket{pattern="supervisor"}[5m])) by (le))
+          > 30
+        for: 5m
+        labels:
+          severity: warning
+          component: langgraph
+          pattern: supervisor
+          team: ai
+        annotations:
+          summary: "LangGraph Supervisor pattern latency is high"
+          description: |
+            High Latency: Supervisor pattern p95 latency is {{ $value | humanizeDuration }}.
+
+            Slow supervisor execution may indicate:
+            - Slow LLM responses from workers
+            - Complex task decomposition
+            - Network latency to LLM providers
+
+            Recommended Actions:
+            1. Check individual worker latencies
+            2. Review LLM provider response times
+            3. Consider reducing worker_count for simple tasks
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/langgraph-patterns.md#high-latency"
+          dashboard_url: "{{ grafana_url }}/d/langgraph-pattern-orchestration/langgraph-pattern-orchestration"
+
+      # -------------------------------------------------------------------------
+      # Hierarchical Pattern Alerts
+      # -------------------------------------------------------------------------
+      - alert: LangGraphHierarchicalHighFailureRate
+        expr: |
+          (
+            sum(rate(langgraph_hierarchical_result_total{success="false"}[5m]))
+            /
+            sum(rate(langgraph_hierarchical_result_total[5m]))
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: langgraph
+          pattern: hierarchical
+          team: ai
+        annotations:
+          summary: "LangGraph Hierarchical pattern failure rate elevated"
+          description: |
+            Hierarchical Pattern Failure: {{ $value | humanizePercentage }} of hierarchical executions are failing.
+
+            The hierarchical pattern (CEO → Managers → Workers) is used for complex ops/data tasks.
+            High failure rates indicate:
+            - CEO agent decision failures
+            - Manager coordination issues
+            - Worker execution failures
+            - Resource constraints at multiple levels
+
+            Recommended Actions:
+            1. Check CEO agent logs for decision errors
+            2. Review manager delegation patterns
+            3. Verify worker agent health
+            4. Check for cascading failures
+
+            Impact: Complex project coordination may fail.
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/langgraph-patterns.md#hierarchical-failures"
+          dashboard_url: "{{ grafana_url }}/d/langgraph-pattern-orchestration/langgraph-pattern-orchestration"
+
+      - alert: LangGraphHierarchicalCriticalFailure
+        expr: |
+          (
+            sum(rate(langgraph_hierarchical_result_total{success="false"}[5m]))
+            /
+            sum(rate(langgraph_hierarchical_result_total[5m]))
+          ) > 0.5
+        for: 2m
+        labels:
+          severity: critical
+          component: langgraph
+          pattern: hierarchical
+          team: ai
+        annotations:
+          summary: "LangGraph Hierarchical pattern critically failing"
+          description: |
+            CRITICAL: {{ $value | humanizePercentage }} of hierarchical executions are failing.
+
+            Immediate action required. Hierarchical pattern is used for high-risk complex tasks.
+
+            Immediate Actions:
+            1. Check LLM provider status
+            2. Verify feature flag enable_langgraph_patterns
+            3. Review recent deployments
+            4. Consider falling back to standard orchestration
+
+            Escalation: Contact AI team immediately.
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/langgraph-patterns.md#critical-hierarchical-failure"
+          dashboard_url: "{{ grafana_url }}/d/langgraph-pattern-orchestration/langgraph-pattern-orchestration"
+
+      # -------------------------------------------------------------------------
+      # Worker Agent Alerts
+      # -------------------------------------------------------------------------
+      - alert: LangGraphWorkerHighErrorRate
+        expr: |
+          (
+            sum(rate(langgraph_worker_errors_total[5m])) by (worker_name)
+            /
+            sum(rate(langgraph_worker_invocations_total[5m])) by (worker_name)
+          ) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          component: langgraph
+          pattern: worker
+          team: ai
+        annotations:
+          summary: "LangGraph worker {{ $labels.worker_name }} has high error rate"
+          description: |
+            Worker Error Rate: {{ $labels.worker_name }} has {{ $value | humanizePercentage }} error rate.
+
+            Worker agents use LLMFactory for LLM invocations. High error rates indicate:
+            - LLM service unavailable
+            - Prompt/response parsing errors
+            - Rate limiting from LLM provider
+            - Timeout issues
+
+            Recommended Actions:
+            1. Check LLMFactory circuit breaker status
+            2. Review worker system prompt for issues
+            3. Check rate limiting metrics
+            4. Verify LLM provider credentials
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/langgraph-patterns.md#worker-errors"
+          dashboard_url: "{{ grafana_url }}/d/langgraph-pattern-orchestration/langgraph-pattern-orchestration"
+
+      - alert: LangGraphWorkerFallbackTriggered
+        expr: |
+          sum(rate(langgraph_worker_fallback_total[5m])) > 1
+        for: 5m
+        labels:
+          severity: info
+          component: langgraph
+          pattern: worker
+          team: ai
+        annotations:
+          summary: "LangGraph workers using fallback responses"
+          description: |
+            Fallback Triggered: {{ $value }} fallback responses per second.
+
+            Workers are returning fallback responses instead of LLM-generated content.
+            This may indicate LLM service issues but the system is gracefully degrading.
+
+            Investigation:
+            1. Check primary LLM provider health
+            2. Review fallback response quality
+            3. Monitor user impact
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/langgraph-patterns.md#worker-fallback"
+          dashboard_url: "{{ grafana_url }}/d/langgraph-pattern-orchestration/langgraph-pattern-orchestration"
+
+      # -------------------------------------------------------------------------
+      # Orchestrator Selection Alerts
+      # -------------------------------------------------------------------------
+      - alert: LangGraphPatternsNotBeingUsed
+        expr: |
+          sum(rate(langgraph_orchestrator_selection_total{orchestrator_type=~"langgraph_supervisor|langgraph_hierarchical"}[1h])) == 0
+          and
+          sum(rate(langgraph_orchestrator_selection_total[1h])) > 0
+        for: 1h
+        labels:
+          severity: info
+          component: langgraph
+          team: ai
+        annotations:
+          summary: "LangGraph patterns not being selected"
+          description: |
+            No LangGraph patterns (supervisor, hierarchical) have been selected in the last hour,
+            but other orchestration patterns are being used.
+
+            This may be expected behavior if:
+            - enable_langgraph_patterns is disabled
+            - No studio or complex ops/data tasks received
+            - All tasks are routing to standard/swarm patterns
+
+            Check:
+            1. Feature flag status: enable_langgraph_patterns
+            2. Routing decision distribution
+            3. Task type classification
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/langgraph-patterns.md#patterns-not-used"
+          dashboard_url: "{{ grafana_url }}/d/langgraph-pattern-orchestration/langgraph-pattern-orchestration"
+
+      - alert: LangGraphRouterSelectionImbalance
+        expr: |
+          (
+            sum(rate(langgraph_orchestrator_selection_total{orchestrator_type="standard"}[1h]))
+            /
+            sum(rate(langgraph_orchestrator_selection_total[1h]))
+          ) > 0.95
+        for: 2h
+        labels:
+          severity: info
+          component: langgraph
+          team: ai
+        annotations:
+          summary: "Router selecting 'standard' orchestrator 95%+ of the time"
+          description: |
+            Orchestrator Selection Imbalance: {{ $value | humanizePercentage }} of selections are 'standard'.
+
+            This may indicate:
+            - Router classification is overly conservative
+            - Task types don't match swarm/hierarchical criteria
+            - Feature flags for advanced patterns are disabled
+
+            Review:
+            1. Router classification accuracy
+            2. Task type distribution
+            3. Feature flag configuration
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/langgraph-patterns.md#selection-imbalance"
+          dashboard_url: "{{ grafana_url }}/d/langgraph-pattern-orchestration/langgraph-pattern-orchestration"
