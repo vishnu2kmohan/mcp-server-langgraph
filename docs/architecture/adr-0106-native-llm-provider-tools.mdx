@@ -1,0 +1,212 @@
+# 106. Native LLM Provider Tools Integration
+
+Date: 2026-01-20
+
+## Status
+
+Accepted
+
+## Context
+
+**Background**:
+LLM providers have introduced native tools that execute within the provider's infrastructure:
+- **Anthropic**: `web_search_20250305` (web search) and `code_execution_20250825` (remote sandbox)
+- **Google**: `googleSearch` (grounded search via Vertex AI)
+- **OpenAI**: `web_search` and `code_interpreter`
+
+These native tools offer advantages over custom implementations:
+- Lower latency (no round-trip for results)
+- Provider-maintained reliability and quality
+- Integrated source citations
+- Reduced token usage (results are summarized)
+
+**Requirements**:
+- Support native tools alongside existing builtin and MCP tools
+- Enable/disable via feature flags (conservative rollout)
+- Fall back gracefully when native tools unavailable
+- Track native tool usage for cost monitoring
+- Maintain backward compatibility with existing tool selection
+
+**Stakeholders**:
+- Backend team: API and agent graph changes
+- Frontend team: Tool selector updates
+- DevOps: Feature flag management
+- Users: Access to native search and code execution
+
+## Decision
+
+We will implement **native LLM provider tool support** with the following architecture:
+
+### 1. Unified Tool Registry with tool_id
+
+All tools (builtin, MCP, native) use a consistent `tool_id` format:
+- Builtin: `builtin:{name}` (e.g., `builtin:web_search`)
+- MCP: `mcp:{qualified_name}` (e.g., `mcp:github:create_issue`)
+- Native: `native:{name}` (e.g., `native:web_search`)
+
+### 2. Model Capability Registry
+
+The `ModelRegistry` tracks native tool support per model:
+
+```python
+@dataclass
+class ModelCapabilities:
+    # Native tool capabilities (v7)
+    supports_native_web_search: bool = False
+    supports_native_code_execution: bool = False
+    native_provider: str | None = None  # "anthropic", "google", "openai"
+```
+
+### 3. Provider-Specific Limitations
+
+| Provider | Platform | Web Search | Code Execution |
+|----------|----------|------------|----------------|
+| Anthropic | Direct API | Yes | Yes |
+| Anthropic | Vertex AI | Yes | **No** |
+| Anthropic | Bedrock | Yes | Yes |
+| Google | Direct API | Yes | No |
+| Google | Vertex AI | Yes | No |
+| OpenAI | Direct API | Yes | Yes |
+
+**Critical Limitation**: Anthropic code execution is NOT supported on Vertex AI. Only web search works.
+
+### 4. Feature Flag Controls
+
+```python
+# Master switch
+native_tools_enabled: bool = False
+
+# Per-provider controls
+anthropic_native_web_search_enabled: bool = False
+anthropic_native_code_execution_enabled: bool = False  # Security-sensitive
+google_native_search_enabled: bool = False
+openai_native_web_search_enabled: bool = False
+openai_native_code_interpreter_enabled: bool = False  # Security-sensitive
+```
+
+### 5. LiteLLM Integration Notes
+
+LiteLLM passes native tool configurations to providers:
+
+```python
+# Anthropic (direct or Bedrock)
+tools = [{"type": "web_search_20250305"}]
+
+# Google Vertex AI
+tools = [{"googleSearch": {}}]
+
+# OpenAI
+tools = [{"type": "web_search"}, {"type": "code_interpreter"}]
+```
+
+**Known Issue**: LiteLLM bug #15299 may not forward beta headers to Vertex AI Claude models.
+
+**Components Affected**:
+- `src/mcp_server_langgraph/agents/model_registry.py` - Native capability flags
+- `src/mcp_server_langgraph/tools/native_registry.py` - Native tool definitions
+- `src/mcp_server_langgraph/tools/native_handler.py` - Native tool configuration
+- `src/mcp_server_langgraph/core/feature_flags.py` - Feature flags
+- `src/mcp_server_langgraph/api/v1/tools.py` - API response with tool_id
+- Frontend tool selector components
+
+## Consequences
+
+### Positive Consequences
+
+- **Better UX**: Native search provides faster, higher-quality results
+- **Source Citations**: Native tools return structured citations automatically
+- **Cost Efficiency**: Reduced token usage from provider-side summarization
+- **Flexibility**: Users can choose between native and builtin implementations
+- **Gradual Rollout**: Feature flags enable safe, controlled enablement
+
+### Negative Consequences
+
+- **Platform Fragmentation**: Different capabilities per provider/platform
+- **LiteLLM Dependency**: Bugs in LiteLLM can affect native tool support
+- **Testing Complexity**: Need to test multiple provider configurations
+- **Documentation Burden**: Must document which tools work where
+
+### Neutral Consequences
+
+- **API Change**: Tool responses now include `tool_id` field (additive)
+- **Frontend Update**: ToolSelector uses `tool_id` for selection
+- **Cost Tracking**: Native tool usage counted separately in metrics
+
+## Alternatives Considered
+
+### Alternative 1: Provider-Specific Tool Wrappers
+
+**Description**: Create separate tool implementations per provider
+
+**Pros**:
+- Full control over behavior
+- No dependency on provider APIs
+
+**Cons**:
+- Duplication of effort
+- Miss provider optimizations
+- Higher maintenance burden
+
+**Why Rejected**: Native tools provide better quality with less code
+
+### Alternative 2: Native Tools Only (No Fallback)
+
+**Description**: Only support native tools, remove builtin implementations
+
+**Pros**:
+- Simpler code
+- Single source of truth
+
+**Cons**:
+- No fallback for unsupported models
+- Provider lock-in
+- Feature gaps when provider tools unavailable
+
+**Why Rejected**: Need fallback for reliability and model flexibility
+
+## Related Decisions
+
+- **Relates to**: ADR-0099 - Semantic Tool Selection
+- **Relates to**: ADR-0001 - LLM Multi-Provider Strategy
+- **Relates to**: ADR-0009 - Feature Flag System
+
+## Implementation Notes
+
+**Rollout Strategy**:
+1. Phase 1: Enable web search for Anthropic direct API (lowest risk)
+2. Phase 2: Enable web search for Google Vertex AI
+3. Phase 3: Enable web search for OpenAI
+4. Phase 4: Enable code execution (requires security review)
+
+**Testing Strategy**:
+- Unit tests: `tests/unit/agents/test_model_registry.py::TestModelNativeToolCapabilities`
+- Unit tests: `tests/unit/tools/test_native_handler.py`
+- Integration tests: `tests/integration/tools/test_native_tool_integration.py`
+- E2E tests: `tests/e2e/test_native_tools_e2e.py`
+
+**Monitoring**:
+- Grafana dashboard: `monitoring/grafana/dashboards/Application/native-tool-metrics.json`
+- Mimir alerts: `docker/mimir/rules/native-tool-alerts.yaml`
+
+**Success Criteria**:
+- Native tool usage visible in cost dashboard
+- Fallback to builtin works when native unavailable
+- No increase in error rates during rollout
+- User feedback on search quality
+
+## References
+
+**Internal**:
+- v7 Integration Plan: `.claude/plans/inherited-bouncing-church.md`
+- Native handler: `src/mcp_server_langgraph/tools/native_handler.py`
+
+**External**:
+- [Anthropic Tool Use Guide](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/overview)
+- [Google Vertex AI Grounding](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/overview)
+- [LiteLLM Tool Calling](https://docs.litellm.ai/docs/completion/function_call)
+- [LiteLLM Issue #15299](https://github.com/BerriAI/litellm/issues/15299) - Beta header forwarding
+
+---
+
+**Template Version**: 1.0
+**Last Updated**: 2026-01-20

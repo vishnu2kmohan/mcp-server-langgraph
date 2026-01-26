@@ -1,4 +1,4 @@
-# 102. Native LLM Provider Tools Integration
+# 106. Native LLM Provider Tools Integration
 
 Date: 2026-01-20
 

@@ -1,0 +1,221 @@
+# 105. Orchestrator Selection for Router Agent
+
+Date: 2026-01-22
+
+## Status
+
+Accepted
+
+## Context
+
+**Background**:
+The RouterAgent classifies incoming chat requests and suggests an orchestrator (e.g., `standard`, `swarm`, `studio`, `ux`, `alert`). However, there was no mechanism to map `suggested_orchestrator` to actual implementations. The existing code at `chat.py:1383-1384` simply set `use_langgraph = True` for swarm/studio, which didn't actually dispatch to AsyncIO orchestrators.
+
+**Requirements**:
+- Map `RouterOutput.suggested_orchestrator` to concrete implementations
+- Use AsyncIO orchestrators (SwarmOrchestrator, Orchestrator) for parallel execution
+- Derive configuration from RouterOutput fields (risk → strategy, complexity → model)
+- Bypass plan/critique loop for swarm (speed optimization)
+- Feature-gate swarm dispatch via `enable_swarm_orchestrator`
+- Add `enable_chat_routing` setting for safe rollout
+
+**Stakeholders**:
+- Chat API consumers expecting improved multi-agent responses
+- Operations team managing feature flag rollout
+- Frontend team handling SSE events
+
+## Decision
+
+We will extend `RouterAgent` with an `OrchestratorSelection` model and `select_orchestrator()` method that maps `RouterOutput` to concrete AsyncIO orchestrator implementations.
+
+**Rationale**:
+- AsyncIO orchestrators are production-ready (SwarmOrchestrator, Orchestrator)
+- LangGraph is synchronous by default, requiring LangGraph Server for true async
+- Extending RouterAgent follows single-responsibility (classify → select)
+- Feature flags allow safe incremental rollout
+
+**Implementation Details**:
+
+```python
+# OrchestratorSelection model (Phase 3: Extended with LangGraph patterns)
+class OrchestratorSelection(BaseModel):
+    orchestrator_type: Literal[
+        "standard",
+        "asyncio_swarm",
+        "asyncio_task",
+        "langgraph_supervisor",  # Phase 3
+        "langgraph_hierarchical",  # Phase 3
+    ]
+    swarm_strategy: Literal["race", "cascade", "consensus"] | None = None
+    langgraph_pattern: Literal["supervisor", "hierarchical"] | None = None  # Phase 3
+    worker_count: int = 3
+    worker_model: str | None = None
+    thinking_budget: Literal["none", "light", "medium", "deep"] = "none"
+    context_strategy: Literal["scoped", "summarized", "full"] = "scoped"
+
+# Selection logic derives config from RouterOutput
+def _select_orchestrator_impl(routing_decision, flags):
+    # Phase 3: studio → LangGraph Supervisor
+    if routing_decision.suggested_orchestrator == "studio" and flags.enable_langgraph_patterns:
+        return OrchestratorSelection(orchestrator_type="langgraph_supervisor", langgraph_pattern="supervisor", ...)
+
+    # Phase 3: Complex ops/data + high risk → Hierarchical (CEO oversight)
+    if (flags.enable_langgraph_patterns and routing_decision.complexity == "complex"
+        and routing_decision.risk == "high" and routing_decision.task_type in ("ops", "data")):
+        return OrchestratorSelection(orchestrator_type="langgraph_hierarchical", langgraph_pattern="hierarchical", ...)
+
+    # Phase 1: swarm → AsyncIO swarm
+    if routing_decision.suggested_orchestrator == "swarm" and flags.enable_swarm_orchestrator:
+        strategy = {"high": "consensus", "medium": "cascade", "low": "race"}[routing_decision.risk]
+        return OrchestratorSelection(orchestrator_type="asyncio_swarm", swarm_strategy=strategy, ...)
+
+    return OrchestratorSelection(orchestrator_type="standard", ...)
+```
+
+**Components Affected**:
+- `src/mcp_server_langgraph/core/config/_settings.py` - Added `enable_chat_routing`
+- `src/mcp_server_langgraph/agents/router_agent.py` - Added `OrchestratorSelection`, `select_orchestrator()`
+- `src/mcp_server_langgraph/api/v1/chat.py` - Added `_stream_via_swarm()`, `_stream_via_task_orchestrator()`, orchestrator dispatch
+- `src/mcp_server_langgraph/api/v1/agents.py` - Added `enable_swarm_orchestrator` to `AGENT_FEATURE_FLAGS`
+- `src/mcp_server_langgraph/agents/registry.py` - Added `SwarmOrchestrator` to `ORCHESTRATOR_REGISTRY`
+- `src/mcp_server_langgraph/agents/__init__.py` - Exported new symbols
+
+## Consequences
+
+### Positive Consequences
+
+- **Parallel Execution**: SwarmOrchestrator enables race/cascade/consensus strategies for parallel responses
+- **Performance**: AsyncIO-first approach avoids LangGraph sync overhead
+- **Configurability**: Risk/complexity automatically derive swarm strategy and model tier
+- **Safe Rollout**: `enable_chat_routing` defaults to False for production testing
+- **Observability**: SSE events (`swarm_result`, `task_decomposition`) enable frontend tracking
+
+### Negative Consequences
+
+- **Phase 1 Limitations**: No tool resolution (workers are "pure LLM"), no thinking budget manager
+- **Bypass Behavior**: Swarm bypasses plan/critique loop (intentional for speed, may need tuning)
+- **Complexity**: Adds another code path to chat streaming
+
+### Neutral Consequences
+
+- **Delta Format**: Swarm results emitted as `{"delta": {"content": ...}}` for SSE persistence compatibility
+- **Standard Path Unchanged**: `orchestrator_type="standard"` continues to plan/critique/LangGraph flow
+
+## Alternatives Considered
+
+### Alternative 1: LangGraph Patterns Only
+
+**Description**: Use LangGraph's multi-agent patterns (supervisor, hierarchical) for all orchestration.
+
+**Pros**:
+- Unified framework
+- Built-in checkpointing
+- LangSmith integration
+
+**Cons**:
+- Synchronous by default
+- Requires LangGraph Server for true async
+- Additional infrastructure
+
+**Why Rejected**: AsyncIO orchestrators already exist and are production-ready. LangGraph patterns deferred to Phase 2 when async adaptation is needed.
+
+---
+
+### Alternative 2: Separate Dispatcher Class
+
+**Description**: Create a new `OrchestratorDispatcher` class separate from RouterAgent.
+
+**Pros**:
+- Single-responsibility principle
+- Cleaner separation
+
+**Cons**:
+- Additional class to maintain
+- RouterAgent already has routing context
+
+**Why Rejected**: Extending RouterAgent with `select_orchestrator()` keeps related functionality together and reduces call-site complexity.
+
+---
+
+### Alternative 3: Per-Request Override
+
+**Description**: Add `enable_routing` field to `ChatCompletionRequest` for per-request control.
+
+**Pros**:
+- Fine-grained control
+- Client flexibility
+
+**Cons**:
+- More complex API surface
+- Harder to reason about behavior
+
+**Why Rejected**: Settings-only control (`enable_chat_routing`) is simpler for Phase 1. Can add per-request override in Phase 2 if needed.
+
+## Related Decisions
+
+- **Relates to**: ADR-0078 Multi-Agent Orchestrator Patterns
+- **Relates to**: ADR-0090 Agent Orchestration Architecture
+- **Relates to**: ADR-0092 Hierarchical Capability Architecture
+
+## Implementation Notes
+
+**Timeline**:
+- Phase 1: Settings, OrchestratorSelection, swarm streaming, dispatch (Complete)
+- Phase 2: CapabilityProvider injection, ThinkingBudgetManager, context strategy, resource injection (Complete)
+- Phase 3: LangGraph pattern integration with astream_events() (Complete)
+
+**Phase 2 Enhancements**:
+- `context_strategy` field in OrchestratorSelection: "scoped" (RACE), "summarized" (CONSENSUS), "full"
+- Resource content injection via `resource_content` kwarg in `_stream_via_swarm`
+- CapabilityProvider and ThinkingBudgetManager injection to WorkerAgent
+
+**Phase 3 Enhancements (LangGraph Pattern Integration)**:
+- `langgraph_supervisor` and `langgraph_hierarchical` orchestrator types
+- `langgraph_pattern` field in OrchestratorSelection
+- `enable_langgraph_patterns` feature flag (default: True)
+- `_stream_via_langgraph_supervisor()` - Uses LangGraph Supervisor pattern with astream_events()
+- `_stream_via_langgraph_hierarchical()` - Uses HierarchicalCoordinator (CEO → Managers → Workers)
+- Hierarchical routing criteria: complex + (ops|data) + high risk
+- SSE events: `langgraph_node`, `langgraph_supervisor_result`, `langgraph_hierarchical_result`
+- Total tests: 80+ (Phase 1: 40, Phase 2: 9, Phase 3: 30+)
+
+**Phase 3 Routing Criteria (Research-Based)**:
+| Pattern | Criteria | Rationale |
+|---------|----------|-----------|
+| `langgraph_supervisor` | `suggested_orchestrator == "studio"` | Studio tasks need structured coordination |
+| `langgraph_hierarchical` | `complex + (ops\|data) + high_risk` | Ops/data pipelines need CEO oversight chain |
+| `asyncio_swarm` | `suggested_orchestrator == "swarm"` | Parallel consensus/race for analysis |
+| `standard` | Default fallback | Single-agent for simple tasks |
+
+**LLM Implementation Decision**:
+- **Selected: LLMFactory** - Best resilience (circuit breaker, retry, rate limiting, cost tracking)
+- Alternatives evaluated: ChatModel Factory, HookedChatModel, Direct LiteLLM
+- Workers currently use placeholder functions; production upgrade path documented
+
+**Testing Strategy**:
+- Unit tests: `tests/unit/agents/test_orchestrator_selection.py` (80+ tests)
+- Integration tests: Registry exports, module exports, full selection flow
+- Regression tests: Existing router_agent and swarm_orchestrator tests
+
+**Success Criteria**:
+- All 80+ orchestrator selection tests pass
+- No regression in existing router/swarm tests
+- SSE events properly emitted for swarm and LangGraph execution
+- Feature flags correctly gate swarm and LangGraph dispatch
+- Context strategy derived from swarm strategy and hierarchical pattern
+- Hierarchical pattern routes correctly for complex ops/data tasks
+
+## References
+
+**External**:
+- [ZenML: LangGraph Alternatives](https://www.zenml.io/blog/langgraph-alternatives) - LangGraph sync limitations
+- [Anthropic Multi-Agent Research System](https://www.anthropic.com/engineering/multi-agent-research-system) - Orchestrator-worker pattern
+- [Google ADK Context Scoping](https://developers.googleblog.com/architecting-efficient-context-aware-multi-agent-framework-for-production/) - Explicit scoping for sub-agents
+- [LangGraph Hierarchical Agent Teams](https://langchain-ai.github.io/langgraph/tutorials/multi_agent/hierarchical_agent_teams/) - CEO→Managers→Workers pattern
+- [LangGraph Multi-Agent Orchestration Guide 2025](https://latenode.com/blog/ai-frameworks-technical-infrastructure/langgraph-multi-agent-orchestration/) - Framework architecture analysis
+- [LangChain Benchmarking Multi-Agent Architectures](https://www.blog.langchain.com/benchmarking-multi-agent-architectures/) - Performance comparisons
+
+---
+
+**Template Version**: 1.0
+**ADR Author**: Claude Code
