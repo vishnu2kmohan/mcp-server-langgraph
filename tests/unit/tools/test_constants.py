@@ -6,6 +6,8 @@ TDD: These tests define the expected behavior for tool constants.
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 class TestToolCategoryMap:
     """Tests for TOOL_CATEGORY_MAP."""

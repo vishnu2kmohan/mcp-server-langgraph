@@ -12,6 +12,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 from mcp_server_langgraph.auth.connection_scope import ConnectionScope, can_use_connection
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def mock_openfga_client() -> AsyncMock:

@@ -22,6 +22,8 @@ from mcp_server_langgraph.execution.cost_estimator import (
     THINKING_TOKENS,
 )
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 class TestTokenEstimates:

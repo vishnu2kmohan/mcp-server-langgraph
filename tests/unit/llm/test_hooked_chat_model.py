@@ -10,12 +10,12 @@ import pytest
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
 
+pytestmark = pytest.mark.unit
+
 
 def make_chat_result(text: str) -> ChatResult:
     """Helper to create a ChatResult with proper message field."""
-    return ChatResult(
-        generations=[ChatGeneration(text=text, message=AIMessage(content=text))]
-    )
+    return ChatResult(generations=[ChatGeneration(text=text, message=AIMessage(content=text))])
 
 
 @pytest.mark.unit
@@ -92,18 +92,14 @@ class TestHookedChatModelBeforeModelHook:
     async def test_before_model_allow_behavior(self) -> None:
         """Allow behavior should proceed with LLM call."""
         from mcp_server_langgraph.llm.hooked_chat_model import HookedChatModel
-        from mcp_server_langgraph.core.hooks import HookContext, HookResult
+        from mcp_server_langgraph.core.hooks import HookResult
 
         mock_inner = MagicMock()
-        mock_inner._agenerate = AsyncMock(
-            return_value=make_chat_result("Response")
-        )
+        mock_inner._agenerate = AsyncMock(return_value=make_chat_result("Response"))
         mock_inner._llm_type = "test"
 
         mock_dispatcher = MagicMock()
-        mock_dispatcher.dispatch_before_model = AsyncMock(
-            return_value=HookResult(behavior="allow")
-        )
+        mock_dispatcher.dispatch_before_model = AsyncMock(return_value=HookResult(behavior="allow"))
         mock_dispatcher.dispatch_after_model = AsyncMock(return_value=HookResult())
 
         model = HookedChatModel(
@@ -114,19 +110,13 @@ class TestHookedChatModelBeforeModelHook:
         )
 
         # Patch feature flags and resilience
-        with patch(
-            "mcp_server_langgraph.llm.hooked_chat_model.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.llm.hooked_chat_model.feature_flags") as mock_flags:
             mock_flags.enable_llm_hooks = True
 
-            with patch(
-                "mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket"
-            ) as mock_bucket:
+            with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket") as mock_bucket:
                 mock_bucket.return_value.acquire = AsyncMock()
 
-                with patch(
-                    "mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead"
-                ) as mock_bulkhead:
+                with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead") as mock_bulkhead:
                     mock_semaphore = MagicMock()
                     mock_semaphore.__aenter__ = AsyncMock()
                     mock_semaphore.__aexit__ = AsyncMock()
@@ -161,9 +151,7 @@ class TestHookedChatModelBeforeModelHook:
             provider="test",
         )
 
-        with patch(
-            "mcp_server_langgraph.llm.hooked_chat_model.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.llm.hooked_chat_model.feature_flags") as mock_flags:
             mock_flags.enable_llm_hooks = True
 
             with pytest.raises(LLMProviderError) as exc_info:
@@ -193,9 +181,7 @@ class TestHookedChatModelBeforeModelHook:
             provider="test",
         )
 
-        with patch(
-            "mcp_server_langgraph.llm.hooked_chat_model.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.llm.hooked_chat_model.feature_flags") as mock_flags:
             mock_flags.enable_llm_hooks = True
 
             result = await model._agenerate([HumanMessage(content="Hello")])
@@ -210,9 +196,7 @@ class TestHookedChatModelBeforeModelHook:
         from mcp_server_langgraph.core.hooks import HookResult
 
         mock_inner = MagicMock()
-        mock_inner._agenerate = AsyncMock(
-            return_value=make_chat_result("Response")
-        )
+        mock_inner._agenerate = AsyncMock(return_value=make_chat_result("Response"))
         mock_inner._llm_type = "test"
 
         # Hook modifies the messages
@@ -230,19 +214,13 @@ class TestHookedChatModelBeforeModelHook:
             provider="test",
         )
 
-        with patch(
-            "mcp_server_langgraph.llm.hooked_chat_model.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.llm.hooked_chat_model.feature_flags") as mock_flags:
             mock_flags.enable_llm_hooks = True
 
-            with patch(
-                "mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket"
-            ) as mock_bucket:
+            with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket") as mock_bucket:
                 mock_bucket.return_value.acquire = AsyncMock()
 
-                with patch(
-                    "mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead"
-                ) as mock_bulkhead:
+                with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead") as mock_bulkhead:
                     mock_semaphore = MagicMock()
                     mock_semaphore.__aenter__ = AsyncMock()
                     mock_semaphore.__aexit__ = AsyncMock()
@@ -270,18 +248,12 @@ class TestHookedChatModelAfterModelHook:
         from mcp_server_langgraph.core.hooks import HookResult
 
         mock_inner = MagicMock()
-        mock_inner._agenerate = AsyncMock(
-            return_value=make_chat_result("Original output")
-        )
+        mock_inner._agenerate = AsyncMock(return_value=make_chat_result("Original output"))
         mock_inner._llm_type = "test"
 
         mock_dispatcher = MagicMock()
-        mock_dispatcher.dispatch_before_model = AsyncMock(
-            return_value=HookResult(behavior="allow")
-        )
-        mock_dispatcher.dispatch_after_model = AsyncMock(
-            return_value=HookResult(modified_output="Transformed output")
-        )
+        mock_dispatcher.dispatch_before_model = AsyncMock(return_value=HookResult(behavior="allow"))
+        mock_dispatcher.dispatch_after_model = AsyncMock(return_value=HookResult(modified_output="Transformed output"))
 
         model = HookedChatModel(
             inner=mock_inner,
@@ -290,19 +262,13 @@ class TestHookedChatModelAfterModelHook:
             provider="test",
         )
 
-        with patch(
-            "mcp_server_langgraph.llm.hooked_chat_model.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.llm.hooked_chat_model.feature_flags") as mock_flags:
             mock_flags.enable_llm_hooks = True
 
-            with patch(
-                "mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket"
-            ) as mock_bucket:
+            with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket") as mock_bucket:
                 mock_bucket.return_value.acquire = AsyncMock()
 
-                with patch(
-                    "mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead"
-                ) as mock_bulkhead:
+                with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead") as mock_bulkhead:
                     mock_semaphore = MagicMock()
                     mock_semaphore.__aenter__ = AsyncMock()
                     mock_semaphore.__aexit__ = AsyncMock()
@@ -324,28 +290,18 @@ class TestHookedChatModelResilience:
         from mcp_server_langgraph.llm.hooked_chat_model import HookedChatModel
 
         mock_inner = MagicMock()
-        mock_inner._agenerate = AsyncMock(
-            return_value=make_chat_result("Response")
-        )
+        mock_inner._agenerate = AsyncMock(return_value=make_chat_result("Response"))
         mock_inner._llm_type = "test"
 
-        model = HookedChatModel(
-            inner=mock_inner, hook_dispatcher=None, model_name="test", provider="test"
-        )
+        model = HookedChatModel(inner=mock_inner, hook_dispatcher=None, model_name="test", provider="test")
 
-        with patch(
-            "mcp_server_langgraph.llm.hooked_chat_model.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.llm.hooked_chat_model.feature_flags") as mock_flags:
             mock_flags.enable_llm_hooks = False
 
-            with patch(
-                "mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket"
-            ) as mock_bucket:
+            with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket") as mock_bucket:
                 mock_bucket.return_value.acquire = AsyncMock()
 
-                with patch(
-                    "mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead"
-                ) as mock_bulkhead:
+                with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead") as mock_bulkhead:
                     mock_semaphore = MagicMock()
                     mock_semaphore.__aenter__ = AsyncMock()
                     mock_semaphore.__aexit__ = AsyncMock()
@@ -367,23 +323,15 @@ class TestHookedChatModelResilience:
         mock_inner._agenerate = AsyncMock(side_effect=RuntimeError("LLM failed"))
         mock_inner._llm_type = "test"
 
-        model = HookedChatModel(
-            inner=mock_inner, hook_dispatcher=None, model_name="test", provider="test"
-        )
+        model = HookedChatModel(inner=mock_inner, hook_dispatcher=None, model_name="test", provider="test")
 
-        with patch(
-            "mcp_server_langgraph.llm.hooked_chat_model.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.llm.hooked_chat_model.feature_flags") as mock_flags:
             mock_flags.enable_llm_hooks = False
 
-            with patch(
-                "mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket"
-            ) as mock_bucket:
+            with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket") as mock_bucket:
                 mock_bucket.return_value.acquire = AsyncMock()
 
-                with patch(
-                    "mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead"
-                ) as mock_bulkhead:
+                with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead") as mock_bulkhead:
                     mock_semaphore = MagicMock()
                     mock_semaphore.__aenter__ = AsyncMock()
                     # Return False to not suppress exceptions
@@ -442,39 +390,27 @@ class TestHookedChatModelNativeTools:
         from mcp_server_langgraph.llm.hooked_chat_model import HookedChatModel
 
         mock_inner = MagicMock()
-        mock_inner._agenerate = AsyncMock(
-            return_value=make_chat_result("Response")
-        )
+        mock_inner._agenerate = AsyncMock(return_value=make_chat_result("Response"))
         mock_inner._llm_type = "test"
 
-        model = HookedChatModel(
-            inner=mock_inner, hook_dispatcher=None, model_name="test", provider="test"
-        )
+        model = HookedChatModel(inner=mock_inner, hook_dispatcher=None, model_name="test", provider="test")
 
         native_configs = [{"type": "web_search_20250305"}]
 
-        with patch(
-            "mcp_server_langgraph.llm.hooked_chat_model.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.llm.hooked_chat_model.feature_flags") as mock_flags:
             mock_flags.enable_llm_hooks = False
 
-            with patch(
-                "mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket"
-            ) as mock_bucket:
+            with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_token_bucket") as mock_bucket:
                 mock_bucket.return_value.acquire = AsyncMock()
 
-                with patch(
-                    "mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead"
-                ) as mock_bulkhead:
+                with patch("mcp_server_langgraph.llm.hooked_chat_model.get_provider_adaptive_bulkhead") as mock_bulkhead:
                     mock_semaphore = MagicMock()
                     mock_semaphore.__aenter__ = AsyncMock()
                     mock_semaphore.__aexit__ = AsyncMock()
                     mock_bulkhead.return_value.get_semaphore.return_value = mock_semaphore
                     mock_bulkhead.return_value.record_success = MagicMock()
 
-                    await model._agenerate(
-                        [HumanMessage(content="Hello")], native_tools=native_configs
-                    )
+                    await model._agenerate([HumanMessage(content="Hello")], native_tools=native_configs)
 
         # Verify native_tools was passed to inner model
         call_kwargs = mock_inner._agenerate.call_args[1]

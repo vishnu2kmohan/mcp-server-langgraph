@@ -6,6 +6,8 @@ TDD: These tests define the expected behavior for native tool definitions.
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 class TestNativeToolDef:
     """Tests for NativeToolDef dataclass."""

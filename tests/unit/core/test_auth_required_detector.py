@@ -14,6 +14,8 @@ from mcp_server_langgraph.core.auth_required_detector import (
     infer_template_from_tool_name,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class TestInferTemplateFromToolName:
     """Tests for infer_template_from_tool_name function."""

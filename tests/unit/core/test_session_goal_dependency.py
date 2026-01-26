@@ -14,6 +14,8 @@ from mcp_server_langgraph.repositories.session_goal import (
     SessionGoalRepository,
 )
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 class TestGetSessionGoalRepository:

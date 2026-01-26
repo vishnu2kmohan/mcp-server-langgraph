@@ -5,10 +5,11 @@ TDD: These tests define the expected behavior for the LangChain ChatModel factor
 These tests use mocking to avoid requiring actual LangChain provider packages.
 """
 
-import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
@@ -21,9 +22,7 @@ class TestChatModelFactoryProviderSelection:
         mock_settings.llm_provider = "anthropic"
         mock_settings.model_name = "claude-3-5-sonnet"
 
-        with patch(
-            "mcp_server_langgraph.llm.chat_model_factory._create_anthropic_model"
-        ) as mock_create:
+        with patch("mcp_server_langgraph.llm.chat_model_factory._create_anthropic_model") as mock_create:
             mock_create.return_value = MagicMock()
 
             from mcp_server_langgraph.llm.chat_model_factory import (
@@ -43,9 +42,7 @@ class TestChatModelFactoryProviderSelection:
         mock_settings.llm_provider = "openai"
         mock_settings.model_name = "gpt-4o"
 
-        with patch(
-            "mcp_server_langgraph.llm.chat_model_factory._create_openai_model"
-        ) as mock_create:
+        with patch("mcp_server_langgraph.llm.chat_model_factory._create_openai_model") as mock_create:
             mock_create.return_value = MagicMock()
 
             from mcp_server_langgraph.llm.chat_model_factory import (
@@ -62,9 +59,7 @@ class TestChatModelFactoryProviderSelection:
         mock_settings.llm_provider = "google"
         mock_settings.model_name = "gemini-2.5-flash"
 
-        with patch(
-            "mcp_server_langgraph.llm.chat_model_factory._create_google_model"
-        ) as mock_create:
+        with patch("mcp_server_langgraph.llm.chat_model_factory._create_google_model") as mock_create:
             mock_create.return_value = MagicMock()
 
             from mcp_server_langgraph.llm.chat_model_factory import (
@@ -81,9 +76,7 @@ class TestChatModelFactoryProviderSelection:
         mock_settings.llm_provider = "azure"
         mock_settings.model_name = "gpt-4o"
 
-        with patch(
-            "mcp_server_langgraph.llm.chat_model_factory._create_azure_model"
-        ) as mock_create:
+        with patch("mcp_server_langgraph.llm.chat_model_factory._create_azure_model") as mock_create:
             mock_create.return_value = MagicMock()
 
             from mcp_server_langgraph.llm.chat_model_factory import (
@@ -100,9 +93,7 @@ class TestChatModelFactoryProviderSelection:
         mock_settings.llm_provider = "vertex_ai"
         mock_settings.model_name = "gemini-3-flash"
 
-        with patch(
-            "mcp_server_langgraph.llm.chat_model_factory._create_vertex_ai_model"
-        ) as mock_create:
+        with patch("mcp_server_langgraph.llm.chat_model_factory._create_vertex_ai_model") as mock_create:
             mock_create.return_value = MagicMock()
 
             from mcp_server_langgraph.llm.chat_model_factory import (
@@ -124,9 +115,7 @@ class TestChatModelFactoryVertexAI:
         mock_settings.llm_provider = "vertex_ai"
         mock_settings.model_name = "vertex_ai/gemini-3-flash"
 
-        with patch(
-            "mcp_server_langgraph.llm.chat_model_factory._create_vertex_ai_model"
-        ) as mock_create:
+        with patch("mcp_server_langgraph.llm.chat_model_factory._create_vertex_ai_model") as mock_create:
             mock_create.return_value = MagicMock()
 
             from mcp_server_langgraph.llm.chat_model_factory import (
@@ -145,9 +134,7 @@ class TestChatModelFactoryVertexAI:
         mock_settings.llm_provider = "vertex_ai"
         mock_settings.model_name = "claude-3-5-sonnet"
 
-        with patch(
-            "mcp_server_langgraph.llm.chat_model_factory._create_litellm_adapter"
-        ) as mock_adapter:
+        with patch("mcp_server_langgraph.llm.chat_model_factory._create_litellm_adapter") as mock_adapter:
             mock_adapter.return_value = MagicMock()
 
             from mcp_server_langgraph.llm.chat_model_factory import (
@@ -169,9 +156,7 @@ class TestChatModelFactoryFallback:
         mock_settings.llm_provider = "bedrock"
         mock_settings.model_name = "claude-3"
 
-        with patch(
-            "mcp_server_langgraph.llm.chat_model_factory._create_litellm_adapter"
-        ) as mock_adapter:
+        with patch("mcp_server_langgraph.llm.chat_model_factory._create_litellm_adapter") as mock_adapter:
             mock_adapter.return_value = MagicMock()
 
             from mcp_server_langgraph.llm.chat_model_factory import (
@@ -188,9 +173,7 @@ class TestChatModelFactoryFallback:
         mock_settings.llm_provider = "ollama"
         mock_settings.model_name = "llama3"
 
-        with patch(
-            "mcp_server_langgraph.llm.chat_model_factory._create_litellm_adapter"
-        ) as mock_adapter:
+        with patch("mcp_server_langgraph.llm.chat_model_factory._create_litellm_adapter") as mock_adapter:
             mock_adapter.return_value = MagicMock()
 
             from mcp_server_langgraph.llm.chat_model_factory import (
@@ -212,9 +195,7 @@ class TestChatModelFactoryStreaming:
         mock_settings.llm_provider = "anthropic"
         mock_settings.model_name = "claude-3-5-sonnet"
 
-        with patch(
-            "mcp_server_langgraph.llm.chat_model_factory._create_anthropic_model"
-        ) as mock_create:
+        with patch("mcp_server_langgraph.llm.chat_model_factory._create_anthropic_model") as mock_create:
             mock_create.return_value = MagicMock()
 
             from mcp_server_langgraph.llm.chat_model_factory import (
@@ -233,9 +214,7 @@ class TestChatModelFactoryStreaming:
         mock_settings.llm_provider = "anthropic"
         mock_settings.model_name = "claude-3-5-sonnet"
 
-        with patch(
-            "mcp_server_langgraph.llm.chat_model_factory._create_anthropic_model"
-        ) as mock_create:
+        with patch("mcp_server_langgraph.llm.chat_model_factory._create_anthropic_model") as mock_create:
             mock_create.return_value = MagicMock()
 
             from mcp_server_langgraph.llm.chat_model_factory import (

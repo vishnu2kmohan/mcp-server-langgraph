@@ -13,6 +13,8 @@ from httpx import ASGITransport, AsyncClient
 from mcp_server_langgraph.api.v1.sessions import sessions_router
 from mcp_server_langgraph.repositories.session_goal import SessionGoalRepository
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def mock_current_user() -> dict:

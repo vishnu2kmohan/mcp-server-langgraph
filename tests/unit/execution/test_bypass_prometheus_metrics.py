@@ -11,6 +11,8 @@ These metrics track bypass mode usage patterns for the Grafana dashboard:
 import pytest
 from decimal import Decimal
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 class TestBypassModeActivationMetrics:

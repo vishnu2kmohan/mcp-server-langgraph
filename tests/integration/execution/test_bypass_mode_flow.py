@@ -20,6 +20,8 @@ from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
 from mcp_server_langgraph.execution.bypass_audit import log_bypass_audit_event
 from mcp_server_langgraph.execution.bypass_manager import BypassDecision, BypassManager
 
+pytestmark = pytest.mark.integration
+
 
 # =============================================================================
 # Fixtures

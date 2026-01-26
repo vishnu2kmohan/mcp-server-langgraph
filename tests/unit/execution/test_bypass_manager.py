@@ -18,6 +18,8 @@ from mcp_server_langgraph.execution.bypass_manager import (
     TOOL_RISK_ESCALATION,
 )
 
+pytestmark = pytest.mark.unit
+
 
 # =============================================================================
 # Fixtures

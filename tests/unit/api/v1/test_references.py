@@ -14,6 +14,8 @@ from fastapi.testclient import TestClient
 from mcp_server_langgraph.api.v1.references import references_router
 from mcp_server_langgraph.storage.models import MCPConnection
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def mock_feature_flags():

@@ -9,6 +9,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from langchain_core.messages import AIMessage
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 class TestNativeToolHandlerShouldUseNative:
@@ -18,9 +20,7 @@ class TestNativeToolHandlerShouldUseNative:
         """Should return False when native_tools_enabled is False."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = False
 
             handler = NativeToolHandler(model_name="claude-sonnet-4-20250514")
@@ -30,9 +30,7 @@ class TestNativeToolHandlerShouldUseNative:
         """Should return False when preference is 'builtin'."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = True
 
             handler = NativeToolHandler(model_name="claude-sonnet-4-20250514")
@@ -42,9 +40,7 @@ class TestNativeToolHandlerShouldUseNative:
         """Should return False when preference is 'mcp'."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = True
 
             handler = NativeToolHandler(model_name="claude-sonnet-4-20250514")
@@ -54,15 +50,11 @@ class TestNativeToolHandlerShouldUseNative:
         """Should return True for web_search with capable Anthropic model."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = True
             mock_flags.anthropic_native_web_search_enabled = True
 
-            with patch(
-                "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-            ) as mock_registry:
+            with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
                 mock_caps = MagicMock()
                 mock_caps.supports_native_web_search = True
                 mock_caps.native_provider = "anthropic"
@@ -80,24 +72,18 @@ class TestNativeToolHandlerGetNativeConfigs:
         """Should separate native configs from remaining tool_ids."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = True
             mock_flags.anthropic_native_web_search_enabled = True
 
-            with patch(
-                "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-            ) as mock_registry:
+            with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
                 mock_caps = MagicMock()
                 mock_caps.supports_native_web_search = True
                 mock_caps.native_provider = "anthropic"
                 mock_registry.return_value.get.return_value = mock_caps
 
                 handler = NativeToolHandler(model_name="claude-sonnet-4-20250514")
-                native_configs, remaining = handler.get_native_configs(
-                    ["native:web_search", "builtin:calculator"], "auto"
-                )
+                native_configs, remaining = handler.get_native_configs(["native:web_search", "builtin:calculator"], "auto")
 
                 assert len(native_configs) == 1
                 assert native_configs[0]["type"] == "web_search_20250305"
@@ -173,9 +159,7 @@ class TestNativeToolHandlerGetConfigForTool:
         """Should return correct config for Anthropic web_search."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-        ) as mock_registry:
+        with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
             mock_caps = MagicMock()
             mock_caps.native_provider = "anthropic"
             mock_registry.return_value.get.return_value = mock_caps
@@ -189,9 +173,7 @@ class TestNativeToolHandlerGetConfigForTool:
         """Should return correct config for Anthropic code_execution."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-        ) as mock_registry:
+        with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
             mock_caps = MagicMock()
             mock_caps.native_provider = "anthropic"
             mock_registry.return_value.get.return_value = mock_caps
@@ -205,9 +187,7 @@ class TestNativeToolHandlerGetConfigForTool:
         """Should return correct config for Google grounded search."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-        ) as mock_registry:
+        with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
             mock_caps = MagicMock()
             mock_caps.native_provider = "google"
             mock_registry.return_value.get.return_value = mock_caps
@@ -221,9 +201,7 @@ class TestNativeToolHandlerGetConfigForTool:
         """Should return None for unsupported tools."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-        ) as mock_registry:
+        with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
             mock_caps = MagicMock()
             mock_caps.native_provider = "anthropic"
             mock_registry.return_value.get.return_value = mock_caps
@@ -237,9 +215,7 @@ class TestNativeToolHandlerGetConfigForTool:
         """Should return correct config for OpenAI web_search via Responses API."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-        ) as mock_registry:
+        with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
             mock_caps = MagicMock()
             mock_caps.native_provider = "openai"
             mock_registry.return_value.get.return_value = mock_caps
@@ -256,9 +232,7 @@ class TestNativeToolHandlerGetConfigForTool:
         """Should return correct config for OpenAI code_interpreter via Responses API."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-        ) as mock_registry:
+        with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
             mock_caps = MagicMock()
             mock_caps.native_provider = "openai"
             mock_registry.return_value.get.return_value = mock_caps
@@ -280,16 +254,12 @@ class TestNativeToolHandlerOpenAIGating:
         """Should return True for OpenAI web_search when Responses API is enabled."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = True
             mock_flags.openai_native_web_search_enabled = True
             mock_flags.use_responses_api_for_openai = True
 
-            with patch(
-                "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-            ) as mock_registry:
+            with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
                 mock_caps = MagicMock()
                 mock_caps.supports_native_web_search = True
                 mock_caps.native_provider = "openai"
@@ -302,16 +272,12 @@ class TestNativeToolHandlerOpenAIGating:
         """Should return False for OpenAI when Responses API is disabled."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = True
             mock_flags.openai_native_web_search_enabled = True
             mock_flags.use_responses_api_for_openai = False  # Disabled!
 
-            with patch(
-                "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-            ) as mock_registry:
+            with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
                 mock_caps = MagicMock()
                 mock_caps.supports_native_web_search = True
                 mock_caps.native_provider = "openai"
@@ -324,16 +290,12 @@ class TestNativeToolHandlerOpenAIGating:
         """Should return True for OpenAI code_interpreter when Responses API is enabled."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = True
             mock_flags.openai_native_code_interpreter_enabled = True
             mock_flags.use_responses_api_for_openai = True
 
-            with patch(
-                "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-            ) as mock_registry:
+            with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
                 mock_caps = MagicMock()
                 mock_caps.supports_native_code_execution = True
                 mock_caps.native_provider = "openai"
@@ -351,25 +313,19 @@ class TestNativeToolHandlerMCPPrefixPreservation:
         """MCP qualified names like 'github:create_issue' should be preserved intact."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = True
             mock_flags.openai_native_web_search_enabled = True
             mock_flags.use_responses_api_for_openai = True
 
-            with patch(
-                "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-            ) as mock_registry:
+            with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
                 mock_caps = MagicMock()
                 mock_caps.supports_native_web_search = True
                 mock_caps.native_provider = "openai"
                 mock_registry.return_value.get.return_value = mock_caps
 
                 handler = NativeToolHandler(model_name="gpt-5.2")
-                native_configs, remaining = handler.get_native_configs(
-                    ["github:create_issue", "web_search"], "auto"
-                )
+                native_configs, remaining = handler.get_native_configs(["github:create_issue", "web_search"], "auto")
 
                 # github:create_issue should be preserved intact
                 assert "github:create_issue" in remaining
@@ -380,15 +336,11 @@ class TestNativeToolHandlerMCPPrefixPreservation:
         """Known sources (native, builtin, mcp) should be parsed correctly."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = True
             mock_flags.anthropic_native_web_search_enabled = True
 
-            with patch(
-                "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-            ) as mock_registry:
+            with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
                 mock_caps = MagicMock()
                 mock_caps.supports_native_web_search = True
                 mock_caps.native_provider = "anthropic"
@@ -409,15 +361,11 @@ class TestNativeToolHandlerMCPPrefixPreservation:
         """Plain tool names should be checked for native availability in auto mode."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = True
             mock_flags.anthropic_native_web_search_enabled = True
 
-            with patch(
-                "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-            ) as mock_registry:
+            with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
                 mock_caps = MagicMock()
                 mock_caps.supports_native_web_search = True
                 mock_caps.native_provider = "anthropic"
@@ -425,7 +373,8 @@ class TestNativeToolHandlerMCPPrefixPreservation:
 
                 handler = NativeToolHandler(model_name="claude-sonnet-4-20250514")
                 native_configs, remaining = handler.get_native_configs(
-                    ["web_search", "calculator"], "auto"  # Plain names!
+                    ["web_search", "calculator"],
+                    "auto",  # Plain names!
                 )
 
                 # web_search goes to native_configs
@@ -536,9 +485,7 @@ class TestNativeToolHandlerEdgeCases:
         """
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-        ) as mock_registry:
+        with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
             mock_caps = MagicMock()
             mock_caps.supports_native_web_search = False  # Unsupported!
             mock_caps.native_provider = "anthropic"
@@ -558,9 +505,7 @@ class TestNativeToolHandlerEdgeCases:
         """
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-        ) as mock_registry:
+        with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
             mock_caps = MagicMock()
             mock_caps.supports_native_web_search = True
             mock_caps.supports_native_code_execution = False  # Vertex AI limitation!
@@ -576,14 +521,10 @@ class TestNativeToolHandlerEdgeCases:
         """Should handle empty tool_ids list gracefully."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = True
 
-            with patch(
-                "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-            ) as mock_registry:
+            with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
                 mock_caps = MagicMock()
                 mock_caps.supports_native_web_search = True
                 mock_caps.native_provider = "anthropic"
@@ -599,23 +540,17 @@ class TestNativeToolHandlerEdgeCases:
         """Should preserve unknown prefixes in remaining list."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = True
 
-            with patch(
-                "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-            ) as mock_registry:
+            with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
                 mock_caps = MagicMock()
                 mock_caps.supports_native_web_search = True
                 mock_caps.native_provider = "anthropic"
                 mock_registry.return_value.get.return_value = mock_caps
 
                 handler = NativeToolHandler(model_name="claude-sonnet-4-20250514")
-                native_configs, remaining = handler.get_native_configs(
-                    ["unknown:some_tool", "custom:another_tool"], "auto"
-                )
+                native_configs, remaining = handler.get_native_configs(["unknown:some_tool", "custom:another_tool"], "auto")
 
                 assert native_configs == []
                 assert "unknown:some_tool" in remaining
@@ -625,9 +560,7 @@ class TestNativeToolHandlerEdgeCases:
         """Should return None for all configs when model has no native_provider."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-        ) as mock_registry:
+        with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
             mock_caps = MagicMock()
             mock_caps.native_provider = None  # No provider!
             mock_registry.return_value.get.return_value = mock_caps
@@ -646,9 +579,7 @@ class TestNativeToolHandlerEdgeCases:
         """
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-        ) as mock_registry:
+        with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
             mock_caps = MagicMock()
             mock_caps.supports_native_code_execution = True
             mock_caps.native_provider = "anthropic"
@@ -666,14 +597,10 @@ class TestNativeToolHandlerEdgeCases:
         """
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
-        with patch(
-            "mcp_server_langgraph.tools.native_handler.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.native_handler.feature_flags") as mock_flags:
             mock_flags.native_tools_enabled = True
 
-            with patch(
-                "mcp_server_langgraph.tools.native_handler.ModelRegistry"
-            ) as mock_registry:
+            with patch("mcp_server_langgraph.tools.native_handler.ModelRegistry") as mock_registry:
                 mock_caps = MagicMock()
                 mock_caps.supports_native_web_search = False
                 mock_caps.supports_native_code_execution = False
@@ -682,7 +609,8 @@ class TestNativeToolHandlerEdgeCases:
 
                 handler = NativeToolHandler(model_name="unknown-model")
                 native_configs, remaining = handler.get_native_configs(
-                    ["native:web_search"], "native"  # Force native
+                    ["native:web_search"],
+                    "native",  # Force native
                 )
 
                 # No native configs available for unsupported model

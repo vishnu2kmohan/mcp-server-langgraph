@@ -15,10 +15,13 @@ from mcp_server_langgraph.audit.models import (
     AuditEventType,
     UnifiedAuditEvent,
 )
+
 from mcp_server_langgraph.execution.bypass_audit import (
     create_bypass_audit_event,
     log_bypass_audit_event,
 )
+
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
