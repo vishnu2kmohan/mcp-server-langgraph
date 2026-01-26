@@ -119,8 +119,8 @@ class PostgresSessionManager:
 
     async def create_session(
         self,
+        user_id: str,
         name: str,
-        user_id: str | None = None,
         config: SessionConfig | None = None,
         status: str = "active",
         workflow_id: str | None = None,
@@ -274,6 +274,7 @@ class PostgresSessionManager:
     async def add_message(
         self,
         session_id: str,
+        user_id: str,
         role: str,
         content: str,
         metadata: dict[str, Any] | None = None,
@@ -282,8 +283,11 @@ class PostgresSessionManager:
         """
         Add a message to session history.
 
+        v8: Added user_id parameter for ownership tracking (Finding 23).
+
         Args:
             session_id: Session ID to add message to
+            user_id: User ID who owns this message (v8: NEW, required)
             role: Message role ("user" or "assistant")
             content: Message content
             metadata: Optional message metadata
@@ -316,9 +320,10 @@ class PostgresSessionManager:
             message_model = MessageModel(
                 id=message_id,
                 session_id=session_id,
+                user_id=user_id,  # v8: Store user_id for ownership (Finding 23)
                 role=role,
                 content=content,
-                metadata_json=full_metadata,
+                metadata_json=full_metadata,  # v8: Pass dict directly, no json.dumps (Finding 48)
                 timestamp=now,
                 order_index=order_index,
             )
@@ -515,15 +520,21 @@ class PostgresSessionManager:
         )
 
     def _model_to_message(self, model: MessageModel) -> Message:
-        """Convert SQLAlchemy message model to Pydantic model."""
-        # Extract sources from metadata_json (stored there to avoid schema migration)
-        metadata = model.metadata_json or {}
-        sources = metadata.pop("sources", []) if isinstance(metadata, dict) else []
+        """Convert SQLAlchemy message model to Pydantic model.
+
+        v8 FIX: metadata_json is JSON column - accessed as dict directly (Finding 48).
+        No json.loads needed - SQLAlchemy JSON column deserializes automatically.
+        """
+        # v8: metadata_json is already a dict (Finding 48)
+        metadata = model.metadata_json if model.metadata_json else {}
+        # Extract sources from metadata (don't pop to preserve original)
+        sources = metadata.get("sources", []) if isinstance(metadata, dict) else []
 
         return Message(
             message_id=model.id,
             role=model.role,
             content=model.content,
+            user_id=model.user_id,  # v8: Return user_id (Finding 22)
             timestamp=model.timestamp,
             metadata=metadata,
             sources=sources,

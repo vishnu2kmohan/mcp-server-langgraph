@@ -30,7 +30,9 @@ class SessionModel(SessionBase):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    user_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    # v8 FIX: Make non-null in ORM before migration (Finding 29)
+    # SECURITY: All sessions must be owned by a user for access control
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     config_model: Mapped[str] = mapped_column(String(100), nullable=False, default="gpt-4o-mini")
     config_temperature: Mapped[float] = mapped_column(Float, nullable=False, default=0.7)
     config_max_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=1000)
@@ -105,6 +107,9 @@ class MessageModel(SessionBase):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     session_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+    # v8: Explicit user_id column for ownership tracking (Finding 2)
+    # SECURITY: Required for user-scoped message access control
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     role: Mapped[str] = mapped_column(String(20), nullable=False)  # "user" or "assistant"
     content: Mapped[str] = mapped_column(Text, nullable=False)
     metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)

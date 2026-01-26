@@ -83,11 +83,17 @@ class SessionConfig(BaseModel):
 
 
 class Message(BaseModel):
-    """A message in a chat session."""
+    """A message in a chat session.
+
+    v8: Added user_id as required field for ownership tracking (Finding 53).
+    SECURITY: Required for user-scoped message access control.
+    """
 
     message_id: str = Field(description="Unique message ID")
     role: str = Field(description="Message role (user, assistant, system)")
     content: str = Field(description="Message content")
+    # v8: Required user_id for ownership tracking (Finding 53)
+    user_id: str = Field(..., description="User ID who owns this message")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC), description="Message timestamp")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
@@ -98,14 +104,19 @@ class Message(BaseModel):
 
 
 class Session(BaseModel):
-    """Full chat session state for storage."""
+    """Full chat session state for storage.
+
+    v8: Made user_id required for ownership tracking (Finding 53).
+    SECURITY: All sessions must be owned by a user for access control.
+    """
 
     model_config = ConfigDict(ser_json_timedelta="iso8601")
 
     session_id: str = Field(description="Unique session ID")
     name: str = Field(description="Session name/title")
     workflow_id: str | None = Field(default=None, description="Associated workflow ID")
-    user_id: str | None = Field(default=None, description="Owner user ID")
+    # v8: Required user_id for ownership tracking (Finding 53)
+    user_id: str = Field(..., description="Owner user ID")
     messages: list[Message] = Field(default_factory=list, description="Session messages")
     config: SessionConfig = Field(default_factory=SessionConfig, description="LLM configuration")
     status: str = Field(default="active", description="Session status")

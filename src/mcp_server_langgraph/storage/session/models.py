@@ -38,11 +38,17 @@ class SessionConfig(BaseModel):
 
 
 class Message(BaseModel):
-    """A message in a session."""
+    """A message in a session.
+
+    v8: Added user_id as required field for ownership tracking (Finding 53).
+    SECURITY: Required for user-scoped message access control.
+    """
 
     message_id: str
     role: str  # "user" or "assistant"
     content: str
+    # v8: Explicit user_id field for ownership (Finding 53, Finding 56)
+    user_id: str = Field(..., description="User ID who owns this message")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     metadata: dict[str, Any] = Field(default_factory=dict)
     sources: list[dict[str, Any]] = Field(
@@ -52,7 +58,11 @@ class Message(BaseModel):
 
 
 class Session(BaseModel):
-    """Full session state for Redis storage."""
+    """Full session state for Redis storage.
+
+    v8: Made user_id required for ownership tracking (Finding 56).
+    SECURITY: All sessions must be owned by a user for access control.
+    """
 
     session_id: str
     name: str
@@ -60,6 +70,7 @@ class Session(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     messages: list[Message] = Field(default_factory=list)
     config: SessionConfig = Field(default_factory=SessionConfig)
-    user_id: str | None = None
+    # v8: Required, not Optional (Finding 56)
+    user_id: str = Field(..., description="User ID who owns this session")
     status: str = Field(default="active", description="Session status: active, archived")
     workflow_id: str | None = Field(default=None, description="Associated workflow ID")
