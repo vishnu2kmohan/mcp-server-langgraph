@@ -115,14 +115,20 @@ class ExecutionPlan(BaseModel):
         """Check if plan has expired."""
         return datetime.now(UTC) > self.expires_at
 
+    # Approval override (set by plan mode)
+    force_approval: bool = False
+
     @property
     def requires_approval(self) -> bool:
         """Check if plan requires manual approval.
 
-        Low-risk plans can auto-execute.
-        Medium and high-risk plans require approval.
+        Approval is required when:
+        - force_approval is True (user selected Plan mode)
+        - OR risk_level is medium or high
+
+        Low-risk plans can auto-execute unless force_approval is set.
         """
-        return self.risk_level != "low"
+        return self.force_approval or self.risk_level != "low"
 
     def approve(self, approved_by: str) -> ExecutionPlan:
         """Approve the plan for execution.
@@ -187,6 +193,7 @@ class ExecutionPlan(BaseModel):
         estimated_cost: Decimal,
         critic_model: str | None = None,
         plan_id: str | None = None,
+        force_approval: bool = False,
     ) -> ExecutionPlan:
         """Create an ExecutionPlan from RouterOutput.
 
@@ -198,6 +205,7 @@ class ExecutionPlan(BaseModel):
             estimated_cost: Estimated cost for execution
             critic_model: Optional critic model
             plan_id: Optional plan ID (auto-generated if not provided)
+            force_approval: Force approval requirement (e.g., plan mode)
 
         Returns:
             New ExecutionPlan instance
@@ -218,4 +226,5 @@ class ExecutionPlan(BaseModel):
             thinking_budget=router_output.thinking_budget,
             tools_needed=router_output.tools_needed,
             confidence=router_output.confidence,
+            force_approval=force_approval,
         )

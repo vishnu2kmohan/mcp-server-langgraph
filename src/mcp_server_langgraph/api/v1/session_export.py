@@ -51,21 +51,26 @@ class ExportRequest(BaseModel):
 
 
 # ==============================================================================
-# Session Service (Mock/Stub)
+# Session Service
 # ==============================================================================
 
-_session_service: Any | None = None
+# v8 FIX: Import real service instead of using local stub (Finding 52)
+# This enables user-scoped access and ownership enforcement
+from mcp_server_langgraph.api.v1.sessions import get_session_service
 
 
-def set_session_service(service: Any | None) -> None:
-    """Set the session service for dependency injection."""
-    global _session_service
-    _session_service = service
+def _get_user_id(current_user: dict[str, Any]) -> str:
+    """Extract user_id from current_user dict.
 
-
-def get_session_service() -> Any:
-    """Get the session service."""
-    return _session_service
+    v8: Required for ownership enforcement in session_export.
+    """
+    user_id = current_user.get("sub") or current_user.get("user_id") or current_user.get("id")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user credentials",
+        )
+    return str(user_id)
 
 
 # ==============================================================================
@@ -213,16 +218,22 @@ async def export_session(
     request: ExportRequest,
     current_user: CurrentUser,
 ) -> Response:
-    """Export a session in the specified format."""
-    service = get_session_service()
+    """Export a session in the specified format.
 
-    # Get session
+    v8: Ownership enforcement - only owner can export session (Finding 45, Q17).
+    """
+    service = get_session_service()
+    user_id = _get_user_id(current_user)
+
+    # v8 FIX: Pass user_id for ownership check (Finding 45)
+    # Returns None if session not found OR not owned by user
     if service:
-        session = await service.get_session(session_id)
+        session = await service.get_session(session_id, user_id)
     else:
         session = None
 
     if not session:
+        # v8 Q17: Same 404 rule as other endpoints (don't reveal existence)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Session {session_id} not found",

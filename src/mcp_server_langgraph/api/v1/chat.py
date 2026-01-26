@@ -30,7 +30,7 @@ import asyncio
 import time
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Annotated, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Callable, Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -67,6 +67,47 @@ CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 def _get_user_id(user: dict[str, Any]) -> str:
     """Extract user ID from authenticated user dict."""
     return user.get("sub") or user.get("user_id") or user.get("preferred_username") or "anonymous"
+
+
+async def _summarize_conversation(messages: list[dict[str, Any]]) -> str:
+    """Summarize conversation history for swarm context (Phase 2).
+
+    Creates a concise summary of the conversation for use when
+    context_strategy="summarized" is selected. This provides workers
+    with relevant context without overwhelming them with full history.
+
+    Args:
+        messages: List of message dicts with 'role' and 'content' keys.
+
+    Returns:
+        Summarized conversation string. Empty string if no messages.
+    """
+    if not messages:
+        return ""
+
+    # For single message, just return its content
+    if len(messages) == 1:
+        return messages[0].get("content", "")
+
+    # For multiple messages, create a structured summary
+    # Format: condensed view of conversation turns
+    summary_parts = []
+    for msg in messages:
+        role = msg.get("role", "unknown")
+        content = msg.get("content", "")
+
+        # Truncate long messages for summary
+        if len(content) > 200:
+            content = content[:200] + "..."
+
+        if role == "user":
+            summary_parts.append(f"User: {content}")
+        elif role == "assistant":
+            summary_parts.append(f"Assistant: {content}")
+        elif role == "system":
+            summary_parts.append(f"System: {content}")
+
+    return "\n".join(summary_parts)
 
 
 # Request/Response Models
@@ -389,6 +430,8 @@ class ChatServiceImpl(ChatService):
         langgraph_agent: Any | None = None,
         llm_factory: Any | None = None,
         router_agent: Any | None = None,
+        capability_provider: Any | None = None,
+        thinking_budget_manager: Any | None = None,
     ) -> None:
         """
         Initialize with optional dependencies.
@@ -404,12 +447,18 @@ class ChatServiceImpl(ChatService):
                          If None, falls back to direct litellm.acompletion.
             router_agent: Optional RouterAgent for orchestration routing.
                          If provided, enables dynamic routing based on request classification.
+            capability_provider: Optional CapabilityProvider for hierarchical tool/skill
+                         resolution (ADR-0105 Phase 2). Used by swarm workers.
+            thinking_budget_manager: Optional ThinkingBudgetManager for extended thinking
+                         support (ADR-0105 Phase 2). Used by swarm workers.
         """
         self._session_storage = session_storage
         self._mcp_bridge = mcp_bridge
         self._langgraph_agent = langgraph_agent
         self._llm_factory = llm_factory
         self._router_agent = router_agent
+        self._capability_provider = capability_provider
+        self._thinking_budget_manager = thinking_budget_manager
 
     @property
     def mcp_bridge(self) -> Any | None:
@@ -1007,6 +1056,77 @@ class ChatServiceImpl(ChatService):
     # - OTEL tracing integration
     # - Cost tracking via callbacks
 
+    def _create_llm_worker(self, name: str, system_prompt: str) -> Callable[[str], str]:
+        """Create a LangGraph-compatible worker that uses LLMFactory for LLM calls.
+
+        Creates a sync function suitable for use with LangGraph patterns (Supervisor,
+        Hierarchical). Uses async→sync bridging via asyncio for LLMFactory.ainvoke().
+
+        Based on research:
+        - RunnableLambda accepts sync functions and handles async internally
+        - LiteLLMChatModel uses asyncio.get_event_loop().run_until_complete() pattern
+        - Workers should have graceful error handling with fallback responses
+
+        Args:
+            name: Worker name for identification and logging
+            system_prompt: System prompt defining the worker's role and capabilities
+
+        Returns:
+            Callable that takes task input (str) and returns LLM response (str)
+
+        Example:
+            worker = self._create_llm_worker("research", "You are a research analyst.")
+            result = worker("Analyze market trends")  # Returns LLM response
+        """
+        import asyncio
+
+        from langchain_core.messages import HumanMessage, SystemMessage
+
+        from mcp_server_langgraph.observability.telemetry import logger
+
+        llm_factory = self.llm_factory
+
+        def worker(task_input: str) -> str:
+            """Sync worker function for LangGraph compatibility."""
+            if not llm_factory:
+                logger.warning(f"[{name}] LLMFactory not available, using fallback")
+                return f"[{name}] Unable to process: LLM not configured"
+
+            # Build messages with system prompt and task
+            messages = [
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=task_input),
+            ]
+
+            async def _invoke_async() -> str:
+                """Async wrapper for LLMFactory.ainvoke()."""
+                try:
+                    response = await llm_factory.ainvoke(messages)
+                    return response.content if hasattr(response, "content") else str(response)
+                except Exception as e:
+                    logger.error(f"[{name}] LLM invocation failed: {e}")
+                    return f"[{name}] Error processing request: {e!s}"
+
+            # Async→sync bridging for LangGraph compatibility
+            try:
+                # Check if we're already in an async context
+                try:
+                    loop = asyncio.get_running_loop()
+                    # We're in async context - use run_coroutine_threadsafe or nest
+                    import concurrent.futures
+
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future = executor.submit(asyncio.run, _invoke_async())
+                        return future.result(timeout=60.0)
+                except RuntimeError:
+                    # No running loop - safe to use asyncio.run()
+                    return asyncio.run(_invoke_async())
+            except Exception as e:
+                logger.error(f"[{name}] Worker execution failed: {e}")
+                return f"[{name}] Fallback response for: {task_input[:50]}..."
+
+        return worker
+
     async def _stream_via_langgraph(
         self,
         session_id: str,
@@ -1285,6 +1405,552 @@ class ChatServiceImpl(ChatService):
             return "agent"
         return "default"
 
+    async def _stream_via_swarm(
+        self,
+        session_id: str,
+        messages: list[dict[str, Any]],
+        selection: Any,  # OrchestratorSelection
+        max_tokens: int | None = None,
+        temperature: float | None = None,
+        **kwargs: Any,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Execute via SwarmOrchestrator and stream results.
+
+        Implements ADR-0105: AsyncIO swarm orchestration for parallel multi-agent
+        execution. Bypasses plan/critique loop for speed.
+
+        Args:
+            session_id: Session identifier for tracing
+            messages: List of chat messages
+            selection: OrchestratorSelection with swarm config
+            max_tokens: Optional max tokens limit
+            temperature: Optional temperature for sampling
+            **kwargs: Additional parameters
+
+        Yields:
+            dict: swarm_result metadata and delta content for SSE persistence
+        """
+        from mcp_server_langgraph.agents.base_agent import AgentRequest
+        from mcp_server_langgraph.agents.swarm_orchestrator import (
+            SwarmConfig,
+            SwarmOrchestrator,
+            SwarmStrategy,
+        )
+        from mcp_server_langgraph.agents.worker_agent import WorkerAgent
+        from mcp_server_langgraph.observability.telemetry import logger
+
+        # Build WorkerAgents with correct constructor signature
+        # Phase 2: Support optional CapabilityProvider and ThinkingBudgetManager
+        workers = [
+            WorkerAgent(
+                llm_factory=self.llm_factory,
+                model_id=selection.worker_model,
+                thinking_budget_manager=self._thinking_budget_manager,
+                capability_provider=self._capability_provider,
+            )
+            for _ in range(selection.worker_count)
+        ]
+
+        # Map strategy string to enum
+        strategy_map = {
+            "race": SwarmStrategy.RACE,
+            "cascade": SwarmStrategy.CASCADE,
+            "consensus": SwarmStrategy.CONSENSUS,
+        }
+        strategy = strategy_map.get(selection.swarm_strategy or "race", SwarmStrategy.RACE)
+
+        # Create swarm config
+        config = SwarmConfig(
+            strategy=strategy,
+            max_agents=selection.worker_count,
+            timeout_seconds=60.0,
+        )
+
+        # Create orchestrator
+        swarm = SwarmOrchestrator(agents=workers, config=config)
+
+        # Phase 2: Build task based on context_strategy
+        context_strategy = getattr(selection, "context_strategy", "scoped")
+
+        if context_strategy == "summarized" and len(messages) > 1:
+            # Summarize conversation history for consensus-style agreement
+            conversation_summary = await _summarize_conversation(messages[:-1])
+            last_message = messages[-1].get("content", "") if messages else ""
+            task = f"<conversation_summary>\n{conversation_summary}\n</conversation_summary>\n\n<current_request>\n{last_message}\n</current_request>"
+        elif context_strategy == "full":
+            # Include full conversation history
+            full_context = "\n".join(
+                f"{msg.get('role', 'unknown')}: {msg.get('content', '')}"
+                for msg in messages
+            )
+            task = full_context
+        else:
+            # "scoped" - default: just last message for speed
+            task = messages[-1].get("content", "") if messages else ""
+
+        # Phase 2: Inject resource content if provided
+        resource_content = kwargs.get("resource_content")
+        if resource_content:
+            # Prepend resource content as context for the task
+            task = f"<context>\n{resource_content}\n</context>\n\n{task}"
+
+        # Build AgentRequest with essential params
+        request = AgentRequest(
+            message=task,
+            session_id=session_id,
+            max_tokens=max_tokens,
+        )
+
+        logger.info(
+            "Swarm orchestration started",
+            extra={
+                "session_id": session_id,
+                "strategy": selection.swarm_strategy,
+                "worker_count": selection.worker_count,
+            },
+        )
+
+        # Run swarm - returns AgentResult
+        result = await swarm.run(request=request)
+
+        # Emit swarm metadata as SSE event
+        yield {
+            "swarm_result": {
+                "strategy": selection.swarm_strategy,
+                "worker_count": len(workers),
+                "success": result.success,
+                "model_used": result.model_used,
+                "error": result.error,
+            }
+        }
+
+        # Emit content as delta for SSE persistence
+        if result.success and result.content:
+            yield {"delta": {"content": result.content}}
+        elif result.error:
+            yield {"delta": {"content": f"Swarm execution failed: {result.error}"}}
+
+        logger.info(
+            "Swarm orchestration completed",
+            extra={
+                "session_id": session_id,
+                "success": result.success,
+            },
+        )
+
+    async def _stream_via_task_orchestrator(
+        self,
+        session_id: str,
+        messages: list[dict[str, Any]],
+        selection: Any,  # OrchestratorSelection
+        max_tokens: int | None = None,
+        **kwargs: Any,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Execute via task decomposition Orchestrator and stream results.
+
+        Implements ADR-0105: AsyncIO task orchestration with subtask decomposition.
+        Feature-gated via enable_multi_agent_orchestration.
+
+        Args:
+            session_id: Session identifier for tracing
+            messages: List of chat messages
+            selection: OrchestratorSelection with task config
+            max_tokens: Optional max tokens limit
+            **kwargs: Additional parameters
+
+        Yields:
+            dict: task_decomposition, subtask_completed, and delta content
+        """
+        from mcp_server_langgraph.agents.orchestrator import Orchestrator
+        from mcp_server_langgraph.core.exceptions import FeatureDisabledError
+        from mcp_server_langgraph.observability.telemetry import logger
+
+        # Extract last user message as task
+        task = messages[-1].get("content", "") if messages else ""
+
+        # Create orchestrator for task decomposition
+        orchestrator = Orchestrator(session_id=session_id)
+
+        try:
+            # Step 1: Decompose task into subtasks (feature-gated)
+            num_subtasks = orchestrator.scale_effort(task)
+            decomposition = orchestrator.decompose_task(task, num_subtasks=num_subtasks)
+
+            logger.info(
+                "Task decomposition completed",
+                extra={
+                    "session_id": session_id,
+                    "subtask_count": len(decomposition.subtasks),
+                },
+            )
+
+            # Emit decomposition event
+            yield {
+                "task_decomposition": {
+                    "original_task": decomposition.original_task,
+                    "subtask_count": len(decomposition.subtasks),
+                    "subtasks": [{"id": s.task_id, "title": s.title} for s in decomposition.subtasks],
+                }
+            }
+
+            # Step 2: Execute via Orchestrator.execute() (feature-gated, async)
+            subagent_results = await orchestrator.execute(decomposition)
+
+            # Emit progress for each completed subtask
+            for result in subagent_results:
+                yield {
+                    "subtask_completed": {
+                        "task_id": result.task_id,
+                        "success": result.success,
+                        "confidence": result.confidence,
+                    }
+                }
+
+            # Step 3: Synthesize results
+            successful_results = [r for r in subagent_results if r.success and r.output]
+            if successful_results:
+                synthesized = "\n\n".join(str(r.output) for r in successful_results)
+                yield {"delta": {"content": synthesized}}
+            else:
+                yield {"delta": {"content": "Task orchestration failed: all subtasks failed"}}
+
+            # Emit completion metadata
+            yield {
+                "task_orchestrator_result": {
+                    "success": len(successful_results) > 0,
+                    "subtasks_completed": len(successful_results),
+                    "subtasks_total": len(decomposition.subtasks),
+                }
+            }
+
+            logger.info(
+                "Task orchestration completed",
+                extra={
+                    "session_id": session_id,
+                    "success": len(successful_results) > 0,
+                    "subtasks_completed": len(successful_results),
+                },
+            )
+
+        except FeatureDisabledError as e:
+            # Feature gate not enabled
+            logger.warning(f"Task orchestration disabled: {e}")
+            yield {"delta": {"content": f"Task orchestration disabled: {e}"}}
+            yield {
+                "task_orchestrator_result": {
+                    "success": False,
+                    "error": "enable_multi_agent_orchestration feature flag is disabled",
+                }
+            }
+
+    async def _stream_via_langgraph_hierarchical(
+        self,
+        session_id: str,
+        messages: list[dict[str, Any]],
+        selection: Any,  # OrchestratorSelection
+        max_tokens: int | None = None,
+        **kwargs: Any,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Execute via LangGraph Hierarchical pattern with astream_events streaming.
+
+        Phase 3: Direct LangGraph pattern integration without LangGraph Server.
+        Uses astream_events() for real-time event streaming.
+
+        The hierarchical pattern organizes agents in a tree structure:
+        CEO → Managers → Workers
+
+        Args:
+            session_id: Session ID for tracking
+            messages: Conversation messages
+            selection: OrchestratorSelection with langgraph_pattern="hierarchical"
+            max_tokens: Optional max tokens limit
+
+        Yields:
+            SSE events:
+            - langgraph_node: Node execution events (ceo, manager_*, worker_*, consolidate)
+            - delta: Content chunks for SSE persistence
+            - langgraph_hierarchical_result: Execution metadata
+        """
+        from mcp_server_langgraph.observability.telemetry import logger
+        from mcp_server_langgraph.patterns.hierarchical import HierarchicalCoordinator
+
+        logger.info(
+            "Starting LangGraph Hierarchical streaming",
+            extra={
+                "session_id": session_id,
+                "pattern": selection.langgraph_pattern,
+                "worker_count": getattr(selection, "worker_count", 3),
+            },
+        )
+
+        # Extract task from last user message
+        task = messages[-1].get("content", "") if messages else ""
+
+        # Create hierarchical agent structure using LLMFactory-powered workers
+        # CEO → Managers → Workers pattern with specialized prompts
+        worker_count = getattr(selection, "worker_count", 3)
+
+        # Role definitions with specialized prompts for each level
+        ceo_prompt = (
+            "You are the CEO overseeing a complex project. Make strategic decisions, "
+            "delegate to department managers, and ensure alignment with project goals. "
+            "Provide clear direction and synthesize team outputs into coherent plans."
+        )
+
+        manager_prompts = {
+            "research_manager": (
+                "You are the Research Manager. Coordinate research activities, "
+                "assign tasks to researchers, and synthesize their findings into actionable insights."
+            ),
+            "dev_manager": (
+                "You are the Development Manager. Coordinate development tasks, "
+                "assign work to developers, and ensure quality and timely delivery."
+            ),
+        }
+
+        worker_prompts = {
+            "Researcher": (
+                "You are a research analyst. Investigate topics thoroughly, "
+                "find relevant information, and provide well-sourced findings."
+            ),
+            "Developer": (
+                "You are a software developer. Implement solutions, "
+                "write clean code, and follow best practices."
+            ),
+        }
+
+        # Build hierarchical structure with LLMFactory-powered agents
+        ceo_agent = self._create_llm_worker("CEO", ceo_prompt)
+        managers = {
+            name: self._create_llm_worker(name, prompt)
+            for name, prompt in manager_prompts.items()
+        }
+        workers = {
+            "research_manager": [
+                self._create_llm_worker(f"Researcher_{i}", worker_prompts["Researcher"])
+                for i in range(1, worker_count // 2 + 2)
+            ],
+            "dev_manager": [
+                self._create_llm_worker(f"Developer_{i}", worker_prompts["Developer"])
+                for i in range(1, worker_count // 2 + 2)
+            ],
+        }
+
+        # Create and compile hierarchical coordinator
+        coordinator = HierarchicalCoordinator(
+            ceo_agent=ceo_agent,
+            managers=managers,
+            workers=workers,
+            delegation_strategy="balanced",
+        )
+        compiled_graph = coordinator.compile()
+
+        # Use astream_events for real-time streaming
+        config = {"configurable": {"thread_id": session_id}}
+
+        try:
+            async for event in compiled_graph.astream_events(
+                {"project": task},
+                config=config,
+                version="v2",
+            ):
+                event_type = event.get("event", "")
+                metadata = event.get("metadata", {})
+                langgraph_node = metadata.get("langgraph_node")
+                data = event.get("data", {})
+
+                # Emit node start/end events
+                if event_type == "on_chain_start" and langgraph_node:
+                    yield {
+                        "langgraph_node": {
+                            "name": langgraph_node,
+                            "type": "chain_start",
+                            "status": "started",
+                        }
+                    }
+
+                elif event_type == "on_chain_end" and langgraph_node:
+                    output = data.get("output", {})
+                    yield {
+                        "langgraph_node": {
+                            "name": langgraph_node,
+                            "type": "chain_end",
+                            "status": "completed",
+                            "has_result": bool(output),
+                        }
+                    }
+
+                    # If this is the consolidate node, extract final report
+                    if langgraph_node == "consolidate" and isinstance(output, dict):
+                        final_report = output.get("final_report", "")
+                        if final_report:
+                            yield {"delta": {"content": final_report}}
+
+                # Handle streaming content from LLM
+                elif event_type == "on_chat_model_stream":
+                    chunk = data.get("chunk")
+                    if chunk and hasattr(chunk, "content") and chunk.content:
+                        yield {"delta": {"content": chunk.content}}
+
+            # Emit completion metadata
+            yield {
+                "langgraph_hierarchical_result": {
+                    "success": True,
+                    "pattern": "hierarchical",
+                    "worker_count": worker_count,
+                }
+            }
+
+            logger.info(
+                "LangGraph Hierarchical streaming completed",
+                extra={"session_id": session_id, "success": True},
+            )
+
+        except Exception as e:
+            logger.exception(f"LangGraph Hierarchical error: {e}")
+            yield {"delta": {"content": f"LangGraph Hierarchical error: {e}"}}
+            yield {
+                "langgraph_hierarchical_result": {
+                    "success": False,
+                    "error": str(e),
+                }
+            }
+
+    async def _stream_via_langgraph_supervisor(
+        self,
+        session_id: str,
+        messages: list[dict[str, Any]],
+        selection: Any,  # OrchestratorSelection
+        max_tokens: int | None = None,
+        **kwargs: Any,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Execute via LangGraph Supervisor pattern with astream_events streaming.
+
+        Phase 3: Direct LangGraph pattern integration without LangGraph Server.
+        Uses astream_events() for real-time event streaming.
+
+        Args:
+            session_id: Session ID for tracking
+            messages: Conversation messages
+            selection: OrchestratorSelection with langgraph_pattern="supervisor"
+            max_tokens: Optional max tokens limit
+
+        Yields:
+            SSE events:
+            - langgraph_node: Node execution events (supervisor, worker, aggregate)
+            - delta: Content chunks for SSE persistence
+            - langgraph_supervisor_result: Execution metadata
+        """
+        from mcp_server_langgraph.observability.telemetry import logger
+        from mcp_server_langgraph.patterns.supervisor import Supervisor
+
+        logger.info(
+            "Starting LangGraph Supervisor streaming",
+            extra={
+                "session_id": session_id,
+                "pattern": selection.langgraph_pattern,
+                "worker_count": selection.worker_count,
+            },
+        )
+
+        # Extract task from last user message
+        task = messages[-1].get("content", "") if messages else ""
+
+        # Create worker agents for the supervisor pattern using LLMFactory
+        # Each worker has a specialized system prompt for its role
+        worker_count = getattr(selection, "worker_count", 3)
+
+        # Worker role definitions with specialized prompts
+        worker_roles = {
+            "research": "You are a research analyst. Analyze information, find key insights, and provide well-sourced findings.",
+            "writer": "You are a technical writer. Create clear, concise content based on the research and requirements provided.",
+            "reviewer": "You are a quality reviewer. Check for accuracy, completeness, and clarity. Provide constructive feedback.",
+        }
+
+        # Build agent dictionary for supervisor using LLMFactory-powered workers
+        agents = {}
+        worker_names = list(worker_roles.keys())[:worker_count]
+        for name in worker_names:
+            agents[name] = self._create_llm_worker(name, worker_roles[name])
+
+        # Create and compile supervisor
+        supervisor = Supervisor(
+            agents=agents,
+            routing_strategy="conditional",
+        )
+        compiled_graph = supervisor.compile()
+
+        # Use astream_events for real-time streaming (no LangGraph Server needed)
+        config = {"configurable": {"thread_id": session_id}}
+
+        try:
+            async for event in compiled_graph.astream_events(
+                {"task": task},
+                config=config,
+                version="v2",
+            ):
+                event_type = event.get("event", "")
+                metadata = event.get("metadata", {})
+                langgraph_node = metadata.get("langgraph_node")
+                data = event.get("data", {})
+
+                # Emit node start/end events
+                if event_type == "on_chain_start" and langgraph_node:
+                    yield {
+                        "langgraph_node": {
+                            "name": langgraph_node,
+                            "type": "chain_start",
+                            "status": "started",
+                        }
+                    }
+
+                elif event_type == "on_chain_end" and langgraph_node:
+                    output = data.get("output", {})
+                    yield {
+                        "langgraph_node": {
+                            "name": langgraph_node,
+                            "type": "chain_end",
+                            "status": "completed",
+                            "has_result": bool(output),
+                        }
+                    }
+
+                    # If this is the aggregate node, extract final result
+                    if langgraph_node == "aggregate" and isinstance(output, dict):
+                        final_result = output.get("final_result", "")
+                        if final_result:
+                            yield {"delta": {"content": final_result}}
+
+                # Handle streaming content from LLM
+                elif event_type == "on_chat_model_stream":
+                    chunk = data.get("chunk")
+                    if chunk and hasattr(chunk, "content") and chunk.content:
+                        yield {"delta": {"content": chunk.content}}
+
+            # Emit completion metadata
+            yield {
+                "langgraph_supervisor_result": {
+                    "success": True,
+                    "pattern": "supervisor",
+                    "worker_count": worker_count,
+                }
+            }
+
+            logger.info(
+                "LangGraph Supervisor streaming completed",
+                extra={"session_id": session_id, "success": True},
+            )
+
+        except Exception as e:
+            logger.exception(f"LangGraph Supervisor error: {e}")
+            yield {"delta": {"content": f"LangGraph Supervisor error: {e}"}}
+            yield {
+                "langgraph_supervisor_result": {
+                    "success": False,
+                    "error": str(e),
+                }
+            }
+
     async def create_stream(
         self, session_id: str, messages: list[dict[str, Any]], **kwargs: Any
     ) -> AsyncIterator[dict[str, Any]]:
@@ -1327,16 +1993,34 @@ class ChatServiceImpl(ChatService):
         resource_uris = kwargs.pop("resource_uris", None)
         messages = await self._inject_resource_context(messages, resource_uris)
 
+        # Extract last user message for classification/plan generation
+        last_user_message = next(
+            (msg.get("content", "") for msg in reversed(messages) if msg.get("role") == "user"),
+            "",
+        )
+
+        # Get execution mode from kwargs (defaults to "default")
+        execution_mode = kwargs.get("execution_mode", "default")
+
         # Router agent classification when enabled
         routing_decision: RouterOutput | None = None
+
+        # =======================================================================
+        # ROUTER CLASSIFICATION (Independent of Plan Mode)
+        # =======================================================================
+        # The router agent classifies the task to determine:
+        # - execution_mode: How to execute (pure_llm, tool_calling, react, etc.)
+        # - complexity: Model tier selection (simple, complicated, complex)
+        # - risk: Risk assessment (low, medium, high)
+        # - critique_rounds: Refinement passes needed
+        # - thinking_budget: Extended reasoning level
+        #
+        # Plan mode is a WORKFLOW overlay that adds approval requirements.
+        # It does NOT override the router's intelligent classification.
+        # =======================================================================
+
         if enable_routing and self.router_agent is not None:
             try:
-                # Extract last user message for classification
-                last_user_message = next(
-                    (msg.get("content", "") for msg in reversed(messages) if msg.get("role") == "user"),
-                    "",
-                )
-
                 routing_decision = await self.router_agent.route(message=last_user_message)
                 logger.info(
                     f"Router decision: orchestrator={routing_decision.suggested_orchestrator}, "
@@ -1360,9 +2044,58 @@ class ChatServiceImpl(ChatService):
                     }
                 }
 
-                # Use routing decision to select streaming strategy
-                if routing_decision.suggested_orchestrator in ("studio", "swarm"):
-                    use_langgraph = True
+                # ADR-0105: Select orchestrator implementation based on routing decision
+                from mcp_server_langgraph.core.feature_flags import feature_flags as ff
+
+                orchestrator_selection = await self.router_agent.select_orchestrator(
+                    routing_decision=routing_decision,
+                    feature_flags=ff,
+                )
+
+                # CRITICAL: Dispatch AsyncIO orchestrators BEFORE plan/critique (bypass behavior)
+                if orchestrator_selection.orchestrator_type == "asyncio_swarm":
+                    async for chunk in self._stream_via_swarm(
+                        session_id=session_id,
+                        messages=messages,
+                        selection=orchestrator_selection,
+                        max_tokens=kwargs.get("max_tokens"),
+                        temperature=kwargs.get("temperature"),
+                    ):
+                        yield chunk
+                    return  # Exit - swarm bypasses plan/critique
+
+                elif orchestrator_selection.orchestrator_type == "asyncio_task":
+                    async for chunk in self._stream_via_task_orchestrator(
+                        session_id=session_id,
+                        messages=messages,
+                        selection=orchestrator_selection,
+                        max_tokens=kwargs.get("max_tokens"),
+                    ):
+                        yield chunk
+                    return  # Exit - task orchestrator bypasses plan/critique
+
+                # ADR-0105 Phase 3: LangGraph pattern dispatching
+                elif orchestrator_selection.orchestrator_type == "langgraph_supervisor":
+                    async for chunk in self._stream_via_langgraph_supervisor(
+                        session_id=session_id,
+                        messages=messages,
+                        selection=orchestrator_selection,
+                        max_tokens=kwargs.get("max_tokens"),
+                    ):
+                        yield chunk
+                    return  # Exit - LangGraph supervisor bypasses plan/critique
+
+                elif orchestrator_selection.orchestrator_type == "langgraph_hierarchical":
+                    async for chunk in self._stream_via_langgraph_hierarchical(
+                        session_id=session_id,
+                        messages=messages,
+                        selection=orchestrator_selection,
+                        max_tokens=kwargs.get("max_tokens"),
+                    ):
+                        yield chunk
+                    return  # Exit - LangGraph hierarchical bypasses plan/critique
+
+                # For "standard" type: Continue to plan/critique and standard LangGraph/LiteLLM path
 
             except Exception as e:
                 logger.warning(f"Router classification failed, using defaults: {e}")
@@ -1392,10 +2125,7 @@ class ChatServiceImpl(ChatService):
         # and emit plan_generated SSE. If bypass mode, evaluate with BypassManager.
         from mcp_server_langgraph.core.feature_flags import feature_flags
 
-        if (
-            feature_flags.enable_plan_generation
-            and routing_decision is not None
-        ):
+        if feature_flags.enable_plan_generation and routing_decision is not None:
             from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
             from mcp_server_langgraph.execution.cost_estimator import estimate_execution_cost
 
@@ -1409,12 +2139,14 @@ class ChatServiceImpl(ChatService):
             )
 
             # Create ExecutionPlan from RouterOutput
+            # Plan mode forces approval regardless of risk level
             execution_plan = ExecutionPlan.from_router_output(
                 router_output=routing_decision,
                 session_id=session_id,
                 message=last_user_message,
                 executor_model=executor_model,
                 estimated_cost=estimated_cost,
+                force_approval=(execution_mode == "plan"),
             )
 
             # Emit plan_generated SSE (format matches useStreamingChat.ts:360)
@@ -1686,6 +2418,36 @@ def reset_session_repository() -> None:
     _session_repository = None
 
 
+# v8: Contextvar-based storage adapter singleton (Finding 55)
+_session_storage: Any = None
+
+
+def get_session_storage() -> Any:
+    """
+    Get the contextvar-based session storage adapter.
+
+    v8: Replaces get_session_repository for user-scoped access (Finding 55).
+    Returns a ContextvarSessionStorageAdapter that reads user_id from contextvar.
+
+    Returns:
+        ContextvarSessionStorageAdapter instance
+    """
+    global _session_storage
+    if _session_storage is None:
+        from mcp_server_langgraph.api.v1.sessions import get_session_service
+        from mcp_server_langgraph.storage.session.adapter import ContextvarSessionStorageAdapter
+
+        session_service = get_session_service()
+        _session_storage = ContextvarSessionStorageAdapter(session_service=session_service)
+    return _session_storage
+
+
+def reset_session_storage() -> None:
+    """Reset the session storage singleton (for testing)."""
+    global _session_storage
+    _session_storage = None
+
+
 def get_chat_service() -> ChatService:
     """
     Get the chat service instance (returns ChatServiceImpl).
@@ -1844,10 +2606,43 @@ async def create_stream(
         )
 
     service = get_chat_service()
+    session_repository = get_session_repository()
     messages = [msg.model_dump() for msg in request.messages]
     user_id = _get_user_id(current_user)
 
     async def event_generator() -> AsyncIterator[str]:
+        import json
+
+        from mcp_server_langgraph.observability.telemetry import logger
+
+        # ================================================================
+        # Message Persistence: Save user message before streaming
+        # ================================================================
+        # Extract the last user message to persist (frontend sends only new message)
+        last_user_msg = next(
+            (msg for msg in reversed(messages) if msg.get("role") == "user"),
+            None,
+        )
+        if last_user_msg and session_repository is not None:
+            try:
+                await session_repository.add_message(
+                    request.session_id,
+                    {
+                        "role": "user",
+                        "content": last_user_msg.get("content", ""),
+                    },
+                )
+                logger.debug(f"Persisted user message for session {request.session_id}")
+            except Exception as e:
+                logger.warning(f"Failed to persist user message: {e}")
+
+        # Accumulate assistant response content for persistence
+        accumulated_content: list[str] = []
+        accumulated_thinking: list[str] = []
+        thinking_tokens: int | None = None
+        model_name: str | None = None
+        sources_collected: list[dict[str, Any]] = []
+
         async for chunk in service.create_stream(
             session_id=request.session_id,
             messages=messages,
@@ -1867,10 +2662,68 @@ async def create_stream(
             tool_selection_mode=request.tool_selection_mode,
             selected_tools=request.selected_tools,
         ):
-            # Format as SSE
-            import json
+            # Accumulate delta content for persistence
+            if "delta" in chunk and "content" in chunk["delta"]:
+                content = chunk["delta"]["content"]
+                if content:
+                    accumulated_content.append(content)
 
+            # v8 Q11: Accumulate thinking content for persistence
+            if "delta" in chunk and "thinking" in chunk["delta"]:
+                thinking = chunk["delta"]["thinking"]
+                if isinstance(thinking, dict):
+                    # New object format: {content, tokens}
+                    if thinking.get("content"):
+                        accumulated_thinking.append(thinking["content"])
+                    if thinking.get("tokens"):
+                        thinking_tokens = thinking["tokens"]
+                elif isinstance(thinking, str) and thinking:
+                    # Legacy string format
+                    accumulated_thinking.append(thinking)
+
+            # Capture model from chunk
+            if chunk.get("model"):
+                model_name = chunk["model"]
+
+            # Collect sources for persistence
+            if "sources" in chunk:
+                sources_collected.extend(chunk["sources"])
+
+            # Format as SSE
             yield f"data: {json.dumps(chunk)}\n\n"
+
+        # ================================================================
+        # Message Persistence: Save assistant response after streaming
+        # ================================================================
+        if accumulated_content and session_repository is not None:
+            try:
+                full_response = "".join(accumulated_content)
+                full_thinking = "".join(accumulated_thinking) if accumulated_thinking else None
+
+                message_data: dict[str, Any] = {
+                    "role": "assistant",
+                    "content": full_response,
+                }
+                if sources_collected:
+                    message_data["sources"] = sources_collected
+
+                # Store thinking as structured object (content and tokens)
+                if full_thinking or thinking_tokens:
+                    message_data["thinking"] = {
+                        "content": full_thinking,
+                        "tokens": thinking_tokens,
+                    }
+
+                if model_name:
+                    message_data["model_name"] = model_name
+
+                await session_repository.add_message(
+                    request.session_id,
+                    message_data,
+                )
+                logger.debug(f"Persisted assistant response for session {request.session_id} ({len(full_response)} chars)")
+            except Exception as e:
+                logger.warning(f"Failed to persist assistant response: {e}")
 
     return StreamingResponse(
         event_generator(),

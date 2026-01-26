@@ -1186,6 +1186,13 @@ class FeatureFlags(BaseSettings):
         "Phase 4 feature - set FF_ENABLE_HIERARCHICAL_ORCHESTRATOR=true to activate.",
     )
 
+    enable_langgraph_patterns: bool = Field(
+        default=True,
+        description="Enable LangGraph pattern dispatching (supervisor, hierarchical) for multi-agent coordination. "
+        "Uses astream_events() for async streaming without LangGraph Server. "
+        "ADR-0105 Phase 3 feature - set FF_ENABLE_LANGGRAPH_PATTERNS=false to disable.",
+    )
+
     # =========================================================================
     # ADR-0092 Hierarchical Capability Architecture Feature Flags
     # =========================================================================
@@ -1282,6 +1289,21 @@ class FeatureFlags(BaseSettings):
         description="Enable vector-based semantic memory search. "
         "Uses embeddings to find relevant memories for context enrichment. "
         "Part of ADR-0092/ADR-0099. Set FF_ENABLE_SEMANTIC_MEMORY_SEARCH=false to disable.",
+    )
+
+    # v8: Message Embedding & Session Similarity Flags (Phase 1)
+    enable_message_embedding: bool = Field(
+        default=False,
+        description="Enable embedding of chat messages for semantic session search. "
+        "Uses dedicated message_index Qdrant collection. "
+        "Part of AI UX feature set. Set FF_ENABLE_MESSAGE_EMBEDDING=true to enable.",
+    )
+
+    enable_session_similarity_v2: bool = Field(
+        default=False,
+        description="Use vector-based session similarity instead of LLM stub. "
+        "Requires enable_message_embedding=true. "
+        "Set FF_ENABLE_SESSION_SIMILARITY_V2=true to enable.",
     )
 
     enable_hitl_undo_rollback: bool = Field(

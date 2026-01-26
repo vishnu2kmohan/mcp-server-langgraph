@@ -16,7 +16,10 @@ Reference: ADR-0099 Semantic Tool Selection
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from mcp_server_langgraph.core.dependencies import set_semantic_index_manager
+from mcp_server_langgraph.core.dependencies import (
+    set_message_index_manager,
+    set_semantic_index_manager,
+)
 from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.observability.telemetry import logger
 from mcp_server_langgraph.tools import get_all_tools
@@ -63,6 +66,7 @@ def _is_semantic_search_enabled() -> bool:
         feature_flags.enable_semantic_tool_search
         or feature_flags.enable_semantic_skill_search
         or feature_flags.enable_semantic_memory_search
+        or feature_flags.enable_message_embedding  # v8: Message embedding for session similarity
     )
 
 
@@ -161,6 +165,33 @@ async def init_semantic(settings: "Settings") -> SemanticState | None:
             # Fail-open: continue even if indexing fails
             logger.warning(f"Failed to index tools at startup: {e}")
 
+    # v8: Initialize message index for session similarity when enabled
+    if feature_flags.enable_message_embedding:
+        try:
+            from mcp_server_langgraph.core.message_semantic_index import (
+                MessageSemanticIndexManager,
+            )
+
+            message_index_manager = MessageSemanticIndexManager(
+                qdrant_client=qdrant_client,
+                embedder=embedder,
+                vector_size=settings.embedding_dimensions,
+            )
+
+            # Ensure message_index collection exists
+            await message_index_manager.ensure_collection()
+
+            # Register singleton for DI access
+            set_message_index_manager(message_index_manager)
+
+            logger.info(
+                "Message semantic index initialized",
+                extra={"collection_name": MessageSemanticIndexManager.COLLECTION_NAME},
+            )
+        except Exception as e:
+            logger.warning(f"Failed to initialize message semantic index: {e}")
+            # Continue without message index - session similarity will be unavailable
+
     logger.info(
         "Semantic index initialized",
         extra={
@@ -170,6 +201,7 @@ async def init_semantic(settings: "Settings") -> SemanticState | None:
                 "tool_search": feature_flags.enable_semantic_tool_search,
                 "skill_search": feature_flags.enable_semantic_skill_search,
                 "memory_search": feature_flags.enable_semantic_memory_search,
+                "message_embedding": feature_flags.enable_message_embedding,  # v8
             },
         },
     )

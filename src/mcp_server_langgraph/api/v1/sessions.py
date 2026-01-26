@@ -19,12 +19,18 @@ Usage:
     POST /api/v1/sessions/generate-title - Generate a session title from a message
 """
 
+import asyncio
 import logging
 import uuid
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Annotated, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.services.message_embedding_service import (
+        MessageEmbeddingService,
+    )
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field, model_validator
@@ -58,6 +64,12 @@ class MessageRole(str, Enum):
     user = "user"
     assistant = "assistant"
     system = "system"
+
+
+# v8: Sentinel value for orphaned/legacy sessions and messages
+# Sessions/messages owned by "system" are hidden from list/search/similarity
+# Per Plan Q10: Hide system-owned sessions from user queries
+SYSTEM_SENTINEL = "system"
 
 
 from mcp_server_langgraph.api.pagination import (
@@ -137,6 +149,23 @@ class MessageRequest(BaseModel):
     content: str = Field(description="Message content", min_length=1)
 
 
+class ThinkingResponse(BaseModel):
+    """Thinking content from extended thinking models.
+
+    v8 Q14: Thinking as structured object for cleaner API design.
+    v8 Finding 54: Use "tokens" not "budget_tokens" to match ThinkingContent model.
+    """
+
+    content: str | None = Field(
+        default=None,
+        description="Internal reasoning/thinking content",
+    )
+    tokens: int | None = Field(
+        default=None,
+        description="Number of tokens used for thinking/reasoning",
+    )
+
+
 class MessageResponse(BaseModel):
     """Response model for a message.
 
@@ -152,13 +181,9 @@ class MessageResponse(BaseModel):
         default=None,
         description="Source citations for the message content",
     )
-    thinking_content: str | None = Field(
+    thinking: ThinkingResponse | None = Field(
         default=None,
-        description="Internal reasoning/thinking content from extended thinking models",
-    )
-    thinking_tokens: int | None = Field(
-        default=None,
-        description="Number of tokens used for thinking/reasoning",
+        description="Extended thinking content with content and tokens",
     )
     model_name: str | None = Field(
         default=None,
@@ -354,13 +379,44 @@ class SessionService(ABC):
         ...
 
     @abstractmethod
-    async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
-        """Get all messages in a session. Returns None if session not found."""
+    async def restore_session(self, session_id: str, user_id: str) -> bool:
+        """Restore an archived session. Returns True if restored, False if not found/owned/not archived.
+
+        v8 Phase 3: Session lifecycle management.
+        """
         ...
 
     @abstractmethod
-    async def add_message(self, session_id: str, message_data: dict[str, Any]) -> dict[str, Any] | None:
-        """Add a message to a session. Returns None if session not found."""
+    async def get_session_messages(self, session_id: str, user_id: str) -> list[dict[str, Any]] | None:
+        """Get all messages in a session with ownership check.
+
+        v8: Added user_id parameter for user-scoped access (Finding 1).
+        SECURITY: Returns None if session not found OR not owned by user.
+
+        Args:
+            session_id: Session ID to get messages from
+            user_id: User ID making the request (for ownership verification)
+
+        Returns:
+            List of message dicts if found and owned, None otherwise
+        """
+        ...
+
+    @abstractmethod
+    async def add_message(self, session_id: str, user_id: str, message_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Add a message to a session with ownership check.
+
+        v8: Added user_id parameter for user-scoped access (Finding 1, 2).
+        SECURITY: Returns None if session not found OR not owned by user.
+
+        Args:
+            session_id: Session ID to add message to
+            user_id: User ID making the request (for ownership verification)
+            message_data: Message dict with role, content, sources, metadata
+
+        Returns:
+            Created message dict if session found and owned, None otherwise
+        """
         ...
 
     @abstractmethod
@@ -545,6 +601,22 @@ class InMemorySessionService(SessionService):
         session["updated_at"] = datetime.now(UTC).isoformat()
         return True
 
+    async def restore_session(self, session_id: str, user_id: str) -> bool:
+        """Restore an archived session. Only owner can restore.
+
+        v8 Phase 3: Session lifecycle management.
+        """
+        session = self._sessions.get(session_id)
+        # SECURITY: Verify ownership before restoring
+        if session is None or session.get("user_id") != user_id:
+            return False
+        # Can only restore archived sessions
+        if session.get("status") != SessionStatus.archived:
+            return False
+        session["status"] = SessionStatus.active
+        session["updated_at"] = datetime.now(UTC).isoformat()
+        return True
+
     async def update_config(self, session_id: str, user_id: str, config_update: dict[str, Any]) -> dict[str, Any] | None:
         """Update session configuration. Only owner can update.
 
@@ -571,27 +643,42 @@ class InMemorySessionService(SessionService):
         session["updated_at"] = datetime.now(UTC).isoformat()
         return session
 
-    async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
-        """Get all messages in a session."""
+    async def get_session_messages(self, session_id: str, user_id: str) -> list[dict[str, Any]] | None:
+        """Get all messages in a session with ownership check."""
         session = self._sessions.get(session_id)
         if session is None:
+            return None
+        # v8: Verify ownership (Finding 1)
+        if session.get("user_id") != user_id:
             return None
         messages: list[dict[str, Any]] = session.get("messages", [])
         return messages
 
-    async def add_message(self, session_id: str, message_data: dict[str, Any]) -> dict[str, Any] | None:
-        """Add a message to a session."""
+    async def add_message(self, session_id: str, user_id: str, message_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Add a message to a session with ownership check."""
         session = self._sessions.get(session_id)
         if session is None:
             return None
+        # v8: Verify ownership (Finding 1)
+        if session.get("user_id") != user_id:
+            return None
 
-        message = {
+        message: dict[str, Any] = {
             "message_id": str(uuid.uuid4()),
             "role": message_data["role"],
             "content": message_data["content"],
+            "user_id": user_id,  # v8: Store user_id
             "timestamp": datetime.now(UTC).isoformat(),
             "sources": message_data.get("sources", []),
         }
+
+        # Preserve thinking object (structured format with content and tokens)
+        if "thinking" in message_data:
+            message["thinking"] = message_data["thinking"]
+
+        # Preserve model_name for message response
+        if "model_name" in message_data:
+            message["model_name"] = message_data["model_name"]
 
         session["messages"].append(message)
         session["updated_at"] = datetime.now(UTC).isoformat()
@@ -833,21 +920,37 @@ class RedisSessionService(SessionService):
     async def archive_session(self, session_id: str, user_id: str) -> bool:
         """Archive a session (soft delete). Only owner can archive.
 
-        Note: Redis storage doesn't persist status changes. For now, this
-        performs a delete. A future enhancement would add status to the
-        Redis storage model.
+        v8 Phase 3: Uses update_session(status=) for proper archive/restore lifecycle.
         """
         # SECURITY: Verify ownership before archiving
         session = await self._manager.get_session(session_id)
         if session is None or session.user_id != user_id:
             return False
-        # For Redis, archive = delete (status not persisted in current model)
-        return await self._manager.delete_session(session_id)
+        # v8: Use update_session with status parameter
+        result = await self._manager.update_session(session_id, status="archived")
+        return result is not None
 
-    async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
-        """Get all messages in a session."""
+    async def restore_session(self, session_id: str, user_id: str) -> bool:
+        """Restore an archived session. Only owner can restore.
+
+        v8 Phase 3: Session lifecycle management.
+        """
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return False
+        # Can only restore archived sessions
+        if session.status != "archived":
+            return False
+        result = await self._manager.update_session(session_id, status="active")
+        return result is not None
+
+    async def get_session_messages(self, session_id: str, user_id: str) -> list[dict[str, Any]] | None:
+        """Get all messages in a session with ownership check (Redis impl)."""
         session = await self._manager.get_session(session_id)
         if session is None:
+            return None
+        # v8: Verify ownership (Finding 1)
+        if session.user_id != user_id:
             return None
 
         return [
@@ -855,14 +958,20 @@ class RedisSessionService(SessionService):
                 "message_id": m.message_id,
                 "role": m.role,
                 "content": m.content,
+                "user_id": m.user_id,  # v8: Include user_id
                 "timestamp": m.timestamp.isoformat(),
                 "sources": m.sources,
             }
             for m in session.messages
         ]
 
-    async def add_message(self, session_id: str, message_data: dict[str, Any]) -> dict[str, Any] | None:
-        """Add a message to a session."""
+    async def add_message(self, session_id: str, user_id: str, message_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Add a message to a session with ownership check (Redis impl)."""
+        # v8: Verify ownership before adding (Finding 30)
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return None
+
         message = await self._manager.add_message(
             session_id=session_id,
             role=message_data["role"],
@@ -877,6 +986,7 @@ class RedisSessionService(SessionService):
             "message_id": message.message_id,
             "role": message.role,
             "content": message.content,
+            "user_id": message.user_id,  # v8: Include user_id
             "timestamp": message.timestamp.isoformat(),
             "sources": message.sources,
         }
@@ -1046,8 +1156,19 @@ class RedisSessionService(SessionService):
 class PostgresSessionService(SessionService):
     """PostgreSQL-backed implementation for production use with ACID guarantees."""
 
-    def __init__(self, manager: PostgresSessionManager) -> None:
+    def __init__(
+        self,
+        manager: PostgresSessionManager,
+        embedding_service: "MessageEmbeddingService | None" = None,
+    ) -> None:
+        """Initialize PostgreSQL session service.
+
+        Args:
+            manager: PostgreSQL session manager
+            embedding_service: Optional message embedding service for session similarity (v8 Phase 1)
+        """
         self._manager = manager
+        self._embedding_service = embedding_service
 
     async def list_sessions(
         self,
@@ -1063,7 +1184,12 @@ class PostgresSessionService(SessionService):
         """List sessions with pagination, filtering, search, and sorting.
 
         SECURITY: Sessions are scoped to the authenticated user.
+        v8 Q10: System-owned sessions (sentinel value) are filtered out.
         """
+        # v8 Q10: Prevent listing system sessions even if somehow authenticated as "system"
+        if user_id == SYSTEM_SENTINEL:
+            return [], None
+
         # Get sessions scoped to user
         # PostgresSessionManager.list_sessions returns (sessions, next_cursor)
         sessions, next_cursor = await self._manager.list_sessions(user_id=user_id, limit=limit + 1)
@@ -1183,21 +1309,45 @@ class PostgresSessionService(SessionService):
     async def archive_session(self, session_id: str, user_id: str) -> bool:
         """Archive a session (soft delete). Only owner can archive.
 
-        Note: PostgreSQL storage doesn't persist status changes yet. For now, this
-        performs a delete. A future enhancement would add status to the
-        PostgreSQL storage model.
+        v8 Phase 3: Use update_session(status="archived") for proper lifecycle.
         """
         # SECURITY: Verify ownership before archiving
         session = await self._manager.get_session(session_id)
         if session is None or session.user_id != user_id:
             return False
-        # For PostgreSQL, archive = delete (status not persisted in current model)
-        return await self._manager.delete_session(session_id)
 
-    async def get_session_messages(self, session_id: str) -> list[dict[str, Any]] | None:
-        """Get all messages in a session."""
+        # v8: Use update_session instead of delete for proper lifecycle
+        result = await self._manager.update_session(session_id, status="archived")
+        if result and self._embedding_service:
+            await self._embedding_service.on_session_archived(session_id)
+        return result is not None
+
+    async def restore_session(self, session_id: str, user_id: str) -> bool:
+        """Restore an archived session. Only owner can restore.
+
+        v8 Phase 3: Restore from archived status to active.
+        """
+        # SECURITY: Verify ownership before restoring
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return False
+
+        # Can only restore archived sessions
+        if session.status != "archived":
+            return False
+
+        result = await self._manager.update_session(session_id, status="active")
+        if result and self._embedding_service:
+            await self._embedding_service.on_session_restored(session_id)
+        return result is not None
+
+    async def get_session_messages(self, session_id: str, user_id: str) -> list[dict[str, Any]] | None:
+        """Get all messages in a session with ownership check (PostgreSQL impl)."""
         session = await self._manager.get_session(session_id)
         if session is None:
+            return None
+        # v8: Verify ownership (Finding 1)
+        if session.user_id != user_id:
             return None
 
         return [
@@ -1205,31 +1355,52 @@ class PostgresSessionService(SessionService):
                 "message_id": m.message_id,
                 "role": m.role,
                 "content": m.content,
+                "user_id": m.user_id,  # v8: Include user_id
                 "timestamp": m.timestamp.isoformat(),
                 "sources": m.sources,
+                # v8: Extract thinking from metadata (Q14, Finding 34)
+                "thinking": m.metadata.get("thinking") if m.metadata else None,
+                "model_name": m.metadata.get("model_name") if m.metadata else None,
             }
             for m in session.messages
         ]
 
-    async def add_message(self, session_id: str, message_data: dict[str, Any]) -> dict[str, Any] | None:
-        """Add a message to a session."""
+    async def add_message(self, session_id: str, user_id: str, message_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Add a message to a session with ownership check (PostgreSQL impl)."""
+        # v8: Verify ownership before adding (Finding 30)
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return None
+
+        # v8: Pass user_id and metadata to manager (Findings 23, 33)
         message = await self._manager.add_message(
             session_id=session_id,
+            user_id=user_id,
             role=message_data["role"],
             content=message_data["content"],
             sources=message_data.get("sources", []),
+            metadata=message_data.get("metadata", {}),  # v8: Forward metadata (Finding 33)
         )
 
         if message is None:
             return None
 
-        return {
+        result = {
             "message_id": message.message_id,
             "role": message.role,
             "content": message.content,
+            "user_id": message.user_id,  # v8: Include for embedding
             "timestamp": message.timestamp.isoformat(),
             "sources": message.sources,
         }
+
+        # v8 Phase 1: Fire-and-forget embedding for session similarity
+        if self._embedding_service is not None:
+            asyncio.create_task(
+                self._embedding_service.on_message_persisted(session_id, result)
+            )
+
+        return result
 
     async def clear_messages(self, session_id: str) -> bool:
         """Clear all messages in a session."""
@@ -1429,7 +1600,30 @@ async def initialize_session_service() -> SessionService:
             await init_session_database(_postgres_engine)
 
             pg_manager = PostgresSessionManager(engine=_postgres_engine)
-            _session_service = PostgresSessionService(pg_manager)
+
+            # v8 Phase 1: Create embedding service if message embedding is enabled
+            embedding_service = None
+            from mcp_server_langgraph.core.feature_flags import feature_flags
+
+            if feature_flags.enable_message_embedding:
+                from mcp_server_langgraph.core.dependencies import get_message_index_manager
+                from mcp_server_langgraph.services.message_embedding_service import (
+                    MessageEmbeddingService,
+                )
+
+                message_index_manager = get_message_index_manager()
+                if message_index_manager is not None:
+                    embedding_service = MessageEmbeddingService(
+                        message_index_manager=message_index_manager,
+                        enabled=True,
+                    )
+                    logger.info("Message embedding service injected into session service")
+                else:
+                    logger.warning("Message embedding enabled but index manager not initialized")
+
+            _session_service = PostgresSessionService(
+                pg_manager, embedding_service=embedding_service
+            )
             logger.info("PostgreSQL session service initialized successfully")
             return _session_service
         except Exception as e:
@@ -1631,11 +1825,10 @@ async def archive_session(session_id: str, current_user: CurrentUser) -> None:
     """
     Archive a session (soft delete).
 
+    v8 Phase 3: Proper session lifecycle with archive/restore.
     Requires authentication. Only the session owner can archive it.
-    Archived sessions are hidden from the session list but can be restored.
-
-    Note: Currently archives are implemented as deletes in the storage layer.
-    A future enhancement will add proper archive/restore functionality.
+    Archived sessions are hidden from the default session list but can be restored
+    using the /sessions/{session_id}/restore endpoint.
     """
     user_id = _get_user_id(current_user)
     service = get_session_service()
@@ -1649,6 +1842,31 @@ async def archive_session(session_id: str, current_user: CurrentUser) -> None:
 
     # Invalidate session cost cache to prevent stale data in WebSocket responses
     await invalidate_session_cost_cache(session_id)
+
+
+@sessions_router.post(
+    "/sessions/{session_id}/restore",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Restore an archived session",
+    description="Restore an archived session back to active status. Only the session owner can restore it.",
+)
+async def restore_session(session_id: str, current_user: CurrentUser) -> None:
+    """
+    Restore an archived session.
+
+    v8 Phase 3: Restore an archived session back to active status.
+    Requires authentication. Only the session owner can restore it.
+    The session must be in archived status to be restored.
+    """
+    user_id = _get_user_id(current_user)
+    service = get_session_service()
+    restored = await service.restore_session(session_id, user_id)
+
+    if not restored:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found or not archived",
+        )
 
 
 @sessions_router.patch(
@@ -1791,21 +2009,32 @@ async def get_session_messages(session_id: str, current_user: CurrentUser) -> li
             detail=f"Session {session_id} not found",
         )
 
-    messages = await service.get_session_messages(session_id)
+    messages = await service.get_session_messages(session_id, user_id)
     # Transform dict messages to MessageResponse
-    return [
-        MessageResponse(
-            message_id=msg.get("message_id", msg.get("id", "")),
-            role=MessageRole(msg.get("role", "user")),
-            content=msg.get("content", ""),
-            timestamp=msg.get("timestamp"),
-            sources=msg.get("sources"),
-            thinking_content=msg.get("thinking_content"),
-            thinking_tokens=msg.get("thinking_tokens"),
-            model_name=msg.get("model_name"),
+    result: list[MessageResponse] = []
+    for msg in messages or []:
+        # Extract thinking from structured object
+        thinking_obj = msg.get("thinking")
+        thinking_response = None
+
+        if thinking_obj and isinstance(thinking_obj, dict):
+            thinking_response = ThinkingResponse(
+                content=thinking_obj.get("content"),
+                tokens=thinking_obj.get("tokens"),
+            )
+
+        result.append(
+            MessageResponse(
+                message_id=msg.get("message_id", msg.get("id", "")),
+                role=MessageRole(msg.get("role", "user")),
+                content=msg.get("content", ""),
+                timestamp=msg.get("timestamp"),
+                sources=msg.get("sources"),
+                thinking=thinking_response,
+                model_name=msg.get("model_name"),
+            )
         )
-        for msg in (messages or [])
-    ]
+    return result
 
 
 @sessions_router.post("/sessions/{session_id}/messages", status_code=status.HTTP_201_CREATED)
@@ -1827,7 +2056,7 @@ async def add_message(session_id: str, request: MessageRequest, current_user: Cu
         )
 
     message_data = request.model_dump()
-    message = await service.add_message(session_id, message_data)
+    message = await service.add_message(session_id, user_id, message_data)
 
     if message is None:
         raise HTTPException(

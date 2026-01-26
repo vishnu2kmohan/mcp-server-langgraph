@@ -56,6 +56,8 @@ def get_ai_ux_service() -> "AIUXService":
 
     Creates the service lazily with LLM support if enabled.
     Falls back to heuristics-only mode if LLM unavailable.
+
+    v8 Phase 2: Injects session_service and message_index_manager for vector similarity.
     """
     global _ai_ux_service
     if _ai_ux_service is None:
@@ -72,7 +74,28 @@ def get_ai_ux_service() -> "AIUXService":
             except Exception as e:
                 logger.warning(f"Failed to create LLM factory for AI UX: {e}")
 
-        _ai_ux_service = AIUXService(llm_factory=llm_factory, settings=settings)
+        # v8 Phase 2: Inject session service and message index for vector similarity
+        session_service = None
+        message_index_manager = None
+        from mcp_server_langgraph.core.feature_flags import feature_flags
+
+        if feature_flags.enable_session_similarity_v2:
+            from mcp_server_langgraph.api.v1.sessions import get_session_service
+            from mcp_server_langgraph.core.dependencies import get_message_index_manager
+
+            session_service = get_session_service()
+            message_index_manager = get_message_index_manager()
+            if message_index_manager is not None:
+                logger.info("AI UX service initialized with vector session similarity")
+            else:
+                logger.warning("Session similarity v2 enabled but message index not initialized")
+
+        _ai_ux_service = AIUXService(
+            llm_factory=llm_factory,
+            settings=settings,
+            session_service=session_service,
+            message_index_manager=message_index_manager,
+        )
     return _ai_ux_service
 
 

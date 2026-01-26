@@ -251,6 +251,7 @@ AGENT_FEATURE_FLAGS = [
     "enable_thinking_budget",
     # Orchestrator flags (must match ORCHESTRATOR_REGISTRY feature_flag values)
     "enable_multi_agent_orchestration",  # Orchestrator (Multi-Agent)
+    "enable_swarm_orchestrator",  # SwarmOrchestrator (ADR-0105)
     "enable_studio_ai",  # StudioOrchestrator
     "enable_orchestrated_ai_ux",  # UXOrchestrator
     "enable_orchestrated_alert_analysis",  # AlertOrchestrator

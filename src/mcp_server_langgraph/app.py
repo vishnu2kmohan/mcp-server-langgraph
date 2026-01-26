@@ -32,6 +32,7 @@ from mcp_server_langgraph.auth.middleware import AuthMiddleware, set_global_auth
 from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.middleware.rate_limiter import setup_rate_limiting
 from mcp_server_langgraph.middleware.audit import AuditMiddleware
+from mcp_server_langgraph.middleware.user_context import UserContextMiddleware
 from mcp_server_langgraph.bootstrap import bootstrap_all, init_observability, AppState
 from mcp_server_langgraph.observability.telemetry import logger
 
@@ -168,6 +169,15 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
     app.add_middleware(AuthRequestMiddleware, auth_middleware=auth_middleware)
     try:
         logger.info("Auth request middleware enabled")
+    except RuntimeError:
+        pass  # Graceful degradation if observability not initialized
+
+    # User context middleware - sets contextvar for user-scoped session storage
+    # Must be after AuthRequestMiddleware to access request.state.user
+    # v8: Enables user_id for session ownership enforcement (Plan Finding 49)
+    app.add_middleware(UserContextMiddleware)
+    try:
+        logger.info("User context middleware enabled (session ownership enforcement)")
     except RuntimeError:
         pass  # Graceful degradation if observability not initialized
 

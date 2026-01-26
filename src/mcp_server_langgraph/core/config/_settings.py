@@ -323,8 +323,7 @@ class Settings(BaseSettings):
         default=60,
         ge=1,
         le=1000,
-        description="Rate limit for Google native tools (requests per minute). "
-        "Default 60 rpm for Google grounded search.",
+        description="Rate limit for Google native tools (requests per minute). Default 60 rpm for Google grounded search.",
     )
     native_tool_rate_limit_openai: int = Field(
         default=60,
@@ -802,6 +801,31 @@ class Settings(BaseSettings):
     # Skills Marketplace Auto-Update (ADR-0072)
     skill_update_interval_hours: int = 24  # Hours between update checks
     skill_auto_apply_updates: bool = False  # Auto-apply updates (requires admin approval if False)
+
+    # ==========================================================================
+    # Router Agent Orchestration (ADR-0105)
+    # ==========================================================================
+    # When enabled, incoming chat requests are classified by RouterAgent
+    # and may be dispatched to specialized orchestrators (e.g., SwarmOrchestrator).
+    # Default: True - enables intelligent routing to optimize response quality.
+    # Set ENABLE_CHAT_ROUTING=false to disable if needed.
+    enable_chat_routing: bool = Field(
+        default=True,
+        description="Enable router agent classification for chat requests",
+        validation_alias=AliasChoices("ENABLE_CHAT_ROUTING"),
+    )
+
+    # LangGraph Pattern Integration (ADR-0105 Phase 3)
+    # When enabled, orchestrator selection can route to LangGraph patterns
+    # (supervisor, hierarchical) for advanced multi-agent coordination.
+    # Uses astream_events() for async streaming without LangGraph Server.
+    # Default: True - enables LangGraph pattern dispatching.
+    # Set ENABLE_LANGGRAPH_PATTERNS=false to disable if needed.
+    enable_langgraph_patterns: bool = Field(
+        default=True,
+        description="Enable LangGraph pattern dispatching for multi-agent coordination",
+        validation_alias=AliasChoices("ENABLE_LANGGRAPH_PATTERNS"),
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

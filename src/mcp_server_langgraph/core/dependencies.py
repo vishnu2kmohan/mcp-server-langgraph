@@ -543,6 +543,52 @@ def set_semantic_index_manager(manager: Any) -> None:
 
 
 # ==============================================================================
+# Message Semantic Index Manager (Session Similarity - v8 Phase 1)
+# ==============================================================================
+
+# Singleton instance for message semantic index manager
+_message_index_manager: Any = None
+
+
+def get_message_index_manager() -> Any:
+    """
+    Get MessageSemanticIndexManager instance (singleton).
+
+    Returns the cached manager for message embedding search.
+    Returns None if not initialized (enable_message_embedding=false).
+
+    v8 Phase 1: Message Embedding & Session Similarity
+
+    Returns:
+        MessageSemanticIndexManager instance or None if not initialized
+
+    Example:
+        # In AI UX service
+        manager = get_message_index_manager()
+        if manager:
+            similar = await manager.search_similar_sessions(query, user_id)
+    """
+    return _message_index_manager
+
+
+def set_message_index_manager(manager: Any) -> None:
+    """
+    Set the MessageSemanticIndexManager singleton instance.
+
+    Called during app startup when enable_message_embedding is true.
+    The manager handles semantic search for session similarity.
+
+    v8 Phase 1: Uses dedicated 'message_index' collection.
+
+    Args:
+        manager: MessageSemanticIndexManager instance
+    """
+    global _message_index_manager
+    _message_index_manager = manager
+    logger.debug("MessageSemanticIndexManager singleton initialized")
+
+
+# ==============================================================================
 # Decision Trace Repository (ADR-0101 Context Graphs)
 # ==============================================================================
 

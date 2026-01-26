@@ -318,6 +318,8 @@ class AIUXService(StaleWhileRevalidateMixin):
         model_selector: ModelSelector | None = None,
         artifact_storage: ArtifactStorage | None = None,
         ux_orchestrator: UXOrchestrator | None = None,
+        session_service: Any | None = None,
+        message_index_manager: Any | None = None,
     ) -> None:
         """
         Initialize AI UX service.
@@ -334,12 +336,17 @@ class AIUXService(StaleWhileRevalidateMixin):
             ux_orchestrator: Optional UXOrchestrator for parallel analysis execution.
                            When provided and feature flag enable_orchestrated_ai_ux is
                            True, uses orchestrator for composite analysis.
+            session_service: v8 Phase 2 - SessionService for loading messages
+            message_index_manager: v8 Phase 2 - MessageSemanticIndexManager for similarity search
         """
         self.llm_factory = llm_factory
         self.settings = settings
         self.model_selector = model_selector
         self.artifact_storage = artifact_storage
         self._ux_orchestrator = ux_orchestrator
+        # v8 Phase 2: Session similarity dependencies
+        self._session_service = session_service
+        self._message_index = message_index_manager
 
         # LLM is enabled only if factory exists AND feature flag is on
         self.llm_enabled = llm_factory is not None and getattr(settings, "ff_enable_ai_suggestions", True)
@@ -2696,6 +2703,20 @@ Compare with last period and generate actionable insights."""
             and getattr(self.settings, "ff_enable_session_intelligence", True)
         )
 
+    def _is_vector_similarity_enabled(self) -> bool:
+        """Check if vector-based session similarity is enabled.
+
+        v8 Phase 2: Vector search is independent of LLM gating.
+        Uses feature_flags (not settings) per Finding 17.
+        """
+        from mcp_server_langgraph.core.feature_flags import feature_flags
+
+        return (
+            self._message_index is not None
+            and self._session_service is not None
+            and feature_flags.enable_session_similarity_v2
+        )
+
     async def summarize_session(
         self,
         session_id: str | None = None,
@@ -2821,6 +2842,9 @@ Analyze and group these sessions into logical clusters based on their themes."""
     ) -> dict[str, Any]:
         """Find sessions similar to the given session.
 
+        v8 Phase 2: Decoupled from LLM gating. Uses vector search when enabled,
+        with optional LLM enrichment for common_topics (Finding 5).
+
         Args:
             session_id: Reference session identifier
             user_id: User identifier
@@ -2828,16 +2852,115 @@ Analyze and group these sessions into logical clusters based on their themes."""
             **kwargs: Additional parameters
 
         Returns:
-            List of similar sessions with similarity scores
+            List of similar sessions with similarity scores and common_topics
         """
-        # Fallback response for when LLM is disabled
+        # Fallback response
         fallback: dict[str, Any] = {
             "similar_sessions": [],
             "search_query": session_id or "",
         }
 
-        if not self._is_session_intelligence_enabled():
+        # v8: Try vector search first if enabled (independent of LLM)
+        if self._is_vector_similarity_enabled():
+            result = await self._find_similar_sessions_vector(session_id, user_id, limit)
+            if result.get("similar_sessions"):
+                return result
+            # Fall through to LLM if vector search returned nothing
+
+        # Fall back to LLM-based similarity if available
+        if self._is_session_intelligence_enabled():
+            return await self._find_similar_sessions_llm(session_id, user_id, limit)
+
+        return fallback
+
+    async def _find_similar_sessions_vector(
+        self,
+        session_id: str | None,
+        user_id: str,
+        limit: int,
+    ) -> dict[str, Any]:
+        """Vector-based session similarity search.
+
+        v8 Phase 2: Uses MessageSemanticIndexManager for semantic search.
+        Decoupled from LLM - works without LLM being enabled.
+        """
+        fallback: dict[str, Any] = {
+            "similar_sessions": [],
+            "search_query": session_id or "",
+        }
+
+        if not session_id or not user_id:
             return fallback
+
+        # Check dependencies are available
+        if self._session_service is None or self._message_index is None:
+            return fallback
+
+        try:
+            # Get messages from reference session (user-scoped)
+            messages = await self._session_service.get_session_messages(session_id, user_id)
+            if not messages:
+                return fallback
+
+            # Build query from recent messages
+            query_parts = []
+            for msg in messages[-5:]:
+                content = msg.get("content", "")[:200]
+                if content:
+                    query_parts.append(content)
+
+            if not query_parts:
+                return fallback
+
+            query = " ".join(query_parts)
+
+            # Vector search
+            similar = await self._message_index.search_similar_sessions(
+                query=query,
+                user_id=user_id,
+                limit=limit,
+                min_score=0.6,
+                exclude_session_id=session_id,
+            )
+
+            # Transform to include common_topics (required by frontend)
+            result_sessions = []
+            for match in similar:
+                session_result = {
+                    "session_id": match["session_id"],
+                    "similarity_score": match["similarity_score"],
+                    "common_topics": [],  # Default empty, can be enriched by LLM
+                }
+
+                # Optional LLM enrichment for common_topics (if LLM available)
+                # For now, skip LLM enrichment to keep it fast
+                # TODO: Add async LLM topic extraction if needed
+
+                result_sessions.append(session_result)
+
+            return {
+                "similar_sessions": result_sessions,
+                "search_query": query[:100],
+            }
+
+        except Exception as e:
+            logger.warning(f"Vector session similarity failed: {e}")
+            return fallback
+
+    async def _find_similar_sessions_llm(
+        self,
+        session_id: str | None,
+        user_id: str,
+        limit: int,
+    ) -> dict[str, Any]:
+        """LLM-based session similarity (original implementation).
+
+        Used as fallback when vector search is disabled.
+        """
+        fallback: dict[str, Any] = {
+            "similar_sessions": [],
+            "search_query": session_id or "",
+        }
 
         try:
             user_prompt = f"""Find sessions similar to session ID: {session_id}
