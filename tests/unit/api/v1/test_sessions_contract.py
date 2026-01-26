@@ -248,6 +248,147 @@ class TestMessageResponseContract:
             # THEN it should succeed with correct role
             assert response.role.value == role_value  # type: ignore[union-attr]
 
+    # =========================================================================
+    # v8: ThinkingResponse object tests (Q14, Q18, Finding 54)
+    # =========================================================================
+
+    @pytest.mark.unit
+    def test_thinking_response_model_exists(self) -> None:
+        """ThinkingResponse model should exist for thinking object structure.
+
+        v8 Q14: Extend API with thinking object for cleaner structure.
+        """
+        # WHEN importing ThinkingResponse
+        from mcp_server_langgraph.api.v1.sessions import ThinkingResponse
+
+        # THEN it should be a Pydantic model
+        from pydantic import BaseModel
+
+        assert issubclass(ThinkingResponse, BaseModel)
+
+    @pytest.mark.unit
+    def test_thinking_response_has_content_and_tokens_fields(self) -> None:
+        """ThinkingResponse should have content and tokens fields.
+
+        v8 Finding 54: Use "tokens" not "budget_tokens" to match ThinkingContent model.
+        """
+        from mcp_server_langgraph.api.v1.sessions import ThinkingResponse
+
+        # GIVEN the ThinkingResponse schema
+        schema = ThinkingResponse.model_json_schema()
+        properties = schema.get("properties", {})
+
+        # THEN it should have 'content' field
+        assert "content" in properties, "ThinkingResponse should have 'content' field"
+
+        # AND it should have 'tokens' field (not 'budget_tokens' - Finding 54)
+        assert "tokens" in properties, "ThinkingResponse should have 'tokens' field"
+        assert "budget_tokens" not in properties, "Use 'tokens' not 'budget_tokens' (Finding 54)"
+
+    @pytest.mark.unit
+    def test_thinking_response_accepts_values(self) -> None:
+        """ThinkingResponse should accept content and tokens values."""
+        from mcp_server_langgraph.api.v1.sessions import ThinkingResponse
+
+        # GIVEN valid thinking data
+        thinking = ThinkingResponse(content="Reasoning about the problem...", tokens=150)
+
+        # THEN values should be accessible
+        assert thinking.content == "Reasoning about the problem..."
+        assert thinking.tokens == 150
+
+    @pytest.mark.unit
+    def test_thinking_response_fields_optional(self) -> None:
+        """ThinkingResponse fields should be optional (nullable)."""
+        from mcp_server_langgraph.api.v1.sessions import ThinkingResponse
+
+        # WHEN creating ThinkingResponse with no fields
+        thinking = ThinkingResponse()
+
+        # THEN it should succeed with None values
+        assert thinking.content is None
+        assert thinking.tokens is None
+
+    @pytest.mark.unit
+    def test_message_response_has_thinking_object_field(self) -> None:
+        """MessageResponse should have thinking field of type ThinkingResponse.
+
+        v8 Q14: Thinking as object for cleaner structure.
+        """
+        # GIVEN the MessageResponse schema
+        schema = MessageResponse.model_json_schema()
+        properties = schema.get("properties", {})
+
+        # THEN 'thinking' should be in properties
+        assert "thinking" in properties, "MessageResponse should have 'thinking' field"
+
+    @pytest.mark.unit
+    def test_message_response_thinking_field_accepts_object(self) -> None:
+        """MessageResponse.thinking should accept ThinkingResponse object."""
+        from mcp_server_langgraph.api.v1.sessions import ThinkingResponse
+
+        # GIVEN message data with thinking object
+        message_data = {
+            "message_id": "msg-123",
+            "role": "assistant",
+            "content": "Here is my response.",
+            "thinking": ThinkingResponse(content="Let me think...", tokens=100),
+        }
+
+        # WHEN creating MessageResponse
+        response = MessageResponse(**message_data)
+
+        # THEN thinking should be accessible
+        assert response.thinking is not None
+        assert response.thinking.content == "Let me think..."
+        assert response.thinking.tokens == 100
+
+    @pytest.mark.unit
+    def test_message_response_no_legacy_thinking_fields(self) -> None:
+        """MessageResponse should NOT have legacy thinking fields.
+
+        Legacy fields (thinking_content, thinking_tokens) have been deprecated
+        in favor of the thinking object with content and tokens fields.
+        """
+        # GIVEN the MessageResponse schema
+        schema = MessageResponse.model_json_schema()
+        properties = schema.get("properties", {})
+
+        # THEN legacy fields should NOT exist (deprecated)
+        assert "thinking_content" not in properties, "Legacy thinking_content should be removed"
+        assert "thinking_tokens" not in properties, "Legacy thinking_tokens should be removed"
+
+        # AND the thinking object should be the only way to access thinking data
+        assert "thinking" in properties, "thinking object should exist"
+
+    @pytest.mark.unit
+    def test_message_response_thinking_object_only(self) -> None:
+        """MessageResponse should only use thinking object, not legacy fields.
+
+        The thinking object provides a cleaner structure with content and tokens.
+        """
+        from mcp_server_langgraph.api.v1.sessions import ThinkingResponse
+
+        # GIVEN message data with thinking object only
+        message_data = {
+            "message_id": "msg-123",
+            "role": "assistant",
+            "content": "Response content",
+            "thinking": ThinkingResponse(content="Deep reasoning...", tokens=200),
+        }
+
+        # WHEN creating MessageResponse
+        response = MessageResponse(**message_data)
+
+        # THEN thinking object should be accessible
+        assert response.thinking is not None
+        assert response.thinking.content == "Deep reasoning..."
+        assert response.thinking.tokens == 200
+
+        # AND legacy attributes should not exist
+        assert not hasattr(response, "thinking_content") or response.thinking_content is None
+        assert not hasattr(response, "thinking_tokens") or response.thinking_tokens is None
+
 
 @pytest.mark.xdist_group(name="test_session_service_contract")
 class TestSessionServiceContract:
@@ -300,9 +441,10 @@ class TestSessionServiceContract:
         service = InMemorySessionService()
         session = await service.create_session({"title": "Test"}, self.TEST_USER_ID)
 
-        # WHEN adding a message
+        # WHEN adding a message - v8: add_message now requires user_id
         message = await service.add_message(
             session["id"],
+            self.TEST_USER_ID,
             {"role": "user", "content": "Hello"},
         )
 
@@ -319,11 +461,12 @@ class TestSessionServiceContract:
         # GIVEN a session with messages
         service = InMemorySessionService()
         session = await service.create_session({"title": "Test"}, self.TEST_USER_ID)
-        await service.add_message(session["id"], {"role": "user", "content": "Hi"})
-        await service.add_message(session["id"], {"role": "assistant", "content": "Hello"})
+        # v8: add_message now requires user_id
+        await service.add_message(session["id"], self.TEST_USER_ID, {"role": "user", "content": "Hi"})
+        await service.add_message(session["id"], self.TEST_USER_ID, {"role": "assistant", "content": "Hello"})
 
-        # WHEN getting messages
-        messages = await service.get_session_messages(session["id"])
+        # WHEN getting messages - v8: now requires user_id
+        messages = await service.get_session_messages(session["id"], self.TEST_USER_ID)
 
         # THEN all messages should have message_id
         assert messages is not None
@@ -340,15 +483,16 @@ class TestSessionServiceContract:
         service = InMemorySessionService()
         session = await service.create_session({"title": "Test"}, self.TEST_USER_ID)
 
-        # Add 5 messages
+        # Add 5 messages - v8: add_message now requires user_id
         for i in range(5):
             await service.add_message(
                 session["id"],
+                self.TEST_USER_ID,
                 {"role": "user", "content": f"Message {i}"},
             )
 
-        # WHEN getting messages
-        messages = await service.get_session_messages(session["id"])
+        # WHEN getting messages - v8: now requires user_id
+        messages = await service.get_session_messages(session["id"], self.TEST_USER_ID)
 
         # THEN all message_ids should be unique
         assert messages is not None
@@ -875,3 +1019,109 @@ class TestSessionTraceResponseContract:
         # THEN it should succeed with default empty values
         assert response.steps == []
         assert response.raw_output is None
+
+
+@pytest.mark.xdist_group(name="test_session_messages_thinking_contract")
+class TestSessionMessagesThinkingContract:
+    """Tests for thinking object in get_session_messages endpoint.
+
+    Thinking data is stored and returned as an object with content and tokens.
+    Legacy flat fields (thinking_content, thinking_tokens) have been deprecated.
+    """
+
+    # Test user ID for session ownership
+    TEST_USER_ID = "test-user-123"
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_messages_with_thinking_object(self) -> None:
+        """Messages stored with thinking object should return the object."""
+        # GIVEN an in-memory session service
+        service = InMemorySessionService()
+        session = await service.create_session({"title": "Test"}, self.TEST_USER_ID)
+
+        # WHEN adding a message with thinking object format
+        await service.add_message(
+            session["id"],
+            self.TEST_USER_ID,
+            {
+                "role": "assistant",
+                "content": "Response content",
+                "thinking": {"content": "Deep reasoning...", "tokens": 150},
+            },
+        )
+
+        # THEN get_session_messages should return the thinking object
+        messages = await service.get_session_messages(session["id"], self.TEST_USER_ID)
+        assert messages is not None
+        assert len(messages) == 1
+
+        msg = messages[0]
+        # Thinking object should be present
+        assert "thinking" in msg
+        thinking = msg["thinking"]
+        assert thinking["content"] == "Deep reasoning..."
+        assert thinking["tokens"] == 150
+
+        # Legacy fields should NOT be present
+        assert "thinking_content" not in msg
+        assert "thinking_tokens" not in msg
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_messages_without_thinking(self) -> None:
+        """Messages without thinking should not have thinking field."""
+        # GIVEN an in-memory session service
+        service = InMemorySessionService()
+        session = await service.create_session({"title": "Test"}, self.TEST_USER_ID)
+
+        # WHEN adding a message without thinking
+        await service.add_message(
+            session["id"],
+            self.TEST_USER_ID,
+            {
+                "role": "user",
+                "content": "Hello",
+            },
+        )
+
+        # THEN get_session_messages should not have thinking
+        messages = await service.get_session_messages(session["id"], self.TEST_USER_ID)
+        assert messages is not None
+        assert len(messages) == 1
+
+        msg = messages[0]
+        assert "thinking" not in msg
+        assert "thinking_content" not in msg
+        assert "thinking_tokens" not in msg
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_messages_model_name_preserved(self) -> None:
+        """Messages with model_name should preserve it in response."""
+        # GIVEN an in-memory session service
+        service = InMemorySessionService()
+        session = await service.create_session({"title": "Test"}, self.TEST_USER_ID)
+
+        # WHEN adding a message with model_name
+        await service.add_message(
+            session["id"],
+            self.TEST_USER_ID,
+            {
+                "role": "assistant",
+                "content": "Response",
+                "model_name": "claude-3-opus-20240229",
+            },
+        )
+
+        # THEN get_session_messages should include model_name
+        messages = await service.get_session_messages(session["id"], self.TEST_USER_ID)
+        assert messages is not None
+        assert len(messages) == 1
+
+        msg = messages[0]
+        assert msg.get("model_name") == "claude-3-opus-20240229"

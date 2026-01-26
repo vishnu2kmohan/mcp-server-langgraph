@@ -42,11 +42,13 @@ class TestMessageModel:
             message_id=str(uuid4()),
             role="user",
             content="Hello, world!",
+            user_id="test-user-123",  # v8: Required field
         )
 
         assert message.message_id is not None
         assert message.role == "user"
         assert message.content == "Hello, world!"
+        assert message.user_id == "test-user-123"
         assert message.timestamp is not None
         assert message.metadata == {}
 
@@ -61,6 +63,7 @@ class TestMessageModel:
                 message_id=str(uuid4()),
                 role=role,
                 content="Test content",
+                user_id="test-user-123",  # v8: Required field
             )
             assert message.role == role
 
@@ -77,13 +80,16 @@ class TestSessionConfigModel:
         """
         GIVEN no config values
         WHEN SessionConfig is created
-        THEN should have default values
+        THEN should use values from settings (12-Factor App Principle III)
         """
+        from mcp_server_langgraph.core.config import settings
+
         config = SessionConfig()
 
-        assert config.model == "gpt-4o-mini"
+        # v8: Use settings values, not hardcoded (12-Factor App)
+        assert config.model == settings.model_name
         assert config.temperature == 0.7
-        assert config.max_tokens == 1000
+        assert config.max_tokens == settings.model_max_tokens
 
     def test_config_custom_values(self) -> None:
         """
@@ -119,10 +125,12 @@ class TestSessionModel:
         session = Session(
             session_id=str(uuid4()),
             name="Test Session",
+            user_id="test-user-123",  # v8: Required field
         )
 
         assert session.session_id is not None
         assert session.name == "Test Session"
+        assert session.user_id == "test-user-123"
         assert session.messages == []
         assert session.status == "active"
         assert session.created_at is not None
@@ -135,13 +143,14 @@ class TestSessionModel:
         THEN should contain messages
         """
         messages = [
-            Message(message_id="1", role="user", content="Hello"),
-            Message(message_id="2", role="assistant", content="Hi there!"),
+            Message(message_id="1", role="user", content="Hello", user_id="test-user-123"),
+            Message(message_id="2", role="assistant", content="Hi there!", user_id="test-user-123"),
         ]
 
         session = Session(
             session_id=str(uuid4()),
             name="Chat Session",
+            user_id="test-user-123",  # v8: Required field
             messages=messages,
         )
 
@@ -156,14 +165,15 @@ class TestSessionModel:
         THEN should return SessionSummary with message count
         """
         messages = [
-            Message(message_id="1", role="user", content="Hello"),
-            Message(message_id="2", role="assistant", content="Hi!"),
-            Message(message_id="3", role="user", content="How are you?"),
+            Message(message_id="1", role="user", content="Hello", user_id="test-user-123"),
+            Message(message_id="2", role="assistant", content="Hi!", user_id="test-user-123"),
+            Message(message_id="3", role="user", content="How are you?", user_id="test-user-123"),
         ]
 
         session = Session(
             session_id=str(uuid4()),
             name="Test Session",
+            user_id="test-user-123",  # v8: Required field
             workflow_id="workflow123",
             messages=messages,
         )

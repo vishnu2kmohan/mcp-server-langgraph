@@ -243,11 +243,14 @@ class TestChatServiceImpl:
         ):
             chunks.append(chunk)
 
-        # All 3 chunks should be yielded via LLMFactory
-        assert len(chunks) == 3
-        assert chunks[0]["delta"]["content"] == "Hello"
-        assert chunks[1]["delta"]["content"] == " world"
-        assert chunks[2]["delta"]["content"] == "!"
+        # Filter to only delta chunks (exclude routing_decision from ADR-0105)
+        delta_chunks = [c for c in chunks if "delta" in c]
+
+        # All 3 delta chunks should be yielded via LLMFactory
+        assert len(delta_chunks) == 3
+        assert delta_chunks[0]["delta"]["content"] == "Hello"
+        assert delta_chunks[1]["delta"]["content"] == " world"
+        assert delta_chunks[2]["delta"]["content"] == "!"
 
     @pytest.mark.asyncio
     async def test_create_stream_uses_llm_factory(
@@ -629,9 +632,12 @@ class TestChatServiceImpl:
         # Verify resource was read
         mock_bridge.read_resource.assert_called_once_with("file:///context.txt")
 
+        # Filter to only delta chunks (exclude routing_decision from ADR-0105)
+        delta_chunks = [c for c in chunks if "delta" in c]
+
         # Verify streaming via LLMFactory works
-        assert len(chunks) == 1
-        assert chunks[0]["delta"]["content"] == "Response"
+        assert len(delta_chunks) == 1
+        assert delta_chunks[0]["delta"]["content"] == "Response"
 
     # =========================================================================
     # LangGraph event streaming tests
@@ -876,9 +882,12 @@ class TestChatServiceImpl:
             ):
                 chunks.append(chunk)
 
+        # Filter to only delta chunks (exclude routing_decision from ADR-0105)
+        delta_chunks = [c for c in chunks if "delta" in c]
+
         # Should fallback to LLMFactory.astream()
-        assert len(chunks) == 1
-        assert chunks[0]["delta"]["content"] == "Fallback"
+        assert len(delta_chunks) == 1
+        assert delta_chunks[0]["delta"]["content"] == "Fallback"
 
     # =========================================================================
     # langgraph_agent lazy initialization tests
@@ -1261,3 +1270,140 @@ class TestChatServiceImpl:
             result = service.validate_dynamic_context_config()
 
             assert result.is_valid
+
+    # =========================================================================
+    # Plan mode RouterOutput contract tests
+    # =========================================================================
+
+    def test_plan_mode_routing_decision_uses_valid_execution_mode(self) -> None:
+        """GIVEN execution_mode="plan" from UI
+        WHEN RouterOutput is created
+        THEN RouterOutput.execution_mode must be a valid agent mode, not "plan"
+
+        This is a contract test to prevent regression of the bug where
+        "plan" (a UI execution mode) was incorrectly passed to RouterOutput
+        which only accepts agent execution modes (tool_calling, react, etc.).
+
+        The two execution_mode concepts are INDEPENDENT:
+        - UI level: "default", "plan", "auto_accept", "bypass" (workflow control)
+        - RouterOutput (agent level): "pure_llm", "tool_calling", "react",
+          "programmatic", "orchestrator" (execution strategy)
+
+        Plan mode is a WORKFLOW overlay that adds approval requirements.
+        It does NOT override the router's intelligent classification.
+        """
+        from pydantic import ValidationError
+
+        from mcp_server_langgraph.agents.router_agent import RouterOutput
+
+        # Verify all valid execution modes are accepted
+        valid_modes = ["pure_llm", "tool_calling", "react", "programmatic", "orchestrator"]
+        for mode in valid_modes:
+            routing_decision = RouterOutput(
+                complexity="complicated",
+                risk="medium",
+                task_type="code",
+                tools_needed=[],
+                suggested_orchestrator="studio",
+                critique_rounds=0,
+                thinking_budget="medium",
+                confidence=0.9,
+                skills_needed=[],
+                execution_mode=mode,
+                routing_rationale=f"Testing {mode} mode",
+            )
+            assert routing_decision.execution_mode == mode
+
+        # Verify that "plan" is NOT a valid execution_mode for RouterOutput
+        with pytest.raises(ValidationError) as exc_info:
+            RouterOutput(
+                complexity="complicated",
+                risk="medium",
+                task_type="code",
+                tools_needed=[],
+                suggested_orchestrator="studio",
+                critique_rounds=1,
+                thinking_budget="medium",
+                confidence=0.9,
+                skills_needed=[],
+                execution_mode="plan",  # Invalid - UI mode, not agent mode
+                routing_rationale="This should fail",
+            )
+        assert "execution_mode" in str(exc_info.value)
+        assert "plan" in str(exc_info.value)
+
+    def test_plan_mode_forces_approval_via_execution_plan(self) -> None:
+        """GIVEN plan mode is selected in UI
+        WHEN ExecutionPlan is created from RouterOutput
+        THEN requires_approval is True regardless of risk level
+
+        This tests the independent architecture where:
+        - Router classifies task (including risk level)
+        - Plan mode forces approval as a workflow overlay
+        """
+        from decimal import Decimal
+
+        from mcp_server_langgraph.agents.router_agent import RouterOutput
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        # Low-risk task that normally wouldn't require approval
+        low_risk_routing = RouterOutput(
+            complexity="simple",
+            risk="low",  # Normally auto-executes
+            task_type="chat",
+            tools_needed=[],
+            suggested_orchestrator="standard",
+            critique_rounds=0,
+            thinking_budget="none",
+            confidence=0.95,
+            skills_needed=[],
+            execution_mode="pure_llm",
+            routing_rationale="Simple chat task",
+        )
+
+        # WITHOUT plan mode: low-risk should NOT require approval
+        plan_without_force = ExecutionPlan.from_router_output(
+            router_output=low_risk_routing,
+            session_id="test-session",
+            message="Hello",
+            executor_model="test-model",
+            estimated_cost=Decimal("0.01"),
+            force_approval=False,
+        )
+        assert plan_without_force.requires_approval is False
+
+        # WITH plan mode: low-risk SHOULD require approval
+        plan_with_force = ExecutionPlan.from_router_output(
+            router_output=low_risk_routing,
+            session_id="test-session",
+            message="Hello",
+            executor_model="test-model",
+            estimated_cost=Decimal("0.01"),
+            force_approval=True,  # Plan mode
+        )
+        assert plan_with_force.requires_approval is True
+
+        # Medium-risk always requires approval
+        medium_risk_routing = RouterOutput(
+            complexity="complicated",
+            risk="medium",
+            task_type="code",
+            tools_needed=["code_interpreter"],
+            suggested_orchestrator="studio",
+            critique_rounds=1,
+            thinking_budget="medium",
+            confidence=0.8,
+            skills_needed=[],
+            execution_mode="tool_calling",
+            routing_rationale="Code task with tools",
+        )
+
+        plan_medium = ExecutionPlan.from_router_output(
+            router_output=medium_risk_routing,
+            session_id="test-session",
+            message="Debug this code",
+            executor_model="test-model",
+            estimated_cost=Decimal("0.05"),
+            force_approval=False,  # Even without plan mode
+        )
+        assert plan_medium.requires_approval is True  # Risk-based

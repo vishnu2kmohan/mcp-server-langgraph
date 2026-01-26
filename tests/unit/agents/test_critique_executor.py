@@ -83,14 +83,16 @@ class TestCritiqueExecutor:
         """
         from mcp_server_langgraph.agents.critique_executor import CritiqueExecutor
 
-        mock_llm_factory = MagicMock()
-        mock_executor = AsyncMock()
-        mock_executor.ainvoke.return_value = MagicMock(content="Executor response")
-        mock_llm_factory.create.return_value = mock_executor
+        # Create a mock LLM instance that will be returned when LLMFactory is instantiated
+        mock_llm_instance = MagicMock()
+        mock_llm_instance.ainvoke = AsyncMock(return_value=MagicMock(content="Executor response"))
+
+        # Mock the LLMFactory class to return our mock instance when instantiated
+        mock_llm_factory_class = MagicMock(return_value=mock_llm_instance)
 
         with patch(
             "mcp_server_langgraph.agents.critique_executor.LLMFactory",
-            mock_llm_factory,
+            mock_llm_factory_class,
         ):
             executor = CritiqueExecutor(
                 executor_model="gemini-3-flash",
@@ -120,26 +122,28 @@ class TestCritiqueExecutor:
             CritiqueExecutor,
         )
 
-        mock_llm_factory = MagicMock()
-        mock_executor = AsyncMock()
-        mock_executor.ainvoke.return_value = MagicMock(content="Good response")
+        # Create mock LLM instances
+        mock_executor_instance = MagicMock()
+        mock_executor_instance.ainvoke = AsyncMock(return_value=MagicMock(content="Good response"))
 
-        mock_critic = AsyncMock()
-        # Critic approves immediately
-        mock_critic.ainvoke.return_value = MagicMock(
-            content='{"approved": true, "feedback": null, "suggestions": [], "confidence": 0.95}'
+        mock_critic_instance = MagicMock()
+        mock_critic_instance.ainvoke = AsyncMock(
+            return_value=MagicMock(
+                content='{"approved": true, "feedback": null, "suggestions": [], "confidence": 0.95}'
+            )
         )
 
-        def create_mock(model: str):
-            if "critic" in model.lower() or "claude" in model.lower():
-                return mock_critic
-            return mock_executor
+        # LLMFactory class mock returns different instances based on model_name
+        def create_llm_instance(model_name: str = None, **kwargs: Any):
+            if model_name and ("critic" in model_name.lower() or "claude" in model_name.lower()):
+                return mock_critic_instance
+            return mock_executor_instance
 
-        mock_llm_factory.create.side_effect = create_mock
+        mock_llm_factory_class = MagicMock(side_effect=create_llm_instance)
 
         with patch(
             "mcp_server_langgraph.agents.critique_executor.LLMFactory",
-            mock_llm_factory,
+            mock_llm_factory_class,
         ):
             executor = CritiqueExecutor(
                 executor_model="gemini-3-flash",
@@ -170,8 +174,6 @@ class TestCritiqueExecutor:
         """
         from mcp_server_langgraph.agents.critique_executor import CritiqueExecutor
 
-        mock_llm_factory = MagicMock()
-
         # Track call count for executor
         executor_call_count = [0]
 
@@ -181,8 +183,8 @@ class TestCritiqueExecutor:
                 return MagicMock(content="Initial response")
             return MagicMock(content="Refined response with examples")
 
-        mock_executor = AsyncMock()
-        mock_executor.ainvoke.side_effect = mock_executor_invoke
+        mock_executor_instance = MagicMock()
+        mock_executor_instance.ainvoke = AsyncMock(side_effect=mock_executor_invoke)
 
         # Track call count for critic
         critic_call_count = [0]
@@ -197,19 +199,19 @@ class TestCritiqueExecutor:
             # Second critique: approve
             return MagicMock(content='{"approved": true, "feedback": null, "suggestions": [], "confidence": 0.9}')
 
-        mock_critic = AsyncMock()
-        mock_critic.ainvoke.side_effect = mock_critic_invoke
+        mock_critic_instance = MagicMock()
+        mock_critic_instance.ainvoke = AsyncMock(side_effect=mock_critic_invoke)
 
-        def create_mock(model: str):
-            if "claude" in model.lower():
-                return mock_critic
-            return mock_executor
+        def create_llm_instance(model_name: str = None, **kwargs: Any):
+            if model_name and "claude" in model_name.lower():
+                return mock_critic_instance
+            return mock_executor_instance
 
-        mock_llm_factory.create.side_effect = create_mock
+        mock_llm_factory_class = MagicMock(side_effect=create_llm_instance)
 
         with patch(
             "mcp_server_langgraph.agents.critique_executor.LLMFactory",
-            mock_llm_factory,
+            mock_llm_factory_class,
         ):
             executor = CritiqueExecutor(
                 executor_model="gemini-3-flash",
@@ -241,26 +243,27 @@ class TestCritiqueExecutor:
         """
         from mcp_server_langgraph.agents.critique_executor import CritiqueExecutor
 
-        mock_llm_factory = MagicMock()
-        mock_executor = AsyncMock()
-        mock_executor.ainvoke.return_value = MagicMock(content="Response")
+        mock_executor_instance = MagicMock()
+        mock_executor_instance.ainvoke = AsyncMock(return_value=MagicMock(content="Response"))
 
-        mock_critic = AsyncMock()
+        mock_critic_instance = MagicMock()
         # Critic always rejects
-        mock_critic.ainvoke.return_value = MagicMock(
-            content='{"approved": false, "feedback": "Still not good", "suggestions": [], "confidence": 0.5}'
+        mock_critic_instance.ainvoke = AsyncMock(
+            return_value=MagicMock(
+                content='{"approved": false, "feedback": "Still not good", "suggestions": [], "confidence": 0.5}'
+            )
         )
 
-        def create_mock(model: str):
-            if "claude" in model.lower():
-                return mock_critic
-            return mock_executor
+        def create_llm_instance(model_name: str = None, **kwargs: Any):
+            if model_name and "claude" in model_name.lower():
+                return mock_critic_instance
+            return mock_executor_instance
 
-        mock_llm_factory.create.side_effect = create_mock
+        mock_llm_factory_class = MagicMock(side_effect=create_llm_instance)
 
         with patch(
             "mcp_server_langgraph.agents.critique_executor.LLMFactory",
-            mock_llm_factory,
+            mock_llm_factory_class,
         ):
             executor = CritiqueExecutor(
                 executor_model="gemini-3-flash",
@@ -287,10 +290,9 @@ class TestCritiqueExecutor:
         """
         from mcp_server_langgraph.agents.critique_executor import CritiqueExecutor
 
-        mock_llm_factory = MagicMock()
-        mock_executor = AsyncMock()
-        mock_executor.ainvoke.return_value = MagicMock(content="Response")
-        mock_llm_factory.create.return_value = mock_executor
+        mock_llm_instance = MagicMock()
+        mock_llm_instance.ainvoke = AsyncMock(return_value=MagicMock(content="Response"))
+        mock_llm_factory_class = MagicMock(return_value=mock_llm_instance)
 
         mock_tracer = MagicMock()
         mock_span = MagicMock()
@@ -301,7 +303,7 @@ class TestCritiqueExecutor:
         with (
             patch(
                 "mcp_server_langgraph.agents.critique_executor.LLMFactory",
-                mock_llm_factory,
+                mock_llm_factory_class,
             ),
             patch(
                 "mcp_server_langgraph.agents.critique_executor.tracer",
@@ -342,28 +344,29 @@ class TestCritiqueExecutorMetrics:
         """
         from mcp_server_langgraph.agents.critique_executor import CritiqueExecutor
 
-        mock_llm_factory = MagicMock()
-        mock_executor = AsyncMock()
-        mock_executor.ainvoke.return_value = MagicMock(content="Response")
+        mock_executor_instance = MagicMock()
+        mock_executor_instance.ainvoke = AsyncMock(return_value=MagicMock(content="Response"))
 
-        mock_critic = AsyncMock()
-        mock_critic.ainvoke.return_value = MagicMock(
-            content='{"approved": true, "feedback": null, "suggestions": [], "confidence": 0.9}'
+        mock_critic_instance = MagicMock()
+        mock_critic_instance.ainvoke = AsyncMock(
+            return_value=MagicMock(
+                content='{"approved": true, "feedback": null, "suggestions": [], "confidence": 0.9}'
+            )
         )
 
-        def create_mock(model: str):
-            if "claude" in model.lower():
-                return mock_critic
-            return mock_executor
+        def create_llm_instance(model_name: str = None, **kwargs: Any):
+            if model_name and "claude" in model_name.lower():
+                return mock_critic_instance
+            return mock_executor_instance
 
-        mock_llm_factory.create.side_effect = create_mock
+        mock_llm_factory_class = MagicMock(side_effect=create_llm_instance)
 
         mock_counter = MagicMock()
 
         with (
             patch(
                 "mcp_server_langgraph.agents.critique_executor.LLMFactory",
-                mock_llm_factory,
+                mock_llm_factory_class,
             ),
             patch(
                 "mcp_server_langgraph.agents.critique_executor.critique_rounds_counter",
@@ -393,17 +396,19 @@ class TestCritiqueExecutorMetrics:
         """
         from mcp_server_langgraph.agents.critique_executor import CritiqueExecutor
 
-        mock_llm_factory = MagicMock()
-        mock_executor = AsyncMock()
-        mock_executor.ainvoke.return_value = MagicMock(content="Response")
-        mock_llm_factory.create.return_value = mock_executor
+        # Create a mock LLM instance that will be returned when LLMFactory is instantiated
+        mock_llm_instance = MagicMock()
+        mock_llm_instance.ainvoke = AsyncMock(return_value=MagicMock(content="Response"))
+
+        # Mock the LLMFactory class to return our mock instance when instantiated
+        mock_llm_factory_class = MagicMock(return_value=mock_llm_instance)
 
         mock_histogram = MagicMock()
 
         with (
             patch(
                 "mcp_server_langgraph.agents.critique_executor.LLMFactory",
-                mock_llm_factory,
+                mock_llm_factory_class,
             ),
             patch(
                 "mcp_server_langgraph.agents.critique_executor.critique_latency_histogram",

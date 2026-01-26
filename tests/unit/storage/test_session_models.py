@@ -157,6 +157,7 @@ class TestSessionConfigExecutionMode:
         session = Session(
             session_id="session-test-123",
             name="Test Session",
+            user_id="test-user-123",  # v8: Required field
             config=SessionConfig(execution_mode="plan"),
         )
 

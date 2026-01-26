@@ -257,3 +257,195 @@ class TestSessionArchiveWithAutoSessionCreation:
 
         assert response.status_code == 204
         # Archive succeeded - frontend can now create new session
+
+
+# =============================================================================
+# v8 Phase 4: Session Restore Tests
+# =============================================================================
+
+
+@pytest.mark.xdist_group(name="session_restore_flow")
+class TestSessionRestoreFlowIntegration:
+    """Integration tests for the complete session restore flow."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_restore_session_returns_204_on_success(
+        self,
+        client: TestClient,
+        mock_session_service: AsyncMock,
+    ) -> None:
+        """
+        GIVEN an archived session exists and is owned by the user
+        WHEN POST /sessions/{id}/restore is called
+        THEN the response should be 204 No Content
+        """
+        mock_session_service.restore_session.return_value = True
+
+        response = client.post("/api/v1/sessions/archived-session-123/restore")
+
+        assert response.status_code == 204
+        mock_session_service.restore_session.assert_called_once()
+
+    def test_restore_session_returns_404_when_not_found(
+        self,
+        client: TestClient,
+        mock_session_service: AsyncMock,
+    ) -> None:
+        """
+        GIVEN a session does not exist
+        WHEN POST /sessions/{id}/restore is called
+        THEN the response should be 404 Not Found
+        """
+        mock_session_service.restore_session.return_value = False
+
+        response = client.post("/api/v1/sessions/nonexistent-session/restore")
+
+        assert response.status_code == 404
+        assert "not found" in response.json()["detail"].lower()
+
+    def test_restore_session_returns_404_for_other_users_session(
+        self,
+        app_with_mocks: FastAPI,
+        mock_session_service: AsyncMock,
+        other_user: dict[str, Any],
+    ) -> None:
+        """
+        GIVEN a session exists but is owned by another user
+        WHEN POST /sessions/{id}/restore is called
+        THEN the response should be 404 (to prevent enumeration)
+        """
+        from mcp_server_langgraph.auth.dependencies import get_current_user
+
+        # Override to use other user
+        app_with_mocks.dependency_overrides[get_current_user] = lambda: other_user
+        mock_session_service.restore_session.return_value = False
+
+        with patch(
+            "mcp_server_langgraph.api.v1.sessions.get_session_service",
+            return_value=mock_session_service,
+        ):
+            test_client = TestClient(app_with_mocks)
+            response = test_client.post("/api/v1/sessions/someone-elses-session/restore")
+
+        assert response.status_code == 404
+
+    def test_restore_session_passes_user_id_to_service(
+        self,
+        client: TestClient,
+        mock_session_service: AsyncMock,
+        mock_user: dict[str, Any],
+    ) -> None:
+        """
+        GIVEN a valid restore request
+        WHEN the endpoint is called
+        THEN the service should receive both session_id and user_id
+        """
+        mock_session_service.restore_session.return_value = True
+
+        client.post("/api/v1/sessions/my-archived-session/restore")
+
+        mock_session_service.restore_session.assert_called_once_with(
+            "my-archived-session",
+            mock_user["sub"],
+        )
+
+
+@pytest.mark.xdist_group(name="session_restore_flow")
+class TestSessionRestoreListingBehavior:
+    """Tests for how restored sessions affect listing behavior."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_restored_session_appears_in_active_list(
+        self,
+        client: TestClient,
+        mock_session_service: AsyncMock,
+    ) -> None:
+        """
+        GIVEN a session has been restored from archive
+        WHEN GET /sessions?status=active is called
+        THEN the restored session should appear in the list
+        """
+        # Mock list_sessions to return tuple (sessions, next_cursor) as expected
+        mock_session_service.list_sessions.return_value = (
+            [
+                {"id": "restored-session", "name": "Restored", "status": "active"},
+                {"id": "active-session", "name": "Active", "status": "active"},
+            ],
+            None,  # next_cursor
+        )
+
+        response = client.get("/api/v1/sessions?status=active")
+
+        assert response.status_code == 200
+        data = response.json()
+        sessions_list = data.get("sessions", data.get("data", []))
+        session_ids = [s.get("id") for s in sessions_list]
+        assert "restored-session" in session_ids
+
+    def test_list_archived_sessions_excludes_restored(
+        self,
+        client: TestClient,
+        mock_session_service: AsyncMock,
+    ) -> None:
+        """
+        GIVEN a session was archived and then restored
+        WHEN GET /sessions?status=archived is called
+        THEN the restored session should not appear
+        """
+        # Mock list_sessions to return only archived sessions
+        mock_session_service.list_sessions.return_value = (
+            [
+                {"id": "still-archived", "name": "Archived", "status": "archived"},
+            ],
+            None,
+        )
+
+        response = client.get("/api/v1/sessions?status=archived")
+
+        assert response.status_code == 200
+        data = response.json()
+        sessions_list = data.get("sessions", data.get("data", []))
+        session_ids = [s.get("id") for s in sessions_list]
+        assert "restored-session" not in session_ids
+
+
+@pytest.mark.xdist_group(name="session_restore_flow")
+class TestSessionArchiveRestoreRoundtrip:
+    """Tests for archive → restore roundtrip."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_archive_then_restore_returns_session_to_active(
+        self,
+        client: TestClient,
+        mock_session_service: AsyncMock,
+    ) -> None:
+        """
+        GIVEN a session is archived
+        WHEN the session is subsequently restored
+        THEN the session should return to active status
+        """
+        session_id = "roundtrip-session"
+
+        # Archive
+        mock_session_service.archive_session.return_value = True
+        with patch("mcp_server_langgraph.api.v1.sessions.invalidate_session_cost_cache"):
+            archive_response = client.post(f"/api/v1/sessions/{session_id}/archive")
+        assert archive_response.status_code == 204
+
+        # Restore
+        mock_session_service.restore_session.return_value = True
+        restore_response = client.post(f"/api/v1/sessions/{session_id}/restore")
+        assert restore_response.status_code == 204
+
+        # Both calls were made
+        mock_session_service.archive_session.assert_called_once()
+        mock_session_service.restore_session.assert_called_once()

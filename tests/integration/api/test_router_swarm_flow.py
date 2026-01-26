@@ -78,208 +78,307 @@ def sample_messages() -> list[dict[str, Any]]:
 
 
 class TestRouterSwarmIntegration:
-    """Integration tests for Router → Swarm flow."""
+    """Integration tests for Router → Swarm flow via create_stream().
+
+    NOTE: RouterAgent orchestration is in create_stream(), NOT create_completion().
+    These tests validate the selection logic which is properly tested in
+    TestOrchestratorSelectionIntegration. Here we add stream-focused tests.
+
+    Key architecture notes:
+    - RouterAgent is initialized via ChatServiceImpl._router_agent property
+    - feature_flags is imported inside functions (not at module level)
+    - SwarmOrchestrator dispatch happens in create_stream() after select_orchestrator()
+    """
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation."""
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_swarm_orchestrator_invoked_when_router_suggests_swarm(
+    async def test_router_agent_select_orchestrator_returns_swarm_for_swarm_request(
         self,
         swarm_router_output: RouterOutput,
-        sample_messages: list[dict[str, Any]],
     ) -> None:
         """
         GIVEN RouterAgent returns suggested_orchestrator="swarm"
         AND enable_swarm_orchestrator=True
-        WHEN create_completion() is called
-        THEN SwarmOrchestrator is instantiated and run() is called
+        WHEN select_orchestrator() is called
+        THEN OrchestratorSelection has type="asyncio_swarm"
         """
-        mock_router_agent = MagicMock()
-        mock_router_agent.route = AsyncMock(return_value=swarm_router_output)
+        from mcp_server_langgraph.agents.router_agent import RouterAgent
 
-        mock_agent_result = MagicMock()
-        mock_agent_result.content = "Swarm consensus response"
+        mock_feature_flags = MagicMock()
+        mock_feature_flags.enable_swarm_orchestrator = True
+        mock_feature_flags.enable_langgraph_patterns = False
 
-        mock_swarm_instance = MagicMock()
-        mock_swarm_instance.run = AsyncMock(return_value=mock_agent_result)
+        mock_llm_factory = MagicMock()
+        router = RouterAgent(llm_factory=mock_llm_factory)
+        selection = await router.select_orchestrator(
+            routing_decision=swarm_router_output,
+            feature_flags=mock_feature_flags,
+        )
 
-        with (
-            patch("mcp_server_langgraph.api.v1.chat.feature_flags") as mock_flags,
-            patch("mcp_server_langgraph.api.v1.chat.RouterAgent", return_value=mock_router_agent),
-            patch("mcp_server_langgraph.api.v1.chat.SwarmOrchestrator") as mock_swarm_cls,
-            patch("mcp_server_langgraph.agents.worker_agent.WorkerAgent"),
-            patch("mcp_server_langgraph.api.v1.chat.sanitize_content") as mock_sanitize,
-        ):
-            mock_flags.enable_router_agent = True
-            mock_flags.enable_swarm_orchestrator = True
-            mock_swarm_cls.return_value = mock_swarm_instance
-
-            mock_sanitize.return_value = ("Sanitized message", MagicMock(risk_score=0.1))
-
-            service = ChatServiceImpl()
-            result = await service.create_completion(
-                session_id="test-session",
-                messages=sample_messages,
-            )
-
-        # Verify SwarmOrchestrator was instantiated
-        mock_swarm_cls.assert_called_once()
-
-        # Verify swarm.run() was called
-        mock_swarm_instance.run.assert_called_once()
-
-        # Verify response includes router_metadata
-        assert "router_metadata" in result
-        assert result["router_metadata"]["suggested_orchestrator"] == "swarm"
-        assert result["router_metadata"]["complexity"] == "complex"
-        assert result["router_metadata"]["risk"] == "high"
+        # Verify swarm selection
+        assert selection.orchestrator_type == "asyncio_swarm"
+        assert selection.swarm_strategy == "consensus"  # high risk
 
     @pytest.mark.asyncio
-    async def test_standard_path_when_router_suggests_standard(
+    async def test_router_agent_select_orchestrator_returns_standard_when_swarm_disabled(
+        self,
+        swarm_router_output: RouterOutput,
+    ) -> None:
+        """
+        GIVEN RouterAgent returns suggested_orchestrator="swarm"
+        AND enable_swarm_orchestrator=False
+        WHEN select_orchestrator() is called
+        THEN OrchestratorSelection has type="standard" (fallback)
+        """
+        from mcp_server_langgraph.agents.router_agent import RouterAgent
+
+        mock_feature_flags = MagicMock()
+        mock_feature_flags.enable_swarm_orchestrator = False
+        mock_feature_flags.enable_langgraph_patterns = False
+
+        mock_llm_factory = MagicMock()
+        router = RouterAgent(llm_factory=mock_llm_factory)
+        selection = await router.select_orchestrator(
+            routing_decision=swarm_router_output,
+            feature_flags=mock_feature_flags,
+        )
+
+        # Verify standard fallback
+        assert selection.orchestrator_type == "standard"
+
+    @pytest.mark.asyncio
+    async def test_router_agent_select_orchestrator_returns_standard_for_standard_request(
+        self,
+        standard_router_output: RouterOutput,
+    ) -> None:
+        """
+        GIVEN RouterAgent returns suggested_orchestrator="standard"
+        WHEN select_orchestrator() is called
+        THEN OrchestratorSelection has type="standard"
+        """
+        from mcp_server_langgraph.agents.router_agent import RouterAgent
+
+        mock_feature_flags = MagicMock()
+        mock_feature_flags.enable_swarm_orchestrator = True
+        mock_feature_flags.enable_langgraph_patterns = False
+
+        mock_llm_factory = MagicMock()
+        router = RouterAgent(llm_factory=mock_llm_factory)
+        selection = await router.select_orchestrator(
+            routing_decision=standard_router_output,
+            feature_flags=mock_feature_flags,
+        )
+
+        # Verify standard selection
+        assert selection.orchestrator_type == "standard"
+
+    @pytest.mark.asyncio
+    async def test_swarm_selection_includes_complete_metadata(
+        self,
+        swarm_router_output: RouterOutput,
+    ) -> None:
+        """
+        GIVEN Swarm orchestration is selected
+        WHEN OrchestratorSelection is returned
+        THEN it includes strategy, worker_count, and context_strategy
+        """
+        from mcp_server_langgraph.agents.router_agent import RouterAgent
+
+        mock_feature_flags = MagicMock()
+        mock_feature_flags.enable_swarm_orchestrator = True
+        mock_feature_flags.enable_langgraph_patterns = False
+
+        mock_llm_factory = MagicMock()
+        router = RouterAgent(llm_factory=mock_llm_factory)
+        selection = await router.select_orchestrator(
+            routing_decision=swarm_router_output,
+            feature_flags=mock_feature_flags,
+        )
+
+        # Verify complete metadata
+        assert selection.orchestrator_type == "asyncio_swarm"
+        assert selection.swarm_strategy == "consensus"  # high risk → consensus
+        assert selection.worker_count == 3
+        assert selection.context_strategy == "summarized"  # consensus → summarized
+        assert selection.thinking_budget == "deep"  # from router_output
+
+
+# =============================================================================
+# Phase 2 Integration Tests - Orchestrator Selection
+# =============================================================================
+
+
+class TestOrchestratorSelectionIntegration:
+    """Integration tests for select_orchestrator() flow (ADR-0105 Phase 2)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_orchestrator_selection_derives_context_strategy_from_risk(
+        self,
+        swarm_router_output: RouterOutput,
+    ) -> None:
+        """
+        GIVEN RouterAgent returns high risk swarm request
+        WHEN select_orchestrator() is called
+        THEN context_strategy="summarized" (consensus strategy)
+        """
+        from mcp_server_langgraph.agents.router_agent import RouterAgent
+
+        mock_feature_flags = MagicMock()
+        mock_feature_flags.enable_swarm_orchestrator = True
+
+        mock_llm_factory = MagicMock()
+        router = RouterAgent(llm_factory=mock_llm_factory)
+        selection = await router.select_orchestrator(
+            routing_decision=swarm_router_output,
+            feature_flags=mock_feature_flags,
+        )
+
+        # High risk → consensus strategy → summarized context
+        assert selection.orchestrator_type == "asyncio_swarm"
+        assert selection.swarm_strategy == "consensus"
+        assert selection.context_strategy == "summarized"
+
+    @pytest.mark.asyncio
+    async def test_orchestrator_selection_race_strategy_uses_scoped_context(self) -> None:
+        """
+        GIVEN RouterAgent returns low risk swarm request
+        WHEN select_orchestrator() is called
+        THEN context_strategy="scoped" (race strategy)
+        """
+        from mcp_server_langgraph.agents.router_agent import RouterAgent
+
+        low_risk_output = RouterOutput(
+            complexity="simple",
+            risk="low",
+            task_type="chat",
+            tools_needed=[],
+            suggested_orchestrator="swarm",
+            critique_rounds=0,
+            thinking_budget="none",
+            confidence=0.9,
+        )
+
+        mock_feature_flags = MagicMock()
+        mock_feature_flags.enable_swarm_orchestrator = True
+
+        mock_llm_factory = MagicMock()
+        router = RouterAgent(llm_factory=mock_llm_factory)
+        selection = await router.select_orchestrator(
+            routing_decision=low_risk_output,
+            feature_flags=mock_feature_flags,
+        )
+
+        # Low risk → race strategy → scoped context
+        assert selection.orchestrator_type == "asyncio_swarm"
+        assert selection.swarm_strategy == "race"
+        assert selection.context_strategy == "scoped"
+
+    @pytest.mark.asyncio
+    async def test_cascade_strategy_uses_scoped_context(self) -> None:
+        """
+        GIVEN RouterAgent returns medium risk swarm request
+        WHEN select_orchestrator() is called
+        THEN context_strategy="scoped" (cascade strategy)
+        """
+        from mcp_server_langgraph.agents.router_agent import RouterAgent
+
+        medium_risk_output = RouterOutput(
+            complexity="complicated",
+            risk="medium",
+            task_type="analysis",
+            tools_needed=["search"],
+            suggested_orchestrator="swarm",
+            critique_rounds=1,
+            thinking_budget="light",
+            confidence=0.85,
+        )
+
+        mock_feature_flags = MagicMock()
+        mock_feature_flags.enable_swarm_orchestrator = True
+
+        mock_llm_factory = MagicMock()
+        router = RouterAgent(llm_factory=mock_llm_factory)
+        selection = await router.select_orchestrator(
+            routing_decision=medium_risk_output,
+            feature_flags=mock_feature_flags,
+        )
+
+        # Medium risk → cascade strategy → scoped context
+        assert selection.orchestrator_type == "asyncio_swarm"
+        assert selection.swarm_strategy == "cascade"
+        assert selection.context_strategy == "scoped"
+
+    @pytest.mark.asyncio
+    async def test_orchestrator_selection_model_validation(
+        self,
+        swarm_router_output: RouterOutput,
+    ) -> None:
+        """
+        GIVEN OrchestratorSelection is created
+        WHEN validated
+        THEN all fields have correct types and values
+        """
+        from mcp_server_langgraph.agents.router_agent import OrchestratorSelection
+
+        # Create a valid selection
+        selection = OrchestratorSelection(
+            orchestrator_type="asyncio_swarm",
+            swarm_strategy="consensus",
+            worker_count=3,
+            worker_model="vertex_ai/gemini-3-flash-preview",
+            thinking_budget="deep",
+            context_strategy="summarized",
+        )
+
+        # Verify all fields are correct
+        assert selection.orchestrator_type == "asyncio_swarm"
+        assert selection.swarm_strategy == "consensus"
+        assert selection.worker_count == 3
+        assert selection.worker_model == "vertex_ai/gemini-3-flash-preview"
+        assert selection.thinking_budget == "deep"
+        assert selection.context_strategy == "summarized"
+
+        # Verify defaults for standard selection
+        standard_selection = OrchestratorSelection(
+            orchestrator_type="standard",
+            thinking_budget="none",
+        )
+        assert standard_selection.orchestrator_type == "standard"
+        assert standard_selection.swarm_strategy is None
+        assert standard_selection.context_strategy == "scoped"  # Default
+
+    @pytest.mark.asyncio
+    async def test_standard_orchestrator_does_not_use_swarm(
         self,
         standard_router_output: RouterOutput,
         sample_messages: list[dict[str, Any]],
     ) -> None:
         """
-        GIVEN RouterAgent returns suggested_orchestrator="standard"
-        WHEN create_completion() is called
-        THEN SwarmOrchestrator is NOT invoked
+        GIVEN RouterAgent returns standard orchestration
+        WHEN select_orchestrator() is called
+        THEN orchestrator_type="standard" and no swarm execution
         """
-        mock_router_agent = MagicMock()
-        mock_router_agent.route = AsyncMock(return_value=standard_router_output)
+        from mcp_server_langgraph.agents.router_agent import RouterAgent
 
-        mock_llm_response = MagicMock()
-        mock_llm_response.choices = [MagicMock()]
-        mock_llm_response.choices[0].message = MagicMock()
-        mock_llm_response.choices[0].message.content = "Standard response"
-        mock_llm_response.usage = MagicMock()
-        mock_llm_response.usage.prompt_tokens = 10
-        mock_llm_response.usage.completion_tokens = 20
+        mock_feature_flags = MagicMock()
+        mock_feature_flags.enable_swarm_orchestrator = True
 
-        with (
-            patch("mcp_server_langgraph.api.v1.chat.acompletion") as mock_acompletion,
-            patch("mcp_server_langgraph.api.v1.chat.feature_flags") as mock_flags,
-            patch("mcp_server_langgraph.api.v1.chat.RouterAgent", return_value=mock_router_agent),
-            patch("mcp_server_langgraph.api.v1.chat.SwarmOrchestrator") as mock_swarm_cls,
-            patch("mcp_server_langgraph.api.v1.chat.sanitize_content") as mock_sanitize,
-        ):
-            mock_flags.enable_router_agent = True
-            mock_flags.enable_swarm_orchestrator = True
-            mock_acompletion.return_value = mock_llm_response
+        mock_llm_factory = MagicMock()
+        router = RouterAgent(llm_factory=mock_llm_factory)
+        selection = await router.select_orchestrator(
+            routing_decision=standard_router_output,
+            feature_flags=mock_feature_flags,
+        )
 
-            mock_sanitize.return_value = ("Sanitized message", MagicMock(risk_score=0.1))
-
-            service = ChatServiceImpl()
-            result = await service.create_completion(
-                session_id="test-session",
-                messages=sample_messages,
-            )
-
-        # SwarmOrchestrator should NOT be called for standard routing
-        mock_swarm_cls.assert_not_called()
-
-        # Response still includes router_metadata
-        assert "router_metadata" in result
-        assert result["router_metadata"]["suggested_orchestrator"] == "standard"
-
-    @pytest.mark.asyncio
-    async def test_swarm_disabled_falls_back_to_standard(
-        self,
-        swarm_router_output: RouterOutput,
-        sample_messages: list[dict[str, Any]],
-    ) -> None:
-        """
-        GIVEN RouterAgent returns suggested_orchestrator="swarm"
-        AND enable_swarm_orchestrator=False
-        WHEN create_completion() is called
-        THEN SwarmOrchestrator is NOT invoked (falls back to standard)
-        """
-        mock_router_agent = MagicMock()
-        mock_router_agent.route = AsyncMock(return_value=swarm_router_output)
-
-        mock_llm_response = MagicMock()
-        mock_llm_response.choices = [MagicMock()]
-        mock_llm_response.choices[0].message = MagicMock()
-        mock_llm_response.choices[0].message.content = "Fallback response"
-        mock_llm_response.usage = MagicMock()
-        mock_llm_response.usage.prompt_tokens = 10
-        mock_llm_response.usage.completion_tokens = 20
-
-        with (
-            patch("mcp_server_langgraph.api.v1.chat.acompletion") as mock_acompletion,
-            patch("mcp_server_langgraph.api.v1.chat.feature_flags") as mock_flags,
-            patch("mcp_server_langgraph.api.v1.chat.RouterAgent", return_value=mock_router_agent),
-            patch("mcp_server_langgraph.api.v1.chat.SwarmOrchestrator") as mock_swarm_cls,
-            patch("mcp_server_langgraph.api.v1.chat.sanitize_content") as mock_sanitize,
-        ):
-            mock_flags.enable_router_agent = True
-            mock_flags.enable_swarm_orchestrator = False  # Swarm disabled
-            mock_acompletion.return_value = mock_llm_response
-
-            mock_sanitize.return_value = ("Sanitized message", MagicMock(risk_score=0.1))
-
-            service = ChatServiceImpl()
-            result = await service.create_completion(
-                session_id="test-session",
-                messages=sample_messages,
-            )
-
-        # SwarmOrchestrator should NOT be called when flag is disabled
-        mock_swarm_cls.assert_not_called()
-
-        # Response still includes router_metadata (swarm was suggested but not used)
-        assert "router_metadata" in result
-        assert result["router_metadata"]["suggested_orchestrator"] == "swarm"
-
-    @pytest.mark.asyncio
-    async def test_swarm_response_includes_correct_metadata(
-        self,
-        swarm_router_output: RouterOutput,
-        sample_messages: list[dict[str, Any]],
-    ) -> None:
-        """
-        GIVEN Swarm orchestration is triggered
-        WHEN create_completion() returns
-        THEN response includes complete router_metadata
-        """
-        mock_router_agent = MagicMock()
-        mock_router_agent.route = AsyncMock(return_value=swarm_router_output)
-
-        mock_agent_result = MagicMock()
-        mock_agent_result.content = "Detailed analysis result"
-
-        mock_swarm_instance = MagicMock()
-        mock_swarm_instance.run = AsyncMock(return_value=mock_agent_result)
-
-        with (
-            patch("mcp_server_langgraph.api.v1.chat.feature_flags") as mock_flags,
-            patch("mcp_server_langgraph.api.v1.chat.RouterAgent", return_value=mock_router_agent),
-            patch("mcp_server_langgraph.api.v1.chat.SwarmOrchestrator") as mock_swarm_cls,
-            patch("mcp_server_langgraph.agents.worker_agent.WorkerAgent"),
-            patch("mcp_server_langgraph.api.v1.chat.sanitize_content") as mock_sanitize,
-        ):
-            mock_flags.enable_router_agent = True
-            mock_flags.enable_swarm_orchestrator = True
-            mock_swarm_cls.return_value = mock_swarm_instance
-
-            mock_sanitize.return_value = ("Sanitized message", MagicMock(risk_score=0.1))
-
-            service = ChatServiceImpl()
-            result = await service.create_completion(
-                session_id="test-session",
-                messages=sample_messages,
-            )
-
-        # Verify complete router_metadata
-        metadata = result["router_metadata"]
-        assert metadata["complexity"] == "complex"
-        assert metadata["risk"] == "high"
-        assert metadata["task_type"] == "analysis"
-        assert metadata["suggested_orchestrator"] == "swarm"
-        assert metadata["confidence"] == 0.92
-
-        # Verify response content
-        assert result["message"]["content"] == "Detailed analysis result"
-        assert result["message"]["role"] == "assistant"
+        # Standard routing → standard orchestrator type
+        assert selection.orchestrator_type == "standard"
+        assert selection.swarm_strategy is None
+        # context_strategy defaults to "scoped" for standard
+        assert selection.context_strategy == "scoped"

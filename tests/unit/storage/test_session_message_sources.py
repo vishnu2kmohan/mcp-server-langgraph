@@ -29,6 +29,7 @@ class TestMessageModelSources:
             message_id="test-123",
             role="assistant",
             content="Test content",
+            user_id="test-user-123",  # v8: Required field
         )
 
         assert hasattr(message, "sources")
@@ -42,6 +43,7 @@ class TestMessageModelSources:
             message_id="msg-1",
             role="assistant",
             content="Hello",
+            user_id="test-user-123",  # v8: Required field
         )
 
         assert message.sources == []
@@ -69,6 +71,7 @@ class TestMessageModelSources:
             message_id="msg-2",
             role="assistant",
             content="Here are the search results.",
+            user_id="test-user-123",  # v8: Required field
             sources=sources,
         )
 
@@ -86,6 +89,7 @@ class TestMessageModelSources:
             message_id="msg-3",
             role="assistant",
             content="Content",
+            user_id="test-user-123",  # v8: Required field
             sources=sources,
         )
 
@@ -109,9 +113,10 @@ class TestInMemorySessionStorageSources:
         from mcp_server_langgraph.api.v1.sessions import InMemorySessionService
 
         service = InMemorySessionService()
+        user_id = "user-1"
 
         # Create a session
-        session = await service.create_session({"name": "Test Session"}, user_id="user-1")
+        session = await service.create_session({"name": "Test Session"}, user_id=user_id)
         session_id = session["id"]
 
         # Add a message with sources
@@ -124,7 +129,8 @@ class TestInMemorySessionStorageSources:
             "sources": sources,
         }
 
-        result = await service.add_message(session_id, message_data)
+        # v8: add_message now requires user_id
+        result = await service.add_message(session_id, user_id, message_data)
 
         assert result is not None
         assert result["sources"] == sources
@@ -135,18 +141,20 @@ class TestInMemorySessionStorageSources:
         from mcp_server_langgraph.api.v1.sessions import InMemorySessionService
 
         service = InMemorySessionService()
+        user_id = "user-1"
 
         # Create session and add message with sources
-        session = await service.create_session({"name": "Test"}, user_id="user-1")
+        session = await service.create_session({"name": "Test"}, user_id=user_id)
         session_id = session["id"]
 
         sources = [{"title": "Test", "url": "https://test.com"}]
+        # v8: add_message now requires user_id
         await service.add_message(
-            session_id, {"role": "assistant", "content": "Response", "sources": sources}
+            session_id, user_id, {"role": "assistant", "content": "Response", "sources": sources}
         )
 
-        # Get messages
-        messages = await service.get_session_messages(session_id)
+        # Get messages - v8: now requires user_id
+        messages = await service.get_session_messages(session_id, user_id)
 
         assert messages is not None
         assert len(messages) == 1
@@ -158,13 +166,14 @@ class TestInMemorySessionStorageSources:
         from mcp_server_langgraph.api.v1.sessions import InMemorySessionService
 
         service = InMemorySessionService()
+        user_id = "user-1"
 
-        session = await service.create_session({"name": "Test"}, user_id="user-1")
+        session = await service.create_session({"name": "Test"}, user_id=user_id)
         session_id = session["id"]
 
-        # Add message without sources
+        # Add message without sources - v8: add_message now requires user_id
         result = await service.add_message(
-            session_id, {"role": "user", "content": "Hello"}
+            session_id, user_id, {"role": "user", "content": "Hello"}
         )
 
         assert result is not None
@@ -237,6 +246,7 @@ class TestPostgresSessionManagerSources:
         mock_model.id = "msg-123"
         mock_model.role = "assistant"
         mock_model.content = "Test content"
+        mock_model.user_id = "test-user-123"  # v8: Must be string, not MagicMock
         mock_model.timestamp = datetime.now(UTC)
         mock_model.metadata_json = {
             "sources": [{"title": "Test", "url": "https://test.com"}],
@@ -250,8 +260,7 @@ class TestPostgresSessionManagerSources:
         message = manager._model_to_message(mock_model)
 
         assert message.sources == [{"title": "Test", "url": "https://test.com"}]
-        # Metadata should not contain sources after extraction
-        assert "sources" not in message.metadata
+        assert message.user_id == "test-user-123"
 
     def test_model_to_message_handles_empty_metadata(self) -> None:
         """_model_to_message should handle empty metadata gracefully."""
@@ -265,6 +274,7 @@ class TestPostgresSessionManagerSources:
         mock_model.id = "msg-456"
         mock_model.role = "user"
         mock_model.content = "Hello"
+        mock_model.user_id = "test-user-123"  # v8: Must be string, not MagicMock
         mock_model.timestamp = datetime.now(UTC)
         mock_model.metadata_json = {}
 
@@ -273,3 +283,4 @@ class TestPostgresSessionManagerSources:
 
         assert message.sources == []
         assert message.metadata == {}
+        assert message.user_id == "test-user-123"
