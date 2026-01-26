@@ -29,10 +29,40 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 
+from opentelemetry import metrics, trace
 from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.repositories.plan_template import PlanTemplateRepository
+
+# OTEL instrumentation
+tracer = trace.get_tracer(__name__)
+meter = metrics.get_meter(__name__)
+
+# Orchestrator Selection Metrics
+orchestrator_selection_counter = meter.create_counter(
+    name="orchestrator_selection_total",
+    description="Total number of orchestrator selections",
+    unit="1",
+)
+
+orchestrator_selection_latency = meter.create_histogram(
+    name="orchestrator_selection_latency_seconds",
+    description="Latency of orchestrator selection in seconds",
+    unit="s",
+)
+
+swarm_orchestrator_counter = meter.create_counter(
+    name="swarm_orchestrator_total",
+    description="Total number of swarm orchestrator selections",
+    unit="1",
+)
+
+routing_confidence_histogram = meter.create_histogram(
+    name="routing_confidence",
+    description="Confidence score of routing decisions",
+    unit="1",
+)
 
 
 class EmbeddingService(Protocol):
@@ -151,6 +181,159 @@ DEFAULT_ROUTER_OUTPUT = RouterOutput(
     routing_rationale="",
 )
 
+
+class OrchestratorSelection(BaseModel):
+    """Result of orchestrator selection (ADR-0105).
+
+    Maps RouterOutput to concrete implementation with derived configuration.
+    Used to dispatch to SwarmOrchestrator, Orchestrator, LangGraph patterns, or standard path.
+
+    Attributes:
+        orchestrator_type: Type of orchestrator to use
+            - "standard": Single-agent (existing LangGraph/LiteLLM path)
+            - "asyncio_swarm": SwarmOrchestrator (parallel multi-agent)
+            - "asyncio_task": Orchestrator (task decomposition)
+            - "langgraph_supervisor": LangGraph Supervisor pattern (multi-agent coordination)
+            - "langgraph_hierarchical": LangGraph Hierarchical pattern (CEO→Managers→Workers)
+        swarm_strategy: Strategy for swarm orchestration (race/cascade/consensus)
+        worker_count: Number of worker agents for swarm
+        worker_model: Model ID for worker agents (derived from complexity)
+        thinking_budget: Thinking budget level passed through from router
+        context_strategy: Context handling strategy for swarm workers (Phase 2)
+            - "scoped": Last message only (fast, for RACE)
+            - "summarized": Summarized conversation history (for CONSENSUS)
+            - "full": Full conversation history (for complex tasks)
+        langgraph_pattern: LangGraph pattern type for langgraph_* orchestrators (Phase 3)
+            - "supervisor": Supervisor pattern (router → workers → aggregator)
+            - "hierarchical": Hierarchical pattern (CEO → managers → workers)
+            - None: Not applicable for non-langgraph orchestrators
+    """
+
+    orchestrator_type: Literal[
+        "standard",
+        "asyncio_swarm",
+        "asyncio_task",
+        "langgraph_supervisor",
+        "langgraph_hierarchical",
+    ]
+
+    # For asyncio_swarm
+    swarm_strategy: Literal["race", "cascade", "consensus"] | None = None
+    worker_count: int = 3
+    worker_model: str | None = None
+
+    # Thinking budget (from RouterOutput)
+    thinking_budget: Literal["none", "light", "medium", "deep"] = "none"
+
+    # Phase 2: Context strategy for swarm workers
+    context_strategy: Literal["scoped", "summarized", "full"] = "scoped"
+
+    # Phase 3: LangGraph pattern type (for langgraph_* orchestrators)
+    langgraph_pattern: Literal["supervisor", "hierarchical"] | None = None
+
+    # Phase 2: Dependencies (set by caller based on availability)
+    use_semantic_tools: bool = False
+    use_progressive_skills: bool = False
+    tool_names: list[str] = Field(default_factory=list)
+
+
+def _select_orchestrator_impl(
+    routing_decision: RouterOutput,
+    flags: Any,
+) -> OrchestratorSelection:
+    """Select orchestrator implementation based on routing decision.
+
+    Maps:
+    - suggested_orchestrator → orchestrator_type
+    - risk → swarm_strategy (high=consensus, medium=cascade, low=race)
+    - complexity → worker_model (via TIER_MODELS)
+    - thinking_budget → thinking_budget (pass through)
+
+    Args:
+        routing_decision: RouterOutput from classification
+        flags: Feature flags with enable_swarm_orchestrator, etc.
+
+    Returns:
+        OrchestratorSelection with type, config, and dependencies
+    """
+    orchestrator = routing_decision.suggested_orchestrator
+    enable_langgraph = getattr(flags, "enable_langgraph_patterns", False)
+
+    # studio → LangGraph Supervisor pattern (Phase 3: astream_events integration)
+    if orchestrator == "studio" and enable_langgraph:
+        return OrchestratorSelection(
+            orchestrator_type="langgraph_supervisor",
+            langgraph_pattern="supervisor",
+            thinking_budget=routing_decision.thinking_budget,
+            worker_count=3,  # Default number of worker agents
+        )
+
+    # ux|alert require structured tasks - fall back to standard for chat
+    if orchestrator in ("studio", "ux", "alert"):
+        return OrchestratorSelection(
+            orchestrator_type="standard",
+            thinking_budget=routing_decision.thinking_budget,
+        )
+
+    # Phase 3: Hierarchical pattern for complex ops/data with high risk
+    # Research: Hierarchical provides CEO oversight vs swarm's parallel execution
+    # Best for: project-level coordination, multi-stage deployments, team structures
+    # Criteria: complex + (ops|data) + high risk → needs coordinated control chain
+    # Sources: LangGraph tutorials, Anthropic multi-agent research
+    if (
+        enable_langgraph
+        and routing_decision.complexity == "complex"
+        and routing_decision.risk == "high"
+        and routing_decision.task_type in ("ops", "data")
+    ):
+        return OrchestratorSelection(
+            orchestrator_type="langgraph_hierarchical",
+            langgraph_pattern="hierarchical",
+            thinking_budget=routing_decision.thinking_budget,
+            worker_count=4,  # CEO + 2 managers + workers
+            context_strategy="summarized",  # CEO needs full picture
+        )
+
+    # swarm → check if SwarmOrchestrator enabled via feature flag
+    if orchestrator == "swarm" and getattr(flags, "enable_swarm_orchestrator", False):
+        # Derive strategy from risk level
+        strategy: Literal["race", "cascade", "consensus"]
+        if routing_decision.risk == "high":
+            strategy = "consensus"  # Need agreement for high-risk
+        elif routing_decision.risk == "medium":
+            strategy = "cascade"  # Fallback chain for medium
+        else:
+            strategy = "race"  # Speed for low-risk
+
+        # Derive context strategy from swarm strategy (Phase 2)
+        # - consensus: needs summarized context for agreement
+        # - race/cascade: use scoped context (last message) for speed
+        context_strategy: Literal["scoped", "summarized", "full"]
+        if strategy == "consensus":
+            context_strategy = "summarized"
+        else:
+            context_strategy = "scoped"
+
+        # Derive model from complexity (using TIER_MODELS)
+        # Default to flash model if complexity not found
+        worker_model = TIER_MODELS["vertex_ai"].get(routing_decision.complexity, "vertex_ai/gemini-3-flash-preview")
+
+        return OrchestratorSelection(
+            orchestrator_type="asyncio_swarm",
+            swarm_strategy=strategy,
+            worker_count=3,
+            worker_model=worker_model,
+            thinking_budget=routing_decision.thinking_budget,
+            context_strategy=context_strategy,
+        )
+
+    # Default: standard single-agent path
+    return OrchestratorSelection(
+        orchestrator_type="standard",
+        thinking_budget=routing_decision.thinking_budget,
+    )
+
+
 # Import centralized orchestration router prompt with dynamic template support
 # See: core/prompts/orchestration_router_prompt.py
 # Migration: ADR-0089 Prompt Architecture Centralization
@@ -235,6 +418,77 @@ class RouterAgent:
         except Exception:
             logger.exception("Router error")
             return DEFAULT_ROUTER_OUTPUT
+
+    async def select_orchestrator(
+        self,
+        routing_decision: RouterOutput,
+        feature_flags: Any,
+    ) -> OrchestratorSelection:
+        """Select orchestrator implementation based on routing decision.
+
+        Maps suggested_orchestrator to actual implementation considering:
+        - Feature flag states (enable_swarm_orchestrator, etc.)
+        - Complexity/risk for worker configuration
+        - Available dependencies (SemanticIndexManager, etc.)
+
+        Args:
+            routing_decision: RouterOutput from classification
+            feature_flags: Feature flags with enable_swarm_orchestrator, etc.
+
+        Returns:
+            OrchestratorSelection with type, config, and dependencies
+        """
+        import time
+
+        start_time = time.perf_counter()
+
+        with tracer.start_as_current_span("select_orchestrator") as span:
+            result = _select_orchestrator_impl(routing_decision, feature_flags)
+
+            # Record span attributes
+            span.set_attribute("orchestrator_type", result.orchestrator_type)
+            span.set_attribute("swarm_strategy", result.swarm_strategy or "none")
+            span.set_attribute("context_strategy", result.context_strategy)
+            span.set_attribute("thinking_budget", result.thinking_budget)
+            span.set_attribute("complexity", routing_decision.complexity)
+            span.set_attribute("risk", routing_decision.risk)
+
+            # Record metrics
+            elapsed = time.perf_counter() - start_time
+
+            # Record latency
+            orchestrator_selection_latency.record(
+                elapsed,
+                {"orchestrator_type": result.orchestrator_type},
+            )
+
+            # Record selection counter
+            orchestrator_selection_counter.add(
+                1,
+                {
+                    "orchestrator_type": result.orchestrator_type,
+                    "swarm_strategy": result.swarm_strategy or "none",
+                    "context_strategy": result.context_strategy,
+                },
+            )
+
+            # Record swarm-specific counter if swarm selected
+            if result.orchestrator_type == "asyncio_swarm":
+                swarm_orchestrator_counter.add(
+                    1,
+                    {
+                        "swarm_strategy": result.swarm_strategy or "race",
+                        "risk": routing_decision.risk,
+                    },
+                )
+
+            # Record routing confidence
+            routing_confidence_histogram.record(
+                routing_decision.confidence,
+                {"task_type": routing_decision.task_type},
+            )
+
+            return result
 
     async def route_with_template_suggestion(
         self,
@@ -344,17 +598,13 @@ class RouterAgent:
 
         # Semantic search for tools and skills (with authorization via user_id)
         try:
-            discovered_tools = await semantic_index.search_tools(
-                query=message, user_id=user_id, limit=max_tools
-            )
+            discovered_tools = await semantic_index.search_tools(query=message, user_id=user_id, limit=max_tools)
         except Exception as e:
             logger.warning(f"Semantic tool search failed: {e}")
             discovered_tools = []
 
         try:
-            discovered_skills = await semantic_index.search_skills(
-                query=message, user_id=user_id, limit=max_skills
-            )
+            discovered_skills = await semantic_index.search_skills(query=message, user_id=user_id, limit=max_skills)
         except Exception as e:
             logger.warning(f"Semantic skill search failed: {e}")
             discovered_skills = []

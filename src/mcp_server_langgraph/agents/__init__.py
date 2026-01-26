@@ -88,6 +88,19 @@ from mcp_server_langgraph.agents.loop_agent import (
     LoopConfig,
     LoopResult,
 )
+from mcp_server_langgraph.agents import router_agent
+from mcp_server_langgraph.agents.router_agent import (
+    OrchestratorSelection,
+    RouterAgent,
+    RouterOutput,
+    _select_orchestrator_impl,
+)
+from mcp_server_langgraph.agents import swarm_orchestrator
+from mcp_server_langgraph.agents.swarm_orchestrator import (
+    SwarmConfig,
+    SwarmOrchestrator,
+    SwarmStrategy,
+)
 
 __all__ = [
     # Base Orchestrator (REFACTOR phase)
@@ -150,4 +163,15 @@ __all__ = [
     "LoopAgent",
     "LoopConfig",
     "LoopResult",
+    # Router Agent (ADR-0105 Orchestrator Selection)
+    "router_agent",
+    "RouterAgent",
+    "RouterOutput",
+    "OrchestratorSelection",
+    "_select_orchestrator_impl",
+    # Swarm Orchestrator (ADR-0105)
+    "swarm_orchestrator",
+    "SwarmOrchestrator",
+    "SwarmConfig",
+    "SwarmStrategy",
 ]

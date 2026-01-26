@@ -63,6 +63,14 @@ ORCHESTRATOR_REGISTRY: dict[str, OrchestratorInfo] = {
         feature_flag="enable_multi_agent_orchestration",
         task_categories=["decomposition", "delegation", "synthesis"],
     ),
+    "SwarmOrchestrator": OrchestratorInfo(
+        name="SwarmOrchestrator",
+        display_name="Swarm Orchestrator",
+        description="Parallel multi-agent orchestrator using race, cascade, or consensus strategies. "
+        "Implements ADR-0105 AsyncIO-first swarm execution for speed-optimized parallel responses.",
+        feature_flag="enable_swarm_orchestrator",
+        task_categories=["parallel", "consensus", "race", "cascade"],
+    ),
     "StudioOrchestrator": OrchestratorInfo(
         name="StudioOrchestrator",
         display_name="Studio AI Orchestrator",
