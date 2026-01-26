@@ -156,6 +156,11 @@ class FixtureCollector(ast.NodeVisitor):
 
         self.generic_visit(node)
 
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        """Visit async function definition to find async fixtures and tests."""
+        # Delegate to visit_FunctionDef since the logic is identical
+        self.visit_FunctionDef(node)  # type: ignore[arg-type]
+
     def _get_decorator_name(self, decorator: ast.expr) -> str:
         """Extract decorator name from AST node."""
         if isinstance(decorator, ast.Name):
