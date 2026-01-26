@@ -108,6 +108,20 @@ repos:
     files: ^tests/.*\.py$
     stages:
     - pre-push
+  - id: check-alembic-duplicates
+    name: Check for duplicate Alembic revision IDs
+    description: |
+      Prevents migrations with duplicate revision IDs that cause
+      "Multiple head revisions" or "Revision X is present more than once" errors.
+
+      Fix: Rename the duplicate file and update its revision ID.
+    entry: uv run --frozen python -u scripts/check_alembic_duplicates.py
+    language: system
+    files: ^alembic/versions/.*\.py$
+    pass_filenames: false
+    stages:
+    - pre-commit
+    - pre-push
   - id: check-banned-imports
     name: Validate no banned/deprecated imports
     description: 'Detects usage of deprecated imports (e.g., toml instead of tomllib).
