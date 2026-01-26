@@ -13,6 +13,8 @@ This document outlines the rollout strategy for new features added during the co
 | `enable_semantic_skill_search` | `false` | Low | P2 |
 | `enable_semantic_memory_retrieval` | `false` | Low | P2 |
 | `enable_progressive_skill_loading` | `false` | Low | P2 |
+| `enable_message_embedding` | `false` | Low | P2 |
+| `enable_session_similarity_v2` | `false` | Low | P2 |
 
 ## Rollout Phases
 
@@ -146,6 +148,66 @@ This document outlines the rollout strategy for new features added during the co
 
 ---
 
+### Phase 5: Message Embedding & Session Similarity (P2 - v8)
+
+**Flags:**
+- `enable_message_embedding` - Enable embedding of chat messages
+- `enable_session_similarity_v2` - Use vector-based session similarity
+
+**What it does:**
+- **enable_message_embedding**: Embeds chat messages on persistence for semantic retrieval
+  - Uses dedicated `message_index` Qdrant collection (isolated from knowledge base)
+  - Fire-and-forget embedding with fail-open semantics
+  - Supports session lifecycle events (archive, restore, delete)
+
+- **enable_session_similarity_v2**: Enables vector-based session similarity search
+  - Requires `enable_message_embedding=true` as prerequisite
+  - Decoupled from LLM gating (works without LLM)
+  - Returns similar sessions based on message content similarity
+
+**Pre-Requisites:**
+- [ ] Qdrant vector database configured and healthy
+- [ ] Embedding service (OpenAI, Vertex AI, etc.) configured
+- [ ] `message_index` collection created during bootstrap
+- [ ] Session lifecycle endpoints (archive/restore) deployed
+- [ ] OTEL metrics for embedding success/failure configured
+
+**Rollout Steps:**
+1. Enable `enable_message_embedding` in development
+2. Verify messages are being indexed in `message_index` collection
+3. Run integration tests for session similarity search
+4. Enable `enable_session_similarity_v2` in development
+5. Test similar sessions feature in UI
+6. Enable both flags in staging with monitoring
+7. Monitor embedding latency and success rates
+8. Enable in production
+
+**Monitoring:**
+```python
+# Key metrics (see src/mcp_server_langgraph/services/message_embedding_service.py)
+- embedding.message.success (counter) - Successful message embeddings
+- embedding.message.failure (counter) - Failed message embeddings
+- embedding.message.latency_ms (histogram) - Embedding operation latency
+- embedding.session.archive (counter) - Session archive operations
+- embedding.session.restore (counter) - Session restore operations
+- embedding.session.delete (counter) - Session delete operations
+- similarity.session.search.latency_ms (histogram) - Similarity search latency
+- similarity.session.search.results_count (histogram) - Results returned
+```
+
+**Rollback Trigger:**
+- Embedding success rate < 95%
+- Embedding latency p99 > 500ms
+- Vector storage errors > 1%
+- Session similarity search errors > 1%
+
+**Security Considerations:**
+- Message embeddings are user-scoped (user_id filter enforced)
+- Session ownership enforced at service layer
+- System-owned sessions (`user_id='system'`) excluded from similarity search
+
+---
+
 ## Environment Configuration
 
 ### Development
@@ -156,6 +218,9 @@ FF_ENABLE_PROGRESSIVE_CONTEXT_DISCOVERY=true
 FF_ENABLE_SEMANTIC_SKILL_SEARCH=true
 FF_ENABLE_SEMANTIC_MEMORY_RETRIEVAL=true
 FF_ENABLE_PROGRESSIVE_SKILL_LOADING=true
+# v8: Message Embedding & Session Similarity
+FF_ENABLE_MESSAGE_EMBEDDING=true
+FF_ENABLE_SESSION_SIMILARITY_V2=true
 ```
 
 ### Staging (Gradual)
@@ -165,6 +230,9 @@ FF_ENABLE_MULTI_TENANT_ISOLATION=true
 FF_ENABLE_PROGRESSIVE_CONTEXT_DISCOVERY=true
 FF_ENABLE_SEMANTIC_SKILL_SEARCH=false
 FF_ENABLE_SEMANTIC_MEMORY_RETRIEVAL=false
+# v8: Message Embedding - enable for testing
+FF_ENABLE_MESSAGE_EMBEDDING=true
+FF_ENABLE_SESSION_SIMILARITY_V2=false
 ```
 
 ### Production (Conservative)
@@ -174,6 +242,9 @@ FF_ENABLE_MULTI_TENANT_ISOLATION=false
 FF_ENABLE_PROGRESSIVE_CONTEXT_DISCOVERY=false
 FF_ENABLE_SEMANTIC_SKILL_SEARCH=false
 FF_ENABLE_SEMANTIC_MEMORY_RETRIEVAL=false
+# v8: Message Embedding - disabled initially
+FF_ENABLE_MESSAGE_EMBEDDING=false
+FF_ENABLE_SESSION_SIMILARITY_V2=false
 ```
 
 ---
