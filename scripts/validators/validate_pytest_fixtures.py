@@ -50,9 +50,34 @@ class FixtureCollector(ast.NodeVisitor):
         self.test_dependencies: dict[str, list[str]] = {}  # test_name -> [fixtures]
         self.current_file: Path | None = None
         self.hypothesis_params: set[str] = set()  # Parameters from @given decorator
+        self._function_depth: int = 0  # Track nesting depth to ignore inner functions
+        self._current_class: str | None = None  # Track current class name
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        """Track class definitions to identify test classes."""
+        old_class = self._current_class
+        self._current_class = node.name
+        self.generic_visit(node)
+        self._current_class = old_class
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         """Visit function definition to find fixtures and tests."""
+        # Track nesting depth - only process top-level functions (depth 0)
+        # Inner functions (callbacks, closures) should be ignored
+        self._function_depth += 1
+        try:
+            self._process_function(node)
+        finally:
+            self._function_depth -= 1
+
+    def _process_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        """Process a function definition for fixtures and tests."""
+        # Skip nested functions (depth > 1) - these are callbacks/closures, not test functions
+        # Depth 1 = top-level function or class method
+        if self._function_depth > 1:
+            self.generic_visit(node)
+            return
+
         # Check if this is a fixture
         is_fixture = False
         fixture_scope = "function"
@@ -137,7 +162,10 @@ class FixtureCollector(ast.NodeVisitor):
                 self.fixture_dependencies[node.name] = deps
 
         # Check if this is a test function
-        elif node.name.startswith("test_"):
+        # Only treat as a test if:
+        # 1. Module-level function starting with test_, OR
+        # 2. Method in a class starting with "Test"
+        elif node.name.startswith("test_") and (self._current_class is None or self._current_class.startswith("Test")):
             # Record test dependencies (from function parameters)
             # Exclude: self, cls, Hypothesis @given parameters, @pytest.mark.parametrize parameters,
             #          and common mock parameter patterns (mock_*, Mock*)
@@ -213,7 +241,12 @@ class FixtureValidator:
     def validate_all(self) -> bool:
         """Validate all test files."""
         # Collect all fixtures and test dependencies
-        test_files = list(self.test_dir.rglob("test_*.py")) + list(self.test_dir.rglob("*_test.py"))
+        # Exclude template files (tests/templates/) - they contain example code, not real tests
+        test_files = [
+            f
+            for f in list(self.test_dir.rglob("test_*.py")) + list(self.test_dir.rglob("*_test.py"))
+            if "/templates/" not in str(f)
+        ]
         conftest_files = list(self.test_dir.rglob("conftest.py"))
 
         # Also collect fixtures from fixtures/ directory
