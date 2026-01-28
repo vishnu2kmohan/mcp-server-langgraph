@@ -235,6 +235,109 @@ max_selected_tools: int = 10                  # Maximum tools per request
 semantic_tool_search_threshold: float = 0.5  # Minimum similarity (0-1)
 ```
 
+### 9. Authorization (ADR-0068 Integration)
+
+All semantic search operations require authorization via OpenFGA:
+
+```python
+# Authorization model
+- tool_index: viewer relation required for search
+- skill_index: viewer relation required for search
+- memory_index: owner relation for own memories, admin for others
+
+# Authorization enforcement in SemanticIndexManager
+async def search_tools(
+    self,
+    query: str,
+    user_id: str,  # Required for authorization
+    limit: int = 10,
+    tenant_id: str | None = None,  # Multi-tenant isolation
+) -> list[ToolIndexEntry]:
+    """Search with authorization check."""
+    # Fail-closed: returns empty list if unauthorized
+    authorized = await self._check_authorization(
+        user_id=user_id,
+        relation="viewer",
+        object_type="tool_index",
+    )
+    if not authorized:
+        return []
+```
+
+### 10. Authorization Caching
+
+To reduce OpenFGA call overhead, positive authorization results are cached:
+
+```python
+# src/mcp_server_langgraph/core/semantic_index_manager.py
+
+class SemanticIndexManager:
+    def __init__(
+        self,
+        embedder: Embeddings,
+        qdrant_client: AsyncQdrantClient,
+        # Cache configuration
+        auth_cache_ttl_seconds: float = 60,    # Default: 60s TTL
+        auth_cache_maxsize: int = 1000,        # LRU eviction at limit
+        cache_service: CacheService | None = None,  # Distributed cache
+    ):
+        # Local cache using TTLCache (per-instance)
+        self._auth_cache = TTLCache(maxsize=auth_cache_maxsize, ttl=auth_cache_ttl_seconds)
+
+        # Optional distributed cache via CacheService (L1+L2)
+        self.cache_service = cache_service
+```
+
+#### Cache Modes
+
+**Local Mode (default)**:
+- Uses in-memory `TTLCache` from `cachetools`
+- Per-instance cache (not shared across replicas)
+- Suitable for single-node deployments
+
+**Distributed Mode**:
+- Uses `CacheService` with L1 (in-memory) + L2 (Redis) layers
+- Cache shared across all instances
+- Suitable for Kubernetes/multi-replica deployments
+
+```python
+# Enable distributed mode
+from mcp_server_langgraph.core.cache import get_cache
+
+manager = SemanticIndexManager(
+    embedder=embedder,
+    qdrant_client=qdrant_client,
+    cache_service=get_cache(),  # Enables distributed caching
+)
+```
+
+#### Cache Statistics
+
+```python
+# Get cache stats for monitoring
+stats = manager.get_cache_stats()
+# Returns:
+# {
+#     "hits": 42,
+#     "misses": 8,
+#     "size": 35,
+#     "maxsize": 1000,
+#     "ttl_seconds": 60.0,
+#     "hit_rate": 0.84,
+#     "distributed": True,  # or False for local mode
+# }
+```
+
+#### Security Considerations
+
+1. **Only positive results cached**: Denied authorizations are NOT cached to allow
+   immediate access when permissions are granted.
+
+2. **Fail-closed**: Any cache or OpenFGA error results in denied access (returns empty list).
+
+3. **Cache invalidation**: Use `manager.clear_auth_cache()` when authorization tuples
+   change and you need to force fresh permission checks.
+
 ## Consequences
 
 ### Benefits
@@ -274,6 +377,10 @@ semantic_tool_search_threshold: float = 0.5  # Minimum similarity (0-1)
 ### Unit Tests
 ```bash
 uv run pytest tests/unit/core/test_semantic_index_manager.py -v
+uv run pytest tests/unit/core/test_semantic_index_authorization.py -v
+uv run pytest tests/unit/core/test_semantic_index_authorization_caching.py -v
+uv run pytest tests/unit/core/test_semantic_index_cache_metrics.py -v
+uv run pytest tests/unit/core/test_semantic_index_distributed_cache.py -v
 uv run pytest tests/unit/core/test_agent_graph_retrieve_tools.py -v
 uv run pytest tests/unit/core/test_agent_graph_retrieve_skills.py -v
 uv run pytest tests/unit/core/test_agent_graph_retrieve_memories.py -v
@@ -296,9 +403,108 @@ uv run pytest tests/integration/test_semantic_tool_selection.py -v
 3. Verify `selected_tools` SSE event in stream
 4. Verify only selected tools are bound to model
 
+## Implementation Status
+
+**Last Updated**: 2026-01-26
+
+### Completed
+
+| Component | Status | Location |
+|-----------|--------|----------|
+| Feature Flags | ✅ Complete | `core/feature_flags.py` |
+| SemanticIndexManager | ✅ Complete | `core/semantic_index_manager.py` |
+| retrieve_tools node | ✅ Complete | `core/agent_graph_builder.py` |
+| retrieve_skills node | ✅ Complete | `core/agent_graph_builder.py` |
+| Dynamic tool binding | ✅ Complete | `core/agent_graph_builder.py` |
+| SSE selected_tools event | ✅ Complete | `api/v1/chat.py` |
+| Authorization integration | ✅ Complete | `core/semantic_index_manager.py` |
+| Authorization caching | ✅ Complete | Local + distributed cache modes |
+| Prometheus cache metrics | ✅ Complete | Counter, Gauge, Histogram in `core/semantic_index_manager.py` |
+| Cache warming on startup | ✅ Complete | `warm_cache()` method in `core/semantic_index_manager.py` |
+| Bootstrap cache warming | ✅ Complete | `warm_semantic_cache()` in `bootstrap/security.py` |
+| Cache warming config | ✅ Complete | `auth_cache_warm_entries` in `core/config/_settings.py` |
+| SkillSearchTool | ✅ Complete | `skills/search.py` |
+| VectorProviderAdapter | ✅ Complete | `skills/adapters.py` |
+| Skill indexing pipeline | ✅ Complete | `skills/installer.py` |
+| Frontend SkillsPage | ✅ Complete | `studio/frontend/src/pages/SkillsPage.tsx` |
+| Marketplace parallel fetching | ✅ Complete | `skills/marketplace.py` |
+| A/B Experiment Framework | ✅ Complete | `core/experiments.py` |
+| Prometheus experiment metrics | ✅ Complete | `core/experiments.py` |
+| Frontend SelectedToolsDisplay | ✅ Complete | `studio/frontend/src/components/Chat/SelectedToolsDisplay.tsx` |
+| Qdrant integration tests | ✅ Complete | `tests/integration/vectors/test_semantic_index_manager_qdrant.py` |
+
+### Test Coverage
+
+| Test Suite | Tests | Status |
+|------------|-------|--------|
+| test_semantic_index_manager.py | 15 | ✅ Pass |
+| test_semantic_index_authorization.py | 8 | ✅ Pass |
+| test_semantic_index_authorization_caching.py | 6 | ✅ Pass |
+| test_semantic_index_cache_metrics.py | 13 | ✅ Pass |
+| test_semantic_index_distributed_cache.py | 7 | ✅ Pass |
+| test_semantic_index_prometheus_metrics.py | 12 | ✅ Pass |
+| test_semantic_index_cache_warming.py | 7 | ✅ Pass |
+| test_semantic_index_bootstrap_integration.py | 6 | ✅ Pass |
+| test_agent_graph_retrieve_tools.py | 12 | ✅ Pass |
+| test_agent_graph_retrieve_skills.py | 10 | ✅ Pass |
+| test_semantic_search_feature_flags.py | 8 | ✅ Pass |
+| test_router_agent_semantic.py | 6 | ✅ Pass |
+| test_chat_selected_tools_sse.py | 7 | ✅ Pass |
+| test_semantic_tool_selection.py (integration) | 5 | ✅ Pass |
+| SkillsPage.test.tsx (frontend) | 33 | ✅ Pass |
+| test_skill_marketplace.py | 60 | ✅ Pass |
+| test_semantic_tool_ab_experiment.py | 12 | ✅ Pass |
+| test_semantic_index_manager_qdrant.py (integration) | 13 | ✅ Pass |
+| test_semantic_tool_selection_e2e.py | 8 | ✅ Pass |
+| SelectedToolsDisplay.test.tsx (frontend) | 10 | ✅ Pass |
+| useStreamingChat.test.tsx (SSE handling) | 8 | ✅ Pass |
+
+### Pending Enhancements
+
+| Enhancement | Priority | Notes |
+|-------------|----------|-------|
+| Rate limiting for marketplace API | ✅ Complete | `MarketplaceClient(rate_limit_requests_per_second=10)` |
+| Retry logic for transient failures | ✅ Complete | Exponential backoff for 5xx errors |
+| Wire A/B experiment into agent graph | Medium | Call `should_use_semantic_selection(user_id)` in `retrieve_tools` node |
+| Benchmark performance tests | Low | Validate 34-64% token savings |
+
+### A/B Experiment Framework
+
+The A/B experiment framework (`core/experiments.py`) is complete but **not yet wired** into the agent graph. When enabled:
+
+1. **Variant Assignment**: Uses consistent hashing (MD5) on `experiment_name:user_id` for deterministic assignment
+2. **Traffic Split**: 50% control (static tools) / 50% treatment (semantic selection)
+3. **Metrics**: Prometheus counters and histograms for experiment analysis
+   - `experiment_assignment_total` - tracks variant assignments
+   - `experiment_tool_selection_total` - tracks tool selection events by variant
+   - `experiment_tool_utilization_ratio` - measures tool usage efficiency
+   - `experiment_response_latency_ms` - compares latency between variants
+   - `experiment_user_satisfaction_total` - tracks user satisfaction by variant
+
+**To enable A/B testing**, wire `should_use_semantic_selection(user_id)` into the `retrieve_tools` node:
+
+```python
+from mcp_server_langgraph.core.experiments import should_use_semantic_selection
+
+async def retrieve_tools(state: AgentState) -> AgentState:
+    user_id = state.get("user_id", "")
+
+    # Use A/B experiment to determine behavior
+    if should_use_semantic_selection(user_id):
+        # Treatment: Use semantic search
+        selected_tools = await semantic_index.search_tools(...)
+        state["selected_tools"] = [t.name for t in selected_tools]
+    else:
+        # Control: Use all tools (current behavior)
+        state["selected_tools"] = None
+
+    return state
+```
+
 ## References
 
 - [Anthropic Tool Search Tool Pattern](https://docs.anthropic.com/en/docs/build-with-claude/tool-use#tool-search-tool)
 - [LangGraph Many Tools Example](https://langchain-ai.github.io/langgraph/tutorials/customer-support/customer-support/#many-tools)
+- ADR-0068: Gateway-Level Authentication with OpenFGA ReBAC
 - ADR-0092: Hierarchical Capability Architecture
 - ADR-0095: Multi-Tenant Vector Search Isolation

@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.adr0099]
+pytestmark = [pytest.mark.unit]
 
 
 @pytest.mark.xdist_group(name="semantic_tool_selection_metrics")
@@ -98,9 +98,7 @@ class TestSearchToolsMetricsIntegration:
         mock_point.score = 0.95
 
         mock_qdrant = AsyncMock(return_value=None)
-        mock_qdrant.query_points = AsyncMock(
-            return_value=MagicMock(points=[mock_point])
-        )
+        mock_qdrant.query_points = AsyncMock(return_value=MagicMock(points=[mock_point]))
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -109,8 +107,10 @@ class TestSearchToolsMetricsIntegration:
             vector_size=384,
         )
 
-        with patch.object(manager, "_check_authorization", return_value=True), \
-             patch("mcp_server_langgraph.core.semantic_index_manager.emit_tool_search_metric") as mock_emit:
+        with (
+            patch.object(manager, "_check_authorization", return_value=True),
+            patch("mcp_server_langgraph.core.semantic_index_manager.emit_tool_search_metric") as mock_emit,
+        ):
             await manager.search_tools(
                 query="test query",
                 user_id="user:test",
@@ -157,8 +157,10 @@ class TestSearchToolsMetricsIntegration:
         )
         manager._query_cache[cache_key] = [cached_entry]
 
-        with patch.object(manager, "_check_authorization", return_value=True), \
-             patch("mcp_server_langgraph.core.semantic_index_manager.emit_cache_hit_metric") as mock_emit:
+        with (
+            patch.object(manager, "_check_authorization", return_value=True),
+            patch("mcp_server_langgraph.core.semantic_index_manager.emit_cache_hit_metric") as mock_emit,
+        ):
             await manager.search_tools(
                 query="test query",
                 user_id="user:test",
@@ -168,10 +170,7 @@ class TestSearchToolsMetricsIntegration:
             # Verify cache hit metric was emitted
             mock_emit.assert_called()
             # Find call with cache_type="query"
-            query_cache_calls = [
-                call for call in mock_emit.call_args_list
-                if call.kwargs.get("cache_type") == "query"
-            ]
+            query_cache_calls = [call for call in mock_emit.call_args_list if call.kwargs.get("cache_type") == "query"]
             assert len(query_cache_calls) >= 1
             assert query_cache_calls[0].kwargs["result"] == "hit"
 

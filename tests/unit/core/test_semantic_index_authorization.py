@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.authorization, pytest.mark.adr0099]
+pytestmark = [pytest.mark.unit, pytest.mark.authorization]
 
 
 @pytest.fixture
@@ -531,9 +531,7 @@ class TestAuthorizationFailClosed:
         assert len(results) == 0
 
     @pytest.mark.asyncio
-    async def test_search_tools_requires_user_id(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
-    ) -> None:
+    async def test_search_tools_requires_user_id(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
         """search_tools should require user_id parameter."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 

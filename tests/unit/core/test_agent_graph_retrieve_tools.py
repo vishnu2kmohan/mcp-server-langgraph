@@ -181,13 +181,13 @@ class TestSelectToolsNodeIntegration:
         # Mock the semantic index manager
         mock_entries = [
             ToolIndexEntry(
-                tool_id="tool-1",
+                tool_id="builtin:calculator",
                 name="calculator",
                 description="Perform calculations",
                 category="math",
             ),
             ToolIndexEntry(
-                tool_id="tool-2",
+                tool_id="builtin:search",
                 name="search",
                 description="Search the web",
                 category="search",

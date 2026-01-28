@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.authorization, pytest.mark.adr0099]
+pytestmark = [pytest.mark.unit, pytest.mark.authorization]
 
 
 @pytest.mark.xdist_group(name="semantic_index_config")
@@ -42,11 +42,6 @@ class TestCacheWarmingConfiguration:
     def test_auth_cache_warm_entries_accepts_list_of_dicts(self) -> None:
         """AUTH_CACHE_WARM_ENTRIES should accept list of entry dicts."""
         from mcp_server_langgraph.core.config import Settings
-
-        entries = [
-            {"user_id": "user:service", "relation": "viewer", "object_type": "tool_index"},
-            {"user_id": "user:admin", "relation": "admin", "object_type": "skill_index"},
-        ]
 
         with patch.dict(
             "os.environ",

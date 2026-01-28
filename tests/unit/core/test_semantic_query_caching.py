@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.adr0099]
+pytestmark = [pytest.mark.unit]
 
 
 @pytest.mark.xdist_group(name="semantic_query_caching")
@@ -97,9 +97,7 @@ class TestQueryResultCaching:
         mock_point.score = 0.95
 
         mock_qdrant = AsyncMock(return_value=None)
-        mock_qdrant.query_points = AsyncMock(
-            return_value=MagicMock(points=[mock_point])
-        )
+        mock_qdrant.query_points = AsyncMock(return_value=MagicMock(points=[mock_point]))
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -146,18 +144,10 @@ class TestQueryResultCaching:
             vector_size=384,
         )
 
-        key1 = manager._make_query_cache_key(
-            query="test", search_type="tools", user_id="user:a", limit=10
-        )
-        key2 = manager._make_query_cache_key(
-            query="test", search_type="tools", user_id="user:b", limit=10
-        )
-        key3 = manager._make_query_cache_key(
-            query="different", search_type="tools", user_id="user:a", limit=10
-        )
-        key4 = manager._make_query_cache_key(
-            query="test", search_type="skills", user_id="user:a", limit=10
-        )
+        key1 = manager._make_query_cache_key(query="test", search_type="tools", user_id="user:a", limit=10)
+        key2 = manager._make_query_cache_key(query="test", search_type="tools", user_id="user:b", limit=10)
+        key3 = manager._make_query_cache_key(query="different", search_type="tools", user_id="user:a", limit=10)
+        key4 = manager._make_query_cache_key(query="test", search_type="skills", user_id="user:a", limit=10)
 
         # All keys should be different
         assert key1 != key2  # Different user
@@ -224,9 +214,7 @@ class TestQueryCacheMetrics:
             description="A cached tool",
             category="other",
         )
-        cache_key = manager._make_query_cache_key(
-            query="test", search_type="tools", user_id="user:test", limit=10
-        )
+        cache_key = manager._make_query_cache_key(query="test", search_type="tools", user_id="user:test", limit=10)
         manager._query_cache[cache_key] = [cached_entry]
 
         # Get initial stats

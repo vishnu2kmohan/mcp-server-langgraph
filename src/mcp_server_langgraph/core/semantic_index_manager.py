@@ -67,6 +67,7 @@ if TYPE_CHECKING:
     from qdrant_client import AsyncQdrantClient
 
     from mcp_server_langgraph.core.cache import CacheService
+    from mcp_server_langgraph.core.config import Settings
 
 
 # Constants
@@ -288,6 +289,7 @@ class SemanticIndexManager:
         embedding_cache_ttl_seconds: float = DEFAULT_EMBEDDING_CACHE_TTL_SECONDS,
         embedding_cache_maxsize: int = DEFAULT_EMBEDDING_CACHE_MAXSIZE,
         cache_service: CacheService | None = None,
+        settings: Settings | None = None,
     ) -> None:
         """Initialize SemanticIndexManager.
 
@@ -311,6 +313,8 @@ class SemanticIndexManager:
             cache_service: Optional CacheService for distributed (Redis) caching.
                           When provided, enables L1+L2 caching for cache sharing
                           across instances in distributed deployments.
+            settings: Optional Settings instance for environment detection.
+                     Uses get_settings() if None. Pass explicit settings for testing.
         """
         self.embedder = embedder
         self.qdrant_client = qdrant_client
@@ -323,6 +327,7 @@ class SemanticIndexManager:
         self.embedding_cache_ttl_seconds = embedding_cache_ttl_seconds
         self.embedding_cache_maxsize = embedding_cache_maxsize
         self.cache_service = cache_service
+        self._settings = settings
 
         # Authorization cache using TTLCache for automatic expiration and LRU eviction
         # Only positive (True) results are cached for security
@@ -670,6 +675,9 @@ class SemanticIndexManager:
     ) -> bool:
         """Check if user is a member of the specified tenant/organization.
 
+        In development mode (environment == "development"), membership is bypassed.
+        All other environments (test, staging, production) are fail-closed.
+
         Args:
             user_id: User identifier (e.g., "user:alice")
             tenant_id: Tenant/organization identifier (e.g., "organization:acme")
@@ -677,6 +685,12 @@ class SemanticIndexManager:
         Returns:
             True if user is a member, False otherwise
         """
+        from mcp_server_langgraph.core.environment import is_developer_mode
+
+        if is_developer_mode(self._settings):
+            logger.debug(f"Dev mode: bypassing tenant membership check for {user_id}")
+            return True
+
         try:
             openfga_client = get_openfga_client()
             if openfga_client is None:
@@ -954,21 +968,13 @@ class SemanticIndexManager:
             )
             results = response.points
 
-            # Convert to ToolIndexEntry
-            entries = []
-            for result in results:
-                payload = result.payload or {}
-                entry = ToolIndexEntry(
-                    tool_id=payload.get("tool_id", str(result.id)),
-                    name=payload.get("name", ""),
-                    description=payload.get("description", ""),
-                    category=payload.get("category", "other"),
-                    scope=CapabilityScope(payload.get("scope", "session")),
-                    tenant_id=payload.get("tenant_id"),
-                    parameters_summary=payload.get("parameters_summary", ""),
-                    token_estimate=payload.get("token_estimate", 0),
-                )
-                entries.append(entry)
+            # Convert to ToolIndexEntry using shared wrapper (v26)
+            # Uses reconstruct_tools_from_payloads() for validation and logging
+            from mcp_server_langgraph.tools.semantic_index import (
+                reconstruct_tools_from_payloads,
+            )
+
+            entries = reconstruct_tools_from_payloads(results, logger)
 
             # Cache the results
             if self.query_cache_ttl_seconds > 0:
@@ -1221,9 +1227,7 @@ class SemanticIndexManager:
                 )
 
             if not authorized:
-                logger.warning(
-                    f"User {current_user_id} denied access to memory_index:{search_username}"
-                )
+                logger.warning(f"User {current_user_id} denied access to memory_index:{search_username}")
                 span.set_attribute("authorized", False)
                 return []
 
@@ -1419,9 +1423,7 @@ class SemanticIndexManager:
             ]
 
             if decision_type:
-                must_conditions.append(
-                    FieldCondition(key="decision_type", match=MatchValue(value=decision_type))
-                )
+                must_conditions.append(FieldCondition(key="decision_type", match=MatchValue(value=decision_type)))
 
             query_filter = Filter(must=must_conditions)  # type: ignore[arg-type]
 
@@ -1439,11 +1441,13 @@ class SemanticIndexManager:
             output = []
             for r in results:
                 payload = r.payload or {}
-                output.append({
-                    "trace_id": payload.get("trace_id", str(r.id)),
-                    "score": r.score,
-                    "decision_type": payload.get("decision_type"),
-                })
+                output.append(
+                    {
+                        "trace_id": payload.get("trace_id", str(r.id)),
+                        "score": r.score,
+                        "decision_type": payload.get("decision_type"),
+                    }
+                )
 
             span.set_attribute("results_count", len(output))
             return output

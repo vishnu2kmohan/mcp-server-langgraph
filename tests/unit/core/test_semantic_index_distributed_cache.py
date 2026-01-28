@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.authorization, pytest.mark.adr0099]
+pytestmark = [pytest.mark.unit, pytest.mark.authorization]
 
 
 @pytest.fixture
@@ -237,9 +237,7 @@ class TestDistributedCacheStats:
         assert "distributed" in stats
         assert stats["distributed"] is True
 
-    def test_cache_stats_indicates_local_mode(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
-    ) -> None:
+    def test_cache_stats_indicates_local_mode(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
         """Cache stats should indicate local mode when no CacheService."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 

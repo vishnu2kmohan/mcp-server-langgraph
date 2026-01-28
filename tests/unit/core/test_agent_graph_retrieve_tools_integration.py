@@ -12,7 +12,7 @@ Tests cover:
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 from langchain_core.messages import HumanMessage
@@ -30,9 +30,7 @@ class TestSemanticIndexManagerDependencyInjection:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_build_agent_graph_accepts_semantic_index_manager_parameter(
-        self, monkeypatch
-    ) -> None:
+    async def test_build_agent_graph_accepts_semantic_index_manager_parameter(self, monkeypatch) -> None:
         """build_agent_graph should accept optional semantic_index_manager parameter."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
@@ -60,9 +58,7 @@ class TestSemanticIndexManagerDependencyInjection:
         assert "retrieve_tools" in graph.nodes
 
     @pytest.mark.asyncio
-    async def test_build_agent_graph_works_without_semantic_index_manager(
-        self, monkeypatch
-    ) -> None:
+    async def test_build_agent_graph_works_without_semantic_index_manager(self, monkeypatch) -> None:
         """build_agent_graph should work when semantic_index_manager is not provided."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
@@ -93,9 +89,7 @@ class TestSelectToolsCallsSemanticIndexManager:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_retrieve_tools_calls_search_tools_with_query(
-        self, monkeypatch
-    ) -> None:
+    async def test_retrieve_tools_calls_search_tools_with_query(self, monkeypatch) -> None:
         """retrieve_tools should call semantic_index_manager.search_tools with query."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
@@ -106,13 +100,13 @@ class TestSelectToolsCallsSemanticIndexManager:
         # Create mock entries
         mock_entries = [
             ToolIndexEntry(
-                tool_id="tool-1",
+                tool_id="builtin:calculator",
                 name="calculator",
                 description="Perform calculations",
                 category="math",
             ),
             ToolIndexEntry(
-                tool_id="tool-2",
+                tool_id="builtin:search",
                 name="search",
                 description="Search the web",
                 category="search",
@@ -130,7 +124,7 @@ class TestSelectToolsCallsSemanticIndexManager:
         }
 
         # Call the helper function directly
-        result = await _retrieve_tools_impl(
+        await _retrieve_tools_impl(
             state=initial_state,
             semantic_index_manager=mock_semantic_index,
             max_selected_tools=10,
@@ -145,9 +139,7 @@ class TestSelectToolsCallsSemanticIndexManager:
         assert "Calculate the sum of 2 and 3" in call_kwargs.kwargs.get("query", "")
 
     @pytest.mark.asyncio
-    async def test_retrieve_tools_populates_selected_tools_with_names(
-        self, monkeypatch
-    ) -> None:
+    async def test_retrieve_tools_populates_selected_tools_with_names(self, monkeypatch) -> None:
         """retrieve_tools should populate state['selected_tools'] with tool names."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
@@ -158,13 +150,13 @@ class TestSelectToolsCallsSemanticIndexManager:
         # Create mock entries
         mock_entries = [
             ToolIndexEntry(
-                tool_id="tool-1",
+                tool_id="builtin:calculator",
                 name="calculator",
                 description="Perform calculations",
                 category="math",
             ),
             ToolIndexEntry(
-                tool_id="tool-2",
+                tool_id="builtin:search",
                 name="search",
                 description="Search the web",
                 category="search",
@@ -182,7 +174,7 @@ class TestSelectToolsCallsSemanticIndexManager:
         }
 
         # Call the helper function directly
-        result = await _retrieve_tools_impl(
+        await _retrieve_tools_impl(
             state=initial_state,
             semantic_index_manager=mock_semantic_index,
             max_selected_tools=10,
@@ -192,9 +184,7 @@ class TestSelectToolsCallsSemanticIndexManager:
         assert initial_state["selected_tools"] == ["calculator", "search"]
 
     @pytest.mark.asyncio
-    async def test_retrieve_tools_uses_config_max_selected_tools(
-        self, monkeypatch
-    ) -> None:
+    async def test_retrieve_tools_uses_config_max_selected_tools(self, monkeypatch) -> None:
         """retrieve_tools should pass max_selected_tools to search_tools."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
@@ -236,9 +226,7 @@ class TestSelectToolsFallbackBehavior:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_retrieve_tools_falls_back_when_manager_not_provided(
-        self, monkeypatch
-    ) -> None:
+    async def test_retrieve_tools_falls_back_when_manager_not_provided(self, monkeypatch) -> None:
         """retrieve_tools should use all tools when semantic_index_manager is None."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
@@ -252,7 +240,7 @@ class TestSelectToolsFallbackBehavior:
         }
 
         # Call with no semantic_index_manager
-        result = await _retrieve_tools_impl(
+        await _retrieve_tools_impl(
             state=initial_state,
             semantic_index_manager=None,
             max_selected_tools=10,
@@ -262,9 +250,7 @@ class TestSelectToolsFallbackBehavior:
         assert initial_state["selected_tools"] is None
 
     @pytest.mark.asyncio
-    async def test_retrieve_tools_falls_back_when_search_fails(
-        self, monkeypatch
-    ) -> None:
+    async def test_retrieve_tools_falls_back_when_search_fails(self, monkeypatch) -> None:
         """retrieve_tools should fall back to all tools when search_tools raises."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
@@ -273,9 +259,7 @@ class TestSelectToolsFallbackBehavior:
 
         # Create mock that raises an error
         mock_semantic_index = AsyncMock(return_value=None)
-        mock_semantic_index.search_tools = AsyncMock(
-            side_effect=Exception("Search failed")
-        )
+        mock_semantic_index.search_tools = AsyncMock(side_effect=Exception("Search failed"))
 
         # Create test state
         initial_state = {
@@ -284,7 +268,7 @@ class TestSelectToolsFallbackBehavior:
         }
 
         # Should not raise - graceful fallback
-        result = await _retrieve_tools_impl(
+        await _retrieve_tools_impl(
             state=initial_state,
             semantic_index_manager=mock_semantic_index,
             max_selected_tools=10,
@@ -294,9 +278,7 @@ class TestSelectToolsFallbackBehavior:
         assert initial_state["selected_tools"] is None
 
     @pytest.mark.asyncio
-    async def test_retrieve_tools_falls_back_when_search_returns_empty(
-        self, monkeypatch
-    ) -> None:
+    async def test_retrieve_tools_falls_back_when_search_returns_empty(self, monkeypatch) -> None:
         """retrieve_tools should fall back when search returns no results."""
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
@@ -314,7 +296,7 @@ class TestSelectToolsFallbackBehavior:
         }
 
         # Call the helper function
-        result = await _retrieve_tools_impl(
+        await _retrieve_tools_impl(
             state=initial_state,
             semantic_index_manager=mock_semantic_index,
             max_selected_tools=10,

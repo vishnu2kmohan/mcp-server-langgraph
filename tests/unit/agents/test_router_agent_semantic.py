@@ -52,7 +52,7 @@ class TestRouterOutputWithDiscovery:
             confidence=0.9,
             discovered_tools=[
                 ToolIndexEntry(
-                    tool_id="tool-1",
+                    tool_id="builtin:calculator",
                     name="calculator",
                     description="Perform calculations",
                     category="math",
@@ -145,7 +145,7 @@ class TestRouterAgentSemanticDiscovery:
         mock.search_tools = AsyncMock(
             return_value=[
                 ToolIndexEntry(
-                    tool_id="tool-1",
+                    tool_id="builtin:calculator",
                     name="calculator",
                     description="Perform calculations",
                     category="math",

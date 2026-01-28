@@ -27,8 +27,8 @@ import pytest
 
 pytestmark = [
     pytest.mark.e2e,
-    pytest.mark.adr0099,
     pytest.mark.integration,
+    pytest.mark.semantic_search,
 ]
 
 
@@ -37,9 +37,11 @@ def mock_embedder() -> MagicMock:
     """Create a mock embedder that returns consistent embeddings."""
     embedder = MagicMock()
     embedder.embed_query = MagicMock(return_value=[0.1, 0.2, 0.3, 0.4] * 96)  # 384 dims
+
     # Return dynamic number of embeddings based on input
     def mock_embed_documents(texts: list[str]) -> list[list[float]]:
         return [[0.1 + i * 0.1, 0.2, 0.3, 0.4] * 96 for i in range(len(texts))]
+
     embedder.embed_documents = MagicMock(side_effect=mock_embed_documents)
     return embedder
 
@@ -82,9 +84,7 @@ class TestSemanticToolSelectionE2E:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_01_graph_builds_with_semantic_tool_selection_enabled(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    async def test_01_graph_builds_with_semantic_tool_selection_enabled(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """
         Test 1: Agent graph builds correctly with semantic tool selection.
 
@@ -114,9 +114,7 @@ class TestSemanticToolSelectionE2E:
         assert "respond" in graph.nodes
 
     @pytest.mark.asyncio
-    async def test_02_graph_with_all_semantic_features_enabled(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    async def test_02_graph_with_all_semantic_features_enabled(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """
         Test 2: Agent graph with all semantic features builds correctly.
 
@@ -212,13 +210,13 @@ class TestSemanticToolSelectionE2E:
             # Index tools
             tools_to_index = [
                 ToolIndexEntry(
-                    tool_id="tool-calculator",
+                    tool_id="builtin:calculator",
                     name="calculator",
                     description="Perform mathematical calculations",
                     category="math",
                 ),
                 ToolIndexEntry(
-                    tool_id="tool-search",
+                    tool_id="builtin:search",
                     name="web_search",
                     description="Search the web for information",
                     category="search",
@@ -339,9 +337,7 @@ class TestSemanticToolSelectionE2E:
             print(f"\n[HEART METRICS] {heart_metrics}")
 
     @pytest.mark.asyncio
-    async def test_05_dynamic_tool_binding_uses_selected_tools(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    async def test_05_dynamic_tool_binding_uses_selected_tools(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """
         Test 5: Dynamic tool binding respects selected_tools in state.
 
@@ -365,9 +361,7 @@ class TestSemanticToolSelectionE2E:
             # Create mock model that tracks bind_tools calls
             mock_model = MagicMock()
             mock_bound_model = MagicMock()
-            mock_bound_model.ainvoke = AsyncMock(
-                return_value=AIMessage(content="Result using selected tools")
-            )
+            mock_bound_model.ainvoke = AsyncMock(return_value=AIMessage(content="Result using selected tools"))
             mock_model.bind_tools = MagicMock(return_value=mock_bound_model)
 
             # Create mock tools
@@ -388,7 +382,7 @@ class TestSemanticToolSelectionE2E:
             }
 
             # Execute _generate_response_impl
-            result = await _generate_response_impl(
+            await _generate_response_impl(
                 state=state,
                 model=mock_model,
                 bound_tools=bound_tools,

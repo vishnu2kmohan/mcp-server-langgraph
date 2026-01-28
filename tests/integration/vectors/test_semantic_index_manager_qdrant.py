@@ -17,7 +17,7 @@ Markers:
 --------
 - @pytest.mark.integration: Integration test category
 - @pytest.mark.qdrant: Qdrant-specific tests
-- @pytest.mark.adr0099: ADR-0099 semantic tool selection tests
+- @: ADR-0099 semantic tool selection tests
 
 ADR Reference: adr/adr-0099-semantic-tool-selection.md
 """
@@ -29,7 +29,6 @@ import os
 import socket
 import time
 import uuid
-from typing import TYPE_CHECKING
 
 import pytest
 
@@ -42,7 +41,7 @@ pytest.importorskip("qdrant_client", reason="qdrant_client is an optional depend
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.qdrant,
-    pytest.mark.adr0099,
+    pytest.mark.semantic_search,
     pytest.mark.xdist_group(name="semantic_index_manager_qdrant"),
 ]
 
@@ -156,6 +155,25 @@ class MockEmbeddingService:
 def mock_embedder() -> MockEmbeddingService:
     """Create mock embedding service."""
     return MockEmbeddingService(vector_size=384)
+
+
+@pytest.fixture(autouse=True)
+def mock_openfga_authorization():
+    """Mock OpenFGA authorization to allow all access for integration tests.
+
+    Integration tests focus on Qdrant functionality, not authorization.
+    Authorization is tested separately in test_semantic_index_authorization.py.
+    """
+    from unittest.mock import AsyncMock, patch
+
+    mock_client = AsyncMock()  # noqa: async-mock-config
+    mock_client.check_permission = AsyncMock(return_value=True)
+
+    with patch(
+        "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+        return_value=mock_client,
+    ):
+        yield mock_client
 
 
 @pytest.mark.skipif(not qdrant_available(), reason="Qdrant not available")
@@ -624,7 +642,7 @@ class TestSemanticIndexManagerMemorySearch:
             results = await manager.search_memories(
                 query="user preferences for programming",
                 current_user_id="user-123",  # User making the request
-                search_user_id="user-123",   # Searching own memories
+                search_user_id="user-123",  # Searching own memories
                 limit=5,
                 min_score=0.0,
             )
@@ -681,7 +699,7 @@ class TestSemanticIndexManagerMemorySearch:
             results = await manager.search_memories(
                 query="User 1 prefers Python language",
                 current_user_id="user-001",  # User making the request
-                search_user_id="user-001",   # Searching own memories
+                search_user_id="user-001",  # Searching own memories
                 limit=10,
                 min_score=0.0,
             )
@@ -777,18 +795,21 @@ class TestSemanticIndexManagerMultiTenant:
             await manager.ensure_collection()
 
             # Index memories for different tenants (use UUIDs for Qdrant compatibility)
+            # Note: user_id is required for search_memories filtering
             memories = [
                 MemoryIndexEntry(
                     memory_id=str(uuid.uuid4()),
                     content="Tenant 1 context information",
                     memory_type=MemoryType.CONTEXT,
                     tenant_id="tenant-001",
+                    user_id="user:test_alice",  # Required for search filter
                 ),
                 MemoryIndexEntry(
                     memory_id=str(uuid.uuid4()),
                     content="Tenant 2 context information",
                     memory_type=MemoryType.CONTEXT,
                     tenant_id="tenant-002",
+                    user_id="user:test_alice",  # Same user, different tenant
                 ),
             ]
 
@@ -799,7 +820,7 @@ class TestSemanticIndexManagerMultiTenant:
             results = await manager.search_memories(
                 query="context information",
                 current_user_id="user:test_alice",  # User making the request
-                search_user_id="user:test_alice",   # User's memories (same for own search)
+                search_user_id="user:test_alice",  # User's memories (same for own search)
                 tenant_id="tenant-001",
                 limit=10,
                 min_score=0.0,

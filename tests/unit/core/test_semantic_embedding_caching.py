@@ -18,7 +18,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.adr0099]
+pytestmark = [pytest.mark.unit]
 
 
 @pytest.mark.xdist_group(name="semantic_embedding_caching")
@@ -50,9 +50,7 @@ class TestEmbeddingCaching:
         mock_point.score = 0.95
 
         mock_qdrant = AsyncMock(return_value=None)
-        mock_qdrant.query_points = AsyncMock(
-            return_value=MagicMock(points=[mock_point])
-        )
+        mock_qdrant.query_points = AsyncMock(return_value=MagicMock(points=[mock_point]))
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -106,9 +104,7 @@ class TestEmbeddingCaching:
         mock_point.score = 0.95
 
         mock_qdrant = AsyncMock(return_value=None)
-        mock_qdrant.query_points = AsyncMock(
-            return_value=MagicMock(points=[mock_point])
-        )
+        mock_qdrant.query_points = AsyncMock(return_value=MagicMock(points=[mock_point]))
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -272,9 +268,7 @@ class TestEmbeddingCacheMetrics:
         mock_point.score = 0.95
 
         mock_qdrant = AsyncMock(return_value=None)
-        mock_qdrant.query_points = AsyncMock(
-            return_value=MagicMock(points=[mock_point])
-        )
+        mock_qdrant.query_points = AsyncMock(return_value=MagicMock(points=[mock_point]))
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,

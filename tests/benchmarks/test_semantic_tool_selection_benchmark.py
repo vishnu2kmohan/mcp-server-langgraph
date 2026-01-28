@@ -21,7 +21,7 @@ Reference:
 
 import gc
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -46,14 +46,12 @@ def create_mock_tool(name: str, description: str = "Test tool") -> MagicMock:
     return tool
 
 
-def create_mock_tool_index_entry(
-    name: str, score: float = 0.8
-) -> "ToolIndexEntry":
+def create_mock_tool_index_entry(name: str, score: float = 0.8) -> "ToolIndexEntry":
     """Create a mock tool index entry for benchmarking."""
     from mcp_server_langgraph.tools.semantic_index import ToolIndexEntry
 
     return ToolIndexEntry(
-        tool_id=f"tool-{name}",
+        tool_id=f"builtin:{name}",
         name=name,
         description=f"Description for {name}",
         category="general",
@@ -87,22 +85,17 @@ class TestSemanticToolSelectionBenchmarks:
         manager.collection_name = "capability_index"
 
         # Create mock search results
-        mock_results = [
-            create_mock_tool_index_entry(f"tool_{i}", score=0.9 - i * 0.05)
-            for i in range(10)
-        ]
+        mock_results = [create_mock_tool_index_entry(f"tool_{i}", score=0.9 - i * 0.05) for i in range(10)]
 
         # Mock the search method
         async def mock_search(*args, **kwargs):
-            return mock_results[:kwargs.get("limit", 10)]
+            return mock_results[: kwargs.get("limit", 10)]
 
         manager.search_tools = mock_search
 
         # Benchmark the search operation
         def run_search():
-            return asyncio.run(
-                manager.search_tools(query="calculate sum", limit=5)
-            )
+            return asyncio.run(manager.search_tools(query="calculate sum", limit=5))
 
         result = benchmark(run_search)
         assert len(result) == 5
@@ -121,20 +114,15 @@ class TestSemanticToolSelectionBenchmarks:
         manager._embedding_model = None
         manager.collection_name = "capability_index"
 
-        mock_results = [
-            create_mock_tool_index_entry(f"tool_{i}", score=0.9 - i * 0.01)
-            for i in range(50)
-        ]
+        mock_results = [create_mock_tool_index_entry(f"tool_{i}", score=0.9 - i * 0.01) for i in range(50)]
 
         async def mock_search(*args, **kwargs):
-            return mock_results[:kwargs.get("limit", 10)]
+            return mock_results[: kwargs.get("limit", 10)]
 
         manager.search_tools = mock_search
 
         def run_search():
-            return asyncio.run(
-                manager.search_tools(query="search database records", limit=10)
-            )
+            return asyncio.run(manager.search_tools(query="search database records", limit=10))
 
         result = benchmark(run_search)
         assert len(result) == 10
@@ -153,20 +141,15 @@ class TestSemanticToolSelectionBenchmarks:
         manager._embedding_model = None
         manager.collection_name = "capability_index"
 
-        mock_results = [
-            create_mock_tool_index_entry(f"tool_{i}", score=0.9 - i * 0.005)
-            for i in range(100)
-        ]
+        mock_results = [create_mock_tool_index_entry(f"tool_{i}", score=0.9 - i * 0.005) for i in range(100)]
 
         async def mock_search(*args, **kwargs):
-            return mock_results[:kwargs.get("limit", 10)]
+            return mock_results[: kwargs.get("limit", 10)]
 
         manager.search_tools = mock_search
 
         def run_search():
-            return asyncio.run(
-                manager.search_tools(query="analyze data patterns", limit=10)
-            )
+            return asyncio.run(manager.search_tools(query="analyze data patterns", limit=10))
 
         result = benchmark(run_search)
         assert len(result) == 10

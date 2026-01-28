@@ -16,7 +16,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.bootstrap, pytest.mark.adr0099]
+pytestmark = [pytest.mark.unit, pytest.mark.bootstrap]
 
 
 @pytest.mark.xdist_group(name="semantic_startup_indexing")
@@ -53,20 +53,25 @@ class TestStartupToolIndexing:
         mock_tool2.name = "search"
         mock_tool2.description = "Search knowledge base"
 
-        with patch(
-            "mcp_server_langgraph.bootstrap.semantic.feature_flags"
-        ) as mock_ff, patch(
-            "qdrant_client.AsyncQdrantClient",
-        ), patch(
-            "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-        ), patch(
-            "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
-            return_value=mock_manager,
-        ), patch(
-            "mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager",
-        ), patch(
-            "mcp_server_langgraph.bootstrap.semantic.get_all_tools",
-            return_value=[mock_tool1, mock_tool2],
+        with (
+            patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
+            patch(
+                "qdrant_client.AsyncQdrantClient",
+            ),
+            patch(
+                "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
+            ),
+            patch(
+                "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
+                return_value=mock_manager,
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager",
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.semantic.get_all_tools",
+                return_value=[mock_tool1, mock_tool2],
+            ),
         ):
             mock_ff.enable_semantic_tool_search = True
             mock_ff.enable_semantic_skill_search = False
@@ -74,7 +79,7 @@ class TestStartupToolIndexing:
 
             from mcp_server_langgraph.bootstrap.semantic import init_semantic
 
-            result = await init_semantic(mock_settings)
+            await init_semantic(mock_settings)
 
             # Verify tools were indexed
             mock_manager.index_tools_batch.assert_called_once()
@@ -100,20 +105,25 @@ class TestStartupToolIndexing:
         mock_manager.ensure_collection = AsyncMock(return_value=None)
         mock_manager.index_tools_batch = AsyncMock(return_value=None)
 
-        with patch(
-            "mcp_server_langgraph.bootstrap.semantic.feature_flags"
-        ) as mock_ff, patch(
-            "qdrant_client.AsyncQdrantClient",
-        ), patch(
-            "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-        ), patch(
-            "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
-            return_value=mock_manager,
-        ), patch(
-            "mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager",
-        ), patch(
-            "mcp_server_langgraph.bootstrap.semantic.get_all_tools",
-        ) as mock_get_tools:
+        with (
+            patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
+            patch(
+                "qdrant_client.AsyncQdrantClient",
+            ),
+            patch(
+                "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
+            ),
+            patch(
+                "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
+                return_value=mock_manager,
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager",
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.semantic.get_all_tools",
+            ) as mock_get_tools,
+        ):
             # Enable skill search but NOT tool search
             mock_ff.enable_semantic_tool_search = False
             mock_ff.enable_semantic_skill_search = True
@@ -143,28 +153,31 @@ class TestStartupToolIndexing:
 
         mock_manager = AsyncMock(return_value=None)
         mock_manager.ensure_collection = AsyncMock(return_value=None)
-        mock_manager.index_tools_batch = AsyncMock(
-            side_effect=Exception("Qdrant connection failed")
-        )
+        mock_manager.index_tools_batch = AsyncMock(side_effect=Exception("Qdrant connection failed"))
 
         mock_tool = MagicMock()
         mock_tool.name = "calculator"
         mock_tool.description = "Perform calculations"
 
-        with patch(
-            "mcp_server_langgraph.bootstrap.semantic.feature_flags"
-        ) as mock_ff, patch(
-            "qdrant_client.AsyncQdrantClient",
-        ), patch(
-            "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-        ), patch(
-            "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
-            return_value=mock_manager,
-        ), patch(
-            "mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager",
-        ), patch(
-            "mcp_server_langgraph.bootstrap.semantic.get_all_tools",
-            return_value=[mock_tool],
+        with (
+            patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
+            patch(
+                "qdrant_client.AsyncQdrantClient",
+            ),
+            patch(
+                "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
+            ),
+            patch(
+                "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
+                return_value=mock_manager,
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager",
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.semantic.get_all_tools",
+                return_value=[mock_tool],
+            ),
         ):
             mock_ff.enable_semantic_tool_search = True
             mock_ff.enable_semantic_skill_search = False
@@ -245,23 +258,27 @@ class TestStartupIndexingMetrics:
 
         mock_tools = [MagicMock(name=f"tool_{i}", description=f"Tool {i}") for i in range(10)]
 
-        with patch(
-            "mcp_server_langgraph.bootstrap.semantic.feature_flags"
-        ) as mock_ff, patch(
-            "qdrant_client.AsyncQdrantClient",
-        ), patch(
-            "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-        ), patch(
-            "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
-            return_value=mock_manager,
-        ), patch(
-            "mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager",
-        ), patch(
-            "mcp_server_langgraph.bootstrap.semantic.get_all_tools",
-            return_value=mock_tools,
-        ), patch(
-            "mcp_server_langgraph.bootstrap.semantic.logger"
-        ) as mock_logger:
+        with (
+            patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
+            patch(
+                "qdrant_client.AsyncQdrantClient",
+            ),
+            patch(
+                "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
+            ),
+            patch(
+                "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
+                return_value=mock_manager,
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager",
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.semantic.get_all_tools",
+                return_value=mock_tools,
+            ),
+            patch("mcp_server_langgraph.bootstrap.semantic.logger") as mock_logger,
+        ):
             mock_ff.enable_semantic_tool_search = True
             mock_ff.enable_semantic_skill_search = False
             mock_ff.enable_semantic_memory_search = False

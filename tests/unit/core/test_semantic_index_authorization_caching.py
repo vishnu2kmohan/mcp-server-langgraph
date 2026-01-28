@@ -13,12 +13,11 @@ results with a short TTL (default 60 seconds).
 
 import asyncio
 import gc
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.authorization, pytest.mark.adr0099]
+pytestmark = [pytest.mark.unit, pytest.mark.authorization]
 
 
 @pytest.fixture
@@ -70,9 +69,7 @@ class TestAuthorizationCachingConfig:
 
         assert manager.auth_cache_ttl_seconds == 30
 
-    def test_semantic_index_manager_default_cache_ttl(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
-    ) -> None:
+    def test_semantic_index_manager_default_cache_ttl(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
         """SemanticIndexManager should have default cache TTL of 60 seconds."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
@@ -83,9 +80,7 @@ class TestAuthorizationCachingConfig:
 
         assert manager.auth_cache_ttl_seconds == 60
 
-    def test_semantic_index_manager_can_disable_cache(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
-    ) -> None:
+    def test_semantic_index_manager_can_disable_cache(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
         """SemanticIndexManager should allow disabling cache with TTL=0."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
@@ -340,9 +335,7 @@ class TestAuthorizationCacheExpiry:
         assert mock_openfga_client.check_permission.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_cache_clear_method_exists(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
-    ) -> None:
+    async def test_cache_clear_method_exists(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
         """SemanticIndexManager should have a method to clear the auth cache."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 

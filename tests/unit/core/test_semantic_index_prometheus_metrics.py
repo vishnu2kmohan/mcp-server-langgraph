@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.authorization, pytest.mark.adr0099]
+pytestmark = [pytest.mark.unit, pytest.mark.authorization]
 
 
 @pytest.fixture
@@ -67,12 +67,13 @@ class TestPrometheusMetricsEmission:
             auth_cache_ttl_seconds=60,
         )
 
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
-        ), patch(
-            "mcp_server_langgraph.core.semantic_index_manager.emit_auth_cache_metric"
-        ) as mock_emit:
+        with (
+            patch(
+                "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+                return_value=mock_openfga_client,
+            ),
+            patch("mcp_server_langgraph.core.semantic_index_manager.emit_auth_cache_metric") as mock_emit,
+        ):
             # First call - miss
             await manager._check_authorization(
                 user_id="user:alice",
@@ -111,12 +112,13 @@ class TestPrometheusMetricsEmission:
             auth_cache_ttl_seconds=60,
         )
 
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
-        ), patch(
-            "mcp_server_langgraph.core.semantic_index_manager.emit_auth_cache_metric"
-        ) as mock_emit:
+        with (
+            patch(
+                "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+                return_value=mock_openfga_client,
+            ),
+            patch("mcp_server_langgraph.core.semantic_index_manager.emit_auth_cache_metric") as mock_emit,
+        ):
             # Different users = different cache keys = all misses
             await manager._check_authorization(
                 user_id="user:alice",
@@ -150,12 +152,13 @@ class TestPrometheusMetricsEmission:
             auth_cache_ttl_seconds=60,
         )
 
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
-        ), patch(
-            "mcp_server_langgraph.core.semantic_index_manager.emit_auth_cache_metric"
-        ) as mock_emit:
+        with (
+            patch(
+                "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+                return_value=mock_openfga_client,
+            ),
+            patch("mcp_server_langgraph.core.semantic_index_manager.emit_auth_cache_metric") as mock_emit,
+        ):
             await manager._check_authorization(
                 user_id="user:alice",
                 relation="viewer",
@@ -236,12 +239,13 @@ class TestPrometheusCacheSizeGauge:
             auth_cache_ttl_seconds=60,
         )
 
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
-        ), patch(
-            "mcp_server_langgraph.core.semantic_index_manager.update_cache_size_gauge"
-        ) as mock_gauge:
+        with (
+            patch(
+                "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+                return_value=mock_openfga_client,
+            ),
+            patch("mcp_server_langgraph.core.semantic_index_manager.update_cache_size_gauge") as mock_gauge,
+        ):
             await manager._check_authorization(
                 user_id="user:alice",
                 relation="viewer",
@@ -300,12 +304,13 @@ class TestPrometheusCacheWarmingHistogram:
             {"user_id": "user:a", "relation": "viewer", "object_type": "tool_index"},
         ]
 
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
-        ), patch(
-            "mcp_server_langgraph.core.semantic_index_manager.record_cache_warming_duration"
-        ) as mock_histogram:
+        with (
+            patch(
+                "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+                return_value=mock_openfga_client,
+            ),
+            patch("mcp_server_langgraph.core.semantic_index_manager.record_cache_warming_duration") as mock_histogram,
+        ):
             await manager.warm_cache(entries)
 
             # Histogram should have been called

@@ -11,12 +11,11 @@ GREEN Phase: Implementation will add metrics and size limits.
 """
 
 import gc
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.authorization, pytest.mark.adr0099]
+pytestmark = [pytest.mark.unit, pytest.mark.authorization]
 
 
 @pytest.fixture
@@ -68,9 +67,7 @@ class TestAuthorizationCacheMetrics:
         assert hasattr(manager, "get_cache_stats")
         assert callable(manager.get_cache_stats)
 
-    def test_cache_stats_returns_hit_miss_counts(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
-    ) -> None:
+    def test_cache_stats_returns_hit_miss_counts(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
         """get_cache_stats should return hit and miss counts."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
@@ -210,20 +207,12 @@ class TestAuthorizationCacheSizeLimits:
             return_value=mock_openfga_client,
         ):
             # Fill cache with 3 entries
-            await manager._check_authorization(
-                user_id="user:alice", relation="viewer", object_type="tool_index"
-            )
-            await manager._check_authorization(
-                user_id="user:bob", relation="viewer", object_type="tool_index"
-            )
-            await manager._check_authorization(
-                user_id="user:charlie", relation="viewer", object_type="tool_index"
-            )
+            await manager._check_authorization(user_id="user:alice", relation="viewer", object_type="tool_index")
+            await manager._check_authorization(user_id="user:bob", relation="viewer", object_type="tool_index")
+            await manager._check_authorization(user_id="user:charlie", relation="viewer", object_type="tool_index")
 
             # Add 4th entry - should evict oldest (alice)
-            await manager._check_authorization(
-                user_id="user:dave", relation="viewer", object_type="tool_index"
-            )
+            await manager._check_authorization(user_id="user:dave", relation="viewer", object_type="tool_index")
 
         stats = manager.get_cache_stats()
         assert stats["size"] <= 3  # Should not exceed maxsize
@@ -245,12 +234,8 @@ class TestAuthorizationCacheSizeLimits:
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
             return_value=mock_openfga_client,
         ):
-            await manager._check_authorization(
-                user_id="user:alice", relation="viewer", object_type="tool_index"
-            )
-            await manager._check_authorization(
-                user_id="user:bob", relation="viewer", object_type="tool_index"
-            )
+            await manager._check_authorization(user_id="user:alice", relation="viewer", object_type="tool_index")
+            await manager._check_authorization(user_id="user:bob", relation="viewer", object_type="tool_index")
 
         stats = manager.get_cache_stats()
         assert stats["size"] == 2
@@ -264,9 +249,7 @@ class TestAuthorizationCacheStatsExtended:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_cache_stats_includes_maxsize(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
-    ) -> None:
+    def test_cache_stats_includes_maxsize(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
         """Cache stats should include maxsize."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
@@ -280,9 +263,7 @@ class TestAuthorizationCacheStatsExtended:
         assert "maxsize" in stats
         assert stats["maxsize"] == 500
 
-    def test_cache_stats_includes_ttl(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
-    ) -> None:
+    def test_cache_stats_includes_ttl(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
         """Cache stats should include TTL."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
@@ -296,9 +277,7 @@ class TestAuthorizationCacheStatsExtended:
         assert "ttl_seconds" in stats
         assert stats["ttl_seconds"] == 120
 
-    def test_cache_stats_includes_hit_rate(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
-    ) -> None:
+    def test_cache_stats_includes_hit_rate(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
         """Cache stats should include hit rate percentage."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
@@ -330,22 +309,16 @@ class TestAuthorizationCacheStatsExtended:
             return_value=mock_openfga_client,
         ):
             # 1 miss (first call)
-            await manager._check_authorization(
-                user_id="user:alice", relation="viewer", object_type="tool_index"
-            )
+            await manager._check_authorization(user_id="user:alice", relation="viewer", object_type="tool_index")
             # 3 hits (subsequent calls)
             for _ in range(3):
-                await manager._check_authorization(
-                    user_id="user:alice", relation="viewer", object_type="tool_index"
-                )
+                await manager._check_authorization(user_id="user:alice", relation="viewer", object_type="tool_index")
 
         stats = manager.get_cache_stats()
         # 3 hits / 4 total = 75%
         assert stats["hit_rate"] == 0.75
 
-    def test_clear_cache_resets_stats(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
-    ) -> None:
+    def test_clear_cache_resets_stats(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
         """Clearing cache should reset stats counters."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 

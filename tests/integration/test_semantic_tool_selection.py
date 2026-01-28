@@ -91,7 +91,7 @@ class TestSemanticToolSelectionIntegration:
 
         # Index a tool
         entry = ToolIndexEntry(
-            tool_id="tool-123",
+            tool_id="builtin:test_tool",
             name="calculator",
             description="Perform calculations",
             category="math",
@@ -174,7 +174,7 @@ class TestSemanticToolSelectionIntegration:
         # Batch index multiple tools
         entries = [
             ToolIndexEntry(
-                tool_id=f"tool-{i}",
+                tool_id=f"builtin:tool_{i}",
                 name=f"tool_{i}",
                 description=f"Tool {i} description",
                 category="test",

@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.core]
+pytestmark = [pytest.mark.unit, pytest.mark.core, pytest.mark.semantic_search]
 
 
 @pytest.mark.xdist_group(name="semantic_index_id_conversion")
@@ -231,9 +231,7 @@ class TestSemanticIndexManagerIdConversion:
         from mcp_server_langgraph.tools.semantic_index import ToolIndexEntry
 
         mock_embedder = MagicMock()
-        mock_embedder.embed_documents = MagicMock(
-            return_value=[[0.1] * 384, [0.2] * 384]
-        )
+        mock_embedder.embed_documents = MagicMock(return_value=[[0.1] * 384, [0.2] * 384])
 
         mock_qdrant = AsyncMock(return_value=None)
 
@@ -294,9 +292,7 @@ class TestSemanticIndexManagerIdConversion:
             vector_size=384,
         )
 
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.semantic_index_manager.feature_flags") as mock_flags:
             mock_flags.enable_precedent_search = True
 
             await manager.index_decision(
@@ -331,7 +327,6 @@ class TestSemanticIndexManagerSearchIdRestoration:
         WHEN searching returns results
         THEN original IDs should be restored in results
         """
-        from mcp_server_langgraph.core.scopes import CapabilityScope
         from mcp_server_langgraph.core.semantic_index_manager import (
             SemanticIndexManager,
         )

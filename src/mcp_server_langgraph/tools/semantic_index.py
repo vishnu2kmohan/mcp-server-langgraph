@@ -10,33 +10,44 @@ Usage:
         MemoryIndexEntry,
         ToolCategory,
         SkillCategory,
+        reconstruct_tools_from_payloads,
     )
 
-    # Create a tool index entry
-    entry = ToolIndexEntry(
-        tool_id="tool-123",
-        name="calculator",
-        description="Perform calculations",
-        category=ToolCategory.CALCULATOR,
+    # Create a tool index entry using factory method (REQUIRED)
+    from langchain_core.tools import StructuredTool
+    entry = ToolIndexEntry.from_langchain_tool(
+        lc_tool,
+        category="math",
+        tool_id="builtin:calculator",  # REQUIRED
     )
 
-    # Create from LangChain tool
-    entry = ToolIndexEntry.from_langchain_tool(lc_tool, category="math")
+    # Reconstruct from Qdrant payload (production uses wrapper)
+    entries = reconstruct_tools_from_payloads(search_results, logger)
+
+Tool ID Format (v26):
+    - builtin:{name} - for builtin tools (e.g., "builtin:calculator")
+    - mcp:{server}:{tool} - for MCP tools (e.g., "mcp:github:create_issue")
+    - NO native: format exists - native tools have tool_id=None in registry
 
 ADR Reference: Plan for semantic tool/skill discovery
 """
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
-from uuid import uuid4
 
 from mcp_server_langgraph.core.scopes import CapabilityScope
 
 if TYPE_CHECKING:
+    from logging import Logger
+
     from langchain_core.tools import BaseTool
+
+# Module-level constant for validation - NO native: format exists (v26)
+VALID_TOOL_ID_PATTERN = re.compile(r"^(builtin|mcp):.+$")
 
 
 class ToolCategory(StrEnum):
@@ -85,7 +96,8 @@ class ToolIndexEntry:
     discovery, filtering, and progressive disclosure.
 
     Attributes:
-        tool_id: Unique identifier for the tool
+        tool_id: Unique identifier matching registry format.
+                 REQUIRED - must match pattern: builtin:{name} or mcp:{server}:{tool}
         name: Tool name (matches LangChain tool.name)
         description: Human-readable description for semantic matching
         category: Tool category for filtering
@@ -94,9 +106,12 @@ class ToolIndexEntry:
         tenant_id: Tenant ID for multi-tenant isolation
         parameters_summary: Compact parameter description
         token_estimate: Estimated tokens for full tool schema
+
+    Raises:
+        ValueError: If tool_id is empty or doesn't match required format
     """
 
-    tool_id: str
+    tool_id: str  # REQUIRED - validated in __post_init__
     name: str
     description: str
     category: str
@@ -105,6 +120,20 @@ class ToolIndexEntry:
     tenant_id: str | None = None
     parameters_summary: str = ""
     token_estimate: int = 0
+
+    def __post_init__(self) -> None:
+        """Validate tool_id format after initialization.
+
+        Raises:
+            ValueError: If tool_id is empty or doesn't match required format
+        """
+        if not self.tool_id:
+            raise ValueError("tool_id is required for ToolIndexEntry")
+
+        if not VALID_TOOL_ID_PATTERN.match(self.tool_id):
+            raise ValueError(
+                f"Invalid tool_id format: '{self.tool_id}'. Must match pattern: builtin:{{name}} or mcp:{{server}}:{{tool}}"
+            )
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for Qdrant payload.
@@ -130,6 +159,7 @@ class ToolIndexEntry:
         category: str = ToolCategory.OTHER,
         scope: CapabilityScope = CapabilityScope.SESSION,
         tenant_id: str | None = None,
+        tool_id: str | None = None,  # REQUIRED - ValueError if None
     ) -> ToolIndexEntry:
         """Create ToolIndexEntry from a LangChain tool.
 
@@ -138,10 +168,21 @@ class ToolIndexEntry:
             category: Tool category
             scope: CapabilityScope for the tool
             tenant_id: Optional tenant ID
+            tool_id: Tool ID matching unified registry format. REQUIRED.
+                     Format: "builtin:{name}" or "mcp:{server}:{tool}"
 
         Returns:
             ToolIndexEntry with metadata from the tool
+
+        Raises:
+            ValueError: If tool_id is None or invalid format (via __post_init__)
         """
+        if tool_id is None:
+            raise ValueError(
+                f"tool_id is required for ToolIndexEntry. "
+                f"Use RegisteredTool.tool_id format: builtin:{tool.name} or mcp:server:tool"
+            )
+
         # Generate parameters summary from schema if available
         params_summary = ""
         if hasattr(tool, "args_schema") and tool.args_schema is not None:
@@ -153,8 +194,9 @@ class ToolIndexEntry:
             except Exception:
                 pass
 
+        # __post_init__ validates format automatically
         return cls(
-            tool_id=f"tool-{uuid4().hex[:12]}",
+            tool_id=tool_id,
             name=tool.name,
             description=tool.description or "",
             category=category,
@@ -162,6 +204,50 @@ class ToolIndexEntry:
             tenant_id=tenant_id,
             parameters_summary=params_summary,
         )
+
+    @classmethod
+    def from_payload(
+        cls,
+        payload: dict[str, Any],
+        embedding: list[float] | None = None,
+    ) -> ToolIndexEntry | None:
+        """Create ToolIndexEntry from Qdrant payload.
+
+        Graceful reconstruction with legacy/invalid data handling.
+
+        Scope (v26):
+        - Production: Use via reconstruct_tools_from_payloads() wrapper ONLY
+        - Tests: Direct calls allowed for focused unit testing
+
+        Args:
+            payload: Qdrant point payload dictionary
+            embedding: Optional embedding vector
+
+        Returns:
+            ToolIndexEntry if payload is valid, None otherwise (silent - no logging)
+        """
+        tool_id = payload.get("tool_id")
+        if not tool_id:
+            return None  # Silent - wrapper tracks count
+
+        # Validate format: ONLY builtin: and mcp: allowed (NO native:)
+        if not VALID_TOOL_ID_PATTERN.match(tool_id):
+            return None  # Silent - wrapper tracks count
+
+        try:
+            return cls(
+                tool_id=tool_id,
+                name=payload.get("name", ""),
+                description=payload.get("description", ""),
+                category=payload.get("category", "other"),
+                embedding=embedding,
+                scope=CapabilityScope(payload.get("scope", "session")),
+                tenant_id=payload.get("tenant_id"),
+                parameters_summary=payload.get("parameters_summary", ""),
+                token_estimate=payload.get("token_estimate", 0),
+            )
+        except (ValueError, KeyError):
+            return None  # Silent - wrapper tracks count
 
     def __eq__(self, other: object) -> bool:
         """Check equality based on tool_id."""
@@ -306,6 +392,40 @@ class MemoryIndexEntry:
         return hash(self.memory_id)
 
 
+def reconstruct_tools_from_payloads(
+    results: list[Any],  # Qdrant ScoredPoint results
+    logger: Logger,
+) -> list[ToolIndexEntry]:
+    """Shared wrapper for reconstructing ToolIndexEntry from Qdrant results.
+
+    This is the ONLY approved way to call from_payload() in production.
+    Handles summary logging for skipped entries.
+
+    Args:
+        results: List of Qdrant ScoredPoint results
+        logger: Logger instance for summary warning
+
+    Returns:
+        List of valid ToolIndexEntry objects
+    """
+    entries: list[ToolIndexEntry] = []
+    skipped_count = 0
+
+    for result in results:
+        payload = result.payload or {}
+        entry = ToolIndexEntry.from_payload(payload, embedding=result.vector)
+        if entry is None:
+            skipped_count += 1
+            continue
+        entries.append(entry)
+
+    # Single summary warning at end (NOT per-entry)
+    if skipped_count > 0:
+        logger.warning(f"Skipped {skipped_count} invalid/legacy entries during search")
+
+    return entries
+
+
 __all__ = [
     "MemoryIndexEntry",
     "MemoryType",
@@ -313,4 +433,6 @@ __all__ = [
     "SkillIndexEntry",
     "ToolCategory",
     "ToolIndexEntry",
+    "VALID_TOOL_ID_PATTERN",
+    "reconstruct_tools_from_payloads",
 ]

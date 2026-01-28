@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.semantic_search]
 
 
 @pytest.fixture
@@ -104,7 +104,7 @@ class TestSemanticIndexManagerToolIndexing:
         )
 
         entry = ToolIndexEntry(
-            tool_id="tool-123",
+            tool_id="builtin:calculator",
             name="calculator",
             description="Perform calculations",
             category="math",
@@ -131,7 +131,7 @@ class TestSemanticIndexManagerToolIndexing:
 
         existing_embedding = [0.5] * 384
         entry = ToolIndexEntry(
-            tool_id="tool-456",
+            tool_id="builtin:search",
             name="search",
             description="Search the web",
             category="search",
@@ -159,13 +159,13 @@ class TestSemanticIndexManagerToolIndexing:
 
         entries = [
             ToolIndexEntry(
-                tool_id="tool-1",
+                tool_id="builtin:calc",
                 name="calc",
                 description="Calculator",
                 category="math",
             ),
             ToolIndexEntry(
-                tool_id="tool-2",
+                tool_id="builtin:search",
                 name="search",
                 description="Web search",
                 category="search",
@@ -201,11 +201,11 @@ class TestSemanticIndexManagerToolSearch:
         # Mock search result
         mock_qdrant_client.query_points.return_value.points = [
             ScoredPoint(
-                id="tool-123",
+                id="builtin:calculator",
                 version=1,
                 score=0.95,
                 payload={
-                    "tool_id": "tool-123",
+                    "tool_id": "builtin:calculator",
                     "name": "calculator",
                     "description": "Perform calculations",
                     "category": "math",
@@ -230,7 +230,7 @@ class TestSemanticIndexManagerToolSearch:
         assert len(results) == 1
         assert isinstance(results[0], ToolIndexEntry)
         assert results[0].name == "calculator"
-        assert results[0].tool_id == "tool-123"
+        assert results[0].tool_id == "builtin:calculator"
 
     @pytest.mark.asyncio
     async def test_search_tools_with_min_score(
@@ -499,3 +499,112 @@ class TestSemanticIndexManagerCollectionManagement:
         await manager.ensure_collection()
 
         mock_qdrant_client.create_collection.assert_not_called()
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_semantic_index_tenant_membership")
+class TestTenantMembershipDevMode:
+    """Tests for _check_tenant_membership dev mode bypass (v26)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_tenant_membership_bypassed_in_dev_mode(
+        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
+    ) -> None:
+        """Tenant membership check is bypassed when environment is 'development'."""
+        from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
+
+        # Create mock settings with development environment
+        mock_settings = MagicMock(environment="development")
+
+        manager = SemanticIndexManager(
+            embedder=mock_embedder,
+            qdrant_client=mock_qdrant_client,
+            settings=mock_settings,
+        )
+
+        # Should return True without calling OpenFGA
+        result = await manager._check_tenant_membership(
+            user_id="user:alice",
+            tenant_id="organization:acme",
+        )
+
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_tenant_membership_fail_closed_in_test_env(
+        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Tenant membership check is NOT bypassed in test environment (fail-closed)."""
+        from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
+
+        # Create mock settings with test environment
+        mock_settings = MagicMock(environment="test")
+
+        # Mock get_openfga_client to return None (simulating unavailable)
+        monkeypatch.setattr(
+            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+            lambda: None,
+        )
+
+        manager = SemanticIndexManager(
+            embedder=mock_embedder,
+            qdrant_client=mock_qdrant_client,
+            settings=mock_settings,
+        )
+
+        # Should return False (fail-closed, no OpenFGA client)
+        result = await manager._check_tenant_membership(
+            user_id="user:alice",
+            tenant_id="organization:acme",
+        )
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_tenant_membership_fail_closed_in_production(
+        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Tenant membership check is NOT bypassed in production environment (fail-closed)."""
+        from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
+
+        # Create mock settings with production environment
+        mock_settings = MagicMock(environment="production")
+
+        # Mock get_openfga_client to return None (simulating unavailable)
+        monkeypatch.setattr(
+            "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
+            lambda: None,
+        )
+
+        manager = SemanticIndexManager(
+            embedder=mock_embedder,
+            qdrant_client=mock_qdrant_client,
+            settings=mock_settings,
+        )
+
+        # Should return False (fail-closed, no OpenFGA client)
+        result = await manager._check_tenant_membership(
+            user_id="user:alice",
+            tenant_id="organization:acme",
+        )
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_settings_injection_constructor(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
+        """SemanticIndexManager accepts settings parameter for DI."""
+        from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
+
+        mock_settings = MagicMock(environment="production")
+
+        manager = SemanticIndexManager(
+            embedder=mock_embedder,
+            qdrant_client=mock_qdrant_client,
+            settings=mock_settings,
+        )
+
+        assert manager._settings is mock_settings

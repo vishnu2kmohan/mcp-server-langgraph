@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.authorization, pytest.mark.adr0099]
+pytestmark = [pytest.mark.unit, pytest.mark.authorization]
 
 
 @pytest.fixture
@@ -52,9 +52,7 @@ class TestCacheWarmingMethod:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_warm_cache_method_exists(
-        self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock
-    ) -> None:
+    def test_warm_cache_method_exists(self, mock_embedder: MagicMock, mock_qdrant_client: AsyncMock) -> None:
         """SemanticIndexManager should have warm_cache method."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
@@ -244,9 +242,7 @@ class TestCacheWarmingStatistics:
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
         mock_openfga = AsyncMock(return_value=None)
-        mock_openfga.check_permission = AsyncMock(
-            side_effect=[True, Exception("Connection error"), True]
-        )
+        mock_openfga.check_permission = AsyncMock(side_effect=[True, Exception("Connection error"), True])
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,

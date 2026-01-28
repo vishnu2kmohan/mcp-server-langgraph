@@ -16,7 +16,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.semantic_search]
 
 
 @pytest.fixture
@@ -32,9 +32,7 @@ def mock_embedder():
 def mock_qdrant_client():
     """Create a mock Qdrant client."""
     client = AsyncMock(return_value=None)
-    client.get_collections = AsyncMock(
-        return_value=MagicMock(collections=[])
-    )
+    client.get_collections = AsyncMock(return_value=MagicMock(collections=[]))
     client.create_collection = AsyncMock(return_value=None)
     client.upsert = AsyncMock(return_value=None)
 
@@ -96,13 +94,9 @@ class TestEnsureDecisionCollection:
         assert callable(semantic_manager.ensure_decision_collection)
 
     @pytest.mark.asyncio
-    async def test_ensure_decision_collection_creates_collection(
-        self, semantic_manager, mock_qdrant_client
-    ) -> None:
+    async def test_ensure_decision_collection_creates_collection(self, semantic_manager, mock_qdrant_client) -> None:
         """ensure_decision_collection should create collection if not exists."""
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.semantic_index_manager.feature_flags") as mock_flags:
             mock_flags.enable_precedent_search = True
 
             await semantic_manager.ensure_decision_collection()
@@ -112,13 +106,9 @@ class TestEnsureDecisionCollection:
             assert call_kwargs.kwargs["collection_name"] == "decision_traces"
 
     @pytest.mark.asyncio
-    async def test_ensure_decision_collection_skips_when_disabled(
-        self, semantic_manager, mock_qdrant_client
-    ) -> None:
+    async def test_ensure_decision_collection_skips_when_disabled(self, semantic_manager, mock_qdrant_client) -> None:
         """ensure_decision_collection should do nothing when feature disabled."""
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.semantic_index_manager.feature_flags") as mock_flags:
             mock_flags.enable_precedent_search = False
 
             await semantic_manager.ensure_decision_collection()
@@ -140,13 +130,9 @@ class TestIndexDecision:
         assert callable(semantic_manager.index_decision)
 
     @pytest.mark.asyncio
-    async def test_index_decision_upserts_to_qdrant(
-        self, semantic_manager, mock_qdrant_client, mock_embedder
-    ) -> None:
+    async def test_index_decision_upserts_to_qdrant(self, semantic_manager, mock_qdrant_client, mock_embedder) -> None:
         """index_decision should upsert point to Qdrant."""
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.semantic_index_manager.feature_flags") as mock_flags:
             mock_flags.enable_precedent_search = True
 
             await semantic_manager.index_decision(
@@ -164,13 +150,9 @@ class TestIndexDecision:
             mock_qdrant_client.upsert.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_index_decision_skips_when_disabled(
-        self, semantic_manager, mock_qdrant_client
-    ) -> None:
+    async def test_index_decision_skips_when_disabled(self, semantic_manager, mock_qdrant_client) -> None:
         """index_decision should do nothing when feature disabled."""
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.semantic_index_manager.feature_flags") as mock_flags:
             mock_flags.enable_precedent_search = False
 
             await semantic_manager.index_decision(
@@ -182,13 +164,9 @@ class TestIndexDecision:
             mock_qdrant_client.upsert.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_index_decision_uses_decision_trace_collection(
-        self, semantic_manager, mock_qdrant_client
-    ) -> None:
+    async def test_index_decision_uses_decision_trace_collection(self, semantic_manager, mock_qdrant_client) -> None:
         """index_decision should upsert to decision_traces collection."""
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.semantic_index_manager.feature_flags") as mock_flags:
             mock_flags.enable_precedent_search = True
 
             await semantic_manager.index_decision(
@@ -215,13 +193,9 @@ class TestSearchPrecedents:
         assert callable(semantic_manager.search_precedents)
 
     @pytest.mark.asyncio
-    async def test_search_precedents_returns_list(
-        self, semantic_manager
-    ) -> None:
+    async def test_search_precedents_returns_list(self, semantic_manager) -> None:
         """search_precedents should return list of results."""
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.semantic_index_manager.feature_flags") as mock_flags:
             mock_flags.enable_precedent_search = True
 
             results = await semantic_manager.search_precedents(
@@ -234,13 +208,9 @@ class TestSearchPrecedents:
             assert isinstance(results, list)
 
     @pytest.mark.asyncio
-    async def test_search_precedents_returns_empty_when_disabled(
-        self, semantic_manager
-    ) -> None:
+    async def test_search_precedents_returns_empty_when_disabled(self, semantic_manager) -> None:
         """search_precedents should return empty list when feature disabled."""
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.semantic_index_manager.feature_flags") as mock_flags:
             mock_flags.enable_precedent_search = False
 
             results = await semantic_manager.search_precedents(
@@ -252,13 +222,9 @@ class TestSearchPrecedents:
             assert results == []
 
     @pytest.mark.asyncio
-    async def test_search_precedents_queries_qdrant(
-        self, semantic_manager, mock_qdrant_client
-    ) -> None:
+    async def test_search_precedents_queries_qdrant(self, semantic_manager, mock_qdrant_client) -> None:
         """search_precedents should query Qdrant with filters."""
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.semantic_index_manager.feature_flags") as mock_flags:
             mock_flags.enable_precedent_search = True
             mock_flags.precedent_search_min_score = 0.5
 
@@ -272,13 +238,9 @@ class TestSearchPrecedents:
             mock_qdrant_client.query_points.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_search_precedents_filters_by_organization(
-        self, semantic_manager, mock_qdrant_client
-    ) -> None:
+    async def test_search_precedents_filters_by_organization(self, semantic_manager, mock_qdrant_client) -> None:
         """search_precedents should filter by organization_id."""
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.semantic_index_manager.feature_flags") as mock_flags:
             mock_flags.enable_precedent_search = True
 
             await semantic_manager.search_precedents(
@@ -293,13 +255,9 @@ class TestSearchPrecedents:
             assert query_filter is not None
 
     @pytest.mark.asyncio
-    async def test_search_precedents_with_decision_type_filter(
-        self, semantic_manager, mock_qdrant_client
-    ) -> None:
+    async def test_search_precedents_with_decision_type_filter(self, semantic_manager, mock_qdrant_client) -> None:
         """search_precedents should filter by decision_type when provided."""
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.semantic_index_manager.feature_flags") as mock_flags:
             mock_flags.enable_precedent_search = True
 
             await semantic_manager.search_precedents(
@@ -312,9 +270,7 @@ class TestSearchPrecedents:
             mock_qdrant_client.query_points.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_search_precedents_returns_trace_ids_and_scores(
-        self, semantic_manager, mock_qdrant_client
-    ) -> None:
+    async def test_search_precedents_returns_trace_ids_and_scores(self, semantic_manager, mock_qdrant_client) -> None:
         """search_precedents should return trace_ids and scores."""
         # Setup mock response with results
         mock_point = MagicMock()
@@ -328,9 +284,7 @@ class TestSearchPrecedents:
         mock_response.points = [mock_point]
         mock_qdrant_client.query_points = AsyncMock(return_value=mock_response)
 
-        with patch(
-            "mcp_server_langgraph.core.semantic_index_manager.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.semantic_index_manager.feature_flags") as mock_flags:
             mock_flags.enable_precedent_search = True
 
             results = await semantic_manager.search_precedents(

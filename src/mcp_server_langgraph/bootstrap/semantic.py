@@ -2,13 +2,15 @@
 Semantic Index Bootstrap Module.
 
 Provides initialization for semantic search components:
-- SemanticIndexManager singleton
+- SemanticIndexManager singleton (init_semantic_manager)
+- Tool indexing from unified registry (index_all_tools)
 - Embedder configuration
 - Qdrant client connection
 - Authorization cache warming
-- Startup tool indexing
 
-Follows existing pattern from bootstrap/context_graph.py.
+Split Architecture (v26):
+- init_semantic_manager(): Creates manager, registers singleton (Phase 8)
+- index_all_tools(): Indexes tools from registry (per-entrypoint, after MCP sync)
 
 Reference: ADR-0099 Semantic Tool Selection
 """
@@ -17,17 +19,14 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from mcp_server_langgraph.core.dependencies import (
+    get_semantic_index_manager,
     set_message_index_manager,
     set_semantic_index_manager,
 )
 from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.observability.telemetry import logger
-from mcp_server_langgraph.tools import get_all_tools
-from mcp_server_langgraph.tools.semantic_index import ToolCategory, ToolIndexEntry
 
 if TYPE_CHECKING:
-    from langchain_core.tools import BaseTool
-
     from mcp_server_langgraph.core.config import Settings
     from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
@@ -70,31 +69,16 @@ def _is_semantic_search_enabled() -> bool:
     )
 
 
-def _tool_to_index_entry(tool: "BaseTool") -> ToolIndexEntry:
-    """Convert a BaseTool to a ToolIndexEntry for semantic indexing.
+async def init_semantic_manager(settings: "Settings") -> SemanticState | None:
+    """Initialize SemanticIndexManager and register singleton (Phase 8).
 
-    Args:
-        tool: LangChain BaseTool instance
-
-    Returns:
-        ToolIndexEntry ready for indexing
-    """
-    return ToolIndexEntry(
-        tool_id=f"tool:{tool.name}",
-        name=tool.name,
-        description=tool.description or "",
-        category=ToolCategory.OTHER.value,  # Default category
-    )
-
-
-async def init_semantic(settings: "Settings") -> SemanticState | None:
-    """Initialize semantic index if any semantic search feature is enabled.
-
-    Creates and wires all semantic search components:
+    Creates and wires semantic search components:
     - Embedder based on embedding_provider setting
     - Qdrant client connection
     - SemanticIndexManager singleton
     - Cache warming with configured entries
+
+    Does NOT index tools - that happens via index_all_tools() after MCP sync.
 
     Args:
         settings: Application settings
@@ -124,12 +108,13 @@ async def init_semantic(settings: "Settings") -> SemanticState | None:
         port=settings.qdrant_port,
     )
 
-    # Create SemanticIndexManager
+    # Create SemanticIndexManager with settings injection (v26)
     manager = SemanticIndexManager(
         embedder=embedder,
         qdrant_client=qdrant_client,
         collection_name=settings.qdrant_collection_name,
         vector_size=settings.embedding_dimensions,
+        settings=settings,  # v26: DI for environment detection
     )
 
     # Register singleton for DI access
@@ -149,21 +134,6 @@ async def init_semantic(settings: "Settings") -> SemanticState | None:
             logger.info(f"Semantic authorization cache warmed: {warmed} entries")
         except Exception as e:
             logger.warning(f"Failed to warm authorization cache: {e}")
-
-    # Index all available tools at startup when tool search is enabled
-    if feature_flags.enable_semantic_tool_search:
-        try:
-            tools = get_all_tools()
-            if tools:
-                tool_entries = [_tool_to_index_entry(t) for t in tools]
-                await manager.index_tools_batch(tool_entries)
-                logger.info(
-                    f"Semantic index: indexed {len(tool_entries)} tools at startup",
-                    extra={"tool_count": len(tools)},
-                )
-        except Exception as e:
-            # Fail-open: continue even if indexing fails
-            logger.warning(f"Failed to index tools at startup: {e}")
 
     # v8: Initialize message index for session similarity when enabled
     if feature_flags.enable_message_embedding:
@@ -193,7 +163,7 @@ async def init_semantic(settings: "Settings") -> SemanticState | None:
             # Continue without message index - session similarity will be unavailable
 
     logger.info(
-        "Semantic index initialized",
+        "Semantic index manager initialized",
         extra={
             "embedding_provider": settings.embedding_provider,
             "collection_name": settings.qdrant_collection_name,
@@ -201,7 +171,7 @@ async def init_semantic(settings: "Settings") -> SemanticState | None:
                 "tool_search": feature_flags.enable_semantic_tool_search,
                 "skill_search": feature_flags.enable_semantic_skill_search,
                 "memory_search": feature_flags.enable_semantic_memory_search,
-                "message_embedding": feature_flags.enable_message_embedding,  # v8
+                "message_embedding": feature_flags.enable_message_embedding,
             },
         },
     )
@@ -212,7 +182,87 @@ async def init_semantic(settings: "Settings") -> SemanticState | None:
     )
 
 
+async def index_all_tools() -> None:
+    """Index all tools from unified registry.
+
+    MUST be called AFTER sync_mcp_tools() to include MCP tools.
+    Uses get_semantic_index_manager() singleton.
+
+    v26 Semantics:
+    - Skips native tools (source='native') - they have tool_id=None by design
+    - Raises ValueError for non-native tools with missing tool_id (fail-fast)
+    - Raises ValueError for non-native tools with missing tool (fail-fast)
+    - Uses ToolIndexEntry.from_langchain_tool() factory method
+
+    Raises:
+        ValueError: If non-native tool has tool_id=None or tool=None
+    """
+    if not feature_flags.enable_semantic_tool_search:
+        logger.debug("Semantic tool search disabled, skipping indexing")
+        return
+
+    manager = get_semantic_index_manager()
+    if manager is None:
+        logger.debug("Semantic indexing disabled - no manager")
+        return
+
+    from mcp_server_langgraph.tools.semantic_index import ToolIndexEntry
+    from mcp_server_langgraph.tools.unified_registry import get_tool_registry
+
+    registry = get_tool_registry()
+    tool_entries: list[ToolIndexEntry] = []
+
+    for reg in registry.get_all():
+        # v26: Skip native tools (expected to have tool_id=None)
+        if reg.source == "native":
+            continue
+
+        # v26: Fail-fast for non-native tools with missing tool_id
+        if reg.tool_id is None:
+            raise ValueError(
+                f"Non-native tool '{reg.name}' (source={reg.source}) has tool_id=None. "
+                f"This indicates a data integrity bug in the registry."
+            )
+
+        # v26: Fail-fast for non-native tools with missing BaseTool
+        if reg.tool is None:
+            raise ValueError(
+                f"Non-native tool '{reg.name}' (source={reg.source}) has tool=None. "
+                f"This indicates a data integrity bug in the registry."
+            )
+
+        # Create index entry using factory method
+        entry = ToolIndexEntry.from_langchain_tool(
+            reg.tool,
+            tool_id=reg.tool_id,  # Use RegisteredTool.tool_id directly
+        )
+        tool_entries.append(entry)
+
+    if tool_entries:
+        try:
+            await manager.index_tools_batch(tool_entries)
+            logger.info(f"Indexed {len(tool_entries)} tools for semantic search")
+        except Exception as e:
+            # Fail-open: continue even if indexing fails
+            logger.warning(f"Failed to index tools at startup: {e}")
+
+
+# Backwards compatibility alias
+async def init_semantic(settings: "Settings") -> SemanticState | None:
+    """Backwards compatible wrapper for init_semantic_manager.
+
+    Deprecated: Use init_semantic_manager() + index_all_tools() instead.
+    This exists for backwards compatibility with existing callers.
+
+    Note: This version does NOT index tools. Callers should explicitly
+    call index_all_tools() after MCP sync.
+    """
+    return await init_semantic_manager(settings)
+
+
 __all__ = [
     "SemanticState",
+    "index_all_tools",
     "init_semantic",
+    "init_semantic_manager",
 ]
