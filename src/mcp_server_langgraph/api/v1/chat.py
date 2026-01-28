@@ -40,6 +40,7 @@ from opentelemetry import trace
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.api.deps import get_audit_service, get_openfga_client
+from mcp_server_langgraph.api.v1.serializers import plan_to_dict
 from mcp_server_langgraph.auth.dependencies import get_current_user
 from mcp_server_langgraph.core.agent import create_agent_graph
 from mcp_server_langgraph.core.config import settings
@@ -1111,7 +1112,7 @@ class ChatServiceImpl(ChatService):
             try:
                 # Check if we're already in an async context
                 try:
-                    loop = asyncio.get_running_loop()
+                    asyncio.get_running_loop()
                     # We're in async context - use run_coroutine_threadsafe or nest
                     import concurrent.futures
 
@@ -1479,10 +1480,7 @@ class ChatServiceImpl(ChatService):
             task = f"<conversation_summary>\n{conversation_summary}\n</conversation_summary>\n\n<current_request>\n{last_message}\n</current_request>"
         elif context_strategy == "full":
             # Include full conversation history
-            full_context = "\n".join(
-                f"{msg.get('role', 'unknown')}: {msg.get('content', '')}"
-                for msg in messages
-            )
+            full_context = "\n".join(f"{msg.get('role', 'unknown')}: {msg.get('content', '')}" for msg in messages)
             task = full_context
         else:
             # "scoped" - default: just last message for speed
@@ -1713,26 +1711,19 @@ class ChatServiceImpl(ChatService):
                 "You are a research analyst. Investigate topics thoroughly, "
                 "find relevant information, and provide well-sourced findings."
             ),
-            "Developer": (
-                "You are a software developer. Implement solutions, "
-                "write clean code, and follow best practices."
-            ),
+            "Developer": ("You are a software developer. Implement solutions, write clean code, and follow best practices."),
         }
 
         # Build hierarchical structure with LLMFactory-powered agents
         ceo_agent = self._create_llm_worker("CEO", ceo_prompt)
-        managers = {
-            name: self._create_llm_worker(name, prompt)
-            for name, prompt in manager_prompts.items()
-        }
+        managers = {name: self._create_llm_worker(name, prompt) for name, prompt in manager_prompts.items()}
         workers = {
             "research_manager": [
                 self._create_llm_worker(f"Researcher_{i}", worker_prompts["Researcher"])
                 for i in range(1, worker_count // 2 + 2)
             ],
             "dev_manager": [
-                self._create_llm_worker(f"Developer_{i}", worker_prompts["Developer"])
-                for i in range(1, worker_count // 2 + 2)
+                self._create_llm_worker(f"Developer_{i}", worker_prompts["Developer"]) for i in range(1, worker_count // 2 + 2)
             ],
         }
 
@@ -2149,22 +2140,9 @@ class ChatServiceImpl(ChatService):
                 force_approval=(execution_mode == "plan"),
             )
 
-            # Emit plan_generated SSE (format matches useStreamingChat.ts:360)
-            yield {
-                "plan_generated": {
-                    "plan_id": execution_plan.plan_id,
-                    "status": execution_plan.status,
-                    "complexity": execution_plan.complexity,
-                    "risk_level": execution_plan.risk_level,
-                    "task_type": execution_plan.task_type,
-                    "executor_model": execution_plan.executor_model,
-                    "estimated_cost": str(execution_plan.estimated_cost),
-                    "tools_needed": execution_plan.tools_needed,
-                    "thinking_budget": execution_plan.thinking_budget,
-                    "critique_rounds": execution_plan.critique_rounds,
-                    "requires_approval": execution_plan.requires_approval,
-                }
-            }
+            # Emit plan_generated SSE with full 27-field payload
+            # Uses plan_to_dict from serializers.py for consistency with REST API
+            yield {"plan_generated": plan_to_dict(execution_plan)}
 
             # Bypass mode: evaluate risk and potentially auto-approve
             execution_mode = kwargs.get("execution_mode", "default")
