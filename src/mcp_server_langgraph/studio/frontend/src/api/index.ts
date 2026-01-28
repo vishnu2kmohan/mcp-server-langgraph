@@ -236,37 +236,40 @@ type UserInfoResponse = components["schemas"]["UserInfoResponse"];
 type UserInfoResponseCamelCase = SnakeToCamelCaseDeep<UserInfoResponse>;
 
 // =============================================================================
-// Skills Marketplace Types
+// Skills Marketplace Types (Re-exported from types/skills.ts)
 // =============================================================================
 
-/** Metadata for a skill in the marketplace */
-export interface SkillMetadata {
-  name: string;
-  description: string;
-  version: string;
-  author?: string;
-  tags: string[];
-  source?: string;
-}
+// Import types for use within this file AND re-export for consumers
+import type {
+  SkillMetadata,
+  SkillUpdate,
+  MarketplaceInfo,
+  MarketplaceType,
+  ListMarketplaceSkillsParams,
+  ListMarketplaceSkillsResponse,
+  ListInstalledSkillsResponse,
+  InstallSkillParams,
+  ApplySkillUpdatesResponse,
+  SkillsTab,
+  InstallationStatus,
+  SkillsFilterState,
+} from "../types/skills";
 
-/** Information about an available skill update */
-export interface SkillUpdate {
-  skillName: string;
-  currentVersion: string;
-  newVersion: string;
-  marketplace: string;
-  changelog?: string;
-}
-
-/** Marketplace configuration information */
-export interface MarketplaceInfo {
-  name: string;
-  uri: string;
-  type: "github" | "oci" | "registry";
-  trusted: boolean;
-  autoSync: boolean;
-  requiresApproval: boolean;
-}
+// Re-export for consumers
+export type {
+  SkillMetadata,
+  SkillUpdate,
+  MarketplaceInfo,
+  MarketplaceType,
+  ListMarketplaceSkillsParams,
+  ListMarketplaceSkillsResponse,
+  ListInstalledSkillsResponse,
+  InstallSkillParams,
+  ApplySkillUpdatesResponse,
+  SkillsTab,
+  InstallationStatus,
+  SkillsFilterState,
+};
 
 // =============================================================================
 // AI UX Generated Types (ADR-0091: Use generated types at API boundary)
@@ -551,6 +554,8 @@ export const api = createApi({
     "DecisionTrace",
     "SessionTraces",
     "BypassPermission",
+    "Plan",
+    "PlanTemplate",
   ],
   endpoints: (builder) => ({
     // Feature Flags
@@ -4061,6 +4066,63 @@ export const api = createApi({
       providesTags: ["Marketplace"],
     }),
 
+    /**
+     * Add a new marketplace
+     */
+    addMarketplace: builder.mutation<
+      { success: boolean; message?: string },
+      {
+        name: string;
+        uri: string;
+        type?: MarketplaceType;
+        trusted?: boolean;
+        autoSync?: boolean;
+        requiresApproval?: boolean;
+      }
+    >({
+      query: (body) => ({
+        url: "/admin/marketplaces",
+        method: "POST",
+        body: {
+          name: body.name,
+          uri: body.uri,
+          type: body.type || "github",
+          trusted: body.trusted ?? false,
+          auto_sync: body.autoSync ?? false,
+          requires_approval: body.requiresApproval ?? true,
+        },
+      }),
+      invalidatesTags: ["Marketplace"],
+    }),
+
+    /**
+     * Remove a marketplace
+     */
+    removeMarketplace: builder.mutation<
+      { success: boolean; message?: string },
+      string
+    >({
+      query: (name) => ({
+        url: `/admin/marketplaces/${name}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Marketplace"],
+    }),
+
+    /**
+     * Sync skills from a marketplace
+     */
+    syncMarketplace: builder.mutation<
+      { synced: number; new: number; updated: number },
+      string
+    >({
+      query: (name) => ({
+        url: `/admin/marketplaces/${name}/sync`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Marketplace", "Skills"],
+    }),
+
     // ==========================================================================
     // Semantic Search
     // ==========================================================================
@@ -4145,6 +4207,442 @@ export const api = createApi({
           }>;
           totalResults: number;
         },
+    }),
+
+    // ==========================================================================
+    // Execution Plans
+    // ==========================================================================
+
+    /**
+     * List pending execution plans.
+     * Returns plans with status 'awaiting_approval'.
+     */
+    listPendingPlans: builder.query<
+      {
+        plans: Array<{
+          planId: string;
+          sessionId: string;
+          status: string;
+          complexity: string;
+          riskLevel: string;
+          taskType: string;
+          executorModel: string;
+          criticModel: string | null;
+          estimatedCost: string;
+          actualCost: string | null;
+          message: string;
+          toolsNeeded: string[];
+          forceApproval: boolean;
+          confidence: number;
+          suggestedOrchestrator: string;
+          orchestrator: string;
+          requiresApproval: boolean;
+          thinkingBudget: string;
+          critiqueRounds: number;
+          createdAt: string | null;
+          expiresAt: string | null;
+          executedAt: string | null;
+          approvedBy: string | null;
+          approvedAt: string | null;
+          rejectedBy: string | null;
+          rejectedAt: string | null;
+          rejectionReason: string | null;
+        }>;
+        total: number;
+      },
+      void
+    >({
+      query: () => "/plans",
+      transformResponse: (response: unknown) => {
+        const res = response as { plans: unknown[]; total: number };
+        return {
+          plans: res.plans.map((p) => transformSnakeToCamel(p)) as Array<{
+            planId: string;
+            sessionId: string;
+            status: string;
+            complexity: string;
+            riskLevel: string;
+            taskType: string;
+            executorModel: string;
+            criticModel: string | null;
+            estimatedCost: string;
+            actualCost: string | null;
+            message: string;
+            toolsNeeded: string[];
+            forceApproval: boolean;
+            confidence: number;
+            suggestedOrchestrator: string;
+            orchestrator: string;
+            requiresApproval: boolean;
+            thinkingBudget: string;
+            critiqueRounds: number;
+            createdAt: string | null;
+            expiresAt: string | null;
+            executedAt: string | null;
+            approvedBy: string | null;
+            approvedAt: string | null;
+            rejectedBy: string | null;
+            rejectedAt: string | null;
+            rejectionReason: string | null;
+          }>,
+          total: res.total,
+        };
+      },
+      providesTags: (result) =>
+        result?.plans
+          ? [
+              ...result.plans.map(({ planId }) => ({
+                type: "Plan" as const,
+                id: planId,
+              })),
+              { type: "Plan", id: "LIST" },
+            ]
+          : [{ type: "Plan", id: "LIST" }],
+    }),
+
+    /**
+     * Get a specific execution plan by ID.
+     */
+    getPlan: builder.query<
+      {
+        planId: string;
+        sessionId: string;
+        status: string;
+        complexity: string;
+        riskLevel: string;
+        taskType: string;
+        executorModel: string;
+        criticModel: string | null;
+        estimatedCost: string;
+        actualCost: string | null;
+        message: string;
+        toolsNeeded: string[];
+        forceApproval: boolean;
+        confidence: number;
+        suggestedOrchestrator: string;
+        orchestrator: string;
+        requiresApproval: boolean;
+        thinkingBudget: string;
+        critiqueRounds: number;
+        createdAt: string | null;
+        expiresAt: string | null;
+        executedAt: string | null;
+        approvedBy: string | null;
+        approvedAt: string | null;
+        rejectedBy: string | null;
+        rejectedAt: string | null;
+        rejectionReason: string | null;
+      },
+      string
+    >({
+      query: (planId) => `/plans/${planId}`,
+      transformResponse: (response: unknown) =>
+        transformSnakeToCamel(response) as {
+          planId: string;
+          sessionId: string;
+          status: string;
+          complexity: string;
+          riskLevel: string;
+          taskType: string;
+          executorModel: string;
+          criticModel: string | null;
+          estimatedCost: string;
+          actualCost: string | null;
+          message: string;
+          toolsNeeded: string[];
+          forceApproval: boolean;
+          confidence: number;
+          suggestedOrchestrator: string;
+          orchestrator: string;
+          requiresApproval: boolean;
+          thinkingBudget: string;
+          critiqueRounds: number;
+          createdAt: string | null;
+          expiresAt: string | null;
+          executedAt: string | null;
+          approvedBy: string | null;
+          approvedAt: string | null;
+          rejectedBy: string | null;
+          rejectedAt: string | null;
+          rejectionReason: string | null;
+        },
+      providesTags: (result, error, planId) => [{ type: "Plan", id: planId }],
+    }),
+
+    /**
+     * Approve an execution plan.
+     */
+    approvePlan: builder.mutation<
+      {
+        planId: string;
+        status: string;
+        approvedBy: string | null;
+        approvedAt: string | null;
+      },
+      string
+    >({
+      query: (planId) => ({
+        url: `/plans/${planId}/approve`,
+        method: "POST",
+      }),
+      transformResponse: (response: unknown) =>
+        transformSnakeToCamel(response) as {
+          planId: string;
+          status: string;
+          approvedBy: string | null;
+          approvedAt: string | null;
+        },
+      invalidatesTags: (result, error, planId) => [
+        { type: "Plan", id: planId },
+        { type: "Plan", id: "LIST" },
+      ],
+    }),
+
+    /**
+     * Reject an execution plan.
+     */
+    rejectPlan: builder.mutation<
+      {
+        planId: string;
+        status: string;
+        rejectedBy: string | null;
+        rejectedAt: string | null;
+        rejectionReason: string | null;
+      },
+      { planId: string; reason: string }
+    >({
+      query: ({ planId, reason }) => ({
+        url: `/plans/${planId}/reject`,
+        method: "POST",
+        body: { reason },
+      }),
+      transformResponse: (response: unknown) =>
+        transformSnakeToCamel(response) as {
+          planId: string;
+          status: string;
+          rejectedBy: string | null;
+          rejectedAt: string | null;
+          rejectionReason: string | null;
+        },
+      invalidatesTags: (result, error, { planId }) => [
+        { type: "Plan", id: planId },
+        { type: "Plan", id: "LIST" },
+      ],
+    }),
+
+    /**
+     * List execution plans for a session.
+     */
+    listSessionPlans: builder.query<
+      {
+        plans: Array<{
+          planId: string;
+          sessionId: string;
+          status: string;
+          complexity: string;
+          riskLevel: string;
+          taskType: string;
+          executorModel: string;
+          estimatedCost: string;
+          requiresApproval: boolean;
+        }>;
+        total: number;
+      },
+      string
+    >({
+      query: (sessionId) => `/plans/sessions/${sessionId}/plans`,
+      transformResponse: (response: unknown) => {
+        const res = response as { plans: unknown[]; total: number };
+        return {
+          plans: res.plans.map((p) => transformSnakeToCamel(p)) as Array<{
+            planId: string;
+            sessionId: string;
+            status: string;
+            complexity: string;
+            riskLevel: string;
+            taskType: string;
+            executorModel: string;
+            estimatedCost: string;
+            requiresApproval: boolean;
+          }>,
+          total: res.total,
+        };
+      },
+      providesTags: (result) =>
+        result?.plans
+          ? [
+              ...result.plans.map(({ planId }) => ({
+                type: "Plan" as const,
+                id: planId,
+              })),
+              { type: "Plan", id: "LIST" },
+            ]
+          : [{ type: "Plan", id: "LIST" }],
+    }),
+
+    /**
+     * Save an approved plan as a reusable template.
+     */
+    saveAsTemplate: builder.mutation<
+      {
+        templateId: string;
+        name: string;
+        description: string;
+        orchestrator: string;
+        thinkingBudget: string;
+        critiqueRounds: number;
+        autoApprove: boolean;
+        createdBy: string;
+        createdAt: string;
+        useCount: number;
+        successRate: number;
+        tags: string[];
+      },
+      {
+        planId: string;
+        name: string;
+        description: string;
+        tags?: string[];
+      }
+    >({
+      query: ({ planId, ...body }) => ({
+        url: `/plans/${planId}/save-as-template`,
+        method: "POST",
+        body: transformCamelToSnake(body),
+      }),
+      transformResponse: (response: unknown) =>
+        transformSnakeToCamel(response) as {
+          templateId: string;
+          name: string;
+          description: string;
+          orchestrator: string;
+          thinkingBudget: string;
+          critiqueRounds: number;
+          autoApprove: boolean;
+          createdBy: string;
+          createdAt: string;
+          useCount: number;
+          successRate: number;
+          tags: string[];
+        },
+      invalidatesTags: ["PlanTemplate"],
+    }),
+
+    /**
+     * Update an execution plan's configuration before approval.
+     * Only plans with status 'awaiting_approval' can be updated.
+     */
+    updatePlan: builder.mutation<
+      {
+        planId: string;
+        status: string;
+        suggestedOrchestrator: string;
+        thinkingBudget: string;
+        critiqueRounds: number;
+        executorModel: string;
+        criticModel: string | null;
+      },
+      {
+        planId: string;
+        changes: {
+          orchestrator?: "standard" | "swarm" | "studio" | "ux" | "alert" | null;
+          thinkingBudget?: "none" | "light" | "medium" | "deep" | null;
+          critiqueRounds?: number | null;
+          executorModel?: string;
+          criticModel?: string | null;
+        };
+      }
+    >({
+      query: ({ planId, changes }) => ({
+        url: `/plans/${planId}`,
+        method: "PATCH",
+        body: transformCamelToSnake(changes),
+      }),
+      transformResponse: (response: unknown) =>
+        transformSnakeToCamel(response) as {
+          planId: string;
+          status: string;
+          suggestedOrchestrator: string;
+          thinkingBudget: string;
+          critiqueRounds: number;
+          executorModel: string;
+          criticModel: string | null;
+        },
+      invalidatesTags: (result, error, { planId }) => [
+        { type: "Plan", id: planId },
+        { type: "Plan", id: "LIST" },
+      ],
+    }),
+
+    // ==========================================================================
+    // Plan Templates
+    // ==========================================================================
+
+    /**
+     * Search plan templates with pagination and sorting.
+     */
+    searchTemplates: builder.query<
+      {
+        templates: Array<{
+          templateId: string;
+          name: string;
+          description: string;
+          orchestrator: string;
+          thinkingBudget: string;
+          critiqueRounds: number;
+          autoApprove: boolean;
+          createdBy: string;
+          createdAt: string;
+          useCount: number;
+          successRate: number;
+          tags: string[];
+        }>;
+        total: number;
+        limit: number;
+        offset: number;
+      },
+      {
+        query?: string;
+        orchestrator?: string;
+        tags?: string;
+        sortBy?: "popularity" | "success_rate" | "recent";
+        sortOrder?: "asc" | "desc";
+        limit?: number;
+        offset?: number;
+      }
+    >({
+      query: (params) => ({
+        url: "/plan-templates/templates/search",
+        params: transformCamelToSnake(params),
+      }),
+      transformResponse: (response: unknown) => {
+        const res = response as {
+          templates: unknown[];
+          total: number;
+          limit: number;
+          offset: number;
+        };
+        return {
+          templates: res.templates.map((t) => transformSnakeToCamel(t)) as Array<{
+            templateId: string;
+            name: string;
+            description: string;
+            orchestrator: string;
+            thinkingBudget: string;
+            critiqueRounds: number;
+            autoApprove: boolean;
+            createdBy: string;
+            createdAt: string;
+            useCount: number;
+            successRate: number;
+            tags: string[];
+          }>,
+          total: res.total,
+          limit: res.limit,
+          offset: res.offset,
+        };
+      },
+      providesTags: ["PlanTemplate"],
     }),
 
     // ==========================================================================
@@ -4451,9 +4949,22 @@ export const {
   useCheckSkillUpdatesQuery,
   useApplySkillUpdatesMutation,
   useListMarketplacesQuery,
+  useAddMarketplaceMutation,
+  useRemoveMarketplaceMutation,
+  useSyncMarketplaceMutation,
   // Semantic Search
   useSemanticSearchToolsMutation,
   useSemanticSearchSkillsMutation,
   // Markdown References Resolution
   useResolveReferencesMutation,
+  // Execution Plans
+  useListPendingPlansQuery,
+  useGetPlanQuery,
+  useApprovePlanMutation,
+  useRejectPlanMutation,
+  useListSessionPlansQuery,
+  useSaveAsTemplateMutation,
+  useUpdatePlanMutation,
+  // Plan Templates
+  useSearchTemplatesQuery,
 } = api;
