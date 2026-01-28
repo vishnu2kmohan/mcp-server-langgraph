@@ -2,7 +2,7 @@
 
 **Purpose**: Essential context auto-loaded at session start
 **Full Guide**: `.github/CLAUDE.md` (1,070 lines of comprehensive documentation)
-**Last Updated**: 2025-12-27
+**Last Updated**: 2026-01-28
 
 ---
 
@@ -53,11 +53,11 @@ async def test_feature():
 |--------|-------|
 | Tests | 20,000+ |
 | Coverage | 75% (target: 80%) |
-| ADRs | 101 |
-| Feature Flags | 175 |
-| Pytest markers | 150 |
+| ADRs | 104 |
+| Feature Flags | 355 |
+| Pytest markers | 168 |
 | Slash commands | 44 |
-| Pre-commit hooks | 95 |
+| Pre-commit hooks | 200 |
 | Make targets | 161 |
 
 **Technology Stack**:
@@ -97,16 +97,16 @@ async def test_feature():
 
 **Context files** (in `.claude/context/`):
 - `recent-work.md` - Auto-updated via git hook
-- `testing-patterns.md` - 14,900+ test patterns
+- `testing-patterns.md` - 20,000+ test patterns
 - `code-patterns.md` - Design patterns library
-- `pytest-markers.md` - 67 pytest markers reference
+- `pytest-markers.md` - 168 pytest markers reference
 - `test-constants-pattern.md` - Test constants and fixtures
 - `xdist-safety-patterns.md` - pytest-xdist parallel safety
 
 **Memory files** (in `.claude/memory/` - MANDATORY):
 - `python-environment-usage.md` - Virtual environment guide
 - `lint-workflow.md` - Linting enforcement
-- `pre-commit-hooks-catalog.md` - 95 hooks reference
+- `pre-commit-hooks-catalog.md` - 200 hooks reference
 - `make-targets.md` - 161 targets reference
 - `gke-infrastructure-testing.md` - GKE/WIF testing guidance (local vs CI gaps)
 - `efficient-tool-usage.md` - Script-based bulk operations, tool chaining
@@ -155,7 +155,7 @@ git push                           # Comprehensive validation
 ```
 mcp-server-langgraph/
 ├── src/mcp_server_langgraph/    # Main package
-│   ├── core/                     # Agent, config, feature flags (164 flags)
+│   ├── core/                     # Agent, config, feature flags (355 flags)
 │   ├── auth/                     # Keycloak + OpenFGA + DPoP
 │   ├── llm/                      # LLM factory (multi-provider)
 │   ├── mcp/                      # MCP server implementations
@@ -163,7 +163,7 @@ mcp-server-langgraph/
 │   ├── execution/                # Sandboxed code execution engine
 │   ├── security/                 # Prompt injection protection
 │   └── observability/            # OpenTelemetry + Grafana LGTM
-├── tests/                        # 14,900+ tests
+├── tests/                        # 20,000+ tests
 ├── deployments/                  # K8s, Helm, Kustomize
 ├── docs/                         # Mintlify documentation
 ├── docs-internal/                # Internal architecture docs
@@ -227,6 +227,10 @@ uv run ruff format src/
 - **Commands**: `.claude/commands/README.md` (44 commands)
 - **Templates**: `.claude/templates/README.md` (8 templates)
 - **Testing**: `TESTING.md` (test patterns, markers)
+- **Contributing**: `CONTRIBUTING.md` (contribution guidelines)
+- **Security**: `SECURITY.md` (security policies)
+- **Frontend Style**: `docs-internal/frontend/STYLE.md` (design system, CVA, Radix colors)
+- **AI Agents**: `AGENTS.md` (cross-tool AI assistant instructions)
 
 ---
 
@@ -241,4 +245,4 @@ uv run ruff format src/
 
 **Remember**: Tests FIRST, `.venv` ALWAYS, `/clear` OFTEN
 
-🤖 Optimized for Claude Code | Python 3.12 | LangGraph >=1.0.4
+🤖 Optimized for Claude Opus 4.5 | Python 3.12 | LangGraph >=1.0.4

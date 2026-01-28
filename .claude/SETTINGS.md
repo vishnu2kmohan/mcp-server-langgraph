@@ -517,6 +517,6 @@ cat .claude/settings.json | python -m json.tool
 
 ---
 
-**Last Updated**: 2025-11-15
+**Last Updated**: 2026-01-28
 **Maintained By**: Project team
 **Review Frequency**: Quarterly or when workflow changes

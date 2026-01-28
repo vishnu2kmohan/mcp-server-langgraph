@@ -51,9 +51,9 @@
 │
 ├── context/                           # Living context files
 │   ├── recent-work.md                 # Last 15 commits (auto-updated)
-│   ├── testing-patterns.md            # 14,900+ test patterns
+│   ├── testing-patterns.md            # 20,000+ test patterns
 │   ├── code-patterns.md               # Design patterns library
-│   ├── pytest-markers.md              # 67 markers catalog (NEW)
+│   ├── pytest-markers.md              # 168 markers catalog
 │   ├── xdist-safety-patterns.md       # Memory safety (NEW)
 │   └── test-constants-pattern.md      # Centralized constants (NEW)
 │
@@ -98,13 +98,13 @@ mcp-server-langgraph/
 │   ├── studio/                   # Agent Studio frontend (React + Redux)
 │   ├── execution/                # Sandboxed code execution engine
 │   └── security/                 # Prompt injection protection
-├── tests/                        # 14,900+ comprehensive tests
+├── tests/                        # 20,000+ comprehensive tests
 ├── deployments/                  # Kubernetes, Helm, Kustomize
 ├── monitoring/                   # Grafana dashboards
 └── .claude/                      # Workflow automation
 ```
 
-**Test Suite**: 14,900+ tests, 67 pytest markers, 99.3% pass rate
+**Test Suite**: 20,000+ tests, 168 pytest markers, 99.3% pass rate
 **Coverage**: 75% (targeting 80%+)
 
 ---
@@ -135,7 +135,7 @@ mcp-server-langgraph/
 
 3. **Context** (`.claude/context/`): Living documentation
    - Auto-updated from git history
-   - Test patterns from 14,900+ tests
+   - Test patterns from 20,000+ tests
    - Design patterns from codebase
    - **NEW**: pytest markers, xdist safety, test constants
 
@@ -1124,6 +1124,10 @@ When using extended thinking, Claude Code will:
 - **Testing Guide**: [../docs/advanced/testing.mdx](../docs/advanced/testing.mdx)
 - **Development Guide**: [../docs/advanced/development-setup.mdx](../docs/advanced/development-setup.mdx)
 - **CHANGELOG**: [../CHANGELOG.md](../CHANGELOG.md)
+- **Contributing**: [../CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines
+- **Security**: [../SECURITY.md](../SECURITY.md) - Security policies and reporting
+- **Frontend Style Guide**: `docs-internal/frontend/STYLE.md` - Design system (CVA, Radix colors, accessibility)
+- **AI Agents**: [../AGENTS.md](../AGENTS.md) - Cross-tool AI assistant instructions (OpenAI Codex, Cursor, etc.)
 
 ## Support
 
@@ -1134,6 +1138,6 @@ For issues or questions about Claude Code integration:
 
 ---
 
-**Last Updated**: 2025-12-02
-**Claude Code Version**: Sonnet 4.5 (claude-sonnet-4-5-20250929)
-**LangGraph Version**: >=1.0.4 (upgraded 2025-11-28, with langgraph-checkpoint-redis>=0.2.1 for distributed state)
+**Last Updated**: 2026-01-28
+**Claude Code Version**: Opus 4.5 (claude-opus-4-5-20251101)
+**LangGraph Version**: >=1.0.4 (with langgraph-checkpoint-redis>=0.2.1 for distributed state)

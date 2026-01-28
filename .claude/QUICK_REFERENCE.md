@@ -1,6 +1,6 @@
 # Claude Code Quick Reference Card
 
-**Last Updated**: 2025-11-15 | **Version**: 3.2 (Optimized)
+**Last Updated**: 2026-01-28 | **Version**: 3.3 (Updated)
 
 ---
 
@@ -141,8 +141,8 @@ Code ready → /test-summary → /coverage-gaps → /ci-status → Create PR →
 - `.claude/settings.local.json` - Local hooks and permissions
 
 ### Commands & Templates
-- `.claude/commands/README.md` - Complete command guide (38 commands)
-- `.claude/templates/README.md` - Template selection guide (6 templates)
+- `.claude/commands/README.md` - Complete command guide (44 commands)
+- `.claude/templates/README.md` - Template selection guide (8 templates)
 
 ### Memory (MANDATORY)
 - `.claude/memory/python-environment-usage.md` - Use `uv run`!
@@ -208,8 +208,8 @@ docker-compose up -d <service>
 
 **Stuck?** Check:
 1. `.claude/README.md` - Complete workflow guide
-2. `.claude/commands/README.md` - Detailed command documentation (38 commands)
-3. `.claude/templates/README.md` - Template selection guide (6 templates)
+2. `.claude/commands/README.md` - Detailed command documentation (44 commands)
+3. `.claude/templates/README.md` - Template selection guide (8 templates)
 4. `.claude/SETTINGS.md` - Configuration architecture explained
 5. This reference card - Quick command cheat sheet
 
@@ -253,4 +253,4 @@ uv run python --version   # Correct Python?
 
 **Print this page** or bookmark for quick reference during development!
 
-🤖 **Claude Code Workflow v3.1** - Advanced Automation & Analytics Complete
+🤖 **Claude Code Workflow v3.3** - Updated for Claude Opus 4.5

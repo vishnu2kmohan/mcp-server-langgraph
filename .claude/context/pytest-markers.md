@@ -1,8 +1,8 @@
 # Pytest Markers Reference
 
-**Last Updated**: 2025-11-23
+**Last Updated**: 2026-01-28
 **Purpose**: Complete catalog of pytest markers for mcp-server-langgraph
-**Total Markers**: 67 registered markers
+**Total Markers**: 168 registered markers
 
 ---
 
