@@ -18,6 +18,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.api.v1.serializers import template_to_dict
 from mcp_server_langgraph.core.models.plan_template import PlanTemplate
 from mcp_server_langgraph.repositories.plan_template import (
     InMemoryPlanTemplateRepository,
@@ -45,6 +46,32 @@ class RecordUsageRequest(BaseModel):
     """Request body for recording template usage."""
 
     success: bool
+
+
+class PlanTemplateResponse(BaseModel):
+    """Response model for a plan template (12 fields)."""
+
+    template_id: str
+    name: str
+    description: str
+    orchestrator: Literal["standard", "swarm", "studio", "ux", "alert"]
+    thinking_budget: Literal["none", "light", "medium", "deep"]
+    critique_rounds: int = Field(ge=0, le=3)
+    auto_approve: bool
+    created_by: str
+    created_at: str  # ISO timestamp string
+    use_count: int = Field(ge=0)
+    success_rate: float = Field(ge=0.0, le=1.0)
+    tags: list[str] = Field(default_factory=list)
+
+
+class TemplateSearchResponse(BaseModel):
+    """Paginated template search response."""
+
+    templates: list[PlanTemplateResponse]
+    total: int
+    limit: int
+    offset: int
 
 
 # =============================================================================
@@ -91,12 +118,12 @@ plan_templates_router = APIRouter(tags=["plan-templates"])
 # =============================================================================
 
 
-@plan_templates_router.get("/templates")
+@plan_templates_router.get("/templates", response_model=list[PlanTemplateResponse])
 async def list_templates(
     limit: int = Query(default=20, ge=1, le=100),
     template_repo: PlanTemplateRepository = Depends(get_template_repository),
     current_user: CurrentUser = Depends(get_current_user),
-) -> list[dict[str, Any]]:
+) -> list[PlanTemplateResponse]:
     """List all plan templates.
 
     Args:
@@ -108,15 +135,15 @@ async def list_templates(
         List of templates
     """
     templates = await template_repo.list_all(limit=limit)
-    return [_template_to_dict(t) for t in templates]
+    return [PlanTemplateResponse(**template_to_dict(t)) for t in templates]
 
 
-@plan_templates_router.get("/templates/{template_id}")
+@plan_templates_router.get("/templates/{template_id}", response_model=PlanTemplateResponse)
 async def get_template(
     template_id: str,
     template_repo: PlanTemplateRepository = Depends(get_template_repository),
     current_user: CurrentUser = Depends(get_current_user),
-) -> dict[str, Any]:
+) -> PlanTemplateResponse:
     """Get a specific template by ID.
 
     Args:
@@ -133,15 +160,15 @@ async def get_template(
     template = await template_repo.get(template_id)
     if template is None:
         raise HTTPException(status_code=404, detail="Template not found")
-    return _template_to_dict(template)
+    return PlanTemplateResponse(**template_to_dict(template))
 
 
-@plan_templates_router.post("/templates")
+@plan_templates_router.post("/templates", response_model=PlanTemplateResponse)
 async def create_template(
     request: CreateTemplateRequest,
     template_repo: PlanTemplateRepository = Depends(get_template_repository),
     current_user: CurrentUser = Depends(get_current_user),
-) -> dict[str, Any]:
+) -> PlanTemplateResponse:
     """Create a new plan template.
 
     Args:
@@ -164,7 +191,7 @@ async def create_template(
         tags=request.tags,
     )
     created = await template_repo.create(template)
-    return _template_to_dict(created)
+    return PlanTemplateResponse(**template_to_dict(created))
 
 
 @plan_templates_router.delete("/templates/{template_id}")
@@ -192,33 +219,69 @@ async def delete_template(
     return {"deleted": True, "template_id": template_id}
 
 
-@plan_templates_router.get("/templates/search")
+@plan_templates_router.get("/templates/search", response_model=TemplateSearchResponse)
 async def search_templates(
+    query: str | None = Query(default=None, description="Text search in name/description (ILIKE)"),
     tags: str | None = Query(default=None, description="Comma-separated tags"),
     orchestrator: str | None = Query(default=None),
+    sort_by: Literal["popularity", "success_rate", "recent"] | None = Query(default=None),
+    sort_order: Literal["asc", "desc"] = Query(default="desc"),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     template_repo: PlanTemplateRepository = Depends(get_template_repository),
     current_user: CurrentUser = Depends(get_current_user),
-) -> list[dict[str, Any]]:
-    """Search templates by tags or orchestrator type.
+) -> TemplateSearchResponse:
+    """Search templates with pagination and sorting.
+
+    IMPORTANT: Use snake_case params (sort_by, sort_order) because frontend
+    transformCamelToSnake converts sortBy->sort_by before sending.
 
     Args:
-        tags: Comma-separated list of tags to search for
+        query: Text search in name/description (uses ILIKE substring match)
+        tags: Comma-separated list of tags to filter by
         orchestrator: Orchestrator type to filter by
+        sort_by: Sort field (popularity=use_count, success_rate, recent=created_at)
+        sort_order: Sort direction (asc/desc)
+        limit: Max results per page
+        offset: Skip first N results
         template_repo: Template repository (injected)
         current_user: Current authenticated user (injected)
 
     Returns:
-        List of matching templates
+        Paginated search results with templates and total count
     """
+    # Build filters
+    filters: dict[str, Any] = {}
     if tags:
-        tag_list = [t.strip() for t in tags.split(",") if t.strip()]
-        templates = await template_repo.find_by_tags(tag_list)
-    elif orchestrator:
-        templates = await template_repo.find_by_orchestrator(orchestrator)
-    else:
-        templates = await template_repo.list_all()
+        filters["tags"] = [t.strip() for t in tags.split(",") if t.strip()]
+    if orchestrator:
+        filters["orchestrator"] = orchestrator
+    if query:
+        filters["query"] = query
 
-    return [_template_to_dict(t) for t in templates]
+    # Sort mapping - semantic names to database fields
+    sort_field_map = {
+        "popularity": "use_count",
+        "success_rate": "success_rate",
+        "recent": "created_at",
+    }
+    sort_field = sort_field_map.get(sort_by, "created_at") if sort_by else "created_at"
+
+    # Get paginated results
+    templates, total = await template_repo.search(
+        filters=filters,
+        sort_field=sort_field,
+        sort_order=sort_order,
+        limit=limit,
+        offset=offset,
+    )
+
+    return TemplateSearchResponse(
+        templates=[PlanTemplateResponse(**template_to_dict(t)) for t in templates],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @plan_templates_router.post("/templates/{template_id}/usage")
@@ -241,26 +304,3 @@ async def record_usage(
     """
     await template_repo.record_usage(template_id, success=request.success)
     return {"recorded": True, "template_id": template_id}
-
-
-# =============================================================================
-# Helpers
-# =============================================================================
-
-
-def _template_to_dict(template: PlanTemplate) -> dict[str, Any]:
-    """Convert a PlanTemplate to a dictionary for API response."""
-    return {
-        "template_id": template.template_id,
-        "name": template.name,
-        "description": template.description,
-        "orchestrator": template.orchestrator,
-        "thinking_budget": template.thinking_budget,
-        "critique_rounds": template.critique_rounds,
-        "auto_approve": template.auto_approve,
-        "created_by": template.created_by,
-        "created_at": template.created_at.isoformat(),
-        "use_count": template.use_count,
-        "success_rate": template.success_rate,
-        "tags": template.tags,
-    }

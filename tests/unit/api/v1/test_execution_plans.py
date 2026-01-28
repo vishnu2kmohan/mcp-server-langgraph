@@ -55,6 +55,14 @@ def mock_user():
     return {"sub": "user-123", "email": "test@example.com", "preferred_username": "testuser"}
 
 
+@pytest.fixture
+def mock_audit_service():
+    """Create a mock audit service."""
+    from unittest.mock import AsyncMock
+
+    return AsyncMock()
+
+
 @pytest.mark.xdist_group(name="execution_plans_api")
 class TestExecutionPlansEndpoints:
     """Tests for execution plans API endpoints."""
@@ -74,7 +82,8 @@ class TestExecutionPlansEndpoints:
         from mcp_server_langgraph.api.v1.execution_plans import execution_plans_router
 
         routes = [route.path for route in execution_plans_router.routes]
-        assert "/plans" in routes or "/plans/" in routes
+        # Route is "/" since router is mounted at /plans
+        assert "/" in routes or "" in routes
 
     def test_router_has_get_plan_endpoint(self) -> None:
         """Test router has get plan by ID endpoint."""
@@ -118,7 +127,8 @@ class TestListPendingPlans:
         ):
             result = await list_pending_plans(current_user=mock_user)
 
-        assert result == []
+        assert result.plans == []
+        assert result.total == 0
 
     @pytest.mark.asyncio
     async def test_list_pending_returns_only_pending_plans(self, mock_repo, mock_user, sample_pending_plan) -> None:
@@ -148,8 +158,9 @@ class TestListPendingPlans:
         ):
             result = await list_pending_plans(current_user=mock_user)
 
-        assert len(result) == 1
-        assert result[0]["plan_id"] == sample_pending_plan.plan_id
+        assert len(result.plans) == 1
+        assert result.total == 1
+        assert result.plans[0].plan_id == sample_pending_plan.plan_id
 
 
 @pytest.mark.xdist_group(name="execution_plans_api_get")
@@ -173,7 +184,7 @@ class TestGetPlan:
         ):
             result = await get_plan(plan_id=sample_pending_plan.plan_id, current_user=mock_user)
 
-        assert result["plan_id"] == sample_pending_plan.plan_id
+        assert result.plan_id == sample_pending_plan.plan_id
 
     @pytest.mark.asyncio
     async def test_get_plan_raises_404_when_not_found(self, mock_repo, mock_user) -> None:
@@ -201,7 +212,7 @@ class TestApprovePlan:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_approve_plan_updates_status(self, mock_repo, mock_user, sample_pending_plan) -> None:
+    async def test_approve_plan_updates_status(self, mock_repo, mock_user, mock_audit_service, sample_pending_plan) -> None:
         """Test approve_plan changes status to approved."""
         from mcp_server_langgraph.api.v1.execution_plans import approve_plan
 
@@ -211,13 +222,17 @@ class TestApprovePlan:
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
             return_value=mock_repo,
         ):
-            result = await approve_plan(plan_id=sample_pending_plan.plan_id, current_user=mock_user)
+            result = await approve_plan(
+                plan_id=sample_pending_plan.plan_id,
+                current_user=mock_user,
+                audit_service=mock_audit_service,
+            )
 
-        assert result["status"] == "approved"
-        assert result["approved_by"] == "user-123"
+        assert result.status == "approved"
+        assert result.approved_by == "user-123"
 
     @pytest.mark.asyncio
-    async def test_approve_plan_raises_404_when_not_found(self, mock_repo, mock_user) -> None:
+    async def test_approve_plan_raises_404_when_not_found(self, mock_repo, mock_user, mock_audit_service) -> None:
         """Test approve_plan raises 404 when plan not found."""
         from fastapi import HTTPException
 
@@ -228,12 +243,16 @@ class TestApprovePlan:
             return_value=mock_repo,
         ):
             with pytest.raises(HTTPException) as exc_info:
-                await approve_plan(plan_id="nonexistent", current_user=mock_user)
+                await approve_plan(
+                    plan_id="nonexistent",
+                    current_user=mock_user,
+                    audit_service=mock_audit_service,
+                )
 
         assert exc_info.value.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_approve_plan_raises_409_when_already_approved(self, mock_repo, mock_user) -> None:
+    async def test_approve_plan_raises_409_when_already_approved(self, mock_repo, mock_user, mock_audit_service) -> None:
         """Test approve_plan raises 409 when plan already approved."""
         from fastapi import HTTPException
 
@@ -257,7 +276,11 @@ class TestApprovePlan:
             return_value=mock_repo,
         ):
             with pytest.raises(HTTPException) as exc_info:
-                await approve_plan(plan_id="plan-approved", current_user=mock_user)
+                await approve_plan(
+                    plan_id="plan-approved",
+                    current_user=mock_user,
+                    audit_service=mock_audit_service,
+                )
 
         assert exc_info.value.status_code == 409
 
@@ -271,7 +294,7 @@ class TestRejectPlan:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_reject_plan_updates_status(self, mock_repo, mock_user, sample_pending_plan) -> None:
+    async def test_reject_plan_updates_status(self, mock_repo, mock_user, mock_audit_service, sample_pending_plan) -> None:
         """Test reject_plan changes status to rejected."""
         from mcp_server_langgraph.api.v1.execution_plans import (
             RejectRequest,
@@ -290,14 +313,15 @@ class TestRejectPlan:
                 plan_id=sample_pending_plan.plan_id,
                 request=reject_request,
                 current_user=mock_user,
+                audit_service=mock_audit_service,
             )
 
-        assert result["status"] == "rejected"
-        assert result["rejected_by"] == "user-123"
-        assert result["rejection_reason"] == "Too expensive"
+        assert result.status == "rejected"
+        assert result.rejected_by == "user-123"
+        assert result.rejection_reason == "Too expensive"
 
     @pytest.mark.asyncio
-    async def test_reject_plan_raises_404_when_not_found(self, mock_repo, mock_user) -> None:
+    async def test_reject_plan_raises_404_when_not_found(self, mock_repo, mock_user, mock_audit_service) -> None:
         """Test reject_plan raises 404 when plan not found."""
         from fastapi import HTTPException
 
@@ -317,12 +341,13 @@ class TestRejectPlan:
                     plan_id="nonexistent",
                     request=reject_request,
                     current_user=mock_user,
+                    audit_service=mock_audit_service,
                 )
 
         assert exc_info.value.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_reject_plan_raises_409_when_already_rejected(self, mock_repo, mock_user) -> None:
+    async def test_reject_plan_raises_409_when_already_rejected(self, mock_repo, mock_user, mock_audit_service) -> None:
         """Test reject_plan raises 409 when plan already rejected."""
         from fastapi import HTTPException
 
@@ -355,6 +380,7 @@ class TestRejectPlan:
                     plan_id="plan-rejected",
                     request=reject_request,
                     current_user=mock_user,
+                    audit_service=mock_audit_service,
                 )
 
         assert exc_info.value.status_code == 409
@@ -396,8 +422,9 @@ class TestListBySession:
         ):
             result = await list_session_plans(session_id="session-456", current_user=mock_user)
 
-        assert len(result) == 1
-        assert result[0]["plan_id"] == sample_pending_plan.plan_id
+        assert len(result.plans) == 1
+        assert result.total == 1
+        assert result.plans[0].plan_id == sample_pending_plan.plan_id
 
 
 @pytest.fixture
@@ -468,9 +495,9 @@ class TestSaveAsTemplate:
                     current_user=mock_user,
                 )
 
-        assert result["name"] == "Code Refactor Template"
-        assert result["orchestrator"] == "standard"
-        assert "template_id" in result
+        assert result.name == "Code Refactor Template"
+        assert result.orchestrator == "standard"
+        assert result.template_id is not None
 
     @pytest.mark.asyncio
     async def test_save_as_template_raises_404_when_plan_not_found(self, mock_repo, mock_user) -> None:
@@ -584,9 +611,9 @@ class TestSaveAsTemplate:
                 )
 
         # Template should inherit plan's configuration
-        assert result["thinking_budget"] in ["none", "light", "medium", "deep"]
-        assert result["auto_approve"] in [True, False]
-        assert result["created_by"] == "user-123"
+        assert result.thinking_budget in ["none", "light", "medium", "deep"]
+        assert result.auto_approve in [True, False]
+        assert result.created_by == "user-123"
 
     @pytest.mark.asyncio
     async def test_save_as_template_records_created_by(self, mock_repo, mock_user, sample_approved_plan) -> None:
@@ -622,4 +649,158 @@ class TestSaveAsTemplate:
                     current_user=mock_user,
                 )
 
-        assert result["created_by"] == "user-123"
+        assert result.created_by == "user-123"
+
+
+@pytest.mark.xdist_group(name="execution_plans_api_update")
+class TestUpdatePlan:
+    """Tests for updating a plan before approval."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_update_plan_changes_orchestrator(self, mock_repo, mock_user, sample_pending_plan) -> None:
+        """Test update_plan can change orchestrator."""
+        from mcp_server_langgraph.api.v1.execution_plans import (
+            UpdatePlanRequest,
+            update_plan,
+        )
+
+        await mock_repo.create(sample_pending_plan)
+
+        request = UpdatePlanRequest(orchestrator="swarm")
+
+        with patch(
+            "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
+            return_value=mock_repo,
+        ):
+            result = await update_plan(
+                plan_id=sample_pending_plan.plan_id,
+                request=request,
+                current_user=mock_user,
+            )
+
+        assert result.suggested_orchestrator == "swarm"
+
+    @pytest.mark.asyncio
+    async def test_update_plan_null_orchestrator_resets_to_default(self, mock_repo, mock_user, sample_pending_plan) -> None:
+        """Test null orchestrator resets to 'standard'."""
+        from mcp_server_langgraph.api.v1.execution_plans import (
+            UpdatePlanRequest,
+            update_plan,
+        )
+
+        # Set orchestrator to non-default
+        modified_plan = sample_pending_plan.model_copy(update={"suggested_orchestrator": "swarm"})
+        await mock_repo.create(modified_plan)
+
+        # Explicitly set orchestrator to None (null in JSON)
+        request = UpdatePlanRequest(orchestrator=None)
+
+        with patch(
+            "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
+            return_value=mock_repo,
+        ):
+            result = await update_plan(
+                plan_id=modified_plan.plan_id,
+                request=request,
+                current_user=mock_user,
+            )
+
+        # Should reset to default "standard"
+        assert result.suggested_orchestrator == "standard"
+
+    @pytest.mark.asyncio
+    async def test_update_plan_null_executor_model_raises_422(self, mock_repo, mock_user, sample_pending_plan) -> None:
+        """Test null executor_model is rejected with 422."""
+        from fastapi import HTTPException
+
+        from mcp_server_langgraph.api.v1.execution_plans import (
+            UpdatePlanRequest,
+            update_plan,
+        )
+
+        await mock_repo.create(sample_pending_plan)
+
+        # Explicitly set executor_model to None (null in JSON)
+        request = UpdatePlanRequest(executor_model=None)
+
+        with patch(
+            "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
+            return_value=mock_repo,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await update_plan(
+                    plan_id=sample_pending_plan.plan_id,
+                    request=request,
+                    current_user=mock_user,
+                )
+
+        assert exc_info.value.status_code == 422
+        assert "executor_model cannot be null" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_update_plan_null_critic_model_clears(self, mock_repo, mock_user, sample_pending_plan) -> None:
+        """Test null critic_model clears the field (truly nullable)."""
+        from mcp_server_langgraph.api.v1.execution_plans import (
+            UpdatePlanRequest,
+            update_plan,
+        )
+
+        await mock_repo.create(sample_pending_plan)
+
+        # Explicitly set critic_model to None (null in JSON)
+        request = UpdatePlanRequest(critic_model=None)
+
+        with patch(
+            "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
+            return_value=mock_repo,
+        ):
+            result = await update_plan(
+                plan_id=sample_pending_plan.plan_id,
+                request=request,
+                current_user=mock_user,
+            )
+
+        # Should clear critic_model
+        assert result.critic_model is None
+
+    @pytest.mark.asyncio
+    async def test_update_plan_raises_409_when_not_awaiting_approval(self, mock_repo, mock_user) -> None:
+        """Test update_plan raises 409 when plan is already approved."""
+        from fastapi import HTTPException
+
+        from mcp_server_langgraph.api.v1.execution_plans import (
+            UpdatePlanRequest,
+            update_plan,
+        )
+
+        approved_plan = ExecutionPlan(
+            plan_id="plan-approved",
+            session_id="session-456",
+            status="approved",
+            complexity="simple",
+            risk_level="low",
+            task_type="chat",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.01"),
+            message="Already approved",
+        )
+        await mock_repo.create(approved_plan)
+
+        request = UpdatePlanRequest(orchestrator="swarm")
+
+        with patch(
+            "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
+            return_value=mock_repo,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await update_plan(
+                    plan_id="plan-approved",
+                    request=request,
+                    current_user=mock_user,
+                )
+
+        assert exc_info.value.status_code == 409

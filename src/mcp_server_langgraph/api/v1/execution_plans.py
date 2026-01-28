@@ -24,10 +24,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.api.deps import get_audit_service
+from mcp_server_langgraph.api.v1.serializers import plan_to_dict, template_to_dict
 from mcp_server_langgraph.audit.models import AuditEventType
 from mcp_server_langgraph.auth.dependencies import get_current_user
-from mcp_server_langgraph.execution.bypass_audit import log_bypass_audit_event
 from mcp_server_langgraph.core.models.plan_template import PlanTemplate
+from mcp_server_langgraph.execution.bypass_audit import log_bypass_audit_event
 from mcp_server_langgraph.repositories.execution_plan import (
     ExecutionPlanRepository,
     InMemoryExecutionPlanRepository,
@@ -73,24 +74,93 @@ class SaveAsTemplateRequest(BaseModel):
 
 
 class PlanResponse(BaseModel):
-    """Response model for an execution plan."""
+    """Response model for an execution plan (27 fields)."""
 
+    # Core identification
     plan_id: str
     session_id: str
-    status: str
-    complexity: str
-    risk_level: str
-    task_type: str
+    status: str  # awaiting_approval|approved|rejected|executed|expired
+
+    # Classification
+    complexity: str  # simple|complicated|complex
+    risk_level: str  # low|medium|high
+    task_type: str  # chat|code|analysis|data|ops|other
+
+    # Model configuration
     executor_model: str
-    estimated_cost: str  # Decimal serialized as string
-    message: str
     critic_model: str | None = None
+
+    # Cost
+    estimated_cost: str  # Decimal serialized as string
+    actual_cost: str | None = None
+
+    # Content
+    message: str
     tools_needed: list[str] = Field(default_factory=list)
+
+    # Approval config
+    force_approval: bool = False
+    confidence: float = 0.0
+
+    # Orchestrator
+    suggested_orchestrator: str = "standard"
+    orchestrator: str = "standard"  # Alias = suggested_orchestrator
+
+    # Computed property
+    requires_approval: bool = True
+
+    # Thinking
+    thinking_budget: str = "none"
+    critique_rounds: int = 0
+
+    # Timestamps
+    created_at: str | None = None
+    expires_at: str | None = None
+    executed_at: str | None = None
     approved_by: str | None = None
     approved_at: str | None = None
     rejected_by: str | None = None
     rejected_at: str | None = None
     rejection_reason: str | None = None
+
+
+class PlanListResponse(BaseModel):
+    """List of execution plans with count."""
+
+    plans: list[PlanResponse]
+    total: int
+
+
+# Literal types for strict validation at API boundary
+OrchestratorType = Literal["standard", "swarm", "studio", "ux", "alert"]
+ThinkingBudgetType = Literal["none", "light", "medium", "deep"]
+
+
+class UpdatePlanRequest(BaseModel):
+    """Request body for updating a plan before approval."""
+
+    orchestrator: OrchestratorType | None = Field(default=None, description="Orchestrator pattern")
+    thinking_budget: ThinkingBudgetType | None = Field(default=None, description="Thinking budget level")
+    critique_rounds: int | None = Field(default=None, ge=0, le=3, description="Critique rounds")
+    executor_model: str | None = Field(default=None, description="Executor model override")
+    critic_model: str | None = Field(default=None, description="Critic model override")
+
+
+class PlanTemplateResponse(BaseModel):
+    """Response model for a plan template (12 fields)."""
+
+    template_id: str
+    name: str
+    description: str
+    orchestrator: Literal["standard", "swarm", "studio", "ux", "alert"]
+    thinking_budget: Literal["none", "light", "medium", "deep"]
+    critique_rounds: int = Field(ge=0, le=3)
+    auto_approve: bool
+    created_by: str
+    created_at: str  # ISO timestamp string
+    use_count: int = Field(ge=0)
+    success_rate: float = Field(ge=0.0, le=1.0)
+    tags: list[str] = Field(default_factory=list)
 
 
 # ============================================================================
@@ -149,37 +219,15 @@ def reset_template_repo() -> None:
     _template_repo = None
 
 
-def _plan_to_dict(plan: Any) -> dict[str, Any]:
-    """Convert ExecutionPlan to response dict."""
-    return {
-        "plan_id": plan.plan_id,
-        "session_id": plan.session_id,
-        "status": plan.status,
-        "complexity": plan.complexity,
-        "risk_level": plan.risk_level,
-        "task_type": plan.task_type,
-        "executor_model": plan.executor_model,
-        "estimated_cost": str(plan.estimated_cost),
-        "message": plan.message,
-        "critic_model": plan.critic_model,
-        "tools_needed": plan.tools_needed,
-        "approved_by": plan.approved_by,
-        "approved_at": plan.approved_at.isoformat() if plan.approved_at else None,
-        "rejected_by": plan.rejected_by,
-        "rejected_at": plan.rejected_at.isoformat() if plan.rejected_at else None,
-        "rejection_reason": plan.rejection_reason,
-    }
-
-
 # ============================================================================
 # Endpoints
 # ============================================================================
 
 
-@execution_plans_router.get("/plans")
+@execution_plans_router.get("/", response_model=PlanListResponse)
 async def list_pending_plans(
     current_user: CurrentUser,
-) -> list[dict[str, Any]]:
+) -> PlanListResponse:
     """
     List all pending execution plans.
 
@@ -188,14 +236,17 @@ async def list_pending_plans(
     """
     repo = get_plan_repo()
     plans = await repo.list_pending()
-    return [_plan_to_dict(plan) for plan in plans]
+    return PlanListResponse(
+        plans=[PlanResponse(**plan_to_dict(plan)) for plan in plans],
+        total=len(plans),
+    )
 
 
-@execution_plans_router.get("/plans/{plan_id}")
+@execution_plans_router.get("/{plan_id}", response_model=PlanResponse)
 async def get_plan(
     plan_id: str,
     current_user: CurrentUser,
-) -> dict[str, Any]:
+) -> PlanResponse:
     """
     Get a specific execution plan by ID.
 
@@ -211,15 +262,15 @@ async def get_plan(
             detail=f"Plan {plan_id} not found",
         )
 
-    return _plan_to_dict(plan)
+    return PlanResponse(**plan_to_dict(plan))
 
 
-@execution_plans_router.post("/plans/{plan_id}/approve")
+@execution_plans_router.post("/{plan_id}/approve", response_model=PlanResponse)
 async def approve_plan(
     plan_id: str,
     current_user: CurrentUser,
     audit_service: AuditService,
-) -> dict[str, Any]:
+) -> PlanResponse:
     """
     Approve an execution plan.
 
@@ -264,16 +315,16 @@ async def approve_plan(
         },
     )
 
-    return _plan_to_dict(approved_plan)
+    return PlanResponse(**plan_to_dict(approved_plan))
 
 
-@execution_plans_router.post("/plans/{plan_id}/reject")
+@execution_plans_router.post("/{plan_id}/reject", response_model=PlanResponse)
 async def reject_plan(
     plan_id: str,
     request: RejectRequest,
     current_user: CurrentUser,
     audit_service: AuditService,
-) -> dict[str, Any]:
+) -> PlanResponse:
     """
     Reject an execution plan.
 
@@ -319,14 +370,14 @@ async def reject_plan(
         },
     )
 
-    return _plan_to_dict(rejected_plan)
+    return PlanResponse(**plan_to_dict(rejected_plan))
 
 
-@execution_plans_router.get("/sessions/{session_id}/plans")
+@execution_plans_router.get("/sessions/{session_id}/plans", response_model=PlanListResponse)
 async def list_session_plans(
     session_id: str,
     current_user: CurrentUser,
-) -> list[dict[str, Any]]:
+) -> PlanListResponse:
     """
     List all execution plans for a session.
 
@@ -335,15 +386,97 @@ async def list_session_plans(
     """
     repo = get_plan_repo()
     plans = await repo.list_by_session(session_id)
-    return [_plan_to_dict(plan) for plan in plans]
+    return PlanListResponse(
+        plans=[PlanResponse(**plan_to_dict(plan)) for plan in plans],
+        total=len(plans),
+    )
 
 
-@execution_plans_router.post("/plans/{plan_id}/save-as-template")
+@execution_plans_router.patch("/{plan_id}", response_model=PlanResponse)
+async def update_plan(
+    plan_id: str,
+    request: UpdatePlanRequest,
+    current_user: CurrentUser,
+) -> PlanResponse:
+    """
+    Update an execution plan's configuration before approval.
+
+    Only plans with status 'awaiting_approval' can be updated.
+    Allows editing orchestrator, thinking_budget, critique_rounds,
+    executor_model, and critic_model.
+
+    Null-clearing: If a field is explicitly set to null in the request,
+    it will be cleared. If the field is not provided, it remains unchanged.
+
+    Raises:
+        HTTPException 404: When plan not found
+        HTTPException 409: When plan is not in 'awaiting_approval' status
+        HTTPException 422: When executor_model is set to null (required field)
+    """
+    repo = get_plan_repo()
+    plan = await repo.get(plan_id)
+
+    if plan is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Plan {plan_id} not found",
+        )
+
+    if plan.status != "awaiting_approval":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Only awaiting_approval plans can be updated (status: {plan.status})",
+        )
+
+    # Use model_fields_set to distinguish "not provided" vs "explicitly null"
+    # Fields in model_fields_set were explicitly provided (even if None)
+    updates: dict[str, Any] = {}
+    fields_set = request.model_fields_set
+
+    # Nullable field: critic_model - null clears it
+    if "critic_model" in fields_set:
+        updates["critic_model"] = request.critic_model  # Can be None to clear
+
+    # Fields with defaults: null resets to default value
+    if "orchestrator" in fields_set:
+        if request.orchestrator is None:
+            updates["suggested_orchestrator"] = "standard"  # Reset to default
+        else:
+            updates["suggested_orchestrator"] = request.orchestrator
+    if "thinking_budget" in fields_set:
+        if request.thinking_budget is None:
+            updates["thinking_budget"] = "none"  # Reset to default
+        else:
+            updates["thinking_budget"] = request.thinking_budget
+    if "critique_rounds" in fields_set:
+        if request.critique_rounds is None:
+            updates["critique_rounds"] = 0  # Reset to default
+        else:
+            updates["critique_rounds"] = request.critique_rounds
+
+    # Required field: executor_model - reject null
+    if "executor_model" in fields_set:
+        if request.executor_model is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="executor_model cannot be null",
+            )
+        updates["executor_model"] = request.executor_model
+
+    if updates:
+        updated_plan = plan.model_copy(update=updates)
+        await repo.update(updated_plan)
+        return PlanResponse(**plan_to_dict(updated_plan))
+
+    return PlanResponse(**plan_to_dict(plan))
+
+
+@execution_plans_router.post("/{plan_id}/save-as-template", response_model=PlanTemplateResponse)
 async def save_as_template(
     plan_id: str,
     request: SaveAsTemplateRequest,
     current_user: CurrentUser,
-) -> dict[str, Any]:
+) -> PlanTemplateResponse:
     """
     Save an approved execution plan as a reusable template.
 
@@ -414,14 +547,4 @@ async def save_as_template(
 
     created_template = await template_repo.create(template)
 
-    return {
-        "template_id": created_template.template_id,
-        "name": created_template.name,
-        "description": created_template.description,
-        "orchestrator": created_template.orchestrator,
-        "thinking_budget": created_template.thinking_budget,
-        "critique_rounds": created_template.critique_rounds,
-        "auto_approve": created_template.auto_approve,
-        "created_by": created_template.created_by,
-        "tags": created_template.tags,
-    }
+    return PlanTemplateResponse(**template_to_dict(created_template))

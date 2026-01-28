@@ -113,8 +113,8 @@ class TestGetTemplateEndpoint:
             current_user=MagicMock(email="test@example.com"),
         )
 
-        assert result["template_id"] == "tmpl-123"
-        assert result["name"] == "Test Template"
+        assert result.template_id == "tmpl-123"
+        assert result.name == "Test Template"
 
     @pytest.mark.asyncio
     async def test_get_template_not_found_raises_404(self) -> None:
@@ -181,7 +181,7 @@ class TestCreateTemplateEndpoint:
             current_user=MagicMock(email="user@example.com"),
         )
 
-        assert result["name"] == "New Template"
+        assert result.name == "New Template"
         mock_repo.create.assert_called_once()
 
 
@@ -255,17 +255,24 @@ class TestSearchTemplatesEndpoint:
             tags=["code", "review"],
         )
         mock_repo = AsyncMock(return_value=None)
-        mock_repo.find_by_tags.return_value = [mock_template]
+        # Mock search() returning (templates, total) tuple
+        mock_repo.search.return_value = ([mock_template], 1)
 
         result = await search_templates(
+            query=None,
             tags="code,review",
             orchestrator=None,
+            sort_by=None,
+            sort_order="desc",
+            limit=20,
+            offset=0,
             template_repo=mock_repo,
             current_user=MagicMock(email="test@example.com"),
         )
 
-        assert len(result) == 1
-        assert result[0]["template_id"] == "tmpl-123"
+        assert len(result.templates) == 1
+        assert result.total == 1
+        assert result.templates[0].template_id == "tmpl-123"
 
     @pytest.mark.asyncio
     async def test_search_by_orchestrator(self) -> None:
@@ -284,17 +291,24 @@ class TestSearchTemplatesEndpoint:
             created_by="user@example.com",
         )
         mock_repo = AsyncMock(return_value=None)
-        mock_repo.find_by_orchestrator.return_value = [mock_template]
+        # Mock search() returning (templates, total) tuple
+        mock_repo.search.return_value = ([mock_template], 1)
 
         result = await search_templates(
+            query=None,
             tags=None,
             orchestrator="swarm",
+            sort_by=None,
+            sort_order="desc",
+            limit=20,
+            offset=0,
             template_repo=mock_repo,
             current_user=MagicMock(email="test@example.com"),
         )
 
-        assert len(result) == 1
-        assert result[0]["orchestrator"] == "swarm"
+        assert len(result.templates) == 1
+        assert result.total == 1
+        assert result.templates[0].orchestrator == "swarm"
 
 
 @pytest.mark.xdist_group(name="plan_templates_record_usage")

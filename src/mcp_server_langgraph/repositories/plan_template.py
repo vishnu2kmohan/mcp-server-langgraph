@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.core.models.plan_template import PlanTemplate
@@ -167,6 +167,32 @@ class PlanTemplateRepository(ABC):
         """
         ...
 
+    @abstractmethod
+    async def search(
+        self,
+        filters: dict[str, Any],
+        sort_field: str = "created_at",
+        sort_order: str = "desc",
+        limit: int = 20,
+        offset: int = 0,
+    ) -> tuple[list[PlanTemplate], int]:
+        """Search templates with filtering, sorting, and pagination.
+
+        Args:
+            filters: Dict with optional keys:
+                - query: Text search in name/description (substring match)
+                - tags: List of tags to filter by (any match)
+                - orchestrator: Orchestrator type to filter by
+            sort_field: Field to sort by (use_count, success_rate, created_at)
+            sort_order: Sort direction (asc, desc)
+            limit: Max results per page
+            offset: Skip first N results
+
+        Returns:
+            Tuple of (matching templates, total count before pagination)
+        """
+        ...
+
 
 class InMemoryPlanTemplateRepository(PlanTemplateRepository):
     """In-memory implementation of PlanTemplateRepository.
@@ -244,3 +270,43 @@ class InMemoryPlanTemplateRepository(PlanTemplateRepository):
 
         updated = template.record_use(success)
         self._templates[template_id] = updated
+
+    async def search(
+        self,
+        filters: dict[str, Any],
+        sort_field: str = "created_at",
+        sort_order: str = "desc",
+        limit: int = 20,
+        offset: int = 0,
+    ) -> tuple[list[PlanTemplate], int]:
+        """Search templates with filtering, sorting, and pagination."""
+        results = list(self._templates.values())
+
+        # Apply filters
+        if "tags" in filters:
+            tag_set = set(filters["tags"])
+            results = [t for t in results if tag_set & set(t.tags)]
+
+        if "orchestrator" in filters:
+            results = [t for t in results if t.orchestrator == filters["orchestrator"]]
+
+        if "query" in filters:
+            query_lower = filters["query"].lower()
+            results = [t for t in results if query_lower in t.name.lower() or query_lower in t.description.lower()]
+
+        # Get total before pagination
+        total = len(results)
+
+        # Sort
+        reverse = sort_order == "desc"
+        if sort_field == "use_count":
+            results.sort(key=lambda t: t.use_count, reverse=reverse)
+        elif sort_field == "success_rate":
+            results.sort(key=lambda t: t.success_rate, reverse=reverse)
+        else:  # created_at (default)
+            results.sort(key=lambda t: t.created_at, reverse=reverse)
+
+        # Paginate
+        results = results[offset : offset + limit]
+
+        return results, total
