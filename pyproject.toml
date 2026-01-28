@@ -66,6 +66,7 @@ dependencies = [
     "asyncpg>=0.29.0",  # PostgreSQL async driver for GDPR/HIPAA/SOC2 compliance storage
     "sqlalchemy[asyncio]>=2.0.44",  # Updated 2025-11-28: Python 3.14, free-threaded support
     "alembic>=1.17.2",  # Updated 2025-11-28: Multiple improvements
+    "pgvector>=0.3.0",  # PostgreSQL vector extension for semantic search (plan templates)
     "pyyaml>=6.0.3",
     "apscheduler>=3.11.0,<4.0.0",  # Pin to 3.x - APScheduler 4.x has breaking API changes
     "python-json-logger>=4.0.0",
@@ -876,6 +877,7 @@ markers = [
     "ai: AI UX service tests (persona analysis, disclosure, nudges, error recovery)",
     "feature_flags: Feature flag configuration and toggle tests",
     "context_graph: Context graph decision trace tests (ADR-0101)",
+    "semantic_search: Semantic search and capability discovery tests (tools, skills, memories)",
     "observability: OpenTelemetry/metrics/logging tests",
     "alerting: Alerting backend and fallback chain tests",
     "metrics: Prometheus/OTel metrics instrumentation tests",
@@ -890,9 +892,6 @@ markers = [
     "compliance: Generic compliance tests (metrics, auditing)",
     "gdpr: GDPR compliance tests (data subject rights)",
     "soc2: SOC 2 compliance tests (evidence collection, access reviews)",
-    "fedramp: FedRAMP compliance tests (government cloud, NIST controls)",
-    "hipaa: HIPAA compliance tests (healthcare data protection)",
-    "eu_ai_act: EU AI Act compliance tests (AI transparency, risk assessment)",
     "sla: SLA monitoring tests (uptime, response time, error rate)",
     "performance: Performance tests (load, stress, benchmarks)",
     "stress: Stress tests (high load, parallel execution stress)",
@@ -923,7 +922,6 @@ markers = [
     "requires_kustomize: Tests requiring kustomize CLI tool",
     "requires_kubectl: Tests requiring kubectl CLI tool",
     "requires_helm: Tests requiring helm CLI tool",
-    "requires_full_infrastructure: Tests requiring full infrastructure (make test-infra-full-up)",
     "validation: Validation tests for deployments and configurations",
     "cli: CLI tool tests",
     "skip_isolation_check: Skip enforce_worker_isolation check (for tests using worker-scoped schemas)",
@@ -991,7 +989,6 @@ markers = [
     "diagram_intelligence: Diagram intelligence AI tests (validation, diagram-to-code)",
     "conversation_intelligence: Conversation intelligence AI tests (intent, context, goals)",
     "kb_focus: KB Focus Mode tests (ADR-0094, Perplexity-style context retrieval control)",
-    "adr0099: ADR-0099 semantic tool selection tests (semantic search for tools, skills, memories)",
     "bootstrap: Application bootstrap and initialization tests (semantic index, auth, dependencies)",
     "service_principal: Service principal authentication tests (non-interactive OAuth2, M2M)",
     "session: Session data flow E2E tests (repository, messages, lifecycle)",
