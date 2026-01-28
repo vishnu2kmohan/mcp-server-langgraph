@@ -63,6 +63,8 @@ const planCardVariants = cva(
         awaiting_approval: "",
         approved: "opacity-75",
         rejected: "opacity-50",
+        executed: "opacity-75",
+        expired: "opacity-50",
       },
     },
     defaultVariants: {
@@ -94,6 +96,8 @@ const badgeVariants = cva(
         approved: "bg-success-3 text-success-11",
         rejected: "bg-error-3 text-error-11",
         awaiting_approval: "bg-primary-3 text-primary-11",
+        executed: "bg-success-3 text-success-11",
+        expired: "bg-neutral-3 text-neutral-11",
       },
     },
     defaultVariants: {

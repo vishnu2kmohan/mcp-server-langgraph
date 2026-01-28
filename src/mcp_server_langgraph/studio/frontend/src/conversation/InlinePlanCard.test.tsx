@@ -67,22 +67,45 @@ vi.mock("motion/react", () => ({
 }));
 
 describe("InlinePlanCard", () => {
+  // Full 27-field mockPlan matching ExecutionPlan interface
   const mockPlan: ExecutionPlan = {
+    // Core identification
     planId: "plan-123",
     sessionId: "session-456",
     status: "awaiting_approval",
+    // Classification
     complexity: "complicated",
     riskLevel: "medium",
     taskType: "code_generation",
+    // Model configuration
     executorModel: "claude-opus-4-5",
     criticModel: "claude-sonnet-4",
+    // Cost tracking
     estimatedCost: "$0.15",
+    actualCost: null,
+    // Content
     message: "Generate a React component",
     toolsNeeded: ["code_executor", "file_writer"],
+    // Approval configuration
+    forceApproval: false,
+    confidence: 0.85,
+    // Orchestrator
+    suggestedOrchestrator: "standard",
+    orchestrator: "standard",
+    // Computed
+    requiresApproval: true,
+    // Thinking configuration
     thinkingBudget: "medium",
     critiqueRounds: 1,
-    orchestrator: "standard",
-    requiresApproval: true,
+    // Timestamps
+    createdAt: "2025-01-27T10:00:00Z",
+    expiresAt: "2025-01-27T11:00:00Z",
+    executedAt: null,
+    approvedBy: null,
+    approvedAt: null,
+    rejectedBy: null,
+    rejectedAt: null,
+    rejectionReason: null,
   };
 
   const defaultProps = {

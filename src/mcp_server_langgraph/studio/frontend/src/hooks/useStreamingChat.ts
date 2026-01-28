@@ -33,6 +33,7 @@ import {
   type ExecutionPlan,
   type RoutingDecision,
 } from "../store/slices/executionModeSlice";
+import { transformSnakeToCamel } from "../api/transforms";
 
 /**
  * Token usage information from streaming response
@@ -69,21 +70,13 @@ export interface AuthRequiredEvent {
 
 /**
  * Plan generated event from SSE stream
- * Emitted when an execution plan is generated and requires approval
+ * Emitted when an execution plan is generated and requires approval.
+ *
+ * Uses the same type as ExecutionPlan from executionModeSlice since SSE
+ * now sends all 27 fields via plan_to_dict. This avoids type duplication
+ * and ensures SSE payload matches Redux state.
  */
-export interface PlanGeneratedEvent {
-  planId: string;
-  status: "awaiting_approval" | "approved" | "rejected";
-  complexity: "simple" | "complicated" | "complex";
-  riskLevel: "low" | "medium" | "high";
-  taskType: string;
-  executorModel: string;
-  estimatedCost: string;
-  toolsNeeded: string[];
-  thinkingBudget: string;
-  critiqueRounds: number;
-  requiresApproval: boolean;
-}
+export type PlanGeneratedEvent = ExecutionPlan;
 
 /**
  * Routing decision event from SSE stream
@@ -415,20 +408,11 @@ export function useStreamingChat(): UseStreamingChatReturn {
           }
 
           // Handle plan_generated events (Execution Mode feature)
+          // Uses transformSnakeToCamel to convert all 27 fields from snake_case
           if (data.plan_generated) {
-            result.planGenerated = {
-              planId: data.plan_generated.plan_id,
-              status: data.plan_generated.status,
-              complexity: data.plan_generated.complexity,
-              riskLevel: data.plan_generated.risk_level,
-              taskType: data.plan_generated.task_type,
-              executorModel: data.plan_generated.executor_model,
-              estimatedCost: data.plan_generated.estimated_cost,
-              toolsNeeded: data.plan_generated.tools_needed ?? [],
-              thinkingBudget: data.plan_generated.thinking_budget,
-              critiqueRounds: data.plan_generated.critique_rounds,
-              requiresApproval: data.plan_generated.requires_approval,
-            };
+            result.planGenerated = transformSnakeToCamel(
+              data.plan_generated,
+            ) as ExecutionPlan;
           }
 
           // Handle routing_decision events (Router Agent classification)
@@ -636,23 +620,15 @@ export function useStreamingChat(): UseStreamingChatReturn {
               }
 
               // Dispatch plan_generated to Redux (Issue 7: Wire up plan rendering)
-              if (parsed.planGenerated && sessionIdRef.current) {
+              // parsed.planGenerated is already camelCase from transformSnakeToCamel
+              // Prefer sessionId from SSE payload, fallback to sessionIdRef
+              if (parsed.planGenerated) {
                 const plan: ExecutionPlan = {
-                  planId: parsed.planGenerated.planId,
-                  sessionId: sessionIdRef.current,
-                  status: parsed.planGenerated.status,
-                  complexity: parsed.planGenerated.complexity,
-                  riskLevel: parsed.planGenerated.riskLevel,
-                  taskType: parsed.planGenerated.taskType,
-                  executorModel: parsed.planGenerated.executorModel,
-                  criticModel: "", // Optional field, not always in SSE
-                  estimatedCost: parsed.planGenerated.estimatedCost,
-                  message: "", // Optional field, not always in SSE
-                  toolsNeeded: parsed.planGenerated.toolsNeeded,
-                  thinkingBudget: parsed.planGenerated.thinkingBudget,
-                  critiqueRounds: parsed.planGenerated.critiqueRounds,
-                  orchestrator: "", // Optional field, not always in SSE
-                  requiresApproval: parsed.planGenerated.requiresApproval,
+                  ...parsed.planGenerated,
+                  sessionId:
+                    parsed.planGenerated.sessionId ||
+                    sessionIdRef.current ||
+                    "",
                 };
                 dispatch(setPlan(plan));
               }

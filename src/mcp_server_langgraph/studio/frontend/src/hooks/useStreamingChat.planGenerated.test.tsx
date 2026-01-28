@@ -194,19 +194,46 @@ describe("useStreamingChat plan_generated SSE handling", () => {
     const { authenticatedFetch } = await import("../utils/authenticatedFetch");
     const mockFetch = vi.mocked(authenticatedFetch);
 
+    // Full 27-field plan event matching ExecutionPlan interface
     const planEvent = {
       plan_generated: {
+        // Core identification
         plan_id: "plan-full",
+        session_id: "session-test",
         status: "awaiting_approval",
+        // Classification
         complexity: "complicated",
         risk_level: "medium",
         task_type: "refactoring",
+        // Model configuration
         executor_model: "claude-3-opus-20240229",
+        critic_model: "claude-sonnet-4",
+        // Cost tracking
         estimated_cost: "$0.50",
+        actual_cost: null,
+        // Content
+        message: "Refactor this module",
         tools_needed: ["read_file", "write_file", "search_codebase"],
+        // Approval configuration
+        force_approval: false,
+        confidence: 0.85,
+        // Orchestrator
+        suggested_orchestrator: "standard",
+        orchestrator: "standard",
+        // Computed
+        requires_approval: true,
+        // Thinking configuration
         thinking_budget: "medium",
         critique_rounds: 1,
-        requires_approval: true,
+        // Timestamps
+        created_at: "2025-01-27T10:00:00Z",
+        expires_at: "2025-01-27T11:00:00Z",
+        executed_at: null,
+        approved_by: null,
+        approved_at: null,
+        rejected_by: null,
+        rejected_at: null,
+        rejection_reason: null,
       },
     };
 
@@ -235,22 +262,45 @@ describe("useStreamingChat plan_generated SSE handling", () => {
     const state = store.getState();
     const currentPlan = selectCurrentPlan(state);
 
+    // Verify full 27-field plan was parsed correctly
     expect(currentPlan).toEqual({
+      // Core identification
       planId: "plan-full",
       sessionId: "session-test",
       status: "awaiting_approval",
+      // Classification
       complexity: "complicated",
       riskLevel: "medium",
       taskType: "refactoring",
+      // Model configuration
       executorModel: "claude-3-opus-20240229",
-      criticModel: "", // Optional field
+      criticModel: "claude-sonnet-4",
+      // Cost tracking
       estimatedCost: "$0.50",
-      message: "", // Optional field
+      actualCost: null,
+      // Content
+      message: "Refactor this module",
       toolsNeeded: ["read_file", "write_file", "search_codebase"],
+      // Approval configuration
+      forceApproval: false,
+      confidence: 0.85,
+      // Orchestrator
+      suggestedOrchestrator: "standard",
+      orchestrator: "standard",
+      // Computed
+      requiresApproval: true,
+      // Thinking configuration
       thinkingBudget: "medium",
       critiqueRounds: 1,
-      orchestrator: "", // Optional field
-      requiresApproval: true,
+      // Timestamps
+      createdAt: "2025-01-27T10:00:00Z",
+      expiresAt: "2025-01-27T11:00:00Z",
+      executedAt: null,
+      approvedBy: null,
+      approvedAt: null,
+      rejectedBy: null,
+      rejectedAt: null,
+      rejectionReason: null,
     });
   });
 

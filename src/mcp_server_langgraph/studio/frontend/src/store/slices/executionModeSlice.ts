@@ -62,40 +62,85 @@ export interface RoutingDecision {
 }
 
 /**
- * Execution plan data from SSE stream
- * Matches the plan_generated SSE event structure
+ * Execution plan data from SSE stream (27 fields)
+ * Matches the plan_generated SSE event structure from plan_to_dict()
  */
 export interface ExecutionPlan {
+  // Core identification
   /** Unique plan identifier */
   planId: string;
   /** Session this plan belongs to */
   sessionId: string;
   /** Current plan status */
-  status: "awaiting_approval" | "approved" | "rejected";
+  status: "awaiting_approval" | "approved" | "rejected" | "executed" | "expired";
+
+  // Classification
   /** Task complexity level */
   complexity: "simple" | "complicated" | "complex";
   /** Risk level assessment */
   riskLevel: "low" | "medium" | "high";
   /** Type of task */
   taskType: string;
+
+  // Model configuration
   /** Model for execution */
   executorModel: string;
-  /** Model for critique */
-  criticModel: string;
+  /** Model for critique (nullable) */
+  criticModel: string | null;
+
+  // Cost tracking
   /** Estimated cost in USD */
   estimatedCost: string;
+  /** Actual cost after execution (nullable) */
+  actualCost: string | null;
+
+  // Content
   /** Original user message */
   message: string;
   /** Tools required for execution */
   toolsNeeded: string[];
+
+  // Approval configuration
+  /** Whether approval is forced regardless of risk */
+  forceApproval: boolean;
+  /** Router confidence score (0-1) */
+  confidence: number;
+
+  // Orchestrator
+  /** Suggested orchestrator pattern from router */
+  suggestedOrchestrator: string;
+  /** Orchestrator pattern (alias for suggestedOrchestrator) */
+  orchestrator: string;
+
+  // Computed property
+  /** Whether this plan requires user approval */
+  requiresApproval: boolean;
+
+  // Thinking configuration
   /** Thinking budget level */
   thinkingBudget: string;
   /** Number of critique rounds */
   critiqueRounds: number;
-  /** Orchestrator pattern */
-  orchestrator: string;
-  /** Whether this plan requires user approval */
-  requiresApproval: boolean;
+
+  // Timestamps (ISO strings or null)
+  /** When the plan was created */
+  createdAt: string | null;
+  /** When the plan expires */
+  expiresAt: string | null;
+  /** When the plan was executed */
+  executedAt: string | null;
+
+  // Approval/rejection tracking
+  /** User who approved the plan */
+  approvedBy: string | null;
+  /** When the plan was approved */
+  approvedAt: string | null;
+  /** User who rejected the plan */
+  rejectedBy: string | null;
+  /** When the plan was rejected */
+  rejectedAt: string | null;
+  /** Reason for rejection */
+  rejectionReason: string | null;
 }
 
 /**
