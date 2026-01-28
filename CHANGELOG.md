@@ -104,6 +104,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `check:unused` npm script
   - `knip.json` configuration with tuned ignores
 
+- **Semantic Tool Selection (ADR-0099)** - Dynamic capability discovery using semantic search for scalable tool, skill, and memory selection:
+  - **SemanticIndexManager** (`src/mcp_server_langgraph/core/semantic_index_manager.py`):
+    - Central manager for indexing and searching tools, skills, and memories
+    - Qdrant-backed vector search with embedding generation
+    - Multi-tenant isolation via `tenant_id` filtering
+    - OpenFGA authorization integration with fail-closed semantics
+    - Authorization caching with TTLCache (local) and CacheService (distributed)
+    - Prometheus metrics for cache hit rate, search latency, and authorization checks
+  - **Dynamic Tool Binding** in Agent Graph (`src/mcp_server_langgraph/core/agent_graph_builder.py`):
+    - `retrieve_tools` node: Semantic search to select relevant tools (max 10 by default)
+    - `retrieve_skills` node: Semantic search for skills based on query
+    - `retrieve_memories` node: Semantic search for user/session memories
+    - `_generate_response_impl`: Binds only selected tools to LLM (not all tools)
+    - Graceful fallback to all tools if semantic search fails
+  - **SSE Events for Frontend** (`src/mcp_server_langgraph/api/v1/chat.py`):
+    - `selected_tools` event: Emits selected tool names, scores, and total available
+    - Real-time visibility into semantic selection in chat stream
+  - **Feature Flags** (`src/mcp_server_langgraph/core/feature_flags.py`):
+    - `FF_ENABLE_SEMANTIC_TOOL_SEARCH`: Enable tool semantic discovery (default: off)
+    - `FF_ENABLE_SEMANTIC_SKILL_SEARCH`: Enable skill semantic discovery (default: off)
+    - `FF_ENABLE_SEMANTIC_MEMORY_SEARCH`: Enable memory semantic retrieval (default: off)
+  - **Frontend Integration** (`src/mcp_server_langgraph/studio/frontend/`):
+    - `SelectedToolsDisplay` component in ChatMessage for rendering selected tools
+    - SkillsPage with marketplace integration and search
+  - **Data Models** (`src/mcp_server_langgraph/tools/semantic_index.py`):
+    - `ToolIndexEntry`: Tool metadata with embedding, category, scope, token estimate
+    - `SkillIndexEntry`: Skill metadata with tools_needed list
+    - `MemoryIndexEntry`: Memory with type (preference, fact, context, history)
+  - **Performance**: 34-64% token savings for requests using subset of tools (Anthropic pattern)
+  - **Documentation**: ADR-0099 with 10 decision sections, implementation status, test coverage
+  - **Tests**: 155+ unit tests, 7 E2E tests across 16 test suites (all passing)
+
 - **Multi-Agent Orchestrator Pattern (ADR-0078)** - Parallel execution orchestrators for AI analysis:
   - **BaseOrchestrator** (`src/mcp_server_langgraph/agents/base_orchestrator.py`):
     - Abstract base class with `asyncio.gather(return_exceptions=True)` for parallel task execution
