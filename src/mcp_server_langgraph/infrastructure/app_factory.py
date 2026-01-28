@@ -363,24 +363,8 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
             logger.warning(f"LiteLLM OTEL callback configuration failed: {e}")
             # Non-fatal: tracing will be disabled
 
-        # Initialize unified tool registry (v7)
-        # Syncs MCP tools from CachedUnifiedRegistry and registers native tools
-        from mcp_server_langgraph.tools.unified_registry import (
-            get_tool_registry,
-            sync_mcp_tools,
-        )
-
-        try:
-            # Get registry (initializes builtin and native tools)
-            registry = get_tool_registry()
-            logger.info(f"Tool registry initialized with {len(registry.get_all())} tools")
-
-            # Sync MCP tools (if any MCP servers are connected)
-            await sync_mcp_tools()
-            logger.info("MCP tools synced to unified registry")
-        except Exception as e:
-            logger.warning(f"Tool registry initialization failed: {e}")
-            # Non-fatal: tools will be loaded on demand
+        # NOTE: MCP sync + semantic indexing moved to app.py lifespan (v26)
+        # See: sync_mcp_tools() + index_all_tools() in app.py
 
     yield
 

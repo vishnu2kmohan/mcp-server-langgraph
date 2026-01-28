@@ -84,6 +84,22 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
         # Bootstrap all components using modular initialization
         state: AppState = await bootstrap_all(config)
 
+        # Phase 9: MCP sync + semantic indexing (v26 canonical startup sequence)
+        # MUST be in this order: sync_mcp_tools() THEN index_all_tools()
+        from mcp_server_langgraph.bootstrap.semantic import index_all_tools
+        from mcp_server_langgraph.tools.unified_registry import sync_mcp_tools
+
+        try:
+            # Step 1: Sync MCP tools to unified registry
+            await sync_mcp_tools()
+            logger.info("MCP tools synced to unified registry")
+
+            # Step 2: Index ALL tools (builtin + MCP) for semantic search
+            await index_all_tools()
+            logger.info("All tools indexed for semantic search")
+        except Exception as e:
+            logger.warning(f"MCP sync/index failed (non-fatal): {e}")
+
         # Store in app.state for request-scoped access via api/deps.py
         app.state.openfga_client = state.security.openfga_client if state.security else None
         app.state.http_client_manager = state.http.http_client_manager if state.http else None

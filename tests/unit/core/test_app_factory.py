@@ -202,3 +202,151 @@ class TestAppFactoryRouterMounting:
 
         assert app is not None
         assert isinstance(app, FastAPI)
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_app_startup_sequence")
+class TestAppStartupSequence:
+    """Tests for app.py lifespan startup sequence (v26).
+
+    Verifies canonical startup: sync_mcp_tools() THEN index_all_tools().
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_lifespan_calls_sync_mcp_tools(self, monkeypatch):
+        """Lifespan calls sync_mcp_tools() during startup."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        call_order: list[str] = []
+
+        async def mock_sync_mcp_tools():
+            call_order.append("sync_mcp_tools")
+
+        async def mock_index_all_tools():
+            call_order.append("index_all_tools")
+
+        # Mock bootstrap_all to return a minimal state
+        mock_state = MagicMock()
+        mock_state.security = None
+        mock_state.http = None
+        mock_state.storage = None
+        mock_state.websocket = None
+        mock_state.context_graph = None
+        mock_state.skills = None
+        mock_state.cleanup = AsyncMock(return_value=None)
+
+        with (
+            patch("mcp_server_langgraph.app.bootstrap_all", return_value=mock_state),
+            patch("mcp_server_langgraph.app.run_startup_validation_async", new_callable=AsyncMock),
+            patch(
+                "mcp_server_langgraph.tools.unified_registry.sync_mcp_tools",
+                mock_sync_mcp_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.semantic.index_all_tools",
+                mock_index_all_tools,
+            ),
+        ):
+            from mcp_server_langgraph.app import create_app
+            from mcp_server_langgraph.observability.telemetry import shutdown_observability
+
+            try:
+                app = create_app(skip_startup_validation=True)
+                # Trigger lifespan
+                async with app.router.lifespan_context(app):
+                    pass
+
+                assert "sync_mcp_tools" in call_order
+            finally:
+                shutdown_observability()
+
+    @pytest.mark.asyncio
+    async def test_lifespan_calls_index_all_tools_after_sync_mcp_tools(self, monkeypatch):
+        """Lifespan calls index_all_tools() AFTER sync_mcp_tools()."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        call_order: list[str] = []
+
+        async def mock_sync_mcp_tools():
+            call_order.append("sync_mcp_tools")
+
+        async def mock_index_all_tools():
+            call_order.append("index_all_tools")
+
+        mock_state = MagicMock()
+        mock_state.security = None
+        mock_state.http = None
+        mock_state.storage = None
+        mock_state.websocket = None
+        mock_state.context_graph = None
+        mock_state.skills = None
+        mock_state.cleanup = AsyncMock(return_value=None)
+
+        with (
+            patch("mcp_server_langgraph.app.bootstrap_all", return_value=mock_state),
+            patch("mcp_server_langgraph.app.run_startup_validation_async", new_callable=AsyncMock),
+            patch(
+                "mcp_server_langgraph.tools.unified_registry.sync_mcp_tools",
+                mock_sync_mcp_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.semantic.index_all_tools",
+                mock_index_all_tools,
+            ),
+        ):
+            from mcp_server_langgraph.app import create_app
+            from mcp_server_langgraph.observability.telemetry import shutdown_observability
+
+            try:
+                app = create_app(skip_startup_validation=True)
+                async with app.router.lifespan_context(app):
+                    pass
+
+                # Both should be called
+                assert "sync_mcp_tools" in call_order
+                assert "index_all_tools" in call_order
+
+                # sync_mcp_tools MUST come before index_all_tools
+                assert call_order.index("sync_mcp_tools") < call_order.index("index_all_tools")
+            finally:
+                shutdown_observability()
+
+    @pytest.mark.asyncio
+    async def test_lifespan_handles_mcp_sync_failure_gracefully(self, monkeypatch):
+        """Lifespan continues even if MCP sync/index fails."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        async def mock_sync_mcp_tools():
+            raise RuntimeError("MCP connection failed")
+
+        mock_state = MagicMock()
+        mock_state.security = None
+        mock_state.http = None
+        mock_state.storage = None
+        mock_state.websocket = None
+        mock_state.context_graph = None
+        mock_state.skills = None
+        mock_state.cleanup = AsyncMock(return_value=None)
+
+        with (
+            patch("mcp_server_langgraph.app.bootstrap_all", return_value=mock_state),
+            patch("mcp_server_langgraph.app.run_startup_validation_async", new_callable=AsyncMock),
+            patch(
+                "mcp_server_langgraph.tools.unified_registry.sync_mcp_tools",
+                mock_sync_mcp_tools,
+            ),
+        ):
+            from mcp_server_langgraph.app import create_app
+            from mcp_server_langgraph.observability.telemetry import shutdown_observability
+
+            try:
+                app = create_app(skip_startup_validation=True)
+                # Should NOT raise even though sync failed
+                async with app.router.lifespan_context(app):
+                    pass
+            finally:
+                shutdown_observability()
