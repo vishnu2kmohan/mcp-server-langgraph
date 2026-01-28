@@ -506,12 +506,21 @@ class LLMFactory:
             AIMessage with the response
 
         Raises:
+            ValueError: If OpenAI native_tools used without Responses API (v26)
             CircuitBreakerOpenError: If circuit breaker is open
             RetryExhaustedError: If all retry attempts failed
             TimeoutError: If operation exceeds 60s timeout
             BulkheadRejectedError: If too many concurrent LLM calls
             LLMProviderError: For other LLM provider errors
         """
+        # v26: Validate OpenAI native tools configuration
+        if native_tools and self.provider == "openai":
+            if not feature_flags.use_responses_api_for_openai:
+                raise ValueError(
+                    "OpenAI native tools require use_responses_api_for_openai=True. "
+                    "Either enable the Responses API feature flag or remove native_tools."
+                )
+
         import time
 
         start_time = time.perf_counter()
@@ -1010,6 +1019,7 @@ class LLMFactory:
             TimeoutError: If first_chunk_timeout or inter_chunk_timeout is exceeded
             CircuitBreakerOpenError: If circuit breaker is open
             BulkheadRejectedError: If too many concurrent LLM calls
+            ValueError: If OpenAI native_tools used without Responses API (v26)
         """
         import asyncio
         import time
@@ -1019,6 +1029,15 @@ class LLMFactory:
         inter_chunk_timeout = kwargs.pop("inter_chunk_timeout", None)
         enable_retry = kwargs.pop("enable_retry", False)
         max_retries = kwargs.pop("max_retries", 3)
+        native_tools = kwargs.pop("native_tools", None)
+
+        # v26: Validate OpenAI native tools configuration
+        if native_tools and self.provider == "openai":
+            if not feature_flags.use_responses_api_for_openai:
+                raise ValueError(
+                    "OpenAI native tools require use_responses_api_for_openai=True. "
+                    "Either enable the Responses API feature flag or remove native_tools."
+                )
 
         start_time = time.perf_counter()
 
