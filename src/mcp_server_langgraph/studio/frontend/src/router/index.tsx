@@ -6,6 +6,7 @@ import { PersonaGuard } from "./guards/PersonaGuard";
 import { PermissionGuard } from "./guards/PermissionGuard";
 import { RootRedirect } from "./guards/RootRedirect";
 import { StudioShellGuard } from "./guards/StudioShellGuard";
+import { RouteErrorBoundary } from "./RouteErrorBoundary";
 import {
   chatLoader,
   sessionsLoader,
@@ -76,6 +77,8 @@ export const router = createBrowserRouter(
               <StudioShellGuard />
             </AuthGuard>
           ),
+          // Catch errors from all child routes
+          errorElement: <RouteErrorBoundary />,
           // Load sessions for SessionNav on shell mount
           loader: sessionsLoader,
           children: [
@@ -192,7 +195,9 @@ export const router = createBrowserRouter(
             // MCP - redirect to Connections Capabilities tab (ADR-0102 consolidation)
             {
               path: "mcp",
-              element: <Navigate to="/studio/connections?tab=capabilities" replace />,
+              element: (
+                <Navigate to="/studio/connections?tab=capabilities" replace />
+              ),
             },
             // Connections section - admin/developer only
             {
@@ -215,7 +220,12 @@ export const router = createBrowserRouter(
                 // MCP - redirect to Capabilities tab (ADR-0102 consolidation)
                 {
                   path: "mcp",
-                  element: <Navigate to="/studio/connections?tab=capabilities" replace />,
+                  element: (
+                    <Navigate
+                      to="/studio/connections?tab=capabilities"
+                      replace
+                    />
+                  ),
                 },
                 {
                   path: "agents",

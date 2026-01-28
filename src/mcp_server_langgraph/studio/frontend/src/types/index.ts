@@ -215,3 +215,4 @@ export * from "./mcp";
 export * from "./session";
 export * from "./tools";
 export * from "./workflow";
+export * from "./skills";

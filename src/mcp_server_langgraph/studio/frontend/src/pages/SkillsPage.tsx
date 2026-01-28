@@ -8,21 +8,20 @@
  * - Updates: Check for and apply skill updates
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Package,
-  Download,
-  Trash2,
   RefreshCw,
   Search,
   Filter,
-  CheckCircle,
   AlertCircle,
   Loader2,
   Store,
   HardDrive,
   ArrowUpCircle,
   Lock,
+  Settings,
+  X,
 } from "lucide-react";
 import {
   useListMarketplaceSkillsQuery,
@@ -31,6 +30,10 @@ import {
   useUninstallSkillMutation,
   useCheckSkillUpdatesQuery,
   useApplySkillUpdatesMutation,
+  useListMarketplacesQuery,
+  useAddMarketplaceMutation,
+  useRemoveMarketplaceMutation,
+  useSyncMarketplaceMutation,
   type SkillMetadata,
 } from "../api";
 import { useFeatureFlags } from "../contexts/FeatureFlagContext";
@@ -39,6 +42,19 @@ import { useFeatureFlags } from "../contexts/FeatureFlagContext";
 // (page chunks end up separate from UI barrel)
 import { Button } from "@/components/UI/Button";
 import { Input } from "@/components/UI/Input";
+import { Select } from "@/components/UI/Select";
+import {
+  SkillDetails,
+  InstallDialog,
+  UninstallDialog,
+  BrowseContent,
+  InstalledContent,
+  UpdatesContent,
+  MarketplaceManager,
+  AddMarketplaceDialog,
+  RemoveMarketplaceDialog,
+} from "@/components/Skills";
+import type { AddMarketplaceFormData } from "@/components/Skills";
 
 type SkillsTab = "browse" | "installed" | "updates";
 
@@ -76,7 +92,35 @@ export function SkillsPage() {
   const [activeTab, setActiveTab] = useState<SkillsTab>("browse");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedMarketplace, setSelectedMarketplace] = useState("anthropic");
   const [actionError, setActionError] = useState<string | null>(null);
+  // Client-side pagination: how many skills to display (incremented by Load More)
+  const [visibleCount, setVisibleCount] = useState(12);
+  // Modal state management
+  const [selectedSkill, setSelectedSkill] = useState<SkillMetadata | null>(
+    null,
+  );
+  const [showDetails, setShowDetails] = useState(false);
+  const [showInstallConfirm, setShowInstallConfirm] = useState(false);
+  const [showUninstallConfirm, setShowUninstallConfirm] = useState(false);
+  const [skillToUninstall, setSkillToUninstall] = useState<string | null>(null);
+  // Marketplace management state
+  const [showSettings, setShowSettings] = useState(false);
+  const [showAddMarketplace, setShowAddMarketplace] = useState(false);
+  const [addMarketplaceError, setAddMarketplaceError] = useState<string | null>(
+    null,
+  );
+  const [syncingMarketplace, setSyncingMarketplace] = useState<string | null>(
+    null,
+  );
+  const [showRemoveMarketplace, setShowRemoveMarketplace] = useState(false);
+  const [marketplaceToRemove, setMarketplaceToRemove] = useState<string | null>(
+    null,
+  );
+  const [isRemovingMarketplace, setIsRemovingMarketplace] = useState(false);
+  // Import cn utility for class merging (STYLE.md Section 2)
+  const cn = (...classes: (string | boolean | undefined)[]) =>
+    classes.filter(Boolean).join(" ");
 
   // Feature flag check
   const { isEnabled, isLoading: isFlagsLoading } = useFeatureFlags();
@@ -92,6 +136,7 @@ export function SkillsPage() {
     {
       search: searchQuery || undefined,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
+      marketplace: selectedMarketplace,
     },
     { skip: !isMarketplaceEnabled },
   );
@@ -114,6 +159,19 @@ export function SkillsPage() {
   const [applyUpdates, { isLoading: isApplyingUpdates }] =
     useApplySkillUpdatesMutation();
 
+  // Marketplace management hooks
+  const {
+    data: marketplacesData,
+    isLoading: isLoadingMarketplaces,
+    error: marketplacesError,
+  } = useListMarketplacesQuery(undefined, { skip: !isMarketplaceEnabled });
+
+  const [addMarketplace, { isLoading: isAddingMarketplace }] =
+    useAddMarketplaceMutation();
+  const [removeMarketplace] = useRemoveMarketplaceMutation();
+  const [syncMarketplace, { isLoading: isSyncingMarketplace }] =
+    useSyncMarketplaceMutation();
+
   // Filtered skills based on search
   const filteredSkills = useMemo(() => {
     if (!marketplaceData?.skills) return [];
@@ -127,6 +185,17 @@ export function SkillsPage() {
     );
   }, [marketplaceData?.skills, searchQuery]);
 
+  // Client-side pagination: slice filteredSkills to visibleCount
+  const visibleSkills = useMemo(
+    () => filteredSkills.slice(0, visibleCount),
+    [filteredSkills, visibleCount],
+  );
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [searchQuery, selectedTags, selectedMarketplace]);
+
   // Extract unique tags for filtering
   const availableTags = useMemo(() => {
     if (!marketplaceData?.skills) return [];
@@ -137,15 +206,31 @@ export function SkillsPage() {
     return Array.from(tagSet).sort();
   }, [marketplaceData?.skills]);
 
+  // Dynamic marketplace options from registered marketplaces
+  const marketplaceOptions = useMemo(() => {
+    if (!marketplacesData?.marketplaces) {
+      // Fallback to default if no marketplaces loaded yet
+      return [{ value: "anthropic", label: "Anthropic" }];
+    }
+    return marketplacesData.marketplaces.map((mp) => ({
+      value: mp.name,
+      // Capitalize first letter for display
+      label: mp.name.charAt(0).toUpperCase() + mp.name.slice(1),
+    }));
+  }, [marketplacesData?.marketplaces]);
+
   // Show disabled state if feature is not enabled (after all hooks)
   if (!isFlagsLoading && !isMarketplaceEnabled) {
     return (
-      <div className="flex flex-col h-full bg-surface-primary">
+      <div
+        className="flex flex-col h-full bg-neutral-1"
+        data-testid="skills-page-disabled"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border-primary">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-6">
           <div className="flex items-center gap-3">
-            <Package className="w-6 h-6 text-text-tertiary" />
-            <h1 className="text-xl font-semibold text-text-primary">
+            <Package className="w-6 h-6 text-neutral-9" />
+            <h1 className="text-xl font-semibold text-neutral-12">
               Skills Marketplace
             </h1>
           </div>
@@ -154,13 +239,13 @@ export function SkillsPage() {
         {/* Disabled State */}
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center text-center max-w-md px-6">
-            <div className="w-16 h-16 rounded-full bg-surface-secondary flex items-center justify-center mb-4">
-              <Lock className="w-8 h-8 text-text-tertiary" />
+            <div className="w-16 h-16 rounded-full bg-neutral-3 flex items-center justify-center mb-4">
+              <Lock className="w-8 h-8 text-neutral-9" />
             </div>
-            <h2 className="text-lg font-semibold text-text-primary mb-2">
+            <h2 className="text-lg font-semibold text-neutral-12 mb-2">
               Skills Marketplace Disabled
             </h2>
-            <p className="text-text-secondary">
+            <p className="text-neutral-11">
               The skills marketplace feature is currently disabled for your
               organization. Contact your administrator to enable this feature.
             </p>
@@ -182,16 +267,35 @@ export function SkillsPage() {
     }
   };
 
-  const handleUninstall = async (skillName: string) => {
+  // Show uninstall confirmation dialog
+  const handleUninstallRequest = (skillName: string) => {
+    setSkillToUninstall(skillName);
+    setShowUninstallConfirm(true);
+  };
+
+  // Actually perform the uninstall after confirmation
+  const handleUninstallConfirm = async () => {
+    if (!skillToUninstall) return;
+
     setActionError(null);
     try {
-      await uninstallSkill(skillName).unwrap();
+      await uninstallSkill(skillToUninstall).unwrap();
       refetchInstalled();
+      setShowUninstallConfirm(false);
+      setSkillToUninstall(null);
     } catch (error) {
       const message = getErrorMessage(error);
-      setActionError(`Failed to uninstall "${skillName}": ${message}`);
+      setActionError(`Failed to uninstall "${skillToUninstall}": ${message}`);
       console.error("Failed to uninstall skill:", error);
+      setShowUninstallConfirm(false);
+      setSkillToUninstall(null);
     }
+  };
+
+  // Close uninstall dialog
+  const handleUninstallCancel = () => {
+    setShowUninstallConfirm(false);
+    setSkillToUninstall(null);
   };
 
   const handleApplyUpdates = async () => {
@@ -212,6 +316,71 @@ export function SkillsPage() {
     if (activeTab === "browse") refetchMarketplace();
     else if (activeTab === "installed") refetchInstalled();
     else refetchUpdates();
+  };
+
+  // Marketplace management handlers
+  const handleAddMarketplace = async (data: AddMarketplaceFormData) => {
+    setAddMarketplaceError(null);
+    try {
+      await addMarketplace({
+        name: data.name,
+        uri: data.uri,
+        type: data.type,
+        trusted: data.trusted,
+        autoSync: data.autoSync,
+        requiresApproval: data.requiresApproval,
+      }).unwrap();
+      setShowAddMarketplace(false);
+    } catch (error) {
+      const message = getErrorMessage(error);
+      setAddMarketplaceError(message);
+    }
+  };
+
+  // Show remove confirmation dialog
+  const handleRemoveMarketplaceRequest = (name: string) => {
+    setMarketplaceToRemove(name);
+    setShowRemoveMarketplace(true);
+  };
+
+  // Actually perform the removal after confirmation
+  const handleRemoveMarketplaceConfirm = async () => {
+    if (!marketplaceToRemove) return;
+
+    setIsRemovingMarketplace(true);
+    try {
+      await removeMarketplace(marketplaceToRemove).unwrap();
+      setShowRemoveMarketplace(false);
+      setMarketplaceToRemove(null);
+    } catch (error) {
+      const message = getErrorMessage(error);
+      setActionError(
+        `Failed to remove marketplace "${marketplaceToRemove}": ${message}`,
+      );
+      setShowRemoveMarketplace(false);
+      setMarketplaceToRemove(null);
+    } finally {
+      setIsRemovingMarketplace(false);
+    }
+  };
+
+  // Close remove dialog
+  const handleRemoveMarketplaceCancel = () => {
+    setShowRemoveMarketplace(false);
+    setMarketplaceToRemove(null);
+  };
+
+  const handleSyncMarketplace = async (name: string) => {
+    setSyncingMarketplace(name);
+    try {
+      await syncMarketplace(name).unwrap();
+      refetchMarketplace();
+    } catch (error) {
+      const message = getErrorMessage(error);
+      setActionError(`Failed to sync marketplace "${name}": ${message}`);
+    } finally {
+      setSyncingMarketplace(null);
+    }
   };
 
   const tabs = [
@@ -243,37 +412,63 @@ export function SkillsPage() {
         : isLoadingUpdates;
 
   return (
-    <div className="flex flex-col h-full bg-surface-primary">
+    <div
+      className="flex flex-col h-full bg-neutral-1"
+      data-testid="skills-page"
+    >
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border-primary">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-6">
         <div className="flex items-center gap-3">
-          <Package className="w-6 h-6 text-accent-primary" />
-          <h1 className="text-xl font-semibold text-text-primary">
+          <Package className="w-6 h-6 text-primary-9" />
+          <h1 className="text-xl font-semibold text-neutral-12">
             Skills Marketplace
           </h1>
         </div>
 
-        <Button
-          variant="ghost"
-          className="flex px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary rounded-md"
-          onClick={handleRefresh}
-          disabled={isLoading}>
-          <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            className="flex gap-2 focus-visible:ring-2 focus-visible:ring-primary-9"
+            onClick={handleRefresh}
+            disabled={isLoading}
+            data-testid="skills-refresh-button"
+          >
+            <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+            Refresh
+          </Button>
+          <Button
+            variant="ghost"
+            className="flex gap-2 focus-visible:ring-2 focus-visible:ring-primary-9"
+            onClick={() => setShowSettings(true)}
+            data-testid="skills-settings-button"
+            aria-label="Settings"
+          >
+            <Settings className="w-4 h-4" />
+            Settings
+          </Button>
+        </div>
       </div>
       {/* Tabs */}
-      <div className="flex items-center gap-1 px-6 py-2 border-b border-border-primary bg-surface-secondary/50">
+      <div
+        className="flex items-center gap-1 px-6 py-2 border-b border-neutral-6 bg-neutral-2"
+        data-testid="skills-tabs"
+      >
         {tabs.map((tab) => (
           <Button
-            variant="primary"
-            className="flex px-4 py-2 text-sm rounded-md"
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}>
+            variant={activeTab === tab.id ? "secondary" : "ghost"}
+            className={cn(
+              "flex gap-2 focus-visible:ring-2 focus-visible:ring-primary-9",
+              activeTab === tab.id && "bg-neutral-3",
+            )}
+            onClick={() => setActiveTab(tab.id)}
+            data-testid={`skills-tab-${tab.id}`}
+            aria-selected={activeTab === tab.id}
+          >
             <tab.icon className="w-4 h-4" />
             {tab.label}
             {tab.count > 0 && (
-              <span className="px-1.5 py-0.5 text-xs bg-surface-tertiary rounded-full">
+              <span className="px-1.5 py-0.5 text-xs bg-neutral-4 text-neutral-11 rounded-full">
                 {tab.count}
               </span>
             )}
@@ -282,34 +477,64 @@ export function SkillsPage() {
       </div>
       {/* Search and Filters (Browse tab only) */}
       {activeTab === "browse" && (
-        <div className="flex items-center gap-4 px-6 py-3 border-b border-border-primary">
+        <div
+          className="flex items-center gap-4 px-6 py-3 border-b border-neutral-6"
+          data-testid="skills-filters"
+        >
+          {/* Marketplace Selector */}
+          <div className="flex items-center gap-2">
+            <Store className="w-4 h-4 text-neutral-9" />
+            <Select
+              aria-label="Marketplace"
+              value={selectedMarketplace}
+              onChange={(e) => {
+                setSelectedMarketplace(e.target.value);
+                refetchMarketplace();
+              }}
+              size="sm"
+              fullWidth={false}
+              options={marketplaceOptions}
+              data-testid="skills-marketplace-select"
+            />
+          </div>
+
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-9" />
             <Input
-              className="pl-9 pr-4 py-2 text-sm bg-surface-secondary border-border-primary text-text-primary placeholder-text-tertiary focus:ring-accent-primary/20 -primary"
+              className="pl-9 pr-4 py-2 text-sm bg-neutral-2 border-neutral-6 text-neutral-12 placeholder-neutral-9 focus:ring-2 focus:ring-primary-9/40"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search skills..."
+              data-testid="skills-search-input"
             />
           </div>
 
           {availableTags.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-text-tertiary" />
+            <div
+              className="flex items-center gap-2"
+              data-testid="skills-tag-filters"
+            >
+              <Filter className="w-4 h-4 text-neutral-9" />
               <div className="flex gap-1 flex-wrap">
                 {availableTags.slice(0, 5).map((tag) => (
                   <Button
-                    variant="primary"
-                    size="sm"
-                    className="px-2 py-1 text-xs rounded-full"
                     key={tag}
+                    variant={selectedTags.includes(tag) ? "secondary" : "ghost"}
+                    size="sm"
+                    className={cn(
+                      "px-2 py-1 text-xs rounded-full focus-visible:ring-2 focus-visible:ring-primary-9",
+                      selectedTags.includes(tag) &&
+                        "bg-primary-3 text-primary-11",
+                    )}
                     onClick={() =>
                       setSelectedTags((prev) =>
                         prev.includes(tag)
                           ? prev.filter((t) => t !== tag)
                           : [...prev, tag],
                       )
-                    }>
+                    }
+                    data-testid={`skills-tag-${tag}`}
+                  >
                     {tag}
                   </Button>
                 ))}
@@ -320,19 +545,24 @@ export function SkillsPage() {
       )}
       {/* Error Banner */}
       {actionError && (
-        <div className="mx-6 mt-4 p-4 bg-semantic-error/10 border border-semantic-error/30 rounded-lg flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-semantic-error flex-shrink-0 mt-0.5" />
+        <div
+          className="mx-6 mt-4 p-4 bg-error-3 border border-error-6 rounded-lg flex items-start gap-3"
+          role="alert"
+          data-testid="skills-error-banner"
+        >
+          <AlertCircle className="w-5 h-5 text-error-11 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-sm text-semantic-error font-medium">
-              Action Failed
-            </p>
-            <p className="text-sm text-text-secondary mt-1">{actionError}</p>
+            <p className="text-sm text-error-11 font-medium">Action Failed</p>
+            <p className="text-sm text-neutral-11 mt-1">{actionError}</p>
           </div>
           <Button
-            variant="secondary"
-            className="text-text-tertiary hover:text-text-primary"
+            variant="ghost"
+            size="sm"
+            className="text-neutral-9 hover:text-neutral-12 focus-visible:ring-2 focus-visible:ring-primary-9"
             onClick={() => setActionError(null)}
-            aria-label="Dismiss error">
+            aria-label="Dismiss error"
+            data-testid="skills-error-dismiss"
+          >
             <svg
               className="w-4 h-4"
               fill="none"
@@ -350,23 +580,36 @@ export function SkillsPage() {
         </div>
       )}
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-6" data-testid="skills-content">
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="w-8 h-8 text-accent-primary animate-spin" />
+          <div
+            className="flex items-center justify-center h-64"
+            data-testid="skills-loading"
+          >
+            <Loader2 className="w-8 h-8 text-primary-9 animate-spin" />
           </div>
         ) : activeTab === "browse" ? (
           <BrowseContent
-            skills={filteredSkills}
+            skills={visibleSkills}
             installedSkills={installedData?.skills || []}
             onInstall={handleInstall}
             isInstalling={isInstalling}
             error={marketplaceError}
+            onRetry={refetchMarketplace}
+            total={filteredSkills.length}
+            onLoadMore={() => {
+              // Client-side pagination: show 12 more skills
+              setVisibleCount((prev) => prev + 12);
+            }}
+            onViewDetails={(skill) => {
+              setSelectedSkill(skill);
+              setShowDetails(true);
+            }}
           />
         ) : activeTab === "installed" ? (
           <InstalledContent
             installedSkills={installedData?.skills || []}
-            onUninstall={handleUninstall}
+            onUninstall={handleUninstallRequest}
             isUninstalling={isUninstalling}
           />
         ) : (
@@ -377,218 +620,125 @@ export function SkillsPage() {
           />
         )}
       </div>
-    </div>
-  );
-}
 
-// Browse Tab Content
-function BrowseContent({
-  skills,
-  installedSkills,
-  onInstall,
-  isInstalling,
-  error,
-}: {
-  skills: SkillMetadata[];
-  installedSkills: string[];
-  onInstall: (name: string) => void;
-  isInstalling: boolean;
-  error: unknown;
-}) {
-  if (error) {
-    // Check if it's an authorization error
-    const errorObj = error as Record<string, unknown>;
-    const is403 = errorObj?.status === 403;
-    const errorMessage = getErrorMessage(error);
+      {/* Skill Details Modal */}
+      <SkillDetails
+        skill={selectedSkill}
+        isOpen={showDetails}
+        isInstalled={
+          selectedSkill
+            ? (installedData?.skills || []).includes(selectedSkill.name)
+            : false
+        }
+        isInstalling={isInstalling}
+        onClose={() => {
+          setShowDetails(false);
+          setSelectedSkill(null);
+        }}
+        onInstall={() => {
+          if (selectedSkill) {
+            setShowDetails(false);
+            setShowInstallConfirm(true);
+          }
+        }}
+      />
 
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-text-secondary">
-        <AlertCircle className="w-12 h-12 text-semantic-error mb-4" />
-        <p className="text-lg font-medium">
-          {is403 ? "Access Denied" : "Failed to load skills"}
-        </p>
-        <p className="text-sm text-center max-w-md">
-          {is403 ? errorMessage : "Please check your connection and try again."}
-        </p>
-      </div>
-    );
-  }
+      {/* Install Confirmation Dialog */}
+      <InstallDialog
+        skill={selectedSkill}
+        isOpen={showInstallConfirm}
+        isInstalling={isInstalling}
+        onClose={() => {
+          setShowInstallConfirm(false);
+          setSelectedSkill(null);
+        }}
+        onConfirm={async () => {
+          if (selectedSkill) {
+            await handleInstall(selectedSkill.name);
+            setShowInstallConfirm(false);
+            setSelectedSkill(null);
+          }
+        }}
+      />
 
-  if (skills.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-text-secondary">
-        <Package className="w-12 h-12 text-text-tertiary mb-4" />
-        <p className="text-lg font-medium">No skills found</p>
-        <p className="text-sm">Try adjusting your search or filters.</p>
-      </div>
-    );
-  }
+      {/* Uninstall Confirmation Dialog */}
+      <UninstallDialog
+        skillName={skillToUninstall}
+        isOpen={showUninstallConfirm}
+        isUninstalling={isUninstalling}
+        onClose={handleUninstallCancel}
+        onConfirm={handleUninstallConfirm}
+      />
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {skills.map((skill) => (
-        <SkillCard
-          key={skill.name}
-          skill={skill}
-          isInstalled={installedSkills.includes(skill.name)}
-          onInstall={() => onInstall(skill.name)}
-          isInstalling={isInstalling}
-        />
-      ))}
-    </div>
-  );
-}
-
-// Installed Tab Content
-function InstalledContent({
-  installedSkills,
-  onUninstall,
-  isUninstalling,
-}: {
-  installedSkills: string[];
-  onUninstall: (name: string) => void;
-  isUninstalling: boolean;
-}) {
-  if (installedSkills.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-text-secondary">
-        <HardDrive className="w-12 h-12 text-text-tertiary mb-4" />
-        <p className="text-lg font-medium">No skills installed</p>
-        <p className="text-sm">
-          Browse the marketplace to discover and install skills.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-2">
-      {installedSkills.map((skillName) => (
+      {/* Settings Panel (Marketplace Manager) */}
+      {showSettings && (
         <div
-          key={skillName}
-          className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg border border-border-primary"
+          className="fixed inset-0 z-50 flex justify-end"
+          onClick={() => setShowSettings(false)}
         >
-          <div className="flex items-center gap-3">
-            <Package className="w-5 h-5 text-accent-primary" />
-            <span className="font-medium text-text-primary">{skillName}</span>
-            <CheckCircle className="w-4 h-4 text-semantic-success" />
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
+
+          {/* Panel */}
+          <div
+            className="relative z-10 w-full max-w-md bg-neutral-1 h-full shadow-xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Panel Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-6 sticky top-0 bg-neutral-1 z-10">
+              <h2 className="text-lg font-semibold text-neutral-12">
+                Settings
+              </h2>
+              <Button
+                variant="ghost"
+                className="focus-visible:ring-2 focus-visible:ring-primary-9"
+                onClick={() => setShowSettings(false)}
+                aria-label="Close settings"
+                data-testid="skills-settings-close"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Panel Content */}
+            <div className="p-6">
+              <MarketplaceManager
+                marketplaces={marketplacesData?.marketplaces || []}
+                onAdd={() => setShowAddMarketplace(true)}
+                onRemove={handleRemoveMarketplaceRequest}
+                onSync={handleSyncMarketplace}
+                isLoading={isLoadingMarketplaces}
+                isSyncing={isSyncingMarketplace}
+                syncingMarketplace={syncingMarketplace}
+                error={
+                  marketplacesError ? getErrorMessage(marketplacesError) : null
+                }
+              />
+            </div>
           </div>
-          <Button
-            variant="danger"
-            className="flex px-3 py-1.5 text-sm text-semantic-error hover:bg-semantic-error/10 rounded-md"
-            onClick={() => onUninstall(skillName)}
-            disabled={isUninstalling}>
-            <Trash2 className="w-4 h-4" />
-            Uninstall
-          </Button>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Updates Tab Content
-function UpdatesContent({
-  updates,
-  onApplyAll,
-  isApplying,
-}: {
-  updates: unknown[];
-  onApplyAll: () => void;
-  isApplying: boolean;
-}) {
-  if (updates.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-text-secondary">
-        <CheckCircle className="w-12 h-12 text-semantic-success mb-4" />
-        <p className="text-lg font-medium">All skills are up to date</p>
-        <p className="text-sm">No updates available at this time.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-text-secondary">
-          {updates.length} update(s) available
-        </p>
-        <Button
-          variant="primary" className="gap-2"
-          onClick={onApplyAll}
-          disabled={isApplying}
-        >
-          {isApplying ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <ArrowUpCircle className="w-4 h-4" />
-          )}
-          Apply All Updates
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// Skill Card Component
-function SkillCard({
-  skill,
-  isInstalled,
-  onInstall,
-  isInstalling,
-}: {
-  skill: SkillMetadata;
-  isInstalled: boolean;
-  onInstall: () => void;
-  isInstalling: boolean;
-}) {
-  return (
-    <div className="flex flex-col p-4 bg-surface-secondary rounded-lg border border-border-primary hover:border-accent-primary/50 transition-colors">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Package className="w-5 h-5 text-accent-primary" />
-          <h3 className="font-medium text-text-primary">{skill.name}</h3>
-        </div>
-        <span className="text-xs text-text-tertiary px-2 py-0.5 bg-surface-tertiary rounded">
-          v{skill.version}
-        </span>
-      </div>
-      <p className="text-sm text-text-secondary mb-3 line-clamp-2">
-        {skill.description || "No description available"}
-      </p>
-      {skill.tags && skill.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-3">
-          {skill.tags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className="px-2 py-0.5 text-xs bg-accent-primary/10 text-accent-primary rounded-full"
-            >
-              {tag}
-            </span>
-          ))}
         </div>
       )}
-      <div className="mt-auto pt-3 border-t border-border-primary">
-        {isInstalled ? (
-          <div className="flex items-center gap-2 text-semantic-success">
-            <CheckCircle className="w-4 h-4" />
-            <span className="text-sm">Installed</span>
-          </div>
-        ) : (
-          <Button
-            variant="primary" size="sm" className="gap-2"
-            onClick={onInstall}
-            disabled={isInstalling}
-          >
-            {isInstalling ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4" />
-            )}
-            Install
-          </Button>
-        )}
-      </div>
+
+      {/* Add Marketplace Dialog */}
+      <AddMarketplaceDialog
+        isOpen={showAddMarketplace}
+        onClose={() => {
+          setShowAddMarketplace(false);
+          setAddMarketplaceError(null);
+        }}
+        onSubmit={handleAddMarketplace}
+        isSubmitting={isAddingMarketplace}
+        error={addMarketplaceError}
+      />
+
+      {/* Remove Marketplace Confirmation Dialog */}
+      <RemoveMarketplaceDialog
+        marketplaceName={marketplaceToRemove}
+        isOpen={showRemoveMarketplace}
+        isRemoving={isRemovingMarketplace}
+        onClose={handleRemoveMarketplaceCancel}
+        onConfirm={handleRemoveMarketplaceConfirm}
+      />
     </div>
   );
 }

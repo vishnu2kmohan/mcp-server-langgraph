@@ -51,6 +51,7 @@ import { nodeConfigHandlers } from "./handlers/nodeConfigHandlers";
 import { heartHandlers } from "./handlers/heartHandlers";
 import { agentRequestHandlers } from "./handlers/agentRequestHandlers";
 import { feedbackHandlers } from "./handlers/feedbackHandlers";
+import { skillsHandlers } from "./handlers/skillsHandlers";
 
 // =============================================================================
 // Mock Data Factories
@@ -1113,6 +1114,9 @@ export const handlers = [
 
   // Feedback Handlers (AI Quality Metrics)
   ...feedbackHandlers,
+
+  // Skills Marketplace Handlers
+  ...skillsHandlers,
 
   // ==========================================================================
   // Knowledge Base Status (ADR-0094: KB Focus Mode)
