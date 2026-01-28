@@ -597,6 +597,28 @@ class CachedUnifiedRegistry:
                     extra={"server_name": config.name, "error": str(e)},
                 )
 
+        # v26: Semantic reindex after registration
+        try:
+            from mcp_server_langgraph.core.dependencies import get_semantic_index_manager
+            from mcp_server_langgraph.tools.semantic_index import ToolIndexEntry
+            from mcp_server_langgraph.tools.unified_registry import get_tool_registry
+
+            semantic_manager = get_semantic_index_manager()
+            if semantic_manager is not None:
+                registry = get_tool_registry()
+                mcp_tools = [
+                    t for t in registry.get_all() if t.source == "mcp" and t.tool is not None and t.tool_id is not None
+                ]
+
+                # Use RegisteredTool.tool_id directly (correct format)
+                tool_entries = [ToolIndexEntry.from_langchain_tool(t.tool, tool_id=t.tool_id) for t in mcp_tools]
+                if tool_entries:
+                    await semantic_manager.index_tools_batch(tool_entries)
+                    logger.info(f"Reindexed {len(tool_entries)} MCP tools for semantic search")
+        except Exception as e:
+            logger.warning(f"Failed to reindex semantic search after registration: {e}")
+            # Non-fatal - tools available in registry, just not semantically searchable
+
         return result
 
     async def unregister_server(self, name: str) -> None:

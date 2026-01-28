@@ -606,58 +606,58 @@ class TestCacheKeyGeneration:
         gc.collect()
 
     def test_generate_tools_cache_key_all(self) -> None:
-        """Test cache key for all tools."""
+        """Test cache key for all tools includes version suffix."""
         from mcp_server_langgraph.mcp.client.cached_unified_registry import (
             generate_tools_cache_key,
         )
 
         key = generate_tools_cache_key(None)
-        assert key == "mcp:tools:all"
+        assert key == "mcp:tools:all:v1"
 
     def test_generate_tools_cache_key_server_filtered(self) -> None:
-        """Test cache key for server-filtered tools."""
+        """Test cache key for server-filtered tools includes version suffix."""
         from mcp_server_langgraph.mcp.client.cached_unified_registry import (
             generate_tools_cache_key,
         )
 
         key = generate_tools_cache_key(TEST_SERVER_NAME)
-        assert key == f"mcp:tools:{TEST_SERVER_NAME}"
+        assert key == f"mcp:tools:{TEST_SERVER_NAME}:v1"
 
     def test_generate_resources_cache_key_all(self) -> None:
-        """Test cache key for all resources."""
+        """Test cache key for all resources includes version suffix."""
         from mcp_server_langgraph.mcp.client.cached_unified_registry import (
             generate_resources_cache_key,
         )
 
         key = generate_resources_cache_key(None)
-        assert key == "mcp:resources:all"
+        assert key == "mcp:resources:all:v1"
 
     def test_generate_prompts_cache_key_all(self) -> None:
-        """Test cache key for all prompts."""
+        """Test cache key for all prompts includes version suffix."""
         from mcp_server_langgraph.mcp.client.cached_unified_registry import (
             generate_prompts_cache_key,
         )
 
         key = generate_prompts_cache_key(None)
-        assert key == "mcp:prompts:all"
+        assert key == "mcp:prompts:all:v1"
 
     def test_generate_server_list_cache_key(self) -> None:
-        """Test cache key for server list."""
+        """Test cache key for server list includes version suffix."""
         from mcp_server_langgraph.mcp.client.cached_unified_registry import (
             generate_server_list_cache_key,
         )
 
         key = generate_server_list_cache_key()
-        assert key == "mcp:servers:all"
+        assert key == "mcp:servers:all:v1"
 
     def test_generate_server_capabilities_cache_key(self) -> None:
-        """Test cache key for server capabilities."""
+        """Test cache key for server capabilities includes version suffix."""
         from mcp_server_langgraph.mcp.client.cached_unified_registry import (
             generate_server_capabilities_cache_key,
         )
 
         key = generate_server_capabilities_cache_key(TEST_SERVER_NAME)
-        assert key == f"mcp:server:{TEST_SERVER_NAME}:capabilities"
+        assert key == f"mcp:server:{TEST_SERVER_NAME}:capabilities:v1"
 
 
 # =============================================================================
@@ -933,4 +933,206 @@ class TestCachedUnifiedRegistrySetBroadcaster:
 
         # Assert - broadcaster not called, operation succeeded
         mock_broadcaster.broadcast_server_registered.assert_not_awaited()
+        assert result["tool_count"] == 1
+
+
+@pytest.mark.xdist_group(name="cached_registry_semantic_reindex")
+class TestCachedUnifiedRegistrySemanticReindex:
+    """Tests for post-registration semantic reindex (v26)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_register_server_triggers_semantic_reindex(self) -> None:
+        """register_server() triggers semantic reindex after registration."""
+        from unittest.mock import patch
+
+        from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+            CachedUnifiedRegistry,
+        )
+
+        mock_registry = MagicMock()
+        mock_registry.register_server = AsyncMock(return_value={"tool_count": 2, "resource_count": 0, "prompt_count": 0})
+        mock_cache = MagicMock()
+        mock_cache.adelete_pattern = AsyncMock(return_value=0)
+
+        # Mock semantic manager
+        mock_semantic_manager = MagicMock()
+        mock_semantic_manager.index_tools_batch = AsyncMock(return_value=None)
+
+        # Mock tool registry with MCP tools
+        mock_tool = MagicMock()
+        mock_tool.name = "test_tool"
+        mock_tool.description = "Test tool"
+        mock_registered_tool = MagicMock()
+        mock_registered_tool.source = "mcp"
+        mock_registered_tool.tool = mock_tool
+        mock_registered_tool.tool_id = "mcp:test-server:test_tool"
+        mock_tool_registry = MagicMock()
+        mock_tool_registry.get_all.return_value = [mock_registered_tool]
+
+        service = CachedUnifiedRegistry(
+            registry=mock_registry,
+            cache=mock_cache,
+            ttl=CACHE_TTL,
+        )
+
+        with (
+            patch(
+                "mcp_server_langgraph.core.dependencies.get_semantic_index_manager",
+                return_value=mock_semantic_manager,
+            ),
+            patch(
+                "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
+                return_value=mock_tool_registry,
+            ),
+        ):
+            mock_config = MagicMock()
+            mock_config.name = TEST_SERVER_NAME
+            await service.register_server(mock_config)
+
+        # Semantic reindex should have been called
+        mock_semantic_manager.index_tools_batch.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_semantic_reindex_uses_registered_tool_id(self) -> None:
+        """Semantic reindex uses RegisteredTool.tool_id format."""
+        from unittest.mock import patch
+
+        from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+            CachedUnifiedRegistry,
+        )
+
+        mock_registry = MagicMock()
+        mock_registry.register_server = AsyncMock(return_value={"tool_count": 1, "resource_count": 0, "prompt_count": 0})
+        mock_cache = MagicMock()
+        mock_cache.adelete_pattern = AsyncMock(return_value=0)
+
+        mock_semantic_manager = MagicMock()
+        captured_entries = []
+
+        async def capture_entries(entries):
+            captured_entries.extend(entries)
+
+        mock_semantic_manager.index_tools_batch = capture_entries
+
+        # Mock tool registry with specific tool_id
+        mock_tool = MagicMock()
+        mock_tool.name = "github_create_issue"
+        mock_tool.description = "Create GitHub issue"
+        mock_registered_tool = MagicMock()
+        mock_registered_tool.source = "mcp"
+        mock_registered_tool.tool = mock_tool
+        mock_registered_tool.tool_id = "mcp:github:create_issue"
+        mock_tool_registry = MagicMock()
+        mock_tool_registry.get_all.return_value = [mock_registered_tool]
+
+        service = CachedUnifiedRegistry(
+            registry=mock_registry,
+            cache=mock_cache,
+            ttl=CACHE_TTL,
+        )
+
+        with (
+            patch(
+                "mcp_server_langgraph.core.dependencies.get_semantic_index_manager",
+                return_value=mock_semantic_manager,
+            ),
+            patch(
+                "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
+                return_value=mock_tool_registry,
+            ),
+        ):
+            mock_config = MagicMock()
+            mock_config.name = TEST_SERVER_NAME
+            await service.register_server(mock_config)
+
+        # Verify tool_id format
+        assert len(captured_entries) == 1
+        assert captured_entries[0].tool_id == "mcp:github:create_issue"
+
+    @pytest.mark.asyncio
+    async def test_semantic_reindex_failure_non_fatal(self) -> None:
+        """Semantic reindex failure does not fail registration."""
+        from unittest.mock import patch
+
+        from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+            CachedUnifiedRegistry,
+        )
+
+        mock_registry = MagicMock()
+        mock_registry.register_server = AsyncMock(return_value={"tool_count": 1, "resource_count": 0, "prompt_count": 0})
+        mock_cache = MagicMock()
+        mock_cache.adelete_pattern = AsyncMock(return_value=0)
+
+        # Mock semantic manager that raises
+        mock_semantic_manager = MagicMock()
+        mock_semantic_manager.index_tools_batch = AsyncMock(side_effect=RuntimeError("Qdrant unavailable"))
+
+        mock_tool = MagicMock()
+        mock_tool.name = "test"
+        mock_tool.description = "Test"
+        mock_registered_tool = MagicMock()
+        mock_registered_tool.source = "mcp"
+        mock_registered_tool.tool = mock_tool
+        mock_registered_tool.tool_id = "mcp:test:test"
+        mock_tool_registry = MagicMock()
+        mock_tool_registry.get_all.return_value = [mock_registered_tool]
+
+        service = CachedUnifiedRegistry(
+            registry=mock_registry,
+            cache=mock_cache,
+            ttl=CACHE_TTL,
+        )
+
+        with (
+            patch(
+                "mcp_server_langgraph.core.dependencies.get_semantic_index_manager",
+                return_value=mock_semantic_manager,
+            ),
+            patch(
+                "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
+                return_value=mock_tool_registry,
+            ),
+        ):
+            mock_config = MagicMock()
+            mock_config.name = TEST_SERVER_NAME
+            # Should not raise even though semantic reindex fails
+            result = await service.register_server(mock_config)
+
+        # Registration should still succeed
+        assert result["tool_count"] == 1
+
+    @pytest.mark.asyncio
+    async def test_semantic_reindex_skipped_when_no_manager(self) -> None:
+        """Semantic reindex is skipped when no semantic manager available."""
+        from unittest.mock import patch
+
+        from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+            CachedUnifiedRegistry,
+        )
+
+        mock_registry = MagicMock()
+        mock_registry.register_server = AsyncMock(return_value={"tool_count": 1, "resource_count": 0, "prompt_count": 0})
+        mock_cache = MagicMock()
+        mock_cache.adelete_pattern = AsyncMock(return_value=0)
+
+        service = CachedUnifiedRegistry(
+            registry=mock_registry,
+            cache=mock_cache,
+            ttl=CACHE_TTL,
+        )
+
+        with patch(
+            "mcp_server_langgraph.core.dependencies.get_semantic_index_manager",
+            return_value=None,
+        ):
+            mock_config = MagicMock()
+            mock_config.name = TEST_SERVER_NAME
+            # Should not raise
+            result = await service.register_server(mock_config)
+
+        # Registration should succeed
         assert result["tool_count"] == 1

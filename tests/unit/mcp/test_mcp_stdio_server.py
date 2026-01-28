@@ -630,3 +630,185 @@ class TestErrorHandling:
         with pytest.raises(Exception, match="LLM API error"):
             await server._handle_chat(arguments, span, get_user_id("alice"))
         span.record_exception.assert_called_once()
+
+
+@pytest.mark.unit
+@pytest.mark.mcp
+@pytest.mark.xdist_group(name="unit_mcp_server_stdio_main")
+class TestMCPServerMain:
+    """Tests for main() function bootstrap sequence (v26)."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_main_calls_bootstrap_all(self):
+        """main() calls bootstrap_all() for full initialization."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        mock_state = MagicMock()
+        mock_state.cleanup = AsyncMock(return_value=None)
+
+        call_order: list[str] = []
+
+        async def mock_bootstrap_all(settings):
+            call_order.append("bootstrap_all")
+            return mock_state
+
+        async def mock_sync_mcp_tools():
+            call_order.append("sync_mcp_tools")
+
+        async def mock_index_all_tools():
+            call_order.append("index_all_tools")
+
+        mock_server = MagicMock()
+        mock_server.run = AsyncMock(return_value=None)
+
+        with (
+            patch("mcp_server_langgraph.observability.telemetry.init_observability"),
+            patch(
+                "mcp_server_langgraph.bootstrap.bootstrap_all",
+                mock_bootstrap_all,
+            ),
+            patch(
+                "mcp_server_langgraph.tools.unified_registry.sync_mcp_tools",
+                mock_sync_mcp_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.semantic.index_all_tools",
+                mock_index_all_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.server_stdio.MCPAgentServer",
+                return_value=mock_server,
+            ),
+        ):
+            from mcp_server_langgraph.mcp.server_stdio import main
+
+            await main()
+
+        assert "bootstrap_all" in call_order
+
+    @pytest.mark.asyncio
+    async def test_main_calls_sync_mcp_tools_and_index_all_tools(self):
+        """main() calls sync_mcp_tools() then index_all_tools()."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        mock_state = MagicMock()
+        mock_state.cleanup = AsyncMock(return_value=None)
+
+        call_order: list[str] = []
+
+        async def mock_bootstrap_all(settings):
+            return mock_state
+
+        async def mock_sync_mcp_tools():
+            call_order.append("sync_mcp_tools")
+
+        async def mock_index_all_tools():
+            call_order.append("index_all_tools")
+
+        mock_server = MagicMock()
+        mock_server.run = AsyncMock(return_value=None)
+
+        with (
+            patch("mcp_server_langgraph.observability.telemetry.init_observability"),
+            patch(
+                "mcp_server_langgraph.bootstrap.bootstrap_all",
+                mock_bootstrap_all,
+            ),
+            patch(
+                "mcp_server_langgraph.tools.unified_registry.sync_mcp_tools",
+                mock_sync_mcp_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.semantic.index_all_tools",
+                mock_index_all_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.server_stdio.MCPAgentServer",
+                return_value=mock_server,
+            ),
+        ):
+            from mcp_server_langgraph.mcp.server_stdio import main
+
+            await main()
+
+        # Both should be called in order
+        assert "sync_mcp_tools" in call_order
+        assert "index_all_tools" in call_order
+        assert call_order.index("sync_mcp_tools") < call_order.index("index_all_tools")
+
+    @pytest.mark.asyncio
+    async def test_main_calls_cleanup_on_shutdown(self):
+        """main() calls state.cleanup() on shutdown."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        mock_state = MagicMock()
+        mock_state.cleanup = AsyncMock(return_value=None)
+
+        mock_server = MagicMock()
+        mock_server.run = AsyncMock(return_value=None)
+
+        with (
+            patch("mcp_server_langgraph.observability.telemetry.init_observability"),
+            patch(
+                "mcp_server_langgraph.bootstrap.bootstrap_all",
+                AsyncMock(return_value=mock_state),
+            ),
+            patch(
+                "mcp_server_langgraph.tools.unified_registry.sync_mcp_tools",
+                AsyncMock(),
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.semantic.index_all_tools",
+                AsyncMock(),
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.server_stdio.MCPAgentServer",
+                return_value=mock_server,
+            ),
+        ):
+            from mcp_server_langgraph.mcp.server_stdio import main
+
+            await main()
+
+        mock_state.cleanup.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_main_handles_sync_failure_gracefully(self):
+        """main() continues even if MCP sync/index fails."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        mock_state = MagicMock()
+        mock_state.cleanup = AsyncMock(return_value=None)
+
+        async def mock_sync_mcp_tools():
+            raise RuntimeError("MCP connection failed")
+
+        mock_server = MagicMock()
+        mock_server.run = AsyncMock(return_value=None)
+
+        with (
+            patch("mcp_server_langgraph.observability.telemetry.init_observability"),
+            patch(
+                "mcp_server_langgraph.bootstrap.bootstrap_all",
+                AsyncMock(return_value=mock_state),
+            ),
+            patch(
+                "mcp_server_langgraph.tools.unified_registry.sync_mcp_tools",
+                mock_sync_mcp_tools,
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.server_stdio.MCPAgentServer",
+                return_value=mock_server,
+            ),
+        ):
+            from mcp_server_langgraph.mcp.server_stdio import main
+
+            # Should not raise
+            await main()
+
+        # Server should still run
+        mock_server.run.assert_awaited_once()

@@ -471,15 +471,41 @@ class MCPAgentServer:
 
 
 async def main() -> None:
-    """Main entry point"""
+    """Main entry point.
+
+    v26: Full bootstrap for semantic indexing and other services.
+    Canonical startup: sync_mcp_tools() THEN index_all_tools().
+    """
     # Initialize observability system before creating server
     from mcp_server_langgraph.observability.telemetry import init_observability
 
     # Initialize with settings and enable file logging if configured
     init_observability(settings=settings, enable_file_logging=getattr(settings, "enable_file_logging", False))
 
-    server = MCPAgentServer()
-    await server.run()
+    # Full bootstrap for semantic indexing and other services (v26)
+    from mcp_server_langgraph.bootstrap import bootstrap_all
+    from mcp_server_langgraph.bootstrap.semantic import index_all_tools
+    from mcp_server_langgraph.tools.unified_registry import sync_mcp_tools
+
+    state = await bootstrap_all(settings)
+
+    try:
+        # Sync MCP tools and index (canonical startup sequence)
+        await sync_mcp_tools()
+        logger.info("MCP tools synced to unified registry")
+
+        await index_all_tools()
+        logger.info("All tools indexed for semantic search")
+    except Exception as e:
+        logger.warning(f"MCP sync/index failed (non-fatal): {e}")
+
+    try:
+        server = MCPAgentServer()
+        await server.run()
+    finally:
+        # Cleanup on shutdown
+        await state.cleanup()
+        logger.info("MCP server shutdown complete")
 
 
 if __name__ == "__main__":
