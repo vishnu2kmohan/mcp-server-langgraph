@@ -1,6 +1,6 @@
 # Claude Code Slash Commands
 
-This directory contains 39 specialized slash commands for streamlined development workflows.
+This directory contains 46 specialized slash commands for streamlined development workflows.
 
 **Quick Access**: See `.claude/QUICK_REFERENCE.md` for the most-used commands.
 
@@ -63,7 +63,7 @@ AI-assisted debugging and problem-solving:
 
 ---
 
-### 🔄 CI/CD & Deployment (5 commands)
+### 🔄 CI/CD & Deployment (8 commands)
 
 Continuous integration and deployment workflows:
 
@@ -72,10 +72,18 @@ Continuous integration and deployment workflows:
 | `/ci-status` | GitHub Actions monitoring | Before pushing, investigating failures |
 | `/pr-checks [number]` | PR validation summary | Before requesting reviews |
 | `/review-pr` | PR review checklist | When reviewing PRs |
+| `/plan-review [path]` | **Dual AI review** (Codex + Gemini) of plans | Before implementing a plan |
+| `/plan-status [path]` | **Dual AI verification** of plan completion | Before code review or commit |
+| `/code-review [scope]` | **Dual AI review** (Codex + Gemini) of code | Before committing code |
 | `/deploy-dev` | Development deployment | Deploying to dev environment |
 | `/deploy` | Production deployment | Production releases |
 
-**Best Practice**: Check `/ci-status` before pushing, `/pr-checks` before requesting review
+**Best Practice**: Check `/plan-status` before `/code-review`, check `/ci-status` before pushing, `/pr-checks` before requesting review
+
+**Dual-Reviewer Features** (Codex + Gemini):
+- Parallel analysis from GPT-5.2-Codex and Gemini 3 Pro Preview
+- Finding reconciliation with source tags: `[Both]`, `[Codex]`, `[Gemini]`
+- Clarification questions before applying fixes (critical/important findings)
 
 ---
 
@@ -147,9 +155,13 @@ Environment setup and infrastructure:
 ```bash
 1. /test-summary  # Run full test suite
 2. /coverage-gaps  # Check coverage
-3. /ci-status  # Verify CI is green
-4. Create PR
-5. /pr-checks  # Validate PR requirements
+3. /code-review staged  # Dual AI review (Codex + Gemini) before commit
+   # - Validates plan completion first
+   # - Asks clarifying questions for critical findings
+   # - Reconciles findings from both reviewers
+4. /ci-status  # Verify CI is green
+5. Create PR
+6. /pr-checks  # Validate PR requirements
 ```
 
 ### Working on Test Coverage
@@ -250,7 +262,7 @@ Environment setup and infrastructure:
 → `/release-prep`, `/test-all`, `/security-scan-report`, `/benchmark`
 
 **...review code**
-→ `/pr-checks`, `/review-pr`
+→ `/code-review`, `/plan-review`, `/plan-status`, `/pr-checks`, `/review-pr`
 
 **...deploy**
 → `/ci-status` (check first), `/deploy-dev` or `/deploy`
@@ -332,6 +344,6 @@ When adding new slash commands:
 
 ---
 
-**Last Updated**: 2025-11-15
-**Command Count**: 38 commands across 7 categories
+**Last Updated**: 2026-01-31
+**Command Count**: 45 commands across 8 categories
 **Maintained By**: Automated via Claude Code optimization framework

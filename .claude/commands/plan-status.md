@@ -524,7 +524,7 @@ If Codex and Gemini disagree on completion status:
 
 ## Models
 
-- **Codex**: Uses defaults from `~/.codex/config.toml` (typically gpt-5.2-codex)
+- **Codex**: Uses defaults from `~/.codex/config.toml` (typically gpt-5.2-codex with xhigh)
 - **Gemini**: Uses `gemini-3-pro-preview` via Gemini CLI
 
 **Timeout**: 60 seconds per reviewer (both run in parallel)
