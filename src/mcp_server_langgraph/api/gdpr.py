@@ -343,6 +343,7 @@ async def delete_user_account(
 
         user_id = str(user.get("user_id") or "")
         username = str(user.get("username") or "")
+        email = user.get("email")  # May be None if not in token
 
         # Log deletion request (before deletion)
         logger.warning(
@@ -364,9 +365,9 @@ async def delete_user_account(
             openfga_client=None,  # Configured via dependency injection in production
         )
 
-        # Delete all user data
+        # Delete all user data (pass email for legacy template deletion)
         result = await deletion_service.delete_user_account(
-            user_id=user_id, username=username, reason="user_request_gdpr_article_17"
+            user_id=user_id, username=username, email=email, reason="user_request_gdpr_article_17"
         )
 
         if not result.success:

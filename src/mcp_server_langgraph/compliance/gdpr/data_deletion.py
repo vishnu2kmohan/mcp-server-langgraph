@@ -110,7 +110,13 @@ class DataDeletionService:
             errors.append(error_msg)
             logger.error(error_msg, exc_info=True)
 
-    async def delete_user_account(self, user_id: str, username: str, reason: str = "user_request") -> DeletionResult:
+    async def delete_user_account(
+        self,
+        user_id: str,
+        username: str,
+        email: str | None = None,
+        reason: str = "user_request",
+    ) -> DeletionResult:
         """
         Delete all user data (GDPR Article 17)
 
@@ -120,6 +126,7 @@ class DataDeletionService:
         Args:
             user_id: User identifier
             username: Username
+            email: User email (optional, for legacy template deletion)
             reason: Reason for deletion
 
         Returns:
@@ -165,6 +172,16 @@ class DataDeletionService:
 
             # 6b. Delete plan templates (Phase 9 GDPR)
             await self._safe_delete("plan_templates", self._delete_plan_templates, user_id, deleted_items, errors)
+
+            # 6c. Delete legacy templates by email (if email provided and verified)
+            if email:
+                await self._safe_delete(
+                    "legacy_templates_by_email",
+                    lambda uid: self._delete_legacy_templates_by_email(email),
+                    user_id,
+                    deleted_items,
+                    errors,
+                )
 
             # 7. Anonymize audit logs (don't delete for compliance)
             await self._safe_anonymize("audit_logs", self._anonymize_user_audit_logs, user_id, anonymized_items, errors)
@@ -487,4 +504,27 @@ class DataDeletionService:
             return count
         except Exception as e:
             logger.error(f"Failed to delete user plan templates: {e}", exc_info=True)
+            raise
+
+    async def _delete_legacy_templates_by_email(self, email: str) -> int:
+        """Delete legacy plan templates by email for GDPR compliance.
+
+        Used for templates created before user_id tracking was implemented.
+
+        Args:
+            email: User email address
+
+        Returns:
+            Number of legacy templates deleted
+        """
+        repo = self._get_plan_template_repository()
+        if repo is None:
+            return 0
+
+        try:
+            # For templates created with email as created_by (legacy)
+            count: int = await repo.delete_by_user(email)
+            return count
+        except Exception as e:
+            logger.error(f"Failed to delete legacy templates by email: {e}", exc_info=True)
             raise
