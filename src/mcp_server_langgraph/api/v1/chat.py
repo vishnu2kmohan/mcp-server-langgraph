@@ -952,6 +952,10 @@ class ChatServiceImpl(ChatService):
         from mcp_server_langgraph.api.v1.mcp_bridge import ChatError
         from mcp_server_langgraph.observability.telemetry import logger
 
+        # Load session history from storage and merge with new messages
+        # Ensures non-streaming calls receive full conversation context
+        messages = await self._load_and_merge_history(session_id, messages)
+
         # Try MCP agent first if configured
         if self.mcp_bridge and self.mcp_bridge.is_configured:
             try:
@@ -2437,7 +2441,7 @@ def get_chat_service() -> ChatService:
     """
     global _chat_service
     if _chat_service is None:
-        session_storage = get_session_repository()
+        session_storage = get_session_storage()
         _chat_service = ChatServiceImpl(session_storage=session_storage)
     return _chat_service
 
@@ -2452,7 +2456,8 @@ def reset_chat_service() -> None:
     """Reset the chat service singleton (for testing)."""
     global _chat_service
     _chat_service = None
-    # Also reset the session repository to ensure fresh state
+    # Also reset session storage/repository to ensure fresh state
+    reset_session_storage()
     reset_session_repository()
 
 
@@ -2584,7 +2589,9 @@ async def create_stream(
         )
 
     service = get_chat_service()
-    session_repository = get_session_repository()
+    from mcp_server_langgraph.api.v1.sessions import get_session_service
+
+    session_service = get_session_service()
     messages = [msg.model_dump() for msg in request.messages]
     user_id = _get_user_id(current_user)
 
@@ -2601,18 +2608,43 @@ async def create_stream(
             (msg for msg in reversed(messages) if msg.get("role") == "user"),
             None,
         )
-        if last_user_msg and session_repository is not None:
+        if last_user_msg and session_service is not None:
+            content = last_user_msg.get("content", "")
+            stored_messages: list[dict[str, Any]] | None = None
+            skip_persist = False
             try:
-                await session_repository.add_message(
-                    request.session_id,
-                    {
-                        "role": "user",
-                        "content": last_user_msg.get("content", ""),
-                    },
-                )
-                logger.debug(f"Persisted user message for session {request.session_id}")
+                stored_messages = await session_service.get_session_messages(request.session_id, user_id)
             except Exception as e:
-                logger.warning(f"Failed to persist user message: {e}")
+                logger.warning(f"Failed to check session messages for dedupe: {e}")
+
+            if stored_messages:
+                last_stored = stored_messages[-1]
+                if last_stored.get("role") == "user" and last_stored.get("content") == content:
+                    logger.debug(
+                        "Skipping duplicate user message persistence",
+                        extra={"session_id": request.session_id},
+                    )
+                    skip_persist = True
+
+            if not skip_persist:
+                try:
+                    result = await session_service.add_message(
+                        request.session_id,
+                        user_id,
+                        {
+                            "role": "user",
+                            "content": content,
+                        },
+                    )
+                    if result is None:
+                        logger.warning(
+                            "User message not persisted (session missing or not owned)",
+                            extra={"session_id": request.session_id},
+                        )
+                    else:
+                        logger.debug(f"Persisted user message for session {request.session_id}")
+                except Exception as e:
+                    logger.warning(f"Failed to persist user message: {e}")
 
         # Accumulate assistant response content for persistence
         accumulated_content: list[str] = []
@@ -2673,7 +2705,7 @@ async def create_stream(
         # ================================================================
         # Message Persistence: Save assistant response after streaming
         # ================================================================
-        if accumulated_content and session_repository is not None:
+        if accumulated_content and session_service is not None:
             try:
                 full_response = "".join(accumulated_content)
                 full_thinking = "".join(accumulated_thinking) if accumulated_thinking else None
@@ -2695,11 +2727,18 @@ async def create_stream(
                 if model_name:
                     message_data["model_name"] = model_name
 
-                await session_repository.add_message(
+                result = await session_service.add_message(
                     request.session_id,
+                    user_id,
                     message_data,
                 )
-                logger.debug(f"Persisted assistant response for session {request.session_id} ({len(full_response)} chars)")
+                if result is None:
+                    logger.warning(
+                        "Assistant response not persisted (session missing or not owned)",
+                        extra={"session_id": request.session_id},
+                    )
+                else:
+                    logger.debug(f"Persisted assistant response for session {request.session_id} ({len(full_response)} chars)")
             except Exception as e:
                 logger.warning(f"Failed to persist assistant response: {e}")
 
@@ -2723,9 +2762,8 @@ async def get_history(
 
     Requires authentication. Returns all messages in chronological order.
 
-    Note: In a full implementation, this would also verify the user has
-    access to this specific session (owner/viewer). Currently requires
-    only authentication.
+    Note: Session storage enforces ownership (user-scoped access). Unauthorized
+    access returns 404.
     """
     service = get_chat_service()
     history = await service.get_history(session_id)

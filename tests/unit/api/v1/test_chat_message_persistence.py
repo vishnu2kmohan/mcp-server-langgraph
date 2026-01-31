@@ -3,7 +3,7 @@ Tests for message persistence during streaming.
 
 TDD: These tests verify that the streaming endpoint persists both
 user messages (before streaming) and assistant messages (after streaming)
-to the session repository.
+to the session service.
 
 This ensures conversation history is properly tracked on the backend,
 regardless of what the frontend sends.
@@ -11,7 +11,7 @@ regardless of what the frontend sends.
 Architecture Note:
 - Persistence happens at the ROUTER level (create_stream endpoint)
 - History loading happens at the SERVICE level (ChatServiceImpl.create_stream)
-- Both use the same storage backend (get_session_repository())
+- Both use the same storage backend (get_session_service())
 - Progressive loading/compaction only affects what's sent to LLM, not what's stored
 """
 
@@ -28,16 +28,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.chat]
 
 
 @pytest.fixture
-def mock_session_repository() -> AsyncMock:
-    """Create a mock session repository that tracks add_message calls."""
+def mock_session_service() -> AsyncMock:
+    """Create a mock session service that tracks add_message calls."""
     repo = AsyncMock(return_value=None)
     repo.persisted_messages: list[dict[str, Any]] = []
 
-    async def track_add_message(session_id: str, message: dict[str, Any]) -> None:
-        repo.persisted_messages.append({"session_id": session_id, **message})
+    async def track_add_message(session_id: str, user_id: str, message: dict[str, Any]) -> None:
+        repo.persisted_messages.append({"session_id": session_id, "user_id": user_id, **message})
 
     repo.add_message = AsyncMock(side_effect=track_add_message)
-    repo.get_messages = AsyncMock(return_value=[])
+    repo.get_session_messages = AsyncMock(return_value=[])
     return repo
 
 
@@ -73,13 +73,13 @@ class TestStreamingMessagePersistence:
     @pytest.mark.asyncio
     async def test_user_message_persisted_during_streaming(
         self,
-        mock_session_repository: AsyncMock,
+        mock_session_service: AsyncMock,
         mock_chat_service: MagicMock,
     ) -> None:
         """
         GIVEN a streaming chat request with a user message
         WHEN the streaming endpoint processes the request
-        THEN the user message should be persisted to the session repository.
+        THEN the user message should be persisted to the session service.
         """
         from mcp_server_langgraph.api.v1.chat import (
             ChatCompletionRequest,
@@ -98,8 +98,8 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_repository",
-                return_value=mock_session_repository,
+                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                return_value=mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
@@ -130,19 +130,15 @@ class TestStreamingMessagePersistence:
                         pass
 
         # Verify user message was persisted
-        user_messages = [
-            m for m in mock_session_repository.persisted_messages if m["role"] == "user"
-        ]
-        assert len(user_messages) == 1, (
-            f"Expected 1 user message persisted, got {len(user_messages)}"
-        )
+        user_messages = [m for m in mock_session_service.persisted_messages if m["role"] == "user"]
+        assert len(user_messages) == 1, f"Expected 1 user message persisted, got {len(user_messages)}"
         assert user_messages[0]["content"] == "Hello, how are you?"
         assert user_messages[0]["session_id"] == "test-session-123"
 
     @pytest.mark.asyncio
     async def test_assistant_message_persisted_after_streaming(
         self,
-        mock_session_repository: AsyncMock,
+        mock_session_service: AsyncMock,
         mock_chat_service: MagicMock,
     ) -> None:
         """
@@ -166,8 +162,8 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_repository",
-                return_value=mock_session_repository,
+                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                return_value=mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
@@ -190,23 +186,16 @@ class TestStreamingMessagePersistence:
                 pass
 
         # Verify assistant message was persisted with accumulated content
-        assistant_messages = [
-            m
-            for m in mock_session_repository.persisted_messages
-            if m["role"] == "assistant"
-        ]
-        assert len(assistant_messages) == 1, (
-            f"Expected 1 assistant message, got {len(assistant_messages)}"
-        )
+        assistant_messages = [m for m in mock_session_service.persisted_messages if m["role"] == "assistant"]
+        assert len(assistant_messages) == 1, f"Expected 1 assistant message, got {len(assistant_messages)}"
         assert assistant_messages[0]["content"] == "Hello world!", (
-            f"Expected accumulated content 'Hello world!', "
-            f"got '{assistant_messages[0]['content']}'"
+            f"Expected accumulated content 'Hello world!', got '{assistant_messages[0]['content']}'"
         )
 
     @pytest.mark.asyncio
     async def test_both_messages_persisted_in_correct_order(
         self,
-        mock_session_repository: AsyncMock,
+        mock_session_service: AsyncMock,
         mock_chat_service: MagicMock,
     ) -> None:
         """
@@ -230,8 +219,8 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_repository",
-                return_value=mock_session_repository,
+                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                return_value=mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
@@ -252,21 +241,19 @@ class TestStreamingMessagePersistence:
                 pass
 
         # Verify both messages were persisted
-        roles = [m["role"] for m in mock_session_repository.persisted_messages]
+        roles = [m["role"] for m in mock_session_service.persisted_messages]
         assert "user" in roles, "User message should be persisted"
         assert "assistant" in roles, "Assistant message should be persisted"
 
         # Verify order: user first, then assistant
         user_idx = roles.index("user")
         assistant_idx = roles.index("assistant")
-        assert user_idx < assistant_idx, (
-            "User message should be persisted before assistant message"
-        )
+        assert user_idx < assistant_idx, "User message should be persisted before assistant message"
 
     @pytest.mark.asyncio
     async def test_sources_persisted_with_assistant_message(
         self,
-        mock_session_repository: AsyncMock,
+        mock_session_service: AsyncMock,
     ) -> None:
         """
         GIVEN a streaming response that includes sources
@@ -303,8 +290,8 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_repository",
-                return_value=mock_session_repository,
+                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                return_value=mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
@@ -326,11 +313,7 @@ class TestStreamingMessagePersistence:
 
         # Verify sources were persisted
         assistant_msg = next(
-            (
-                m
-                for m in mock_session_repository.persisted_messages
-                if m["role"] == "assistant"
-            ),
+            (m for m in mock_session_service.persisted_messages if m["role"] == "assistant"),
             None,
         )
         assert assistant_msg is not None
@@ -353,11 +336,9 @@ class TestStreamingMessagePersistence:
             create_stream,
         )
 
-        # Create mock repository that raises exceptions
-        failing_repo = AsyncMock(return_value=None)
-        failing_repo.add_message = AsyncMock(
-            side_effect=Exception("Database connection failed")
-        )
+        # Create mock service that raises exceptions
+        failing_service = AsyncMock(return_value=None)
+        failing_service.add_message = AsyncMock(side_effect=Exception("Database connection failed"))
 
         request = ChatCompletionRequest(
             session_id="test-failure",
@@ -370,8 +351,8 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_repository",
-                return_value=failing_repo,
+                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                return_value=failing_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
@@ -405,12 +386,12 @@ class TestStreamingMessagePersistence:
         assert streamed_content == ["Hello", " world", "!"]
 
     @pytest.mark.asyncio
-    async def test_no_persistence_when_repository_is_none(
+    async def test_no_persistence_when_service_is_none(
         self,
         mock_chat_service: MagicMock,
     ) -> None:
         """
-        GIVEN a streaming chat request with no session repository configured
+        GIVEN a streaming chat request with no session service configured
         WHEN streaming completes
         THEN no persistence errors should occur.
         """
@@ -430,7 +411,7 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_repository",
+                "mcp_server_langgraph.api.v1.chat.get_session_service",
                 return_value=None,
             ),
             patch(
@@ -467,7 +448,7 @@ class TestStreamingMessagePersistence:
     @pytest.mark.asyncio
     async def test_empty_response_not_persisted(
         self,
-        mock_session_repository: AsyncMock,
+        mock_session_service: AsyncMock,
     ) -> None:
         """
         GIVEN a streaming response with no content
@@ -499,8 +480,8 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_repository",
-                return_value=mock_session_repository,
+                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                return_value=mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
@@ -521,7 +502,7 @@ class TestStreamingMessagePersistence:
                 pass
 
         # User message should be persisted, but not empty assistant message
-        roles = [m["role"] for m in mock_session_repository.persisted_messages]
+        roles = [m["role"] for m in mock_session_service.persisted_messages]
         assert "user" in roles, "User message should still be persisted"
         assert "assistant" not in roles, "Empty assistant message should not be persisted"
 
@@ -581,9 +562,7 @@ class TestPersistenceAndProgressiveLoadingCompatibility:
 
         # Verify deduplication: should NOT have duplicate "Hello"
         user_hellos = [m for m in captured_messages if m["role"] == "user" and m["content"] == "Hello"]
-        assert len(user_hellos) == 1, (
-            f"Expected 1 'Hello' message (deduplicated), got {len(user_hellos)}"
-        )
+        assert len(user_hellos) == 1, f"Expected 1 'Hello' message (deduplicated), got {len(user_hellos)}"
 
     @pytest.mark.asyncio
     async def test_history_loading_does_not_affect_storage(self) -> None:
@@ -597,9 +576,7 @@ class TestPersistenceAndProgressiveLoadingCompatibility:
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
         # Create mock storage with history
-        original_messages = [
-            {"role": "user", "content": f"Message {i}"} for i in range(10)
-        ]
+        original_messages = [{"role": "user", "content": f"Message {i}"} for i in range(10)]
         mock_storage = AsyncMock(return_value=None)
         mock_storage.get_messages = AsyncMock(return_value=original_messages.copy())
 
@@ -643,7 +620,7 @@ class TestThinkingContentPersistence:
     @pytest.mark.asyncio
     async def test_thinking_content_persisted_as_object(
         self,
-        mock_session_repository: AsyncMock,
+        mock_session_service: AsyncMock,
     ) -> None:
         """
         GIVEN a streaming response with thinking content
@@ -679,8 +656,8 @@ class TestThinkingContentPersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_repository",
-                return_value=mock_session_repository,
+                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                return_value=mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
@@ -702,11 +679,7 @@ class TestThinkingContentPersistence:
 
         # Verify thinking object was persisted
         assistant_msg = next(
-            (
-                m
-                for m in mock_session_repository.persisted_messages
-                if m["role"] == "assistant"
-            ),
+            (m for m in mock_session_service.persisted_messages if m["role"] == "assistant"),
             None,
         )
         assert assistant_msg is not None, "Assistant message should be persisted"
@@ -719,7 +692,7 @@ class TestThinkingContentPersistence:
     @pytest.mark.asyncio
     async def test_thinking_only_object_no_legacy_fields(
         self,
-        mock_session_repository: AsyncMock,
+        mock_session_service: AsyncMock,
     ) -> None:
         """
         GIVEN a streaming response with thinking content
@@ -753,8 +726,8 @@ class TestThinkingContentPersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_repository",
-                return_value=mock_session_repository,
+                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                return_value=mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
@@ -775,11 +748,7 @@ class TestThinkingContentPersistence:
                 pass
 
         assistant_msg = next(
-            (
-                m
-                for m in mock_session_repository.persisted_messages
-                if m["role"] == "assistant"
-            ),
+            (m for m in mock_session_service.persisted_messages if m["role"] == "assistant"),
             None,
         )
         assert assistant_msg is not None
@@ -796,7 +765,7 @@ class TestThinkingContentPersistence:
     @pytest.mark.asyncio
     async def test_thinking_uses_tokens_not_budget_tokens(
         self,
-        mock_session_repository: AsyncMock,
+        mock_session_service: AsyncMock,
     ) -> None:
         """
         GIVEN a streaming response with thinking tokens
@@ -829,8 +798,8 @@ class TestThinkingContentPersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_repository",
-                return_value=mock_session_repository,
+                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                return_value=mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
@@ -851,11 +820,7 @@ class TestThinkingContentPersistence:
                 pass
 
         assistant_msg = next(
-            (
-                m
-                for m in mock_session_repository.persisted_messages
-                if m["role"] == "assistant"
-            ),
+            (m for m in mock_session_service.persisted_messages if m["role"] == "assistant"),
             None,
         )
         assert assistant_msg is not None
@@ -873,7 +838,7 @@ class TestThinkingContentPersistence:
     @pytest.mark.asyncio
     async def test_model_name_persisted_with_message(
         self,
-        mock_session_repository: AsyncMock,
+        mock_session_service: AsyncMock,
     ) -> None:
         """
         GIVEN a streaming response with model information
@@ -904,8 +869,8 @@ class TestThinkingContentPersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_repository",
-                return_value=mock_session_repository,
+                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                return_value=mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
@@ -926,11 +891,7 @@ class TestThinkingContentPersistence:
                 pass
 
         assistant_msg = next(
-            (
-                m
-                for m in mock_session_repository.persisted_messages
-                if m["role"] == "assistant"
-            ),
+            (m for m in mock_session_service.persisted_messages if m["role"] == "assistant"),
             None,
         )
         assert assistant_msg is not None
