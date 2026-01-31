@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { Button } from "@/components/UI";
+import { PlanEditor, type ExecutionPlanView } from "@/components/PlanEditor";
 import type {
   ExecutionPlan,
   RoutingDecision,
@@ -48,10 +49,7 @@ import type {
  * Card container variants based on risk level
  */
 const planCardVariants = cva(
-  [
-    "rounded-lg border p-4 shadow-sm",
-    "transition-colors duration-150",
-  ],
+  ["rounded-lg border p-4 shadow-sm", "transition-colors duration-150"],
   {
     variants: {
       riskLevel: {
@@ -129,8 +127,9 @@ const accordionVariants = {
 // Types
 // =============================================================================
 
-export interface InlinePlanCardProps
-  extends VariantProps<typeof planCardVariants> {
+export interface InlinePlanCardProps extends VariantProps<
+  typeof planCardVariants
+> {
   /** Execution plan data */
   plan: ExecutionPlan;
   /** Routing decision data (for debugging/observability) */
@@ -201,7 +200,7 @@ export function InlinePlanCard({
   routingDecision,
   onApprove,
   onReject,
-  onEdit: _onEdit,
+  onEdit,
   isLoading = false,
   status: statusOverride,
   className,
@@ -209,6 +208,50 @@ export function InlinePlanCard({
   const prefersReducedMotion = useReducedMotion();
   const [isExpanded, setIsExpanded] = useState(false);
   const telemetry = useSessionTelemetry();
+
+  // Transform ExecutionPlan to ExecutionPlanView for PlanEditor
+  const planView: ExecutionPlanView = {
+    planId: plan.planId,
+    sessionId: plan.sessionId,
+    status:
+      plan.status === "executed" || plan.status === "expired"
+        ? "awaiting_approval"
+        : plan.status,
+    complexity: plan.complexity,
+    riskLevel: plan.riskLevel,
+    taskType: plan.taskType,
+    executorModel: plan.executorModel,
+    criticModel: plan.criticModel ?? "",
+    estimatedCost: plan.estimatedCost.toString(),
+    message: plan.message,
+    toolsNeeded: plan.toolsNeeded,
+    thinkingBudget: plan.thinkingBudget,
+    critiqueRounds: plan.critiqueRounds,
+    orchestrator: plan.suggestedOrchestrator,
+  };
+
+  // Handle plan configuration changes from PlanEditor
+  const handlePlanSave = useCallback(
+    (updates: Partial<ExecutionPlanView>) => {
+      if (onEdit) {
+        // Map PlanEditor fields back to ExecutionPlan fields
+        const planUpdates: Partial<ExecutionPlan> = {};
+        if (updates.orchestrator !== undefined) {
+          planUpdates.suggestedOrchestrator =
+            updates.orchestrator as ExecutionPlan["suggestedOrchestrator"];
+        }
+        if (updates.thinkingBudget !== undefined) {
+          planUpdates.thinkingBudget =
+            updates.thinkingBudget as ExecutionPlan["thinkingBudget"];
+        }
+        if (updates.critiqueRounds !== undefined) {
+          planUpdates.critiqueRounds = updates.critiqueRounds;
+        }
+        onEdit(plan.planId, planUpdates);
+      }
+    },
+    [onEdit, plan.planId],
+  );
 
   // Use override status if provided, otherwise use plan status
   const displayStatus = statusOverride ?? plan.status;
@@ -415,9 +458,13 @@ export function InlinePlanCard({
             exit="collapsed"
           >
             <div className="border-t border-neutral-6 pt-4 mt-2">
-              <p className="text-xs text-neutral-11 mb-2">
-                Plan editing coming soon. You can approve or reject this plan.
-              </p>
+              <PlanEditor
+                plan={planView}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                onSave={handlePlanSave}
+                readOnly={!isActionable}
+              />
             </div>
           </motion.div>
         )}

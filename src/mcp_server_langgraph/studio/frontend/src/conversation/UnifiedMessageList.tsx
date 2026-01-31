@@ -48,12 +48,16 @@ import {
   HallucinationIndicator,
   type HallucinationReport,
 } from "@/components/Chat/HallucinationIndicator";
-import { ResponseRating, type RatingValue } from "@/components/Chat/ResponseRating";
+import {
+  ResponseRating,
+  type RatingValue,
+} from "@/components/Chat/ResponseRating";
 import { TokenUsageDisplay } from "@/components/Chat/TokenUsageDisplay";
 import { AgentTraceToggleButton } from "@/components/Chat/AgentTraceToggleButton";
 import { AIEmptyState } from "@/components/EmptyState/AIEmptyState";
 import { Button } from "@/components/UI";
 import { cn } from "../utils/cn";
+import { InlinePlanCard } from "./InlinePlanCard";
 
 // Lazy load heavy components for code-splitting
 const LLMThinkingTrace = lazy(() =>
@@ -124,6 +128,29 @@ export interface UnifiedMessageListProps {
   sessionId?: string;
   userId?: string;
   userInitials?: string;
+
+  // Inline Plan Card (Issue 7: Execution Plans)
+  /** Current pending execution plan to display inline */
+  pendingPlan?:
+    | import("@/store/slices/executionModeSlice").ExecutionPlan
+    | null;
+  /** Routing decision for debugging/observability */
+  routingDecision?:
+    | import("@/store/slices/executionModeSlice").RoutingDecision
+    | null;
+  /** Whether to show the plan approval card */
+  showPlanApproval?: boolean;
+  /** Callback when plan is approved */
+  onApprovePlan?: (planId: string) => void;
+  /** Callback when plan is rejected */
+  onRejectPlan?: (planId: string) => void;
+  /** Callback when plan is edited */
+  onEditPlan?: (
+    planId: string,
+    updates: Partial<import("@/store/slices/executionModeSlice").ExecutionPlan>,
+  ) => void;
+  /** Whether plan actions are in progress */
+  isPlanLoading?: boolean;
 }
 
 // =============================================================================
@@ -486,6 +513,14 @@ function UnifiedMessageListImpl({
   sessionId,
   userId,
   userInitials,
+  // Inline Plan Card (Issue 7)
+  pendingPlan,
+  routingDecision,
+  showPlanApproval = false,
+  onApprovePlan,
+  onRejectPlan,
+  onEditPlan,
+  isPlanLoading = false,
 }: UnifiedMessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -557,6 +592,22 @@ function UnifiedMessageListImpl({
         className={cn("flex-1 overflow-y-auto p-6", className)}
       >
         <AIEmptyState context="messages" emptyType="empty" variant="inline" />
+        {/* Inline Plan Card - also show in empty state (Issue 7) */}
+        {showPlanApproval && pendingPlan && (
+          <div
+            className="px-2 py-2 mt-4"
+            data-testid="inline-plan-card-container"
+          >
+            <InlinePlanCard
+              plan={pendingPlan}
+              routingDecision={routingDecision}
+              onApprove={onApprovePlan ?? (() => {})}
+              onReject={onRejectPlan ?? (() => {})}
+              onEdit={onEditPlan}
+              isLoading={isPlanLoading}
+            />
+          </div>
+        )}
         <div ref={endRef} data-testid="messages-end" />
       </div>
     );
@@ -601,6 +652,20 @@ function UnifiedMessageListImpl({
         />
       ))}
 
+      {/* Inline Plan Card - rendered after the triggering message (Issue 7) */}
+      {showPlanApproval && pendingPlan && (
+        <div className="px-2 py-2" data-testid="inline-plan-card-container">
+          <InlinePlanCard
+            plan={pendingPlan}
+            routingDecision={routingDecision}
+            onApprove={onApprovePlan ?? (() => {})}
+            onReject={onRejectPlan ?? (() => {})}
+            onEdit={onEditPlan}
+            isLoading={isPlanLoading}
+          />
+        </div>
+      )}
+
       {/* Loading indicator */}
       {isLoading && !isStreaming && (
         <div className="flex justify-start">
@@ -627,30 +692,27 @@ function UnifiedMessageListImpl({
       )}
 
       {/* Typing Indicator (streaming without content yet) */}
-      {isStreaming &&
-        !messages.some((m) => m.isStreaming && m.content) && (
-          <div
-            data-testid="typing-indicator"
-            className="flex items-center gap-2 px-4 py-2"
-            role="status"
-            aria-label="Assistant is typing"
-          >
-            <div className="flex gap-1">
-              <div className="w-2 h-2 bg-neutral-4 rounded-full animate-bounce motion-reduce:animate-none" />
-              <div
-                className="w-2 h-2 bg-neutral-4 rounded-full animate-bounce motion-reduce:animate-none"
-                style={{ animationDelay: "150ms" }}
-              />
-              <div
-                className="w-2 h-2 bg-neutral-4 rounded-full animate-bounce motion-reduce:animate-none"
-                style={{ animationDelay: "300ms" }}
-              />
-            </div>
-            <span className="text-sm text-neutral-9">
-              Assistant is typing...
-            </span>
+      {isStreaming && !messages.some((m) => m.isStreaming && m.content) && (
+        <div
+          data-testid="typing-indicator"
+          className="flex items-center gap-2 px-4 py-2"
+          role="status"
+          aria-label="Assistant is typing"
+        >
+          <div className="flex gap-1">
+            <div className="w-2 h-2 bg-neutral-4 rounded-full animate-bounce motion-reduce:animate-none" />
+            <div
+              className="w-2 h-2 bg-neutral-4 rounded-full animate-bounce motion-reduce:animate-none"
+              style={{ animationDelay: "150ms" }}
+            />
+            <div
+              className="w-2 h-2 bg-neutral-4 rounded-full animate-bounce motion-reduce:animate-none"
+              style={{ animationDelay: "300ms" }}
+            />
           </div>
-        )}
+          <span className="text-sm text-neutral-9">Assistant is typing...</span>
+        </div>
+      )}
 
       {/* Follow-up Suggestions */}
       {!isStreaming &&

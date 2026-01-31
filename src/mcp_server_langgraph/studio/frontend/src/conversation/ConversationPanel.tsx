@@ -185,11 +185,36 @@ export interface ConversationPanelProps {
   /** Current tool preference */
   toolPreference?: "auto" | "native" | "builtin" | "mcp";
   /** Callback when tool preference changes */
-  onToolPreferenceChange?: (preference: "auto" | "native" | "builtin" | "mcp") => void;
+  onToolPreferenceChange?: (
+    preference: "auto" | "native" | "builtin" | "mcp",
+  ) => void;
 
   // Source Citations
   /** Group source citations by type (web vs knowledge base). Defaults to true. */
   groupSourcesByType?: boolean;
+
+  // Inline Plan Card (Issue 7: Execution Plans)
+  /** Current pending execution plan to display inline */
+  pendingPlan?:
+    | import("@/store/slices/executionModeSlice").ExecutionPlan
+    | null;
+  /** Routing decision for debugging/observability */
+  routingDecision?:
+    | import("@/store/slices/executionModeSlice").RoutingDecision
+    | null;
+  /** Whether to show the plan approval card */
+  showPlanApproval?: boolean;
+  /** Callback when plan is approved */
+  onApprovePlan?: (planId: string) => void;
+  /** Callback when plan is rejected */
+  onRejectPlan?: (planId: string) => void;
+  /** Callback when plan is edited */
+  onEditPlan?: (
+    planId: string,
+    updates: Partial<import("@/store/slices/executionModeSlice").ExecutionPlan>,
+  ) => void;
+  /** Whether plan actions are in progress */
+  isPlanLoading?: boolean;
 }
 
 // =============================================================================
@@ -217,9 +242,7 @@ function SessionHeader({
         "border-b border-neutral-5",
       )}
     >
-      <h2 className="text-sm font-medium text-neutral-12 truncate">
-        {title}
-      </h2>
+      <h2 className="text-sm font-medium text-neutral-12 truncate">{title}</h2>
       <div className="flex items-center gap-1">
         {/* Generate Workflow from Chat button */}
         {sessionId && <GenerateWorkflowButton sessionId={sessionId} />}
@@ -327,6 +350,14 @@ export function ConversationPanel({
   onToolPreferenceChange,
   // Source Citations
   groupSourcesByType,
+  // Inline Plan Card (Issue 7)
+  pendingPlan,
+  routingDecision,
+  showPlanApproval = false,
+  onApprovePlan,
+  onRejectPlan,
+  onEditPlan,
+  isPlanLoading = false,
 }: ConversationPanelProps) {
   const [inputValue, setInputValue] = useState("");
 
@@ -387,10 +418,7 @@ export function ConversationPanel({
   return (
     <div
       data-testid="conversation-panel"
-      className={cn(
-        "flex flex-col h-full bg-neutral-1",
-        className,
-      )}
+      className={cn("flex flex-col h-full bg-neutral-1", className)}
     >
       {/* Session Header */}
       {sessionTitle && (
@@ -437,6 +465,14 @@ export function ConversationPanel({
           userId={userId}
           userInitials={userInitials}
           className="flex-1"
+          // Inline Plan Card (Issue 7)
+          pendingPlan={pendingPlan}
+          routingDecision={routingDecision}
+          showPlanApproval={showPlanApproval}
+          onApprovePlan={onApprovePlan}
+          onRejectPlan={onRejectPlan}
+          onEditPlan={onEditPlan}
+          isPlanLoading={isPlanLoading}
         />
       ) : (
         <MessageList

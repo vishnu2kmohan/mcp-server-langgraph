@@ -71,11 +71,7 @@ import {
   useSubmitHallucinationReportMutation,
 } from "../api";
 import { ConversationPanel } from "./ConversationPanel";
-import { InlinePlanCard } from "./InlinePlanCard";
-import type {
-  SlashCommand,
-  ModelOption,
-} from "../components/Chat/ChatInput";
+import type { SlashCommand, ModelOption } from "../components/Chat/ChatInput";
 import type { ReasoningEffortLevel } from "../components/Chat/ReasoningEffortSelector";
 import type { KBFocusMode, ToolPreference } from "../hooks/useStreamingChat";
 import type { ChatLoaderData } from "../router/loaders";
@@ -598,7 +594,13 @@ export const ConnectedConversationPanel = forwardRef<
       lastThinkingTokensRef.current = thinkingTokens;
       lastStreamedSourcesRef.current = streamingSources;
     }
-  }, [isStreaming, streamingContent, streamingUsage, thinkingTokens, streamingSources]);
+  }, [
+    isStreaming,
+    streamingContent,
+    streamingUsage,
+    thinkingTokens,
+    streamingSources,
+  ]);
 
   // Get session title for display (currentSession defined earlier for message merging)
   const sessionTitle = currentSession?.name;
@@ -640,7 +642,9 @@ export const ConnectedConversationPanel = forwardRef<
       try {
         // Auto-create session on first message if no session exists
         if (!effectiveSessionId) {
-          logger.debug("No session found, creating new session for first message");
+          logger.debug(
+            "No session found, creating new session for first message",
+          );
           const newSession = await dispatch(
             createSession({ name: "New Chat" }),
           ).unwrap();
@@ -805,33 +809,24 @@ export const ConnectedConversationPanel = forwardRef<
   );
 
   // Handle message edit
-  const handleEditMessage = useCallback(
-    (messageId: string) => {
-      // TODO: Implement message editing when supported
-      logger.debug("Edit message requested", { messageId });
-    },
-    [],
-  );
+  const handleEditMessage = useCallback((messageId: string) => {
+    // TODO: Implement message editing when supported
+    logger.debug("Edit message requested", { messageId });
+  }, []);
 
   // Handle message deletion
-  const handleDeleteMessage = useCallback(
-    (messageId: string) => {
-      // TODO: Implement message deletion when supported
-      logger.debug("Delete message requested", { messageId });
-    },
-    [],
-  );
+  const handleDeleteMessage = useCallback((messageId: string) => {
+    // TODO: Implement message deletion when supported
+    logger.debug("Delete message requested", { messageId });
+  }, []);
 
   // Handle message regeneration
-  const handleRegenerateMessage = useCallback(
-    (messageId: string) => {
-      setIsRegenerating(true);
-      // TODO: Implement message regeneration when supported
-      logger.debug("Regenerate message requested", { messageId });
-      setIsRegenerating(false);
-    },
-    [],
-  );
+  const handleRegenerateMessage = useCallback((messageId: string) => {
+    setIsRegenerating(true);
+    // TODO: Implement message regeneration when supported
+    logger.debug("Regenerate message requested", { messageId });
+    setIsRegenerating(false);
+  }, []);
 
   // Handle hallucination report
   const handleReportHallucination = useCallback(
@@ -931,7 +926,8 @@ export const ConnectedConversationPanel = forwardRef<
                 isThinkingContentCollapsed
                   ? "Expand thinking content"
                   : "Collapse thinking content"
-              }>
+              }
+            >
               {isThinkingContentCollapsed ? (
                 <ChevronDown size={14} />
               ) : (
@@ -1078,7 +1074,8 @@ export const ConnectedConversationPanel = forwardRef<
               className="p-1 hover:bg-insight-4 dark:hover:bg-insight-11 rounded"
               data-testid="dismiss-suggestion-button"
               onClick={() => dismissSuggestion(suggestion.id)}
-              aria-label="Dismiss suggestion">
+              aria-label="Dismiss suggestion"
+            >
               <X size={14} className="text-insight-9" />
             </Button>
           </div>
@@ -1095,10 +1092,7 @@ export const ConnectedConversationPanel = forwardRef<
               "border-b border-neutral-5",
             )}
           >
-            <Lightbulb
-              size={12}
-              className="flex-shrink-0 text-neutral-9"
-            />
+            <Lightbulb size={12} className="flex-shrink-0 text-neutral-9" />
             <div className="flex-1 text-xs text-neutral-11">
               {suggestion.targetElement && (
                 <span className="font-mono text-xs text-neutral-9 mr-2">
@@ -1131,17 +1125,6 @@ export const ConnectedConversationPanel = forwardRef<
           onDismiss={() => handleDismissAuthRequirement(authReq.id)}
         />
       ))}
-      {/* Inline Plan Card (Issue 7: Execution Plans) */}
-      {showPlanApproval && currentPlan && (
-        <div className="px-4 py-2">
-          <InlinePlanCard
-            plan={currentPlan}
-            routingDecision={routingDecision}
-            onApprove={handleApprovePlan}
-            onReject={handleRejectPlan}
-          />
-        </div>
-      )}
       <ConversationPanel
         data-testid="connected-conversation-panel"
         messages={messages}
@@ -1202,6 +1185,12 @@ export const ConnectedConversationPanel = forwardRef<
         onRegenerateMessage={handleRegenerateMessage}
         onReportHallucination={handleReportHallucination}
         isRegenerating={isRegenerating}
+        // Inline Plan Card (Issue 7: Execution Plans)
+        pendingPlan={currentPlan}
+        routingDecision={routingDecision}
+        showPlanApproval={showPlanApproval}
+        onApprovePlan={handleApprovePlan}
+        onRejectPlan={handleRejectPlan}
       />
     </div>
   );

@@ -83,6 +83,39 @@ vi.mock("../hooks/useStreamingChat", () => ({
   useStreamingChat: () => mockStreamingChatReturn,
 }));
 
+// Mock feature flags to enable unified_message_list for inline plan card rendering
+vi.mock("../contexts/FeatureFlagContext", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("../contexts/FeatureFlagContext")>();
+  return {
+    ...actual,
+    useFeatureFlags: () => ({
+      isEnabled: (flag: string) => flag === "unified_message_list",
+      isLoading: false,
+      flags: { unified_message_list: true },
+    }),
+    useFeatureFlag: (flag: string) => flag === "unified_message_list",
+  };
+});
+
+// Mock useAIEmptyState to avoid persona slice dependency
+vi.mock("../hooks/useAIEmptyState", () => ({
+  useAIEmptyState: () => ({
+    showEmptyState: false,
+    emptyType: "empty",
+    emptyContext: {},
+    isLoading: false,
+    error: null,
+    content: null,
+    suggestions: [],
+  }),
+}));
+
+// Mock AIEmptyState component to avoid persona slice dependency
+vi.mock("../components/EmptyState/AIEmptyState", () => ({
+  AIEmptyState: () => null,
+}));
+
 vi.mock("../hooks/useConversationIntelligence", () => ({
   useIntentDetection: vi.fn(() => ({
     intent: null,
