@@ -366,6 +366,59 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         # NOTE: MCP sync + semantic indexing moved to app.py lifespan (v26)
         # See: sync_mcp_tools() + index_all_tools() in app.py
 
+        # Initialize Plan Repositories (Phase 6: pgvector Pool at App Startup)
+        # Supports PostgreSQL with pgvector for semantic search or in-memory for testing
+        from mcp_server_langgraph.repositories.execution_plan import (
+            InMemoryExecutionPlanRepository,
+        )
+        from mcp_server_langgraph.repositories.plan_template import (
+            InMemoryPlanTemplateRepository,
+        )
+        from mcp_server_langgraph.api.v1.execution_plans import (
+            set_plan_repo,
+            set_template_repo,
+        )
+
+        try:
+            use_postgres = container.settings.plan_storage_backend == "postgres"
+            has_database = bool(container.settings.database_url)
+
+            if use_postgres and has_database:
+                from mcp_server_langgraph.database.session import get_session_maker
+                from mcp_server_langgraph.repositories.postgres_execution_plan import (
+                    PostgresExecutionPlanRepository,
+                )
+                from mcp_server_langgraph.repositories.postgres_plan_template import (
+                    PostgresPlanTemplateRepository,
+                )
+
+                session_maker = get_session_maker(container.settings.database_url)
+
+                # Create a context manager factory for session
+                @asynccontextmanager
+                async def session_factory():
+                    async with session_maker() as session:
+                        yield session
+
+                execution_plan_repo = PostgresExecutionPlanRepository(session_factory)
+                plan_template_repo = PostgresPlanTemplateRepository(session_factory)
+                logger.info("Using PostgreSQL plan repositories with pgvector (production)")
+            else:
+                execution_plan_repo = InMemoryExecutionPlanRepository()
+                plan_template_repo = InMemoryPlanTemplateRepository()
+                logger.info("Using in-memory plan repositories (development/test)")
+
+            # Wire repositories to DI
+            set_plan_repo(execution_plan_repo)
+            set_template_repo(plan_template_repo)
+            logger.info("Plan repositories initialized successfully")
+        except Exception as e:
+            logger.warning(f"Plan repository initialization failed: {e}")
+            # Fallback to in-memory
+            set_plan_repo(InMemoryExecutionPlanRepository())
+            set_template_repo(InMemoryPlanTemplateRepository())
+            logger.info("Falling back to in-memory plan repositories")
+
     yield
 
     # Shutdown
@@ -376,6 +429,7 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         from mcp_server_langgraph.api.v1.artifacts import set_artifacts_service
         from mcp_server_langgraph.api.v1.notifications import set_push_subscription_store
         from mcp_server_langgraph.api.v1.remediation_approvals import set_feedback_store
+        from mcp_server_langgraph.api.v1.execution_plans import reset_plan_repo, reset_template_repo
         from mcp_server_langgraph.compliance.gdpr.factory import reset_gdpr_storage
         from mcp_server_langgraph.monitoring.budget_storage import set_budget_storage
 
@@ -384,6 +438,8 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         set_artifacts_service(None)
         set_budget_storage(None)
         reset_gdpr_storage()
+        reset_plan_repo()
+        reset_template_repo()
 
         # Reset MCP aggregated broadcaster
         from mcp_server_langgraph.mcp.client.cached_unified_registry import (

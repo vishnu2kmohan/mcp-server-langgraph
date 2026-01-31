@@ -160,6 +160,12 @@ class DataDeletionService:
             # 6. Delete decision traces (ADR-0101 Context Graphs)
             await self._safe_delete("decision_traces", self._delete_decision_traces, user_id, deleted_items, errors)
 
+            # 6a. Delete execution plans (Phase 9 GDPR)
+            await self._safe_delete("execution_plans", self._delete_execution_plans, user_id, deleted_items, errors)
+
+            # 6b. Delete plan templates (Phase 9 GDPR)
+            await self._safe_delete("plan_templates", self._delete_plan_templates, user_id, deleted_items, errors)
+
             # 7. Anonymize audit logs (don't delete for compliance)
             await self._safe_anonymize("audit_logs", self._anonymize_user_audit_logs, user_id, anonymized_items, errors)
 
@@ -384,7 +390,6 @@ class DataDeletionService:
         Returns the repository if available, None otherwise.
         Used for GDPR deletion of decision traces (ADR-0101 Context Graphs).
         """
-        from typing import Any
 
         try:
             from mcp_server_langgraph.core.dependencies import (
@@ -414,4 +419,72 @@ class DataDeletionService:
             return count
         except Exception as e:
             logger.error(f"Failed to delete user decision traces: {e}", exc_info=True)
+            raise
+
+    def _get_execution_plan_repository(self) -> Any:
+        """Get execution plan repository from DI.
+
+        Returns the repository if available, None otherwise.
+        Used for GDPR deletion of execution plans (Phase 9).
+        """
+        try:
+            from mcp_server_langgraph.api.v1.execution_plans import get_plan_repo
+
+            return get_plan_repo()
+        except Exception as e:
+            logger.debug(f"Execution plan repository not available: {e}")
+            return None
+
+    def _get_plan_template_repository(self) -> Any:
+        """Get plan template repository from DI.
+
+        Returns the repository if available, None otherwise.
+        Used for GDPR deletion of plan templates (Phase 9).
+        """
+        try:
+            from mcp_server_langgraph.api.v1.execution_plans import get_template_repo
+
+            return get_template_repo()
+        except Exception as e:
+            logger.debug(f"Plan template repository not available: {e}")
+            return None
+
+    async def _delete_execution_plans(self, user_id: str) -> int:
+        """Delete user execution plans for GDPR compliance (Phase 9).
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            Number of execution plans deleted
+        """
+        repo = self._get_execution_plan_repository()
+        if repo is None:
+            return 0
+
+        try:
+            count: int = await repo.delete_by_user(user_id)
+            return count
+        except Exception as e:
+            logger.error(f"Failed to delete user execution plans: {e}", exc_info=True)
+            raise
+
+    async def _delete_plan_templates(self, user_id: str) -> int:
+        """Delete user plan templates for GDPR compliance (Phase 9).
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            Number of plan templates deleted
+        """
+        repo = self._get_plan_template_repository()
+        if repo is None:
+            return 0
+
+        try:
+            count: int = await repo.delete_by_user(user_id)
+            return count
+        except Exception as e:
+            logger.error(f"Failed to delete user plan templates: {e}", exc_info=True)
             raise

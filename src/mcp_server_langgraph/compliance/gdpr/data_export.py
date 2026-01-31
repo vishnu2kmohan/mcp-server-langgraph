@@ -33,7 +33,11 @@ class UserDataExport(BaseModel):
     preferences: dict[str, Any] = Field(default_factory=dict, description="User preferences and settings")
     audit_log: list[dict[str, Any]] = Field(default_factory=list, description="User activity audit log")
     consents: list[dict[str, Any]] = Field(default_factory=list, description="Consent records")
-    decision_traces: list[dict[str, Any]] = Field(default_factory=list, description="Decision traces (ADR-0101 Context Graphs)")
+    decision_traces: list[dict[str, Any]] = Field(
+        default_factory=list, description="Decision traces (ADR-0101 Context Graphs)"
+    )
+    execution_plans: list[dict[str, Any]] = Field(default_factory=list, description="Execution plans (Phase 9 GDPR)")
+    plan_templates: list[dict[str, Any]] = Field(default_factory=list, description="Plan templates (Phase 9 GDPR)")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     model_config = ConfigDict(
@@ -123,6 +127,8 @@ class DataExportService:
             audit_log = await self._get_user_audit_log(user_id)
             consents = await self._get_user_consents(user_id)
             decision_traces = await self._get_user_decision_traces(user_id)
+            execution_plans = await self._get_user_execution_plans(user_id)
+            plan_templates = await self._get_user_plan_templates(user_id)
 
             export = UserDataExport(
                 export_id=export_id,
@@ -137,6 +143,8 @@ class DataExportService:
                 audit_log=audit_log,
                 consents=consents,
                 decision_traces=decision_traces,
+                execution_plans=execution_plans,
+                plan_templates=plan_templates,
                 metadata={"export_reason": "user_request", "gdpr_article": "15"},
             )
 
@@ -392,4 +400,58 @@ class DataExportService:
             return traces
         except Exception as e:
             logger.error(f"Failed to retrieve user decision traces: {e}", exc_info=True)
+            return []
+
+    def _get_execution_plan_repository(self) -> Any:
+        """Get execution plan repository from DI.
+
+        Returns the repository if available, None otherwise.
+        Used for GDPR data export of execution plans (Phase 9).
+        """
+        try:
+            from mcp_server_langgraph.api.v1.execution_plans import get_plan_repo
+
+            return get_plan_repo()
+        except Exception as e:
+            logger.debug(f"Execution plan repository not available: {e}")
+            return None
+
+    def _get_plan_template_repository(self) -> Any:
+        """Get plan template repository from DI.
+
+        Returns the repository if available, None otherwise.
+        Used for GDPR data export of plan templates (Phase 9).
+        """
+        try:
+            from mcp_server_langgraph.api.v1.execution_plans import get_template_repo
+
+            return get_template_repo()
+        except Exception as e:
+            logger.debug(f"Plan template repository not available: {e}")
+            return None
+
+    async def _get_user_execution_plans(self, user_id: str) -> list[dict[str, Any]]:
+        """Get user execution plans for GDPR export (Phase 9)."""
+        repo = self._get_execution_plan_repository()
+        if repo is None:
+            return []
+
+        try:
+            plans = await repo.list_by_user(user_id)
+            return [plan.model_dump() for plan in plans]
+        except Exception as e:
+            logger.error(f"Failed to retrieve user execution plans: {e}", exc_info=True)
+            return []
+
+    async def _get_user_plan_templates(self, user_id: str) -> list[dict[str, Any]]:
+        """Get user plan templates for GDPR export (Phase 9)."""
+        repo = self._get_plan_template_repository()
+        if repo is None:
+            return []
+
+        try:
+            templates = await repo.list_by_user(user_id)
+            return [template.model_dump() for template in templates]
+        except Exception as e:
+            logger.error(f"Failed to retrieve user plan templates: {e}", exc_info=True)
             return []

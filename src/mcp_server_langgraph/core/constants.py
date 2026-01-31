@@ -51,3 +51,29 @@ DEFAULT_RETRY_BASE_DELAY: float = 1.0
 
 # Default maximum delay for exponential backoff (seconds)
 DEFAULT_RETRY_MAX_DELAY: float = 60.0
+
+
+# ==============================================================================
+# Embedding Constants
+# ==============================================================================
+
+# Embedding dimension for pgvector storage
+# Must match: Vertex AI output (768), DB schema vector(768), search queries
+# All components MUST import from here - no local 768 literals.
+EMBEDDING_DIM: int = 768
+
+
+def assert_embedding_dimension(actual: int, context: str) -> None:
+    """Assert embedding dimension matches expected value.
+
+    Call this at startup or when generating embeddings to catch mismatches early.
+
+    Args:
+        actual: The actual embedding dimension from the provider/database.
+        context: Description of where this check is happening (for error messages).
+
+    Raises:
+        ValueError: If the actual dimension doesn't match EMBEDDING_DIM.
+    """
+    if actual != EMBEDDING_DIM:
+        raise ValueError(f"Embedding dimension mismatch in {context}: got {actual}, expected {EMBEDDING_DIM}")
