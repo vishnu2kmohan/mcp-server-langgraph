@@ -175,6 +175,7 @@ class InMemorySessionRepository(SessionRepository):
             message_id=message.get("message_id", str(uuid4())),
             role=message["role"],
             content=message["content"],
+            user_id=message.get("user_id") or session.user_id,
             metadata=message.get("metadata", {}),
         )
         session.messages.append(msg)
