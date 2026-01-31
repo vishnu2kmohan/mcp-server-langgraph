@@ -138,6 +138,17 @@ class PostgresPlanTemplateRepository(PlanTemplateRepository):
             await session.execute(
                 update(PlanTemplateModel).where(PlanTemplateModel.template_id == template.template_id).values(**values)
             )
+
+            # Persist embedding via raw SQL (pgvector column not mapped in ORM)
+            if template.description_embedding is not None:
+                vector_str = "[" + ",".join(str(v) for v in template.description_embedding) + "]"
+                await session.execute(
+                    text(
+                        "UPDATE plan_templates SET description_embedding = :embedding::vector WHERE template_id = :template_id"
+                    ),
+                    {"embedding": vector_str, "template_id": template.template_id},
+                )
+
             await session.commit()
 
             result = await session.execute(
@@ -230,6 +241,9 @@ class PostgresPlanTemplateRepository(PlanTemplateRepository):
                         last_used_at=row.last_used_at,
                         created_at=row.created_at,
                         updated_at=row.updated_at,
+                        embedding_status=row.embedding_status or "pending",
+                        embedding_error=row.embedding_error,
+                        embedding_failed_at=row.embedding_failed_at,
                     )
                 )
             return templates

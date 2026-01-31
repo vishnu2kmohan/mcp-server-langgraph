@@ -16,11 +16,57 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, select, text, update
 
 from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
 from mcp_server_langgraph.database.execution_plan_models import ExecutionPlanModel
 from mcp_server_langgraph.repositories.execution_plan import ExecutionPlanRepository
+
+
+def execution_plan_to_model(plan: ExecutionPlan) -> ExecutionPlanModel:
+    """Convert Pydantic ExecutionPlan to SQLAlchemy ExecutionPlanModel.
+
+    Shared mapper for use by PostgresExecutionPlanRepository and PlanPersistenceService.
+
+    Args:
+        plan: The Pydantic execution plan.
+
+    Returns:
+        SQLAlchemy model ready for database insertion.
+    """
+    return ExecutionPlanModel(
+        plan_id=plan.plan_id,
+        session_id=plan.session_id,
+        status=plan.status,
+        complexity=plan.complexity,
+        risk_level=plan.risk_level,
+        task_type=plan.task_type,
+        executor_model=plan.executor_model,
+        critic_model=plan.critic_model,
+        estimated_cost=plan.estimated_cost,
+        actual_cost=plan.actual_cost,
+        message=plan.message,
+        tools_needed=plan.tools_needed,
+        force_approval=plan.force_approval,
+        confidence=plan.confidence,
+        suggested_orchestrator=plan.suggested_orchestrator,
+        critique_rounds=plan.critique_rounds,
+        thinking_budget=plan.thinking_budget,
+        created_at=plan.created_at,
+        expires_at=plan.expires_at,
+        executed_at=plan.executed_at,
+        approved_by=plan.approved_by,
+        approved_at=plan.approved_at,
+        rejected_by=plan.rejected_by,
+        rejected_at=plan.rejected_at,
+        rejection_reason=plan.rejection_reason,
+        user_id=plan.user_id,
+        created_by=plan.created_by,
+        embedding_status=plan.embedding_status,
+        embedding_error=plan.embedding_error,
+        embedding_failed_at=plan.embedding_failed_at,
+    )
+
 
 # Type alias for session factory
 SessionFactory = Callable[[], Any]  # Returns context manager yielding AsyncSession
@@ -78,38 +124,7 @@ class PostgresExecutionPlanRepository(ExecutionPlanRepository):
 
     def _pydantic_to_model(self, plan: ExecutionPlan) -> ExecutionPlanModel:
         """Convert Pydantic model to SQLAlchemy model."""
-        return ExecutionPlanModel(
-            plan_id=plan.plan_id,
-            session_id=plan.session_id,
-            status=plan.status,
-            complexity=plan.complexity,
-            risk_level=plan.risk_level,
-            task_type=plan.task_type,
-            executor_model=plan.executor_model,
-            critic_model=plan.critic_model,
-            estimated_cost=plan.estimated_cost,
-            actual_cost=plan.actual_cost,
-            message=plan.message,
-            tools_needed=plan.tools_needed,
-            force_approval=plan.force_approval,
-            confidence=plan.confidence,
-            suggested_orchestrator=plan.suggested_orchestrator,
-            critique_rounds=plan.critique_rounds,
-            thinking_budget=plan.thinking_budget,
-            created_at=plan.created_at,
-            expires_at=plan.expires_at,
-            executed_at=plan.executed_at,
-            approved_by=plan.approved_by,
-            approved_at=plan.approved_at,
-            rejected_by=plan.rejected_by,
-            rejected_at=plan.rejected_at,
-            rejection_reason=plan.rejection_reason,
-            user_id=plan.user_id,
-            created_by=plan.created_by,
-            embedding_status=plan.embedding_status,
-            embedding_error=plan.embedding_error,
-            embedding_failed_at=plan.embedding_failed_at,
-        )
+        return execution_plan_to_model(plan)
 
     async def create(self, plan: ExecutionPlan) -> ExecutionPlan:
         """Create a new execution plan.
@@ -173,6 +188,15 @@ class PostgresExecutionPlanRepository(ExecutionPlanRepository):
             await session.execute(
                 update(ExecutionPlanModel).where(ExecutionPlanModel.plan_id == plan.plan_id).values(**values)
             )
+
+            # Persist embedding via raw SQL (pgvector column not mapped in ORM)
+            if plan.description_embedding is not None:
+                vector_str = "[" + ",".join(str(v) for v in plan.description_embedding) + "]"
+                await session.execute(
+                    text("UPDATE execution_plans SET description_embedding = :embedding::vector WHERE plan_id = :plan_id"),
+                    {"embedding": vector_str, "plan_id": plan.plan_id},
+                )
+
             await session.commit()
 
             # Fetch updated record
