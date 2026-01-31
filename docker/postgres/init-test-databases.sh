@@ -51,6 +51,17 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "agent_studio_test"
 EOSQL
 echo "✓ TimescaleDB extension enabled"
 
+# Enable pgvector extension for vector similarity search
+# Required for execution plan and template embedding search
+# TimescaleDB 2.17.2-pg16 includes pgvector as a bundled extension
+# Reference: Phase 1 - pgvector Test Image
+echo "Enabling pgvector extension in agent_studio_test database..."
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "agent_studio_test" <<-EOSQL
+    CREATE EXTENSION IF NOT EXISTS vector;
+    \echo 'pgvector extension enabled in agent_studio_test'
+EOSQL
+echo "✓ pgvector extension enabled"
+
 # Apply compliance schema to compliance_test database
 # The compliance schema is required for E2E tests (test_infrastructure fixture checks for these tables)
 # Supports GDPR, HIPAA, SOC2, and FedRAMP compliance data storage

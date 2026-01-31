@@ -1,0 +1,234 @@
+"""
+Integration Tests for PostgresExecutionPlanRepository.
+
+Tests the PostgreSQL implementation of the execution plan repository
+with real database connections.
+
+TDD Approach:
+- RED: Tests fail without PostgresExecutionPlanRepository implementation
+- GREEN: Tests pass after implementing repository
+- REFACTOR: Optimize queries and indexing
+
+Phase 4: PostgreSQL Repositories (SQLAlchemy AsyncSession)
+"""
+
+import gc
+import uuid
+from datetime import datetime, timedelta, UTC
+
+import pytest
+
+from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+pytestmark = [pytest.mark.integration, pytest.mark.repository]
+
+
+def create_test_plan(
+    session_id: str | None = None,
+    user_id: str | None = None,
+    status: str = "awaiting_approval",
+) -> ExecutionPlan:
+    """Create a test execution plan with minimal required fields."""
+    return ExecutionPlan(
+        plan_id=f"plan_{uuid.uuid4().hex[:8]}",
+        session_id=session_id or f"session_{uuid.uuid4().hex[:8]}",
+        message="Test plan message",
+        complexity="simple",
+        risk_level="low",
+        task_type="chat",
+        estimated_cost=0.01,
+        executor_model="claude-sonnet-4-20250514",
+        suggested_orchestrator="standard",
+        status=status,
+        user_id=user_id or f"user:{uuid.uuid4().hex[:8]}",
+        created_by=user_id or f"user:{uuid.uuid4().hex[:8]}",
+        created_at=datetime.now(UTC),
+        expires_at=datetime.now(UTC) + timedelta(hours=1),
+    )
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.xdist_group(name="testpostgresexecutionplanrepo")
+@pytest.mark.skip_isolation_check  # Uses worker-scoped Postgres schemas for isolation
+class TestPostgresExecutionPlanRepository:
+    """
+    Test PostgresExecutionPlanRepository with real PostgreSQL.
+
+    TDD: RED phase - These tests will fail without the repository implementation.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.fixture
+    async def repo(self, postgres_connection_clean):
+        """Create repository with test database session."""
+        from mcp_server_langgraph.repositories.postgres_execution_plan import (
+            PostgresExecutionPlanRepository,
+        )
+
+        # Create mock session factory from connection
+        class MockSessionFactory:
+            def __init__(self, conn):
+                self.conn = conn
+
+            def __call__(self):
+                return self
+
+            async def __aenter__(self):
+                return self.conn
+
+            async def __aexit__(self, *args):
+                pass
+
+        return PostgresExecutionPlanRepository(MockSessionFactory(postgres_connection_clean))
+
+    async def test_create_and_get_plan(self, repo):
+        """Test creating and retrieving an execution plan."""
+        plan = create_test_plan()
+
+        # Create
+        created = await repo.create(plan)
+        assert created.plan_id == plan.plan_id
+
+        # Get
+        retrieved = await repo.get(plan.plan_id)
+        assert retrieved is not None
+        assert retrieved.plan_id == plan.plan_id
+        assert retrieved.message == plan.message
+        assert retrieved.status == "awaiting_approval"
+
+    async def test_update_plan_status(self, repo):
+        """Test updating plan status (approval workflow)."""
+        plan = create_test_plan()
+        await repo.create(plan)
+
+        # Approve the plan
+        plan.status = "approved"
+        plan.approved_by = "test_user"
+        plan.approved_at = datetime.now(UTC)
+        updated = await repo.update(plan)
+
+        assert updated.status == "approved"
+        assert updated.approved_by == "test_user"
+
+        # Verify persistence
+        retrieved = await repo.get(plan.plan_id)
+        assert retrieved.status == "approved"
+
+    async def test_delete_plan(self, repo):
+        """Test deleting an execution plan."""
+        plan = create_test_plan()
+        await repo.create(plan)
+
+        # Delete
+        result = await repo.delete(plan.plan_id)
+        assert result is True
+
+        # Verify deletion
+        retrieved = await repo.get(plan.plan_id)
+        assert retrieved is None
+
+        # Delete non-existent plan
+        result = await repo.delete("non_existent_id")
+        assert result is False
+
+    async def test_list_by_session(self, repo):
+        """Test listing plans by session ID."""
+        session_id = f"session_{uuid.uuid4().hex[:8]}"
+
+        # Create multiple plans for same session
+        plans = [create_test_plan(session_id=session_id) for _ in range(3)]
+        for plan in plans:
+            await repo.create(plan)
+
+        # Create plan for different session
+        other_plan = create_test_plan()
+        await repo.create(other_plan)
+
+        # List by session
+        session_plans = await repo.list_by_session(session_id)
+        assert len(session_plans) == 3
+        assert all(p.session_id == session_id for p in session_plans)
+
+    async def test_list_pending(self, repo):
+        """Test listing plans awaiting approval."""
+        # Create plans with different statuses
+        pending1 = create_test_plan(status="awaiting_approval")
+        pending2 = create_test_plan(status="awaiting_approval")
+        approved = create_test_plan(status="approved")
+        rejected = create_test_plan(status="rejected")
+
+        for plan in [pending1, pending2, approved, rejected]:
+            await repo.create(plan)
+
+        # List pending
+        pending_plans = await repo.list_pending()
+        assert len(pending_plans) >= 2  # May include other pending plans
+        pending_ids = {p.plan_id for p in pending_plans}
+        assert pending1.plan_id in pending_ids
+        assert pending2.plan_id in pending_ids
+        assert approved.plan_id not in pending_ids
+        assert rejected.plan_id not in pending_ids
+
+    async def test_list_by_user(self, repo):
+        """Test listing plans by user ID (GDPR export)."""
+        user_id = f"user:{uuid.uuid4().hex[:8]}"
+
+        # Create plans for user
+        plans = [create_test_plan(user_id=user_id) for _ in range(3)]
+        for plan in plans:
+            await repo.create(plan)
+
+        # Create plan for different user
+        other_plan = create_test_plan()
+        await repo.create(other_plan)
+
+        # List by user
+        user_plans = await repo.list_by_user(user_id)
+        assert len(user_plans) == 3
+        assert all(p.user_id == user_id for p in user_plans)
+
+    async def test_delete_by_user(self, repo):
+        """Test deleting all plans for a user (GDPR deletion)."""
+        user_id = f"user:{uuid.uuid4().hex[:8]}"
+
+        # Create plans for user
+        plans = [create_test_plan(user_id=user_id) for _ in range(3)]
+        for plan in plans:
+            await repo.create(plan)
+
+        # Create plan for different user (should not be deleted)
+        other_plan = create_test_plan()
+        await repo.create(other_plan)
+
+        # Delete by user
+        deleted_count = await repo.delete_by_user(user_id)
+        assert deleted_count == 3
+
+        # Verify deletion
+        user_plans = await repo.list_by_user(user_id)
+        assert len(user_plans) == 0
+
+        # Verify other user's plan still exists
+        retrieved = await repo.get(other_plan.plan_id)
+        assert retrieved is not None
+
+    async def test_embedding_fields_persisted(self, repo):
+        """Test that embedding status fields are persisted."""
+        plan = create_test_plan()
+        plan.embedding_status = "processing"
+
+        await repo.create(plan)
+
+        retrieved = await repo.get(plan.plan_id)
+        assert retrieved.embedding_status == "processing"
+
+        # Update embedding status
+        plan.embedding_status = "completed"
+        await repo.update(plan)
+
+        retrieved = await repo.get(plan.plan_id)
+        assert retrieved.embedding_status == "completed"
