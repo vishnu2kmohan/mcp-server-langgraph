@@ -489,6 +489,9 @@ class InMemorySessionService(SessionService):
 
     def __init__(self) -> None:
         self._sessions: dict[str, dict[str, Any]] = {}
+        # R2-Finding 6: Index for O(1) request_id lookups
+        # Structure: {session_id: {request_id: message_index}}
+        self._request_id_index: dict[str, dict[str, int]] = {}
 
     async def list_sessions(
         self,
@@ -680,8 +683,19 @@ class InMemorySessionService(SessionService):
         if "model_name" in message_data:
             message["model_name"] = message_data["model_name"]
 
+        # R2-Finding 6: Preserve metadata including request_id
+        if "metadata" in message_data:
+            message["metadata"] = message_data["metadata"]
+
         session["messages"].append(message)
         session["updated_at"] = datetime.now(UTC).isoformat()
+
+        # R2-Finding 6: Update request_id index if present
+        request_id = message_data.get("metadata", {}).get("request_id")
+        if request_id:
+            if session_id not in self._request_id_index:
+                self._request_id_index[session_id] = {}
+            self._request_id_index[session_id][request_id] = len(session["messages"]) - 1
 
         return message
 
@@ -693,6 +707,8 @@ class InMemorySessionService(SessionService):
 
         session["messages"] = []
         session["updated_at"] = datetime.now(UTC).isoformat()
+        # Clear request_id index to prevent stale lookups (R1-Finding 2)
+        self._request_id_index.pop(session_id, None)
         return True
 
     async def update_name(self, session_id: str, user_id: str, name: str) -> dict[str, Any] | None:
@@ -760,6 +776,132 @@ class InMemorySessionService(SessionService):
             "user_id": user_id,
             "created_at": datetime.now(UTC).isoformat(),
         }
+
+    async def get_message_by_request_id(
+        self,
+        session_id: str,
+        user_id: str,
+        request_id: str,
+    ) -> dict[str, Any] | None:
+        """Get a message by request_id for idempotency lookup.
+
+        R1-Finding 5: O(1) lookup using request_id index.
+
+        Args:
+            session_id: Session ID to search in
+            user_id: User ID making the request (for ownership check)
+            request_id: The request_id to look up
+
+        Returns:
+            Message dict if found and owned, None otherwise
+        """
+        session = self._sessions.get(session_id)
+        if session is None or session.get("user_id") != user_id:
+            return None
+
+        # Check index first (O(1))
+        if session_id in self._request_id_index:
+            idx = self._request_id_index[session_id].get(request_id)
+            if idx is not None:
+                messages = session.get("messages", [])
+                if 0 <= idx < len(messages):
+                    return messages[idx]
+
+        # Fallback: linear scan if index missing (shouldn't happen normally)
+        for msg in session.get("messages", []):
+            if msg.get("metadata", {}).get("request_id") == request_id:
+                return msg
+
+        return None
+
+    async def delete_message(
+        self,
+        session_id: str,
+        user_id: str,
+        message_id: str,
+    ) -> bool:
+        """Delete a message and update request_id index.
+
+        R2-Finding 6: Index must be maintained on deletion.
+
+        Args:
+            session_id: Session ID containing the message
+            user_id: User ID making the request (for ownership check)
+            message_id: ID of message to delete
+
+        Returns:
+            True if deleted, False if not found or not owned
+        """
+        session = self._sessions.get(session_id)
+        if session is None or session.get("user_id") != user_id:
+            return False
+
+        # Find and remove message
+        messages = session.get("messages", [])
+        for i, msg in enumerate(messages):
+            if msg.get("message_id") == message_id:
+                # Update index if message had request_id
+                request_id = msg.get("metadata", {}).get("request_id")
+                if request_id and session_id in self._request_id_index:
+                    self._request_id_index[session_id].pop(request_id, None)
+
+                # Remove message
+                messages.pop(i)
+
+                # Rebuild index for remaining messages (indices shifted)
+                self._rebuild_request_id_index(session_id, messages)
+
+                session["updated_at"] = datetime.now(UTC).isoformat()
+                return True
+
+        return False
+
+    async def truncate_session(
+        self,
+        session_id: str,
+        user_id: str,
+        keep_last_n: int,
+    ) -> bool:
+        """Truncate session and rebuild request_id index.
+
+        R2-Finding 6: Index must be rebuilt when messages are truncated.
+
+        Args:
+            session_id: Session ID to truncate
+            user_id: User ID making the request (for ownership check)
+            keep_last_n: Number of most recent messages to keep
+
+        Returns:
+            True if truncated, False if not found or not owned
+        """
+        session = self._sessions.get(session_id)
+        if session is None or session.get("user_id") != user_id:
+            return False
+
+        # Keep only last N messages
+        messages = session.get("messages", [])
+        session["messages"] = messages[-keep_last_n:] if keep_last_n > 0 else []
+
+        # Rebuild index for remaining messages
+        self._rebuild_request_id_index(session_id, session["messages"])
+
+        session["updated_at"] = datetime.now(UTC).isoformat()
+        return True
+
+    def _rebuild_request_id_index(
+        self,
+        session_id: str,
+        messages: list[dict[str, Any]],
+    ) -> None:
+        """Rebuild request_id index for a session.
+
+        Helper method for delete_message and truncate_session.
+        """
+        self._request_id_index[session_id] = {}
+        for i, msg in enumerate(messages):
+            request_id = msg.get("metadata", {}).get("request_id")
+            if request_id:
+                self._request_id_index[session_id][request_id] = i
 
 
 class RedisSessionService(SessionService):
@@ -1396,7 +1538,7 @@ class PostgresSessionService(SessionService):
 
         # v8 Phase 1: Fire-and-forget embedding for session similarity
         if self._embedding_service is not None:
-            asyncio.create_task(
+            asyncio.create_task(  # noqa: RUF006 - fire-and-forget; suppress RUF006
                 self._embedding_service.on_message_persisted(session_id, result)
             )
 
@@ -1621,9 +1763,7 @@ async def initialize_session_service() -> SessionService:
                 else:
                     logger.warning("Message embedding enabled but index manager not initialized")
 
-            _session_service = PostgresSessionService(
-                pg_manager, embedding_service=embedding_service
-            )
+            _session_service = PostgresSessionService(pg_manager, embedding_service=embedding_service)
             logger.info("PostgreSQL session service initialized successfully")
             return _session_service
         except Exception as e:

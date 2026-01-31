@@ -37,7 +37,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from litellm import acompletion
 from opentelemetry import trace
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from mcp_server_langgraph.api.deps import get_audit_service, get_openfga_client
 from mcp_server_langgraph.api.v1.serializers import plan_to_dict
@@ -179,6 +179,42 @@ class ChatCompletionRequest(BaseModel):
         "'auto_accept' = auto-approve all plans (no modal), "
         "'bypass' = skip all approvals (admin only, audited).",
     )
+    # Idempotency support (R1-Finding 1, R1-Finding 6)
+    request_id: str | None = Field(
+        default=None,
+        max_length=128,
+        description="Optional client-provided idempotency key. "
+        "If provided, duplicate requests with the same request_id will return cached responses. "
+        "Must be alphanumeric with hyphens, underscores, and dots only (max 128 chars).",
+    )
+    tools: list[dict[str, Any]] | None = Field(
+        default=None,
+        description="Optional list of tools for idempotency hashing (internal use).",
+    )
+
+    @field_validator("request_id")
+    @classmethod
+    def validate_request_id(cls, v: str | None) -> str | None:
+        """Validate request_id format (R1-Finding 6: prevent log injection, XSS).
+
+        R3: Also reject reserved prefixes to prevent internal conflicts.
+        """
+        if v is None:
+            return v
+        import re
+
+        # Allow only alphanumeric, hyphens, underscores, and dots
+        if not re.match(r"^[a-zA-Z0-9._-]+$", v):
+            msg = "request_id must contain only alphanumeric characters, hyphens, underscores, and dots"
+            raise ValueError(msg)
+
+        # R3: Reject reserved prefixes to prevent internal conflicts
+        reserved_prefixes = ("cached-", "internal-", "system-", "_")
+        if v.startswith(reserved_prefixes):
+            msg = f"request_id cannot start with reserved prefixes: {reserved_prefixes}"
+            raise ValueError(msg)
+
+        return v
 
 
 class ChatUsage(BaseModel):
@@ -298,6 +334,216 @@ def model_supports_thinking(model_name: str) -> bool:
     ]
 
     return any(pattern in model_lower for pattern in thinking_patterns)
+
+
+# ==============================================================================
+# Idempotency Support (R1/R2 Findings)
+# ==============================================================================
+
+
+def _compute_content_hash(
+    messages: list[dict[str, Any]],
+    model: str | None = None,
+    tools: list[dict[str, Any]] | None = None,
+    temperature: float | None = None,
+    top_p: float | None = None,
+    max_tokens: int | None = None,
+    seed: int | None = None,
+    response_format: dict[str, Any] | None = None,
+    tool_choice: str | dict[str, Any] | None = None,
+) -> str:
+    """Compute SHA-256 hash of full request for idempotency validation.
+
+    R2-Finding 2: Hash ALL messages (not just user), include model/tools/params,
+    use stable JSON serialization with full hash (no truncation).
+
+    R2-Finding 3: Handle multi-part content (lists/dicts) consistently.
+
+    R3: Include all parameters that affect response: top_p, max_tokens, seed,
+    response_format, tool_choice.
+
+    Args:
+        messages: List of message dicts
+        model: Optional model name
+        tools: Optional tools list
+        temperature: Optional temperature parameter
+        top_p: Optional top_p parameter
+        max_tokens: Optional max_tokens parameter
+        seed: Optional seed for reproducibility
+        response_format: Optional response format specification
+        tool_choice: Optional tool choice specification
+
+    Returns:
+        Full SHA-256 hex digest (64 characters)
+    """
+    import hashlib
+    import json
+
+    # Build canonical representation with all parameters (R3)
+    canonical: dict[str, Any] = {
+        "messages": [],
+        "model": model,
+        "temperature": temperature,
+        "top_p": top_p,
+        "max_tokens": max_tokens,
+        "seed": seed,
+    }
+
+    # Include response_format if present
+    if response_format:
+        canonical["response_format"] = json.dumps(response_format, sort_keys=True)
+
+    # Include tool_choice if present
+    if tool_choice:
+        if isinstance(tool_choice, str):
+            canonical["tool_choice"] = tool_choice
+        else:
+            canonical["tool_choice"] = json.dumps(tool_choice, sort_keys=True)
+
+    # Include all messages with role, content, and tool-related fields
+    # Codex review: Include name, tool_call_id, tool_calls, function_call for hash accuracy
+    for msg in messages:
+        msg_repr: dict[str, Any] = {
+            "role": msg.get("role", "user"),
+            "name": msg.get("name"),
+            "tool_call_id": msg.get("tool_call_id"),
+        }
+        # Handle multi-part content (R2-Finding 3: string or list/dict)
+        content = msg.get("content", "")
+        if isinstance(content, str):
+            msg_repr["content"] = content
+        else:
+            # Stable JSON for complex content (vision API, multi-part)
+            msg_repr["content"] = json.dumps(content, sort_keys=True)
+
+        # Include tool_calls with stable JSON serialization
+        tool_calls = msg.get("tool_calls")
+        if tool_calls is not None:
+            msg_repr["tool_calls"] = json.dumps(tool_calls, sort_keys=True)
+
+        # Include function_call for legacy compatibility
+        function_call = msg.get("function_call")
+        if function_call is not None:
+            msg_repr["function_call"] = json.dumps(function_call, sort_keys=True)
+
+        canonical["messages"].append(msg_repr)
+
+    # Include tools if present
+    if tools:
+        canonical["tools"] = json.dumps(tools, sort_keys=True)
+
+    # Stable JSON serialization with sorted keys
+    canonical_str = json.dumps(canonical, sort_keys=True, ensure_ascii=True)
+
+    # Full SHA-256 hash (R2-Finding 2: no truncation)
+    return hashlib.sha256(canonical_str.encode()).hexdigest()
+
+
+async def _stream_cached_response(
+    cached_msg: dict[str, Any],
+    request_id: str,
+) -> AsyncIterator[str]:
+    """Stream a cached response in SSE format with full delta support.
+
+    R2-Finding 7: Include tool_calls, role deltas, and accurate structure.
+
+    Args:
+        cached_msg: Cached message dict with content, model_name, role, tool_calls
+        request_id: Original request ID for chunk IDs
+
+    Yields:
+        SSE-formatted chunks (data: {...}\\n\\n)
+    """
+    import json
+
+    content = cached_msg.get("content", "")
+    model = cached_msg.get("model_name", "unknown")
+    tool_calls = cached_msg.get("tool_calls", [])
+    role = cached_msg.get("role", "assistant")
+
+    # First chunk: role delta (important for clients)
+    first_data = {
+        "id": f"cached-{request_id}",
+        "object": "chat.completion.chunk",
+        "choices": [
+            {
+                "delta": {"role": role},
+                "index": 0,
+            }
+        ],
+        "model": model,
+    }
+    yield f"data: {json.dumps(first_data)}\n\n"
+
+    # Content chunks (if any)
+    if content:
+        chunk_size = 100
+        for i in range(0, len(content), chunk_size):
+            chunk = content[i : i + chunk_size]
+            data = {
+                "id": f"cached-{request_id}",
+                "object": "chat.completion.chunk",
+                "choices": [
+                    {
+                        "delta": {"content": chunk},
+                        "index": 0,
+                    }
+                ],
+                "model": model,
+            }
+            yield f"data: {json.dumps(data)}\n\n"
+            # Minimal delay for stream pacing (Codex review: reduced from 0.01s)
+            await asyncio.sleep(0.001)
+
+    # Tool call chunks (R2-Finding 7: full tool_call support)
+    for i, tool_call in enumerate(tool_calls):
+        tool_data = {
+            "id": f"cached-{request_id}",
+            "object": "chat.completion.chunk",
+            "choices": [
+                {
+                    "delta": {
+                        "tool_calls": [
+                            {
+                                "index": i,
+                                "id": tool_call.get("id", f"call_{i}"),
+                                "type": "function",
+                                "function": {
+                                    "name": tool_call.get("function", {}).get("name", ""),
+                                    "arguments": tool_call.get("function", {}).get("arguments", ""),
+                                },
+                            }
+                        ]
+                    },
+                    "index": 0,
+                }
+            ],
+            "model": model,
+        }
+        yield f"data: {json.dumps(tool_data)}\n\n"
+
+    # Final chunk with finish_reason and usage
+    final_data = {
+        "id": f"cached-{request_id}",
+        "object": "chat.completion.chunk",
+        "choices": [
+            {
+                "delta": {},
+                "index": 0,
+                "finish_reason": "stop" if not tool_calls else "tool_calls",
+            }
+        ],
+        "model": model,
+        "cached": True,
+        "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+            "cached": True,
+        },
+    }
+    yield f"data: {json.dumps(final_data)}\n\n"
+    yield "data: [DONE]\n\n"
 
 
 # ==============================================================================
@@ -2135,6 +2381,8 @@ class ChatServiceImpl(ChatService):
 
             # Create ExecutionPlan from RouterOutput
             # Plan mode forces approval regardless of risk level
+            current_user = kwargs.get("current_user", {})
+            user_id = current_user.get("user_id") or current_user.get("sub")
             execution_plan = ExecutionPlan.from_router_output(
                 router_output=routing_decision,
                 session_id=session_id,
@@ -2143,6 +2391,35 @@ class ChatServiceImpl(ChatService):
                 estimated_cost=estimated_cost,
                 force_approval=(execution_mode == "plan"),
             )
+            # Set user tracking fields (GDPR compliance)
+            execution_plan = execution_plan.model_copy(
+                update={
+                    "user_id": user_id,
+                    "created_by": user_id,
+                }
+            )
+
+            # Persist plan to storage (Phase 5)
+            # Uses PlanPersistenceService for immediate commit before streaming
+            from mcp_server_langgraph.services.plan_persistence_service import (
+                PlanPersistenceService,
+            )
+
+            # Get repo from app.state for memory mode, None for postgres mode
+            plan_repo = None
+            if settings.plan_storage_backend != "postgres":
+                request = kwargs.get("request")
+                if request and hasattr(request.app.state, "execution_plan_repo"):
+                    plan_repo = request.app.state.execution_plan_repo
+
+            try:
+                persistence_service = PlanPersistenceService(plan_repo=plan_repo)
+                await persistence_service.persist_plan(execution_plan)
+            except Exception as e:
+                # Log but don't fail the request - plan generation can still proceed
+                import logging
+
+                logging.getLogger(__name__).warning(f"Failed to persist plan {execution_plan.plan_id}: {e}")
 
             # Emit plan_generated SSE with full 27-field payload
             # Uses plan_to_dict from serializers.py for consistency with REST API
@@ -2476,12 +2753,18 @@ async def create_completion(
 
     Sends messages to the LLM and returns the assistant's response.
 
+    Idempotency: If request_id is provided, duplicate requests with the same
+    request_id will return the cached response. Concurrent requests will receive
+    409 Conflict. Request content mismatch will also receive 409 Conflict.
+
     Raises:
         HTTPException 401: When authentication is required
+        HTTPException 409: When request_id is in progress or content mismatch
         HTTPException 428: When MCP requires user elicitation (authentication, consent)
         HTTPException 403: When permission is denied
         HTTPException 503: When MCP server is unavailable
     """
+    from mcp_server_langgraph.api.v1.idempotency import get_idempotency_guard
     from mcp_server_langgraph.api.v1.mcp_bridge import (
         MCPConnectionError,
         MCPElicitationRequiredError,
@@ -2491,6 +2774,29 @@ async def create_completion(
     service = get_chat_service()
     messages = [msg.model_dump() for msg in request.messages]
     user_id = _get_user_id(current_user)
+
+    # Idempotency support (R1-Finding 1): Check for cached response or acquire lock
+    idempotency_guard = None
+    if request.request_id:
+        content_hash = _compute_content_hash(
+            messages=messages,
+            model=request.model,
+            temperature=request.temperature,
+            max_tokens=request.max_tokens,
+        )
+        idempotency_guard = get_idempotency_guard()
+
+        # try_acquire raises HTTPException for 409 (concurrent) or 422 (mismatch)
+        record = await idempotency_guard.try_acquire(
+            user_id=user_id,
+            session_id=request.session_id,
+            request_id=request.request_id,
+            content_hash=content_hash,
+        )
+
+        # If we have a cached response, return it immediately
+        if record and record.response:
+            return ChatCompletionResponse(**record.response)
 
     try:
         response = await service.create_completion(
@@ -2505,18 +2811,47 @@ async def create_completion(
             user_id=user_id,
             kb_focus=request.kb_focus,  # ADR-0094: KB Focus Mode for non-stream path
         )
+
+        # Mark idempotency as completed with response (R1-Finding 1)
+        if idempotency_guard and request.request_id:
+            await idempotency_guard.mark_completed(
+                user_id=user_id,
+                session_id=request.session_id,
+                request_id=request.request_id,
+                response=response,
+            )
+
         return ChatCompletionResponse(**response)
     except MCPElicitationRequiredError as e:
+        # Release idempotency lock on error to allow retry (R1-Finding 1)
+        if idempotency_guard and request.request_id:
+            await idempotency_guard.release(
+                user_id=user_id,
+                session_id=request.session_id,
+                request_id=request.request_id,
+            )
         raise HTTPException(
             status_code=status.HTTP_428_PRECONDITION_REQUIRED,
             detail={"detail": str(e), "elicitations": e.elicitations},
         )
     except MCPPermissionError as e:
+        if idempotency_guard and request.request_id:
+            await idempotency_guard.release(
+                user_id=user_id,
+                session_id=request.session_id,
+                request_id=request.request_id,
+            )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Access denied: {e}",
         )
     except MCPConnectionError as e:
+        if idempotency_guard and request.request_id:
+            await idempotency_guard.release(
+                user_id=user_id,
+                session_id=request.session_id,
+                request_id=request.request_id,
+            )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"MCP connection failed: {e}",
@@ -2588,12 +2923,41 @@ async def create_stream(
             context=create_context_from_request(request),
         )
 
+    from mcp_server_langgraph.api.v1.idempotency import get_idempotency_guard
+
     service = get_chat_service()
     from mcp_server_langgraph.api.v1.sessions import get_session_service
 
     session_service = get_session_service()
     messages = [msg.model_dump() for msg in request.messages]
     user_id = _get_user_id(current_user)
+
+    # Idempotency support (Part 5): Check for cached response or acquire lock
+    idempotency_guard = None
+    if request.request_id:
+        content_hash = _compute_content_hash(
+            messages=messages,
+            model=request.model,
+            temperature=request.temperature,
+            max_tokens=request.max_tokens,
+        )
+        idempotency_guard = get_idempotency_guard()
+
+        # try_acquire raises HTTPException for 409 (concurrent) or content mismatch
+        record = await idempotency_guard.try_acquire(
+            user_id=user_id,
+            session_id=request.session_id,
+            request_id=request.request_id,
+            content_hash=content_hash,
+        )
+
+        # If we have a cached response, stream it immediately
+        if record and record.response:
+            return StreamingResponse(
+                _stream_cached_response(record.response, request.request_id),
+                media_type="text/event-stream",
+                headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
+            )
 
     async def event_generator() -> AsyncIterator[str]:
         import json
@@ -2649,98 +3013,171 @@ async def create_stream(
         # Accumulate assistant response content for persistence
         accumulated_content: list[str] = []
         accumulated_thinking: list[str] = []
+        accumulated_tool_calls: list[dict[str, Any]] = []  # CR-Finding: Track tool_calls
         thinking_tokens: int | None = None
         model_name: str | None = None
         sources_collected: list[dict[str, Any]] = []
 
-        async for chunk in service.create_stream(
-            session_id=request.session_id,
-            messages=messages,
-            model=request.model,
-            temperature=request.temperature,
-            max_tokens=request.max_tokens,
-            resource_uris=request.resource_uris,
-            reasoning_effort=request.reasoning_effort,
-            enable_thinking=request.enable_thinking,
-            kb_focus=request.kb_focus,
-            user_id=user_id,
-            execution_mode=request.execution_mode,
-            audit_service=audit_service,
-            current_user=current_user,
-            # v7: Native tools integration parameters
-            tool_preference=request.tool_preference,
-            tool_selection_mode=request.tool_selection_mode,
-            selected_tools=request.selected_tools,
-        ):
-            # Accumulate delta content for persistence
-            if "delta" in chunk and "content" in chunk["delta"]:
-                content = chunk["delta"]["content"]
-                if content:
-                    accumulated_content.append(content)
+        try:
+            async for chunk in service.create_stream(
+                session_id=request.session_id,
+                messages=messages,
+                model=request.model,
+                temperature=request.temperature,
+                max_tokens=request.max_tokens,
+                resource_uris=request.resource_uris,
+                reasoning_effort=request.reasoning_effort,
+                enable_thinking=request.enable_thinking,
+                kb_focus=request.kb_focus,
+                user_id=user_id,
+                execution_mode=request.execution_mode,
+                audit_service=audit_service,
+                current_user=current_user,
+                # v7: Native tools integration parameters
+                tool_preference=request.tool_preference,
+                tool_selection_mode=request.tool_selection_mode,
+                selected_tools=request.selected_tools,
+            ):
+                # Accumulate delta content for persistence
+                if "delta" in chunk and "content" in chunk["delta"]:
+                    content = chunk["delta"]["content"]
+                    if content:
+                        accumulated_content.append(content)
 
-            # v8 Q11: Accumulate thinking content for persistence
-            if "delta" in chunk and "thinking" in chunk["delta"]:
-                thinking = chunk["delta"]["thinking"]
-                if isinstance(thinking, dict):
-                    # New object format: {content, tokens}
-                    if thinking.get("content"):
-                        accumulated_thinking.append(thinking["content"])
-                    if thinking.get("tokens"):
-                        thinking_tokens = thinking["tokens"]
-                elif isinstance(thinking, str) and thinking:
-                    # Legacy string format
-                    accumulated_thinking.append(thinking)
+                # v8 Q11: Accumulate thinking content for persistence
+                if "delta" in chunk and "thinking" in chunk["delta"]:
+                    thinking = chunk["delta"]["thinking"]
+                    if isinstance(thinking, dict):
+                        # New object format: {content, tokens}
+                        if thinking.get("content"):
+                            accumulated_thinking.append(thinking["content"])
+                        if thinking.get("tokens"):
+                            thinking_tokens = thinking["tokens"]
+                    elif isinstance(thinking, str) and thinking:
+                        # Legacy string format
+                        accumulated_thinking.append(thinking)
 
-            # Capture model from chunk
-            if chunk.get("model"):
-                model_name = chunk["model"]
+                # Capture model from chunk
+                if chunk.get("model"):
+                    model_name = chunk["model"]
 
-            # Collect sources for persistence
-            if "sources" in chunk:
-                sources_collected.extend(chunk["sources"])
+                # Collect sources for persistence
+                if "sources" in chunk:
+                    sources_collected.extend(chunk["sources"])
 
-            # Format as SSE
-            yield f"data: {json.dumps(chunk)}\n\n"
+                # CR-Finding: Accumulate tool_calls for caching
+                if "delta" in chunk and "tool_calls" in chunk["delta"]:
+                    tool_calls = chunk["delta"]["tool_calls"]
+                    if tool_calls:
+                        for tc in tool_calls:
+                            # Build complete tool_call from delta (may span multiple chunks)
+                            tc_index = tc.get("index", 0)
+                            # Extend list if needed
+                            while len(accumulated_tool_calls) <= tc_index:
+                                accumulated_tool_calls.append({})
+                            # Merge tool_call fields
+                            if "id" in tc:
+                                accumulated_tool_calls[tc_index]["id"] = tc["id"]
+                            if "type" in tc:
+                                accumulated_tool_calls[tc_index]["type"] = tc["type"]
+                            if "function" in tc:
+                                if "function" not in accumulated_tool_calls[tc_index]:
+                                    accumulated_tool_calls[tc_index]["function"] = {}
+                                func = tc["function"]
+                                if "name" in func:
+                                    accumulated_tool_calls[tc_index]["function"]["name"] = func["name"]
+                                if "arguments" in func:
+                                    # Arguments may be streamed, so concatenate
+                                    prev_args = accumulated_tool_calls[tc_index]["function"].get("arguments", "")
+                                    accumulated_tool_calls[tc_index]["function"]["arguments"] = prev_args + func["arguments"]
 
-        # ================================================================
-        # Message Persistence: Save assistant response after streaming
-        # ================================================================
-        if accumulated_content and session_service is not None:
-            try:
-                full_response = "".join(accumulated_content)
-                full_thinking = "".join(accumulated_thinking) if accumulated_thinking else None
+                # Format as SSE
+                yield f"data: {json.dumps(chunk)}\n\n"
 
-                message_data: dict[str, Any] = {
-                    "role": "assistant",
-                    "content": full_response,
-                }
-                if sources_collected:
-                    message_data["sources"] = sources_collected
+            # ================================================================
+            # Message Persistence: Save assistant response after streaming
+            # ================================================================
+            full_response = "".join(accumulated_content)
+            full_thinking = "".join(accumulated_thinking) if accumulated_thinking else None
 
-                # Store thinking as structured object (content and tokens)
-                if full_thinking or thinking_tokens:
-                    message_data["thinking"] = {
-                        "content": full_thinking,
-                        "tokens": thinking_tokens,
+            # Persist to session storage (only if we have content)
+            if accumulated_content and session_service is not None:
+                try:
+                    message_data: dict[str, Any] = {
+                        "role": "assistant",
+                        "content": full_response,
+                        "metadata": {"request_id": request.request_id} if request.request_id else {},
                     }
+                    if sources_collected:
+                        message_data["sources"] = sources_collected
 
-                if model_name:
-                    message_data["model_name"] = model_name
+                    # Store thinking as structured object (content and tokens)
+                    if full_thinking or thinking_tokens:
+                        message_data["thinking"] = {
+                            "content": full_thinking,
+                            "tokens": thinking_tokens,
+                        }
 
-                result = await session_service.add_message(
-                    request.session_id,
-                    user_id,
-                    message_data,
-                )
-                if result is None:
-                    logger.warning(
-                        "Assistant response not persisted (session missing or not owned)",
-                        extra={"session_id": request.session_id},
+                    # CR-Finding: Include tool_calls in persisted message
+                    if accumulated_tool_calls:
+                        message_data["tool_calls"] = accumulated_tool_calls
+
+                    if model_name:
+                        message_data["model_name"] = model_name
+
+                    result = await session_service.add_message(
+                        request.session_id,
+                        user_id,
+                        message_data,
                     )
-                else:
-                    logger.debug(f"Persisted assistant response for session {request.session_id} ({len(full_response)} chars)")
-            except Exception as e:
-                logger.warning(f"Failed to persist assistant response: {e}")
+                    if result is None:
+                        logger.warning(
+                            "Assistant response not persisted (session missing or not owned)",
+                            extra={"session_id": request.session_id},
+                        )
+                    else:
+                        logger.debug(
+                            f"Persisted assistant response for session {request.session_id} ({len(full_response)} chars)"
+                        )
+                except Exception as e:
+                    logger.warning(f"Failed to persist assistant response: {e}")
+
+            # ================================================================
+            # Idempotency: Mark completed (CR-Finding: handle tool-only responses)
+            # ================================================================
+            # Mark completed if we have ANY response (content OR tool_calls)
+            has_response = bool(accumulated_content) or bool(accumulated_tool_calls)
+            if idempotency_guard and request.request_id and has_response:
+                try:
+                    await idempotency_guard.mark_completed(
+                        user_id=user_id,
+                        session_id=request.session_id,
+                        request_id=request.request_id,
+                        response={
+                            "content": full_response,
+                            "model_name": model_name,
+                            "role": "assistant",
+                            "tool_calls": accumulated_tool_calls if accumulated_tool_calls else [],
+                        },
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to mark idempotency as completed: {e}")
+                    # Release lock on error to allow retry
+                    await idempotency_guard.release(
+                        user_id=user_id,
+                        session_id=request.session_id,
+                        request_id=request.request_id,
+                    )
+        except Exception as e:
+            # Idempotency: Release lock on streaming error to allow retry (Part 5)
+            logger.error(f"Streaming error: {e}")
+            if idempotency_guard and request.request_id:
+                await idempotency_guard.release(
+                    user_id=user_id,
+                    session_id=request.session_id,
+                    request_id=request.request_id,
+                )
+            raise
 
     return StreamingResponse(
         event_generator(),

@@ -626,6 +626,30 @@ class Settings(BaseSettings):
     session_max_concurrent: int = 5  # Max concurrent sessions per user
     session_encryption_key: str | None = None  # AES-256 encryption key for session data (64 hex chars)
 
+    # Idempotency Configuration (for request deduplication)
+    # Uses redis_url for distributed deployments, in-memory for single-worker
+    idempotency_ttl_seconds: int = Field(
+        default=300,
+        ge=60,
+        le=3600,
+        description="TTL for idempotency records in seconds (60-3600, default 5 minutes)",
+    )
+    idempotency_max_entries: int = Field(
+        default=10000,
+        ge=100,
+        le=100000,
+        description="Max in-memory idempotency entries before cleanup (100-100000)",
+    )
+    # Worker count for multi-worker safety validation (R3: fail-fast at startup)
+    # Set to match uvicorn --workers N or gunicorn -w N for multi-worker deployments
+    # When workers > 1 and redis_url is not set, idempotency guard will fail at startup
+    workers: int = Field(
+        default=1,
+        ge=1,
+        le=32,
+        description="Number of workers (1-32). Set > 1 requires redis_url for idempotency.",
+    )
+
     # API Key Cache Configuration (ADR-0034: Redis-backed API key lookup)
     # Improves API key validation from O(users×keys) to O(1)
     # Redis DB allocation: 0=sessions, 1=checkpoints, 2=api-key-cache, 3=rate-limiting
@@ -661,6 +685,12 @@ class Settings(BaseSettings):
     # - "redis": Uses Redis for fast access (good for caching layer)
     # - "memory": In-memory using fakeredis (development only, requires fakeredis package)
     workflow_storage_backend: str = "memory"  # "postgres" (recommended), "redis", "memory"
+
+    # Execution Plan Storage (Phase 5: PostgreSQL Persistence)
+    # Storage for execution plans and plan templates with embeddings
+    # - "postgres": PostgreSQL with pgvector (recommended for production)
+    # - "memory": In-memory (development/testing only)
+    plan_storage_backend: str = "memory"  # "postgres" (production), "memory" (dev/test)
 
     # GDPR/HIPAA/SOC2/FedRAMP Compliance Storage (ADR-0041: Pure PostgreSQL)
     # Storage for user profiles, preferences, consents, conversations, and audit logs
