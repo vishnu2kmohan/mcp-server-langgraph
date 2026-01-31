@@ -80,58 +80,12 @@ class PlanPersistenceService:
         session_maker = get_session_maker(settings.database_url)
         async with session_maker() as session:
             try:
-                # Create a factory wrapper for the repository
-                class SingleSessionFactory:
-                    def __init__(self, sess):
-                        self._session = sess
-
-                    def __call__(self):
-                        return self
-
-                    async def __aenter__(self):
-                        return self._session
-
-                    async def __aexit__(self, *args):
-                        pass
-
-                # Note: We use raw session here for immediate commit instead of repo
-                # (PostgresExecutionPlanRepository uses deferred commit patterns)
-                from mcp_server_langgraph.database.execution_plan_models import (
-                    ExecutionPlanModel,
+                # Use shared mapper to avoid code duplication (Code Review Finding #6)
+                from mcp_server_langgraph.repositories.postgres_execution_plan import (
+                    execution_plan_to_model,
                 )
 
-                model = ExecutionPlanModel(
-                    plan_id=plan.plan_id,
-                    session_id=plan.session_id,
-                    status=plan.status,
-                    complexity=plan.complexity,
-                    risk_level=plan.risk_level,
-                    task_type=plan.task_type,
-                    executor_model=plan.executor_model,
-                    critic_model=plan.critic_model,
-                    estimated_cost=plan.estimated_cost,
-                    actual_cost=plan.actual_cost,
-                    message=plan.message,
-                    tools_needed=plan.tools_needed,
-                    force_approval=plan.force_approval,
-                    confidence=plan.confidence,
-                    suggested_orchestrator=plan.suggested_orchestrator,
-                    critique_rounds=plan.critique_rounds,
-                    thinking_budget=plan.thinking_budget,
-                    created_at=plan.created_at,
-                    expires_at=plan.expires_at,
-                    executed_at=plan.executed_at,
-                    approved_by=plan.approved_by,
-                    approved_at=plan.approved_at,
-                    rejected_by=plan.rejected_by,
-                    rejected_at=plan.rejected_at,
-                    rejection_reason=plan.rejection_reason,
-                    user_id=plan.user_id,
-                    created_by=plan.created_by,
-                    embedding_status=plan.embedding_status,
-                    embedding_error=plan.embedding_error,
-                    embedding_failed_at=plan.embedding_failed_at,
-                )
+                model = execution_plan_to_model(plan)
                 session.add(model)
                 await session.commit()  # IMMEDIATE COMMIT
                 logger.debug(f"Persisted plan {plan.plan_id} to postgres")
