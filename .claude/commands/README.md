@@ -1,6 +1,6 @@
 # Claude Code Slash Commands
 
-This directory contains 46 specialized slash commands for streamlined development workflows.
+This directory contains 47 specialized slash commands for streamlined development workflows.
 
 **Quick Access**: See `.claude/QUICK_REFERENCE.md` for the most-used commands.
 
@@ -49,17 +49,24 @@ Comprehensive testing and quality assurance tools:
 
 ---
 
-### 🐛 Debugging (3 commands)
+### 🐛 Debugging (4 commands)
 
 AI-assisted debugging and problem-solving:
 
-| Command | Purpose | Success Rate | When to Use |
-|---------|---------|--------------|-------------|
-| `/quick-debug [error]` | AI-assisted debugging | ~85% | **First response** to any error |
-| `/debug-auth` | Authentication debugging | ~90% | Login/permission issues |
-| `/validate` | Run all validations | N/A | Comprehensive health check |
+| Command | Purpose | AI Systems | When to Use |
+|---------|---------|------------|-------------|
+| `/quick-debug [error]` | Fast AI-assisted debugging | Claude | **First response** to simple errors |
+| `/troubleshoot <issue>` | **Triple-AI diagnosis** (Claude + Codex + Gemini) | All 3 | Complex issues needing deep analysis |
+| `/debug-auth` | Authentication debugging | Claude | Login/permission issues |
+| `/validate` | Run all validations | Claude | Comprehensive health check |
 
-**Pro Tip**: Always start with `/quick-debug` - it saves 60% debug time through pattern matching
+**Pro Tip**: Start with `/quick-debug` for simple errors. Use `/troubleshoot` for complex issues requiring multiple perspectives.
+
+**Triple-AI Features** (`/troubleshoot`):
+- Parallel analysis from Claude, Codex (GPT-5.2), and Gemini (3 Pro)
+- Multimodal support: attach images, logs, screenshots
+- Finding consensus with confidence tags: `[Consensus]`, `[Claude+Codex]`, etc.
+- Multi-round troubleshooting with incremental artifacts
 
 ---
 
@@ -230,9 +237,10 @@ Environment setup and infrastructure:
 3. **Improvement**: `/improve-coverage 70` (action plan)
 
 ### Debugging Workflow
-1. **Start**: `/quick-debug "error"` (pattern matching)
-2. **Deep Dive**: `/test-failure-analysis` (if tests involved)
-3. **Domain-Specific**: `/debug-auth` (for auth issues)
+1. **Simple Error**: `/quick-debug "error"` (fast, single AI)
+2. **Complex Issue**: `/troubleshoot "issue"` (triple-AI, multimodal)
+3. **Test Failures**: `/test-failure-analysis` (deep test analysis)
+4. **Domain-Specific**: `/debug-auth` (for auth issues)
 
 ---
 
@@ -253,7 +261,7 @@ Environment setup and infrastructure:
 → `/coverage-gaps`, `/improve-coverage`, `/benchmark`, `/security-scan-report`
 
 **...fix a bug**
-→ `/quick-debug`, `/test-failure-analysis`, `/debug-auth`
+→ `/quick-debug` (simple), `/troubleshoot` (complex), `/test-failure-analysis`, `/debug-auth`
 
 **...track progress**
 → `/progress-update`, `/todo-status`, `/analytics`
@@ -345,5 +353,5 @@ When adding new slash commands:
 ---
 
 **Last Updated**: 2026-01-31
-**Command Count**: 45 commands across 8 categories
+**Command Count**: 47 commands across 8 categories
 **Maintained By**: Automated via Claude Code optimization framework
