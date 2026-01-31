@@ -155,8 +155,9 @@ class PlanEmbeddingService:
         await self._plan_template_repo.update(template)
 
         try:
-            # Generate embedding from name + description
-            text = f"{template.name}: {template.description}"
+            # Generate embedding from name + description (handle nullable description)
+            desc = template.description or ""
+            text = f"{template.name}: {desc}" if desc else template.name
             embedding = await self.generate_embedding(text)
 
             # Update template with embedding

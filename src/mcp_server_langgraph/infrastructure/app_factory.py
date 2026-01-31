@@ -412,6 +412,29 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
             set_plan_repo(execution_plan_repo)
             set_template_repo(plan_template_repo)
             logger.info("Plan repositories initialized successfully")
+
+            # Initialize embedding service for background processing (Phase 7)
+            try:
+                import asyncio
+                from mcp_server_langgraph.services.plan_embedding_service import (
+                    PlanEmbeddingService,
+                    set_embedding_service_instance,
+                )
+
+                embedding_service = PlanEmbeddingService(
+                    execution_plan_repo=execution_plan_repo,
+                    plan_template_repo=plan_template_repo,
+                )
+                set_embedding_service_instance(embedding_service)
+                # Start background processing task (stored in service for shutdown)
+                embedding_service._task = asyncio.create_task(
+                    embedding_service.start_background_processing(),
+                    name="plan_embedding_bg",
+                )
+                logger.info("Plan embedding service initialized and background processing started")
+            except Exception as e:
+                logger.warning(f"Plan embedding service initialization failed: {e}")
+                # Non-fatal: embeddings will be skipped but core functionality works
         except Exception as e:
             logger.warning(f"Plan repository initialization failed: {e}")
             # Fallback to in-memory
@@ -440,6 +463,17 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         reset_gdpr_storage()
         reset_plan_repo()
         reset_template_repo()
+
+        # Stop embedding service background task
+        from mcp_server_langgraph.services.plan_embedding_service import (
+            get_embedding_service_instance,
+            set_embedding_service_instance,
+        )
+
+        embedding_service = get_embedding_service_instance()
+        if embedding_service:
+            embedding_service.stop_background_processing()
+            set_embedding_service_instance(None)
 
         # Reset MCP aggregated broadcaster
         from mcp_server_langgraph.mcp.client.cached_unified_registry import (
