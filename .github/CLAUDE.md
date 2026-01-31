@@ -13,7 +13,7 @@
    ```bash
    # Read these FIRST in every session
    cat .claude/memory/python-environment-usage.md  # CRITICAL: Always use .venv
-   cat .claude/memory/pre-commit-hooks-catalog.md  # 95 hooks, 3-tier validation
+   cat .claude/memory/validation-strategy.md       # Hooks and validation reference
    cat .claude/memory/make-targets.md              # 161 Make targets reference
    ```
 
@@ -59,9 +59,8 @@
 │
 └── memory/                            # Persistent guidance (MANDATORY)
     ├── python-environment-usage.md    # CRITICAL: Always use .venv
-    ├── lint-workflow.md               # Linting enforcement workflow
+    ├── validation-strategy.md         # Consolidated hooks/validation reference
     ├── task-spawn-error-prevention-strategy.md  # Error patterns & solutions
-    ├── pre-commit-hooks-catalog.md    # 95 hooks reference
     └── make-targets.md                # 161 Make targets reference
 ```
 
@@ -703,7 +702,7 @@ Please update the tests to properly mock the Redis client."
 
 3. **Activate first** (only for multiple commands):
    ```bash
-   source .venv/bin/activate && python -m pytest && mypy src/
+   source .venv/bin/activate && .venv/bin/pytest && .venv/bin/mypy src/
    ```
 
 **Never Use**: Bare `python`, `python3`, `pytest`, or `pip` commands (these use system Python).
@@ -767,7 +766,7 @@ git push
 make git-hooks
 
 # Verify hooks are configured
-python scripts/validators/validate_pre_push_hook.py
+uv run --frozen python scripts/validators/validate_pre_push_hook.py
 ```python
 #### When Claude Code Should Commit/Push
 
@@ -787,7 +786,7 @@ python scripts/validators/validate_pre_push_hook.py
 
 Claude Code can measure hook performance:
 ```bash
-python scripts/dev/measure_hook_performance.py --stage all
+uv run --frozen python scripts/dev/measure_hook_performance.py --stage all
 ```python
 #### Documentation References
 

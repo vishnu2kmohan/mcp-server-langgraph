@@ -11,6 +11,20 @@ Guided codebase exploration before making changes. Use this command when startin
 /explore-codebase
 ```
 
+## Efficiency Patterns
+
+**Prefer Task(Explore) Agent**: For open-ended exploration, delegate to the Explore agent:
+```
+Task(subagent_type="Explore", prompt="Find all authentication-related files and explain the auth flow")
+```
+
+This is more efficient than manual grep/find commands as it:
+- Handles multiple search rounds automatically
+- Provides structured summaries
+- Uses less context in the main conversation
+
+**Batch Reads**: When reading specific files, batch them in a single message.
+
 ## Exploration Checklist
 
 ### 1. Understand Project Structure

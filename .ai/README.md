@@ -1,370 +1,73 @@
-# AI Assistant Instructions
+# AI Assistant Configurations
 
-This directory contains instructions and configurations for various AI coding assistants to work effectively with this codebase.
+**Purpose**: Directory for AI coding assistant configurations
 
-## Supported AI Assistants
+---
 
-- ✅ **GitHub Copilot** (VSCode, Cursor, Neovim)
-- ✅ **Cursor AI**
-- ✅ **Claude Code** (Anthropic)
-- ✅ **Gemini Code Assist** (Google)
-- ✅ **OpenAI GPT-4** (via extensions)
+## Supported Tools
+
+| Tool | Primary Config | Status |
+|------|---------------|--------|
+| OpenAI Codex | `CORE.md` | Supported |
+| GitHub Copilot | `.github/copilot-instructions.md` | Supported |
+| Cursor | `.cursorrules` | Supported |
+| Claude Code | `.claude/CLAUDE.md` | Supported |
+| Gemini Code Assist | `CORE.md` | Supported |
+
+---
+
+## Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `CORE.md` | **Shared core** - Python env, commands, TDD, style |
+| `.github/copilot-instructions.md` | Copilot-specific patterns |
+| `.cursorrules` | Cursor-specific rules + MCP config |
+| `.claude/CLAUDE.md` | Claude Code quick start |
+| `.github/CLAUDE.md` | Claude Code full guide |
+| `AGENTS.md` | Cross-tool overview |
+
+---
 
 ## Quick Start for AI Assistants
 
-When working with this codebase, please:
+1. **Read first**: `CORE.md` (this directory)
+2. **Tool-specific**: Check your tool's config file above
+3. **Follow**: TDD workflow (tests first)
+4. **Use**: `.venv` for all Python commands
 
-1. **Read these files first**:
-   - `README.md` - Project overview
-   - `CONTRIBUTING.md` - Contribution guidelines
-   - `docs/advanced/development-setup.mdx` - Development setup
-   - `.cursorrules` - Code style and patterns
-   - `.github/CLAUDE.md` - Claude Code guidance
-   - `AGENTS.md` - Cross-tool AI assistant instructions (OpenAI Codex, etc.)
+---
 
-2. **Understand the architecture**:
-   - LangGraph agent with MCP protocol
-   - Multi-LLM support (LiteLLM)
-   - OpenFGA authorization
-   - OpenTelemetry observability
-
-3. **Follow code standards**:
-   - Ruff formatting (127 char lines)
-   - Type hints required
-   - Google-style docstrings
-   - Comprehensive testing (20,000+ tests)
-
-## Configuration Files by Tool
-
-### VSCode (with Copilot, extensions)
-- `.vscode/settings.json` - Editor and Python settings
-- `.vscode/extensions.json` - Recommended extensions
-- `.vscode/launch.json` - Debug configurations
-- `.vscode/tasks.json` - Build and test tasks
-- `.github/copilot-instructions.md` - Copilot-specific rules
-
-### Cursor
-- `.cursorrules` - Cursor AI rules and patterns
-- `.cursor/mcp.json` - MCP server configuration
-- `.vscode/*` - Inherits VSCode settings
-
-### Claude Code (Anthropic)
-- `.claude/` - Claude-specific configurations (if needed)
-- Follows `.cursorrules` and general guidelines
-
-### Gemini Code Assist (Google)
-- `.gemini/` - Gemini-specific configurations (if needed)
-- Follows general AI instructions
-
-### Universal Settings
-- `.editorconfig` - Editor-agnostic formatting
-- `.pre-commit-config.yaml` - Git hooks for quality
-- `pyproject.toml` - Python tool configurations
-
-## Project Structure
+## Directory Structure
 
 ```
-mcp-server-langgraph/
-├── src/mcp_server_langgraph/  # Main source package
-│   ├── core/                  # Core components
-│   │   ├── agent.py           # LangGraph agent implementation
-│   │   └── config.py          # Configuration management
-│   ├── mcp/                   # MCP protocol servers
-│   │   ├── server_stdio.py    # stdio transport
-│   │   └── server_streamable.py  # HTTP/streamable transport
-│   ├── auth/                  # Authentication & authorization
-│   │   ├── jwt/               # JWT authentication
-│   │   └── openfga/           # OpenFGA authorization
-│   ├── secrets/               # Secrets management (Infisical)
-│   ├── observability/         # OpenTelemetry instrumentation
-│   ├── llm/                   # LLM factory and clients
-│   ├── compliance/            # GDPR/HIPAA/SOC2 compliance
-│   └── api/                   # FastAPI endpoints
-├── tests/                     # Test suite
-│   ├── unit/                  # Fast unit tests
-│   ├── integration/           # Integration tests
-│   └── deployment/            # Deployment validation
-├── .vscode/                   # VSCode configuration
-├── .cursor/                   # Cursor configuration
-├── .github/                   # GitHub workflows & Copilot
-└── docs/                      # Mintlify documentation
+.ai/
+├── CORE.md      # Shared instructions (all tools)
+└── README.md    # This file
+
+.claude/
+├── CLAUDE.md    # Claude Code quick start
+├── commands/    # 46 slash commands
+├── context/     # Living context files
+├── memory/      # Persistent guidance
+└── templates/   # 8 professional templates
+
+.github/
+├── CLAUDE.md              # Claude Code full guide
+└── copilot-instructions.md # Copilot patterns
+
+Root/
+├── AGENTS.md    # Cross-tool overview
+└── .cursorrules # Cursor AI rules
 ```
 
-## Common AI Assistant Queries
+---
 
-### "How do I add a new tool to the agent?"
+## Key Principle
 
-1. Define tool in `agent.py`:
-```python
-@agent_graph.tool
-async def my_tool(param: str, user_id: str) -> str:
-    """Tool description."""
-    # Authorization check
-    # Implementation
-    # Return result
-```
+All AI instruction files reference `CORE.md` for common content.
+Tool-specific files contain only unique patterns for that tool.
 
-2. Add Pydantic schema for inputs
-3. Add telemetry (spans, metrics)
-4. Write tests
-5. Update docs
+---
 
-### "How do I run the tests?"
-
-```bash
-# All tests
-pytest -v
-
-# Unit tests only
-pytest -m unit -v
-
-# Integration tests
-pytest -m integration -v
-
-# With coverage
-pytest --cov=. --cov-report=html
-```
-
-### "How do I start the development server?"
-
-```bash
-# Option 1: Start infrastructure
-docker-compose up -d
-
-# Option 2: Run MCP server
-python mcp_server_streamable.py
-
-# Option 3: Use VSCode debugger
-# Press F5 and select "Python: MCP Server (StreamableHTTP)"
-```
-
-### "What are the security requirements?"
-
-- **Authentication**: JWT tokens with 256-bit secrets
-- **Authorization**: OpenFGA checks before protected operations
-- **Secrets**: Never hardcode, use Infisical or env vars
-- **Logging**: Structured with trace context, no sensitive data
-- **Validation**: Pydantic models for all inputs
-
-### "How do I add observability?"
-
-```python
-# Tracing
-with tracer.start_as_current_span("operation_name") as span:
-    span.set_attribute("key", "value")
-    result = await perform_operation()
-
-# Logging
-logger.info("Event occurred", extra={"context": "data"})
-
-# Metrics
-metrics.counter_name.add(1, {"label": "value"})
-```
-
-## Code Quality Checklist
-
-Before submitting code, ensure:
-
-- [ ] Code formatted with `ruff format`
-- [ ] Linting passed with `ruff check`
-- [ ] Type hints on all public functions
-- [ ] Docstrings in Google style
-- [ ] Tests written and passing
-- [ ] No hardcoded secrets
-- [ ] Observability added (traces, logs, metrics)
-- [ ] Error handling implemented
-- [ ] Security checks in place
-
-## Common Patterns
-
-### Async Request Handler
-```python
-@app.post("/api/endpoint")
-async def handler(request: RequestModel) -> ResponseModel:
-    """Handler docstring."""
-    with tracer.start_as_current_span("handler_name"):
-        # Validate
-        # Authorize
-        # Process
-        # Return
-```
-
-### Authorization Check
-```python
-allowed = await openfga_client.check(
-    user=f"user:{user_id}",
-    relation="viewer",
-    object=f"resource:{resource_id}"
-)
-if not allowed:
-    raise PermissionError("Not authorized")
-```
-
-### LLM Call with Telemetry
-```python
-with tracer.start_as_current_span("llm_call") as span:
-    span.set_attribute("model", model_name)
-    span.set_attribute("provider", provider)
-
-    start_time = time.time()
-    response = await llm_client.complete(prompt)
-    duration = (time.time() - start_time) * 1000
-
-    metrics.llm_duration.record(duration, {"model": model_name})
-```
-
-## Performance Targets
-
-| Operation | Target (p95) |
-|-----------|--------------|
-| Agent response | < 5s |
-| LLM call | < 10s |
-| Authorization check | < 50ms |
-| JWT validation | < 2ms |
-
-Add benchmarks for critical paths:
-```python
-@pytest.mark.benchmark
-def test_operation_performance(benchmark):
-    result = benchmark(operation)
-    assert benchmark.stats["mean"] < 0.050  # 50ms
-```
-
-## Testing Strategy
-
-### Unit Tests
-- Test individual functions in isolation
-- Mock external dependencies
-- Fast execution (< 1s total)
-
-### Integration Tests
-- Test component interactions
-- Use real services in Docker
-- Slower but more realistic
-
-### Benchmarks
-- Measure performance of critical paths
-- Track over time
-- Alert on regressions
-
-## Debugging Tips
-
-### Enable Debug Logging
-```python
-# In .env
-LOG_LEVEL=DEBUG
-```
-
-### View Traces
-```bash
-# Open Jaeger UI
-open http://localhost:16686
-```
-
-### Check Metrics
-```bash
-# Open Prometheus
-open http://localhost:9090
-```
-
-### View Dashboards
-```bash
-# Open Grafana
-open http://localhost:3000
-```
-
-## Documentation
-
-- **API Docs**: Start server, visit http://localhost:8000/docs
-- **Architecture**: See `README.md` and `docs/architecture/` (ADRs)
-- **Deployment**: See `docs/deployment/` (Kubernetes, Helm, Cloud Run, LangGraph Platform)
-- **Security**: See `SECURITY.md` and `docs/security/`
-- **Testing**: See `docs/advanced/testing.mdx`
-- **Development**: See `docs/advanced/development-setup.mdx`
-- **Contributing**: See `CONTRIBUTING.md` and `docs/advanced/contributing.mdx`
-- **Mintlify Docs**: See `docs/docs.json` (100% coverage)
-
-## Current Project State (2026-01-28)
-
-- **LangGraph Version**: >=1.0.4 (with langgraph-checkpoint-redis>=0.2.1)
-- **Python Version**: 3.11-3.13 supported
-- **Documentation**: Mintlify integration complete with docs/ structure
-- **Production Ready**: Full observability, security, and compliance features
-- **Test Coverage**: 20,000+ comprehensive tests (unit, integration, deployment)
-
-## Getting Help
-
-- **Issues**: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues
-- **Discussions**: https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions
-- **Docs**: See `docs/` directory
-
-## AI Assistant Best Practices
-
-### For Code Generation
-1. Read existing code patterns first
-2. Follow established conventions
-3. Add comprehensive tests
-4. Include error handling
-5. Add observability
-
-### For Refactoring
-1. Maintain backward compatibility
-2. Update tests
-3. Update documentation
-4. Keep changes focused
-
-### For Bug Fixes
-1. Write failing test first
-2. Fix minimal code
-3. Verify test passes
-4. Update CHANGELOG.md
-
-### For Documentation
-1. Use clear, concise language
-2. Provide code examples
-3. Keep up to date
-4. Link to related docs
-
-## Tool-Specific Notes
-
-### GitHub Copilot
-- Reads `.github/copilot-instructions.md`
-- Works in VSCode, Cursor, Neovim
-- Use inline comments to guide suggestions
-
-### Cursor
-- Reads `.cursorrules`
-- Can connect to MCP server (`.cursor/mcp.json`)
-- Use @-mentions to reference docs
-
-### Claude Code
-- Reads project structure automatically
-- Follow conversation with context
-- Ask for clarification when needed
-
-### Gemini Code Assist
-- Integrates with Google Cloud
-- Reads workspace configuration
-- Provides inline suggestions
-
-## Version Compatibility
-
-| Tool | Minimum Version | Tested Version |
-|------|----------------|----------------|
-| VSCode | 1.85.0 | 1.95.0 |
-| Cursor | 0.30.0 | 0.42.0 |
-| Python | 3.10 | 3.11 |
-| Node.js (docs) | 18.0 | 20.0 |
-
-## Contributing to AI Configs
-
-If you improve AI assistant configurations:
-
-1. Test with multiple tools
-2. Document changes
-3. Update this README
-4. Submit PR with description
-
-## License
-
-Same as project: MIT License
+**See**: `CORE.md` for shared instructions

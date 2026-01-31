@@ -1,138 +1,25 @@
 # MCP Server LangGraph - Claude Code Quick Start
 
 **Purpose**: Essential context auto-loaded at session start
-**Full Guide**: `.github/CLAUDE.md` (1,070 lines of comprehensive documentation)
-**Last Updated**: 2026-01-28
+**Full Guide**: `.github/CLAUDE.md` (1,070 lines)
 
 ---
 
 ## CRITICAL: Python Environment
 
-**ALWAYS use the project virtual environment. NEVER use bare `python` commands.**
-
-```bash
-# PREFERRED: uv run (automatically uses .venv)
-uv run --frozen pytest tests/
-uv run --frozen python script.py
-uv run --frozen mypy src/
-
-# ALTERNATIVE: Explicit venv path
-.venv/bin/python script.py
-.venv/bin/pytest tests/
-
-# NEVER USE (will use wrong Python):
-# python script.py     <- WRONG
-# pytest tests/        <- WRONG
-# pip install foo      <- WRONG
-```
+**ALWAYS use `.venv`**: `uv run --frozen <command>` or `.venv/bin/python`
+**Full guide**: `.claude/memory/python-environment-usage.md`
 
 ---
 
 ## TDD Mode Active
 
-**Write tests FIRST, then implementation (Red-Green-Refactor):**
-
-1. **RED**: Write failing test that defines expected behavior
-2. **GREEN**: Write minimal code to make test pass
-3. **REFACTOR**: Improve code while keeping tests green
+**Write tests FIRST, then implementation (Red-Green-Refactor)**
 
 ```python
-# Test structure: GIVEN-WHEN-THEN
 @pytest.mark.unit
 async def test_feature():
-    # GIVEN: Setup
-    # WHEN: Action
-    # THEN: Assertion
-```
-
----
-
-## Project Overview
-
-| Metric | Value |
-|--------|-------|
-| Tests | 20,000+ |
-| Coverage | 75% (target: 80%) |
-| ADRs | 104 |
-| Feature Flags | 355 |
-| Pytest markers | 168 |
-| Slash commands | 44 |
-| Pre-commit hooks | 200 |
-| Make targets | 161 |
-
-**Technology Stack**:
-- **Framework**: LangGraph >=1.0.4 + LangChain + LiteLLM
-- **Frontend**: Agent Studio (React 18 + Redux Toolkit + RTK Query + Vite)
-- **LLM Providers**: OpenAI, Anthropic, Google (Vertex AI), Azure
-- **Auth**: Keycloak SSO + OpenFGA authorization + DPoP token binding
-- **Storage**: PostgreSQL + Redis (langgraph-checkpoint-redis)
-- **Execution**: Docker/Kubernetes sandbox code execution engine
-- **Observability**: OpenTelemetry + Grafana LGTM (Loki/Tempo/Mimir/Alloy)
-- **Deployment**: Kubernetes (Helm + Kustomize)
-
----
-
-## Key Slash Commands
-
-### Development
-- `/test-summary [scope]` - Analyze test results (unit|integration|all)
-- `/quick-debug <error>` - AI-assisted error debugging
-- `/tdd` - Start TDD workflow
-
-### Sprint Management
-- `/start-sprint <type>` - Initialize sprint (technical-debt|feature|bug-fix)
-- `/progress-update` - Generate progress report
-- `/todo-status` - Enhanced TODO tracking
-
-### Quality
-- `/validate` - Run all validations
-- `/ci-status` - Check GitHub Actions status
-- `/coverage-trend` - Historical coverage tracking
-
----
-
-## Context Management
-
-**Use `/clear` between unrelated tasks** to reset context window.
-
-**Context files** (in `.claude/context/`):
-- `recent-work.md` - Auto-updated via git hook
-- `testing-patterns.md` - 20,000+ test patterns
-- `code-patterns.md` - Design patterns library
-- `pytest-markers.md` - 168 pytest markers reference
-- `test-constants-pattern.md` - Test constants and fixtures
-- `xdist-safety-patterns.md` - pytest-xdist parallel safety
-
-**Memory files** (in `.claude/memory/` - MANDATORY):
-- `python-environment-usage.md` - Virtual environment guide
-- `lint-workflow.md` - Linting enforcement
-- `pre-commit-hooks-catalog.md` - 200 hooks reference
-- `make-targets.md` - 161 targets reference
-- `gke-infrastructure-testing.md` - GKE/WIF testing guidance (local vs CI gaps)
-- `efficient-tool-usage.md` - Script-based bulk operations, tool chaining
-- `context-efficiency.md` - Minimize redundant reads, parallel calls
-- `anti-patterns.md` - Common mistakes to avoid
-- `decision-trees.md` - Quick decision frameworks
-- `session-workflow-patterns.md` - Context management, checkpoints, research sessions
-- `feature-flag-conventions.md` - API naming (short names vs enable_ prefix)
-- `distroless-container-healthchecks.md` - Container health check patterns
-- `helm-chart-validation.md` - Helm chart validation guidance
-- `keycloak-oidc-issuer-pattern.md` - Keycloak OIDC issuer patterns
-- `kustomize-nameprefix-gotchas.md` - Kustomize namePrefix gotchas
-- `lgtm-stack-lessons.md` - Grafana LGTM stack lessons learned
-- `task-spawn-error-prevention-strategy.md` - Task spawn error prevention
-- `rollup-circular-dependency-pattern.md` - Direct imports in pages for Rollup
-
----
-
-## Git Hooks
-
-**Pre-commit** (< 30s): Ruff format/check, security scan
-**Pre-push** (8-12 min): Full test suite, mypy, all hooks
-
-```bash
-git commit -m "feat: add feature"  # Fast validation
-git push                           # Comprehensive validation
+    # GIVEN → WHEN → THEN
 ```
 
 ---
@@ -141,45 +28,41 @@ git push                           # Comprehensive validation
 
 | Task | Command |
 |------|---------|
-| Format | `uv run ruff format src/` |
-| Lint | `uv run ruff check src/` |
-| Type check | `uv run mypy src/` |
-| Unit tests | `uv run pytest -m unit` |
-| All tests | `uv run pytest` |
-| Coverage | `uv run pytest --cov=src` |
+| Unit tests | `uv run --frozen pytest -m unit` |
+| All tests | `uv run --frozen pytest` |
+| Format | `uv run --frozen ruff format src/` |
+| Lint | `uv run --frozen ruff check src/` |
+| Type check | `uv run --frozen mypy src/` |
+| Coverage | `uv run --frozen pytest --cov=src` |
+
+---
+
+## Git Hooks
+
+| Stage | Trigger | Duration | Purpose |
+|-------|---------|----------|---------|
+| Pre-commit | `git commit` | < 30s | Ruff format/check, security scan |
+| Pre-push | `git push` | 8-12 min | Full test suite, mypy, all hooks |
 
 ---
 
 ## Project Structure
 
 ```
-mcp-server-langgraph/
-├── src/mcp_server_langgraph/    # Main package
-│   ├── core/                     # Agent, config, feature flags (355 flags)
-│   ├── auth/                     # Keycloak + OpenFGA + DPoP
-│   ├── llm/                      # LLM factory (multi-provider)
-│   ├── mcp/                      # MCP server implementations
-│   ├── studio/                   # Agent Studio frontend (React + Redux)
-│   ├── execution/                # Sandboxed code execution engine
-│   ├── security/                 # Prompt injection protection
-│   └── observability/            # OpenTelemetry + Grafana LGTM
-├── tests/                        # 20,000+ tests
-├── deployments/                  # K8s, Helm, Kustomize
-├── docs/                         # Mintlify documentation
-├── docs-internal/                # Internal architecture docs
-├── .claude/                      # Claude Code automation
-│   ├── commands/                 # 44 slash commands
-│   ├── context/                  # Living context files
-│   ├── memory/                   # Persistent guidance
-│   └── templates/                # 8 professional templates
-└── .github/CLAUDE.md             # Comprehensive guide
+src/mcp_server_langgraph/
+├── core/       # Agent, config, feature flags (355 flags)
+├── auth/       # Keycloak + OpenFGA + DPoP
+├── llm/        # LLM factory (multi-provider)
+├── mcp/        # MCP server implementations
+├── studio/     # Agent Studio frontend (React + Redux)
+├── execution/  # Sandboxed code execution engine
+├── security/   # Prompt injection protection
+└── observability/  # OpenTelemetry + Grafana LGTM
 ```
 
 ---
 
 ## Extended Thinking
-
-Use thinking keywords for complex tasks:
 
 | Keyword | Use Case |
 |---------|----------|
@@ -199,50 +82,57 @@ Use thinking keywords for complex tasks:
 
 ---
 
+## Context Files
+
+**Essential** (in `.claude/context/`):
+- `recent-work.md` - Auto-updated via git hook
+- `testing-patterns.md` - Test patterns reference
+- `pytest-markers.md` - 168 markers catalog
+
+**Memory** (in `.claude/memory/`):
+- `python-environment-usage.md` - Virtual environment guide
+- `validation-strategy.md` - Lint + hooks reference
+- `efficient-tool-usage.md` - Script-based bulk operations
+
+---
+
+## Slash Commands
+
+See `.claude/commands/README.md` for all 46 commands.
+
+**Most Used**:
+- `/test-summary [scope]` - Analyze test results
+- `/quick-debug <error>` - AI-assisted debugging
+- `/tdd` - Start TDD workflow
+- `/validate` - Run all validations
+
+---
+
 ## Common Issues
 
-**Tests failing?**
-```bash
-uv run pytest --lf -x  # Run last failed
-/test-failure-analysis  # Deep analysis
-```
+Use `/quick-debug <error>` for AI-assisted debugging.
 
-**Type errors?**
+**Quick fixes**:
 ```bash
-uv run mypy src/
-/fix-mypy              # AI-assisted fixing
-```
-
-**Linting?**
-```bash
-uv run ruff check --fix src/
-uv run ruff format src/
+uv run --frozen pytest --lf -x       # Run last failed
+uv run --frozen ruff check --fix src/  # Auto-fix linting
+uv run --frozen mypy src/            # Type check
 ```
 
 ---
 
 ## Resources
 
-- **Full Guide**: `.github/CLAUDE.md` (comprehensive, 1,070 lines)
-- **Commands**: `.claude/commands/README.md` (44 commands)
-- **Templates**: `.claude/templates/README.md` (8 templates)
-- **Testing**: `TESTING.md` (test patterns, markers)
-- **Contributing**: `CONTRIBUTING.md` (contribution guidelines)
-- **Security**: `SECURITY.md` (security policies)
-- **Frontend Style**: `docs-internal/frontend/STYLE.md` (design system, CVA, Radix colors)
-- **AI Agents**: `AGENTS.md` (cross-tool AI assistant instructions)
-
----
-
-## Session Start Checklist
-
-1. ✅ Check git status (auto-shown)
-2. ✅ TDD mode reminder (auto-shown)
-3. 📖 Review recent work: `.claude/context/recent-work.md`
-4. 🧪 Verify tests: `/test-summary unit`
+| Resource | Path |
+|----------|------|
+| Full Guide | `.github/CLAUDE.md` |
+| Commands | `.claude/commands/README.md` |
+| Templates | `.claude/templates/README.md` |
+| Testing | `docs-internal/testing/TESTING.md` |
+| AI Agents | `AGENTS.md` |
 
 ---
 
 **Remember**: Tests FIRST, `.venv` ALWAYS, `/clear` OFTEN
 
-🤖 Optimized for Claude Opus 4.5 | Python 3.12 | LangGraph >=1.0.4
+Python 3.12 | LangGraph >=1.0.4 | Claude Opus 4.5

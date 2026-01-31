@@ -69,9 +69,9 @@ Measures execution time of all pre-commit hooks to identify candidates
 for moving from commit stage to pre-push stage.
 
 Usage:
-    python scripts/profiling/profile_hooks.py --scenario typical --iterations 10
-    python scripts/profiling/profile_hooks.py --all-scenarios --format json
-    python scripts/profiling/profile_hooks.py --hook-id ruff-format --iterations 50
+    uv run --frozen python scripts/profiling/profile_hooks.py --scenario typical --iterations 10
+    uv run --frozen python scripts/profiling/profile_hooks.py --all-scenarios --format json
+    uv run --frozen python scripts/profiling/profile_hooks.py --hook-id ruff-format --iterations 50
 """
 
 import argparse
@@ -345,7 +345,7 @@ Run profiling script on all hooks to establish baseline performance metrics.
 
 ```bash
 # Profile all hooks with 10 iterations each
-python scripts/profiling/profile_hooks.py --iterations 10 --format all
+uv run --frozen python scripts/profiling/profile_hooks.py --iterations 10 --format all
 
 # Output will be in docs-internal/profiling/:
 # - hooks_performance.json
@@ -399,7 +399,7 @@ For each heavy hook, change `stages: [commit]` to `stages: [push]`:
 # BEFORE
 - id: prevent-local-config-commits
   name: Prevent commits with local config
-  entry: python scripts/validation/check_local_config.py
+  entry: uv run --frozen python scripts/validation/check_local_config.py
   language: system
   pass_filenames: false
   stages: [commit]  # ❌ Runs on every commit (5-8s)
@@ -407,7 +407,7 @@ For each heavy hook, change `stages: [commit]` to `stages: [push]`:
 # AFTER
 - id: prevent-local-config-commits
   name: Prevent commits with local config
-  entry: python scripts/validation/check_local_config.py
+  entry: uv run --frozen python scripts/validation/check_local_config.py
   language: system
   pass_filenames: false
   stages: [push]  # ✅ Runs on push only
@@ -441,7 +441,7 @@ time git commit -m "test: measure commit speed"
 time git push --dry-run
 
 # Profile again to verify improvements
-python scripts/profiling/profile_hooks.py --format markdown
+uv run --frozen python scripts/profiling/profile_hooks.py --format markdown
 ```
 
 ---
@@ -705,7 +705,7 @@ if __name__ == "__main__":
 
 ```bash
 # 1. Measure commit performance
-python scripts/validation/measure_commit_performance.py
+uv run --frozen python scripts/validation/measure_commit_performance.py
 
 # Expected output:
 # 📊 Measuring commit performance (10 iterations)...
@@ -725,7 +725,7 @@ time make validate-pre-push
 # Expected: 4-5 minutes (comprehensive validation)
 
 # 3. Document results
-python scripts/validation/measure_commit_performance.py > docs-internal/commit_performance_after.txt
+uv run --frozen python scripts/validation/measure_commit_performance.py > docs-internal/commit_performance_after.txt
 ```
 
 ---
@@ -754,7 +754,7 @@ python scripts/validation/measure_commit_performance.py > docs-internal/commit_p
 1. Clear commit messages explaining changes
 2. Update TESTING.md with new hook organization
 3. Add banner message when hooks are skipped on commit
-4. Document in .claude/memory/pre-commit-hooks-catalog.md
+4. Document in .claude/memory/validation-strategy.md
 
 ---
 
@@ -854,7 +854,7 @@ Auto-runs on `git push` for all files.
 **Philosophy**: Comprehensive validation before code review
 ```
 
-### 2. .claude/memory/pre-commit-hooks-catalog.md
+### 2. .claude/memory/validation-strategy.md
 
 Update with new hook organization showing which hooks run on commit vs push.
 

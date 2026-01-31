@@ -227,7 +227,9 @@ mcp_test_*.json
 _site/
 
 # AI Tools (user-specific - these are personal IDE configurations)
-.ai/
+.ai/*
+!.ai/CORE.md
+!.ai/README.md
 .openai/
 .cursor/
 .mcp.json

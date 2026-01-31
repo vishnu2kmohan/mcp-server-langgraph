@@ -5,6 +5,18 @@ description: You are tasked with searching the project knowledge base for releva
 
 You are tasked with searching the project knowledge base for relevant information. This command provides semantic search across code, documentation, ADRs, and context files.
 
+## Efficiency Pattern: Explore Agent Delegation
+
+**Prefer Task(Explore) Agent** for complex searches:
+```
+Task(subagent_type="Explore", prompt="Search for authentication patterns and explain how JWT validation works")
+```
+
+This is more efficient than manual grep commands as it:
+- Handles multiple search iterations automatically
+- Provides structured, summarized results
+- Uses less main conversation context
+
 ## Knowledge Base Context
 
 **Sources**:

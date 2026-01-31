@@ -772,7 +772,7 @@ make help | grep -i deploy
 ## Related Documentation
 
 - Makefile Source: `Makefile`
-- Pre-commit Hooks: `.claude/memory/pre-commit-hooks-catalog.md`
+- Validation Strategy: `.claude/memory/validation-strategy.md`
 - Testing Guide: `TESTING.md`
 - pytest Markers: `.claude/context/pytest-markers.md`
 - CI/CD Workflow: `.github/workflows/ci.yaml`

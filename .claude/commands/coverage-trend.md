@@ -7,12 +7,14 @@ description: Track test coverage trends over time and identify patterns
 
 **Purpose**: Track test coverage trends over time and identify patterns
 
-**Features** 🆕:
-- Historical coverage tracking
-- Trend visualization
-- Module-level breakdown
-- Coverage delta analysis
-- Regression detection
+## Efficiency Pattern: Script Reference
+
+For detailed analysis, use the dedicated script instead of embedded bash:
+```bash
+uv run --frozen python scripts/workflow/coverage-trend-analyzer.py --days 30 --detailed
+```
+
+The script handles all the parsing, trend calculation, and visualization in a single command.
 
 ---
 
@@ -295,7 +297,7 @@ coverage report --format=total
 Full trend report with 30-day history:
 
 ```bash
-python scripts/workflow/coverage-trend-analyzer.py --days 30 --detailed
+uv run --frozen python scripts/workflow/coverage-trend-analyzer.py --days 30 --detailed
 ```
 
 ### Module Focus

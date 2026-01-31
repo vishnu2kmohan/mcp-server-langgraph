@@ -8,6 +8,18 @@ Automated workflow for debugging and fixing GitHub issues.
 
 **Usage**: `/fix-issue <issue-number>` or `/fix-issue $ARGUMENTS`
 
+## Efficiency Patterns
+
+**Batch Reads**: When investigating, read all potentially relevant files in parallel:
+```
+Read(file1), Read(file2), Read(file3)  # Single message, parallel execution
+```
+
+**Explore Agent**: For complex codebase searches, use Task tool with `subagent_type=Explore`:
+```
+Task(subagent_type="Explore", prompt="Find all error handling patterns in auth module")
+```
+
 ## Workflow Steps
 
 1. **Retrieve Issue Details**

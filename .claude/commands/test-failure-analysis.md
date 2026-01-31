@@ -8,6 +8,15 @@ argument-hint: <args>
 
 **Purpose**: Comprehensive analysis of test failures with root cause identification
 
+## Efficiency Pattern: Script Reference
+
+For automated analysis, use the dedicated script:
+```bash
+uv run --frozen python scripts/workflow/test-failure-analyzer.py --output /tmp/failure_analysis.md
+```
+
+This handles failure parsing, categorization, and fix suggestions in a single command.
+
 ---
 
 ## 🔬 What This Command Does

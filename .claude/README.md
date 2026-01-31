@@ -81,8 +81,7 @@ This directory contains optimized workflow resources for Claude Code sessions.
 ├── memory/                           # Persistent guidance (MANDATORY reading)
 │   ├── python-environment-usage.md  # Virtual environment usage (CRITICAL!)
 │   ├── task-spawn-error-prevention-strategy.md  # Error patterns & solutions
-│   ├── lint-workflow.md             # Linting workflow
-│   ├── pre-commit-hooks-catalog.md  # 200 hooks, 3-tier validation
+│   ├── validation-strategy.md       # Consolidated hooks/validation reference
 │   └── make-targets.md              # 161 Make targets reference
 │
 ├── handoff/                          # Session continuity
@@ -380,15 +379,13 @@ Persistent guidance that must be followed in all sessions:
 - **Never use** bare `python`, `pytest`, or `pip` commands
 - Preferred methods: `uv run`, `.venv/bin/python`, or activation
 - Complete troubleshooting guide and examples
-- Ensures consistency with Python 3.13.7 and project dependencies
+- Ensures consistency with Python 3.12 and project dependencies
 
-**`pre-commit-hooks-catalog.md`** (1,600 lines):
-- Complete catalog of all 200 pre-commit hooks
-- Organized by stage (pre-commit, pre-push, manual)
-- Two-stage validation strategy (< 30s / 8-12 min)
-- Hook configuration reference
-- When to skip hooks (and when NOT to)
-- Hook development guide
+**`validation-strategy.md`** (consolidated):
+- Two-stage hook strategy (pre-commit < 30s, pre-push 8-12 min)
+- Essential hooks reference (auto-fixers, blockers, validators)
+- CI/CD alignment table
+- Merged from: lint-workflow.md + pre-commit-hooks-catalog.md (now removed)
 
 **Purpose**: Understand validation workflow and hook usage
 
@@ -419,7 +416,7 @@ Persistent guidance that must be followed in all sessions:
 - Tracks file modification frequency
 - Identifies hot spot directories
 - **Auto-runs**: Via post-commit git hook
-- **Manual**: `python scripts/workflow/update-context-files.py --recent-work`
+- **Manual**: `uv run --frozen python scripts/workflow/update-context-files.py --recent-work`
 
 **`scripts/workflow/generate-burndown.py`** (350 lines):
 - Generates ASCII TODO burndown charts

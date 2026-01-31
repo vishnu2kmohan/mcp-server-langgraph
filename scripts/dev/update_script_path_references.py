@@ -8,8 +8,8 @@ many documentation files and workflows still reference old paths.
 This script updates all references to match new locations.
 
 Usage:
-    python scripts/dev/update_script_path_references.py
-    python scripts/dev/update_script_path_references.py --dry-run
+    uv run --frozen python scripts/dev/update_script_path_references.py
+    uv run --frozen python scripts/dev/update_script_path_references.py --dry-run
 """
 
 import argparse
@@ -26,7 +26,7 @@ SCRIPT_MOVES = {
 # Files to update (discovered from grep audit)
 FILES_TO_UPDATE = [
     # measure_hook_performance.py references
-    ".claude/memory/pre-commit-hooks-catalog.md",
+    ".claude/memory/validation-strategy.md",
     ".github/CLAUDE.md",
     ".github/CONTRIBUTING.md",
     "CONTRIBUTING.md",

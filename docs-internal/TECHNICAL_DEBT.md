@@ -596,7 +596,7 @@ Unimplemented observability backend integrations.
 
 **Context Files:**
 - `.claude/context/xdist-safety-patterns.md` - 1,800 lines of xdist patterns
-- `.claude/memory/pre-commit-hooks-catalog.md` - 69 hooks reference
+- `.claude/memory/validation-strategy.md` - Consolidated hooks/validation reference
 - `.claude/memory/make-targets.md` - 133 targets reference
 
 ### Validation Scripts
