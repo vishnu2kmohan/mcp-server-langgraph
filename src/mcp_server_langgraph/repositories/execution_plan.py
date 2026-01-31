@@ -92,6 +92,42 @@ class ExecutionPlanRepository(ABC):
         """
         pass
 
+    @abstractmethod
+    async def list_by_user(self, user_id: str) -> list[ExecutionPlan]:
+        """List all plans for a user (GDPR export).
+
+        Args:
+            user_id: The user ID to filter by
+
+        Returns:
+            List of execution plans for the user
+        """
+        pass
+
+    @abstractmethod
+    async def delete_by_user(self, user_id: str) -> int:
+        """Delete all plans for a user (GDPR deletion).
+
+        Args:
+            user_id: The user ID to delete plans for
+
+        Returns:
+            Count of deleted plans
+        """
+        pass
+
+    @abstractmethod
+    async def list_pending_embeddings(self, limit: int = 100) -> list[ExecutionPlan]:
+        """List plans with pending embeddings for background processing.
+
+        Args:
+            limit: Maximum number of plans to return
+
+        Returns:
+            List of plans needing embedding generation
+        """
+        pass
+
 
 class InMemoryExecutionPlanRepository(ExecutionPlanRepository):
     """In-memory implementation for testing."""
@@ -129,3 +165,19 @@ class InMemoryExecutionPlanRepository(ExecutionPlanRepository):
     async def list_pending(self) -> list[ExecutionPlan]:
         """List all plans awaiting approval."""
         return [plan for plan in self._plans.values() if plan.status == "awaiting_approval"]
+
+    async def list_by_user(self, user_id: str) -> list[ExecutionPlan]:
+        """List all plans for a user (GDPR export)."""
+        return [plan for plan in self._plans.values() if plan.user_id == user_id]
+
+    async def delete_by_user(self, user_id: str) -> int:
+        """Delete all plans for a user (GDPR deletion)."""
+        to_delete = [plan_id for plan_id, plan in self._plans.items() if plan.user_id == user_id]
+        for plan_id in to_delete:
+            del self._plans[plan_id]
+        return len(to_delete)
+
+    async def list_pending_embeddings(self, limit: int = 100) -> list[ExecutionPlan]:
+        """List plans with pending embeddings for background processing."""
+        pending = [plan for plan in self._plans.values() if getattr(plan, "embedding_status", "pending") == "pending"]
+        return sorted(pending, key=lambda p: p.created_at)[:limit]

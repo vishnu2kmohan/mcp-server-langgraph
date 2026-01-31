@@ -193,6 +193,42 @@ class PlanTemplateRepository(ABC):
         """
         ...
 
+    @abstractmethod
+    async def list_by_user(self, user_id: str) -> list[PlanTemplate]:
+        """List all templates created by a user (GDPR export).
+
+        Args:
+            user_id: The user ID (created_by field)
+
+        Returns:
+            List of templates created by the user
+        """
+        ...
+
+    @abstractmethod
+    async def delete_by_user(self, user_id: str) -> int:
+        """Delete all templates for a user (GDPR deletion).
+
+        Args:
+            user_id: The user ID (created_by field)
+
+        Returns:
+            Count of deleted templates
+        """
+        ...
+
+    @abstractmethod
+    async def list_pending_embeddings(self, limit: int = 100) -> list[PlanTemplate]:
+        """List templates with pending embeddings for background processing.
+
+        Args:
+            limit: Maximum number of templates to return
+
+        Returns:
+            List of templates needing embedding generation
+        """
+        ...
+
 
 class InMemoryPlanTemplateRepository(PlanTemplateRepository):
     """In-memory implementation of PlanTemplateRepository.
@@ -310,3 +346,21 @@ class InMemoryPlanTemplateRepository(PlanTemplateRepository):
         results = results[offset : offset + limit]
 
         return results, total
+
+    async def list_by_user(self, user_id: str) -> list[PlanTemplate]:
+        """List all templates created by a user (GDPR export)."""
+        return [t for t in self._templates.values() if t.created_by == user_id]
+
+    async def delete_by_user(self, user_id: str) -> int:
+        """Delete all templates for a user (GDPR deletion)."""
+        to_delete = [template_id for template_id, template in self._templates.items() if template.created_by == user_id]
+        for template_id in to_delete:
+            del self._templates[template_id]
+        return len(to_delete)
+
+    async def list_pending_embeddings(self, limit: int = 100) -> list[PlanTemplate]:
+        """List templates with pending embeddings for background processing."""
+        pending = [
+            template for template in self._templates.values() if getattr(template, "embedding_status", "pending") == "pending"
+        ]
+        return sorted(pending, key=lambda t: t.created_at)[:limit]

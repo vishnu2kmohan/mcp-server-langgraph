@@ -77,6 +77,15 @@ class PlanTemplate(BaseModel):
     # Organization
     tags: list[str] = Field(default_factory=list)
 
+    # Timestamps
+    updated_at: datetime | None = None
+    last_used_at: datetime | None = None
+
+    # Embedding status (Phase 7.25: Self-healing embedding service)
+    embedding_status: Literal["pending", "processing", "completed", "failed"] = "pending"
+    embedding_error: str | None = None
+    embedding_failed_at: datetime | None = None
+
     def record_use(self, success: bool) -> PlanTemplate:
         """Record a template usage and update metrics.
 

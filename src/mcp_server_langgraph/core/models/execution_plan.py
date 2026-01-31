@@ -118,6 +118,16 @@ class ExecutionPlan(BaseModel):
     # Approval override (set by plan mode)
     force_approval: bool = False
 
+    # User tracking (GDPR compliance)
+    user_id: str | None = None
+    created_by: str | None = None
+
+    # Embedding status (Phase 7.25: Self-healing embedding service)
+    embedding_status: Literal["pending", "processing", "completed", "failed"] = "pending"
+    embedding_error: str | None = None
+    embedding_failed_at: datetime | None = None
+    description_embedding: list[float] | None = None
+
     @property
     def requires_approval(self) -> bool:
         """Check if plan requires manual approval.
