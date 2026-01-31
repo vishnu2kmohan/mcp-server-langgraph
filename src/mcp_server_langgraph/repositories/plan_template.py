@@ -328,7 +328,7 @@ class InMemoryPlanTemplateRepository(PlanTemplateRepository):
 
         if "query" in filters:
             query_lower = filters["query"].lower()
-            results = [t for t in results if query_lower in t.name.lower() or query_lower in t.description.lower()]
+            results = [t for t in results if query_lower in t.name.lower() or query_lower in (t.description or "").lower()]
 
         # Get total before pagination
         total = len(results)

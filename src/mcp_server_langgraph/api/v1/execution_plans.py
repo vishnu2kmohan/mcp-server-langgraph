@@ -151,7 +151,7 @@ class PlanTemplateResponse(BaseModel):
 
     template_id: str
     name: str
-    description: str
+    description: str | None  # Nullable for DB compatibility with legacy rows
     orchestrator: Literal["standard", "swarm", "studio", "ux", "alert"]
     thinking_budget: Literal["none", "light", "medium", "deep"]
     critique_rounds: int = Field(ge=0, le=3)

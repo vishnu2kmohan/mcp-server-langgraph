@@ -55,7 +55,8 @@ class PlanTemplate(BaseModel):
 
     template_id: str
     name: str = Field(min_length=1, max_length=255)
-    description: str = Field(min_length=1, max_length=2000)
+    # Note: DB column is nullable; allow None to prevent validation errors on NULL rows
+    description: str | None = Field(default=None, max_length=2000)
 
     # Template configuration
     orchestrator: Literal["standard", "swarm", "studio", "ux", "alert"]
