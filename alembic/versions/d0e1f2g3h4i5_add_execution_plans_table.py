@@ -42,7 +42,7 @@ def upgrade() -> None:
         "executed",
         "expired",
         name="execution_plan_status",
-        create_type=True,
+        create_type=False,  # We create manually below
     )
     status_enum.create(op.get_bind(), checkfirst=True)
 
@@ -52,7 +52,7 @@ def upgrade() -> None:
         "complicated",
         "complex",
         name="execution_plan_complexity",
-        create_type=True,
+        create_type=False,  # We create manually below
     )
     complexity_enum.create(op.get_bind(), checkfirst=True)
 
@@ -62,7 +62,7 @@ def upgrade() -> None:
         "medium",
         "high",
         name="execution_plan_risk_level",
-        create_type=True,
+        create_type=False,  # We create manually below
     )
     risk_enum.create(op.get_bind(), checkfirst=True)
 
@@ -75,7 +75,7 @@ def upgrade() -> None:
         "ops",
         "other",
         name="execution_plan_task_type",
-        create_type=True,
+        create_type=False,  # We create manually below
     )
     task_type_enum.create(op.get_bind(), checkfirst=True)
 
@@ -87,7 +87,7 @@ def upgrade() -> None:
         "ux",
         "alert",
         name="execution_plan_orchestrator",
-        create_type=True,
+        create_type=False,  # We create manually below
     )
     orchestrator_enum.create(op.get_bind(), checkfirst=True)
 
@@ -98,7 +98,7 @@ def upgrade() -> None:
         "medium",
         "deep",
         name="execution_plan_thinking_budget",
-        create_type=True,
+        create_type=False,  # We create manually below
     )
     thinking_budget_enum.create(op.get_bind(), checkfirst=True)
 

@@ -19,7 +19,8 @@ When working with this codebase, please:
    - `CONTRIBUTING.md` - Contribution guidelines
    - `docs/advanced/development-setup.mdx` - Development setup
    - `.cursorrules` - Code style and patterns
-   - `.github/CLAUDE.md` and `.github/AGENTS.md` - AI agent guidance
+   - `.github/CLAUDE.md` - Claude Code guidance
+   - `AGENTS.md` - Cross-tool AI assistant instructions (OpenAI Codex, etc.)
 
 2. **Understand the architecture**:
    - LangGraph agent with MCP protocol
@@ -28,10 +29,10 @@ When working with this codebase, please:
    - OpenTelemetry observability
 
 3. **Follow code standards**:
-   - Black formatting (127 char lines)
+   - Ruff formatting (127 char lines)
    - Type hints required
    - Google-style docstrings
-   - Comprehensive testing
+   - Comprehensive testing (20,000+ tests)
 
 ## Configuration Files by Tool
 
@@ -164,8 +165,8 @@ metrics.counter_name.add(1, {"label": "value"})
 
 Before submitting code, ensure:
 
-- [ ] Code formatted with `black`
-- [ ] Imports sorted with `isort`
+- [ ] Code formatted with `ruff format`
+- [ ] Linting passed with `ruff check`
 - [ ] Type hints on all public functions
 - [ ] Docstrings in Google style
 - [ ] Tests written and passing
@@ -283,13 +284,13 @@ open http://localhost:3000
 - **Contributing**: See `CONTRIBUTING.md` and `docs/advanced/contributing.mdx`
 - **Mintlify Docs**: See `docs/docs.json` (100% coverage)
 
-## Current Project State (2025-11-06)
+## Current Project State (2026-01-28)
 
-- **LangGraph Version**: 1.0.1 (latest stable release)
-- **Python Version**: 3.10-3.12 supported
+- **LangGraph Version**: >=1.0.4 (with langgraph-checkpoint-redis>=0.2.1)
+- **Python Version**: 3.11-3.13 supported
 - **Documentation**: Mintlify integration complete with docs/ structure
 - **Production Ready**: Full observability, security, and compliance features
-- **Test Coverage**: 318+ comprehensive tests (unit, integration, deployment)
+- **Test Coverage**: 20,000+ comprehensive tests (unit, integration, deployment)
 
 ## Getting Help
 
