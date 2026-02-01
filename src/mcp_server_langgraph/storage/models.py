@@ -334,7 +334,9 @@ class MCPConnection(BaseModel):
     owner_id: str = Field(description="Owner user ID")
     organization_id: str | None = Field(default=None, description="Organization ID")
     project_id: str | None = Field(default=None, description="Project ID")
-    scope: ConnectionScopeType = Field(default="user", description="Access scope: user (owner only), project (project members), session (ephemeral)")
+    scope: ConnectionScopeType = Field(
+        default="user", description="Access scope: user (owner only), project (project members), session (ephemeral)"
+    )
 
     # Timestamps
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="Creation timestamp")
@@ -410,7 +412,9 @@ class MCPConnectionCreate(BaseModel):
 
     # Association and access control
     project_id: str | None = Field(default=None, description="Project to associate with")
-    scope: ConnectionScopeType = Field(default="user", description="Access scope: user (owner only), project (project members), session (ephemeral)")
+    scope: ConnectionScopeType = Field(
+        default="user", description="Access scope: user (owner only), project (project members), session (ephemeral)"
+    )
 
 
 class MCPConnectionUpdate(BaseModel):
@@ -505,12 +509,8 @@ class DecisionTraceCreate(BaseModel):
     chosen_action: str = Field(..., max_length=255, description="Action/tool chosen")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score")
     rationale: str = Field(..., max_length=1000, description="Why this decision (truncated)")
-    available_options: list[str] | None = Field(
-        None, description="Options considered (max 20)"
-    )
-    selected_items: list[str] | None = Field(
-        None, description="Items selected (max 20)"
-    )
+    available_options: list[str] | None = Field(None, description="Options considered (max 20)")
+    selected_items: list[str] | None = Field(None, description="Items selected (max 20)")
     policy_version: str | None = Field(None, max_length=100, description="Policy version")
 
 
@@ -560,9 +560,7 @@ class PrecedentSearchRequest(BaseModel):
     """
 
     query: str = Field(..., min_length=3, max_length=500, description="Search query")
-    decision_type: DecisionType | None = Field(
-        None, description="Filter by decision type"
-    )
+    decision_type: DecisionType | None = Field(None, description="Filter by decision type")
     outcome: DecisionOutcome | None = Field(None, description="Filter by outcome")
     limit: int = Field(10, ge=1, le=100, description="Max results to return")
 
@@ -574,6 +572,79 @@ class PrecedentSearchResult(BaseModel):
     """
 
     trace: DecisionTraceRead = Field(..., description="The matching decision trace")
-    similarity_score: float = Field(
-        ..., ge=0.0, le=1.0, description="Cosine similarity score"
-    )
+    similarity_score: float = Field(..., ge=0.0, le=1.0, description="Cosine similarity score")
+
+
+# =============================================================================
+# LangGraph Execution Trace Models (Phase 4)
+# =============================================================================
+
+# Valid execution statuses
+ExecutionStatus = Literal["running", "completed", "failed", "skipped"]
+
+
+class LangGraphExecutionTraceCreate(BaseModel):
+    """Input model for creating LangGraph execution traces.
+
+    Used when persisting trace_step WebSocket events to database.
+    """
+
+    trace_id: str = Field(..., max_length=36, description="Unique trace identifier (UUID)")
+    session_id: str = Field(..., max_length=255, description="Session identifier")
+    run_id: str = Field(..., max_length=36, description="LangGraph run ID")
+    workflow_id: str | None = Field(None, max_length=255, description="Workflow ID (optional)")
+    user_id: str = Field(..., max_length=255, description="User ID for GDPR")
+    organization_id: str = Field(..., max_length=255, description="Organization ID")
+    node_id: str | None = Field(None, max_length=255, description="Node identifier (optional)")
+    node_name: str = Field(..., max_length=255, description="Node name (router, planner, etc.)")
+    node_type: str | None = Field(None, max_length=50, description="Node type (optional)")
+    status: ExecutionStatus = Field(..., description="Execution status")
+    start_time: int = Field(..., description="Start timestamp (epoch ms)")
+    end_time: int | None = Field(None, description="End timestamp (epoch ms)")
+    duration_ms: int | None = Field(None, ge=0, description="Duration in milliseconds")
+    sequence_number: int = Field(..., ge=0, description="Order within session")
+    attributes: dict[str, Any] | None = Field(None, description="Additional attributes")
+    error_message: str | None = Field(None, description="Error message if failed")
+
+
+class LangGraphExecutionTraceRead(BaseModel):
+    """Response model for LangGraph execution traces.
+
+    Used for API responses. Compatible with ORM models via from_attributes.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    trace_id: str = Field(..., description="Unique trace identifier")
+    session_id: str = Field(..., description="Session identifier")
+    run_id: str = Field(..., description="LangGraph run ID")
+    workflow_id: str | None = Field(None, description="Workflow ID (optional)")
+    user_id: str = Field(..., description="User ID")
+    organization_id: str = Field(..., description="Organization ID")
+    node_id: str | None = Field(None, description="Node identifier (optional)")
+    node_name: str = Field(..., description="Node name")
+    node_type: str | None = Field(None, description="Node type (optional)")
+    status: str = Field(..., description="Execution status")
+    start_time: int = Field(..., description="Start timestamp (epoch ms)")
+    end_time: int | None = Field(None, description="End timestamp (epoch ms)")
+    duration_ms: int | None = Field(None, description="Duration in milliseconds")
+    sequence_number: int = Field(..., description="Order within session")
+    attributes: dict[str, Any] | None = Field(None, description="Additional attributes")
+    error_message: str | None = Field(None, description="Error message if failed")
+    created_at: datetime = Field(..., description="When record was created")
+
+
+class LangGraphExecutionTraceSummary(BaseModel):
+    """Lightweight summary for list responses.
+
+    Used by DevTools AgentTraceTab for timeline display.
+    Excludes heavy fields like attributes and user context.
+    """
+
+    trace_id: str = Field(..., description="Unique trace identifier")
+    node_name: str = Field(..., description="Node name")
+    status: str = Field(..., description="Execution status")
+    start_time: int = Field(..., description="Start timestamp (epoch ms)")
+    end_time: int | None = Field(None, description="End timestamp (epoch ms)")
+    duration_ms: int | None = Field(None, description="Duration in milliseconds")
+    sequence_number: int = Field(..., description="Order within session")

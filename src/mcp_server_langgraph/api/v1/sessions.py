@@ -2908,3 +2908,112 @@ async def get_session_trace(
         start_time=start_time,
         end_time=end_time,
     )
+
+
+@sessions_router.get("/sessions/{session_id}/agent-execution-trace")
+async def get_session_agent_execution_trace(
+    session_id: str,
+    request: Request,
+    current_user: CurrentUser,
+    limit: int = 100,
+    offset: int = 0,
+) -> dict[str, Any]:
+    """
+    Get LangGraph node execution traces for a session.
+
+    Returns historical traces of LangGraph node execution (router, planner, executor)
+    from the database. This endpoint returns persisted traces, NOT OTEL distributed
+    traces from Tempo.
+
+    Used by DevTools AgentTraceTab for historical trace display after page reload.
+    Live traces are received via WebSocket `trace_step` messages.
+
+    Phase 4: LangGraph Execution Trace Persistence
+
+    Args:
+        session_id: The session to get traces for
+        limit: Maximum traces to return (default 100)
+        offset: Pagination offset (default 0)
+
+    Returns:
+        List of execution trace summaries with timing and status
+
+    Example Response:
+        {
+            "session_id": "sess-123",
+            "traces": [
+                {
+                    "trace_id": "trace-abc",
+                    "node_name": "router",
+                    "status": "completed",
+                    "start_time": 1704720000000,
+                    "end_time": 1704720001000,
+                    "duration_ms": 1000,
+                    "sequence_number": 0
+                }
+            ],
+            "total": 5,
+            "has_more": false
+        }
+    """
+    from mcp_server_langgraph.core.dependencies import (
+        get_langgraph_execution_trace_repository,
+    )
+
+    user_id = _get_user_id(current_user)
+    service = get_session_service()
+
+    # SECURITY: Verify session ownership first
+    session = await service.get_session(session_id, user_id)
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )
+
+    # Get execution traces from repository
+    repo = get_langgraph_execution_trace_repository()
+    traces: list[dict[str, Any]] = []
+
+    if repo is not None:
+        try:
+            trace_summaries = await repo.get_by_session(
+                session_id=session_id,
+                limit=limit + 1,  # Fetch one extra to check has_more
+                offset=offset,
+            )
+
+            # Check if there are more results
+            has_more = len(trace_summaries) > limit
+            if has_more:
+                trace_summaries = trace_summaries[:limit]
+
+            traces = [
+                {
+                    "trace_id": t.trace_id,
+                    "node_name": t.node_name,
+                    "status": t.status,
+                    "start_time": t.start_time,
+                    "end_time": t.end_time,
+                    "duration_ms": t.duration_ms,
+                    "sequence_number": t.sequence_number,
+                }
+                for t in trace_summaries
+            ]
+
+            return {
+                "session_id": session_id,
+                "traces": traces,
+                "total": len(traces),
+                "has_more": has_more,
+            }
+        except Exception as e:
+            # Graceful degradation: return empty traces on errors
+            logger.warning(f"Failed to retrieve agent execution traces for session {session_id}: {e}")
+
+    return {
+        "session_id": session_id,
+        "traces": [],
+        "total": 0,
+        "has_more": False,
+    }

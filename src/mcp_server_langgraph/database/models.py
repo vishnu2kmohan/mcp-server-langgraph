@@ -4,6 +4,7 @@ SQLAlchemy models for cost tracking and context graph persistence.
 This module defines database models for storing:
 - LLM token usage and cost metrics (TokenUsageRecord, BudgetRecord)
 - Context graph decision traces (DecisionTrace, DecisionEdge)
+- LangGraph execution traces (LangGraphExecutionTrace)
 
 All models use PostgreSQL persistence with automatic retention policies.
 """
@@ -688,3 +689,180 @@ class DecisionEdge(Base):  # type: ignore[misc,valid-type]
             f"relation={self.relation}, "
             f"{self.source_type}:{self.source_id} -> {self.target_type}:{self.target_id})>"
         )
+
+
+# =============================================================================
+# LangGraph Execution Trace Model (Phase 4)
+# =============================================================================
+
+
+class LangGraphExecutionTrace(Base):  # type: ignore[misc,valid-type]
+    """
+    Persistent storage for LangGraph node execution traces.
+
+    Captures WHAT nodes ran and when (as opposed to DecisionTrace which
+    captures WHY decisions were made). Used by DevTools AgentTraceTab
+    to show historical execution traces after page reload.
+
+    Data Flow:
+    - Live: WebSocket `trace_step` messages to DevTools
+    - Persistence: Stored here for historical retrieval
+    - Query: `/api/v1/sessions/{id}/agent-execution-trace`
+
+    Fields mirror the trace_step WebSocket payload:
+    - node_name: Name of the LangGraph node (router, planner, executor)
+    - status: Execution state (running, completed, failed, skipped)
+    - start_time/end_time: Timing in epoch milliseconds
+    - duration_ms: Calculated duration
+
+    GDPR Compliance:
+    - user_id: For GDPR export/delete
+    - organization_id: For org-level analytics
+
+    Indexes:
+    - session_id: Primary query path
+    - user_id: GDPR export/delete
+    - created_at: Retention cleanup
+    - (session_id, sequence_number): Ordered timeline
+    """
+
+    __tablename__ = "langgraph_execution_traces"
+
+    # Primary key
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trace_id: Mapped[str] = mapped_column(
+        String(36),
+        unique=True,
+        nullable=False,
+        doc="Unique trace identifier (UUID)",
+    )
+
+    # Context identifiers
+    session_id: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        doc="Session identifier",
+    )
+    run_id: Mapped[str] = mapped_column(
+        String(36),
+        nullable=False,
+        doc="LangGraph run ID for correlation",
+    )
+    workflow_id: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        doc="Optional workflow identifier",
+    )
+
+    # GDPR compliance
+    user_id: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        doc="User identifier for GDPR export/delete",
+    )
+    organization_id: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        doc="Organization identifier for analytics",
+    )
+
+    # Node execution data
+    node_id: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        doc="Node identifier (may differ from name)",
+    )
+    node_name: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        doc="Node name (router, planner, executor, etc.)",
+    )
+    node_type: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        doc="Node type (default, conditional, etc.)",
+    )
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        doc="Execution status: running, completed, failed, skipped",
+    )
+
+    # Timing (epoch milliseconds)
+    start_time: Mapped[int] = mapped_column(
+        BigInteger,
+        nullable=False,
+        doc="Start timestamp in epoch milliseconds",
+    )
+    end_time: Mapped[int | None] = mapped_column(
+        BigInteger,
+        nullable=True,
+        doc="End timestamp in epoch milliseconds",
+    )
+    duration_ms: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+        doc="Duration in milliseconds",
+    )
+
+    # Ordering
+    sequence_number: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        doc="Sequential order within session",
+    )
+
+    # Metadata
+    attributes: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON,
+        nullable=True,
+        doc="Additional node attributes (JSON)",
+    )
+    error_message: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        doc="Error message if status is 'failed'",
+    )
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        doc="When the record was created (UTC)",
+    )
+
+    # Indexes
+    __table_args__ = (
+        Index("ix_lget_session_id", "session_id"),
+        Index("ix_lget_user_id", "user_id"),
+        Index("ix_lget_org_id", "organization_id"),
+        Index("ix_lget_created_at", "created_at"),
+        Index("ix_lget_session_sequence", "session_id", "sequence_number"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<LangGraphExecutionTrace(trace_id={self.trace_id}, node_name={self.node_name}, status={self.status})>"
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize for API/GDPR export."""
+        return {
+            "trace_id": self.trace_id,
+            "session_id": self.session_id,
+            "run_id": self.run_id,
+            "workflow_id": self.workflow_id,
+            "user_id": self.user_id,
+            "organization_id": self.organization_id,
+            "node_id": self.node_id,
+            "node_name": self.node_name,
+            "node_type": self.node_type,
+            "status": self.status,
+            "start_time": self.start_time,
+            "end_time": self.end_time,
+            "duration_ms": self.duration_ms,
+            "sequence_number": self.sequence_number,
+            "attributes": self.attributes,
+            "error_message": self.error_message,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }

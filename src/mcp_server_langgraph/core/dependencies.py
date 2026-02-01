@@ -9,6 +9,9 @@ from collections.abc import AsyncGenerator
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from mcp_server_langgraph.repositories.langgraph_execution_trace import (
+        LangGraphExecutionTraceRepositoryBase,
+    )
     from mcp_server_langgraph.repositories.session_goal import SessionGoalRepository
 
 from fastapi import Depends, Request
@@ -641,6 +644,48 @@ def set_decision_trace_repository(repository: Any) -> None:
 
 
 # ==============================================================================
+# LangGraph Execution Trace Repository Dependency (Phase 4)
+# ==============================================================================
+
+# Singleton instance for LangGraph execution trace repository
+_langgraph_execution_trace_repository: "LangGraphExecutionTraceRepositoryBase | None" = None
+
+
+def get_langgraph_execution_trace_repository() -> "LangGraphExecutionTraceRepositoryBase | None":
+    """
+    Get LangGraphExecutionTraceRepository instance (singleton).
+
+    Returns the cached PostgresLangGraphExecutionTraceRepository for
+    storing LangGraph node execution traces for DevTools AgentTraceTab.
+
+    Phase 4: LangGraph Execution Trace Persistence
+
+    Returns:
+        LangGraphExecutionTraceRepositoryBase instance or None if not initialized
+
+    Example:
+        repo = get_langgraph_execution_trace_repository()
+        if repo:
+            traces = await repo.get_by_session(session_id)
+    """
+    return _langgraph_execution_trace_repository
+
+
+def set_langgraph_execution_trace_repository(repository: "LangGraphExecutionTraceRepositoryBase") -> None:
+    """
+    Set the LangGraphExecutionTraceRepository singleton instance.
+
+    Called during app startup to initialize the repository.
+
+    Args:
+        repository: LangGraphExecutionTraceRepositoryBase instance to cache
+    """
+    global _langgraph_execution_trace_repository
+    _langgraph_execution_trace_repository = repository
+    logger.debug("LangGraphExecutionTraceRepository singleton initialized")
+
+
+# ==============================================================================
 # Testing Utilities (CODEX Finding #6)
 # ==============================================================================
 
@@ -663,7 +708,16 @@ def reset_singleton_dependencies() -> None:
 
     WARNING: This should ONLY be used in tests. Never call in production code.
     """
-    global _keycloak_client, _openfga_client, _service_principal_manager, _api_key_manager, _user_provider, _token_denylist, _semantic_index_manager, _decision_trace_repository
+    global \
+        _keycloak_client, \
+        _openfga_client, \
+        _service_principal_manager, \
+        _api_key_manager, \
+        _user_provider, \
+        _token_denylist, \
+        _semantic_index_manager, \
+        _decision_trace_repository, \
+        _execution_plan_repository
 
     _keycloak_client = None
     _openfga_client = None
@@ -673,6 +727,7 @@ def reset_singleton_dependencies() -> None:
     _token_denylist = None
     _semantic_index_manager = None
     _decision_trace_repository = None
+    _execution_plan_repository = None
 
 
 # ==============================================================================
@@ -878,7 +933,6 @@ def get_session_goal_repository(
     """
     from mcp_server_langgraph.repositories.session_goal import (
         PostgresSessionGoalRepository,
-        SessionGoalRepository,
     )
 
     return PostgresSessionGoalRepository(session)
@@ -981,6 +1035,73 @@ def get_oauth2_service() -> OAuth2Service:
         _oauth2_service = OAuth2Service()
 
     return _oauth2_service
+
+
+# ==============================================================================
+# Execution Plan Repository Dependencies (v35.0)
+# ==============================================================================
+
+# Singleton instance for execution plan repository
+_execution_plan_repository: Any = None
+
+
+def get_execution_plan_repository() -> Any:
+    """
+    Get ExecutionPlanRepository instance (singleton).
+
+    Returns the cached repository for execution plan persistence.
+    Returns InMemoryExecutionPlanRepository if settings.plan_storage_backend != "postgres",
+    otherwise returns PostgresExecutionPlanRepository.
+
+    v35.0 RLM Phase: Execution plan persistence for approval workflows.
+
+    Returns:
+        ExecutionPlanRepository instance
+
+    Example:
+        # In API routes
+        repo = get_execution_plan_repository()
+        plan = await repo.get(plan_id)
+    """
+    global _execution_plan_repository
+
+    if _execution_plan_repository is None:
+        if settings.plan_storage_backend == "postgres":
+            from mcp_server_langgraph.database.session import get_session_maker
+            from mcp_server_langgraph.repositories.postgres_execution_plan import (
+                PostgresExecutionPlanRepository,
+            )
+
+            database_url = settings.database_url
+            if not database_url:
+                raise RuntimeError("DATABASE_URL is not configured for postgres plan storage.")
+
+            session_maker = get_session_maker(database_url)
+            _execution_plan_repository = PostgresExecutionPlanRepository(session_maker)
+        else:
+            from mcp_server_langgraph.repositories.execution_plan import (
+                get_plan_repository,
+            )
+
+            _execution_plan_repository = get_plan_repository()
+
+    return _execution_plan_repository
+
+
+def set_execution_plan_repository(repository: Any) -> None:
+    """
+    Set the ExecutionPlanRepository singleton instance.
+
+    Called during app startup or testing to inject a specific repository.
+
+    v35.0 RLM Phase: Allows DI for testing.
+
+    Args:
+        repository: ExecutionPlanRepository instance to cache
+    """
+    global _execution_plan_repository
+    _execution_plan_repository = repository
+    logger.debug("ExecutionPlanRepository singleton initialized")
 
 
 # ==============================================================================

@@ -251,10 +251,26 @@ class DevToolsBroadcaster:
     ) -> None:
         """Broadcast an agent trace step for DevTools Agent Trace tab.
 
+        Also persists the trace to the database for historical retrieval
+        (Phase 4: LangGraph Execution Trace Persistence).
+
         Args:
             step: Step payload with session_id, name, status, timing, etc.
             context_entity_id: Optional session/workflow ID for filtering
         """
+        import asyncio
+
+        logger.info(
+            "Broadcasting trace step",
+            extra={
+                "subscriber_count": len(self._subscribers),
+                "node_name": step.get("name"),
+                "status": step.get("status"),
+                "context_entity_id": context_entity_id,
+            },
+        )
+
+        # Broadcast to WebSocket subscribers (primary)
         await self._broadcast(
             {
                 "type": "trace_step",
@@ -262,6 +278,90 @@ class DevToolsBroadcaster:
             },
             context_entity_id=context_entity_id,
         )
+
+        # Persist trace to database (fire-and-forget)
+        # This allows historical retrieval via /api/v1/sessions/{id}/agent-execution-trace
+        # Store reference to prevent task from being garbage collected (RUF006)
+        _task = asyncio.create_task(self._persist_trace_step(step))
+        _task.add_done_callback(lambda t: None)  # Suppress "Task exception was never retrieved"
+
+    async def _persist_trace_step(self, step: dict[str, Any]) -> None:
+        """Persist a trace step to the database for historical retrieval.
+
+        Phase 4: LangGraph Execution Trace Persistence
+
+        This is called fire-and-forget to avoid blocking the WebSocket broadcast.
+        Errors are logged but do not propagate to callers.
+
+        Args:
+            step: Trace step payload from broadcast_trace_step
+        """
+        import uuid
+        from datetime import UTC, datetime
+
+        try:
+            from mcp_server_langgraph.core.dependencies import (
+                get_langgraph_execution_trace_repository,
+            )
+
+            repo = get_langgraph_execution_trace_repository()
+            if repo is None:
+                # Repository not initialized - skip persistence
+                return
+
+            # Only persist terminal statuses to avoid duplicate trace_id constraint violations
+            # (chat broadcasts reuse the same id for running → completed events)
+            status = step.get("status", "running")
+            if status not in {"completed", "failed", "skipped"}:
+                return
+
+            # Warn if GDPR-required fields are missing
+            user_id = step.get("user_id")
+            org_id = step.get("organization_id")
+            if not user_id or not org_id:
+                logger.warning(
+                    "Trace step missing user_id or organization_id - GDPR compliance affected",
+                    extra={"session_id": step.get("session_id"), "node": step.get("name")},
+                )
+
+            # Map WebSocket step payload to database model
+            # Support both camelCase (frontend) and snake_case (backend) keys for compatibility
+            trace_data = {
+                "trace_id": step.get("id") or str(uuid.uuid4()),
+                "session_id": step.get("session_id", ""),
+                "run_id": step.get("run_id") or str(uuid.uuid4()),
+                "workflow_id": step.get("workflow_id"),
+                "user_id": user_id or "unknown",
+                "organization_id": org_id or "unknown",
+                "node_id": step.get("node_id"),
+                "node_name": step.get("name", "unknown"),
+                "node_type": step.get("node_type"),
+                "status": status,
+                # Support both snake_case and camelCase keys
+                "start_time": step.get("start_time") or step.get("startTime") or int(datetime.now(UTC).timestamp() * 1000),
+                "end_time": step.get("end_time") or step.get("endTime"),
+                "duration_ms": step.get("duration_ms") or step.get("duration"),
+                "sequence_number": step.get("sequence_number", 0),
+                "attributes": step.get("attributes") or step.get("metadata"),
+                "error_message": step.get("error"),
+                "created_at": datetime.now(UTC),
+            }
+
+            await repo.create(trace_data)
+            logger.debug(
+                "Persisted trace step to database",
+                extra={
+                    "trace_id": trace_data["trace_id"],
+                    "node_name": trace_data["node_name"],
+                    "session_id": trace_data["session_id"],
+                },
+            )
+        except Exception as e:
+            # Log but don't propagate - this is fire-and-forget
+            logger.warning(
+                "Failed to persist trace step to database",
+                extra={"error": str(e), "step": step.get("name")},
+            )
 
 
 # =============================================================================
@@ -277,6 +377,8 @@ class DevToolsHandler(WebSocketBase, BroadcasterMixin):
     standardized infrastructure (auth, rate limiting, metrics, etc.).
 
     Usage:
+        from mcp_server_langgraph.websocket.registry import get_devtools_broadcaster
+
         handler = DevToolsHandler(
             config=WebSocketConfig(
                 endpoint_name="devtools",
@@ -421,25 +523,8 @@ class DevToolsHandler(WebSocketBase, BroadcasterMixin):
 
 
 # =============================================================================
-# Singleton Instance
+# Singleton Instance - CENTRALIZED IN REGISTRY
 # =============================================================================
-
-_broadcaster: DevToolsBroadcaster | None = None
-
-
-def get_devtools_broadcaster() -> DevToolsBroadcaster:
-    """Get the application-wide DevTools broadcaster instance.
-
-    Returns:
-        Singleton DevToolsBroadcaster instance
-    """
-    global _broadcaster
-    if _broadcaster is None:
-        _broadcaster = DevToolsBroadcaster()
-    return _broadcaster
-
-
-def reset_devtools_broadcaster() -> None:
-    """Reset the DevTools broadcaster (for testing)."""
-    global _broadcaster
-    _broadcaster = None
+# NOTE: get_devtools_broadcaster() is defined in websocket/registry.py
+# to ensure a single application-wide broadcaster instance.
+# Import from there: from mcp_server_langgraph.websocket.registry import get_devtools_broadcaster

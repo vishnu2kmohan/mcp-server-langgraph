@@ -2,8 +2,11 @@
  * useAgentTrace Hook
  *
  * Fetches and manages agent execution trace data for a session.
- * Transforms API response (snake_case SessionTraceResponse) to frontend format
- * (camelCase AgentExecutionTrace with nodes derived from steps).
+ *
+ * Phase 4D: Updated to use new `/api/v1/sessions/{id}/agent-execution-trace`
+ * endpoint which returns LangGraph node execution traces (not OTEL traces from Tempo).
+ *
+ * Transforms API response to frontend AgentExecutionTrace format.
  */
 import { useState, useEffect, useCallback } from "react";
 
@@ -15,19 +18,28 @@ import { authenticatedFetch } from "../../../utils/authenticatedFetch";
 // =============================================================================
 
 /**
- * API response format from /api/v1/sessions/{sessionId}/trace
- * (SessionTraceResponse - uses snake_case)
+ * Individual trace entry from the new API endpoint.
+ * Represents a single LangGraph node execution.
  */
-interface SessionTraceApiResponse {
-  raw_output?: string;
-  steps?: Array<{ name: string; status: string; duration?: number }>;
-  tokens?: { input: number; output: number };
-  current_node?: string;
-  start_time?: number;
+interface AgentExecutionTraceEntry {
+  trace_id: string;
+  node_name: string;
+  status: string;
+  start_time: number;
   end_time?: number;
-  // Future-proofing: API may return nodes/edges directly
-  nodes?: LangGraphNode[];
-  edges?: Array<{ from: string; to: string; condition?: string }>;
+  duration_ms?: number;
+  sequence_number: number;
+}
+
+/**
+ * API response format from /api/v1/sessions/{sessionId}/agent-execution-trace
+ * (Phase 4: LangGraph Execution Trace Persistence)
+ */
+interface AgentExecutionTraceApiResponse {
+  session_id: string;
+  traces: AgentExecutionTraceEntry[];
+  total: number;
+  has_more: boolean;
 }
 
 export interface UseAgentTraceOptions {
@@ -55,35 +67,44 @@ export interface UseAgentTraceReturn {
 // =============================================================================
 
 /**
- * Transform API response to frontend AgentExecutionTrace format.
- * - Converts snake_case to camelCase
- * - Derives nodes from steps if not already present
+ * Transform new agent execution trace API response to frontend format.
+ * Phase 4D: Uses `/api/v1/sessions/{id}/agent-execution-trace` response.
  */
-function transformApiResponse(
-  data: SessionTraceApiResponse,
+function transformAgentExecutionTraceResponse(
+  data: AgentExecutionTraceApiResponse,
 ): AgentExecutionTrace {
-  // If API returns nodes directly, use them; otherwise derive from steps
-  let nodes: LangGraphNode[] | undefined = data.nodes;
+  const { traces } = data;
 
-  if (!nodes && data.steps) {
-    nodes = data.steps.map((step, index) => ({
-      id: `step-${index}`,
-      name: step.name,
-      type: "default" as const,
-      status: step.status as LangGraphNode["status"],
-      duration: step.duration,
-    }));
-  }
+  // Transform trace entries to LangGraphNode format
+  const nodes: LangGraphNode[] = traces.map((trace) => ({
+    id: trace.trace_id,
+    name: trace.node_name,
+    type: "default" as const,
+    status: trace.status as LangGraphNode["status"],
+    duration: trace.duration_ms,
+  }));
+
+  // Transform to steps for backward compatibility
+  const steps = traces.map((trace) => ({
+    name: trace.node_name,
+    status: trace.status,
+    duration: trace.duration_ms,
+  }));
+
+  // Calculate overall start/end times from traces
+  const startTime = traces.length > 0 ? traces[0].start_time : undefined;
+  const endTime =
+    traces.length > 0 ? traces[traces.length - 1].end_time : undefined;
 
   return {
-    rawOutput: data.raw_output,
-    steps: data.steps,
-    tokens: data.tokens,
+    rawOutput: undefined,
+    steps,
+    tokens: undefined,
     nodes,
-    edges: data.edges,
-    currentNode: data.current_node ?? undefined,
-    startTime: data.start_time,
-    endTime: data.end_time,
+    edges: undefined,
+    currentNode: undefined,
+    startTime,
+    endTime,
   };
 }
 
@@ -107,18 +128,17 @@ export function useAgentTrace(
     setError(null);
 
     try {
-      // In a real implementation, this would call an API endpoint
-      // For now, we'll simulate fetching from the session state
+      // Phase 4D: Fetch LangGraph execution traces from new endpoint
       const response = await authenticatedFetch(
-        `/api/v1/sessions/${sessionId}/trace`,
+        `/api/v1/sessions/${sessionId}/agent-execution-trace`,
       );
 
       if (!response.ok) {
         throw new Error(`Failed to fetch trace: ${response.statusText}`);
       }
 
-      const data: SessionTraceApiResponse = await response.json();
-      const transformed = transformApiResponse(data);
+      const data: AgentExecutionTraceApiResponse = await response.json();
+      const transformed = transformAgentExecutionTraceResponse(data);
       setTrace(transformed);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Unknown error"));

@@ -2,6 +2,9 @@
  * useAgentTrace Hook Tests
  *
  * TDD tests for the agent trace data fetching hook.
+ *
+ * Phase 4D: Updated to use new `/api/v1/sessions/{id}/agent-execution-trace` endpoint
+ * which returns LangGraph node execution traces (not OTEL traces from Tempo).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
@@ -14,43 +17,70 @@ import type { AgentExecutionTrace } from "../../../types/chat";
 // =============================================================================
 
 /**
- * Mock API response in snake_case format (matches backend SessionTraceResponse).
- * This ensures tests verify the transformation from API to frontend format.
+ * Mock API response from `/api/v1/sessions/{id}/agent-execution-trace`.
+ * Returns LangGraph node execution traces (Phase 4).
  */
-const mockApiResponse = {
-  raw_output: "test output",
-  steps: [
-    { name: "Router", status: "completed", duration: 1000 },
-    { name: "Agent", status: "completed", duration: 2000 },
+const mockAgentExecutionTraceApiResponse = {
+  session_id: "session-123",
+  traces: [
+    {
+      trace_id: "trace-1",
+      node_name: "Router",
+      status: "completed",
+      start_time: Date.now() - 5000,
+      end_time: Date.now() - 4000,
+      duration_ms: 1000,
+      sequence_number: 0,
+    },
+    {
+      trace_id: "trace-2",
+      node_name: "Agent",
+      status: "completed",
+      start_time: Date.now() - 4000,
+      end_time: Date.now() - 2000,
+      duration_ms: 2000,
+      sequence_number: 1,
+    },
   ],
-  tokens: { input: 100, output: 50 },
-  current_node: null,
-  start_time: Date.now() - 5000,
-  end_time: Date.now() - 2000,
+  total: 2,
+  has_more: false,
 };
 
 /**
  * Expected frontend format after transformation (AgentExecutionTrace).
- * Must match exactly what transformApiResponse() returns.
+ * Transforms the new API format to AgentExecutionTrace.
  */
 const expectedTransformedTrace: AgentExecutionTrace = {
-  rawOutput: "test output",
+  rawOutput: undefined,
   steps: [
     { name: "Router", status: "completed", duration: 1000 },
     { name: "Agent", status: "completed", duration: 2000 },
   ],
-  tokens: { input: 100, output: 50 },
+  tokens: undefined,
   nodes: [
-    { id: "step-0", name: "Router", type: "default", status: "completed", duration: 1000 },
-    { id: "step-1", name: "Agent", type: "default", status: "completed", duration: 2000 },
+    {
+      id: "trace-1",
+      name: "Router",
+      type: "default",
+      status: "completed",
+      duration: 1000,
+    },
+    {
+      id: "trace-2",
+      name: "Agent",
+      type: "default",
+      status: "completed",
+      duration: 2000,
+    },
   ],
   edges: undefined,
   currentNode: undefined,
-  startTime: mockApiResponse.start_time,
-  endTime: mockApiResponse.end_time,
+  startTime: mockAgentExecutionTraceApiResponse.traces[0].start_time,
+  endTime: mockAgentExecutionTraceApiResponse.traces[1].end_time,
 };
 
-// Legacy format kept for backwards compatibility tests
+// Alias for backward compatibility in tests
+const mockApiResponse = mockAgentExecutionTraceApiResponse;
 const mockTrace: AgentExecutionTrace = expectedTransformedTrace;
 
 // =============================================================================
@@ -153,7 +183,7 @@ describe("useAgentTrace", () => {
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
-          "/api/v1/sessions/session-123/trace",
+          "/api/v1/sessions/session-123/agent-execution-trace",
           expect.anything(),
         );
       });
@@ -296,7 +326,7 @@ describe("useAgentTrace", () => {
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
-          "/api/v1/sessions/session-456/trace",
+          "/api/v1/sessions/session-456/agent-execution-trace",
           expect.anything(),
         );
       });
@@ -425,19 +455,33 @@ describe("useAgentTrace", () => {
     });
   });
 
-  describe("API response transformation", () => {
-    it("should transform snake_case API response to camelCase", async () => {
-      // API returns snake_case fields (SessionTraceResponse format)
+  describe("API response transformation (Phase 4D)", () => {
+    it("should transform agent execution trace API response", async () => {
+      // New API format from /api/v1/sessions/{id}/agent-execution-trace
       const apiResponse = {
-        raw_output: "test output",
-        steps: [
-          { name: "Router", status: "completed", duration: 100 },
-          { name: "Agent", status: "running", duration: 200 },
+        session_id: "session-123",
+        traces: [
+          {
+            trace_id: "trace-1",
+            node_name: "Router",
+            status: "completed",
+            start_time: 1700000000000,
+            end_time: 1700000001000,
+            duration_ms: 1000,
+            sequence_number: 0,
+          },
+          {
+            trace_id: "trace-2",
+            node_name: "Agent",
+            status: "running",
+            start_time: 1700000001000,
+            end_time: 1700000003000,
+            duration_ms: 2000,
+            sequence_number: 1,
+          },
         ],
-        tokens: { input: 100, output: 50 },
-        current_node: "node-1",
-        start_time: 1700000000000,
-        end_time: 1700000005000,
+        total: 2,
+        has_more: false,
       };
 
       mockFetch.mockResolvedValue({
@@ -453,22 +497,43 @@ describe("useAgentTrace", () => {
         expect(result.current.trace).not.toBeNull();
       });
 
-      // Should have camelCase fields
-      expect(result.current.trace?.rawOutput).toBe("test output");
-      expect(result.current.trace?.currentNode).toBe("node-1");
+      // Should have timing from traces
       expect(result.current.trace?.startTime).toBe(1700000000000);
-      expect(result.current.trace?.endTime).toBe(1700000005000);
+      expect(result.current.trace?.endTime).toBe(1700000003000);
     });
 
-    it("should transform steps to nodes for AgentTraceTab display", async () => {
-      // API returns steps array (SessionTraceResponse format)
+    it("should transform traces to nodes for AgentTraceTab display", async () => {
+      // New API format with multiple traces
       const apiResponse = {
-        steps: [
-          { name: "Router", status: "completed", duration: 100 },
-          { name: "Agent", status: "running", duration: 200 },
-          { name: "Tool", status: "error", duration: 50 },
+        session_id: "session-123",
+        traces: [
+          {
+            trace_id: "trace-1",
+            node_name: "Router",
+            status: "completed",
+            start_time: 1700000000000,
+            duration_ms: 100,
+            sequence_number: 0,
+          },
+          {
+            trace_id: "trace-2",
+            node_name: "Agent",
+            status: "running",
+            start_time: 1700000000100,
+            duration_ms: 200,
+            sequence_number: 1,
+          },
+          {
+            trace_id: "trace-3",
+            node_name: "Tool",
+            status: "error",
+            start_time: 1700000000300,
+            duration_ms: 50,
+            sequence_number: 2,
+          },
         ],
-        tokens: { input: 100, output: 50 },
+        total: 3,
+        has_more: false,
       };
 
       mockFetch.mockResolvedValue({
@@ -484,36 +549,47 @@ describe("useAgentTrace", () => {
         expect(result.current.trace).not.toBeNull();
       });
 
-      // Should have nodes array derived from steps
+      // Should have nodes array derived from traces
       expect(result.current.trace?.nodes).toBeDefined();
       expect(result.current.trace?.nodes).toHaveLength(3);
 
       // Verify node structure matches LangGraphNode interface
       const nodes = result.current.trace?.nodes ?? [];
       expect(nodes[0]).toMatchObject({
-        id: expect.any(String),
+        id: "trace-1",
         name: "Router",
         status: "completed",
         duration: 100,
       });
       expect(nodes[1]).toMatchObject({
-        id: expect.any(String),
+        id: "trace-2",
         name: "Agent",
         status: "running",
         duration: 200,
       });
       expect(nodes[2]).toMatchObject({
-        id: expect.any(String),
+        id: "trace-3",
         name: "Tool",
         status: "error",
         duration: 50,
       });
     });
 
-    it("should preserve tokens structure", async () => {
+    it("should also generate steps for backward compatibility", async () => {
       const apiResponse = {
-        steps: [],
-        tokens: { input: 1000, output: 500 },
+        session_id: "session-123",
+        traces: [
+          {
+            trace_id: "trace-1",
+            node_name: "Router",
+            status: "completed",
+            start_time: 1700000000000,
+            duration_ms: 1000,
+            sequence_number: 0,
+          },
+        ],
+        total: 1,
+        has_more: false,
       };
 
       mockFetch.mockResolvedValue({
@@ -529,16 +605,22 @@ describe("useAgentTrace", () => {
         expect(result.current.trace).not.toBeNull();
       });
 
-      expect(result.current.trace?.tokens).toEqual({
-        input: 1000,
-        output: 500,
+      // Should have steps array for backward compatibility
+      expect(result.current.trace?.steps).toBeDefined();
+      expect(result.current.trace?.steps).toHaveLength(1);
+      expect(result.current.trace?.steps?.[0]).toEqual({
+        name: "Router",
+        status: "completed",
+        duration: 1000,
       });
     });
 
-    it("should handle empty steps array", async () => {
+    it("should handle empty traces array", async () => {
       const apiResponse = {
-        steps: [],
-        tokens: null,
+        session_id: "session-123",
+        traces: [],
+        total: 0,
+        has_more: false,
       };
 
       mockFetch.mockResolvedValue({
@@ -555,17 +637,25 @@ describe("useAgentTrace", () => {
       });
 
       expect(result.current.trace?.nodes).toEqual([]);
+      expect(result.current.trace?.steps).toEqual([]);
     });
 
-    it("should handle API response with nodes already present", async () => {
-      // If API already returns nodes (future-proofing)
+    it("should handle traces with missing optional fields", async () => {
+      // Traces may not have end_time or duration_ms
       const apiResponse = {
-        nodes: [
-          { id: "node-1", name: "Router", type: "router", status: "completed" },
+        session_id: "session-123",
+        traces: [
+          {
+            trace_id: "trace-1",
+            node_name: "Router",
+            status: "running",
+            start_time: 1700000000000,
+            sequence_number: 0,
+            // end_time and duration_ms are omitted (node still running)
+          },
         ],
-        edges: [{ source: "node-1", target: "node-2" }],
-        steps: [],
-        tokens: { input: 100, output: 50 },
+        total: 1,
+        has_more: false,
       };
 
       mockFetch.mockResolvedValue({
@@ -581,9 +671,12 @@ describe("useAgentTrace", () => {
         expect(result.current.trace).not.toBeNull();
       });
 
-      // Should preserve existing nodes
+      // Should handle trace without duration
       expect(result.current.trace?.nodes).toHaveLength(1);
-      expect(result.current.trace?.nodes?.[0].id).toBe("node-1");
+      expect(result.current.trace?.nodes?.[0].id).toBe("trace-1");
+      expect(result.current.trace?.nodes?.[0].name).toBe("Router");
+      expect(result.current.trace?.nodes?.[0].status).toBe("running");
+      expect(result.current.trace?.nodes?.[0].duration).toBeUndefined();
     });
   });
 });
