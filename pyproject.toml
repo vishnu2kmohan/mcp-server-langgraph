@@ -386,6 +386,11 @@ exclude = [
 # SIM: code simplification
 # TRY/EM: exception handling patterns
 select = ["E", "F", "I", "UP", "B", "RUF", "S", "ASYNC", "C4", "FAST", "PERF", "LOG", "G", "PT", "SIM", "TRY", "EM"]
+# External linter codes recognized in noqa comments (custom project linters).
+# NOTE: Ruff only recognizes codes matching [A-Z]+[0-9]+ pattern (e.g., F401).
+# Lowercase hyphenated codes below are for documentation; warnings may still appear.
+# These noqa comments are for project-specific validators, not Ruff.
+external = ["async-mock", "async-mock-config", "sleep-duration"]
 
 # Ignore specific rules to align with black formatting and reduce noise during migration
 ignore = [
