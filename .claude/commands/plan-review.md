@@ -1,9 +1,9 @@
 ---
-description: Review implementation plans with dual AI reviewers (Codex + Gemini) and act on findings
+description: Review implementation plans with triple AI reviewers (Claude + Codex + Gemini) and act on findings
 ---
-# Plan Review with Dual AI Reviewers
+# Plan Review with Triple AI Reviewers
 
-Get external AI review of implementation plans using OpenAI Codex and Google Gemini CLI, then address findings collaboratively with clarifying questions.
+Get comprehensive AI review of implementation plans using Claude (primary analyst) plus OpenAI Codex and Google Gemini CLI in parallel, then address findings collaboratively with clarifying questions.
 
 ## Usage
 
@@ -62,12 +62,13 @@ PLAN_REVIEW_ID=$(date +%s%N)  # Nanosecond timestamp, or use: $(uuidgen)
 /tmp/gemini_plan_review_${PLAN_REVIEW_ID}.json
 ```
 
-## Dual-Reviewer Configuration
+## Triple-Reviewer Configuration
 
-Use both Codex and Gemini CLI for comprehensive analysis:
+Use Claude as primary analyst with Codex and Gemini CLI running in parallel for comprehensive analysis:
 
 | Reviewer | Model | Strengths |
 |----------|-------|-----------|
+| Claude | claude-opus-4-5 | Session context, codebase familiarity, tool access |
 | Codex | gpt-5.2-codex | Deep reasoning, code-level fixes |
 | Gemini | gemini-3-pro-preview | Broad context (1M tokens), alternative perspectives |
 
@@ -198,11 +199,11 @@ which codex || echo "ERROR: Codex CLI not found. Install with: npm install -g @o
 which gemini || echo "ERROR: Gemini CLI not found. Install with: npm install -g @google/gemini-cli"
 ```
 
-If either is not installed, provide installation instructions. Both reviewers are recommended but the workflow can proceed with just one.
+If either external CLI is not installed, provide installation instructions. Both external CLIs (Codex/Gemini) are recommended; if one is missing, proceed with Claude + the remaining CLI; if both are missing, proceed Claude-only with a warning about reduced accuracy.
 
-### Step 3: Invoke Dual-Reviewer Analysis
+### Step 3: Invoke Triple-Reviewer Analysis
 
-Send the plan to both Codex and Gemini CLI in parallel for comprehensive analysis.
+Send the plan to Claude (primary), Codex, and Gemini in parallel for comprehensive analysis.
 
 **Execution: Use Claude's Native Background Tasks**
 
@@ -287,6 +288,43 @@ Return JSON: {\"findings\": [{\"severity\": \"critical|important|suggestion\", \
 # The GEMINI_PID and wait commands are only needed for shell-level parallelism
 ```
 
+#### Claude Primary Analysis (Parallel with External AIs)
+
+While Codex and Gemini run in background, Claude performs its own plan review:
+
+1. **Read the plan file content** using the Read tool
+2. **Check for**:
+   - Security concerns (hardcoded secrets, missing auth, injection risks)
+   - Architectural issues (coupling, scalability, missing error handling)
+   - Completeness (missing steps, unclear requirements, edge cases)
+   - Consistency (contradictions, outdated references)
+3. **Cross-reference with**:
+   - Existing codebase patterns (via file reads)
+   - Related ADRs in `docs/adr/`
+   - Testing requirements in plan
+4. **Generate findings** in same JSON format as external reviewers:
+   ```json
+   {
+     "findings": [
+       {
+         "severity": "critical|important|suggestion",
+         "category": "security|architecture|completeness|error_handling|performance",
+         "section": "Section Name",
+         "description": "Issue description",
+         "suggestion": "Recommended fix"
+       }
+     ],
+     "summary": "Overall assessment",
+     "verdict": "approve|request_changes"
+   }
+   ```
+
+**Claude's unique advantages:**
+- Full access to session context and conversation history
+- Can read referenced files directly via Read tool
+- Familiar with codebase patterns from current session
+- No sandbox restrictions on file access
+
 After the initial review, capture the Codex session ID for subsequent rounds:
 
 ```bash
@@ -327,6 +365,8 @@ Updated plan:
 $(cat <plan-file>)"
 
 # Resume Gemini session (--resume <UUID> loads previous context)
+# SANDBOX_FLAGS for ADC and plans directory access
+export SANDBOX_FLAGS="-v $HOME/.config/gcloud/application_default_credentials.json:/tmp/adc.json:ro -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/adc.json -v $HOME/.claude/plans:$PWD/.claude-plans:ro"
 gemini \
   --resume $GEMINI_PLAN_REVIEW_SESSION_ID \
   --model gemini-3-pro-preview \
@@ -341,45 +381,61 @@ Re-read the plan file at .claude-plans/$PLAN_NAME and verify previous issues are
 Return JSON: {\"findings\": [...], \"summary\": \"...\", \"verdict\": \"approve|request_changes\"}"
 ```
 
-**Benefits of dual-reviewer session persistence**:
-- Both Codex and Gemini preserve full context across review rounds
+**Benefits of triple-reviewer session persistence**:
+- All three reviewers preserve context across review rounds
 - Reviewers remember previous findings and can verify fixes
 - No need to re-explain the plan context
 
-**Benefits of dual-reviewer approach**:
+**Benefits of triple-reviewer approach**:
+- Claude: Session context, codebase familiarity, direct tool access
 - Codex: Deep reasoning, code-level expertise, session persistence
 - Gemini: Broad context (1M tokens), alternative perspectives
-- Cross-validation reduces false negatives
+- Cross-validation with 3 AIs provides highest confidence
 - Different model architectures catch different issues
 
-### Step 4: Reconcile Findings
+### Step 4: Reconcile Findings (3-Way Merge)
 
-After both reviewers complete, merge and deduplicate their findings:
+After all three reviewers complete, merge and deduplicate their findings:
 
 #### Finding Reconciliation Logic
 
-1. **Parse JSON** from both `/tmp/codex_plan_review_${PLAN_REVIEW_ID}.json` and `/tmp/gemini_plan_review_${PLAN_REVIEW_ID}.json`
+1. **Parse JSON** from Claude's analysis, TaskOutput for Codex, and TaskOutput for Gemini
 
 2. **Deduplicate findings** by comparing:
    - Same section + similar description = merge into single finding
    - Keep higher severity when merging (critical > important > suggestion)
 
-3. **Tag each finding** with source:
-   - `[Both]` - Both reviewers identified this issue
-   - `[Codex]` - Only Codex identified this
-   - `[Gemini]` - Only Gemini identified this
+3. **Tag each finding with consensus level**:
+   - `[Consensus]` - All 3 AIs identified this issue (HIGH confidence)
+   - `[Claude+Codex]` - Claude and Codex agree (MEDIUM confidence)
+   - `[Claude+Gemini]` - Claude and Gemini agree (MEDIUM confidence)
+   - `[Codex+Gemini]` - Codex and Gemini agree (MEDIUM confidence)
+   - `[Claude-only]` - Only Claude identified this (LOWER confidence)
+   - `[Codex-only]` - Only Codex identified this (LOWER confidence)
+   - `[Gemini-only]` - Only Gemini identified this (LOWER confidence)
 
-4. **Sort by severity** (critical first, then important, then suggestion)
+4. **Sort by confidence then severity**:
+   - Consensus first, then 2-of-3, then single
+   - Within each tier: critical > important > suggestion
 
 5. **Reconcile verdicts**:
-   - If either says `request_changes` → overall verdict is `REQUEST_CHANGES`
-   - If both say `approve` → overall verdict is `APPROVED`
+   - If ANY AI says `request_changes` → overall verdict is `REQUEST_CHANGES`
+   - If ALL 3 say `approve` → overall verdict is `APPROVED`
+
+#### Graceful Degradation
+
+When external AIs fail or are unavailable:
+- If Codex fails → Continue with Claude + Gemini (reduced confidence)
+- If Gemini fails → Continue with Claude + Codex (reduced confidence)
+- If both fail → Claude-only review with warning about reduced accuracy
+- Display which AIs participated in the review header
 
 #### Handling Disagreements
 
 When reviewers suggest different approaches for the same finding:
-- Display both suggestions in the clarification question
-- Include "Codex suggests: X" and "Gemini suggests: Y" as separate options
+- Display all available suggestions in the clarification question
+- Include "Claude suggests: X", "Codex suggests: Y", and "Gemini suggests: Z" as separate options
+- Highlight consensus approaches when 2+ AIs agree
 - Let user choose or provide custom approach
 
 ### Step 5: Parse and Display Results
@@ -388,23 +444,24 @@ Display reconciled findings in a structured format with source attribution:
 
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ 🤖 DUAL REVIEW: CODEX + GEMINI                          ┃
+┃ 🤖 TRIPLE REVIEW: CLAUDE + CODEX + GEMINI               ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃                                                         ┃
-┃ Reviewers: Codex (gpt-5.2-codex) + Gemini (gemini-3-pro-preview)┃
-┃ Findings: [N] total ([X] both, [Y] Codex, [Z] Gemini)   ┃
+┃ Reviewers: Claude + Codex + Gemini                      ┃
+┃ Findings: [N] total ([X] consensus, [Y] 2-of-3, [Z] single)┃
 ┃ Verdict: [APPROVED / REQUEST_CHANGES]                   ┃
 ┃                                                         ┃
 ┃ ─────────────────────────────────────────────────────── ┃
 ┃ 🔴 CRITICAL (must address)                              ┃
 ┃ ─────────────────────────────────────────────────────── ┃
 ┃                                                         ┃
-┃ 1. [Both] Missing Redis failure handling                ┃
+┃ 1. [Consensus] Missing Redis failure handling           ┃
 ┃    📁 Section: "Implementation"                         ┃
+┃    Claude: Add circuit breaker with graceful degradation┃
 ┃    Codex: Add fallback to allow requests when down      ┃
 ┃    Gemini: Implement circuit breaker pattern            ┃
 ┃                                                         ┃
-┃ 2. [Codex] Security: Missing input validation           ┃
+┃ 2. [Claude+Codex] Security: Missing input validation    ┃
 ┃    📁 Section: "API Design"                             ┃
 ┃    Suggestion: Add input sanitization before processing ┃
 ┃                                                         ┃
@@ -412,7 +469,7 @@ Display reconciled findings in a structured format with source attribution:
 ┃ ⚠️  IMPORTANT (should address)                          ┃
 ┃ ─────────────────────────────────────────────────────── ┃
 ┃                                                         ┃
-┃ 3. [Gemini] Single rate limit for all endpoints         ┃
+┃ 3. [Gemini-only] Single rate limit for all endpoints    ┃
 ┃    📁 Section: "Configuration"                          ┃
 ┃    Suggestion: Consider per-endpoint limits             ┃
 ┃                                                         ┃
@@ -420,15 +477,15 @@ Display reconciled findings in a structured format with source attribution:
 ┃ 💡 SUGGESTIONS (optional)                               ┃
 ┃ ─────────────────────────────────────────────────────── ┃
 ┃                                                         ┃
-┃ [List suggestions with source tags]                     ┃
+┃ [List suggestions with consensus tags]                  ┃
 ┃                                                         ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
-**Source tag meanings**:
-- `[Both]` - High confidence: both reviewers identified this issue
-- `[Codex]` - Codex-only finding (may be more code-specific)
-- `[Gemini]` - Gemini-only finding (may be more context-aware)
+**Consensus tag meanings**:
+- `[Consensus]` - HIGH confidence: all 3 AIs identified this issue
+- `[Claude+Codex]`, `[Claude+Gemini]`, `[Codex+Gemini]` - MEDIUM confidence: 2 of 3 agree
+- `[Claude-only]`, `[Codex-only]`, `[Gemini-only]` - LOWER confidence: single AI finding
 
 ### Step 6: Prompt for Action
 
@@ -460,18 +517,19 @@ For each finding to be addressed:
       📁 Section: "[Section Name]"
       Severity: [🔴 Critical / ⚠️  Important / 💡 Suggestion]
       Category: [Category]
-      Source: [Both / Codex / Gemini]
+      Source: [Consensus / Claude+Codex / Claude+Gemini / Codex+Gemini / Claude-only / Codex-only / Gemini-only]
    ```
 
 2. **Ask clarification if needed** (see Clarification Rules above):
 
-   For findings where both reviewers suggest different approaches:
+   For findings where reviewers suggest different approaches:
    ```
    ❓ How should this issue be addressed?
-     [1] [Codex suggestion] (Codex recommends)
-     [2] [Gemini suggestion] (Gemini recommends)
-     [3] Combine both approaches
-     [4] Let me specify...
+     [1] [Claude suggestion] (Claude recommends)
+     [2] [Codex suggestion] (Codex recommends)
+     [3] [Gemini suggestion] (Gemini recommends)
+     [4] Combine approaches (highlight consensus when 2+ agree)
+     [5] Let me specify...
 
    Your choice:
    ```
@@ -765,23 +823,24 @@ find ~/.gemini/sessions ~/.config/gemini/sessions -type f -mmin -60 -name "*.jso
 User: /plan-review ~/.claude/plans/rate-limiting.md
 
 Claude: 🔍 Reading plan file...
-        📤 Sending to Codex + Gemini for review...
-        ⏳ Running parallel analysis...
+        📤 Launching Claude + Codex + Gemini analysis...
+        ⏳ Running triple-AI parallel review...
 
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ 🤖 DUAL REVIEW: CODEX + GEMINI                          ┃
+┃ 🤖 TRIPLE REVIEW: CLAUDE + CODEX + GEMINI               ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃                                                         ┃
-┃ Reviewers: Codex (gpt-5.2-codex) + Gemini (gemini-3-pro-preview)
-┃ Findings: 3 total (1 both, 1 Codex, 1 Gemini)           ┃
+┃ Reviewers: Claude + Codex + Gemini                      ┃
+┃ Findings: 3 total (1 consensus, 1 two-of-3, 1 single)   ┃
 ┃ Verdict: REQUEST_CHANGES                                ┃
 ┃                                                         ┃
 ┃ ─────────────────────────────────────────────────────── ┃
 ┃ 🔴 CRITICAL (1)                                         ┃
 ┃ ─────────────────────────────────────────────────────── ┃
 ┃                                                         ┃
-┃ 1. [Both] Missing Redis failure handling                ┃
+┃ 1. [Consensus] Missing Redis failure handling           ┃
 ┃    📁 Section: "Implementation"                         ┃
+┃    Claude: Add circuit breaker with graceful degradation┃
 ┃    Codex: Add fallback to allow requests when down      ┃
 ┃    Gemini: Implement circuit breaker pattern            ┃
 ┃                                                         ┃
@@ -789,7 +848,7 @@ Claude: 🔍 Reading plan file...
 ┃ ⚠️  IMPORTANT (1)                                        ┃
 ┃ ─────────────────────────────────────────────────────── ┃
 ┃                                                         ┃
-┃ 2. [Gemini] Single rate limit for all endpoints         ┃
+┃ 2. [Claude+Gemini] Single rate limit for all endpoints  ┃
 ┃    📁 Section: "Configuration"                          ┃
 ┃    Consider per-endpoint limits for /api/chat vs /api/  ┃
 ┃    health.                                              ┃
@@ -798,7 +857,7 @@ Claude: 🔍 Reading plan file...
 ┃ 💡 SUGGESTIONS (1)                                      ┃
 ┃ ─────────────────────────────────────────────────────── ┃
 ┃                                                         ┃
-┃ 3. [Codex] Consider sliding window algorithm            ┃
+┃ 3. [Codex-only] Consider sliding window algorithm       ┃
 ┃    📁 Section: "Algorithm"                              ┃
 ┃    Fixed window has thundering herd issues at window    ┃
 ┃    boundaries.                                          ┃

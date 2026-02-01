@@ -1,9 +1,9 @@
 ---
-description: Check plan completion status with dual AI verification (Codex + Gemini)
+description: Check plan completion status with triple AI verification (Claude + Codex + Gemini)
 ---
-# Plan Status Check with Dual AI Verification
+# Plan Status Check with Triple AI Verification
 
-Check the completion status of the active plan using both Codex and Gemini CLI for thorough verification,
+Check the completion status of the active plan using Claude (primary) plus Codex and Gemini CLI for thorough verification,
 and optionally continue working until all items are complete.
 
 ## Usage
@@ -36,7 +36,7 @@ Before using this command, ensure:
    gemini auth login
    ```
 
-If neither CLI is installed, the command falls back to local parsing only.
+If neither external CLI is installed, the command performs Claude-only verification (unless `--skip-ai` is set). Local parsing only runs when `--skip-ai` is explicitly set.
 
 ## Session State Tracking
 
@@ -56,6 +56,28 @@ PLAN_STATUS_ID=$(date +%s%N)
 1. **Active session plan** (from conversation context) - auto-detected, no confirmation
 2. **User-provided path argument** - use specified path
 3. **Plans directory search** - requires user confirmation if multiple found
+
+### Security Settings (Read-Only Mode)
+
+Both external reviewers run with minimal permissions - they can read files freely but cannot modify them:
+
+| Reviewer | Sandbox Mode | Read Operations | Write Operations |
+|----------|--------------|-----------------|------------------|
+| Claude | Native session | All reads allowed | Writes allowed (but not used for status) |
+| Codex | `--sandbox read-only` + `disk-full-read-access` | All reads allowed (Landlock enforced) | Blocked by Landlock |
+| Gemini | `--sandbox` + `--allowed-tools` | read_file + run_shell_command (no confirmation) | Blocked by Docker |
+
+**Note**: Codex `--sandbox read-only` requires Landlock kernel support (Linux 5.13+). The `disk-full-read-access`
+permission allows Codex to read files from any path including `~/.claude/plans/`.
+
+**Key security features:**
+- **Read access**: All reviewers can read files freely within sandbox constraints
+- **Write blocked**: External CLI write operations blocked at OS/container level
+- **No YOLO mode**: Gemini uses `--allowed-tools` (specific tools) not `--yolo` (all tools)
+- **Isolated execution**: Gemini runs in Docker container, Codex uses Landlock sandbox
+- **No network access**: Network disabled by default in external CLIs
+- **ADC mounting**: Gemini sandbox mounts ADC credentials via `SANDBOX_FLAGS` for Vertex AI auth
+- **Plans directory**: `~/.claude/plans/` mounted read-only in Gemini sandbox for plan access
 
 ## Workflow
 
@@ -125,14 +147,50 @@ completion_percentage = COMPLETE_TODOS / (COMPLETE_TODOS + INCOMPLETE_TODOS) * 1
 
 ### Step 5: AI Verification (Unless --skip-ai)
 
-If `--skip-ai` is NOT set and at least one CLI is available, invoke dual AI verification.
+If `--skip-ai` is NOT set, invoke triple AI verification. Claude always performs verification; external CLIs (Codex/Gemini) are added when available.
 
 **Execution: Use Claude's Native Background Tasks**
 
-Run Codex and Gemini in parallel using Claude's `run_in_background=true`:
-1. Launch both reviewers as separate Bash tool calls with `run_in_background=true`
+Run Codex and Gemini in parallel using Claude's `run_in_background=true`, while Claude performs its own verification:
+1. Launch both external reviewers as separate Bash tool calls with `run_in_background=true`
 2. DO NOT use shell output redirection - let stdout flow to Claude's task output
-3. Use TaskOutput to retrieve results after completion
+3. Claude performs primary verification concurrently
+4. Use TaskOutput to retrieve external results after completion
+
+#### Claude Verification (Parallel with External AIs)
+
+While Codex and Gemini run in background, Claude verifies the plan:
+
+1. **Read the plan file** using the Read tool
+2. **Identify all incomplete items** (same checklist as regex):
+   - Unchecked TODOs: `[ ]` items
+   - TODO:, FIXME:, WIP:, PENDING: markers
+   - OPTIONAL:, DEFERRED:, LATER:, MAYBE: items
+   - BLOCKED:, WAITING:, UNBLOCK: items
+   - Incomplete Phase/Step/Sprint/Milestone items
+3. **Check for hidden items regex might miss**:
+   - TODOs in code blocks
+   - Implicit requirements in prose
+   - Dependencies on incomplete external work
+4. **Cross-reference with TaskList** for pending Claude Code tasks
+5. **Return verification** in same JSON format as external AIs:
+   ```json
+   {
+     "verified": true,
+     "incomplete_count": 5,
+     "incomplete_items": [
+       {"type": "todo", "text": "Add tests", "line": 42}
+     ],
+     "hidden_items": ["Implicit TODO in architecture section"],
+     "completion_percentage": 75,
+     "verdict": "incomplete"
+   }
+   ```
+
+**Claude's unique advantages:**
+- Can read referenced files to check if tasks are actually done
+- Has access to TaskList for Claude Code task status
+- Familiar with codebase from session context
 
 #### Codex Verification
 
@@ -212,34 +270,50 @@ Return JSON:
 }"
 ```
 
-#### Reconcile AI Findings
+#### Reconcile AI Findings (3-Way Merge)
 
-After both reviewers complete:
+After all three reviewers complete:
 
-1. **Parse JSON** from Codex and Gemini TaskOutput results
+1. **Parse JSON** from Claude's analysis, Codex TaskOutput, and Gemini TaskOutput
 2. **Merge incomplete_items** lists, deduplicating by line number
-3. **Merge hidden_items** - items AI found that regex missed
-4. **Reconcile verdicts**:
-   - If EITHER says `incomplete` → overall status is INCOMPLETE
-   - If BOTH say `complete` → overall status is COMPLETE
-5. **Update completion percentage** to use AI-verified count
+3. **Merge hidden_items** - items AIs found that regex missed
+4. **Tag each finding with consensus level**:
+   - `[Consensus]` - All 3 AIs identified this item as incomplete (HIGH confidence)
+   - `[Claude+Codex]`, `[Claude+Gemini]`, `[Codex+Gemini]` - 2 of 3 agree (MEDIUM confidence)
+   - `[Claude-only]`, `[Codex-only]`, `[Gemini-only]` - Single AI finding (LOWER confidence)
+5. **Reconcile verdicts (conservative)**:
+   - If ANY AI says `incomplete` → overall status is INCOMPLETE
+   - If ALL 3 say `complete` → overall status is COMPLETE
+6. **Update completion percentage** to use AI-verified count
 
 ```python
-# Reconciliation logic
+# 3-way reconciliation logic
 ai_incomplete_items = deduplicate(
+    claude_result.get("incomplete_items", []) +
     codex_result.get("incomplete_items", []) +
     gemini_result.get("incomplete_items", [])
 )
 hidden_items = set(
+    claude_result.get("hidden_items", []) +
     codex_result.get("hidden_items", []) +
     gemini_result.get("hidden_items", [])
 )
 ai_verified = True
+# Conservative: any incomplete verdict → incomplete
 ai_verdict = "complete" if (
+    claude_result.get("verdict") == "complete" and
     codex_result.get("verdict") == "complete" and
     gemini_result.get("verdict") == "complete"
 ) else "incomplete"
 ```
+
+#### Graceful Degradation
+
+When external AIs fail or are unavailable:
+- If Codex fails → Continue with Claude + Gemini
+- If Gemini fails → Continue with Claude + Codex
+- If both fail → Claude-only verification with warning
+- Display which AIs participated in the verification header
 
 ### Step 6: Display Status
 
@@ -247,12 +321,12 @@ ai_verdict = "complete" if (
 
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ ✅ PLAN COMPLETE (100%) - AI VERIFIED                   ┃
+┃ ✅ PLAN COMPLETE (100%) - TRIPLE AI VERIFIED            ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃                                                         ┃
 ┃ Plan: ~/.claude/plans/feature-implementation.md         ┃
 ┃                                                         ┃
-┃ Verification: Codex ✅ + Gemini ✅                      ┃
+┃ Verification: Claude ✅ + Codex ✅ + Gemini ✅          ┃
 ┃                                                         ┃
 ┃ All Items Complete:                                     ┃
 ┃   ✅ TODOs: 12/12                                       ┃
@@ -294,12 +368,12 @@ ai_verdict = "complete" if (
 
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ ⚠️  PLAN INCOMPLETE (67%) - AI VERIFIED                  ┃
+┃ ⚠️  PLAN INCOMPLETE (67%) - TRIPLE AI VERIFIED           ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃                                                         ┃
 ┃ Plan: ~/.claude/plans/feature-implementation.md         ┃
 ┃                                                         ┃
-┃ Verification: Codex ✅ + Gemini ✅                      ┃
+┃ Verification: Claude ✅ + Codex ✅ + Gemini ✅          ┃
 ┃                                                         ┃
 ┃ Remaining Items (8 total):                              ┃
 ┃                                                         ┃
@@ -323,8 +397,9 @@ ai_verdict = "complete" if (
 ┃                                                         ┃
 ┃ ─────────────────────────────────────────────────────── ┃
 ┃ 🔍 AI-Detected Hidden Items (missed by regex):         ┃
-┃   - "Need to handle edge case" in code comment (L:45)   ┃
-┃   - Implicit TODO in implementation section             ┃
+┃   - [Consensus] "Need to handle edge case" (L:45)       ┃
+┃   - [Claude+Gemini] Implicit TODO in implementation     ┃
+┃   - [Claude-only] Missing error handling in Step 3      ┃
 ┃ ─────────────────────────────────────────────────────── ┃
 ┃                                                         ┃
 ┃ Use --continue to work on remaining items               ┃
@@ -506,25 +581,32 @@ Falling back to local parsing results.
 
 ### Disagreement Between Reviewers
 
-If Codex and Gemini disagree on completion status:
+If AIs disagree on completion status:
 
 ```
 ┃ ⚠️  VERIFICATION CONFLICT                               ┃
 ┃                                                         ┃
+┃ Claude says: INCOMPLETE (2 items)                       ┃
 ┃ Codex says: COMPLETE (100%)                             ┃
 ┃ Gemini says: INCOMPLETE (3 items)                       ┃
 ┃                                                         ┃
-┃ Gemini found items Codex missed:                        ┃
+┃ [Consensus] Items found by all 3:                       ┃
+┃   (none)                                                ┃
+┃                                                         ┃
+┃ [Claude+Gemini] Items found by 2 of 3:                  ┃
 ┃   - DEFERRED: Add caching layer (L:45)                  ┃
-┃   - OPTIONAL: Performance optimization (L:78)           ┃
 ┃   - WIP: Error handling section (L:112)                 ┃
+┃                                                         ┃
+┃ [Gemini-only] Items found by 1 of 3:                    ┃
+┃   - OPTIONAL: Performance optimization (L:78)           ┃
 ┃                                                         ┃
 ┃ Using conservative estimate: INCOMPLETE                 ┃
 ```
 
 ## Models
 
+- **Claude**: Uses `claude-opus-4-5` (session primary, no external invocation needed)
 - **Codex**: Uses defaults from `~/.codex/config.toml` (typically gpt-5.2-codex with xhigh)
 - **Gemini**: Uses `gemini-3-pro-preview` via Gemini CLI
 
-**Timeout**: 60 seconds per reviewer (both run in parallel)
+**Timeout**: 60 seconds per external CLI (Codex and Gemini run in parallel; Claude runs natively)
