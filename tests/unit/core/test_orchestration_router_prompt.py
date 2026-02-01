@@ -365,7 +365,8 @@ class TestRouterOutputJSONParsing:
         assert DEFAULT_ROUTER_OUTPUT.complexity == "complicated"
         assert DEFAULT_ROUTER_OUTPUT.risk == "medium"
         assert DEFAULT_ROUTER_OUTPUT.task_type == "other"
-        assert DEFAULT_ROUTER_OUTPUT.tools_needed == []
+        # v35.0: tools_needed defaults to None (sentinel for "use router suggestion")
+        assert DEFAULT_ROUTER_OUTPUT.tools_needed is None
         assert DEFAULT_ROUTER_OUTPUT.suggested_orchestrator == "standard"
         assert DEFAULT_ROUTER_OUTPUT.critique_rounds == 1
         assert DEFAULT_ROUTER_OUTPUT.thinking_budget == "light"

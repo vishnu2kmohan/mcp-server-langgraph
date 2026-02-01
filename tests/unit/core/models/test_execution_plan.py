@@ -306,7 +306,8 @@ class TestExecutionPlanModel:
             message="Test",
         )
 
-        assert plan.tools_needed == []
+        # v35.0: tools_needed defaults to None (not []) to preserve NULL semantics
+        assert plan.tools_needed is None
 
     def test_execution_plan_has_confidence(self) -> None:
         """Test ExecutionPlan has confidence field."""
@@ -592,3 +593,377 @@ class TestExecutionPlanFactory:
         assert plan1.plan_id != plan2.plan_id
         assert plan1.plan_id.startswith("plan-")
         assert plan2.plan_id.startswith("plan-")
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="execution_plan_new_fields")
+class TestExecutionPlanNewFields:
+    """Tests for v35.0 new fields: skills_needed, selected_tool_ids, llm_provider, kb_focus."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_skills_needed_field_accepts_none(self) -> None:
+        """Test that skills_needed field accepts None (v35.0)."""
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        plan = ExecutionPlan(
+            plan_id="plan-1",
+            session_id="session-1",
+            status="awaiting_approval",
+            complexity="simple",
+            risk_level="low",
+            task_type="chat",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.001"),
+            message="Test",
+            skills_needed=None,
+        )
+
+        assert plan.skills_needed is None
+
+    def test_skills_needed_field_accepts_list(self) -> None:
+        """Test that skills_needed field accepts list of strings."""
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        plan = ExecutionPlan(
+            plan_id="plan-1",
+            session_id="session-1",
+            status="awaiting_approval",
+            complexity="simple",
+            risk_level="low",
+            task_type="chat",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.001"),
+            message="Test",
+            skills_needed=["code_review", "testing"],
+        )
+
+        assert plan.skills_needed == ["code_review", "testing"]
+
+    def test_selected_tool_ids_field_accepts_none(self) -> None:
+        """Test that selected_tool_ids field accepts None (v35.0)."""
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        plan = ExecutionPlan(
+            plan_id="plan-1",
+            session_id="session-1",
+            status="awaiting_approval",
+            complexity="simple",
+            risk_level="low",
+            task_type="chat",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.001"),
+            message="Test",
+            selected_tool_ids=None,
+        )
+
+        assert plan.selected_tool_ids is None
+
+    def test_selected_tool_ids_field_accepts_list(self) -> None:
+        """Test that selected_tool_ids field accepts list of strings."""
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        plan = ExecutionPlan(
+            plan_id="plan-1",
+            session_id="session-1",
+            status="awaiting_approval",
+            complexity="simple",
+            risk_level="low",
+            task_type="chat",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.001"),
+            message="Test",
+            selected_tool_ids=["tool-1", "tool-2"],
+        )
+
+        assert plan.selected_tool_ids == ["tool-1", "tool-2"]
+
+    def test_llm_provider_field_accepts_none(self) -> None:
+        """Test that llm_provider field accepts None (v35.0)."""
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        plan = ExecutionPlan(
+            plan_id="plan-1",
+            session_id="session-1",
+            status="awaiting_approval",
+            complexity="simple",
+            risk_level="low",
+            task_type="chat",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.001"),
+            message="Test",
+            llm_provider=None,
+        )
+
+        assert plan.llm_provider is None
+
+    def test_llm_provider_field_accepts_string(self) -> None:
+        """Test that llm_provider field accepts string."""
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        plan = ExecutionPlan(
+            plan_id="plan-1",
+            session_id="session-1",
+            status="awaiting_approval",
+            complexity="simple",
+            risk_level="low",
+            task_type="chat",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.001"),
+            message="Test",
+            llm_provider="anthropic",
+        )
+
+        assert plan.llm_provider == "anthropic"
+
+    def test_kb_focus_field_accepts_none(self) -> None:
+        """Test that kb_focus field accepts None (v35.0)."""
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        plan = ExecutionPlan(
+            plan_id="plan-1",
+            session_id="session-1",
+            status="awaiting_approval",
+            complexity="simple",
+            risk_level="low",
+            task_type="chat",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.001"),
+            message="Test",
+            kb_focus=None,
+        )
+
+        assert plan.kb_focus is None
+
+    def test_kb_focus_field_accepts_valid_values(self) -> None:
+        """Test that kb_focus field accepts valid literal values."""
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        for kb_focus in ["all", "kb_only", "web_only", "none"]:
+            plan = ExecutionPlan(
+                plan_id=f"plan-{kb_focus}",
+                session_id="session-1",
+                status="awaiting_approval",
+                complexity="simple",
+                risk_level="low",
+                task_type="chat",
+                executor_model="gemini-3-flash",
+                estimated_cost=Decimal("0.001"),
+                message="Test",
+                kb_focus=kb_focus,
+            )
+
+            assert plan.kb_focus == kb_focus
+
+    def test_from_router_output_copies_skills_needed(self) -> None:
+        """Test from_router_output copies skills_needed from RouterOutput (v35.0)."""
+        from mcp_server_langgraph.agents.router_agent import RouterOutput
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        router_output = RouterOutput(
+            complexity="complicated",
+            risk="medium",
+            task_type="code",
+            tools_needed=["search"],
+            suggested_orchestrator="standard",
+            critique_rounds=1,
+            thinking_budget="medium",
+            confidence=0.85,
+            skills_needed=["code_review", "testing"],
+        )
+
+        plan = ExecutionPlan.from_router_output(
+            router_output=router_output,
+            session_id="session-1",
+            message="Review code",
+            executor_model="claude-sonnet-4-20250514",
+            estimated_cost=Decimal("0.05"),
+        )
+
+        assert plan.skills_needed == ["code_review", "testing"]
+
+    def test_from_router_output_copies_none_skills_needed(self) -> None:
+        """Test from_router_output copies None skills_needed (v35.0)."""
+        from mcp_server_langgraph.agents.router_agent import RouterOutput
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        router_output = RouterOutput(
+            complexity="simple",
+            risk="low",
+            task_type="chat",
+            tools_needed=None,
+            suggested_orchestrator="standard",
+            critique_rounds=0,
+            thinking_budget="none",
+            confidence=0.95,
+            skills_needed=None,
+        )
+
+        plan = ExecutionPlan.from_router_output(
+            router_output=router_output,
+            session_id="session-1",
+            message="Hello",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.001"),
+        )
+
+        assert plan.skills_needed is None
+
+    def test_new_fields_default_to_none(self) -> None:
+        """Test that new fields default to None when not provided."""
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        plan = ExecutionPlan(
+            plan_id="plan-1",
+            session_id="session-1",
+            status="awaiting_approval",
+            complexity="simple",
+            risk_level="low",
+            task_type="chat",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.001"),
+            message="Test",
+        )
+
+        # All new fields should default to None
+        assert plan.skills_needed is None
+        assert plan.selected_tool_ids is None
+        assert plan.llm_provider is None
+        assert plan.kb_focus is None
+
+    def test_tool_preference_field_accepts_none(self) -> None:
+        """Test that tool_preference accepts None (v35.0 Phase 2e)."""
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        plan = ExecutionPlan(
+            plan_id="plan-1",
+            session_id="session-1",
+            status="awaiting_approval",
+            complexity="simple",
+            risk_level="low",
+            task_type="chat",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.001"),
+            message="Test",
+            tool_preference=None,
+        )
+
+        assert plan.tool_preference is None
+
+    def test_tool_preference_field_accepts_string(self) -> None:
+        """Test that tool_preference accepts string values (v35.0 Phase 2e)."""
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        plan = ExecutionPlan(
+            plan_id="plan-1",
+            session_id="session-1",
+            status="awaiting_approval",
+            complexity="simple",
+            risk_level="low",
+            task_type="chat",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.001"),
+            message="Test",
+            tool_preference="prefer_tools",
+        )
+
+        assert plan.tool_preference == "prefer_tools"
+
+    def test_tool_selection_mode_field_accepts_valid_values(self) -> None:
+        """Test that tool_selection_mode accepts valid literal values (v35.0 Phase 2e)."""
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        for mode in ["auto", "manual", "hybrid"]:
+            plan = ExecutionPlan(
+                plan_id=f"plan-{mode}",
+                session_id="session-1",
+                status="awaiting_approval",
+                complexity="simple",
+                risk_level="low",
+                task_type="chat",
+                executor_model="gemini-3-flash",
+                estimated_cost=Decimal("0.001"),
+                message="Test",
+                tool_selection_mode=mode,
+            )
+
+            assert plan.tool_selection_mode == mode
+
+    def test_tool_preference_fields_default_to_none(self) -> None:
+        """Test that tool preference fields default to None (v35.0 Phase 2e)."""
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        plan = ExecutionPlan(
+            plan_id="plan-1",
+            session_id="session-1",
+            status="awaiting_approval",
+            complexity="simple",
+            risk_level="low",
+            task_type="chat",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.001"),
+            message="Test",
+        )
+
+        assert plan.tool_preference is None
+        assert plan.tool_selection_mode is None
+
+    def test_from_router_output_copies_tool_preference(self) -> None:
+        """Test from_router_output copies tool_preference from RouterOutput (v35.0)."""
+        from mcp_server_langgraph.agents.router_agent import RouterOutput
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        router_output = RouterOutput(
+            complexity="complicated",
+            risk="medium",
+            task_type="code",
+            tools_needed=None,
+            suggested_orchestrator="standard",
+            critique_rounds=1,
+            thinking_budget="medium",
+            confidence=0.85,
+            tool_preference="prefer_tools",
+            tool_selection_mode="auto",
+        )
+
+        plan = ExecutionPlan.from_router_output(
+            router_output=router_output,
+            session_id="session-1",
+            message="Test",
+            executor_model="claude-sonnet-4-20250514",
+            estimated_cost=Decimal("0.05"),
+        )
+
+        assert plan.tool_preference == "prefer_tools"
+        assert plan.tool_selection_mode == "auto"
+
+    def test_from_router_output_copies_none_tool_preference(self) -> None:
+        """Test from_router_output copies None tool_preference (v35.0)."""
+        from mcp_server_langgraph.agents.router_agent import RouterOutput
+        from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+
+        router_output = RouterOutput(
+            complexity="simple",
+            risk="low",
+            task_type="chat",
+            tools_needed=None,
+            suggested_orchestrator="standard",
+            critique_rounds=0,
+            thinking_budget="none",
+            confidence=0.95,
+            tool_preference=None,
+            tool_selection_mode=None,
+        )
+
+        plan = ExecutionPlan.from_router_output(
+            router_output=router_output,
+            session_id="session-1",
+            message="Hello",
+            executor_model="gemini-3-flash",
+            estimated_cost=Decimal("0.001"),
+        )
+
+        assert plan.tool_preference is None
+        assert plan.tool_selection_mode is None
