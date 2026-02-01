@@ -164,9 +164,9 @@ class ChatCompletionRequest(BaseModel):
         description="Tool selection mode: 'auto' = semantic search (default), "
         "'manual' = use selected_tools only, 'none' = disable all tools.",
     )
-    tool_preference: Literal["auto", "native", "builtin", "mcp"] = Field(
-        default="auto",
-        description="Tool preference for this request: 'auto' = prefer native tools when available, "
+    tool_preference: Literal["auto", "native", "builtin", "mcp"] | None = Field(
+        default=None,
+        description="Tool preference for this request (None = use router suggestion): 'auto' = prefer native tools when available, "
         "'native' = only use native LLM provider tools (fallback to builtin if unavailable), "
         "'builtin' = only use built-in tools, 'mcp' = only use MCP server tools.",
     )
@@ -2391,11 +2391,27 @@ class ChatServiceImpl(ChatService):
                 estimated_cost=estimated_cost,
                 force_approval=(execution_mode == "plan"),
             )
-            # Set user tracking fields (GDPR compliance)
+            # Set user tracking and v35.0 context fields (GDPR compliance + audit trail)
+            selected_tools_value = kwargs.get("selected_tools")
+            kb_focus_value = kwargs.get("kb_focus")
+            # Derive LLM provider from model name (e.g., "claude-3" -> "anthropic")
+            llm_provider_value = None
+            if executor_model:
+                if "claude" in executor_model.lower():
+                    llm_provider_value = "anthropic"
+                elif "gpt" in executor_model.lower() or "o1" in executor_model.lower():
+                    llm_provider_value = "openai"
+                elif "gemini" in executor_model.lower():
+                    llm_provider_value = "google"
+
             execution_plan = execution_plan.model_copy(
                 update={
                     "user_id": user_id,
                     "created_by": user_id,
+                    # v35.0: Context fields for audit trail
+                    "selected_tool_ids": selected_tools_value,
+                    "llm_provider": llm_provider_value,
+                    "kb_focus": kb_focus_value,
                 }
             )
 

@@ -80,6 +80,26 @@ Classify the incoming request to determine:
 - **light**: Brief reflection for straightforward tasks
 - **medium**: Moderate thinking for complicated problems
 - **deep**: Extensive reasoning for complex challenges
+
+## Execution Mode (ADR-0092)
+- **pure_llm**: No tool usage, pure language model response
+- **tool_calling**: Standard tool calling for specific operations
+- **react**: ReAct-style reasoning and acting loop
+- **programmatic**: Direct programmatic execution
+- **orchestrator**: Multi-agent orchestration
+
+## Tool Selection Mode (v35.0)
+- **auto**: System automatically selects appropriate tools
+- **manual**: User explicitly specifies tools to use
+- **hybrid**: System suggests tools, user confirms selection
+
+## Tool Preference (v35.0)
+Optional hint about tool execution mode:
+- "auto": Prefer native tools when available, fallback to builtin (recommended)
+- "native": Only use native LLM provider tools
+- "builtin": Only use built-in tools
+- "mcp": Only use MCP server tools
+- null: No preference (system decides based on context)
 </classification_criteria>
 
 <defaults_on_uncertainty>
@@ -101,11 +121,16 @@ Required fields:
     "complexity": "simple" | "complicated" | "complex",
     "risk": "low" | "medium" | "high",
     "task_type": "chat" | "code" | "analysis" | "data" | "ops" | "other",
-    "tools_needed": ["list", "of", "tool", "names"],
+    "tools_needed": ["list", "of", "tool", "names"] | null,
     "suggested_orchestrator": "standard" | "swarm" | "studio" | "ux" | "alert",
     "critique_rounds": 0-3,
     "thinking_budget": "none" | "light" | "medium" | "deep",
-    "confidence": 0.0-1.0
+    "confidence": 0.0-1.0,
+    "skills_needed": ["list", "of", "skill", "names"] | null,
+    "execution_mode": "pure_llm" | "tool_calling" | "react" | "programmatic" | "orchestrator",
+    "routing_rationale": "brief explanation of routing decision",
+    "tool_preference": "auto" | "native" | "builtin" | "mcp" | null,
+    "tool_selection_mode": "auto" | "manual" | "hybrid" | null
 }}
 </output_schema>
 
