@@ -1,9 +1,9 @@
 ---
-description: Review code changes with triple AI reviewers (Claude + Codex + Gemini) and apply fixes before commit
+description: Review code changes with Multi-AI reviewers (Claude + Gemini by default, +Codex with --heavy)
 ---
-# Code Review with Triple AI Reviewers
+# Code Review with Multi-AI Reviewers
 
-Get comprehensive AI review of code changes using Claude (primary analyst) plus OpenAI Codex and Google Gemini CLI in parallel, then fix issues with clarifying questions before committing.
+Get comprehensive AI review of code changes using Claude (primary analyst) plus Google Gemini CLI. Use `--heavy` to add OpenAI Codex for triple-AI analysis. Fix issues with clarifying questions before committing.
 
 ## Usage
 
@@ -17,7 +17,15 @@ Get comprehensive AI review of code changes using Claude (primary analyst) plus 
 - `branch`: All changes vs base branch (`git diff main...HEAD`)
 
 **Flags**:
+- `--light`: Claude Code only (fastest, 2 min timeout)
+- `--medium`: Claude Code + Gemini (default, 5 min timeout)
+- `--heavy`: Claude Code + Gemini + Codex (most thorough, 10 min timeout)
+- `--timeout <duration>`: Override default timeout (e.g., `5m`, `90s`, `2min30sec`, `30s10m`). Must be a single token without spaces.
 - `--auto-fix`: Automatically apply all fixes (power user mode)
+
+> **Breaking Change (v2.0)**: Default intensity changed from triple-AI to dual-AI.
+> Use `--heavy` for full Claude + Gemini + Codex analysis, or set
+> `TRIPLE_AI_DEFAULT_INTENSITY=heavy` environment variable.
 
 ## Prerequisites
 
@@ -44,12 +52,14 @@ Before using this command, ensure:
 Track reviewer sessions across review rounds for context preservation:
 
 ```
-CODE_REVIEW_ID=""                     # Unique ID for this review session (generated at start)
-CODEX_REVIEW_SESSION_ID=""           # Current Codex session UUID
-GEMINI_REVIEW_SESSION_ID=""           # Current Gemini session UUID
-REVIEW_ROUND=1                 # Current iteration number
-ADDRESSED_FINDINGS=[]          # Findings addressed in previous rounds
-SKIP_REMAINING_CLARIFICATIONS=false  # Set true after user selects "apply all"
+CODE_REVIEW_ID=""                         # Unique ID for this review session (generated at start)
+CODEX_REVIEW_SESSION_ID=""                # Current Codex session UUID
+GEMINI_REVIEW_SESSION_ID=""               # Current Gemini session UUID
+REVIEW_ROUND=1                            # Current iteration number
+ADDRESSED_FINDINGS=[]                     # Findings addressed in previous rounds
+SKIP_REMAINING_CLARIFICATIONS=false       # Set true after user selects "apply all"
+AI_INTENSITY="medium"                     # Intensity level: light|medium|heavy (default: medium)
+AI_TIMEOUT=300                            # Timeout in seconds (default: 5 min for medium)
 ```
 
 **Generate unique review ID at session start** (before invoking reviewers):
@@ -64,15 +74,115 @@ CODE_REVIEW_ID=$(date +%s%N)  # Nanosecond timestamp, or use: $(uuidgen)
 /tmp/gemini_code_review_${CODE_REVIEW_ID}.json
 ```
 
-## Triple-Reviewer Configuration
+## Intensity Level Parsing
+
+Parse intensity flags (`--light`, `--medium`, `--heavy`) and timeout before processing arguments:
+
+```bash
+# Parse human-friendly timeout to seconds (handles any order: 30s10m, 1h5s, etc.)
+parse_timeout() {
+  local input="$1"
+  local total_seconds=0
+
+  # Remove spaces, quotes, and convert to lowercase
+  input=$(echo "$input" | tr -d ' "'"'" | tr '[:upper:]' '[:lower:]')
+
+  local remaining="$input"
+
+  # Loop to extract time units in ANY order (30s10m works)
+  while [[ -n "$remaining" ]]; do
+    if [[ "$remaining" =~ ^([0-9]+)(h|hr|hours?)(.*)$ ]]; then
+      total_seconds=$((total_seconds + ${BASH_REMATCH[1]} * 3600))
+      remaining="${BASH_REMATCH[3]}"
+    elif [[ "$remaining" =~ ^([0-9]+)(m|min|minutes?)(.*)$ ]]; then
+      total_seconds=$((total_seconds + ${BASH_REMATCH[1]} * 60))
+      remaining="${BASH_REMATCH[3]}"
+    elif [[ "$remaining" =~ ^([0-9]+)(s|sec|seconds?)(.*)$ ]]; then
+      total_seconds=$((total_seconds + ${BASH_REMATCH[1]}))
+      remaining="${BASH_REMATCH[3]}"
+    elif [[ "$remaining" =~ ^[0-9]+$ ]]; then
+      total_seconds=$((total_seconds + remaining))
+      remaining=""
+    else
+      echo "ERROR: Invalid timeout format: '$1' (unparsed: '$remaining')" >&2
+      return 1
+    fi
+  done
+
+  [[ $total_seconds -eq 0 ]] && { echo "ERROR: Timeout must be greater than 0" >&2; return 1; }
+  [[ $total_seconds -gt 1800 ]] && { echo "WARNING: Capping at 30m" >&2; total_seconds=1800; }
+
+  echo "$total_seconds"
+}
+
+# Environment variable override for default intensity
+AI_INTENSITY="${TRIPLE_AI_DEFAULT_INTENSITY:-medium}"
+[[ -n "$TRIPLE_AI_DEFAULT_INTENSITY" && ! "$TRIPLE_AI_DEFAULT_INTENSITY" =~ ^(light|medium|heavy)$ ]] && AI_INTENSITY="medium"
+
+# Robust argument parsing
+declare -a REMAINING_ARGS=()
+INTENSITY_FLAG_COUNT=0
+CUSTOM_TIMEOUT=""
+TIMEOUT_FLAG_COUNT=0
+SKIP_NEXT=false
+
+read -r -a args <<< "$ARGUMENTS"
+
+for i in "${!args[@]}"; do
+  [[ "$SKIP_NEXT" == true ]] && { SKIP_NEXT=false; continue; }
+  arg="${args[$i]}"
+  case "$arg" in
+    --light)  AI_INTENSITY="light"; ((INTENSITY_FLAG_COUNT++)) ;;
+    --medium) AI_INTENSITY="medium"; ((INTENSITY_FLAG_COUNT++)) ;;
+    --heavy)  AI_INTENSITY="heavy"; ((INTENSITY_FLAG_COUNT++)) ;;
+    --timeout)
+      next_idx=$((i + 1))
+      [[ -n "${args[$next_idx]}" ]] && { CUSTOM_TIMEOUT="${args[$next_idx]}"; ((TIMEOUT_FLAG_COUNT++)); SKIP_NEXT=true; } || { echo "ERROR: --timeout requires a value"; exit 1; }
+      ;;
+    --timeout=*)
+      CUSTOM_TIMEOUT="${arg#--timeout=}"
+      [[ -z "$CUSTOM_TIMEOUT" ]] && { echo "ERROR: --timeout= requires a value"; exit 1; }
+      ((TIMEOUT_FLAG_COUNT++))
+      ;;
+    *) REMAINING_ARGS+=("$arg") ;;
+  esac
+done
+
+[[ $TIMEOUT_FLAG_COUNT -gt 1 ]] && { echo "ERROR: Multiple --timeout flags"; exit 1; }
+[[ $INTENSITY_FLAG_COUNT -gt 1 ]] && { echo "ERROR: Multiple intensity flags"; exit 1; }
+
+# Apply timeout
+if [[ -n "$CUSTOM_TIMEOUT" ]]; then
+  AI_TIMEOUT=$(parse_timeout "$CUSTOM_TIMEOUT") || exit 1
+else
+  case "$AI_INTENSITY" in
+    light)  AI_TIMEOUT=120 ;;
+    medium) AI_TIMEOUT=300 ;;
+    heavy)  AI_TIMEOUT=600 ;;
+  esac
+fi
+
+echo "Intensity: $AI_INTENSITY | Timeout: ${AI_TIMEOUT}s"
+```
+
+## Multi-AI Configuration
 
 Use Claude as primary analyst with Codex and Gemini CLI running in parallel for comprehensive code analysis:
 
-| Reviewer | Model | Strengths |
-|----------|-------|-----------|
-| Claude | claude-opus-4-5 | Session context, codebase familiarity, plan validation |
-| Codex | gpt-5.2-codex | Deep code reasoning, precise fixes |
-| Gemini | gemini-3-pro-preview | Broad context (1M tokens), alternative perspectives |
+| Reviewer | Model | Strengths | Web Capabilities |
+|----------|-------|-----------|------------------|
+| Claude | claude-opus-4-5 | Session context, codebase familiarity, plan validation | WebSearch, WebFetch (native) |
+| Codex | gpt-5.2-codex | Deep code reasoning, precise fixes | `--search on` flag |
+| Gemini | gemini-3-pro-preview | Broad context (1M tokens), alternative perspectives | google_web_search, web_fetch tools |
+
+### Web Search Security
+
+**IMPORTANT**: Web search is DISABLED when reviewing code with sensitive content to prevent data leakage.
+
+**When web search is enabled**, AIs should use it to validate:
+- Security recommendations (OWASP, CWE updates)
+- Library vulnerabilities and fixes
+- Best practices for specific frameworks
 
 ### Security Settings (Read-Only Mode)
 
@@ -195,19 +305,37 @@ For code review, Claude should check for an active implementation plan to valida
 
 **Note**: Plan detection is optional for code review. If no plan is found, proceed with code review without plan validation.
 
-### Step 3: Verify Reviewer CLIs
+### Step 3: Verify Reviewer CLIs (Intensity-Conditional)
+
+Before invoking reviewers, verify CLIs based on intensity level. This is an **Agent-level workflow**:
 
 ```bash
-# Check Codex CLI
-which codex || echo "ERROR: Codex CLI not found. Install with: npm install -g @openai/codex-cli"
+# Check availability based on intensity level
+GEMINI_AVAILABLE="no"
+CODEX_AVAILABLE="no"
 
-# Check Gemini CLI
-which gemini || echo "ERROR: Gemini CLI not found. Install with: npm install -g @google/gemini-cli"
+# Skip all checks if --light
+if [[ "$AI_INTENSITY" != "light" ]]; then
+  which gemini >/dev/null 2>&1 && GEMINI_AVAILABLE="yes"
+fi
+
+# Only check Codex if --heavy
+if [[ "$AI_INTENSITY" == "heavy" ]]; then
+  which codex >/dev/null 2>&1 && CODEX_AVAILABLE="yes"
+fi
 ```
 
-If either external CLI is not installed, provide installation instructions. Both external CLIs (Codex/Gemini) are recommended; if one is missing, proceed with Claude + the remaining CLI; if both are missing, proceed Claude-only with a warning about reduced accuracy.
+**If Gemini missing AND intensity requires it (medium/heavy)**: Agent uses `AskUserQuestion` to offer:
+- "Continue with Claude-only" → sets `AI_INTENSITY = "light"`
+- "Abort" → displays installation instructions and exits
 
-### Step 4: Invoke Triple-Reviewer Analysis
+**If Codex missing AND intensity is heavy**: Agent uses `AskUserQuestion` to offer:
+- "Continue with Claude + Gemini" → sets `AI_INTENSITY = "medium"`
+- "Abort" → displays installation instructions and exits
+
+Agent proceeds with the (possibly adjusted) `AI_INTENSITY` value.
+
+### Step 4: Invoke Multi-AI Analysis
 
 Send the diff to Claude (primary), Codex, and Gemini in parallel for comprehensive analysis.
 
@@ -234,7 +362,25 @@ are retained for documentation but should be omitted when using `run_in_backgrou
 
 #### Round 1: Initial Review (New Sessions)
 
-Run both reviewers in parallel for efficiency:
+Launch AIs based on intensity level:
+
+**Conditional invocation pattern:**
+```bash
+# Claude always runs (primary analyst)
+# Claude performs analysis using Read tool and session context
+
+# Launch Gemini (unless --light)
+if [[ "$AI_INTENSITY" != "light" ]]; then
+  # Gemini invocation (see below)
+fi
+
+# Launch Codex (only if --heavy)
+if [[ "$AI_INTENSITY" == "heavy" ]]; then
+  # Codex invocation (see below)
+fi
+```
+
+Run reviewers in parallel for efficiency:
 
 ```bash
 # Get file list and stats (context-efficient)
@@ -443,17 +589,23 @@ After all three reviewers complete, merge and deduplicate their findings:
    - Same file + same line + similar description = merge into single finding
    - Keep higher severity when merging (critical > important > suggestion)
 
-3. **Tag each finding with consensus level**:
+3. **Tag each finding with consensus level** (intensity-dependent):
+
+   **--heavy (3 AIs)**:
    - `[Consensus]` - All 3 AIs identified this issue (HIGH confidence)
-   - `[Claude+Codex]` - Claude and Codex agree (MEDIUM confidence)
-   - `[Claude+Gemini]` - Claude and Gemini agree (MEDIUM confidence)
-   - `[Codex+Gemini]` - Codex and Gemini agree (MEDIUM confidence)
-   - `[Claude-only]` - Only Claude identified this (LOWER confidence)
-   - `[Codex-only]` - Only Codex identified this (LOWER confidence)
-   - `[Gemini-only]` - Only Gemini identified this (LOWER confidence)
+   - `[Claude+Codex]`, `[Claude+Gemini]`, `[Codex+Gemini]` - 2 of 3 agree (MEDIUM)
+   - `[Claude-only]`, `[Codex-only]`, `[Gemini-only]` - Single AI (LOWER)
+
+   **--medium (2 AIs)**:
+   - `[Consensus]` - Claude and Gemini both agree (HIGH confidence)
+   - `[Claude-only]` - Only Claude identified this
+   - `[Gemini-only]` - Only Gemini identified this
+
+   **--light (1 AI)**:
+   - `[Claude]` - All findings from Claude only (no consensus possible)
 
 4. **Sort by confidence then severity**:
-   - Consensus first, then 2-of-3, then single
+   - Consensus first, then partial, then single
    - Within each tier: critical > important > suggestion
 
 5. **Reconcile verdicts**:
@@ -478,17 +630,38 @@ When reviewers suggest different fixes for the same finding:
 
 ### Step 6: Parse and Display Results
 
+#### Dynamic Header Based on Intensity
+
+```bash
+# Generate header based on which AIs participated
+case "$AI_INTENSITY" in
+  light)
+    HEADER="CLAUDE REVIEW"
+    PARTICIPANTS="Claude"
+    ;;
+  medium)
+    HEADER="DUAL REVIEW: CLAUDE + GEMINI"
+    PARTICIPANTS="Claude, Gemini"
+    ;;
+  heavy)
+    HEADER="TRIPLE REVIEW: CLAUDE + CODEX + GEMINI"
+    PARTICIPANTS="Claude, Codex, Gemini"
+    ;;
+esac
+```
+
 Display reconciled findings in a structured format with source attribution:
 
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ 🤖 TRIPLE REVIEW: CLAUDE + CODEX + GEMINI               ┃
+┃ 🤖 [HEADER]                                             ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃                                                         ┃
-┃ Reviewers: Claude + Codex + Gemini                      ┃
+┃ PARTICIPANTS: [PARTICIPANTS]                            ┃
+┃ Reviewers: [PARTICIPANTS]                               ┃
 ┃ Scope: [staged/all/branch]                              ┃
 ┃ Files: [N] files, +[X]/-[Y] lines                       ┃
-┃ Findings: [N] total ([X] consensus, [Y] 2-of-3, [Z] single)┃
+┃ Findings: [N] total ([X] consensus, [Y] partial, [Z] single)┃
 ┃ Verdict: [APPROVED / REQUEST_CHANGES]                   ┃
 ┃                                                         ┃
 ┃ ─────────────────────────────────────────────────────── ┃
@@ -711,16 +884,17 @@ If new issues are introduced by fixes (regression), flag them and continue itera
 After the review is complete (user satisfied or all critical findings resolved), clean up both Codex and Gemini sessions:
 
 ```bash
-# Clean up Codex session file to free disk space (specific session only)
-if [ -n "$CODEX_REVIEW_SESSION_ID" ]; then
-  find ~/.codex/sessions -name "*${CODEX_REVIEW_SESSION_ID}*.jsonl" -delete 2>/dev/null
-fi
+# Clean up sessions that were actually created (intensity-conditional)
 
-# Clean up Gemini CLI session file (specific session only)
-# Gemini session ID is captured at review start alongside Codex
-if [ -n "$GEMINI_REVIEW_SESSION_ID" ]; then
+# Only clean up Gemini if it was used (medium or heavy)
+if [[ "$AI_INTENSITY" != "light" && -n "$GEMINI_REVIEW_SESSION_ID" ]]; then
   find ~/.gemini/sessions -name "*${GEMINI_REVIEW_SESSION_ID}*" -delete 2>/dev/null
   find ~/.config/gemini/sessions -name "*${GEMINI_REVIEW_SESSION_ID}*" -delete 2>/dev/null
+fi
+
+# Only clean up Codex if it was used (heavy only)
+if [[ "$AI_INTENSITY" == "heavy" && -n "$CODEX_REVIEW_SESSION_ID" ]]; then
+  find ~/.codex/sessions -name "*${CODEX_REVIEW_SESSION_ID}*.jsonl" -delete 2>/dev/null
 fi
 
 # Clean up temporary review output files (always safe to delete)

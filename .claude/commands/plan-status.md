@@ -1,10 +1,9 @@
 ---
-description: Check plan completion status with triple AI verification (Claude + Codex + Gemini)
+description: Check plan completion status with Multi-AI verification (Claude + Gemini by default, +Codex with --heavy)
 ---
-# Plan Status Check with Triple AI Verification
+# Plan Status Check with Multi-AI Verification
 
-Check the completion status of the active plan using Claude (primary) plus Codex and Gemini CLI for thorough verification,
-and optionally continue working until all items are complete.
+Check the completion status of the active plan using Claude (primary) plus Gemini CLI for verification. Use `--heavy` to add Codex for triple-AI verification. Optionally continue working until all items are complete.
 
 ## Usage
 
@@ -16,9 +15,17 @@ and optionally continue working until all items are complete.
 - `plan-file-path` (optional): Path to plan file. If omitted, uses active session plan or searches `~/.claude/plans/`
 
 **Flags**:
+- `--light`: Claude Code only (fastest, 2 min timeout)
+- `--medium`: Claude Code + Gemini (default, 5 min timeout)
+- `--heavy`: Claude Code + Gemini + Codex (most thorough, 10 min timeout)
+- `--timeout <duration>`: Override default timeout (e.g., `5m`, `90s`, `2min30sec`, `30s10m`). Must be a single token without spaces.
 - `--continue`: If incomplete, continue working on plan until all items are complete
 - `--summary`: Show summary only (no detailed item list)
 - `--skip-ai`: Skip AI verification, use local parsing only (faster but less thorough)
+
+> **Breaking Change (v2.0)**: Default intensity changed from triple-AI to dual-AI.
+> Use `--heavy` for full Claude + Gemini + Codex analysis, or set
+> `TRIPLE_AI_DEFAULT_INTENSITY=heavy` environment variable.
 
 ## Prerequisites
 
@@ -44,6 +51,8 @@ If neither external CLI is installed, the command performs Claude-only verificat
 PLAN_STATUS_ID=""              # Unique ID for this status check session
 CODEX_STATUS_SESSION_ID=""     # Codex session UUID (if used)
 GEMINI_STATUS_SESSION_ID=""    # Gemini session UUID (if used)
+AI_INTENSITY="medium"          # Intensity level: light|medium|heavy (default: medium)
+AI_TIMEOUT=300                 # Timeout in seconds (default: 5 min for medium)
 ```
 
 **Generate unique status ID at session start**:
@@ -51,11 +60,110 @@ GEMINI_STATUS_SESSION_ID=""    # Gemini session UUID (if used)
 PLAN_STATUS_ID=$(date +%s%N)
 ```
 
+## Intensity Level Parsing
+
+Parse intensity flags (`--light`, `--medium`, `--heavy`) and timeout before processing arguments:
+
+```bash
+# Parse human-friendly timeout to seconds (handles any order: 30s10m, 1h5s, etc.)
+parse_timeout() {
+  local input="$1"
+  local total_seconds=0
+
+  # Remove spaces, quotes, and convert to lowercase
+  input=$(echo "$input" | tr -d ' "'"'" | tr '[:upper:]' '[:lower:]')
+
+  local remaining="$input"
+
+  # Loop to extract time units in ANY order (30s10m works)
+  while [[ -n "$remaining" ]]; do
+    if [[ "$remaining" =~ ^([0-9]+)(h|hr|hours?)(.*)$ ]]; then
+      total_seconds=$((total_seconds + ${BASH_REMATCH[1]} * 3600))
+      remaining="${BASH_REMATCH[3]}"
+    elif [[ "$remaining" =~ ^([0-9]+)(m|min|minutes?)(.*)$ ]]; then
+      total_seconds=$((total_seconds + ${BASH_REMATCH[1]} * 60))
+      remaining="${BASH_REMATCH[3]}"
+    elif [[ "$remaining" =~ ^([0-9]+)(s|sec|seconds?)(.*)$ ]]; then
+      total_seconds=$((total_seconds + ${BASH_REMATCH[1]}))
+      remaining="${BASH_REMATCH[3]}"
+    elif [[ "$remaining" =~ ^[0-9]+$ ]]; then
+      total_seconds=$((total_seconds + remaining))
+      remaining=""
+    else
+      echo "ERROR: Invalid timeout format: '$1' (unparsed: '$remaining')" >&2
+      return 1
+    fi
+  done
+
+  [[ $total_seconds -eq 0 ]] && { echo "ERROR: Timeout must be greater than 0" >&2; return 1; }
+  [[ $total_seconds -gt 1800 ]] && { echo "WARNING: Capping at 30m" >&2; total_seconds=1800; }
+
+  echo "$total_seconds"
+}
+
+# Environment variable override for default intensity
+AI_INTENSITY="${TRIPLE_AI_DEFAULT_INTENSITY:-medium}"
+[[ -n "$TRIPLE_AI_DEFAULT_INTENSITY" && ! "$TRIPLE_AI_DEFAULT_INTENSITY" =~ ^(light|medium|heavy)$ ]] && AI_INTENSITY="medium"
+
+# Robust argument parsing
+declare -a REMAINING_ARGS=()
+INTENSITY_FLAG_COUNT=0
+CUSTOM_TIMEOUT=""
+TIMEOUT_FLAG_COUNT=0
+SKIP_NEXT=false
+
+read -r -a args <<< "$ARGUMENTS"
+
+for i in "${!args[@]}"; do
+  [[ "$SKIP_NEXT" == true ]] && { SKIP_NEXT=false; continue; }
+  arg="${args[$i]}"
+  case "$arg" in
+    --light)  AI_INTENSITY="light"; ((INTENSITY_FLAG_COUNT++)) ;;
+    --medium) AI_INTENSITY="medium"; ((INTENSITY_FLAG_COUNT++)) ;;
+    --heavy)  AI_INTENSITY="heavy"; ((INTENSITY_FLAG_COUNT++)) ;;
+    --timeout)
+      next_idx=$((i + 1))
+      [[ -n "${args[$next_idx]}" ]] && { CUSTOM_TIMEOUT="${args[$next_idx]}"; ((TIMEOUT_FLAG_COUNT++)); SKIP_NEXT=true; } || { echo "ERROR: --timeout requires a value"; exit 1; }
+      ;;
+    --timeout=*)
+      CUSTOM_TIMEOUT="${arg#--timeout=}"
+      [[ -z "$CUSTOM_TIMEOUT" ]] && { echo "ERROR: --timeout= requires a value"; exit 1; }
+      ((TIMEOUT_FLAG_COUNT++))
+      ;;
+    *) REMAINING_ARGS+=("$arg") ;;
+  esac
+done
+
+[[ $TIMEOUT_FLAG_COUNT -gt 1 ]] && { echo "ERROR: Multiple --timeout flags"; exit 1; }
+[[ $INTENSITY_FLAG_COUNT -gt 1 ]] && { echo "ERROR: Multiple intensity flags"; exit 1; }
+
+# Apply timeout
+if [[ -n "$CUSTOM_TIMEOUT" ]]; then
+  AI_TIMEOUT=$(parse_timeout "$CUSTOM_TIMEOUT") || exit 1
+else
+  case "$AI_INTENSITY" in
+    light)  AI_TIMEOUT=120 ;;
+    medium) AI_TIMEOUT=300 ;;
+    heavy)  AI_TIMEOUT=600 ;;
+  esac
+fi
+
+echo "Intensity: $AI_INTENSITY | Timeout: ${AI_TIMEOUT}s"
+```
+
 ## Plan Detection Priority
 
 1. **Active session plan** (from conversation context) - auto-detected, no confirmation
 2. **User-provided path argument** - use specified path
 3. **Plans directory search** - requires user confirmation if multiple found
+
+### AI Capabilities
+
+| Reviewer | Model | Strengths | Web Capabilities |
+|----------|-------|-----------|------------------|
+| Claude | claude-opus-4-5 | Session context, TaskList access, codebase familiarity | WebSearch, WebFetch (native) |
+| Codex | gpt-5.2-codex | Deep reasoning, pattern detection | `--search on` flag |
+| Gemini | gemini-3-pro-preview | Broad context (1M tokens), alternative perspectives | google_web_search, web_fetch tools |
 
 ### Security Settings (Read-Only Mode)
 
@@ -145,14 +253,58 @@ is_complete = (total_incomplete == 0)
 completion_percentage = COMPLETE_TODOS / (COMPLETE_TODOS + INCOMPLETE_TODOS) * 100
 ```
 
-### Step 5: AI Verification (Unless --skip-ai)
+### Step 5: AI Verification (Intensity-Conditional)
 
-If `--skip-ai` is NOT set, invoke triple AI verification. Claude always performs verification; external CLIs (Codex/Gemini) are added when available.
+If `--skip-ai` is NOT set, invoke AI verification based on intensity level. Claude always performs verification; external CLIs are added based on `AI_INTENSITY`.
+
+#### Step 5.1: Verify CLIs Based on Intensity
+
+```bash
+# Check availability based on intensity level
+GEMINI_AVAILABLE="no"
+CODEX_AVAILABLE="no"
+
+# Skip all checks if --light or --skip-ai
+if [[ "$AI_INTENSITY" != "light" ]]; then
+  which gemini >/dev/null 2>&1 && GEMINI_AVAILABLE="yes"
+fi
+
+# Only check Codex if --heavy
+if [[ "$AI_INTENSITY" == "heavy" ]]; then
+  which codex >/dev/null 2>&1 && CODEX_AVAILABLE="yes"
+fi
+```
+
+**If Gemini missing AND intensity requires it (medium/heavy)**: Agent uses `AskUserQuestion` to offer:
+- "Continue with Claude-only" → sets `AI_INTENSITY = "light"`
+- "Abort" → displays installation instructions and exits
+
+**If Codex missing AND intensity is heavy**: Agent uses `AskUserQuestion` to offer:
+- "Continue with Claude + Gemini" → sets `AI_INTENSITY = "medium"`
+- "Abort" → displays installation instructions and exits
+
+#### Step 5.2: Execute Verification
 
 **Execution: Use Claude's Native Background Tasks**
 
-Run Codex and Gemini in parallel using Claude's `run_in_background=true`, while Claude performs its own verification:
-1. Launch both external reviewers as separate Bash tool calls with `run_in_background=true`
+Run external AIs in parallel using Claude's `run_in_background=true` based on intensity level:
+**Conditional invocation pattern:**
+```bash
+# Claude always runs (primary analyst)
+# Claude performs verification using Read tool and session context
+
+# Launch Gemini (unless --light)
+if [[ "$AI_INTENSITY" != "light" ]]; then
+  # Gemini invocation as background task
+fi
+
+# Launch Codex (only if --heavy)
+if [[ "$AI_INTENSITY" == "heavy" ]]; then
+  # Codex invocation as background task
+fi
+```
+
+1. Launch external reviewers as separate Bash tool calls with `run_in_background=true` (based on intensity)
 2. DO NOT use shell output redirection - let stdout flow to Claude's task output
 3. Claude performs primary verification concurrently
 4. Use TaskOutput to retrieve external results after completion
@@ -276,10 +428,20 @@ After all three reviewers complete:
 1. **Parse JSON** from Claude's analysis, Codex TaskOutput, and Gemini TaskOutput
 2. **Merge incomplete_items** lists, deduplicating by line number
 3. **Merge hidden_items** - items AIs found that regex missed
-4. **Tag each finding with consensus level**:
-   - `[Consensus]` - All 3 AIs identified this item as incomplete (HIGH confidence)
-   - `[Claude+Codex]`, `[Claude+Gemini]`, `[Codex+Gemini]` - 2 of 3 agree (MEDIUM confidence)
-   - `[Claude-only]`, `[Codex-only]`, `[Gemini-only]` - Single AI finding (LOWER confidence)
+4. **Tag each finding with consensus level** (intensity-dependent):
+
+   **--heavy (3 AIs)**:
+   - `[Consensus]` - All 3 AIs identified this item (HIGH confidence)
+   - `[Claude+Codex]`, `[Claude+Gemini]`, `[Codex+Gemini]` - 2 of 3 agree (MEDIUM)
+   - `[Claude-only]`, `[Codex-only]`, `[Gemini-only]` - Single AI (LOWER)
+
+   **--medium (2 AIs)**:
+   - `[Consensus]` - Claude and Gemini both agree (HIGH confidence)
+   - `[Claude-only]` - Only Claude identified this
+   - `[Gemini-only]` - Only Gemini identified this
+
+   **--light (1 AI)**:
+   - `[Claude]` - All findings from Claude only (no consensus possible)
 5. **Reconcile verdicts (conservative)**:
    - If ANY AI says `incomplete` → overall status is INCOMPLETE
    - If ALL 3 say `complete` → overall status is COMPLETE
@@ -316,11 +478,32 @@ When external AIs fail or are unavailable:
 
 ### Step 6: Display Status
 
+#### Dynamic Header Based on Intensity
+
+```bash
+# Generate header based on which AIs participated
+case "$AI_INTENSITY" in
+  light)
+    VERIFY_LABEL="CLAUDE VERIFIED"
+    PARTICIPANTS="Claude"
+    ;;
+  medium)
+    VERIFY_LABEL="DUAL AI VERIFIED"
+    PARTICIPANTS="Claude, Gemini"
+    ;;
+  heavy)
+    VERIFY_LABEL="TRIPLE AI VERIFIED"
+    PARTICIPANTS="Claude, Codex, Gemini"
+    ;;
+esac
+```
+
 #### If 100% Complete (AI Verified):
 
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ ✅ PLAN COMPLETE (100%) - TRIPLE AI VERIFIED            ┃
+┃ ✅ PLAN COMPLETE (100%) - [VERIFY_LABEL]                ┃
+┃ PARTICIPANTS: [PARTICIPANTS]                            ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃                                                         ┃
 ┃ Plan: ~/.claude/plans/feature-implementation.md         ┃
@@ -526,14 +709,16 @@ Claude: Working on remaining items...
 After status check completes, clean up session state:
 
 ```bash
-# Clean up Codex session file (if used)
-if [ -n "$CODEX_STATUS_SESSION_ID" ]; then
-  find ~/.codex/sessions -name "*${CODEX_STATUS_SESSION_ID}*.jsonl" -delete 2>/dev/null
+# Clean up sessions that were actually created (intensity-conditional)
+
+# Only clean up Gemini if it was used (medium or heavy)
+if [[ "$AI_INTENSITY" != "light" && -n "$GEMINI_STATUS_SESSION_ID" ]]; then
+  find ~/.gemini/sessions ~/.config/gemini/sessions -name "*${GEMINI_STATUS_SESSION_ID}*" -delete 2>/dev/null
 fi
 
-# Clean up Gemini session file (if used)
-if [ -n "$GEMINI_STATUS_SESSION_ID" ]; then
-  find ~/.gemini/sessions ~/.config/gemini/sessions -name "*${GEMINI_STATUS_SESSION_ID}*" -delete 2>/dev/null
+# Only clean up Codex if it was used (heavy only)
+if [[ "$AI_INTENSITY" == "heavy" && -n "$CODEX_STATUS_SESSION_ID" ]]; then
+  find ~/.codex/sessions -name "*${CODEX_STATUS_SESSION_ID}*.jsonl" -delete 2>/dev/null
 fi
 
 # Clear session state

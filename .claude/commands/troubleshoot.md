@@ -1,10 +1,10 @@
 ---
-description: Diagnose issues with triple-AI analysis (Claude + Codex + Gemini) in plan mode
+description: Diagnose issues with Multi-AI analysis (Claude + Gemini by default, +Codex with --heavy)
 argument-hint: <issue description>
 ---
-# Troubleshoot with Triple-AI Diagnosis
+# Troubleshoot with Multi-AI Diagnosis
 
-Diagnose and resolve issues using **all three AI systems** (Claude + Codex + Gemini) in parallel for comprehensive diagnostic accuracy.
+Diagnose and resolve issues using Claude (primary) plus Gemini CLI. Use `--heavy` to add Codex for triple-AI diagnostic accuracy.
 
 ## Usage
 
@@ -19,7 +19,15 @@ Diagnose and resolve issues using **all three AI systems** (Claude + Codex + Gem
 - `file paths` (optional): Images, logs, or configs to include in analysis
 
 **Flags**:
+- `--light`: Claude Code only (fastest, 2 min timeout)
+- `--medium`: Claude Code + Gemini (default, 5 min timeout)
+- `--heavy`: Claude Code + Gemini + Codex (most thorough, 10 min timeout)
+- `--timeout <duration>`: Override default timeout (e.g., `5m`, `90s`, `2min30sec`, `30s10m`). Must be a single token without spaces.
 - `--allow-secrets`: Include sensitive files (`.env`, credentials) - use with caution
+
+> **Breaking Change (v2.0)**: Default intensity changed from triple-AI to dual-AI.
+> Use `--heavy` for full Claude + Gemini + Codex analysis, or set
+> `TRIPLE_AI_DEFAULT_INTENSITY=heavy` environment variable.
 
 ## Key Differentiators
 
@@ -55,15 +63,33 @@ Before using this command, ensure:
 
 ---
 
-## Triple-AI Architecture
+## Multi-AI Architecture
 
 ### Role Distribution
 
-| AI | Role | Strengths |
-|----|------|-----------|
-| **Claude** | Orchestrator + Primary Analyst | Deep codebase context, session state, tool access |
-| **Codex** | Code-Level Diagnostician | Code reasoning, fix generation, pattern detection |
-| **Gemini** | Context-Aware Investigator | 1M token context, broad patterns, alternative perspectives |
+| AI | Role | Strengths | Web Capabilities |
+|----|------|-----------|------------------|
+| **Claude** | Orchestrator + Primary Analyst | Deep codebase context, session state, tool access | WebSearch, WebFetch (native) |
+| **Codex** | Code-Level Diagnostician | Code reasoning, fix generation, pattern detection | `--search on` flag |
+| **Gemini** | Context-Aware Investigator | 1M token context, broad patterns, alternative perspectives | google_web_search, web_fetch tools |
+
+### Web Search Security
+
+**IMPORTANT**: Web search is DISABLED when `--allow-secrets` is set to prevent data leakage.
+
+```bash
+# Determine if web search is safe
+ENABLE_WEB_SEARCH=true
+if [[ "$ALLOW_SECRETS" == "true" ]]; then
+  ENABLE_WEB_SEARCH=false
+  echo "NOTE: Web search disabled for all AIs (--allow-secrets is set)"
+fi
+```
+
+**When web search is enabled**, AIs should use it to validate:
+- Error messages and stack traces for known issues
+- Infrastructure configuration best practices
+- Library compatibility and version requirements
 
 ### Parallel Execution Flow
 
@@ -102,6 +128,8 @@ TROUBLESHOOT_ARTIFACTS=()        # All files from all rounds
 TROUBLESHOOT_ROUND=1             # Current round number
 TROUBLESHOOT_HISTORY=()          # Previous diagnoses for context
 SESSION_TTL=3600                 # Session expiry: 1 hour
+AI_INTENSITY="medium"            # Intensity level: light|medium|heavy (default: medium)
+AI_TIMEOUT=300                   # Timeout in seconds (default: 5 min for medium)
 ```
 
 **Generate unique session ID at start**:
@@ -159,9 +187,42 @@ Both external reviewers run with minimal permissions:
 
 ### Step 0: Input Parsing with Security Validation
 
-Parse `$ARGUMENTS` to extract issue description and file attachments with security hardening:
+Parse `$ARGUMENTS` to extract issue description, file attachments, and intensity flags with security hardening:
 
 ```bash
+# Parse human-friendly timeout to seconds (handles any order: 30s10m, 1h5s, etc.)
+parse_timeout() {
+  local input="$1"
+  local total_seconds=0
+  input=$(echo "$input" | tr -d ' "'"'" | tr '[:upper:]' '[:lower:]')
+  local remaining="$input"
+
+  # Loop to extract time units in ANY order (30s10m works)
+  while [[ -n "$remaining" ]]; do
+    if [[ "$remaining" =~ ^([0-9]+)(h|hr|hours?)(.*)$ ]]; then
+      total_seconds=$((total_seconds + ${BASH_REMATCH[1]} * 3600))
+      remaining="${BASH_REMATCH[3]}"
+    elif [[ "$remaining" =~ ^([0-9]+)(m|min|minutes?)(.*)$ ]]; then
+      total_seconds=$((total_seconds + ${BASH_REMATCH[1]} * 60))
+      remaining="${BASH_REMATCH[3]}"
+    elif [[ "$remaining" =~ ^([0-9]+)(s|sec|seconds?)(.*)$ ]]; then
+      total_seconds=$((total_seconds + ${BASH_REMATCH[1]}))
+      remaining="${BASH_REMATCH[3]}"
+    elif [[ "$remaining" =~ ^[0-9]+$ ]]; then
+      total_seconds=$((total_seconds + remaining))
+      remaining=""
+    else
+      echo "ERROR: Invalid timeout format: '$1' (unparsed: '$remaining')" >&2
+      return 1
+    fi
+  done
+
+  [[ $total_seconds -eq 0 ]] && { echo "ERROR: Timeout must be greater than 0" >&2; return 1; }
+  [[ $total_seconds -gt 1800 ]] && { echo "WARNING: Capping at 30m" >&2; total_seconds=1800; }
+
+  echo "$total_seconds"
+}
+
 # Security: Validate and sanitize all file paths
 validate_path() {
   local path="$1"
@@ -203,11 +264,43 @@ declare -a SENSITIVE_FILES=()
 DESCRIPTION=""
 ALLOW_SECRETS=false
 
+# Intensity flag parsing
+AI_INTENSITY="${TRIPLE_AI_DEFAULT_INTENSITY:-medium}"
+[[ -n "$TRIPLE_AI_DEFAULT_INTENSITY" && ! "$TRIPLE_AI_DEFAULT_INTENSITY" =~ ^(light|medium|heavy)$ ]] && AI_INTENSITY="medium"
+INTENSITY_FLAG_COUNT=0
+CUSTOM_TIMEOUT=""
+TIMEOUT_FLAG_COUNT=0
+SKIP_NEXT=false
+
 # Split $ARGUMENTS into array for iteration
 # (In Claude Code commands, $ARGUMENTS contains the user's input)
 read -r -a args <<< "$ARGUMENTS"
 
-for arg in "${args[@]}"; do
+for i in "${!args[@]}"; do
+  if [[ "$SKIP_NEXT" == true ]]; then
+    SKIP_NEXT=false
+    continue
+  fi
+
+  arg="${args[$i]}"
+
+  # Check for intensity flags first
+  case "$arg" in
+    --light)  AI_INTENSITY="light"; ((INTENSITY_FLAG_COUNT++)); continue ;;
+    --medium) AI_INTENSITY="medium"; ((INTENSITY_FLAG_COUNT++)); continue ;;
+    --heavy)  AI_INTENSITY="heavy"; ((INTENSITY_FLAG_COUNT++)); continue ;;
+    --timeout)
+      next_idx=$((i + 1))
+      [[ -n "${args[$next_idx]}" ]] && { CUSTOM_TIMEOUT="${args[$next_idx]}"; ((TIMEOUT_FLAG_COUNT++)); SKIP_NEXT=true; continue; } || { echo "ERROR: --timeout requires a value"; exit 1; }
+      ;;
+    --timeout=*)
+      CUSTOM_TIMEOUT="${arg#--timeout=}"
+      [[ -z "$CUSTOM_TIMEOUT" ]] && { echo "ERROR: --timeout= requires a value"; exit 1; }
+      ((TIMEOUT_FLAG_COUNT++))
+      continue
+      ;;
+  esac
+
   # Check for --allow-secrets flag
   if [[ "$arg" == "--allow-secrets" ]]; then
     ALLOW_SECRETS=true
@@ -241,6 +334,23 @@ for arg in "${args[@]}"; do
     DESCRIPTION="${DESCRIPTION:+$DESCRIPTION }$arg"
   fi
 done
+
+# Validate flags
+[[ $TIMEOUT_FLAG_COUNT -gt 1 ]] && { echo "ERROR: Multiple --timeout flags"; exit 1; }
+[[ $INTENSITY_FLAG_COUNT -gt 1 ]] && { echo "ERROR: Multiple intensity flags"; exit 1; }
+
+# Apply timeout
+if [[ -n "$CUSTOM_TIMEOUT" ]]; then
+  AI_TIMEOUT=$(parse_timeout "$CUSTOM_TIMEOUT") || exit 1
+else
+  case "$AI_INTENSITY" in
+    light)  AI_TIMEOUT=120 ;;
+    medium) AI_TIMEOUT=300 ;;
+    heavy)  AI_TIMEOUT=600 ;;
+  esac
+fi
+
+echo "Intensity: $AI_INTENSITY | Timeout: ${AI_TIMEOUT}s"
 
 # Build comma-separated image list (properly quoted)
 IMAGE_FILES_CSV=""
@@ -356,27 +466,59 @@ summarize_if_large() {
 - Repository tree (depth 3, excluding node_modules/.git/.venv)
 - Attached artifacts (images, logs, configs)
 
-### Step 4: Verify External AI CLIs
+### Step 4: Verify External AI CLIs (Intensity-Conditional)
 
-Before invoking external reviewers, verify both CLIs are available:
+Before invoking external reviewers, verify CLIs based on intensity level. This is an **Agent-level workflow**:
 
 ```bash
-# Check Codex CLI
-which codex || echo "ERROR: Codex CLI not found. Install with: npm install -g @openai/codex-cli"
+# Check availability based on intensity level
+GEMINI_AVAILABLE="no"
+CODEX_AVAILABLE="no"
 
-# Check Gemini CLI
-which gemini || echo "ERROR: Gemini CLI not found. Install with: npm install -g @google/gemini-cli"
+# Skip all checks if --light
+if [[ "$AI_INTENSITY" != "light" ]]; then
+  which gemini >/dev/null 2>&1 && GEMINI_AVAILABLE="yes"
+fi
+
+# Only check Codex if --heavy
+if [[ "$AI_INTENSITY" == "heavy" ]]; then
+  which codex >/dev/null 2>&1 && CODEX_AVAILABLE="yes"
+fi
 ```
 
-**Graceful degradation**: If either is not installed, continue with available AIs.
+**If Gemini missing AND intensity requires it (medium/heavy)**: Agent uses `AskUserQuestion` to offer:
+- "Continue with Claude-only" → sets `AI_INTENSITY = "light"`
+- "Abort" → displays installation instructions and exits
 
-### Step 5: Invoke Triple-AI Analysis in Parallel
+**If Codex missing AND intensity is heavy**: Agent uses `AskUserQuestion` to offer:
+- "Continue with Claude + Gemini" → sets `AI_INTENSITY = "medium"`
+- "Abort" → displays installation instructions and exits
+
+Agent proceeds with the (possibly adjusted) `AI_INTENSITY` value.
+
+### Step 5: Invoke AI Analysis (Intensity-Conditional)
 
 **Execution: Use Claude's Native Background Tasks**
 
-Run Codex and Gemini in parallel using Claude's `run_in_background=true`:
+Run external AIs based on intensity level using Claude's `run_in_background=true`:
 
-1. **Launch both external reviewers** as separate Bash tool calls with `run_in_background=true`
+**Conditional invocation pattern:**
+```bash
+# Claude always runs (primary analyst)
+# Claude performs analysis using Read tool and session context
+
+# Launch Gemini (unless --light)
+if [[ "$AI_INTENSITY" != "light" ]]; then
+  # Gemini invocation as background task
+fi
+
+# Launch Codex (only if --heavy)
+if [[ "$AI_INTENSITY" == "heavy" ]]; then
+  # Codex invocation as background task
+fi
+```
+
+1. **Launch external reviewers** as separate Bash tool calls with `run_in_background=true` (based on intensity)
 2. **DO NOT** use shell output redirection (`>` or `| tee`) - let stdout flow to Claude's task output
 3. **Use TaskOutput** to retrieve results after completion
 
@@ -416,7 +558,7 @@ CODEX_CMD+=(--)
 SAFE_DESCRIPTION=$(printf '%q' "$DESCRIPTION")
 
 # Execute with timeout and error handling
-timeout 120 "${CODEX_CMD[@]}" "Diagnose this issue: $SAFE_DESCRIPTION
+timeout $AI_TIMEOUT "${CODEX_CMD[@]}" "Diagnose this issue: $SAFE_DESCRIPTION
 
 ${IMAGE_FILES_CSV:+[Attached images show the error/issue - analyze them carefully]}
 
@@ -487,7 +629,7 @@ declare -a GEMINI_CMD=(
 export SANDBOX_FLAGS="-v $HOME/.config/gcloud/application_default_credentials.json:/tmp/adc.json:ro -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/adc.json"
 
 # Execute with timeout
-timeout 120 "${GEMINI_CMD[@]}" --prompt "Diagnose this issue: $SAFE_DESCRIPTION
+timeout $AI_TIMEOUT "${GEMINI_CMD[@]}" --prompt "Diagnose this issue: $SAFE_DESCRIPTION
 
 ${GEMINI_FILE_REFS:+Attached files to analyze: $GEMINI_FILE_REFS}
 
@@ -630,8 +772,9 @@ If both fail:
   -> Display warning: "External AI unavailable, using Claude analysis only"
 ```
 
-#### Merge Findings
+#### Merge Findings (Intensity-Dependent)
 
+**--heavy (3 AIs)**:
 ```
 For each finding:
   - If all 3 AIs agree -> [Consensus] tag (HIGH confidence)
@@ -639,20 +782,54 @@ For each finding:
   - If only 1 AI found -> [Codex-only] etc. (LOWER confidence, still valid)
 ```
 
+**--medium (2 AIs)**:
+```
+For each finding:
+  - If Claude+Gemini agree -> [Consensus] tag (HIGH confidence)
+  - If only Claude found -> [Claude-only]
+  - If only Gemini found -> [Gemini-only]
+```
+
+**--light (1 AI)**:
+```
+All findings tagged [Claude] (no consensus possible)
+```
+
 #### Prioritize Findings By
 
-1. **Confidence** (consensus > 2-of-3 > single)
+1. **Confidence** (consensus > partial > single)
 2. **Impact** (infrastructure > code > config)
 3. **Fix complexity** (quick wins first)
 
 ### Step 8: Display Diagnosis
 
+#### Dynamic Header Based on Intensity
+
+```bash
+# Generate header based on which AIs participated
+case "$AI_INTENSITY" in
+  light)
+    HEADER="CLAUDE DIAGNOSIS"
+    PARTICIPANTS="Claude"
+    ;;
+  medium)
+    HEADER="DUAL-AI DIAGNOSIS: CLAUDE + GEMINI"
+    PARTICIPANTS="Claude, Gemini"
+    ;;
+  heavy)
+    HEADER="TRIPLE-AI DIAGNOSIS: CLAUDE + CODEX + GEMINI"
+    PARTICIPANTS="Claude, Codex, Gemini"
+    ;;
+esac
+```
+
 Display reconciled findings in a structured format:
 
 ```
 +-----------------------------------------------------------+
-| TRIPLE-AI DIAGNOSIS: CLAUDE + CODEX + GEMINI              |
+| [HEADER]                                                  |
 +-----------------------------------------------------------+
+| PARTICIPANTS: [PARTICIPANTS]                              |
 | Issue: [issue description]                                |
 | Confidence: [HIGH/MEDIUM/LOW]                             |
 | Root Cause: [primary diagnosis]                           |
@@ -778,13 +955,13 @@ add_artifact() {
   if [[ -n "$CODEX_DIAG_SESSION_ID" ]]; then
     if [[ "$is_image" == true ]]; then
       # Use --image flag for image files
-      timeout 120 codex exec resume "$CODEX_DIAG_SESSION_ID" \
+      timeout $AI_TIMEOUT codex exec resume "$CODEX_DIAG_SESSION_ID" \
         --image "$new_file" \
         -- "New image artifact provided. Previous diagnosis: $prev_diagnosis.
          Analyze this new visual evidence and update your diagnosis."
     else
       # For non-image files, instruct Codex to read the file
-      timeout 120 codex exec resume "$CODEX_DIAG_SESSION_ID" \
+      timeout $AI_TIMEOUT codex exec resume "$CODEX_DIAG_SESSION_ID" \
         -- "New artifact provided at path: $new_file
          Previous diagnosis: $prev_diagnosis.
          Read the file and analyze this new evidence to update your diagnosis."
@@ -793,7 +970,7 @@ add_artifact() {
 
   # Resume Gemini session with new artifact (Gemini handles all file types via @)
   if [[ -n "$GEMINI_DIAG_SESSION_ID" ]]; then
-    timeout 120 gemini \
+    timeout $AI_TIMEOUT gemini \
       --resume "$GEMINI_DIAG_SESSION_ID" \
       --model gemini-3-pro-preview \
       --sandbox \
@@ -816,14 +993,18 @@ add_artifact() {
 **MANDATORY**: This step MUST run before exiting the troubleshoot workflow.
 
 ```bash
-# Cleanup sessions on completion
+# Cleanup sessions on completion (intensity-conditional)
 cleanup_sessions() {
-  if [[ -n "$CODEX_DIAG_SESSION_ID" ]]; then
-    find ~/.codex/sessions -name "*${CODEX_DIAG_SESSION_ID}*.jsonl" -delete 2>/dev/null
-  fi
-  if [[ -n "$GEMINI_DIAG_SESSION_ID" ]]; then
+  # Only clean up Gemini if it was used (medium or heavy)
+  if [[ "$AI_INTENSITY" != "light" && -n "$GEMINI_DIAG_SESSION_ID" ]]; then
     find ~/.gemini/sessions ~/.config/gemini/sessions -name "*${GEMINI_DIAG_SESSION_ID}*" -delete 2>/dev/null
   fi
+
+  # Only clean up Codex if it was used (heavy only)
+  if [[ "$AI_INTENSITY" == "heavy" && -n "$CODEX_DIAG_SESSION_ID" ]]; then
+    find ~/.codex/sessions -name "*${CODEX_DIAG_SESSION_ID}*.jsonl" -delete 2>/dev/null
+  fi
+
   rm -f /tmp/troubleshoot_${TROUBLESHOOT_ID}_*.json 2>/dev/null
 }
 ```
