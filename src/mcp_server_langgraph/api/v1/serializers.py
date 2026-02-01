@@ -66,7 +66,40 @@ def plan_to_dict(plan: ExecutionPlan) -> dict[str, Any]:
         "rejected_by": plan.rejected_by,
         "rejected_at": plan.rejected_at.isoformat() if plan.rejected_at else None,
         "rejection_reason": plan.rejection_reason,
+        # v35.0: New fields for audit trail and capability tracking
+        "skills_needed": plan.skills_needed,
+        "selected_tool_ids": plan.selected_tool_ids,
+        "llm_provider": plan.llm_provider,
+        "kb_focus": plan.kb_focus,
+        # v35.0 Phase 2e: Tool preference fields
+        "tool_preference": plan.tool_preference,
+        "tool_selection_mode": plan.tool_selection_mode,
     }
+
+
+def plan_to_admin_dict(plan: ExecutionPlan) -> dict[str, Any]:
+    """Convert ExecutionPlan to admin response dict with additional fields (v35.0 Phase 2f).
+
+    Extends plan_to_dict with admin-only fields:
+    - user_id: User who created the plan (GDPR)
+    - created_by: User/system that created the plan
+    - embedding_status: Status of embedding generation
+    - embedding_error: Error message if embedding failed
+
+    Args:
+        plan: The ExecutionPlan instance to convert
+
+    Returns:
+        Dictionary with all base fields + 4 admin fields for API response
+    """
+    base_dict = plan_to_dict(plan)
+    admin_fields = {
+        "user_id": plan.user_id,
+        "created_by": plan.created_by,
+        "embedding_status": plan.embedding_status,
+        "embedding_error": plan.embedding_error,
+    }
+    return {**base_dict, **admin_fields}
 
 
 def template_to_dict(template: PlanTemplate) -> dict[str, Any]:

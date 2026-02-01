@@ -24,7 +24,7 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from mcp_server_langgraph.database.models import Base
@@ -78,7 +78,8 @@ class ExecutionPlanModel(Base):  # type: ignore[misc,valid-type]
 
     # Content
     message: Mapped[str] = mapped_column(Text, nullable=False)
-    tools_needed: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True, default=[])
+    # v35.0: Uses JSONB (not ARRAY) to match SQL schema and preserve NULL semantics
+    tools_needed: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
 
     # Approval configuration
     force_approval: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -111,6 +112,17 @@ class ExecutionPlanModel(Base):  # type: ignore[misc,valid-type]
     # User tracking (GDPR compliance)
     user_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     created_by: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+
+    # v35.0: Audit trail and capability tracking fields
+    # NOTE: Uses JSONB to match Alembic migration c0d1e2f3g4h5 (not ARRAY)
+    skills_needed: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    selected_tool_ids: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    llm_provider: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    kb_focus: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
+    # v35.0 Phase 2e: Tool preference fields
+    tool_preference: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    tool_selection_mode: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     # Embedding status (Phase 7.25: Self-healing embedding service)
     embedding_status: Mapped[str | None] = mapped_column(String(20), nullable=True, default="pending")

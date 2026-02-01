@@ -95,8 +95,19 @@ class ExecutionPlan(BaseModel):
     suggested_orchestrator: Literal["standard", "swarm", "studio", "ux", "alert"] = "standard"
     critique_rounds: int = Field(default=0, ge=0, le=3)
     thinking_budget: Literal["none", "light", "medium", "deep"] = "none"
-    tools_needed: list[str] = Field(default_factory=list)
+    # v35.0: Preserve NULL semantics (None = "router didn't suggest", [] = "explicitly no tools")
+    tools_needed: list[str] | None = Field(default=None)
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+
+    # v35.0: New fields for audit trail and capability tracking
+    skills_needed: list[str] | None = Field(default=None)
+    selected_tool_ids: list[str] | None = Field(default=None)
+    llm_provider: str | None = Field(default=None)
+    kb_focus: Literal["all", "kb_only", "web_only", "none"] | None = Field(default=None)
+
+    # v35.0 Phase 2e: Tool preference fields for fine-grained control
+    tool_preference: str | None = Field(default=None)
+    tool_selection_mode: Literal["auto", "manual", "hybrid"] | None = Field(default=None)
 
     # Timestamps
     created_at: datetime = Field(default_factory=_now)
@@ -234,7 +245,12 @@ class ExecutionPlan(BaseModel):
             suggested_orchestrator=router_output.suggested_orchestrator,
             critique_rounds=router_output.critique_rounds,
             thinking_budget=router_output.thinking_budget,
-            tools_needed=router_output.tools_needed,
+            tools_needed=router_output.tools_needed,  # v35.0: Preserve None semantics
             confidence=router_output.confidence,
             force_approval=force_approval,
+            # v35.0: Copy skills_needed from router output
+            skills_needed=router_output.skills_needed,
+            # v35.0 Phase 2e: Copy tool preference fields from router output
+            tool_preference=router_output.tool_preference,
+            tool_selection_mode=router_output.tool_selection_mode,
         )

@@ -24,14 +24,21 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.api.deps import get_audit_service
-from mcp_server_langgraph.api.v1.serializers import plan_to_dict, template_to_dict
+from mcp_server_langgraph.api.v1.serializers import (
+    plan_to_admin_dict,
+    plan_to_dict,
+    template_to_dict,
+)
 from mcp_server_langgraph.audit.models import AuditEventType
-from mcp_server_langgraph.auth.dependencies import get_current_user
+from mcp_server_langgraph.auth.dependencies import get_current_user, require_admin
+from mcp_server_langgraph.core.dependencies import (
+    get_execution_plan_repository,
+    set_execution_plan_repository,
+)
 from mcp_server_langgraph.core.models.plan_template import PlanTemplate
 from mcp_server_langgraph.execution.bypass_audit import log_bypass_audit_event
 from mcp_server_langgraph.repositories.execution_plan import (
     ExecutionPlanRepository,
-    InMemoryExecutionPlanRepository,
 )
 from mcp_server_langgraph.repositories.plan_template import (
     InMemoryPlanTemplateRepository,
@@ -46,6 +53,7 @@ execution_plans_router = APIRouter(tags=["execution-plans"])
 # ============================================================================
 
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
+AdminUser = Annotated[dict[str, Any], Depends(require_admin)]
 AuditService = Annotated[Any, Depends(get_audit_service)]
 
 
@@ -96,7 +104,8 @@ class PlanResponse(BaseModel):
 
     # Content
     message: str
-    tools_needed: list[str] = Field(default_factory=list)
+    # v35.0: Preserve NULL semantics (None = "router didn't suggest", [] = "explicitly no tools")
+    tools_needed: list[str] | None = None
 
     # Approval config
     force_approval: bool = False
@@ -113,6 +122,16 @@ class PlanResponse(BaseModel):
     thinking_budget: str = "none"
     critique_rounds: int = 0
 
+    # v35.0: New fields for audit trail and capability tracking
+    skills_needed: list[str] | None = None
+    selected_tool_ids: list[str] | None = None
+    llm_provider: str | None = None
+    kb_focus: str | None = None
+
+    # v35.0 Phase 2e: Tool preference fields
+    tool_preference: str | None = None
+    tool_selection_mode: str | None = None
+
     # Timestamps
     created_at: str | None = None
     expires_at: str | None = None
@@ -128,6 +147,32 @@ class PlanListResponse(BaseModel):
     """List of execution plans with count."""
 
     plans: list[PlanResponse]
+    total: int
+
+
+class AdminPlanResponse(PlanResponse):
+    """Response model for admin view with additional fields (v35.0 Phase 2f).
+
+    Extends PlanResponse with admin-only fields for debugging and audit:
+    - user_id: User who created the plan
+    - created_by: User/system that created the plan
+    - embedding_status: Status of embedding generation
+    - embedding_error: Error message if embedding failed
+    """
+
+    # GDPR compliance fields (admin-only visibility)
+    user_id: str | None = None
+    created_by: str | None = None
+
+    # Embedding status (admin debugging)
+    embedding_status: str = "pending"
+    embedding_error: str | None = None
+
+
+class AdminPlanListResponse(BaseModel):
+    """List of execution plans with admin fields (v35.0 Phase 2f)."""
+
+    plans: list[AdminPlanResponse]
     total: int
 
 
@@ -164,31 +209,35 @@ class PlanTemplateResponse(BaseModel):
 
 
 # ============================================================================
-# Repository Dependency
+# Repository Dependency (delegates to core.dependencies)
 # ============================================================================
-
-_plan_repo: ExecutionPlanRepository | None = None
 
 
 def get_plan_repo() -> ExecutionPlanRepository:
-    """Get the plan repository instance."""
-    global _plan_repo
-    if _plan_repo is None:
-        # Default to in-memory for now; production uses Postgres
-        _plan_repo = InMemoryExecutionPlanRepository()
-    return _plan_repo
+    """Get the plan repository instance.
+
+    Delegates to core.dependencies.get_execution_plan_repository() for
+    centralized DI management. Returns InMemory or Postgres based on settings.
+    """
+    return get_execution_plan_repository()
 
 
 def set_plan_repo(repo: ExecutionPlanRepository) -> None:
-    """Set the plan repository instance (for testing/DI)."""
-    global _plan_repo
-    _plan_repo = repo
+    """Set the plan repository instance (for testing/DI).
+
+    Delegates to core.dependencies.set_execution_plan_repository().
+    """
+    set_execution_plan_repository(repo)
 
 
 def reset_plan_repo() -> None:
-    """Reset the plan repository singleton (for testing)."""
-    global _plan_repo
-    _plan_repo = None
+    """Reset the plan repository singleton (for testing).
+
+    Uses core.dependencies.reset_singleton_dependencies() for full reset.
+    """
+    from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+    reset_singleton_dependencies()
 
 
 # ============================================================================
@@ -222,6 +271,39 @@ def reset_template_repo() -> None:
 # ============================================================================
 # Endpoints
 # ============================================================================
+
+
+@execution_plans_router.get("/all", response_model=AdminPlanListResponse)
+async def list_all_plans(
+    admin_user: AdminUser,
+    limit: int = 100,
+    offset: int = 0,
+) -> AdminPlanListResponse:
+    """
+    List all execution plans with pagination (Admin endpoint).
+
+    v35.0: Returns all plans regardless of status, sorted by created_at DESC.
+    Applies hard caps: limit ≤ 1000, offset ≤ 100000.
+    Clamps negative values to 0 for consistent behavior across backends.
+    Requires admin role for access (Phase 2f).
+
+    Args:
+        admin_user: Admin user (from require_admin dependency)
+        limit: Maximum number of plans to return (default 100, max 1000)
+        offset: Number of plans to skip (default 0, max 100000)
+
+    Returns:
+        Paginated list of all execution plans with admin fields
+    """
+    # Clamp negative values to 0 (consistent behavior, prevent SQL LIMIT -1 bypass)
+    safe_limit = max(0, limit)
+    safe_offset = max(0, offset)
+    repo = get_plan_repo()
+    plans = await repo.list_all(limit=safe_limit, offset=safe_offset)
+    return AdminPlanListResponse(
+        plans=[AdminPlanResponse(**plan_to_admin_dict(plan)) for plan in plans],
+        total=len(plans),
+    )
 
 
 @execution_plans_router.get("/", response_model=PlanListResponse)

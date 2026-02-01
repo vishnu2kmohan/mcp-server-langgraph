@@ -62,6 +62,15 @@ def execution_plan_to_model(plan: ExecutionPlan) -> ExecutionPlanModel:
         rejection_reason=plan.rejection_reason,
         user_id=plan.user_id,
         created_by=plan.created_by,
+        # v35.0: Audit trail and capability tracking
+        skills_needed=plan.skills_needed,
+        selected_tool_ids=plan.selected_tool_ids,
+        llm_provider=plan.llm_provider,
+        kb_focus=plan.kb_focus,
+        # v35.0 Phase 2e: Tool preference fields
+        tool_preference=plan.tool_preference,
+        tool_selection_mode=plan.tool_selection_mode,
+        # Embedding status
         embedding_status=plan.embedding_status,
         embedding_error=plan.embedding_error,
         embedding_failed_at=plan.embedding_failed_at,
@@ -101,7 +110,7 @@ class PostgresExecutionPlanRepository(ExecutionPlanRepository):
             estimated_cost=model.estimated_cost,
             actual_cost=model.actual_cost,
             message=model.message,
-            tools_needed=model.tools_needed or [],
+            tools_needed=model.tools_needed,  # v35.0: Preserve None semantics
             force_approval=model.force_approval,
             confidence=model.confidence,
             suggested_orchestrator=model.suggested_orchestrator,
@@ -117,6 +126,15 @@ class PostgresExecutionPlanRepository(ExecutionPlanRepository):
             rejection_reason=model.rejection_reason,
             user_id=model.user_id,
             created_by=model.created_by,
+            # v35.0: Audit trail and capability tracking
+            skills_needed=model.skills_needed,
+            selected_tool_ids=model.selected_tool_ids,
+            llm_provider=model.llm_provider,
+            kb_focus=model.kb_focus,
+            # v35.0 Phase 2e: Tool preference fields
+            tool_preference=model.tool_preference,
+            tool_selection_mode=model.tool_selection_mode,
+            # Embedding status
             embedding_status=model.embedding_status or "pending",
             embedding_error=model.embedding_error,
             embedding_failed_at=model.embedding_failed_at,
@@ -298,6 +316,32 @@ class PostgresExecutionPlanRepository(ExecutionPlanRepository):
                 .where(ExecutionPlanModel.embedding_status == "pending")
                 .order_by(ExecutionPlanModel.created_at.asc())
                 .limit(limit)
+            )
+            models = result.scalars().all()
+            return [self._model_to_pydantic(m) for m in models]
+
+    async def list_all(self, limit: int = 100, offset: int = 0) -> list[ExecutionPlan]:
+        """List all execution plans with pagination.
+
+        v35.0: Sorted by created_at DESC with hard caps on limit/offset.
+
+        Args:
+            limit: Maximum number of plans to return (capped at 1000)
+            offset: Number of plans to skip (capped at 100000)
+
+        Returns:
+            List of execution plans sorted by created_at DESC
+        """
+        # Apply hard caps (v35.0)
+        capped_limit = min(limit, 1000)
+        capped_offset = min(offset, 100000)
+
+        async with self._session_factory() as session:
+            result = await session.execute(
+                select(ExecutionPlanModel)
+                .order_by(ExecutionPlanModel.created_at.desc())
+                .offset(capped_offset)
+                .limit(capped_limit)
             )
             models = result.scalars().all()
             return [self._model_to_pydantic(m) for m in models]
