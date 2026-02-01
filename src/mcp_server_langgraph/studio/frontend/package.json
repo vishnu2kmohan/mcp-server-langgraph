@@ -28,6 +28,7 @@
     "generate-types": "openapi-typescript ../../../../api/openapi.json -o src/types/generated-api.ts",
     "generate-types:check": "openapi-typescript ../../../../api/openapi.json --dry-run",
     "validate:test-cleanup": "tsx scripts/validate-test-cleanup.ts",
+    "fix:test-cleanup": "tsx scripts/fix-test-cleanup.ts",
     "check:design-system": "tsx scripts/check-design-system-compliance.ts",
     "check:design-system:strict": "tsx scripts/check-design-system-compliance.ts --strict",
     "check:design-system:violations": "tsx scripts/check-design-system-compliance.ts --violations",
