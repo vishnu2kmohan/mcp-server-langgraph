@@ -1028,9 +1028,7 @@ class TestTupleToUsersetFromSyntax:
         viewer_rel = result["relations"].get("viewer", {})
 
         # Should have tupleToUserset structure, NOT a raw string
-        assert "tupleToUserset" in viewer_rel, (
-            f"Expected 'tupleToUserset' for 'viewer from session'. Got: {viewer_rel}"
-        )
+        assert "tupleToUserset" in viewer_rel, f"Expected 'tupleToUserset' for 'viewer from session'. Got: {viewer_rel}"
         assert viewer_rel["tupleToUserset"]["tupleset"]["relation"] == "session"
         assert viewer_rel["tupleToUserset"]["computedUserset"]["relation"] == "viewer"
 
@@ -1049,9 +1047,7 @@ class TestTupleToUsersetFromSyntax:
 
         approver_rel = result["relations"].get("approver", {})
 
-        assert "tupleToUserset" in approver_rel, (
-            f"Expected 'tupleToUserset' for 'owner from plan'. Got: {approver_rel}"
-        )
+        assert "tupleToUserset" in approver_rel, f"Expected 'tupleToUserset' for 'owner from plan'. Got: {approver_rel}"
         assert approver_rel["tupleToUserset"]["tupleset"]["relation"] == "plan"
         assert approver_rel["tupleToUserset"]["computedUserset"]["relation"] == "owner"
 
@@ -1100,9 +1096,7 @@ class TestTupleToUsersetFromSyntax:
 
         rel = result["relations"].get("restricted_viewer", {})
 
-        assert "intersection" in rel, (
-            f"Expected 'intersection' for 'member and viewer from session'. Got: {rel}"
-        )
+        assert "intersection" in rel, f"Expected 'intersection' for 'member and viewer from session'. Got: {rel}"
 
         children = rel["intersection"]["child"]
         assert len(children) == 2
@@ -1129,9 +1123,7 @@ class TestTupleToUsersetFromSyntax:
 
         rel = result["relations"].get("can_view", {})
 
-        assert "difference" in rel, (
-            f"Expected 'difference' for 'viewer from session but not blocked'. Got: {rel}"
-        )
+        assert "difference" in rel, f"Expected 'difference' for 'viewer from session but not blocked'. Got: {rel}"
 
         base = rel["difference"]["base"]
         subtract = rel["difference"]["subtract"]
@@ -1159,9 +1151,7 @@ class TestTupleToUsersetFromSyntax:
 
         rel = result["relations"].get("filtered_view", {})
 
-        assert "difference" in rel, (
-            f"Expected 'difference' for 'viewer but not blocked from session'. Got: {rel}"
-        )
+        assert "difference" in rel, f"Expected 'difference' for 'viewer but not blocked from session'. Got: {rel}"
 
         base = rel["difference"]["base"]
         subtract = rel["difference"]["subtract"]

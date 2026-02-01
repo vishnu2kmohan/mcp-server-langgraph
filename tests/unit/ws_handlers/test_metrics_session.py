@@ -61,9 +61,7 @@ class TestMetricsSessionHandlerConstruction:
             MetricsSessionHandler,
         )
 
-        handler = MetricsSessionHandler(
-            config=WebSocketConfig(endpoint_name="metrics-session")
-        )
+        handler = MetricsSessionHandler(config=WebSocketConfig(endpoint_name="metrics-session"))
         assert isinstance(handler, WebSocketBase)
 
     def test_handler_has_handle_message_method(self) -> None:
@@ -76,11 +74,9 @@ class TestMetricsSessionHandlerConstruction:
             MetricsSessionHandler,
         )
 
-        handler = MetricsSessionHandler(
-            config=WebSocketConfig(endpoint_name="metrics-session")
-        )
+        handler = MetricsSessionHandler(config=WebSocketConfig(endpoint_name="metrics-session"))
         assert hasattr(handler, "handle_message")
-        assert callable(getattr(handler, "handle_message"))
+        assert callable(handler.handle_message)
 
 
 @pytest.mark.xdist_group(name="metrics_session_ws")
@@ -92,9 +88,7 @@ class TestMetricsSessionLifecycle:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_on_connect_receives_auth_user(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_on_connect_receives_auth_user(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a MetricsSessionHandler
         WHEN on_connect is called
@@ -105,9 +99,7 @@ class TestMetricsSessionLifecycle:
         )
         from mcp_server_langgraph.websocket.types import AuthUser
 
-        handler = MetricsSessionHandler(
-            config=WebSocketConfig(endpoint_name="metrics-session")
-        )
+        handler = MetricsSessionHandler(config=WebSocketConfig(endpoint_name="metrics-session"))
         handler._websocket = mock_websocket
 
         user = AuthUser(id="test-user", username="testuser")
@@ -116,9 +108,7 @@ class TestMetricsSessionLifecycle:
         await handler.on_connect(user)
 
     @pytest.mark.asyncio
-    async def test_on_disconnect_has_no_parameters(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_on_disconnect_has_no_parameters(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a MetricsSessionHandler with subscriptions
         WHEN on_disconnect is called
@@ -129,9 +119,7 @@ class TestMetricsSessionLifecycle:
         )
         from mcp_server_langgraph.websocket.types import AuthUser
 
-        handler = MetricsSessionHandler(
-            config=WebSocketConfig(endpoint_name="metrics-session")
-        )
+        handler = MetricsSessionHandler(config=WebSocketConfig(endpoint_name="metrics-session"))
         handler._websocket = mock_websocket
         handler._user = AuthUser(id="test-user", username="testuser")
         handler._subscribed_sessions = {"session-1", "session-2"}
@@ -161,9 +149,7 @@ class TestMetricsSessionMessageHandling:
             MetricsSessionHandler,
         )
 
-        handler = MetricsSessionHandler(
-            config=WebSocketConfig(endpoint_name="metrics-session")
-        )
+        handler = MetricsSessionHandler(config=WebSocketConfig(endpoint_name="metrics-session"))
 
         message = MessageEnvelope(
             type="subscribe",
@@ -188,9 +174,7 @@ class TestMetricsSessionMessageHandling:
             MetricsSessionHandler,
         )
 
-        handler = MetricsSessionHandler(
-            config=WebSocketConfig(endpoint_name="metrics-session")
-        )
+        handler = MetricsSessionHandler(config=WebSocketConfig(endpoint_name="metrics-session"))
 
         message = MessageEnvelope(
             type="subscribe",
@@ -216,9 +200,7 @@ class TestMetricsSessionMessageHandling:
             MetricsSessionHandler,
         )
 
-        handler = MetricsSessionHandler(
-            config=WebSocketConfig(endpoint_name="metrics-session")
-        )
+        handler = MetricsSessionHandler(config=WebSocketConfig(endpoint_name="metrics-session"))
         handler._subscribed_sessions = {"session-123"}
 
         message = MessageEnvelope(
@@ -245,9 +227,7 @@ class TestMetricsSessionMessageHandling:
             MetricsSessionHandler,
         )
 
-        handler = MetricsSessionHandler(
-            config=WebSocketConfig(endpoint_name="metrics-session")
-        )
+        handler = MetricsSessionHandler(config=WebSocketConfig(endpoint_name="metrics-session"))
 
         message = MessageEnvelope(
             type="ping",
@@ -272,9 +252,7 @@ class TestMetricsSessionMessageHandling:
             MetricsSessionHandler,
         )
 
-        handler = MetricsSessionHandler(
-            config=WebSocketConfig(endpoint_name="metrics-session")
-        )
+        handler = MetricsSessionHandler(config=WebSocketConfig(endpoint_name="metrics-session"))
 
         message = MessageEnvelope(
             type="unknown_type",

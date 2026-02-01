@@ -14,7 +14,6 @@ Prerequisites:
 """
 
 import gc
-import os
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
@@ -32,9 +31,7 @@ pytestmark = [
 @pytest.fixture
 def context_graph_feature_flags():
     """Enable context graph feature flags for tests."""
-    with patch(
-        "mcp_server_langgraph.core.feature_flags.feature_flags"
-    ) as mock_flags:
+    with patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_flags:
         mock_flags.enable_context_graph = True
         mock_flags.enable_precedent_search = True
         mock_flags.context_graph_async_persistence = False  # Sync for testing
@@ -109,9 +106,7 @@ class TestContextGraphIntegration:
             DecisionEmitter,
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.decision_emitter.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.decision_emitter.feature_flags") as mock_flags:
             mock_flags.enable_context_graph = False
 
             mock_repo = AsyncMock(return_value=None)
@@ -148,9 +143,7 @@ class TestContextGraphIntegration:
             DecisionEmitter,
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.decision_emitter.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.decision_emitter.feature_flags") as mock_flags:
             mock_flags.enable_context_graph = True
             mock_flags.context_graph_sampling_rate = 0.0  # 0% sampling
             mock_flags.context_graph_async_persistence = False
@@ -425,9 +418,6 @@ class TestContextGraphRetentionScheduler:
     @pytest.mark.asyncio
     async def test_retention_scheduler_deletes_expired_traces(self, context_graph_feature_flags):
         """Test that retention scheduler deletes expired traces."""
-        from mcp_server_langgraph.schedulers.decision_retention import (
-            _retention_loop,
-        )
 
         mock_repo = AsyncMock(return_value=None)
         mock_repo.delete_expired = AsyncMock(return_value=10)

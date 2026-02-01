@@ -18,7 +18,6 @@ Why this matters:
 from __future__ import annotations
 
 import ast
-import inspect
 from pathlib import Path
 from typing import NamedTuple
 
@@ -131,8 +130,7 @@ class TestWebSocketHandlerSignatures:
 
         # We should find at least 15 handlers
         assert len(handlers) >= 15, (
-            f"Expected at least 15 WebSocketBase handlers, found {len(handlers)}. "
-            f"Did some handlers get removed or renamed?"
+            f"Expected at least 15 WebSocketBase handlers, found {len(handlers)}. Did some handlers get removed or renamed?"
         )
 
     def test_all_handlers_implement_handle_message(self) -> None:
@@ -244,9 +242,7 @@ class TestWebSocketHandlerSignatures:
         for file_path, class_name, class_node in handlers:
             sig = extract_method_signature(file_path, class_name, class_node, "on_message")
             if sig is not None:
-                legacy_methods.append(
-                    f"{class_name}.on_message at {file_path.name}:{sig.line_number}"
-                )
+                legacy_methods.append(f"{class_name}.on_message at {file_path.name}:{sig.line_number}")
 
         assert not legacy_methods, (
             f"The following handlers use legacy 'on_message' instead of 'handle_message':\n"
@@ -261,12 +257,10 @@ class TestWebSocketHandlerSignatures:
 
         # We expect at least 15 handlers based on current codebase
         assert len(handlers) >= 15, (
-            f"Only {len(handlers)} handlers found. Expected at least 15. "
-            f"Did some handlers get accidentally removed?"
+            f"Only {len(handlers)} handlers found. Expected at least 15. Did some handlers get accidentally removed?"
         )
 
         # Upper bound sanity check
         assert len(handlers) <= 50, (
-            f"{len(handlers)} handlers found. This seems excessive - "
-            f"consider consolidating if growing beyond 50."
+            f"{len(handlers)} handlers found. This seems excessive - consider consolidating if growing beyond 50."
         )

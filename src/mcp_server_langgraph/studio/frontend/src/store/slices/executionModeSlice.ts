@@ -141,6 +141,22 @@ export interface ExecutionPlan {
   rejectedAt: string | null;
   /** Reason for rejection */
   rejectionReason: string | null;
+
+  // v35.0: Audit trail and capability tracking
+  /** Skills required for execution (nullable) */
+  skillsNeeded: string[] | null;
+  /** Selected tool IDs (nullable) */
+  selectedToolIds: string[] | null;
+  /** LLM provider name (nullable) */
+  llmProvider: string | null;
+  /** Knowledge base focus (nullable) */
+  kbFocus: string | null;
+
+  // v35.0 Phase 2e: Tool preference fields
+  /** Tool preference setting (nullable) */
+  toolPreference: string | null;
+  /** Tool selection mode (nullable) */
+  toolSelectionMode: "auto" | "manual" | "hybrid" | null;
 }
 
 /**

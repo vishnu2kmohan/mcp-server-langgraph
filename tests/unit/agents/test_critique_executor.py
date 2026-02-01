@@ -128,9 +128,7 @@ class TestCritiqueExecutor:
 
         mock_critic_instance = MagicMock()
         mock_critic_instance.ainvoke = AsyncMock(
-            return_value=MagicMock(
-                content='{"approved": true, "feedback": null, "suggestions": [], "confidence": 0.95}'
-            )
+            return_value=MagicMock(content='{"approved": true, "feedback": null, "suggestions": [], "confidence": 0.95}')
         )
 
         # LLMFactory class mock returns different instances based on model_name
@@ -349,9 +347,7 @@ class TestCritiqueExecutorMetrics:
 
         mock_critic_instance = MagicMock()
         mock_critic_instance.ainvoke = AsyncMock(
-            return_value=MagicMock(
-                content='{"approved": true, "feedback": null, "suggestions": [], "confidence": 0.9}'
-            )
+            return_value=MagicMock(content='{"approved": true, "feedback": null, "suggestions": [], "confidence": 0.9}')
         )
 
         def create_llm_instance(model_name: str = None, **kwargs: Any):

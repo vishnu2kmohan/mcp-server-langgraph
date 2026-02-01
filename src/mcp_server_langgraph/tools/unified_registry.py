@@ -19,7 +19,7 @@ Native Tools Integration (v7):
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
 from mcp_server_langgraph.capabilities.provider import ToolSpec
@@ -67,7 +67,7 @@ class RegisteredTool:
     display_name: str
     description: str
     category: str | None
-    tool: "BaseTool | None"
+    tool: BaseTool | None
     native_config: dict[str, Any] | None = None
     server_name: str | None = None
     provider: str | None = None
@@ -111,9 +111,7 @@ class UnifiedToolRegistry:
     # v7: Native Tools Integration Methods
     # =========================================================================
 
-    def register_builtin(
-        self, tool: "BaseTool", category: str | None = None
-    ) -> None:
+    def register_builtin(self, tool: BaseTool, category: str | None = None) -> None:
         """Register a built-in tool.
 
         Args:
@@ -140,9 +138,7 @@ class UnifiedToolRegistry:
         self._by_lc_name.setdefault(tool.name, []).append(reg)
         self._by_qualified_name[qualified_name] = reg
 
-    def register_mcp_from_cached(
-        self, mcp_tool_dict: dict[str, Any], tool: "BaseTool"
-    ) -> None:
+    def register_mcp_from_cached(self, mcp_tool_dict: dict[str, Any], tool: BaseTool) -> None:
         """Register MCP tool from CachedUnifiedRegistry dict + proxy.
 
         CRITICAL (v7): Use qualified_name from cached registry for tool_id.
@@ -261,9 +257,7 @@ class UnifiedToolRegistry:
         """
         return [t for t in self._by_id.values() if t.source == source]
 
-    def resolve_tool_ids(
-        self, tool_ids: list[str]
-    ) -> tuple[list["BaseTool"], list[dict[str, Any]]]:
+    def resolve_tool_ids(self, tool_ids: list[str]) -> tuple[list[BaseTool], list[dict[str, Any]]]:
         """Resolve tool_ids to executable tools and native configs.
 
         Args:
@@ -272,7 +266,7 @@ class UnifiedToolRegistry:
         Returns:
             Tuple of (lc_tools, native_configs)
         """
-        lc_tools: list["BaseTool"] = []
+        lc_tools: list[BaseTool] = []
         native_configs: list[dict[str, Any]] = []
 
         for tool_id in tool_ids:
@@ -293,9 +287,7 @@ class UnifiedToolRegistry:
             reg = self._by_id.pop(tid)
             self._by_qualified_name.pop(reg.qualified_name, None)
             if reg.name in self._by_lc_name:
-                self._by_lc_name[reg.name] = [
-                    r for r in self._by_lc_name[reg.name] if r.source != "mcp"
-                ]
+                self._by_lc_name[reg.name] = [r for r in self._by_lc_name[reg.name] if r.source != "mcp"]
 
     def get_for_scope(
         self,

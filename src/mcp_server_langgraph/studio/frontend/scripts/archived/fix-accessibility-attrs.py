@@ -25,10 +25,9 @@ Exit Codes:
 import argparse
 import json
 import re
-from typing import Any, Pattern
 import sys
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 # =============================================================================
@@ -70,6 +69,7 @@ class Violation:
 # Pattern[str] Definitions
 # =============================================================================
 
+
 def should_skip(path: Path) -> bool:
     """Check if path should be skipped."""
     if any(skip in path.parts for skip in SKIP_DIRS):
@@ -92,17 +92,19 @@ def check_icon_buttons_without_aria_label(content: str, file_path: Path) -> list
     for line_no, line in enumerate(lines, 1):
         for match in pattern.finditer(line):
             button_tag = match.group()
-            if 'aria-label=' not in button_tag:
-                violations.append(Violation(
-                    file=file_path,
-                    line_no=line_no,
-                    column=match.start() + 1,
-                    rule="icon-button-missing-aria-label",
-                    severity="error",
-                    message="Icon-only button missing aria-label for screen readers",
-                    context=line.strip()[:100],
-                    suggestion="Add aria-label describing the button's action (e.g., aria-label=\"Close dialog\")",
-                ))
+            if "aria-label=" not in button_tag:
+                violations.append(
+                    Violation(
+                        file=file_path,
+                        line_no=line_no,
+                        column=match.start() + 1,
+                        rule="icon-button-missing-aria-label",
+                        severity="error",
+                        message="Icon-only button missing aria-label for screen readers",
+                        context=line.strip()[:100],
+                        suggestion='Add aria-label describing the button\'s action (e.g., aria-label="Close dialog")',
+                    )
+                )
 
     return violations
 
@@ -113,27 +115,29 @@ def check_onclick_on_non_buttons(content: str, file_path: Path) -> list[Violatio
     lines = content.splitlines()
 
     # Pattern[str]: <div|span ... onClick= ...
-    pattern = re.compile(r'<(div|span)\b[^>]*\bonClick=')
+    pattern = re.compile(r"<(div|span)\b[^>]*\bonClick=")
 
     for line_no, line in enumerate(lines, 1):
         for match in pattern.finditer(line):
             element = match.group(1)
             # Check if it has role="button" or tabIndex (which makes it semi-accessible)
-            line_context = line[match.start():match.start() + 200]
+            line_context = line[match.start() : match.start() + 200]
             has_role = 'role="button"' in line_context or "role='button'" in line_context
-            has_tabindex = 'tabIndex' in line_context
+            has_tabindex = "tabIndex" in line_context
 
             if not has_role:
-                violations.append(Violation(
-                    file=file_path,
-                    line_no=line_no,
-                    column=match.start() + 1,
-                    rule="onclick-on-non-button",
-                    severity="warning",
-                    message=f"<{element}> with onClick should use <Button> or add role=\"button\" and tabIndex",
-                    context=line.strip()[:100],
-                    suggestion=f"Replace with <Button variant=\"ghost\"> or add role=\"button\" tabIndex={{0}} onKeyDown handler",
-                ))
+                violations.append(
+                    Violation(
+                        file=file_path,
+                        line_no=line_no,
+                        column=match.start() + 1,
+                        rule="onclick-on-non-button",
+                        severity="warning",
+                        message=f'<{element}> with onClick should use <Button> or add role="button" and tabIndex',
+                        context=line.strip()[:100],
+                        suggestion='Replace with <Button variant="ghost"> or add role="button" tabIndex={0} onKeyDown handler',
+                    )
+                )
 
     return violations
 
@@ -144,7 +148,7 @@ def check_form_controls_without_labels(content: str, file_path: Path) -> list[Vi
     lines = content.splitlines()
 
     # Pattern[str]: <Toggle or <Checkbox without id= (needed for label association)
-    pattern = re.compile(r'<(Toggle|Checkbox)\b(?![^>]*\bid=)[^/]*/?>')
+    pattern = re.compile(r"<(Toggle|Checkbox)\b(?![^>]*\bid=)[^/]*/?>")
 
     for line_no, line in enumerate(lines, 1):
         for match in pattern.finditer(line):
@@ -152,19 +156,21 @@ def check_form_controls_without_labels(content: str, file_path: Path) -> list[Vi
             # Check if there's an associated label nearby
             context_start = max(0, line_no - 3)
             context_end = min(len(lines), line_no + 3)
-            context_block = '\n'.join(lines[context_start:context_end])
+            context_block = "\n".join(lines[context_start:context_end])
 
-            if '<label' not in context_block.lower() and 'Label' not in context_block:
-                violations.append(Violation(
-                    file=file_path,
-                    line_no=line_no,
-                    column=match.start() + 1,
-                    rule="form-control-missing-label",
-                    severity="warning",
-                    message=f"<{component}> may need an associated label for accessibility",
-                    context=line.strip()[:100],
-                    suggestion=f"Add id prop and associate with <label htmlFor=...> or wrap in <label>",
-                ))
+            if "<label" not in context_block.lower() and "Label" not in context_block:
+                violations.append(
+                    Violation(
+                        file=file_path,
+                        line_no=line_no,
+                        column=match.start() + 1,
+                        rule="form-control-missing-label",
+                        severity="warning",
+                        message=f"<{component}> may need an associated label for accessibility",
+                        context=line.strip()[:100],
+                        suggestion="Add id prop and associate with <label htmlFor=...> or wrap in <label>",
+                    )
+                )
 
     return violations
 
@@ -175,20 +181,22 @@ def check_inputs_without_type(content: str, file_path: Path) -> list[Violation]:
     lines = content.splitlines()
 
     # Pattern[str]: <input without type=
-    pattern = re.compile(r'<input\b(?![^>]*\btype=)[^>]*>')
+    pattern = re.compile(r"<input\b(?![^>]*\btype=)[^>]*>")
 
     for line_no, line in enumerate(lines, 1):
         for match in pattern.finditer(line):
-            violations.append(Violation(
-                file=file_path,
-                line_no=line_no,
-                column=match.start() + 1,
-                rule="input-missing-type",
-                severity="warning",
-                message="<input> without explicit type defaults to \"text\" - be explicit",
-                context=line.strip()[:100],
-                suggestion="Add type=\"text\" (or appropriate type) explicitly",
-            ))
+            violations.append(
+                Violation(
+                    file=file_path,
+                    line_no=line_no,
+                    column=match.start() + 1,
+                    rule="input-missing-type",
+                    severity="warning",
+                    message='<input> without explicit type defaults to "text" - be explicit',
+                    context=line.strip()[:100],
+                    suggestion='Add type="text" (or appropriate type) explicitly',
+                )
+            )
 
     return violations
 
@@ -214,6 +222,7 @@ def audit_file(file_path: Path) -> list[Violation]:
 # =============================================================================
 # Reporting
 # =============================================================================
+
 
 def print_violations(violations: list[Violation], verbose: bool = False) -> None:
     """Print violations to console."""
@@ -263,6 +272,7 @@ def generate_json_report(violations: list[Violation]) -> dict:
 # Main Entry Point
 # =============================================================================
 
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Audit and fix accessibility attribute violations",
@@ -287,7 +297,7 @@ def main() -> int:
 
     all_violations: list[Violation] = []
 
-    print(f"\nAccessibility Audit")
+    print("\nAccessibility Audit")
     print("=" * 60)
     print(f"Scanning {len(files)} files...\n")
 
@@ -313,10 +323,10 @@ def main() -> int:
         print(f"  Total: {len(all_violations)}")
 
         if errors > 0:
-            print(f"\nErrors require manual fixes (aria-label needs human-readable text).")
+            print("\nErrors require manual fixes (aria-label needs human-readable text).")
         if args.fix:
-            print(f"\nNote: Most accessibility issues require manual review.")
-            print(f"      aria-label values must be human-written for screen readers.")
+            print("\nNote: Most accessibility issues require manual review.")
+            print("      aria-label values must be human-written for screen readers.")
 
     # Exit code
     if args.strict and len(all_violations) > 0:

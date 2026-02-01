@@ -871,15 +871,11 @@ class TestSkillInstallerInstallSkillMethod:
                 "version": "1.5.0",
             },
         ):
-            with patch(
-                "mcp_server_langgraph.skills.auto_update.get_auto_update_scheduler"
-            ) as mock_get_scheduler:
+            with patch("mcp_server_langgraph.skills.auto_update.get_auto_update_scheduler") as mock_get_scheduler:
                 mock_scheduler = MagicMock()
                 mock_get_scheduler.return_value = mock_scheduler
 
-                result = await installer.install_skill(
-                    "tracked-skill", version="1.5.0", marketplace="anthropic"
-                )
+                result = await installer.install_skill("tracked-skill", version="1.5.0", marketplace="anthropic")
 
                 assert result.success is True
                 mock_scheduler.register_installed_skill.assert_called_once_with(
@@ -902,9 +898,7 @@ class TestSkillInstallerInstallSkillMethod:
             new_callable=AsyncMock,
             side_effect=Exception("Marketplace error"),
         ):
-            with patch(
-                "mcp_server_langgraph.skills.auto_update.get_auto_update_scheduler"
-            ) as mock_get_scheduler:
+            with patch("mcp_server_langgraph.skills.auto_update.get_auto_update_scheduler") as mock_get_scheduler:
                 mock_scheduler = MagicMock()
                 mock_get_scheduler.return_value = mock_scheduler
 

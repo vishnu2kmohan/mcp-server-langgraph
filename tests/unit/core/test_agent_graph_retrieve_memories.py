@@ -14,14 +14,14 @@ Pattern: Anthropic Tool Search Tool + LangGraph Many Tools
 from __future__ import annotations
 
 import gc
-from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from langchain_core.messages import HumanMessage
 
 if TYPE_CHECKING:
-    from mcp_server_langgraph.core.agent_config import AgentConfig
+    pass
 
 pytestmark = pytest.mark.unit
 

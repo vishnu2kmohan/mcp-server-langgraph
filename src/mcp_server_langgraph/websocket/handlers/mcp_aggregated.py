@@ -364,6 +364,7 @@ class MCPAggregatedHandler(WebSocketBase, BroadcasterMixin):
         super().__init__(config=config, metrics=metrics)
         self._broadcaster = broadcaster
         # Note: _subscribed is managed by BroadcasterMixin
+
     async def on_connect(self, user: AuthUser) -> None:
         """
         Handle connection establishment.

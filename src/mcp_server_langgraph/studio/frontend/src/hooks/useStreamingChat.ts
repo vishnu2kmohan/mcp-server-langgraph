@@ -87,14 +87,17 @@ export interface RoutingDecisionEvent {
   complexity: "simple" | "complicated" | "complex";
   risk: "low" | "medium" | "high";
   taskType: string;
-  toolsNeeded: string[];
+  toolsNeeded: string[] | null;
   suggestedOrchestrator: string;
   critiqueRounds: number;
   thinkingBudget: string;
   confidence: number;
-  skillsNeeded: string[];
+  skillsNeeded: string[] | null;
   executionMode: string;
   routingRationale: string;
+  // v35.0 Phase 2e: Tool preference fields
+  toolPreference: string | null;
+  toolSelectionMode: "auto" | "manual" | "hybrid" | null;
 }
 
 /**
@@ -422,14 +425,17 @@ export function useStreamingChat(): UseStreamingChatReturn {
               complexity: data.routing_decision.complexity,
               risk: data.routing_decision.risk,
               taskType: data.routing_decision.task_type,
-              toolsNeeded: data.routing_decision.tools_needed ?? [],
+              toolsNeeded: data.routing_decision.tools_needed ?? null,
               suggestedOrchestrator: data.routing_decision.suggested_orchestrator,
               critiqueRounds: data.routing_decision.critique_rounds,
               thinkingBudget: data.routing_decision.thinking_budget,
               confidence: data.routing_decision.confidence,
-              skillsNeeded: data.routing_decision.skills_needed ?? [],
+              skillsNeeded: data.routing_decision.skills_needed ?? null,
               executionMode: data.routing_decision.execution_mode,
               routingRationale: data.routing_decision.routing_rationale ?? "",
+              // v35.0 Phase 2e: Tool preference fields
+              toolPreference: data.routing_decision.tool_preference ?? null,
+              toolSelectionMode: data.routing_decision.tool_selection_mode ?? null,
             };
           }
 
@@ -639,12 +645,12 @@ export function useStreamingChat(): UseStreamingChatReturn {
                   complexity: parsed.routingDecision.complexity,
                   risk: parsed.routingDecision.risk,
                   taskType: parsed.routingDecision.taskType,
-                  toolsNeeded: parsed.routingDecision.toolsNeeded,
+                  toolsNeeded: parsed.routingDecision.toolsNeeded ?? [],
                   suggestedOrchestrator: parsed.routingDecision.suggestedOrchestrator,
                   critiqueRounds: parsed.routingDecision.critiqueRounds,
                   thinkingBudget: parsed.routingDecision.thinkingBudget,
                   confidence: parsed.routingDecision.confidence,
-                  skillsNeeded: parsed.routingDecision.skillsNeeded,
+                  skillsNeeded: parsed.routingDecision.skillsNeeded ?? [],
                   executionMode: parsed.routingDecision.executionMode,
                   routingRationale: parsed.routingDecision.routingRationale,
                 };

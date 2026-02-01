@@ -57,9 +57,7 @@ class SourceCitation(BaseModel):
     title: str = Field(description="Source title")
     url: str = Field(description="Source URL")
     snippet: str | None = Field(default=None, description="Relevant snippet from source")
-    relevance_score: float | None = Field(
-        default=None, description="Relevance score for ranking (0.0 to 1.0)"
-    )
+    relevance_score: float | None = Field(default=None, description="Relevance score for ranking (0.0 to 1.0)")
 
     def truncated_snippet(self, max_length: int = 150) -> str | None:
         """Return snippet truncated to max_length with ellipsis.
@@ -83,9 +81,7 @@ class SourceCitation(BaseModel):
 # Matches: [Title](https://example.com): Optional snippet text
 # Also matches: [Title](https://example.com) without snippet
 # Note: Title and URL cannot contain newlines to avoid matching across lines
-MARKDOWN_LINK_PATTERN = re.compile(
-    r"\[([^\]\n]+)\]\(([^)\n]+)\)(?::\s*([^\n]+))?(?:\n|$)"
-)
+MARKDOWN_LINK_PATTERN = re.compile(r"\[([^\]\n]+)\]\(([^)\n]+)\)(?::\s*([^\n]+))?(?:\n|$)")
 
 
 def _is_source_citations_enabled() -> bool:

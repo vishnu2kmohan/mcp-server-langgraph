@@ -519,9 +519,7 @@ class TestUnifiedRegistryResolveToolIds:
             fallback_builtin="web_search",
         )
 
-        lc_tools, native_configs = registry.resolve_tool_ids(
-            ["builtin:calculator", "native:web_search"]
-        )
+        lc_tools, native_configs = registry.resolve_tool_ids(["builtin:calculator", "native:web_search"])
 
         assert len(lc_tools) == 1
         assert lc_tools[0] == mock_tool

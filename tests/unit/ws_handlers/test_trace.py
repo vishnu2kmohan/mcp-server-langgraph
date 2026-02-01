@@ -81,9 +81,7 @@ class TestTraceHandlerConstruction:
 
         assert issubclass(TraceHandler, BroadcasterMixin)
 
-    def test_handler_has_handle_message_method(
-        self, mock_broadcaster: MagicMock
-    ) -> None:
+    def test_handler_has_handle_message_method(self, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN the TraceHandler class
         WHEN inspecting its methods
@@ -96,7 +94,7 @@ class TestTraceHandlerConstruction:
             broadcaster=mock_broadcaster,
         )
         assert hasattr(handler, "handle_message")
-        assert callable(getattr(handler, "handle_message"))
+        assert callable(handler.handle_message)
 
 
 @pytest.mark.xdist_group(name="trace_ws")
@@ -108,9 +106,7 @@ class TestTraceLifecycle:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_on_connect_receives_auth_user(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_connect_receives_auth_user(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a TraceHandler
         WHEN on_connect is called
@@ -135,9 +131,7 @@ class TestTraceLifecycle:
         mock_broadcaster.subscribe.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_on_disconnect_clears_subscription(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_disconnect_clears_subscription(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a TraceHandler with subscription
         WHEN on_disconnect is called
@@ -221,9 +215,7 @@ class TestTraceMessageHandling:
         assert response.type == "unsubscribed"
 
     @pytest.mark.asyncio
-    async def test_handle_set_filter(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_handle_set_filter(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a set_filter message
         WHEN handle_message is called
@@ -252,9 +244,7 @@ class TestTraceMessageHandling:
         assert handler._current_filter.status == "ERROR"
 
     @pytest.mark.asyncio
-    async def test_handle_clear_filter(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_handle_clear_filter(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a clear_filter message
         WHEN handle_message is called
@@ -294,9 +284,7 @@ class TestTraceMessageHandling:
         """
         from mcp_server_langgraph.websocket.handlers.trace import TraceHandler
 
-        mock_broadcaster.get_recent_traces.return_value = [
-            {"trace_id": "trace-1", "service_name": "test"}
-        ]
+        mock_broadcaster.get_recent_traces.return_value = [{"trace_id": "trace-1", "service_name": "test"}]
 
         handler = TraceHandler(
             config=WebSocketConfig(endpoint_name="traces"),
@@ -316,9 +304,7 @@ class TestTraceMessageHandling:
         mock_broadcaster.get_recent_traces.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_handle_unknown_type_returns_error(
-        self, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_handle_unknown_type_returns_error(self, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN an unknown message type
         WHEN handle_message is called
@@ -358,9 +344,7 @@ class TestTraceSessionIdFromQueryParams:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_on_connect_extracts_session_id_from_query_params(
-        self, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_connect_extracts_session_id_from_query_params(self, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a WebSocket connection with session_id in query params
         WHEN on_connect is called
@@ -390,9 +374,7 @@ class TestTraceSessionIdFromQueryParams:
         assert handler._session_id == "session-abc-123"
 
     @pytest.mark.asyncio
-    async def test_on_connect_without_session_id_works(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_connect_without_session_id_works(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a WebSocket connection without session_id in query params
         WHEN on_connect is called

@@ -112,6 +112,7 @@ class AlertHandler(WebSocketBase, BroadcasterMixin):
         super().__init__(config=config, metrics=metrics)
         self._broadcaster = broadcaster
         # Note: _subscribed is managed by BroadcasterMixin
+
     async def on_connect(self, user: AuthUser) -> None:
         """
         Handle connection establishment.
@@ -214,8 +215,8 @@ class AlertHandler(WebSocketBase, BroadcasterMixin):
             alert: The alert data to send.
         """
         await self.send_if_subscribed(
-                {
-                    "type": "alert",
-                    "payload": alert,
-                }
-            )
+            {
+                "type": "alert",
+                "payload": alert,
+            }
+        )

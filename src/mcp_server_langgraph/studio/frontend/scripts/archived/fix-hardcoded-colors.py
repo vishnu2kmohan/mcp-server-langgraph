@@ -13,7 +13,7 @@ Usage:
 import re
 import sys
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 
 class ColorMapping(NamedTuple):
@@ -117,7 +117,7 @@ def fix_file(file_path: Path, dry_run: bool = True) -> list[str]:
                 quote_char = old_text[0]
                 new_text = f"{quote_char}{replacement}{quote_char}"
                 content = content[:start] + new_text + content[end:]
-                changes.append(f"  Line ~{content[:start].count(chr(10))+1}: {old_text} -> {new_text}")
+                changes.append(f"  Line ~{content[:start].count(chr(10)) + 1}: {old_text} -> {new_text}")
 
     if content != original_content:
         if not dry_run:

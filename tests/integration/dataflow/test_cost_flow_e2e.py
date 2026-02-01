@@ -11,14 +11,12 @@ Following memory safety patterns for pytest-xdist (see CLAUDE.md).
 """
 
 import gc
-import os
 from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
-from httpx import AsyncClient, ASGITransport
 
 pytestmark = [
     pytest.mark.integration,
@@ -151,9 +149,7 @@ class TestCostDataFlowE2E:
                 "mcp_server_langgraph.llm.factory.acompletion",
                 new_callable=AsyncMock,
             ) as mock_acompletion,
-            patch(
-                "mcp_server_langgraph.llm.factory.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
         ):
             mock_acompletion.return_value = mock_acompletion_response
             mock_flags.enable_cost_tracking = True
@@ -202,9 +198,7 @@ class TestCostDataFlowE2E:
         THEN: The stored data is returned correctly
         """
         from mcp_server_langgraph.monitoring.cost_tracker import (
-            CostMetricsCollector,
             TokenUsage,
-            get_cost_collector,
         )
         from mcp_server_langgraph.monitoring.cost_storage_factory import (
             get_cost_storage_backend,
@@ -228,15 +222,10 @@ class TestCostDataFlowE2E:
         await storage.store(test_usage)
 
         # Query via storage backend
-        records, _ = await storage.get_records(
-            filters={"user_id": unique_user_id}
-        )
+        records, _ = await storage.get_records(filters={"user_id": unique_user_id})
 
         assert len(records) >= 1, "Expected at least 1 record from storage"
-        found = any(
-            r.user_id == unique_user_id and r.session_id == unique_session_id
-            for r in records
-        )
+        found = any(r.user_id == unique_user_id and r.session_id == unique_session_id for r in records)
         assert found, f"Expected to find record for user {unique_user_id}"
 
     async def test_full_e2e_llm_to_api_response(
@@ -271,9 +260,7 @@ class TestCostDataFlowE2E:
                 "mcp_server_langgraph.llm.factory.acompletion",
                 new_callable=AsyncMock,
             ) as mock_acompletion,
-            patch(
-                "mcp_server_langgraph.llm.factory.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
         ):
             mock_acompletion.return_value = mock_acompletion_response
             mock_flags.enable_cost_tracking = True
@@ -291,10 +278,7 @@ class TestCostDataFlowE2E:
             records, _ = await storage.get_records()
 
             # Find our record
-            our_records = [
-                r for r in records
-                if r.user_id == unique_user_id and r.session_id == unique_session_id
-            ]
+            our_records = [r for r in records if r.user_id == unique_user_id and r.session_id == unique_session_id]
 
             assert len(our_records) == 1, (
                 f"Expected exactly 1 record for user={unique_user_id}, "
@@ -368,9 +352,7 @@ class TestCostDataFlowWithFeatureFlags:
                 "mcp_server_langgraph.llm.factory.acompletion",
                 new_callable=AsyncMock,
             ) as mock_acompletion,
-            patch(
-                "mcp_server_langgraph.llm.factory.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
         ):
             mock_acompletion.return_value = mock_acompletion_response
             # Disable cost tracking
@@ -387,15 +369,9 @@ class TestCostDataFlowWithFeatureFlags:
             storage = get_cost_storage_backend()
             records, _ = await storage.get_records()
 
-            our_records = [
-                r for r in records
-                if r.user_id == unique_user_id
-            ]
+            our_records = [r for r in records if r.user_id == unique_user_id]
 
-            assert len(our_records) == 0, (
-                "Expected 0 records when cost tracking disabled, "
-                f"but found {len(our_records)}"
-            )
+            assert len(our_records) == 0, f"Expected 0 records when cost tracking disabled, but found {len(our_records)}"
 
 
 class TestResponsesAPICostFlow:
@@ -466,9 +442,7 @@ class TestResponsesAPICostFlow:
                 "_call_responses_api",
                 new_callable=AsyncMock,
             ) as mock_responses,
-            patch(
-                "mcp_server_langgraph.llm.factory.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
         ):
             # Mock Responses API return value
             mock_responses.return_value = (
@@ -492,10 +466,7 @@ class TestResponsesAPICostFlow:
             storage = get_cost_storage_backend()
             records, _ = await storage.get_records()
 
-            our_records = [
-                r for r in records
-                if r.user_id == unique_user_id and r.session_id == unique_session_id
-            ]
+            our_records = [r for r in records if r.user_id == unique_user_id and r.session_id == unique_session_id]
 
             assert len(our_records) == 1, (
                 f"Expected 1 record from Responses API path, got {len(our_records)}. "

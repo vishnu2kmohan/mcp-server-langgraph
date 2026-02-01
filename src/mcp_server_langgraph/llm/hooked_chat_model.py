@@ -151,9 +151,7 @@ class HookedChatModel(BaseChatModel):
         """
         import asyncio
 
-        return asyncio.get_event_loop().run_until_complete(
-            self._agenerate(messages, stop, **kwargs)
-        )
+        return asyncio.get_event_loop().run_until_complete(self._agenerate(messages, stop, **kwargs))
 
     async def _agenerate(
         self,
@@ -226,16 +224,16 @@ class HookedChatModel(BaseChatModel):
                 if before_result.behavior == "skip" and before_result.early_return is not None:
                     span.set_attribute("hook.before_model.skipped", True)
                     return ChatResult(
-                        generations=[ChatGeneration(
-                        text=str(before_result.early_return),
-                        message=AIMessage(content=str(before_result.early_return)),
-                    )]
+                        generations=[
+                            ChatGeneration(
+                                text=str(before_result.early_return),
+                                message=AIMessage(content=str(before_result.early_return)),
+                            )
+                        ]
                     )
 
                 # CRITICAL (v7): Apply updated_input to ACTUAL inner call
-                if before_result.updated_input is not None and isinstance(
-                    before_result.updated_input, list
-                ):
+                if before_result.updated_input is not None and isinstance(before_result.updated_input, list):
                     span.set_attribute("hook.before_model.updated_input", True)
                     messages_to_use = self._rebuild_messages(before_result.updated_input)
 
@@ -261,7 +259,7 @@ class HookedChatModel(BaseChatModel):
                         **invoke_kwargs,
                     )
                     adaptive_bulkhead.record_success()
-                except Exception as e:
+                except Exception:
                     # CRITICAL (v7): Use record_error() not record_failure()
                     adaptive_bulkhead.record_error()
                     raise
@@ -300,7 +298,7 @@ class HookedChatModel(BaseChatModel):
 
             return result
 
-    def bind_tools(self, tools: list[Any], **kwargs: Any) -> "HookedChatModel":
+    def bind_tools(self, tools: list[Any], **kwargs: Any) -> HookedChatModel:
         """Delegate bind_tools to inner model, preserve wrapper.
 
         NOTE: Native tool configs are NOT passed here. Use invocation kwargs.

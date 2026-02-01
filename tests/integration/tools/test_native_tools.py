@@ -12,7 +12,7 @@ Uses mocked LLM providers to avoid actual API calls.
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -115,9 +115,7 @@ class TestNativeToolHandler:
         """Force GC to prevent mock accumulation."""
         gc.collect()
 
-    def test_should_use_native_with_capable_model(
-        self, mock_feature_flags, mock_model_registry
-    ):
+    def test_should_use_native_with_capable_model(self, mock_feature_flags, mock_model_registry):
         """should_use_native should return True for capable models."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
@@ -126,9 +124,7 @@ class TestNativeToolHandler:
 
         assert result is True
 
-    def test_should_use_native_respects_preference(
-        self, mock_feature_flags, mock_model_registry
-    ):
+    def test_should_use_native_respects_preference(self, mock_feature_flags, mock_model_registry):
         """should_use_native should respect builtin preference."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
@@ -142,9 +138,7 @@ class TestNativeToolHandler:
         result = handler.should_use_native("web_search", "mcp")
         assert result is False
 
-    def test_get_native_configs_separates_tools(
-        self, mock_feature_flags, mock_model_registry
-    ):
+    def test_get_native_configs_separates_tools(self, mock_feature_flags, mock_model_registry):
         """get_native_configs should separate native from non-native tool_ids."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
@@ -274,14 +268,11 @@ class TestNativeToolIntegrationFlow:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_native_tool_selection_to_execution_flow(
-        self, mock_feature_flags, mock_model_registry
-    ):
+    async def test_native_tool_selection_to_execution_flow(self, mock_feature_flags, mock_model_registry):
         """Test complete flow from tool selection to native result parsing."""
         from langchain_core.messages import AIMessage
 
         from mcp_server_langgraph.tools.native_handler import (
-            NativeToolHandler,
             parse_native_results,
         )
         from mcp_server_langgraph.tools.unified_registry import UnifiedToolRegistry

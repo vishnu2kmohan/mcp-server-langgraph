@@ -129,8 +129,8 @@ class TestPytestXdistIsolation:
         app.dependency_overrides[get_current_user] = mock_async_dependency
 
         # Mock the manager dependency
-        app.dependency_overrides[get_manager] = (
-            lambda: AsyncMock(return_value=None)
+        app.dependency_overrides[get_manager] = lambda: AsyncMock(
+            return_value=None
         )  # async-mock-configured - Generic test mock for dependency injection testing
 
         client = TestClient(app)
@@ -169,8 +169,8 @@ class TestPytestXdistIsolation:
         }
 
         # Mock the manager dependency
-        app.dependency_overrides[get_manager] = (
-            lambda: AsyncMock(return_value=None)
+        app.dependency_overrides[get_manager] = lambda: AsyncMock(
+            return_value=None
         )  # async-mock-configured - Generic test mock for dependency injection testing
 
         client = TestClient(app)
@@ -201,8 +201,8 @@ class TestPytestXdistIsolation:
         app.dependency_overrides[get_current_user] = mock_user
 
         # ✅ Sync dependency overridden with sync function
-        app.dependency_overrides[get_manager] = (
-            lambda: AsyncMock(return_value=None)
+        app.dependency_overrides[get_manager] = lambda: AsyncMock(
+            return_value=None
         )  # async-mock-configured - Generic test mock for dependency injection testing
 
         client = TestClient(app)
@@ -228,8 +228,8 @@ class TestPytestXdistIsolation:
             return {"user_id": "user:test", "username": "testuser"}
 
         app.dependency_overrides[get_current_user] = mock_user
-        app.dependency_overrides[get_manager] = (
-            lambda: AsyncMock(return_value=None)
+        app.dependency_overrides[get_manager] = lambda: AsyncMock(
+            return_value=None
         )  # async-mock-configured - Generic test mock for dependency injection testing
 
         # Verify overrides are set

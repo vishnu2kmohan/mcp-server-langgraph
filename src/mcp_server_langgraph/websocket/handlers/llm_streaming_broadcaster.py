@@ -384,31 +384,39 @@ class _LLMStreamingInnerHandler:
                                 session_id=self._session_id,
                             )
                             self._subscribed = True
-                            await websocket.send_json({
-                                "type": "subscribed",
-                                "payload": {"session_id": self._session_id},
-                            })
+                            await websocket.send_json(
+                                {
+                                    "type": "subscribed",
+                                    "payload": {"session_id": self._session_id},
+                                }
+                            )
 
                     elif msg_type == "unsubscribe":
                         if self._subscribed:
                             await self._broadcaster.unsubscribe(websocket)
                             self._subscribed = False
-                        await websocket.send_json({
-                            "type": "unsubscribed",
-                            "payload": {},
-                        })
+                        await websocket.send_json(
+                            {
+                                "type": "unsubscribed",
+                                "payload": {},
+                            }
+                        )
 
                 except json.JSONDecodeError as e:
-                    await websocket.send_json({
-                        "type": "error",
-                        "message": f"Invalid JSON: {e}",
-                    })
+                    await websocket.send_json(
+                        {
+                            "type": "error",
+                            "message": f"Invalid JSON: {e}",
+                        }
+                    )
                 except Exception as e:
                     logger.exception("Error handling LLM streaming message")
-                    await websocket.send_json({
-                        "type": "error",
-                        "message": str(e),
-                    })
+                    await websocket.send_json(
+                        {
+                            "type": "error",
+                            "message": str(e),
+                        }
+                    )
 
         finally:
             # Clean up subscription

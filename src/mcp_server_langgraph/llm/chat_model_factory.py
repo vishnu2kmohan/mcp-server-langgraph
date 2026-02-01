@@ -18,7 +18,7 @@ Supported Providers:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
@@ -28,10 +28,10 @@ from mcp_server_langgraph.observability.telemetry import logger
 
 
 def create_chat_model_from_config(
-    settings: "Settings",
+    settings: Settings,
     *,
     enable_streaming: bool = True,
-) -> "BaseChatModel":
+) -> BaseChatModel:
     """Create LangChain chat model with correct settings mapping.
 
     This function creates a provider-specific LangChain ChatModel instance
@@ -87,9 +87,7 @@ def create_chat_model_from_config(
         return _create_litellm_adapter(settings)
 
 
-def _create_anthropic_model(
-    settings: "Settings", model_name: str, enable_streaming: bool
-) -> "BaseChatModel":
+def _create_anthropic_model(settings: Settings, model_name: str, enable_streaming: bool) -> BaseChatModel:
     """Create Anthropic ChatModel."""
     from langchain_anthropic import ChatAnthropic
 
@@ -103,7 +101,7 @@ def _create_anthropic_model(
     )
 
 
-def _create_google_model(settings: "Settings", model_name: str) -> "BaseChatModel":
+def _create_google_model(settings: Settings, model_name: str) -> BaseChatModel:
     """Create Google Generative AI ChatModel."""
     from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -115,9 +113,7 @@ def _create_google_model(settings: "Settings", model_name: str) -> "BaseChatMode
     )
 
 
-def _create_vertex_ai_model(
-    settings: "Settings", model_name: str, enable_streaming: bool
-) -> "BaseChatModel":
+def _create_vertex_ai_model(settings: Settings, model_name: str, enable_streaming: bool) -> BaseChatModel:
     """Create Vertex AI ChatModel."""
     from langchain_google_vertexai import ChatVertexAI
 
@@ -131,9 +127,7 @@ def _create_vertex_ai_model(
     )
 
 
-def _create_openai_model(
-    settings: "Settings", model_name: str, enable_streaming: bool
-) -> "BaseChatModel":
+def _create_openai_model(settings: Settings, model_name: str, enable_streaming: bool) -> BaseChatModel:
     """Create OpenAI ChatModel."""
     from langchain_openai import ChatOpenAI
 
@@ -146,7 +140,7 @@ def _create_openai_model(
     )
 
 
-def _create_azure_model(settings: "Settings", enable_streaming: bool) -> "BaseChatModel":
+def _create_azure_model(settings: Settings, enable_streaming: bool) -> BaseChatModel:
     """Create Azure OpenAI ChatModel."""
     from langchain_openai import AzureChatOpenAI
 
@@ -161,7 +155,7 @@ def _create_azure_model(settings: "Settings", enable_streaming: bool) -> "BaseCh
     )
 
 
-def _create_litellm_adapter(settings: "Settings") -> "BaseChatModel":
+def _create_litellm_adapter(settings: Settings) -> BaseChatModel:
     """Create LiteLLM-backed ChatModel for unsupported providers.
 
     Uses ChatLiteLLM from langchain-community as a fallback for providers

@@ -13,7 +13,6 @@ After:
 """
 
 import re
-from typing import Any, Pattern, Match
 import sys
 from pathlib import Path
 
@@ -41,12 +40,12 @@ def fix_duplicate_classnames(content: str) -> tuple[str, int]:
         fixes += count1
 
     # Pattern[str] 2: className={`${expr}`} followed by className={expression}
-    pattern2 = r'className=\{`([^`]+)`\}\s*\n\s*className=\{([^}]+)\}'
+    pattern2 = r"className=\{`([^`]+)`\}\s*\n\s*className=\{([^}]+)\}"
 
     def merge_template(m: re.Match[str]) -> str:
         template = m.group(1)
         dynamic_expr = m.group(2)
-        return f'className={{cn(`{template}`, {dynamic_expr})}}'
+        return f"className={{cn(`{template}`, {dynamic_expr})}}"
 
     new_content, count2 = re.subn(pattern2, merge_template, content)
     if count2 > 0:
@@ -58,7 +57,7 @@ def fix_duplicate_classnames(content: str) -> tuple[str, int]:
 
 def ensure_cn_import(content: str) -> str:
     """Ensure cn is imported if used."""
-    if 'cn(' in content and "import { cn }" not in content and "import {cn}" not in content:
+    if "cn(" in content and "import { cn }" not in content and "import {cn}" not in content:
         # Check if cn is imported with other things
         if "from '@/utils/cn'" not in content and 'from "@/utils/cn"' not in content:
             # Add import at the top after other imports
@@ -67,37 +66,47 @@ def ensure_cn_import(content: str) -> str:
             first_import = content.find("import ")
             if first_import != -1:
                 # Find end of imports section (first non-import line)
-                lines = content.split('\n')
+                lines = content.split("\n")
                 last_import_idx = 0
                 for i, line in enumerate(lines):
-                    if line.strip().startswith('import ') or line.strip().startswith('} from') or (line.strip() and not line.strip().startswith('//') and 'from' in line and "'" in line):
+                    if (
+                        line.strip().startswith("import ")
+                        or line.strip().startswith("} from")
+                        or (line.strip() and not line.strip().startswith("//") and "from" in line and "'" in line)
+                    ):
                         last_import_idx = i
-                    elif line.strip() and not line.strip().startswith('//') and not line.strip().startswith('import') and not line.strip().startswith('}') and 'from' not in line:
+                    elif (
+                        line.strip()
+                        and not line.strip().startswith("//")
+                        and not line.strip().startswith("import")
+                        and not line.strip().startswith("}")
+                        and "from" not in line
+                    ):
                         if i > last_import_idx + 1:
                             break
 
                 # Insert after last import
                 lines.insert(last_import_idx + 1, import_line.strip())
-                content = '\n'.join(lines)
+                content = "\n".join(lines)
 
     return content
 
 
 def ensure_indent_import(content: str) -> str:
     """Ensure getIndentClass is imported if used."""
-    if 'getIndentClass(' in content and "import { getIndentClass }" not in content:
+    if "getIndentClass(" in content and "import { getIndentClass }" not in content:
         if "from '@/utils/indent'" not in content and 'from "@/utils/indent"' not in content:
             import_line = "import { getIndentClass } from '@/utils/indent';\n"
             first_import = content.find("import ")
             if first_import != -1:
-                lines = content.split('\n')
+                lines = content.split("\n")
                 last_import_idx = 0
                 for i, line in enumerate(lines):
-                    if line.strip().startswith('import '):
+                    if line.strip().startswith("import "):
                         last_import_idx = i
 
                 lines.insert(last_import_idx + 1, import_line.strip())
-                content = '\n'.join(lines)
+                content = "\n".join(lines)
 
     return content
 

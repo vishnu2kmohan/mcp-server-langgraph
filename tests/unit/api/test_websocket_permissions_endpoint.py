@@ -186,9 +186,7 @@ def create_fail_closed_permissions() -> WebSocketPermissions:
 class TestWebSocketPermissionsInMeEndpoint:
     """Tests for websocket_permissions field in GET /api/v1/me response."""
 
-    def test_me_endpoint_returns_websocket_permissions_field(
-        self, mock_alice_user: dict[str, Any]
-    ) -> None:
+    def test_me_endpoint_returns_websocket_permissions_field(self, mock_alice_user: dict[str, Any]) -> None:
         """Verify /api/v1/me response includes websocket_permissions field."""
         app = create_app_with_user(mock_alice_user)
 
@@ -205,9 +203,7 @@ class TestWebSocketPermissionsInMeEndpoint:
         assert "websocket_permissions" in data
         assert isinstance(data["websocket_permissions"], dict)
 
-    def test_me_endpoint_returns_all_17_permission_fields(
-        self, mock_alice_user: dict[str, Any]
-    ) -> None:
+    def test_me_endpoint_returns_all_17_permission_fields(self, mock_alice_user: dict[str, Any]) -> None:
         """Verify all 17 WebSocket permission fields are returned."""
         app = create_app_with_user(mock_alice_user)
 
@@ -249,9 +245,7 @@ class TestWebSocketPermissionsInMeEndpoint:
         # Verify exactly 17 fields (no extras)
         assert len(perms) == 17
 
-    def test_admin_user_gets_all_permissions_true(
-        self, mock_admin_user: dict[str, Any]
-    ) -> None:
+    def test_admin_user_gets_all_permissions_true(self, mock_admin_user: dict[str, Any]) -> None:
         """Admin user should have all WebSocket permissions including alerts."""
         app = create_app_with_user(mock_admin_user)
 
@@ -275,9 +269,7 @@ class TestWebSocketPermissionsInMeEndpoint:
         # All should be True
         assert all(perms.values()), "Admin should have all permissions True"
 
-    def test_developer_user_lacks_alert_permission(
-        self, mock_alice_user: dict[str, Any]
-    ) -> None:
+    def test_developer_user_lacks_alert_permission(self, mock_alice_user: dict[str, Any]) -> None:
         """Developer user should NOT have alert WebSocket permission."""
         app = create_app_with_user(mock_alice_user)
 
@@ -300,9 +292,7 @@ class TestWebSocketPermissionsInMeEndpoint:
         assert perms["connections_health"] is True
         assert perms["agent_requests"] is True  # Editor on workflow:hitl
 
-    def test_basic_user_has_viewer_permissions(
-        self, mock_bob_user: dict[str, Any]
-    ) -> None:
+    def test_basic_user_has_viewer_permissions(self, mock_bob_user: dict[str, Any]) -> None:
         """Basic user (bob) should have viewer-level WebSocket permissions (15/17)."""
         app = create_app_with_user(mock_bob_user)
 
@@ -331,9 +321,7 @@ class TestWebSocketPermissionsInMeEndpoint:
         assert perms["llm_streaming"] is True
         assert perms["session_metrics"] is True
 
-    def test_openfga_unavailable_returns_fail_closed_permissions(
-        self, mock_alice_user: dict[str, Any]
-    ) -> None:
+    def test_openfga_unavailable_returns_fail_closed_permissions(self, mock_alice_user: dict[str, Any]) -> None:
         """When OpenFGA is unavailable, should return fail-closed (all False)."""
         app = create_app_with_user(mock_alice_user)
 
@@ -350,13 +338,9 @@ class TestWebSocketPermissionsInMeEndpoint:
         perms = response.json()["websocket_permissions"]
 
         # All permissions should be False (fail-closed)
-        assert all(
-            v is False for v in perms.values()
-        ), "Fail-closed should have all permissions False"
+        assert all(v is False for v in perms.values()), "Fail-closed should have all permissions False"
 
-    def test_response_uses_snake_case_keys(
-        self, mock_alice_user: dict[str, Any]
-    ) -> None:
+    def test_response_uses_snake_case_keys(self, mock_alice_user: dict[str, Any]) -> None:
         """Response should use snake_case keys for frontend compatibility."""
         app = create_app_with_user(mock_alice_user)
 
@@ -379,9 +363,7 @@ class TestWebSocketPermissionsInMeEndpoint:
         assert "ai_suggestions" in perms  # Not aiSuggestions
         assert "orchestrator_status" in perms  # Not orchestratorStatus
 
-    def test_me_endpoint_calls_get_websocket_permissions_with_user_id(
-        self, mock_alice_user: dict[str, Any]
-    ) -> None:
+    def test_me_endpoint_calls_get_websocket_permissions_with_user_id(self, mock_alice_user: dict[str, Any]) -> None:
         """Verify get_websocket_permissions is called with correct user_id."""
         app = create_app_with_user(mock_alice_user)
 
@@ -479,9 +461,7 @@ class TestWebSocketPermissionsMapping:
 class TestWebSocketPermissionsIntegration:
     """Integration-level tests for the permissions flow."""
 
-    def test_me_response_structure_matches_frontend_expectations(
-        self, mock_alice_user: dict[str, Any]
-    ) -> None:
+    def test_me_response_structure_matches_frontend_expectations(self, mock_alice_user: dict[str, Any]) -> None:
         """
         Response structure should match what frontend initializeAuth expects.
 
@@ -682,9 +662,7 @@ class TestSubPersonaWebSocketPermissions:
     - DevOps: Developer role plus infrastructure alerts
     """
 
-    def test_auditor_lacks_hitl_approval_permission(
-        self, mock_auditor_user: dict[str, Any]
-    ) -> None:
+    def test_auditor_lacks_hitl_approval_permission(self, mock_auditor_user: dict[str, Any]) -> None:
         """
         Auditors should NOT have HITL approval (agent_requests) permission.
 
@@ -710,9 +688,7 @@ class TestSubPersonaWebSocketPermissions:
         assert perms["audit"] is True, "Auditors need audit log access"
         assert perms["traces"] is True, "Auditors need traces for investigation"
 
-    def test_auditor_lacks_infrastructure_alerts(
-        self, mock_auditor_user: dict[str, Any]
-    ) -> None:
+    def test_auditor_lacks_infrastructure_alerts(self, mock_auditor_user: dict[str, Any]) -> None:
         """
         Auditors should NOT receive infrastructure alerts.
 
@@ -734,9 +710,7 @@ class TestSubPersonaWebSocketPermissions:
         # Auditor should NOT have alerts
         assert perms["alerts"] is False, "Auditors don't need infrastructure alerts"
 
-    def test_auditor_lacks_developer_features(
-        self, mock_auditor_user: dict[str, Any]
-    ) -> None:
+    def test_auditor_lacks_developer_features(self, mock_auditor_user: dict[str, Any]) -> None:
         """
         Auditors should NOT have developer-only features.
 
@@ -762,9 +736,7 @@ class TestSubPersonaWebSocketPermissions:
         assert perms["connections_health"] is False, "Connection health is ops-only"
         assert perms["connections_realtime"] is False, "Connection realtime is ops-only"
 
-    def test_auditor_has_compliance_access(
-        self, mock_auditor_user: dict[str, Any]
-    ) -> None:
+    def test_auditor_has_compliance_access(self, mock_auditor_user: dict[str, Any]) -> None:
         """Auditors should have all compliance-relevant WebSocket access."""
         app = create_app_with_user(mock_auditor_user)
 
@@ -795,9 +767,7 @@ class TestSubPersonaWebSocketPermissions:
         true_count = sum(1 for v in perms.values() if v is True)
         assert true_count == 10, f"Auditor should have 10/17 permissions, got {true_count}"
 
-    def test_compliance_officer_lacks_developer_features(
-        self, mock_compliance_officer_user: dict[str, Any]
-    ) -> None:
+    def test_compliance_officer_lacks_developer_features(self, mock_compliance_officer_user: dict[str, Any]) -> None:
         """
         Compliance officers should NOT have developer-only features.
 
@@ -825,9 +795,7 @@ class TestSubPersonaWebSocketPermissions:
         assert perms["connections_realtime"] is False, "Connection realtime is dev/ops"
         assert perms["alerts"] is False, "Alerts is infrastructure ops"
 
-    def test_compliance_officer_has_compliance_access(
-        self, mock_compliance_officer_user: dict[str, Any]
-    ) -> None:
+    def test_compliance_officer_has_compliance_access(self, mock_compliance_officer_user: dict[str, Any]) -> None:
         """Compliance officers should have compliance-relevant WebSocket access."""
         app = create_app_with_user(mock_compliance_officer_user)
 
@@ -852,9 +820,7 @@ class TestSubPersonaWebSocketPermissions:
         true_count = sum(1 for v in perms.values() if v is True)
         assert true_count == 10, f"Compliance officer should have 10/17 permissions, got {true_count}"
 
-    def test_devops_has_full_developer_plus_alerts(
-        self, mock_devops_user: dict[str, Any]
-    ) -> None:
+    def test_devops_has_full_developer_plus_alerts(self, mock_devops_user: dict[str, Any]) -> None:
         """
         DevOps sub-persona should have developer access PLUS infrastructure alerts.
 
@@ -886,9 +852,7 @@ class TestSubPersonaWebSocketPermissions:
         # All 17 permissions should be True
         assert all(perms.values()), "DevOps should have all 17 permissions True"
 
-    def test_devops_has_all_17_permissions(
-        self, mock_devops_user: dict[str, Any]
-    ) -> None:
+    def test_devops_has_all_17_permissions(self, mock_devops_user: dict[str, Any]) -> None:
         """DevOps should have full access (17/17) like admin."""
         app = create_app_with_user(mock_devops_user)
 
@@ -922,9 +886,7 @@ class TestSubPersonaPermissionCounts:
             ("devops", 17, "Developer + infrastructure alerts"),
         ],
     )
-    def test_permission_count_by_persona(
-        self, persona: str, expected_count: int, description: str
-    ) -> None:
+    def test_permission_count_by_persona(self, persona: str, expected_count: int, description: str) -> None:
         """Verify each persona has the expected number of permissions."""
         permission_creators = {
             "admin": create_admin_permissions,
@@ -939,6 +901,5 @@ class TestSubPersonaPermissionCounts:
         true_count = sum(1 for v in perms.model_dump().values() if v is True)
 
         assert true_count == expected_count, (
-            f"{description} ({persona}) should have {expected_count}/17 permissions, "
-            f"got {true_count}"
+            f"{description} ({persona}) should have {expected_count}/17 permissions, got {true_count}"
         )

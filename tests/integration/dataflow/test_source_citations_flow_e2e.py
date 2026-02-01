@@ -12,7 +12,6 @@ Following memory safety patterns for pytest-xdist (see CLAUDE.md).
 
 import gc
 from unittest.mock import patch
-from uuid import uuid4
 
 import pytest
 from langchain_core.messages import AIMessage, SystemMessage, ToolMessage

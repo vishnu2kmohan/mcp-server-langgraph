@@ -780,9 +780,7 @@ class TestNativeToolsIntegration:
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
                 return_value=mock_cached_registry,
             ),
-            patch(
-                "mcp_server_langgraph.api.v1.tools.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_flags,
         ):
             mock_flags.native_tools_enabled = True
             mock_flags.anthropic_native_web_search_enabled = True
@@ -819,9 +817,7 @@ class TestNativeToolsIntegration:
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
                 return_value=mock_cached_registry,
             ),
-            patch(
-                "mcp_server_langgraph.api.v1.tools.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_flags,
         ):
             mock_flags.native_tools_enabled = False
 
@@ -852,9 +848,7 @@ class TestNativeToolsIntegration:
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
                 return_value=mock_cached_registry,
             ),
-            patch(
-                "mcp_server_langgraph.api.v1.tools.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_flags,
         ):
             mock_flags.native_tools_enabled = True
             mock_flags.anthropic_native_web_search_enabled = True
@@ -886,9 +880,7 @@ class TestNativeToolsIntegration:
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
                 return_value=mock_cached_registry,
             ),
-            patch(
-                "mcp_server_langgraph.api.v1.tools.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_flags,
         ):
             mock_flags.native_tools_enabled = True
             mock_flags.anthropic_native_web_search_enabled = True
@@ -1033,17 +1025,13 @@ class TestNativeCapabilitiesEndpoint:
 
         with (
             patch.object(ModelRegistry, "get", return_value=mock_caps),
-            patch(
-                "mcp_server_langgraph.api.v1.tools.feature_flags"
-            ) as mock_ff,
+            patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             mock_ff.native_tools_enabled = True
             mock_ff.anthropic_native_web_search_enabled = True
             mock_ff.anthropic_native_code_execution_enabled = True
 
-            response = native_client.get(
-                "/api/v1/tools/native-capabilities/claude-opus-4-5-20251101"
-            )
+            response = native_client.get("/api/v1/tools/native-capabilities/claude-opus-4-5-20251101")
             assert response.status_code == 200
             data = response.json()
 
@@ -1081,17 +1069,13 @@ class TestNativeCapabilitiesEndpoint:
 
         with (
             patch.object(ModelRegistry, "get", return_value=mock_caps),
-            patch(
-                "mcp_server_langgraph.api.v1.tools.feature_flags"
-            ) as mock_ff,
+            patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             mock_ff.native_tools_enabled = True
             mock_ff.anthropic_native_web_search_enabled = True
             mock_ff.anthropic_native_code_execution_enabled = True
 
-            response = native_client.get(
-                "/api/v1/tools/native-capabilities/claude-opus-4-5@20251101"
-            )
+            response = native_client.get("/api/v1/tools/native-capabilities/claude-opus-4-5@20251101")
             assert response.status_code == 200
             data = response.json()
 
@@ -1123,16 +1107,12 @@ class TestNativeCapabilitiesEndpoint:
 
         with (
             patch.object(ModelRegistry, "get", return_value=mock_caps),
-            patch(
-                "mcp_server_langgraph.api.v1.tools.feature_flags"
-            ) as mock_ff,
+            patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             mock_ff.native_tools_enabled = True
             mock_ff.google_native_search_enabled = True
 
-            response = native_client.get(
-                "/api/v1/tools/native-capabilities/gemini-3-flash"
-            )
+            response = native_client.get("/api/v1/tools/native-capabilities/gemini-3-flash")
             assert response.status_code == 200
             data = response.json()
 
@@ -1166,15 +1146,11 @@ class TestNativeCapabilitiesEndpoint:
 
         with (
             patch.object(ModelRegistry, "get", return_value=mock_caps),
-            patch(
-                "mcp_server_langgraph.api.v1.tools.feature_flags"
-            ) as mock_ff,
+            patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             mock_ff.native_tools_enabled = True
 
-            response = native_client.get(
-                "/api/v1/tools/native-capabilities/some-random-model"
-            )
+            response = native_client.get("/api/v1/tools/native-capabilities/some-random-model")
             assert response.status_code == 200
             data = response.json()
 
@@ -1203,18 +1179,14 @@ class TestNativeCapabilitiesEndpoint:
 
         with (
             patch.object(ModelRegistry, "get", return_value=mock_caps),
-            patch(
-                "mcp_server_langgraph.api.v1.tools.feature_flags"
-            ) as mock_ff,
+            patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             # Master switch is OFF
             mock_ff.native_tools_enabled = False
             mock_ff.anthropic_native_web_search_enabled = True
             mock_ff.anthropic_native_code_execution_enabled = True
 
-            response = native_client.get(
-                "/api/v1/tools/native-capabilities/claude-opus-4-5-20251101"
-            )
+            response = native_client.get("/api/v1/tools/native-capabilities/claude-opus-4-5-20251101")
             assert response.status_code == 200
             data = response.json()
 
@@ -1244,18 +1216,14 @@ class TestNativeCapabilitiesEndpoint:
 
         with (
             patch.object(ModelRegistry, "get", return_value=mock_caps),
-            patch(
-                "mcp_server_langgraph.api.v1.tools.feature_flags"
-            ) as mock_ff,
+            patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             mock_ff.native_tools_enabled = True
             mock_ff.openai_native_web_search_enabled = True
             mock_ff.openai_native_code_interpreter_enabled = True
             mock_ff.use_responses_api_for_openai = True
 
-            response = native_client.get(
-                "/api/v1/tools/native-capabilities/gpt-5.2"
-            )
+            response = native_client.get("/api/v1/tools/native-capabilities/gpt-5.2")
             assert response.status_code == 200
             data = response.json()
 
@@ -1290,15 +1258,11 @@ class TestNativeCapabilitiesEndpoint:
 
         with (
             patch.object(ModelRegistry, "get", return_value=mock_caps),
-            patch(
-                "mcp_server_langgraph.api.v1.tools.feature_flags"
-            ) as mock_ff,
+            patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             mock_ff.native_tools_enabled = False
 
-            response = native_client.get(
-                "/api/v1/tools/native-capabilities/vertex_ai/claude-3-opus"
-            )
+            response = native_client.get("/api/v1/tools/native-capabilities/vertex_ai/claude-3-opus")
             assert response.status_code == 200
             data = response.json()
 

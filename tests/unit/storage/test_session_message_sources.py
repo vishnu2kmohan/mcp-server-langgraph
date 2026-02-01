@@ -149,9 +149,7 @@ class TestInMemorySessionStorageSources:
 
         sources = [{"title": "Test", "url": "https://test.com"}]
         # v8: add_message now requires user_id
-        await service.add_message(
-            session_id, user_id, {"role": "assistant", "content": "Response", "sources": sources}
-        )
+        await service.add_message(session_id, user_id, {"role": "assistant", "content": "Response", "sources": sources})
 
         # Get messages - v8: now requires user_id
         messages = await service.get_session_messages(session_id, user_id)
@@ -172,9 +170,7 @@ class TestInMemorySessionStorageSources:
         session_id = session["id"]
 
         # Add message without sources - v8: add_message now requires user_id
-        result = await service.add_message(
-            session_id, user_id, {"role": "user", "content": "Hello"}
-        )
+        result = await service.add_message(session_id, user_id, {"role": "user", "content": "Hello"})
 
         assert result is not None
         assert result["sources"] == []

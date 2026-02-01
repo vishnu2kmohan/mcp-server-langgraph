@@ -32,7 +32,6 @@ Usage: python scripts/migrate-legacy-semantic-colors.py [--dry-run] [--verbose]
 
 import argparse
 import re
-from typing import Any, Match
 import sys
 from pathlib import Path
 from collections import defaultdict
@@ -56,7 +55,7 @@ LEGACY_TO_RADIX = {
     "200": "3",
     "300": "4",
     "400": "5",
-    "500": "9",    # Main solid color
+    "500": "9",  # Main solid color
     "600": "10",
     "700": "11",
     "800": "11",
@@ -75,9 +74,9 @@ def build_patterns():
         for legacy, radix in LEGACY_TO_RADIX.items():
             for util in UTILITIES:
                 # Match[str] utility-color-legacyScale (e.g., bg-warning-500)
-                pattern = re.compile(rf'\b{util}-{color}-{legacy}\b')
-                replacement = f'{util}-{color}-{radix}'
-                patterns.append((pattern, replacement, f'{util}-{color}-{legacy}'))
+                pattern = re.compile(rf"\b{util}-{color}-{legacy}\b")
+                replacement = f"{util}-{color}-{radix}"
+                patterns.append((pattern, replacement, f"{util}-{color}-{legacy}"))
     return patterns
 
 

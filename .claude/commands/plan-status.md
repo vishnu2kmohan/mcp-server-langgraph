@@ -242,7 +242,6 @@ GEMINI_PLAN_PATH=$(basename "$PLAN_PATH")
 # Note: Use --prompt flag (stdin pipe doesn't work reliably with run_in_background)
 gemini \
   --model gemini-3-pro-preview \
-  --output-format json \
   --sandbox \
   --allowed-tools run_shell_command \
   --allowed-tools read_file \

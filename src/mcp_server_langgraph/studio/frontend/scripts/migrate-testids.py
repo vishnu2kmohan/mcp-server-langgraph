@@ -2,7 +2,6 @@
 """Migrate testids from ChatInputForm to ChatInput in test files."""
 
 import re
-from typing import Any, Match
 import sys
 from pathlib import Path
 
@@ -16,6 +15,7 @@ TESTID_MAPPINGS = {
     "enable-thinking-toggle": "thinking-toggle",
     "url-fetch-indicator": "url-fetch-loading",
 }
+
 
 def migrate_file(filepath: Path) -> int:
     """Migrate testids in a file. Returns count of replacements."""
@@ -39,6 +39,7 @@ def migrate_file(filepath: Path) -> int:
 
     return count
 
+
 def main() -> None:
     if len(sys.argv) < 2:
         print("Usage: migrate-testids.py <file>")
@@ -51,6 +52,7 @@ def main() -> None:
 
     count = migrate_file(filepath)
     print(f"Total replacements: {count}")
+
 
 if __name__ == "__main__":
     main()

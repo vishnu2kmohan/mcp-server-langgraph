@@ -81,9 +81,7 @@ class TestInitSkillsBootstrap:
                 "mcp_server_langgraph.bootstrap.skills.create_marketplace_admin_router",
                 return_value=(MagicMock(), MagicMock()),
             ),
-            patch(
-                "mcp_server_langgraph.core.feature_flags.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_flags,
             patch(
                 "mcp_server_langgraph.skills.adapters.create_skill_search_tool",
                 return_value=mock_tool,
@@ -115,9 +113,7 @@ class TestInitSkillsBootstrap:
                 "mcp_server_langgraph.bootstrap.skills.create_marketplace_admin_router",
                 return_value=(MagicMock(), MagicMock()),
             ),
-            patch(
-                "mcp_server_langgraph.core.feature_flags.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_flags,
             patch(
                 "mcp_server_langgraph.skills.adapters.create_skill_search_tool",
             ) as mock_create,
@@ -153,9 +149,7 @@ class TestSkillIndexingOnInstall:
 
         installer = SkillInstaller(skill_search_tool=mock_tool)
 
-        with patch.object(
-            installer, "_fetch_skill_from_marketplace", new_callable=AsyncMock
-        ) as mock_fetch:
+        with patch.object(installer, "_fetch_skill_from_marketplace", new_callable=AsyncMock) as mock_fetch:
             # Mock skill data with metadata
             mock_fetch.return_value = {
                 "content": "# Test Skill\nInstructions here.",
@@ -180,9 +174,7 @@ class TestSkillIndexingOnInstall:
 
         installer = SkillInstaller(skill_search_tool=None)
 
-        with patch.object(
-            installer, "_fetch_skill_from_marketplace", new_callable=AsyncMock
-        ) as mock_fetch:
+        with patch.object(installer, "_fetch_skill_from_marketplace", new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = {
                 "content": "# Test Skill",
                 "description": "A test skill",
@@ -293,9 +285,7 @@ class TestExistingSkillsIndexing:
                 "mcp_server_langgraph.bootstrap.skills.create_marketplace_admin_router",
                 return_value=(MagicMock(), MagicMock()),
             ),
-            patch(
-                "mcp_server_langgraph.core.feature_flags.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_flags,
             patch(
                 "mcp_server_langgraph.skills.adapters.create_skill_search_tool",
                 return_value=mock_tool,

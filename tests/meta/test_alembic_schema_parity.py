@@ -270,6 +270,7 @@ class TestAlembicSchemaParity:
                 "audit_logs",
                 "consent_records",
                 "conversations",
+                "execution_plans",  # v35.0: Added for RLM persistence
                 "user_preferences",
                 "user_profiles",
             ]
@@ -311,6 +312,7 @@ class TestAlembicSchemaParity:
                 "audit_logs",
                 "consent_records",
                 "conversations",
+                "execution_plans",  # v35.0: Added for RLM persistence
                 "user_preferences",
                 "user_profiles",
             ]

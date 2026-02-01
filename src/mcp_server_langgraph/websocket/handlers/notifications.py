@@ -95,6 +95,7 @@ class NotificationWebSocketHandler(WebSocketBase):
         """
         super().__init__(config=config, metrics=metrics)
         self._broadcaster = broadcaster
+
     async def on_connect(self, user: AuthUser) -> None:
         """
         Handle connection establishment.

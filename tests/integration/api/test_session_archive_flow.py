@@ -160,9 +160,7 @@ class TestSessionArchiveFlowIntegration:
         """
         mock_session_service.archive_session.return_value = True
 
-        with patch(
-            "mcp_server_langgraph.api.v1.sessions.invalidate_session_cost_cache"
-        ) as mock_invalidate:
+        with patch("mcp_server_langgraph.api.v1.sessions.invalidate_session_cost_cache") as mock_invalidate:
             response = client.post("/api/v1/sessions/session-to-archive/archive")
 
         assert response.status_code == 204

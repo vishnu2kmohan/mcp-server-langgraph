@@ -67,7 +67,6 @@ class TestExtractSourcesFromNativeResults:
     def test_extract_sources_from_openai_responses_api(self) -> None:
         """Should extract sources from OpenAI Responses API native_output."""
         from mcp_server_langgraph.tools.source_citation import (
-            SourceCitation,
             extract_sources_from_message,
         )
 
@@ -252,8 +251,7 @@ class TestExtractSourcesFromToolMessages:
         )
 
         tool_msg = ToolMessage(
-            content="[Broken Link(https://example.com: no closing bracket\n"
-            "[Valid](https://valid.com): This one works.",
+            content="[Broken Link(https://example.com: no closing bracket\n[Valid](https://valid.com): This one works.",
             tool_call_id="web_search_malformed",
             name="web_search",
         )

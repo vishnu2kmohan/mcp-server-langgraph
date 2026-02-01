@@ -100,9 +100,7 @@ class TestSessionGoalIntegration:
         set_at = 1705123456789
         completed_at = 1705127056789
 
-        with patch(
-            "mcp_server_langgraph.api.v1.sessions.get_session_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
             mock_service = AsyncMock(return_value=None)
             mock_service.get_session.return_value = MagicMock(**mock_session)
             mock_get_service.return_value = mock_service
@@ -153,9 +151,7 @@ class TestSessionGoalIntegration:
         """
         session_id = mock_session["id"]
 
-        with patch(
-            "mcp_server_langgraph.api.v1.sessions.get_session_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
             mock_service = AsyncMock(return_value=None)
             mock_service.get_session.return_value = MagicMock(**mock_session)
             mock_get_service.return_value = mock_service
@@ -195,9 +191,7 @@ class TestSessionGoalIntegration:
         """
         session_id = mock_session["id"]
 
-        with patch(
-            "mcp_server_langgraph.api.v1.sessions.get_session_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
             mock_service = AsyncMock(return_value=None)
             mock_service.get_session.return_value = MagicMock(**mock_session)
             mock_get_service.return_value = mock_service
@@ -234,9 +228,7 @@ class TestSessionGoalIntegration:
         WHEN attempting to set a goal
         THEN the response should be 404 Not Found
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.sessions.get_session_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
             mock_service = AsyncMock(return_value=None)
             mock_service.get_session.return_value = None
             mock_get_service.return_value = mock_service
@@ -258,9 +250,7 @@ class TestSessionGoalIntegration:
         WHEN attempting to complete a goal
         THEN the response should be 404 Not Found
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.sessions.get_session_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
             mock_service = AsyncMock(return_value=None)
             mock_service.get_session.return_value = None
             mock_get_service.return_value = mock_service
@@ -323,9 +313,7 @@ class TestSessionGoalIntegration:
         """
         session_id = mock_session["id"]
 
-        with patch(
-            "mcp_server_langgraph.api.v1.sessions.get_session_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
             mock_service = AsyncMock(return_value=None)
             mock_service.get_session.return_value = MagicMock(**mock_session)
             mock_get_service.return_value = mock_service

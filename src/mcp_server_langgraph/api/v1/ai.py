@@ -1998,9 +1998,7 @@ class AIPrediction(BaseModel):
     predicted_value: float = Field(ge=0.0, le=1.0, description="Predicted value (0-1)")
     confidence: float = Field(ge=0.0, le=1.0, description="Confidence score (0-1)")
     timeframe: Literal["7d", "30d", "90d"] = Field(description="Prediction timeframe")
-    factors: list[PredictionFactor] = Field(
-        default_factory=list, description="Contributing factors"
-    )
+    factors: list[PredictionFactor] = Field(default_factory=list, description="Contributing factors")
     created_at: int = Field(description="Creation timestamp (epoch ms)")
 
     @field_validator("confidence", mode="before")
@@ -2019,9 +2017,7 @@ class AIPrediction(BaseModel):
 class PredictionsResponse(BaseModel):
     """Response containing AI predictions."""
 
-    predictions: list[AIPrediction] = Field(
-        default_factory=list, description="List of predictions"
-    )
+    predictions: list[AIPrediction] = Field(default_factory=list, description="List of predictions")
 
 
 @ai_router.get(

@@ -71,7 +71,7 @@ class MessageEmbeddingService:
 
     def __init__(
         self,
-        message_index_manager: "MessageSemanticIndexManager | None",
+        message_index_manager: MessageSemanticIndexManager | None,
         enabled: bool = True,
     ) -> None:
         """Initialize message embedding service.
@@ -115,9 +115,7 @@ class MessageEmbeddingService:
             # user_id must be in message payload (added by v8 Phase 0)
             user_id = message.get("user_id", "")
             if not user_id:
-                logger.warning(
-                    f"Message missing user_id, skipping embedding: {session_id}"
-                )
+                logger.warning(f"Message missing user_id, skipping embedding: {session_id}")
                 record_embedding_attempt(
                     session_id=session_id,
                     success=False,
@@ -145,9 +143,7 @@ class MessageEmbeddingService:
                 latency_ms=latency_ms,
             )
 
-            logger.debug(
-                f"Embedded message {message.get('message_id')} for session {session_id}"
-            )
+            logger.debug(f"Embedded message {message.get('message_id')} for session {session_id}")
         except Exception as e:
             # Fail open - log warning but don't raise
             latency_ms = (time.perf_counter() - start_time) * 1000

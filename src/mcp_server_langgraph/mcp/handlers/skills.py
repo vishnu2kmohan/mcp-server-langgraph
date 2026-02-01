@@ -46,7 +46,7 @@ class SkillsToolHandler(AbstractToolHandler):
         skill_registry: SkillRegistry | None = None,
         skill_discovery: SkillDiscovery | None = None,
         skill_executor: SkillExecutor | None = None,
-        skill_search_tool: "SkillSearchTool | None" = None,
+        skill_search_tool: SkillSearchTool | None = None,
     ) -> None:
         """Initialize skills handler.
 
@@ -218,10 +218,7 @@ class SkillsToolHandler(AbstractToolHandler):
         summaries = []
 
         # Try semantic search if enabled and available
-        if (
-            feature_flags.enable_semantic_skill_search
-            and self.skill_search_tool is not None
-        ):
+        if feature_flags.enable_semantic_skill_search and self.skill_search_tool is not None:
             try:
                 semantic_results = await self.skill_search_tool.search(
                     query,

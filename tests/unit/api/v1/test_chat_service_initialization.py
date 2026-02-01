@@ -13,12 +13,12 @@ from __future__ import annotations
 
 import gc
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 if TYPE_CHECKING:
-    from mcp_server_langgraph.api.v1.chat import ChatService
+    pass
 
 pytestmark = pytest.mark.unit
 
@@ -78,9 +78,7 @@ class TestGetChatServiceInitialization:
         # Verify storage has the required method
         storage = service._session_storage
         assert storage is not None
-        assert hasattr(storage, "get_messages"), (
-            "session_storage must have get_messages() method for history loading"
-        )
+        assert hasattr(storage, "get_messages"), "session_storage must have get_messages() method for history loading"
 
     @pytest.mark.asyncio
     async def test_get_chat_service_session_storage_can_load_history(self) -> None:

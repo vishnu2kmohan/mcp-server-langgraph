@@ -16,41 +16,41 @@ WORKFLOWS_PAGE = Path(__file__).parent.parent / "src" / "pages" / "WorkflowsPage
 # Text color fixes
 TEXT_FIXES = [
     # Undo/redo buttons - step 10 to 11
-    (r'\btext-neutral-10\b', 'text-neutral-11'),
-
+    (r"\btext-neutral-10\b", "text-neutral-11"),
     # Warning text - step 10 to 11
-    (r'\btext-warning-10\b', 'text-warning-11'),
+    (r"\btext-warning-10\b", "text-warning-11"),
 ]
 
 # Dark mode text fixes - consolidate to step 11
 DARK_TEXT_FIXES = [
-    (r'\bdark:text-error-7\b', 'dark:text-error-11'),
-    (r'\bdark:text-primary-7\b', 'dark:text-primary-11'),
-    (r'\bdark:text-success-7\b', 'dark:text-success-11'),
-    (r'\bdark:text-warning-9\b', 'dark:text-warning-11'),
-    (r'\bdark:text-grafana-5\b', 'dark:text-grafana-11'),
-    (r'\bdark:text-insight-9\b', 'dark:text-insight-11'),
+    (r"\bdark:text-error-7\b", "dark:text-error-11"),
+    (r"\bdark:text-primary-7\b", "dark:text-primary-11"),
+    (r"\bdark:text-success-7\b", "dark:text-success-11"),
+    (r"\bdark:text-warning-9\b", "dark:text-warning-11"),
+    (r"\bdark:text-grafana-5\b", "dark:text-grafana-11"),
+    (r"\bdark:text-insight-9\b", "dark:text-insight-11"),
 ]
 
 # Button background fixes - step 10 to step 9
 BG_FIXES = [
-    (r'\bbg-success-10\b', 'bg-success-9'),
-    (r'\bhover:bg-success-11\b', 'hover:bg-success-10'),
-    (r'\bbg-primary-10\b', 'bg-primary-9'),
-    (r'\bhover:bg-primary-11\b', 'hover:bg-primary-10'),
+    (r"\bbg-success-10\b", "bg-success-9"),
+    (r"\bhover:bg-success-11\b", "hover:bg-success-10"),
+    (r"\bbg-primary-10\b", "bg-primary-9"),
+    (r"\bhover:bg-primary-11\b", "hover:bg-primary-10"),
 ]
 
 # Duplicate bg class cleanup (remove second bg class)
 DUPLICATE_FIXES = [
     # "bg-error-3 text-error-11 bg-error-4" -> "bg-error-3 text-error-11"
-    (r'bg-error-3 (text-error-11) bg-error-4', r'bg-error-3 \1'),
-    (r'bg-primary-3 (text-primary-11) bg-primary-4', r'bg-primary-3 \1'),
-    (r'bg-success-3 (text-success-11) bg-success-4', r'bg-success-3 \1'),
+    (r"bg-error-3 (text-error-11) bg-error-4", r"bg-error-3 \1"),
+    (r"bg-primary-3 (text-primary-11) bg-primary-4", r"bg-primary-3 \1"),
+    (r"bg-success-3 (text-success-11) bg-success-4", r"bg-success-3 \1"),
     # Also handle "bg-X-3 bg-X-4" patterns
-    (r'bg-error-3 bg-error-4', 'bg-error-3'),
-    (r'bg-primary-3 bg-primary-4', 'bg-primary-3'),
-    (r'bg-success-3 bg-success-4', 'bg-success-3'),
+    (r"bg-error-3 bg-error-4", "bg-error-3"),
+    (r"bg-primary-3 bg-primary-4", "bg-primary-3"),
+    (r"bg-success-3 bg-success-4", "bg-success-3"),
 ]
+
 
 def fix_file(filepath: Path, dry_run: bool = False) -> int:
     """Fix a single file. Returns number of replacements made."""
@@ -70,8 +70,10 @@ def fix_file(filepath: Path, dry_run: bool = False) -> int:
 
     return changes
 
+
 def main() -> int:
     import sys
+
     dry_run = "--dry-run" in sys.argv
 
     if dry_run:
@@ -89,6 +91,8 @@ def main() -> int:
 
     return 0
 
+
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

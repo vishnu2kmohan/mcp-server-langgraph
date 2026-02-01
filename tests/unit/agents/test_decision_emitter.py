@@ -13,10 +13,8 @@ Key Features Tested:
 - Field truncation (query, rationale)
 """
 
-import asyncio
 import gc
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -132,9 +130,7 @@ class TestDecisionEmitterEmit:
             user_id="user:alice",
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.decision_emitter.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.decision_emitter.feature_flags") as mock_flags:
             mock_flags.enable_context_graph = False
 
             result = await emitter.emit(
@@ -169,9 +165,7 @@ class TestDecisionEmitterEmit:
             user_id="user:alice",
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.decision_emitter.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.decision_emitter.feature_flags") as mock_flags:
             mock_flags.enable_context_graph = True
             mock_flags.context_graph_sampling_rate = 1.0
             mock_flags.context_graph_async_persistence = False
@@ -214,9 +208,7 @@ class TestDecisionEmitterEmit:
 
         long_query = "x" * 1000  # Much longer than MAX_QUERY_LENGTH
 
-        with patch(
-            "mcp_server_langgraph.agents.decision_emitter.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.decision_emitter.feature_flags") as mock_flags:
             mock_flags.enable_context_graph = True
             mock_flags.context_graph_sampling_rate = 1.0
             mock_flags.context_graph_async_persistence = False
@@ -258,9 +250,7 @@ class TestDecisionEmitterEmit:
 
         long_rationale = "r" * 2000  # Much longer than MAX_RATIONALE_LENGTH
 
-        with patch(
-            "mcp_server_langgraph.agents.decision_emitter.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.decision_emitter.feature_flags") as mock_flags:
             mock_flags.enable_context_graph = True
             mock_flags.context_graph_sampling_rate = 1.0
             mock_flags.context_graph_async_persistence = False
@@ -308,9 +298,7 @@ class TestDecisionEmitterSampling:
             user_id="user:alice",
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.decision_emitter.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.decision_emitter.feature_flags") as mock_flags:
             mock_flags.enable_context_graph = True
             mock_flags.context_graph_sampling_rate = 0.0
 
@@ -356,9 +344,7 @@ class TestDecisionEmitterSequencing:
             user_id="user:alice",
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.decision_emitter.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.decision_emitter.feature_flags") as mock_flags:
             mock_flags.enable_context_graph = True
             mock_flags.context_graph_sampling_rate = 1.0
             mock_flags.context_graph_async_persistence = False
@@ -417,9 +403,7 @@ class TestDecisionEmitterAsync:
             user_id="user:alice",
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.decision_emitter.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.decision_emitter.feature_flags") as mock_flags:
             mock_flags.enable_context_graph = True
             mock_flags.context_graph_sampling_rate = 1.0
             mock_flags.context_graph_async_persistence = True

@@ -30,7 +30,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 # Frontend source directory
 FRONTEND_SRC = Path(__file__).parent.parent / "src"
@@ -50,6 +50,7 @@ SKIP_PATTERNS = {
 
 class Replacement(NamedTuple):
     """A color replacement rule"""
+
     pattern: str
     replacement: str
     description: str
@@ -57,6 +58,7 @@ class Replacement(NamedTuple):
 
 class Violation(NamedTuple):
     """A detected violation"""
+
     file: Path
     line_no: int
     line: str
@@ -71,21 +73,17 @@ REPLACEMENTS = [
     Replacement(r"\s*dark:text-black\b", "", "Remove redundant dark:text-black"),
     Replacement(r"\s*dark:bg-white\b", "", "Remove redundant dark:bg-white"),
     Replacement(r"\s*dark:bg-black\b", "", "Remove redundant dark:bg-black"),
-
     # Background colors with opacity
     Replacement(r"\bbg-black/(\d+)", r"bg-neutral-12/\1", "Replace bg-black/N with bg-neutral-12/N"),
     Replacement(r"\bbg-white/(\d+)", r"bg-neutral-1/\1", "Replace bg-white/N with bg-neutral-1/N"),
-
     # Solid colors
     Replacement(r"\btext-white\b", "text-neutral-12", "Replace text-white with text-neutral-12"),
     Replacement(r"\btext-black\b", "text-neutral-1", "Replace text-black with text-neutral-1"),
     Replacement(r"\bbg-white\b", "bg-neutral-1", "Replace bg-white with bg-neutral-1"),
     Replacement(r"\bbg-black\b", "bg-neutral-12", "Replace bg-black with bg-neutral-12"),
-
     # Border colors
     Replacement(r"\bborder-white\b", "border-neutral-1", "Replace border-white with border-neutral-1"),
     Replacement(r"\bborder-black\b", "border-neutral-12", "Replace border-black with border-neutral-12"),
-
     # Ring colors
     Replacement(r"\bring-white\b", "ring-neutral-1", "Replace ring-white with ring-neutral-1"),
     Replacement(r"\bring-black\b", "ring-neutral-12", "Replace ring-black with ring-neutral-12"),
@@ -108,13 +106,15 @@ def find_violations(content: str, file_path: Path) -> list[Violation]:
     for line_no, line in enumerate(lines, 1):
         for rule in REPLACEMENTS:
             if re.search(rule.pattern, line):
-                violations.append(Violation(
-                    file=file_path,
-                    line_no=line_no,
-                    line=line.strip(),
-                    pattern=rule.pattern,
-                    replacement=rule.replacement,
-                ))
+                violations.append(
+                    Violation(
+                        file=file_path,
+                        line_no=line_no,
+                        line=line.strip(),
+                        pattern=rule.pattern,
+                        replacement=rule.replacement,
+                    )
+                )
 
     return violations
 
@@ -169,16 +169,15 @@ def process_file(file_path: Path, dry_run: bool = False, verbose: bool = False) 
 
 def main(argv: list[str] | None = None) -> int:
     """Main entry point"""
-    parser = argparse.ArgumentParser(
-        description="Fix design system color violations in frontend code"
-    )
+    parser = argparse.ArgumentParser(description="Fix design system color violations in frontend code")
     parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Show violations without fixing them",
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Show detailed output",
     )
@@ -198,10 +197,7 @@ def main(argv: list[str] | None = None) -> int:
         if not FRONTEND_SRC.exists():
             print(f"Frontend source directory not found: {FRONTEND_SRC}", file=sys.stderr)
             return 1
-        files = [
-            f for f in FRONTEND_SRC.rglob("*")
-            if f.suffix in EXTENSIONS and not should_skip_file(f)
-        ]
+        files = [f for f in FRONTEND_SRC.rglob("*") if f.suffix in EXTENSIONS and not should_skip_file(f)]
 
     total_violations = 0
     total_fixes = 0

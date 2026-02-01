@@ -114,7 +114,7 @@ class TestStreamingSourceCitations:
     @pytest.mark.asyncio
     async def test_langgraph_stream_emits_sources(self) -> None:
         """LangGraph streaming should emit sources SSE event."""
-        from unittest.mock import AsyncMock, MagicMock, patch
+        from unittest.mock import MagicMock
 
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 

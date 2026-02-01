@@ -16,21 +16,22 @@ ARTIFACTS_PAGE = Path(__file__).parent.parent / "src" / "pages" / "ArtifactsPage
 
 # Text color fixes - step 10 to step 11
 TEXT_FIXES = [
-    (r'\btext-neutral-10\b', 'text-neutral-11'),
-    (r'\btext-warning-10\b', 'text-warning-11'),
+    (r"\btext-neutral-10\b", "text-neutral-11"),
+    (r"\btext-warning-10\b", "text-warning-11"),
 ]
 
 # Dark mode text fixes - consolidate to step 11
 DARK_TEXT_FIXES = [
-    (r'\bdark:text-warning-6\b', 'dark:text-warning-11'),
-    (r'\bdark:text-success-5\b', 'dark:text-success-11'),
-    (r'\bdark:text-error-9\b', 'dark:text-error-11'),
+    (r"\bdark:text-warning-6\b", "dark:text-warning-11"),
+    (r"\bdark:text-success-5\b", "dark:text-success-11"),
+    (r"\bdark:text-error-9\b", "dark:text-error-11"),
 ]
 
 # Dark mode border fixes - step 10 to step 7
 DARK_BORDER_FIXES = [
-    (r'\bdark:hover:border-primary-10\b', 'dark:hover:border-primary-7'),
+    (r"\bdark:hover:border-primary-10\b", "dark:hover:border-primary-7"),
 ]
+
 
 def fix_file(filepath: Path, dry_run: bool = False) -> int:
     """Fix a single file. Returns number of replacements made."""
@@ -50,8 +51,10 @@ def fix_file(filepath: Path, dry_run: bool = False) -> int:
 
     return changes
 
+
 def main() -> int:
     import sys
+
     dry_run = "--dry-run" in sys.argv
 
     if dry_run:
@@ -69,6 +72,8 @@ def main() -> int:
 
     return 0
 
+
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

@@ -128,6 +128,19 @@ class ExecutionPlanRepository(ABC):
         """
         pass
 
+    @abstractmethod
+    async def list_all(self, limit: int = 100, offset: int = 0) -> list[ExecutionPlan]:
+        """List all execution plans with pagination.
+
+        Args:
+            limit: Maximum number of plans to return (capped at 1000)
+            offset: Number of plans to skip (capped at 100000)
+
+        Returns:
+            List of execution plans sorted by created_at DESC
+        """
+        pass
+
 
 class InMemoryExecutionPlanRepository(ExecutionPlanRepository):
     """In-memory implementation for testing."""
@@ -181,3 +194,47 @@ class InMemoryExecutionPlanRepository(ExecutionPlanRepository):
         """List plans with pending embeddings for background processing."""
         pending = [plan for plan in self._plans.values() if getattr(plan, "embedding_status", "pending") == "pending"]
         return sorted(pending, key=lambda p: p.created_at)[:limit]
+
+    async def list_all(self, limit: int = 100, offset: int = 0) -> list[ExecutionPlan]:
+        """List all execution plans with pagination.
+
+        v35.0: Sorted by created_at DESC with hard caps on limit/offset.
+        """
+        # Apply hard caps (v35.0)
+        capped_limit = min(limit, 1000)
+        capped_offset = min(offset, 100000)
+
+        # Sort by created_at DESC (newest first)
+        sorted_plans = sorted(
+            self._plans.values(),
+            key=lambda p: p.created_at,
+            reverse=True,
+        )
+
+        # Apply pagination
+        return sorted_plans[capped_offset : capped_offset + capped_limit]
+
+
+# Singleton pattern for shared InMemory repository (v35.0)
+_plan_repository: InMemoryExecutionPlanRepository | None = None
+
+
+def get_plan_repository() -> InMemoryExecutionPlanRepository:
+    """Get the shared InMemory execution plan repository singleton.
+
+    Returns:
+        The shared InMemoryExecutionPlanRepository instance
+    """
+    global _plan_repository
+    if _plan_repository is None:
+        _plan_repository = InMemoryExecutionPlanRepository()
+    return _plan_repository
+
+
+def reset_plan_repository() -> None:
+    """Reset the shared InMemory repository (for testing).
+
+    Creates a fresh repository instance, clearing all stored plans.
+    """
+    global _plan_repository
+    _plan_repository = None

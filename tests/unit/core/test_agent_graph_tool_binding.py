@@ -462,7 +462,7 @@ class TestDynamicToolFiltering:
         When semantic search selects specific tools, the LLM should only receive
         those tools in its context, not all available tools.
         """
-        from unittest.mock import AsyncMock, MagicMock, patch
+        from unittest.mock import AsyncMock, MagicMock
 
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
@@ -487,9 +487,7 @@ class TestDynamicToolFiltering:
         mock_model = MagicMock()
         mock_model_with_filtered_tools = MagicMock()
         mock_model.bind_tools = MagicMock(return_value=mock_model_with_filtered_tools)
-        mock_model_with_filtered_tools.ainvoke = AsyncMock(
-            return_value=AIMessage(content="Response using selected tools")
-        )
+        mock_model_with_filtered_tools.ainvoke = AsyncMock(return_value=AIMessage(content="Response using selected tools"))
 
         # State with only calculator and search selected
         state: AgentState = {
@@ -552,9 +550,7 @@ class TestDynamicToolFiltering:
 
         # Create pre-bound model (all tools)
         mock_model_with_all_tools = MagicMock()
-        mock_model_with_all_tools.ainvoke = AsyncMock(
-            return_value=AIMessage(content="Response using all tools")
-        )
+        mock_model_with_all_tools.ainvoke = AsyncMock(return_value=AIMessage(content="Response using all tools"))
 
         mock_model = MagicMock()
 
@@ -608,14 +604,10 @@ class TestDynamicToolFiltering:
         mock_model = MagicMock()
         mock_model_no_tools = MagicMock()
         mock_model.bind_tools = MagicMock(return_value=mock_model_no_tools)
-        mock_model_no_tools.ainvoke = AsyncMock(
-            return_value=AIMessage(content="Response without tools")
-        )
+        mock_model_no_tools.ainvoke = AsyncMock(return_value=AIMessage(content="Response without tools"))
 
         mock_model_with_all_tools = MagicMock()
-        mock_model_with_all_tools.ainvoke = AsyncMock(
-            return_value=AIMessage(content="Response with all tools")
-        )
+        mock_model_with_all_tools.ainvoke = AsyncMock(return_value=AIMessage(content="Response with all tools"))
 
         state: AgentState = {
             "messages": [HumanMessage(content="Hello")],
@@ -727,9 +719,7 @@ class TestNativeResultDetection:
 
         mock_response = MagicMock()
         mock_response.content = "I'll calculate that for you."
-        mock_response.tool_calls = [
-            {"id": "call_123", "name": "calculator", "args": {"a": 1, "b": 2}}
-        ]
+        mock_response.tool_calls = [{"id": "call_123", "name": "calculator", "args": {"a": 1, "b": 2}}]
 
         mock_model = MagicMock()
         mock_model.ainvoke = AsyncMock(return_value=mock_response)

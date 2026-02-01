@@ -176,6 +176,25 @@ Try:
   • git add <file>         - Stage changes first
 ```
 
+### Step 2.5: Detect Plan Context (Optional)
+
+For code review, Claude should check for an active implementation plan to validate changes against:
+
+**Plan Detection Priority:**
+
+1. **Active session plan** (highest priority)
+   - Check conversation context for system reminder:
+     `"A plan file exists from plan mode at: /path/to/plan.md"`
+   - If found, use this path automatically (no confirmation needed)
+   - Display: `📋 Using active session plan: [path]`
+
+2. **Plans directory fallback**
+   - If no active plan detected, search `~/.claude/plans/*.md`
+   - Use most recently modified plan (no confirmation for code review)
+   - Plan provides context for validating changes align with requirements
+
+**Note**: Plan detection is optional for code review. If no plan is found, proceed with code review without plan validation.
+
 ### Step 3: Verify Reviewer CLIs
 
 ```bash
@@ -222,9 +241,16 @@ Run both reviewers in parallel for efficiency:
 CHANGED_FILES=$(git diff --staged --name-only | tr '\n' ' ')
 DIFF_STAT=$(git diff --staged --stat | tail -1)
 
-# Detect active plan file for context (use most recent if no active session plan)
-# Claude injects active plan via system reminder: "A plan file exists from plan mode at: /path/to/plan.md"
-# If not found, use most recently modified plan in ~/.claude/plans/
+# Detect active plan file for context using priority order:
+# 1. Active session plan: Claude injects via system reminder:
+#    "A plan file exists from plan mode at: /path/to/plan.md"
+#    If found in conversation context, use automatically (no confirmation needed).
+# 2. User-provided argument: Check if path was passed as argument
+# 3. Plans directory search: Fallback to most recently modified plan in ~/.claude/plans/
+#    (For code review, no confirmation needed since plan is just context, not the review target)
+#
+# NOTE: Claude (the AI) should check conversation context for active plan first.
+# The bash variable below is only a fallback when no active plan is detected.
 PLAN_PATH=$(ls -t ~/.claude/plans/*.md 2>/dev/null | head -1)
 PLAN_NAME=$(basename "$PLAN_PATH" 2>/dev/null || echo "none")
 
@@ -273,7 +299,6 @@ export SANDBOX_FLAGS="-v $HOME/.config/gcloud/application_default_credentials.js
 # Note: Use --prompt flag (stdin pipe doesn't work reliably with run_in_background)
 gemini \
   --model gemini-3-pro-preview \
-  --output-format json \
   --sandbox \
   --allowed-tools run_shell_command \
   --allowed-tools read_file \
@@ -384,7 +409,6 @@ export SANDBOX_FLAGS="-v $HOME/.config/gcloud/application_default_credentials.js
 gemini \
   --resume $GEMINI_REVIEW_SESSION_ID \
   --model gemini-3-pro-preview \
-  --output-format json \
   --sandbox \
   --allowed-tools run_shell_command \
   --allowed-tools read_file \

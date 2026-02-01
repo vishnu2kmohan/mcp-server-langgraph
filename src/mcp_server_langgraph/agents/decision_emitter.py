@@ -184,12 +184,8 @@ class DecisionEmitter:
             "selected_items": selected_items[:20] if selected_items else None,
             "policy_version": policy_version,
             "embedding_text": f"{query_truncated} {rationale_truncated}",
-            "otel_trace_id": (
-                format(span_ctx.trace_id, "032x") if span_ctx.is_valid else None
-            ),
-            "otel_span_id": (
-                format(span_ctx.span_id, "016x") if span_ctx.is_valid else None
-            ),
+            "otel_trace_id": (format(span_ctx.trace_id, "032x") if span_ctx.is_valid else None),
+            "otel_span_id": (format(span_ctx.span_id, "016x") if span_ctx.is_valid else None),
         }
 
         if feature_flags.context_graph_async_persistence:
@@ -214,7 +210,7 @@ class DecisionEmitter:
                     try:
                         item = await asyncio.wait_for(self._queue.get(), timeout=1.0)
                         batch.append(item)
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         break
 
                 # Persist batch

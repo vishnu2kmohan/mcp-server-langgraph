@@ -16,7 +16,7 @@ Reference: ADR-0068 Phase 9, Google Zanzibar cross-tenant patterns
 import gc
 import json
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 

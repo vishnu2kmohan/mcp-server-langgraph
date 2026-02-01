@@ -98,6 +98,7 @@ class AuditHandler(WebSocketBase):
         super().__init__(config=config, metrics=metrics)
         self._broadcaster = broadcaster
         self._current_filter: AuditFilter = AuditFilter()
+
     async def on_connect(self, user: AuthUser) -> None:
         """
         Handle connection establishment.

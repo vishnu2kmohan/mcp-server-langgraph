@@ -11,8 +11,7 @@ Following memory safety patterns for pytest-xdist (see CLAUDE.md).
 """
 
 import gc
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
@@ -443,9 +442,7 @@ class TestAuditSchedulerIntegration:
             state = await init_storage(test_settings)
 
             try:
-                assert scheduler_started["value"], (
-                    "Audit scheduler should have been started when enabled"
-                )
+                assert scheduler_started["value"], "Audit scheduler should have been started when enabled"
             finally:
                 await state.cleanup()
 

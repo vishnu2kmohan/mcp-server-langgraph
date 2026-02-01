@@ -1034,9 +1034,7 @@ class TestWebSocketPermissionsE2E:
         perms = response.json()["websocket_permissions"]
 
         for key, value in perms.items():
-            assert isinstance(value, bool), (
-                f"websocket_permissions.{key} should be boolean, got {type(value).__name__}"
-            )
+            assert isinstance(value, bool), f"websocket_permissions.{key} should be boolean, got {type(value).__name__}"
 
     @pytest.mark.skipif(not _api_available(), reason="API server not available")
     @pytest.mark.skipif(
@@ -1086,8 +1084,7 @@ class TestWebSocketPermissionsE2E:
 
         # Must require authentication - never return permissions without auth
         assert response.status_code == 401, (
-            "/api/v1/me must require authentication. "
-            "Returning 200 without auth would be a security vulnerability."
+            "/api/v1/me must require authentication. Returning 200 without auth would be a security vulnerability."
         )
 
 

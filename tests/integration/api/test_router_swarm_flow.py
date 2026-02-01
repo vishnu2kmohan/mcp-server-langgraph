@@ -14,12 +14,11 @@ from __future__ import annotations
 
 import gc
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from mcp_server_langgraph.agents.router_agent import RouterOutput
-from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
 
 pytestmark = [

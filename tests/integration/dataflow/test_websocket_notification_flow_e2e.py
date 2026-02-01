@@ -565,9 +565,7 @@ class TestNotificationConnectionLifecycle:
 
         # Create connection that fails
         failing_connection = MagicMock()
-        failing_connection.send_json = AsyncMock(
-            side_effect=ConnectionError("Connection closed")
-        )
+        failing_connection.send_json = AsyncMock(side_effect=ConnectionError("Connection closed"))
 
         await broadcaster.subscribe(
             connection=failing_connection,

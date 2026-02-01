@@ -477,7 +477,6 @@ SAFE_DESCRIPTION=$(printf '%q' "$DESCRIPTION")
 declare -a GEMINI_CMD=(
   gemini
   --model gemini-3-pro-preview
-  --output-format json
   --sandbox
   --allowed-tools read_file
 )
@@ -797,7 +796,8 @@ add_artifact() {
     timeout 120 gemini \
       --resume "$GEMINI_DIAG_SESSION_ID" \
       --model gemini-3-pro-preview \
-      --output-format json \
+      --sandbox \
+      --allowed-tools read_file \
       --prompt "New artifact provided: @./$new_file
        Previous diagnosis: $prev_diagnosis.
        Analyze this new evidence and update your diagnosis."

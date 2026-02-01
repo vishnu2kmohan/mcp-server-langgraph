@@ -444,9 +444,9 @@ class TestBudgetCheckAllFlow:
 
         # Spend data
         spend_by_entity = {
-            "org-1": Decimal("50.00"),   # 50% - ok
+            "org-1": Decimal("50.00"),  # 50% - ok
             "org-2": Decimal("180.00"),  # 90% - warning
-            "org-3": Decimal("60.00"),   # 120% - exceeded
+            "org-3": Decimal("60.00"),  # 120% - exceeded
         }
 
         # Check all

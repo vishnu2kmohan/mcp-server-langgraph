@@ -174,8 +174,7 @@ class TestSourceCitationCollection:
                 ),
                 # ToolMessage from builtin web_search
                 ToolMessage(
-                    content="[Doc B](https://example.com/b): B snippet\n"
-                    "[Doc C](https://example.com/c): C snippet\n",
+                    content="[Doc B](https://example.com/b): B snippet\n[Doc C](https://example.com/c): C snippet\n",
                     tool_call_id="ws_456",
                     name="web_search",
                 ),
@@ -260,12 +259,8 @@ class TestSourceCitationDomainUtils:
 
         sources = [
             SourceCitation(title="No Score", url="https://noscore.com"),
-            SourceCitation(
-                title="Low", url="https://low.com", relevance_score=0.3
-            ),
-            SourceCitation(
-                title="High", url="https://high.com", relevance_score=0.95
-            ),
+            SourceCitation(title="Low", url="https://low.com", relevance_score=0.3),
+            SourceCitation(title="High", url="https://high.com", relevance_score=0.95),
         ]
 
         sorted_sources = sort_sources_by_relevance(sources)
@@ -453,7 +448,7 @@ class TestMessageStorageSourceCitations:
             {
                 "title": "Python 3.13: What's New — A Complete Guide",
                 "url": "https://example.com/path?query=value&foo=bar#section",
-                "snippet": "Features include:\n- Pattern matching\n- Type hints \"improved\"",
+                "snippet": 'Features include:\n- Pattern matching\n- Type hints "improved"',
             },
         ]
 

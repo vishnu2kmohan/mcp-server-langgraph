@@ -13,7 +13,7 @@ Tests:
 
 import gc
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import FastAPI
@@ -100,9 +100,7 @@ class TestGetTraceEndpoint:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_get_trace_returns_trace(
-        self, mock_current_user, mock_trace_read
-    ) -> None:
+    async def test_get_trace_returns_trace(self, mock_current_user, mock_trace_read) -> None:
         """GET /traces/{trace_id} should return trace data."""
         from mcp_server_langgraph.api.v1.context_graph import (
             get_decision_repository,
@@ -131,9 +129,7 @@ class TestGetTraceEndpoint:
             app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
-    async def test_get_trace_returns_404_when_not_found(
-        self, mock_current_user
-    ) -> None:
+    async def test_get_trace_returns_404_when_not_found(self, mock_current_user) -> None:
         """GET /traces/{trace_id} should return 404 when trace not found."""
         from mcp_server_langgraph.api.v1.context_graph import (
             get_decision_repository,
@@ -167,9 +163,7 @@ class TestGetSessionTracesEndpoint:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_get_session_traces_returns_list(
-        self, mock_current_user, mock_trace_summary
-    ) -> None:
+    async def test_get_session_traces_returns_list(self, mock_current_user, mock_trace_summary) -> None:
         """GET /sessions/{session_id}/traces should return trace summaries."""
         from mcp_server_langgraph.api.v1.context_graph import (
             get_decision_repository,
@@ -181,9 +175,7 @@ class TestGetSessionTracesEndpoint:
         app.include_router(router)
 
         mock_repo = AsyncMock(return_value=None)
-        mock_repo.get_by_session = AsyncMock(
-            return_value=[mock_trace_summary, mock_trace_summary]
-        )
+        mock_repo.get_by_session = AsyncMock(return_value=[mock_trace_summary, mock_trace_summary])
 
         app.dependency_overrides[get_current_user] = lambda: mock_current_user
         app.dependency_overrides[get_decision_repository] = lambda: mock_repo
@@ -200,9 +192,7 @@ class TestGetSessionTracesEndpoint:
             app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
-    async def test_get_session_traces_supports_pagination(
-        self, mock_current_user, mock_trace_summary
-    ) -> None:
+    async def test_get_session_traces_supports_pagination(self, mock_current_user, mock_trace_summary) -> None:
         """GET /sessions/{session_id}/traces should support limit and offset."""
         from mcp_server_langgraph.api.v1.context_graph import (
             get_decision_repository,

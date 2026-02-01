@@ -145,9 +145,7 @@ class CachedConnectionRepository(ConnectionRepository):
         Used for reference resolution to map server_name → connection_id.
         Caches results for 5 minutes (CACHE_TTLS["connection"]).
         """
-        cache_key = generate_cache_key(
-            server_name, owner_id, prefix="connection_by_name"
-        )
+        cache_key = generate_cache_key(server_name, owner_id, prefix="connection_by_name")
 
         # Try cache first
         cached = self._cache.get(cache_key)
@@ -347,9 +345,7 @@ class CachedConnectionRepository(ConnectionRepository):
         popup: bool = False,
     ) -> None:
         """Create OAuth2 state (not cached)."""
-        await self._delegate.create_oauth2_state(
-            connection_id, state, code_verifier, redirect_uri, popup
-        )
+        await self._delegate.create_oauth2_state(connection_id, state, code_verifier, redirect_uri, popup)
 
     async def get_and_delete_oauth2_state(self, state: str) -> dict[str, Any] | None:
         """Get and delete OAuth2 state (not cached, one-time use)."""

@@ -113,9 +113,7 @@ class TestVectorProviderFactorySettings:
         mock_settings = MagicMock()
         mock_settings.vector_search_provider = "pgvector"
 
-        with patch(
-            "mcp_server_langgraph.core.config.settings", mock_settings
-        ):
+        with patch("mcp_server_langgraph.core.config.settings", mock_settings):
             with patch(
                 "mcp_server_langgraph.storage.vectors.factory.get_database_pool",
                 return_value=mock_pool,
@@ -142,9 +140,7 @@ class TestVectorProviderFactorySettings:
         mock_settings.vector_search_provider = "qdrant"
         mock_settings.embedding_dimensions = 768
 
-        with patch(
-            "mcp_server_langgraph.core.config.settings", mock_settings
-        ):
+        with patch("mcp_server_langgraph.core.config.settings", mock_settings):
             with patch(
                 "mcp_server_langgraph.storage.vectors.factory.get_qdrant_client",
                 return_value=mock_client,

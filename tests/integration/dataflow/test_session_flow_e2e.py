@@ -11,7 +11,6 @@ Following memory safety patterns for pytest-xdist (see CLAUDE.md).
 """
 
 import gc
-from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -79,7 +78,6 @@ def create_test_session():
 @pytest.fixture
 def create_test_message():
     """Factory for creating test messages."""
-    from mcp_server_langgraph.storage.models import Message
 
     def _create(
         role: str = "user",
@@ -235,7 +233,7 @@ class TestSessionDataFlowE2E:
 
         # Create session for different user
         other_session = create_test_session(
-            session_id=f"session-other-user",
+            session_id="session-other-user",
             user_id="other-user-123",
             name="Other User Session",
         )

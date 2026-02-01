@@ -74,13 +74,10 @@ class TestLiteLLMModelCostAccess:
 
         # Look for models with supports_reasoning field
         models_with_reasoning = [
-            key for key, value in model_cost.items()
-            if isinstance(value, dict) and "supports_reasoning" in value
+            key for key, value in model_cost.items() if isinstance(value, dict) and "supports_reasoning" in value
         ]
 
-        assert len(models_with_reasoning) > 0, (
-            "At least some models should have supports_reasoning field"
-        )
+        assert len(models_with_reasoning) > 0, "At least some models should have supports_reasoning field"
 
     def test_litellm_known_reasoning_models_have_field_true(self) -> None:
         """Test that known reasoning models have supports_reasoning=True."""
@@ -100,9 +97,7 @@ class TestLiteLLMModelCostAccess:
                             found_reasoning_model = True
                             break
 
-        assert found_reasoning_model, (
-            "Should find at least one o-series model with supports_reasoning=True"
-        )
+        assert found_reasoning_model, "Should find at least one o-series model with supports_reasoning=True"
 
 
 @pytest.mark.integration
@@ -164,9 +159,7 @@ class TestLiteLLMSupportsReasoningFunction:
 
         result = litellm.supports_reasoning("gemini-2.5-flash")
 
-        assert result is True, (
-            "gemini-2.5-flash should support reasoning per Google docs"
-        )
+        assert result is True, "gemini-2.5-flash should support reasoning per Google docs"
 
 
 @pytest.mark.integration
@@ -229,10 +222,7 @@ class TestLiteLLMModelSyncIntegration:
         model_cost = litellm.model_cost
 
         # Check that normalization handles prefixed keys
-        prefixed_keys = [
-            key for key in model_cost.keys()
-            if "/" in key and isinstance(key, str)
-        ]
+        prefixed_keys = [key for key in model_cost.keys() if "/" in key and isinstance(key, str)]
 
         assert len(prefixed_keys) > 0, "LiteLLM should have prefixed model keys"
 
@@ -294,8 +284,7 @@ class TestLiteLLMCapabilityAccuracy:
 
         # Our registry should have the correct value
         assert caps.supports_extended_thinking is True, (
-            "ModelRegistry should have gemini-3-flash with "
-            "supports_extended_thinking=True per Google docs"
+            "ModelRegistry should have gemini-3-flash with supports_extended_thinking=True per Google docs"
         )
 
     def test_registry_overrides_incorrect_litellm_data(self) -> None:
@@ -323,10 +312,7 @@ class TestLiteLLMCapabilityAccuracy:
         post_sync_thinking = post_sync_caps.supports_extended_thinking
 
         # Registry should maintain correct value
-        assert post_sync_thinking is True, (
-            "Registry should maintain correct gemini-3-flash capability "
-            "even after sync"
-        )
+        assert post_sync_thinking is True, "Registry should maintain correct gemini-3-flash capability even after sync"
 
 
 @pytest.mark.integration
@@ -401,6 +387,4 @@ class TestAlternativeModelIdLookup:
                     break
 
         # Should match at least some known models
-        assert matched_count >= 3, (
-            f"Should match at least 3 known models, got {matched_count}"
-        )
+        assert matched_count >= 3, f"Should match at least 3 known models, got {matched_count}"

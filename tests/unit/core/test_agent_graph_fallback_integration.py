@@ -69,15 +69,19 @@ class TestExecuteToolWithFallback:
         mock_builtin_tool = MagicMock()
         mock_builtin_tool.ainvoke = AsyncMock(return_value="builtin result")
 
-        with patch(
-            "mcp_server_langgraph.core.tool_executor.get_tool_by_name",
-            return_value=mock_builtin_tool,
-        ), patch(
-            "mcp_server_langgraph.core.tool_executor._get_native_executor",
-            return_value=mock_native_executor,
-        ), patch(
-            "mcp_server_langgraph.core.tool_executor._should_use_native",
-            return_value=True,
+        with (
+            patch(
+                "mcp_server_langgraph.core.tool_executor.get_tool_by_name",
+                return_value=mock_builtin_tool,
+            ),
+            patch(
+                "mcp_server_langgraph.core.tool_executor._get_native_executor",
+                return_value=mock_native_executor,
+            ),
+            patch(
+                "mcp_server_langgraph.core.tool_executor._should_use_native",
+                return_value=True,
+            ),
         ):
             result, source = await execute_tool_with_fallback(
                 tool_name="web_search",
@@ -100,15 +104,19 @@ class TestExecuteToolWithFallback:
         mock_builtin_tool = MagicMock()
         mock_builtin_tool.ainvoke = AsyncMock(return_value="builtin result")
 
-        with patch(
-            "mcp_server_langgraph.core.tool_executor.get_tool_by_name",
-            return_value=mock_builtin_tool,
-        ), patch(
-            "mcp_server_langgraph.core.tool_executor._get_native_executor",
-            return_value=mock_native_executor,
-        ), patch(
-            "mcp_server_langgraph.core.tool_executor._should_use_native",
-            return_value=True,
+        with (
+            patch(
+                "mcp_server_langgraph.core.tool_executor.get_tool_by_name",
+                return_value=mock_builtin_tool,
+            ),
+            patch(
+                "mcp_server_langgraph.core.tool_executor._get_native_executor",
+                return_value=mock_native_executor,
+            ),
+            patch(
+                "mcp_server_langgraph.core.tool_executor._should_use_native",
+                return_value=True,
+            ),
         ):
             result, source = await execute_tool_with_fallback(
                 tool_name="web_search",
@@ -152,15 +160,19 @@ class TestExecuteToolWithFallback:
         mock_builtin_tool = MagicMock()
         mock_builtin_tool.ainvoke = AsyncMock(return_value="builtin result")
 
-        with patch(
-            "mcp_server_langgraph.core.tool_executor.get_tool_by_name",
-            return_value=mock_builtin_tool,
-        ), patch(
-            "mcp_server_langgraph.core.tool_executor._get_native_executor",
-            return_value=mock_native_executor,
-        ), patch(
-            "mcp_server_langgraph.core.tool_executor._should_use_native",
-            return_value=True,
+        with (
+            patch(
+                "mcp_server_langgraph.core.tool_executor.get_tool_by_name",
+                return_value=mock_builtin_tool,
+            ),
+            patch(
+                "mcp_server_langgraph.core.tool_executor._get_native_executor",
+                return_value=mock_native_executor,
+            ),
+            patch(
+                "mcp_server_langgraph.core.tool_executor._should_use_native",
+                return_value=True,
+            ),
         ):
             result, source = await execute_tool_with_fallback(
                 tool_name="web_search",

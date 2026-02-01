@@ -22,7 +22,7 @@ Usage:
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from threading import Lock
 from typing import Any, Callable
 
@@ -141,8 +141,7 @@ class NativeToolCircuitBreaker:
             if state.failure_count >= self.failure_threshold:
                 state.is_open = True
                 logger.warning(
-                    f"Circuit breaker OPEN for provider '{provider}' "
-                    f"after {state.failure_count} failures",
+                    f"Circuit breaker OPEN for provider '{provider}' after {state.failure_count} failures",
                     extra={
                         "provider": provider,
                         "failure_count": state.failure_count,
@@ -212,9 +211,7 @@ def get_circuit_breaker() -> NativeToolCircuitBreaker:
 
         _circuit_breaker = NativeToolCircuitBreaker(
             failure_threshold=settings.native_tool_circuit_breaker_threshold,
-            reset_timeout_seconds=float(
-                settings.native_tool_circuit_breaker_reset_seconds
-            ),
+            reset_timeout_seconds=float(settings.native_tool_circuit_breaker_reset_seconds),
         )
     return _circuit_breaker
 

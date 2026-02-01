@@ -166,14 +166,13 @@ def upgrade() -> None:
     )
 
     # Backfill embedding_status for execution_plans
+    # Note: execution_plans table doesn't have description_embedding column,
+    # so all existing records start as 'pending'
     op.execute(
         """
         UPDATE execution_plans
-        SET embedding_status = CASE
-            WHEN description_embedding IS NOT NULL THEN 'completed'
-            ELSE 'pending'
-        END
-        WHERE embedding_status IS NULL OR embedding_status = 'pending';
+        SET embedding_status = 'pending'
+        WHERE embedding_status IS NULL;
         """
     )
 

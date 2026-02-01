@@ -12,8 +12,7 @@ Following memory safety patterns for pytest-xdist (see CLAUDE.md).
 """
 
 import gc
-from datetime import datetime, UTC
-from decimal import Decimal
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

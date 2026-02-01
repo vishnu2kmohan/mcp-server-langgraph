@@ -17,7 +17,6 @@ Usage:
 
 import argparse
 import re
-from typing import Any, Pattern, Match
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -33,36 +32,107 @@ SKIP_FILES = {"Button.tsx", "Button.test.tsx", "Button.stories.tsx"}
 
 # Text patterns that indicate specific variants
 PRIMARY_TEXT = [
-    "Submit", "Save", "Create", "Add", "Apply", "Confirm", "Continue",
-    "Next", "Run", "Execute", "Start", "Enable", "Activate", "Connect",
-    "Send", "Post", "Publish", "Deploy", "Install", "Update", "Upgrade",
-    "Generate", "Build", "Compile", "Test", "Verify", "Validate", "OK",
-    "Yes", "Accept", "Approve", "Grant", "Allow", "Proceed", "Go",
-    "Login", "Sign in", "Sign up", "Register", "Join", "Subscribe",
-    "Retry", "Try again", "Refresh", "Reload", "Sync", "Import", "Export",
+    "Submit",
+    "Save",
+    "Create",
+    "Add",
+    "Apply",
+    "Confirm",
+    "Continue",
+    "Next",
+    "Run",
+    "Execute",
+    "Start",
+    "Enable",
+    "Activate",
+    "Connect",
+    "Send",
+    "Post",
+    "Publish",
+    "Deploy",
+    "Install",
+    "Update",
+    "Upgrade",
+    "Generate",
+    "Build",
+    "Compile",
+    "Test",
+    "Verify",
+    "Validate",
+    "OK",
+    "Yes",
+    "Accept",
+    "Approve",
+    "Grant",
+    "Allow",
+    "Proceed",
+    "Go",
+    "Login",
+    "Sign in",
+    "Sign up",
+    "Register",
+    "Join",
+    "Subscribe",
+    "Retry",
+    "Try again",
+    "Refresh",
+    "Reload",
+    "Sync",
+    "Import",
+    "Export",
 ]
 
 SECONDARY_TEXT = [
-    "Cancel", "Close", "Back", "Dismiss", "No", "Never mind", "Not now",
-    "Skip", "Later", "Ignore", "Hide", "Collapse", "Minimize", "Maybe Later",
+    "Cancel",
+    "Close",
+    "Back",
+    "Dismiss",
+    "No",
+    "Never mind",
+    "Not now",
+    "Skip",
+    "Later",
+    "Ignore",
+    "Hide",
+    "Collapse",
+    "Minimize",
+    "Maybe Later",
 ]
 
 # Only truly destructive actions - NOT "Clear filters" etc.
 DANGER_TEXT = [
-    "Delete", "Remove", "Destroy", "Discard",
-    "Revoke", "Terminate", "Kill", "Abort", "Reject", "Deny",
-    "Uninstall", "Disconnect", "Logout", "Sign out", "Leave", "Exit",
+    "Delete",
+    "Remove",
+    "Destroy",
+    "Discard",
+    "Revoke",
+    "Terminate",
+    "Kill",
+    "Abort",
+    "Reject",
+    "Deny",
+    "Uninstall",
+    "Disconnect",
+    "Logout",
+    "Sign out",
+    "Leave",
+    "Exit",
 ]
 
 # These look like "Clear" but are not destructive
 CLEAR_EXCEPTIONS = ["Clear filter", "Clear filters", "Clear completed", "Clear search"]
 
 SUCCESS_TEXT = [
-    "Done", "Complete", "Finish", "Success",
+    "Done",
+    "Complete",
+    "Finish",
+    "Success",
 ]
 
 WARNING_TEXT = [
-    "Warning", "Caution", "Alert",
+    "Warning",
+    "Caution",
+    "Alert",
 ]
 
 
@@ -115,10 +185,7 @@ def fix_button_with_text(content: str) -> tuple[str, dict[str, int]]:
 
     # Pattern[str]: <Button ...>Text</Button> without variant
     # Matches single-word or multi-word button text
-    pattern = re.compile(
-        r'(<Button\b)(?![^>]*\bvariant=)([^>]*>)\s*([A-Z][a-zA-Z\s]*?)\s*(</Button>)',
-        re.MULTILINE
-    )
+    pattern = re.compile(r"(<Button\b)(?![^>]*\bvariant=)([^>]*>)\s*([A-Z][a-zA-Z\s]*?)\s*(</Button>)", re.MULTILINE)
 
     def replacer(match: re.Match[str]) -> str:
         opening = match.group(1)
@@ -141,9 +208,7 @@ def fix_icon_buttons(content: str) -> tuple[str, dict[str, int]]:
     fixes: dict[str, int] = defaultdict(int)
 
     # Pattern[str]: <Button size="icon" ...> without variant
-    pattern = re.compile(
-        r'(<Button\b)(?![^>]*\bvariant=)([^>]*\bsize=["\']icon["\'][^>]*>)'
-    )
+    pattern = re.compile(r'(<Button\b)(?![^>]*\bvariant=)([^>]*\bsize=["\']icon["\'][^>]*>)')
 
     def replacer(match: re.Match[str]) -> str:
         fixes["icon button → ghost"] += 1
@@ -194,14 +259,15 @@ def fix_classname_overrides(content: str) -> tuple[str, dict[str, int]]:
                 fixes[f"bg-{col}-* → {var}"] += 1
                 # Remove the bg-color class
                 classes_before = match.group(3)
-                classes_after = match.group(4).rstrip('"\'>').lstrip()
+                classes_after = match.group(4).rstrip("\"'>").lstrip()
                 all_classes = classes_before + classes_after
                 # Clean up
-                all_classes = re.sub(rf'\s*bg-{col}-\d+\s*', ' ', all_classes).strip()
+                all_classes = re.sub(rf"\s*bg-{col}-\d+\s*", " ", all_classes).strip()
                 if all_classes:
                     return f'{match.group(1)} variant="{var}" className="{all_classes}">'
                 else:
                     return f'{match.group(1)} variant="{var}">'
+
             return replacer
 
         content = pattern.sub(make_replacer(variant, color), content)
@@ -219,14 +285,13 @@ def fix_remaining_buttons(content: str) -> tuple[str, dict[str, int]]:
     # Pattern[str]: <Button ...>CapitalizedText</Button> without variant
     # Only match if text starts with capital and looks like a CTA
     pattern = re.compile(
-        r'(<Button\b)(?![^>]*\bvariant=)([^>]*>)\s*([A-Z][a-z]+(?:\s+[A-Za-z]+)*)\s*(</Button>)',
-        re.MULTILINE
+        r"(<Button\b)(?![^>]*\bvariant=)([^>]*>)\s*([A-Z][a-z]+(?:\s+[A-Za-z]+)*)\s*(</Button>)", re.MULTILINE
     )
 
     def replacer(match: re.Match[str]) -> str:
         text = match.group(3).strip()
         # Skip if text looks like a variable or complex expression
-        if '{' in text or '}' in text or len(text) > 30:
+        if "{" in text or "}" in text or len(text) > 30:
             return match.group(0)
         fixes[f"'{text}' → primary (explicit)"] += 1
         return f'{match.group(1)} variant="primary"{match.group(2)}{text}{match.group(4)}'
@@ -314,7 +379,7 @@ def main() -> int:
             print(f"    {fix_type}: {count}")
 
     if args.dry_run and files_modified > 0:
-        print(f"\nRun without --dry-run to apply changes.")
+        print("\nRun without --dry-run to apply changes.")
 
     return 0
 

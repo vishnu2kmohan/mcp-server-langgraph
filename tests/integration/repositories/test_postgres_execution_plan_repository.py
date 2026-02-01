@@ -232,3 +232,95 @@ class TestPostgresExecutionPlanRepository:
 
         retrieved = await repo.get(plan.plan_id)
         assert retrieved.embedding_status == "completed"
+
+    async def test_list_all_with_pagination(self, repo):
+        """Test list_all with pagination (v35.0 Plan)."""
+        import time
+
+        # Create plans with slight time differences to ensure ordering
+        plans = []
+        for i in range(5):
+            plan = create_test_plan()
+            # Ensure different created_at for ordering
+            plan = ExecutionPlan(
+                plan_id=plan.plan_id,
+                session_id=plan.session_id,
+                message=plan.message,
+                complexity=plan.complexity,
+                risk_level=plan.risk_level,
+                task_type=plan.task_type,
+                estimated_cost=plan.estimated_cost,
+                executor_model=plan.executor_model,
+                suggested_orchestrator=plan.suggested_orchestrator,
+                status=plan.status,
+                user_id=plan.user_id,
+                created_by=plan.created_by,
+                created_at=datetime.now(UTC) + timedelta(seconds=i),
+                expires_at=plan.expires_at,
+            )
+            plans.append(plan)
+            await repo.create(plan)
+            time.sleep(0.01)  # Small delay to ensure ordering
+
+        # Test limit
+        limited = await repo.list_all(limit=3)
+        assert len(limited) == 3
+
+        # Test offset
+        offset_plans = await repo.list_all(offset=2)
+        assert len(offset_plans) == 3
+
+        # Test limit + offset
+        paginated = await repo.list_all(limit=2, offset=1)
+        assert len(paginated) == 2
+
+    async def test_list_all_sorted_desc(self, repo):
+        """Test list_all returns plans sorted by created_at DESC (v35.0 Plan)."""
+        # Create plans with explicit ordering
+        old_plan = create_test_plan()
+        old_plan = ExecutionPlan(
+            plan_id=old_plan.plan_id,
+            session_id=old_plan.session_id,
+            message="Old plan",
+            complexity=old_plan.complexity,
+            risk_level=old_plan.risk_level,
+            task_type=old_plan.task_type,
+            estimated_cost=old_plan.estimated_cost,
+            executor_model=old_plan.executor_model,
+            suggested_orchestrator=old_plan.suggested_orchestrator,
+            status=old_plan.status,
+            user_id=old_plan.user_id,
+            created_by=old_plan.created_by,
+            created_at=datetime(2024, 1, 1, tzinfo=UTC),
+            expires_at=old_plan.expires_at,
+        )
+
+        new_plan = create_test_plan()
+        new_plan = ExecutionPlan(
+            plan_id=new_plan.plan_id,
+            session_id=new_plan.session_id,
+            message="New plan",
+            complexity=new_plan.complexity,
+            risk_level=new_plan.risk_level,
+            task_type=new_plan.task_type,
+            estimated_cost=new_plan.estimated_cost,
+            executor_model=new_plan.executor_model,
+            suggested_orchestrator=new_plan.suggested_orchestrator,
+            status=new_plan.status,
+            user_id=new_plan.user_id,
+            created_by=new_plan.created_by,
+            created_at=datetime(2025, 1, 1, tzinfo=UTC),
+            expires_at=new_plan.expires_at,
+        )
+
+        await repo.create(old_plan)
+        await repo.create(new_plan)
+
+        all_plans = await repo.list_all()
+
+        # Find our test plans in results
+        old_idx = next((i for i, p in enumerate(all_plans) if p.plan_id == old_plan.plan_id), -1)
+        new_idx = next((i for i, p in enumerate(all_plans) if p.plan_id == new_plan.plan_id), -1)
+
+        # Newer plan should appear before older plan (DESC order)
+        assert new_idx < old_idx, "Plans should be sorted by created_at DESC"

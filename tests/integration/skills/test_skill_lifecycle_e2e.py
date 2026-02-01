@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import gc
 import os
-import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock
@@ -107,11 +106,13 @@ class MockVectorProvider:
             # Simple dot product score (normalized vectors assumed)
             score = sum(a * b for a, b in zip(query_vector[:10], data["vector"][:10]))
             if score >= min_score:
-                results.append({
-                    "id": doc_id,
-                    "score": score,
-                    "metadata": data["metadata"],
-                })
+                results.append(
+                    {
+                        "id": doc_id,
+                        "score": score,
+                        "metadata": data["metadata"],
+                    }
+                )
 
         # Sort by score descending
         results.sort(key=lambda x: x["score"], reverse=True)
@@ -159,7 +160,7 @@ def temp_install_path(tmp_path: Path) -> Path:
     """Create temporary skill installation directory."""
     install_path = tmp_path / "skills"
     install_path.mkdir(parents=True)
-    yield install_path
+    return install_path
     # Cleanup handled by tmp_path fixture
 
 
@@ -179,7 +180,7 @@ def mock_embedding_service() -> MockEmbeddingService:
 def skill_search_tool(
     mock_vector_provider: MockVectorProvider,
     mock_embedding_service: MockEmbeddingService,
-) -> "SkillSearchTool":
+) -> SkillSearchTool:
     """Create SkillSearchTool with mock providers."""
     from mcp_server_langgraph.skills.search import SkillSearchTool
 
@@ -196,7 +197,7 @@ class TestSkillLifecycleE2E:
     async def test_install_indexes_skill_for_search(
         self,
         temp_install_path: Path,
-        skill_search_tool: "SkillSearchTool",
+        skill_search_tool: SkillSearchTool,
         mock_vector_provider: MockVectorProvider,
     ) -> None:
         """
@@ -239,7 +240,7 @@ class TestSkillLifecycleE2E:
     async def test_installed_skill_is_searchable(
         self,
         temp_install_path: Path,
-        skill_search_tool: "SkillSearchTool",
+        skill_search_tool: SkillSearchTool,
     ) -> None:
         """
         GIVEN: A skill has been installed and indexed
@@ -249,7 +250,6 @@ class TestSkillLifecycleE2E:
         Tests Phase 2 of lifecycle: Search
         """
         from mcp_server_langgraph.skills.installer import SkillInstaller
-        from mcp_server_langgraph.skills.models import Skill
 
         # Create installer with search tool
         installer = SkillInstaller(
@@ -282,7 +282,7 @@ class TestSkillLifecycleE2E:
     async def test_uninstall_removes_skill_from_search_index(
         self,
         temp_install_path: Path,
-        skill_search_tool: "SkillSearchTool",
+        skill_search_tool: SkillSearchTool,
         mock_vector_provider: MockVectorProvider,
     ) -> None:
         """
@@ -329,7 +329,7 @@ class TestSkillLifecycleE2E:
     async def test_uninstalled_skill_not_searchable(
         self,
         temp_install_path: Path,
-        skill_search_tool: "SkillSearchTool",
+        skill_search_tool: SkillSearchTool,
     ) -> None:
         """
         GIVEN: A skill was installed then uninstalled
@@ -374,7 +374,7 @@ class TestSkillLifecycleE2E:
     async def test_full_lifecycle_install_search_uninstall(
         self,
         temp_install_path: Path,
-        skill_search_tool: "SkillSearchTool",
+        skill_search_tool: SkillSearchTool,
         mock_vector_provider: MockVectorProvider,
     ) -> None:
         """
@@ -423,7 +423,7 @@ class TestSkillLifecycleE2E:
     async def test_multiple_skills_lifecycle(
         self,
         temp_install_path: Path,
-        skill_search_tool: "SkillSearchTool",
+        skill_search_tool: SkillSearchTool,
         mock_vector_provider: MockVectorProvider,
     ) -> None:
         """

@@ -89,17 +89,13 @@ async def async_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
 
     async with session_maker() as session:
         # Clear any existing test data
-        await session.execute(
-            text("DELETE FROM session_goals WHERE session_id LIKE 'session-e2e-test%'")
-        )
+        await session.execute(text("DELETE FROM session_goals WHERE session_id LIKE 'session-e2e-test%'"))
         await session.commit()
 
         yield session
 
         # Cleanup after test
-        await session.execute(
-            text("DELETE FROM session_goals WHERE session_id LIKE 'session-e2e-test%'")
-        )
+        await session.execute(text("DELETE FROM session_goals WHERE session_id LIKE 'session-e2e-test%'"))
         await session.commit()
 
 
@@ -173,9 +169,7 @@ class TestSessionGoalsE2EFlow:
         async_session: AsyncSession,
     ) -> None:
         """Test creating a goal and retrieving it from history."""
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             # Step 1: Create a goal
             create_response = await client.post(
                 "/api/v1/sessions/session-e2e-test/goal",
@@ -194,9 +188,7 @@ class TestSessionGoalsE2EFlow:
             await async_session.commit()
 
             # Step 2: Retrieve goal history
-            history_response = await client.get(
-                "/api/v1/sessions/session-e2e-test/goals"
-            )
+            history_response = await client.get("/api/v1/sessions/session-e2e-test/goals")
 
             assert history_response.status_code == 200
             history_data = history_response.json()
@@ -211,9 +203,7 @@ class TestSessionGoalsE2EFlow:
         async_session: AsyncSession,
     ) -> None:
         """Test creating and completing a goal."""
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             # Step 1: Create a goal
             await client.post(
                 "/api/v1/sessions/session-e2e-test/goal",
@@ -245,9 +235,7 @@ class TestSessionGoalsE2EFlow:
             await async_session.commit()
 
             # Step 3: Verify in history
-            history_response = await client.get(
-                "/api/v1/sessions/session-e2e-test/goals"
-            )
+            history_response = await client.get("/api/v1/sessions/session-e2e-test/goals")
 
             history_data = history_response.json()
             goal = history_data["goals"][0]
@@ -261,9 +249,7 @@ class TestSessionGoalsE2EFlow:
         async_session: AsyncSession,
     ) -> None:
         """Test completing a goal with partial achievement."""
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             # Create and complete with partial achievement
             await client.post(
                 "/api/v1/sessions/session-e2e-test/goal",
@@ -295,9 +281,7 @@ class TestSessionGoalsE2EFlow:
         async_session: AsyncSession,
     ) -> None:
         """Test that goals are ordered by set_at descending (newest first)."""
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             # Create multiple goals with different timestamps
             for i, ts in enumerate([1705100000000, 1705200000000, 1705150000000]):
                 await client.post(
@@ -311,9 +295,7 @@ class TestSessionGoalsE2EFlow:
             await async_session.commit()
 
             # Retrieve history
-            history_response = await client.get(
-                "/api/v1/sessions/session-e2e-test/goals"
-            )
+            history_response = await client.get("/api/v1/sessions/session-e2e-test/goals")
 
             history_data = history_response.json()
             assert len(history_data["goals"]) == 3
@@ -329,9 +311,7 @@ class TestSessionGoalsE2EFlow:
         async_session: AsyncSession,
     ) -> None:
         """Test pagination with limit and offset."""
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             # Create 5 goals
             for i in range(5):
                 await client.post(
@@ -345,16 +325,12 @@ class TestSessionGoalsE2EFlow:
             await async_session.commit()
 
             # Get first 2 goals
-            response1 = await client.get(
-                "/api/v1/sessions/session-e2e-test/goals?limit=2&offset=0"
-            )
+            response1 = await client.get("/api/v1/sessions/session-e2e-test/goals?limit=2&offset=0")
             data1 = response1.json()
             assert len(data1["goals"]) == 2
 
             # Get next 2 goals
-            response2 = await client.get(
-                "/api/v1/sessions/session-e2e-test/goals?limit=2&offset=2"
-            )
+            response2 = await client.get("/api/v1/sessions/session-e2e-test/goals?limit=2&offset=2")
             data2 = response2.json()
             assert len(data2["goals"]) == 2
 
@@ -370,9 +346,7 @@ class TestSessionGoalsE2EFlow:
         async_session: AsyncSession,
     ) -> None:
         """Test completing a goal with achieved=false."""
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             await client.post(
                 "/api/v1/sessions/session-e2e-test/goal",
                 json={
@@ -404,9 +378,7 @@ class TestSessionGoalsE2EFlow:
         async_session: AsyncSession,
     ) -> None:
         """Verify data is actually persisted in database."""
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             await client.post(
                 "/api/v1/sessions/session-e2e-test/goal",
                 json={
@@ -417,9 +389,7 @@ class TestSessionGoalsE2EFlow:
             await async_session.commit()
 
         # Query database directly
-        result = await async_session.execute(
-            text("SELECT * FROM session_goals WHERE goal = 'Persistence test'")
-        )
+        result = await async_session.execute(text("SELECT * FROM session_goals WHERE goal = 'Persistence test'"))
         row = result.fetchone()
 
         assert row is not None

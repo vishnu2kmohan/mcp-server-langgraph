@@ -23,6 +23,7 @@ WARNINGS = [
     ("components/DevTools/TimelineBar.tsx", [132]),
 ]
 
+
 def fix_file(filepath: Path, line_numbers: list[int], dry_run: bool = False) -> int:
     """Add eslint-disable-next-line before exports at specified lines."""
     if not filepath.exists():
@@ -45,9 +46,9 @@ def fix_file(filepath: Path, line_numbers: list[int], dry_run: bool = False) -> 
             continue
 
         # Check if this is an export of a function/const
-        if re.match(r'\s*(export\s+)?(const|function|let|var)\s+', line):
+        if re.match(r"\s*(export\s+)?(const|function|let|var)\s+", line):
             # Get the indentation
-            indent = re.match(r'^(\s*)', line).group(1)
+            indent = re.match(r"^(\s*)", line).group(1)
             disable_comment = f"{indent}// eslint-disable-next-line react-refresh/only-export-components\n"
             lines.insert(idx, disable_comment)
             offset += 1
@@ -58,8 +59,10 @@ def fix_file(filepath: Path, line_numbers: list[int], dry_run: bool = False) -> 
 
     return changes
 
+
 def main() -> int:
     import sys
+
     dry_run = "--dry-run" in sys.argv
 
     if dry_run:
@@ -78,6 +81,8 @@ def main() -> int:
     print(f"\nTotal: {total_changes} exports fixed")
     return 0
 
+
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

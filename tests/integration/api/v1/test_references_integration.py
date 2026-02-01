@@ -62,11 +62,12 @@ class TestReferencesAPIIntegration:
 
         app = create_test_app(user_override=mock_user, repo_override=mock_repo)
 
-        with patch(
-            "mcp_server_langgraph.api.v1.references.feature_flags"
-        ) as mock_flags, patch(
-            "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth,
+        with (
+            patch("mcp_server_langgraph.api.v1.references.feature_flags") as mock_flags,
+            patch(
+                "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
+                return_value=mock_auth,
+            ),
         ):
             mock_flags.enable_markdown_references = True
 
@@ -114,9 +115,7 @@ class TestReferencesAPIIntegration:
         app.include_router(references_router, prefix="/api/v1")
         app.dependency_overrides[require_reference_viewer_global] = raise_forbidden
 
-        with patch(
-            "mcp_server_langgraph.api.v1.references.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.api.v1.references.feature_flags") as mock_flags:
             mock_flags.enable_markdown_references = True
 
             async with AsyncClient(
@@ -125,11 +124,7 @@ class TestReferencesAPIIntegration:
             ) as client:
                 response = await client.post(
                     "/api/v1/references/resolve",
-                    json={
-                        "references": [
-                            {"type": "skill", "qualifier": "analyze", "id": "analyze"}
-                        ]
-                    },
+                    json={"references": [{"type": "skill", "qualifier": "analyze", "id": "analyze"}]},
                 )
 
         assert response.status_code == 403
@@ -162,14 +157,14 @@ class TestReferencesAPIIntegration:
 
         app = create_test_app(user_override=mock_user, repo_override=mock_repo)
 
-        with patch(
-            "mcp_server_langgraph.api.v1.references.feature_flags"
-        ) as mock_flags, patch(
-            "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth,
-        ), patch(
-            "mcp_server_langgraph.skills.SkillDiscovery"
-        ) as mock_discovery_class:
+        with (
+            patch("mcp_server_langgraph.api.v1.references.feature_flags") as mock_flags,
+            patch(
+                "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
+                return_value=mock_auth,
+            ),
+            patch("mcp_server_langgraph.skills.SkillDiscovery") as mock_discovery_class,
+        ):
             mock_flags.enable_markdown_references = True
             mock_discovery = MagicMock()
             mock_discovery.get_skill = MagicMock(return_value=mock_skill)
@@ -221,9 +216,7 @@ class TestReferencesAPIIntegration:
         mock_user = {"sub": "user:test-user-123", "user_id": "test-user-123"}
         app = create_test_app(user_override=mock_user)
 
-        with patch(
-            "mcp_server_langgraph.api.v1.references.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.api.v1.references.feature_flags") as mock_flags:
             mock_flags.enable_markdown_references = False
 
             async with AsyncClient(
@@ -232,11 +225,7 @@ class TestReferencesAPIIntegration:
             ) as client:
                 response = await client.post(
                     "/api/v1/references/resolve",
-                    json={
-                        "references": [
-                            {"type": "skill", "qualifier": "test", "id": "test"}
-                        ]
-                    },
+                    json={"references": [{"type": "skill", "qualifier": "test", "id": "test"}]},
                 )
 
         assert response.status_code == 404
@@ -259,11 +248,12 @@ class TestReferencesAPIIntegration:
 
         app = create_test_app(user_override=mock_user, repo_override=mock_repo)
 
-        with patch(
-            "mcp_server_langgraph.api.v1.references.feature_flags"
-        ) as mock_flags, patch(
-            "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth,
+        with (
+            patch("mcp_server_langgraph.api.v1.references.feature_flags") as mock_flags,
+            patch(
+                "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
+                return_value=mock_auth,
+            ),
         ):
             mock_flags.enable_markdown_references = True
 
@@ -312,11 +302,12 @@ class TestReferencesAPIIntegration:
 
         app = create_test_app(user_override=mock_user, repo_override=mock_repo)
 
-        with patch(
-            "mcp_server_langgraph.api.v1.references.feature_flags"
-        ) as mock_flags, patch(
-            "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth,
+        with (
+            patch("mcp_server_langgraph.api.v1.references.feature_flags") as mock_flags,
+            patch(
+                "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
+                return_value=mock_auth,
+            ),
         ):
             mock_flags.enable_markdown_references = True
 
@@ -362,14 +353,14 @@ class TestReferencesAPIIntegration:
 
         app = create_test_app(user_override=mock_user)
 
-        with patch(
-            "mcp_server_langgraph.api.v1.references.feature_flags"
-        ) as mock_flags, patch(
-            "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth,
-        ), patch(
-            "mcp_server_langgraph.skills.SkillDiscovery"
-        ) as mock_discovery_class:
+        with (
+            patch("mcp_server_langgraph.api.v1.references.feature_flags") as mock_flags,
+            patch(
+                "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
+                return_value=mock_auth,
+            ),
+            patch("mcp_server_langgraph.skills.SkillDiscovery") as mock_discovery_class,
+        ):
             mock_flags.enable_markdown_references = True
             mock_discovery = MagicMock()
             mock_discovery.get_skill = MagicMock(return_value=mock_skill)
@@ -422,14 +413,14 @@ class TestReferencesAPIIntegration:
 
         app = create_test_app(user_override=mock_user)
 
-        with patch(
-            "mcp_server_langgraph.api.v1.references.feature_flags"
-        ) as mock_flags, patch(
-            "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth,
-        ), patch(
-            "mcp_server_langgraph.api.v1.memory.get_notes_manager"
-        ) as mock_manager_fn:
+        with (
+            patch("mcp_server_langgraph.api.v1.references.feature_flags") as mock_flags,
+            patch(
+                "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
+                return_value=mock_auth,
+            ),
+            patch("mcp_server_langgraph.api.v1.memory.get_notes_manager") as mock_manager_fn,
+        ):
             mock_flags.enable_markdown_references = True
             mock_manager = MagicMock()
             mock_manager.get_note = MagicMock(return_value=mock_note)
@@ -481,14 +472,14 @@ class TestReferencesAPIIntegration:
 
         app = create_test_app(user_override=mock_user)
 
-        with patch(
-            "mcp_server_langgraph.api.v1.references.feature_flags"
-        ) as mock_flags, patch(
-            "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth,
-        ), patch(
-            "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo"
-        ) as mock_repo_fn:
+        with (
+            patch("mcp_server_langgraph.api.v1.references.feature_flags") as mock_flags,
+            patch(
+                "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
+                return_value=mock_auth,
+            ),
+            patch("mcp_server_langgraph.api.v1.execution_plans.get_plan_repo") as mock_repo_fn,
+        ):
             mock_flags.enable_markdown_references = True
             mock_repo = MagicMock()
             mock_repo.get = AsyncMock(return_value=mock_plan)

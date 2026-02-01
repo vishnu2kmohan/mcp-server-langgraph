@@ -34,7 +34,7 @@ class LiteLLMChatModel(BaseChatModel):
     max_tokens: int
     provider: str
 
-    def __init__(self, settings: "Settings") -> None:
+    def __init__(self, settings: Settings) -> None:
         """Initialize with settings.
 
         Args:
@@ -61,9 +61,7 @@ class LiteLLMChatModel(BaseChatModel):
         """Synchronous generation (blocking)."""
         import asyncio
 
-        return asyncio.get_event_loop().run_until_complete(
-            self._agenerate(messages, stop, **kwargs)
-        )
+        return asyncio.get_event_loop().run_until_complete(self._agenerate(messages, stop, **kwargs))
 
     async def _agenerate(
         self,

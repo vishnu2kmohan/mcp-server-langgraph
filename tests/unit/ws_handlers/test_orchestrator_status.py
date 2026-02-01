@@ -92,9 +92,7 @@ class TestOrchestratorStatusHandlerConstruction:
 
         assert issubclass(OrchestratorStatusHandler, BroadcasterMixin)
 
-    def test_handler_has_handle_message_method(
-        self, mock_broadcaster: MagicMock
-    ) -> None:
+    def test_handler_has_handle_message_method(self, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN the OrchestratorStatusHandler class
         WHEN inspecting its methods
@@ -109,7 +107,7 @@ class TestOrchestratorStatusHandlerConstruction:
             broadcaster=mock_broadcaster,
         )
         assert hasattr(handler, "handle_message")
-        assert callable(getattr(handler, "handle_message"))
+        assert callable(handler.handle_message)
 
 
 @pytest.mark.xdist_group(name="orchestrator_status_ws")
@@ -121,9 +119,7 @@ class TestOrchestratorStatusLifecycle:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_on_connect_receives_auth_user(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_connect_receives_auth_user(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN an OrchestratorStatusHandler
         WHEN on_connect is called
@@ -150,9 +146,7 @@ class TestOrchestratorStatusLifecycle:
         mock_broadcaster.subscribe.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_on_disconnect_clears_subscription(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_disconnect_clears_subscription(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN an OrchestratorStatusHandler with subscription
         WHEN on_disconnect is called

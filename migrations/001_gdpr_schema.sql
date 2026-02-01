@@ -180,6 +180,77 @@ COMMENT ON COLUMN audit_logs.metadata IS 'Structured audit context (request_id, 
 COMMENT ON INDEX idx_audit_logs_retention_archival IS 'Optimized for archival to S3/GCS after 90 days';
 
 -- ==============================================================================
+-- 6. EXECUTION PLANS (v35.0 RLM)
+-- ==============================================================================
+-- Stores execution plans for approval workflows
+-- Retention: 90 days (same as conversations)
+-- v35.0: Added for RLM (Recursive Language Models) persistence
+
+CREATE TABLE IF NOT EXISTS execution_plans (
+    id BIGSERIAL PRIMARY KEY,
+    plan_id TEXT NOT NULL UNIQUE,
+    session_id TEXT NOT NULL,
+    status TEXT NOT NULL,  -- awaiting_approval, approved, rejected, executed, expired
+    complexity TEXT NOT NULL,  -- simple, complicated, complex
+    risk_level TEXT NOT NULL,  -- low, medium, high
+    task_type TEXT NOT NULL,  -- chat, code, analysis, data, ops, other
+    executor_model TEXT NOT NULL,
+    critic_model TEXT,
+    estimated_cost NUMERIC(10, 6) NOT NULL,
+    actual_cost NUMERIC(10, 6),
+    message TEXT NOT NULL,
+    suggested_orchestrator TEXT NOT NULL DEFAULT 'standard',
+    critique_rounds INTEGER NOT NULL DEFAULT 0,
+    thinking_budget TEXT NOT NULL DEFAULT 'none',
+    tools_needed JSONB,
+    skills_needed JSONB,
+    selected_tool_ids JSONB,
+    confidence NUMERIC(4, 3) NOT NULL DEFAULT 0.0,
+    force_approval BOOLEAN NOT NULL DEFAULT FALSE,
+    user_id TEXT,  -- GDPR: User who created the plan
+    created_by TEXT,
+    llm_provider TEXT,
+    kb_focus TEXT,  -- all, kb_only, web_only, none
+    tool_preference TEXT,  -- v35.0 Phase 2e
+    tool_selection_mode TEXT,  -- auto, manual, hybrid
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ,
+    executed_at TIMESTAMPTZ,
+    approved_by TEXT,
+    approved_at TIMESTAMPTZ,
+    rejected_by TEXT,
+    rejected_at TIMESTAMPTZ,
+    rejection_reason TEXT,
+    embedding_status TEXT NOT NULL DEFAULT 'pending',
+    embedding_error TEXT,
+    embedding_failed_at TIMESTAMPTZ,
+
+    -- Constraints
+    CONSTRAINT execution_plans_status_valid CHECK (
+        status IN ('awaiting_approval', 'approved', 'rejected', 'executed', 'expired')
+    ),
+    CONSTRAINT execution_plans_complexity_valid CHECK (
+        complexity IN ('simple', 'complicated', 'complex')
+    ),
+    CONSTRAINT execution_plans_risk_level_valid CHECK (
+        risk_level IN ('low', 'medium', 'high')
+    ),
+    CONSTRAINT execution_plans_task_type_valid CHECK (
+        task_type IN ('chat', 'code', 'analysis', 'data', 'ops', 'other')
+    )
+);
+
+-- Indexes (per plan v35.0: explicit names matching SQLAlchemy model)
+CREATE INDEX IF NOT EXISTS idx_execution_plans_session_id ON execution_plans(session_id);
+CREATE INDEX IF NOT EXISTS idx_execution_plans_status ON execution_plans(status);
+CREATE INDEX IF NOT EXISTS idx_execution_plans_user_id ON execution_plans(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_execution_plans_created_at_desc ON execution_plans(created_at DESC);
+
+COMMENT ON TABLE execution_plans IS 'Execution plans for approval workflows (v35.0 RLM, 90-day retention)';
+COMMENT ON COLUMN execution_plans.user_id IS 'GDPR: User who created the plan (nullable for system plans)';
+COMMENT ON COLUMN execution_plans.embedding_status IS 'Embedding generation status (pending, processing, completed, failed)';
+
+-- ==============================================================================
 -- FUNCTIONS & TRIGGERS
 -- ==============================================================================
 
@@ -270,7 +341,7 @@ COMMENT ON VIEW audit_logs_for_archival IS 'Audit logs 90+ days old for archival
 DO $$
 BEGIN
     RAISE NOTICE 'GDPR Schema Migration 001 Complete';
-    RAISE NOTICE 'Tables created: user_profiles, user_preferences, consent_records, conversations, audit_logs';
+    RAISE NOTICE 'Tables created: user_profiles, user_preferences, consent_records, conversations, audit_logs, execution_plans';
     RAISE NOTICE 'Compliance: GDPR (Articles 5, 15, 17), HIPAA (§164.312(b)), SOC2 (CC6.6, PI1.4)';
-    RAISE NOTICE 'Retention: Audit logs & consents = 7 years, Conversations = 90 days';
+    RAISE NOTICE 'Retention: Audit logs & consents = 7 years, Conversations & execution_plans = 90 days';
 END $$;

@@ -13,7 +13,7 @@ Tests verify:
 from __future__ import annotations
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -57,9 +57,7 @@ class TestAISuggestionsHandlerConstruction:
             AISuggestionsHandler,
         )
 
-        handler = AISuggestionsHandler(
-            config=WebSocketConfig(endpoint_name="ai-suggestions")
-        )
+        handler = AISuggestionsHandler(config=WebSocketConfig(endpoint_name="ai-suggestions"))
         assert isinstance(handler, WebSocketBase)
 
     def test_handler_has_handle_message_method(self) -> None:
@@ -72,11 +70,9 @@ class TestAISuggestionsHandlerConstruction:
             AISuggestionsHandler,
         )
 
-        handler = AISuggestionsHandler(
-            config=WebSocketConfig(endpoint_name="ai-suggestions")
-        )
+        handler = AISuggestionsHandler(config=WebSocketConfig(endpoint_name="ai-suggestions"))
         assert hasattr(handler, "handle_message")
-        assert callable(getattr(handler, "handle_message"))
+        assert callable(handler.handle_message)
 
 
 @pytest.mark.xdist_group(name="ai_suggestions_ws")
@@ -99,9 +95,7 @@ class TestAISuggestionsLifecycle:
         )
         from mcp_server_langgraph.websocket.types import AuthUser
 
-        handler = AISuggestionsHandler(
-            config=WebSocketConfig(endpoint_name="ai-suggestions")
-        )
+        handler = AISuggestionsHandler(config=WebSocketConfig(endpoint_name="ai-suggestions"))
         handler._websocket = mock_websocket
 
         user = AuthUser(id="test-user", username="testuser")
@@ -124,9 +118,7 @@ class TestAISuggestionsLifecycle:
         )
         from mcp_server_langgraph.websocket.types import AuthUser
 
-        handler = AISuggestionsHandler(
-            config=WebSocketConfig(endpoint_name="ai-suggestions")
-        )
+        handler = AISuggestionsHandler(config=WebSocketConfig(endpoint_name="ai-suggestions"))
         handler._websocket = mock_websocket
         handler._user = AuthUser(id="test-user", username="testuser")
         handler._session_context = {"session-1": "context"}
@@ -155,9 +147,7 @@ class TestAISuggestionsMessageHandling:
             AISuggestionsHandler,
         )
 
-        handler = AISuggestionsHandler(
-            config=WebSocketConfig(endpoint_name="ai-suggestions")
-        )
+        handler = AISuggestionsHandler(config=WebSocketConfig(endpoint_name="ai-suggestions"))
 
         message = MessageEnvelope(
             type="unknown_type",
@@ -180,9 +170,7 @@ class TestAISuggestionsMessageHandling:
         )
         from mcp_server_langgraph.websocket.types import AISuggestionMessageType
 
-        handler = AISuggestionsHandler(
-            config=WebSocketConfig(endpoint_name="ai-suggestions")
-        )
+        handler = AISuggestionsHandler(config=WebSocketConfig(endpoint_name="ai-suggestions"))
 
         # Request with empty payload triggers parsing, then missing session
         message = MessageEnvelope(
@@ -212,9 +200,7 @@ class TestAISuggestionsMessageHandling:
         )
         from mcp_server_langgraph.websocket.types import AISuggestionMessageType, AuthUser
 
-        handler = AISuggestionsHandler(
-            config=WebSocketConfig(endpoint_name="ai-suggestions")
-        )
+        handler = AISuggestionsHandler(config=WebSocketConfig(endpoint_name="ai-suggestions"))
         handler._user = AuthUser(id="test-user", username="testuser")
 
         message = MessageEnvelope(
@@ -240,9 +226,7 @@ class TestAISuggestionsMessageHandling:
         )
         from mcp_server_langgraph.websocket.types import AISuggestionMessageType, AuthUser
 
-        handler = AISuggestionsHandler(
-            config=WebSocketConfig(endpoint_name="ai-suggestions")
-        )
+        handler = AISuggestionsHandler(config=WebSocketConfig(endpoint_name="ai-suggestions"))
         handler._user = AuthUser(id="test-user", username="testuser")
 
         message = MessageEnvelope(
@@ -268,9 +252,7 @@ class TestAISuggestionsMessageHandling:
         )
         from mcp_server_langgraph.websocket.types import AISuggestionMessageType, AuthUser
 
-        handler = AISuggestionsHandler(
-            config=WebSocketConfig(endpoint_name="ai-suggestions")
-        )
+        handler = AISuggestionsHandler(config=WebSocketConfig(endpoint_name="ai-suggestions"))
         handler._user = AuthUser(id="test-user", username="testuser")
 
         message = MessageEnvelope(

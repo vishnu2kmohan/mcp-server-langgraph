@@ -70,9 +70,7 @@ class TestGetDecisionEmitter:
         emitter = get_decision_emitter(mock_request)
         assert emitter is mock_request.app.state.decision_emitter
 
-    def test_get_decision_emitter_returns_none_when_not_configured(
-        self, mock_request_no_emitter
-    ) -> None:
+    def test_get_decision_emitter_returns_none_when_not_configured(self, mock_request_no_emitter) -> None:
         """get_decision_emitter should return None when not configured."""
         from mcp_server_langgraph.agents.decision_helper import get_decision_emitter
 
@@ -95,15 +93,11 @@ class TestEmitRoutingDecision:
         assert callable(emit_routing_decision)
 
     @pytest.mark.asyncio
-    async def test_emit_routing_decision_calls_emitter(
-        self, mock_request, mock_decision_context
-    ) -> None:
+    async def test_emit_routing_decision_calls_emitter(self, mock_request, mock_decision_context) -> None:
         """emit_routing_decision should call emitter.emit with correct params."""
         from mcp_server_langgraph.agents.decision_helper import emit_routing_decision
 
-        mock_request.app.state.decision_emitter.emit = AsyncMock(
-            return_value="trace-abc"
-        )
+        mock_request.app.state.decision_emitter.emit = AsyncMock(return_value="trace-abc")
 
         result = await emit_routing_decision(
             request=mock_request,
@@ -157,17 +151,13 @@ class TestEmitToolSelectionDecision:
         assert callable(emit_tool_selection_decision)
 
     @pytest.mark.asyncio
-    async def test_emit_tool_selection_decision_calls_emitter(
-        self, mock_request, mock_decision_context
-    ) -> None:
+    async def test_emit_tool_selection_decision_calls_emitter(self, mock_request, mock_decision_context) -> None:
         """emit_tool_selection_decision should call emitter with tool_selection type."""
         from mcp_server_langgraph.agents.decision_helper import (
             emit_tool_selection_decision,
         )
 
-        mock_request.app.state.decision_emitter.emit = AsyncMock(
-            return_value="trace-tool-123"
-        )
+        mock_request.app.state.decision_emitter.emit = AsyncMock(return_value="trace-tool-123")
 
         result = await emit_tool_selection_decision(
             request=mock_request,
@@ -201,17 +191,13 @@ class TestEmitModelSelectionDecision:
         assert callable(emit_model_selection_decision)
 
     @pytest.mark.asyncio
-    async def test_emit_model_selection_decision_calls_emitter(
-        self, mock_request, mock_decision_context
-    ) -> None:
+    async def test_emit_model_selection_decision_calls_emitter(self, mock_request, mock_decision_context) -> None:
         """emit_model_selection_decision should call emitter with model_selection type."""
         from mcp_server_langgraph.agents.decision_helper import (
             emit_model_selection_decision,
         )
 
-        mock_request.app.state.decision_emitter.emit = AsyncMock(
-            return_value="trace-model-456"
-        )
+        mock_request.app.state.decision_emitter.emit = AsyncMock(return_value="trace-model-456")
 
         result = await emit_model_selection_decision(
             request=mock_request,
@@ -243,15 +229,11 @@ class TestEmitApprovalDecision:
         assert callable(emit_approval_decision)
 
     @pytest.mark.asyncio
-    async def test_emit_approval_decision_calls_emitter(
-        self, mock_request, mock_decision_context
-    ) -> None:
+    async def test_emit_approval_decision_calls_emitter(self, mock_request, mock_decision_context) -> None:
         """emit_approval_decision should call emitter with approval type."""
         from mcp_server_langgraph.agents.decision_helper import emit_approval_decision
 
-        mock_request.app.state.decision_emitter.emit = AsyncMock(
-            return_value="trace-approval-789"
-        )
+        mock_request.app.state.decision_emitter.emit = AsyncMock(return_value="trace-approval-789")
 
         result = await emit_approval_decision(
             request=mock_request,

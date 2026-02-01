@@ -79,9 +79,7 @@ class TestInitContextGraph:
 
         mock_settings = MagicMock()
 
-        with patch(
-            "mcp_server_langgraph.bootstrap.context_graph.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.bootstrap.context_graph.feature_flags") as mock_flags:
             mock_flags.enable_context_graph = False
 
             result = await init_context_graph(mock_settings)
@@ -99,22 +97,14 @@ class TestInitContextGraph:
         mock_settings = MagicMock()
 
         with (
-            patch(
-                "mcp_server_langgraph.bootstrap.context_graph.feature_flags"
-            ) as mock_flags,
-            patch(
-                "mcp_server_langgraph.repositories.decision_trace.PostgresDecisionTraceRepository"
-            ) as mock_repo_cls,
-            patch(
-                "mcp_server_langgraph.agents.decision_emitter.DecisionEmitter"
-            ) as mock_emitter_cls,
+            patch("mcp_server_langgraph.bootstrap.context_graph.feature_flags") as mock_flags,
+            patch("mcp_server_langgraph.repositories.decision_trace.PostgresDecisionTraceRepository") as mock_repo_cls,
+            patch("mcp_server_langgraph.agents.decision_emitter.DecisionEmitter") as mock_emitter_cls,
             patch(
                 "mcp_server_langgraph.schedulers.decision_retention.start_retention_scheduler",
                 new_callable=AsyncMock,
             ) as mock_scheduler,
-            patch(
-                "mcp_server_langgraph.core.dependencies.get_async_session"
-            ) as mock_session,
+            patch("mcp_server_langgraph.core.dependencies.get_async_session") as mock_session,
         ):
             mock_flags.enable_context_graph = True
 

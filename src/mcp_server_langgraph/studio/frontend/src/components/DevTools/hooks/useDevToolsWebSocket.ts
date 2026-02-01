@@ -176,6 +176,9 @@ export function useDevToolsWebSocket(
    */
   const handleMessage = useCallback(
     (data: unknown) => {
+      // Debug: Log all incoming WebSocket messages (remove after verification)
+      console.debug("[DevTools WS] Received message:", data);
+
       // Use centralized type guards for type-safe message handling
       if (isConsoleLogEntry(data)) {
         const entry: ConsoleEntry = {
@@ -216,6 +219,12 @@ export function useDevToolsWebSocket(
         );
       } else if (isTraceStepEntry(data)) {
         const step = data.payload;
+        // Debug: Log trace step entries (remove after verification)
+        console.debug("[DevTools WS] Trace step received:", {
+          name: step.name,
+          status: step.status,
+          session_id: step.session_id,
+        });
         if (shouldIncludeEntry(step as unknown as Record<string, unknown>)) {
           setTraceSteps((prev) => [...prev, step]);
         }

@@ -508,9 +508,7 @@ class TestCheckSkillUpdates:
     ) -> None:
         """Test that scheduler errors are handled gracefully."""
         mock_scheduler = AsyncMock(return_value=None)
-        mock_scheduler.check_updates_available = AsyncMock(
-            side_effect=RuntimeError("Scheduler unavailable")
-        )
+        mock_scheduler.check_updates_available = AsyncMock(side_effect=RuntimeError("Scheduler unavailable"))
 
         with patch(
             "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
@@ -611,9 +609,7 @@ class TestApplySkillUpdates:
     ) -> None:
         """Test that scheduler errors are handled gracefully."""
         mock_scheduler = AsyncMock(return_value=None)
-        mock_scheduler.apply_updates = AsyncMock(
-            side_effect=RuntimeError("Update failed")
-        )
+        mock_scheduler.apply_updates = AsyncMock(side_effect=RuntimeError("Update failed"))
 
         with patch(
             "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",

@@ -334,41 +334,25 @@ class NativeToolMetricsAggregator:
                     "error_count": snapshot.error_count,
                     "fallback_count": snapshot.fallback_count,
                     "avg_latency_ms": round(snapshot.avg_latency_ms, 2),
-                    "min_latency_ms": round(snapshot.min_latency_ms, 2)
-                    if snapshot.min_latency_ms != float("inf")
-                    else 0.0,
+                    "min_latency_ms": round(snapshot.min_latency_ms, 2) if snapshot.min_latency_ms != float("inf") else 0.0,
                     "max_latency_ms": round(snapshot.max_latency_ms, 2),
                     "p50_latency_ms": round(p50, 2),
                     "p95_latency_ms": round(p95, 2),
                     "p99_latency_ms": round(p99, 2),
-                    "error_rate": round(
-                        snapshot.error_count / snapshot.execution_count * 100, 2
-                    )
+                    "error_rate": round(snapshot.error_count / snapshot.execution_count * 100, 2)
                     if snapshot.execution_count > 0
                     else 0.0,
                 }
 
             # Calculate summary stats
             total_native_selections = sum(
-                s.selection_count
-                for (_, source, _), s in self._metrics.items()
-                if source == "native"
+                s.selection_count for (_, source, _), s in self._metrics.items() if source == "native"
             )
             total_builtin_selections = sum(
-                s.selection_count
-                for (_, source, _), s in self._metrics.items()
-                if source == "builtin"
+                s.selection_count for (_, source, _), s in self._metrics.items() if source == "builtin"
             )
-            total_native_errors = sum(
-                s.error_count
-                for (_, source, _), s in self._metrics.items()
-                if source == "native"
-            )
-            total_builtin_errors = sum(
-                s.error_count
-                for (_, source, _), s in self._metrics.items()
-                if source == "builtin"
-            )
+            total_native_errors = sum(s.error_count for (_, source, _), s in self._metrics.items() if source == "native")
+            total_builtin_errors = sum(s.error_count for (_, source, _), s in self._metrics.items() if source == "builtin")
 
             return {
                 "tools": list(tools.values()),

@@ -11,8 +11,6 @@ Feature Flags:
 """
 
 import gc
-import os
-from unittest.mock import patch
 
 import pytest
 
@@ -222,5 +220,3 @@ class TestSettingsSemanticSearchFlags:
         settings = Settings()
         assert hasattr(settings, "max_selected_skills")
         assert isinstance(settings.max_selected_skills, int)
-
-

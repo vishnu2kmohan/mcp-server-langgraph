@@ -12,7 +12,6 @@ Reference: docs-internal/frontend/PENDING-BACKEND-APIS.md
 
 import gc
 from typing import Any, Generator
-from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -136,20 +135,13 @@ class TestPredictionsEndpoint:
         WHEN GET request is made
         THEN response should be 200 OK with all filters applied
         """
-        response = client.get(
-            "/api/v1/ai/predictions"
-            "?session_id=session-123"
-            "&type=adoption_forecast"
-            "&min_confidence=0.5"
-        )
+        response = client.get("/api/v1/ai/predictions?session_id=session-123&type=adoption_forecast&min_confidence=0.5")
 
         assert response.status_code == 200
         data = response.json()
         assert "predictions" in data
 
-    def test_get_predictions_requires_authentication(
-        self, test_app: FastAPI
-    ) -> None:
+    def test_get_predictions_requires_authentication(self, test_app: FastAPI) -> None:
         """
         GIVEN a request to /api/v1/ai/predictions
         WHEN GET request is made without authentication

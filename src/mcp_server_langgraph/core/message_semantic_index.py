@@ -14,7 +14,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from mcp_server_langgraph.observability.telemetry import logger
@@ -132,8 +132,8 @@ class MessageSemanticIndexManager:
 
     def __init__(
         self,
-        qdrant_client: "AsyncQdrantClient",
-        embedder: "Embeddings",
+        qdrant_client: AsyncQdrantClient,
+        embedder: Embeddings,
         vector_size: int = 768,
     ) -> None:
         """Initialize message semantic index manager.
@@ -183,9 +183,7 @@ class MessageSemanticIndexManager:
             # Generate embedding if not provided
             embedding = entry.embedding
             if embedding is None:
-                embedding = await asyncio.to_thread(
-                    self._embedder.embed_query, entry.summary
-                )
+                embedding = await asyncio.to_thread(self._embedder.embed_query, entry.summary)
 
             payload = entry.to_payload()
             payload["_original_id"] = entry.message_id
@@ -193,13 +191,9 @@ class MessageSemanticIndexManager:
             qdrant_id = string_to_qdrant_id(entry.message_id)
             point = PointStruct(id=qdrant_id, vector=embedding, payload=payload)
 
-            await self._client.upsert(
-                collection_name=self.COLLECTION_NAME, points=[point]
-            )
+            await self._client.upsert(collection_name=self.COLLECTION_NAME, points=[point])
 
-            logger.debug(
-                f"Indexed message {entry.message_id} in session {entry.session_id}"
-            )
+            logger.debug(f"Indexed message {entry.message_id} in session {entry.session_id}")
         except Exception as e:
             logger.warning(f"Failed to index message {entry.message_id}: {e}")
             raise
@@ -233,27 +227,21 @@ class MessageSemanticIndexManager:
 
         try:
             # Generate query embedding
-            query_embedding = await asyncio.to_thread(
-                self._embedder.embed_query, query
-            )
+            query_embedding = await asyncio.to_thread(self._embedder.embed_query, query)
 
             # Build filter: user_id + archive status
             must_conditions = [
                 FieldCondition(key="user_id", match=MatchValue(value=user_id)),
             ]
             if not include_archived:
-                must_conditions.append(
-                    FieldCondition(key="archived", match=MatchValue(value=False))
-                )
+                must_conditions.append(FieldCondition(key="archived", match=MatchValue(value=False)))
 
             # Exclude specified session and system-owned sessions (Q10)
             must_not_conditions = [
                 FieldCondition(key="user_id", match=MatchValue(value="system")),
             ]
             if exclude_session_id:
-                must_not_conditions.append(
-                    FieldCondition(key="session_id", match=MatchValue(value=exclude_session_id))
-                )
+                must_not_conditions.append(FieldCondition(key="session_id", match=MatchValue(value=exclude_session_id)))
 
             query_filter = Filter(must=must_conditions, must_not=must_not_conditions)
 
@@ -274,10 +262,7 @@ class MessageSemanticIndexManager:
 
             # Sort by score and return top sessions
             sorted_sessions = sorted(session_scores.items(), key=lambda x: x[1], reverse=True)
-            return [
-                {"session_id": sid, "similarity_score": score}
-                for sid, score in sorted_sessions[:limit]
-            ]
+            return [{"session_id": sid, "similarity_score": score} for sid, score in sorted_sessions[:limit]]
         except Exception as e:
             logger.warning(f"Failed to search similar sessions: {e}")
             return []
@@ -296,9 +281,7 @@ class MessageSemanticIndexManager:
             await self._client.delete(
                 collection_name=self.COLLECTION_NAME,
                 points_selector=FilterSelector(
-                    filter=Filter(
-                        must=[FieldCondition(key="session_id", match=MatchValue(value=session_id))]
-                    )
+                    filter=Filter(must=[FieldCondition(key="session_id", match=MatchValue(value=session_id))])
                 ),
             )
             logger.debug(f"Deleted message embeddings for session {session_id}")
@@ -321,9 +304,7 @@ class MessageSemanticIndexManager:
                 collection_name=self.COLLECTION_NAME,
                 payload={"archived": archived},
                 points=FilterSelector(
-                    filter=Filter(
-                        must=[FieldCondition(key="session_id", match=MatchValue(value=session_id))]
-                    )
+                    filter=Filter(must=[FieldCondition(key="session_id", match=MatchValue(value=session_id))])
                 ),
             )
             logger.debug(f"Marked session {session_id} archived={archived}")

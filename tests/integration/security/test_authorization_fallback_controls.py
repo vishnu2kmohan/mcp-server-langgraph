@@ -241,9 +241,7 @@ class TestAuthorizationFallbackControls:
         """
         settings = Settings()
 
-        assert settings.allow_auth_fallback is True, (
-            "allow_auth_fallback should default to True for development convenience"
-        )
+        assert settings.allow_auth_fallback is True, "allow_auth_fallback should default to True for development convenience"
 
     def test_config_fallback_can_be_explicitly_enabled(self):
         """

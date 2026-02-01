@@ -810,12 +810,9 @@ class MarketplaceClient:
                     return result
 
         # Fetch all skills in parallel with bounded concurrency
-        skills_with_metadata = await asyncio.gather(
-            *(fetch_with_fallback(skill) for skill in valid_skills)
-        )
+        skills_with_metadata = await asyncio.gather(*(fetch_with_fallback(skill) for skill in valid_skills))
 
         return list(skills_with_metadata)
-
 
 
 def create_marketplace_client() -> MarketplaceClient:

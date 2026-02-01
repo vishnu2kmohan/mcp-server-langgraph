@@ -65,9 +65,7 @@ class TestBudgetAlertsHandlerConstruction:
             BudgetAlertsHandler,
         )
 
-        handler = BudgetAlertsHandler(
-            config=WebSocketConfig(endpoint_name="budget-alerts")
-        )
+        handler = BudgetAlertsHandler(config=WebSocketConfig(endpoint_name="budget-alerts"))
         assert isinstance(handler, WebSocketBase)
 
     def test_handler_has_handle_message_method(self) -> None:
@@ -80,11 +78,9 @@ class TestBudgetAlertsHandlerConstruction:
             BudgetAlertsHandler,
         )
 
-        handler = BudgetAlertsHandler(
-            config=WebSocketConfig(endpoint_name="budget-alerts")
-        )
+        handler = BudgetAlertsHandler(config=WebSocketConfig(endpoint_name="budget-alerts"))
         assert hasattr(handler, "handle_message")
-        assert callable(getattr(handler, "handle_message"))
+        assert callable(handler.handle_message)
 
 
 @pytest.mark.xdist_group(name="budget_alerts_ws")
@@ -107,9 +103,7 @@ class TestBudgetAlertsLifecycle:
         )
         from mcp_server_langgraph.websocket.types import AuthUser
 
-        handler = BudgetAlertsHandler(
-            config=WebSocketConfig(endpoint_name="budget-alerts")
-        )
+        handler = BudgetAlertsHandler(config=WebSocketConfig(endpoint_name="budget-alerts"))
         handler._websocket = mock_websocket
 
         user = AuthUser(id="test-user", username="testuser")
@@ -129,9 +123,7 @@ class TestBudgetAlertsLifecycle:
         )
         from mcp_server_langgraph.websocket.types import AuthUser
 
-        handler = BudgetAlertsHandler(
-            config=WebSocketConfig(endpoint_name="budget-alerts")
-        )
+        handler = BudgetAlertsHandler(config=WebSocketConfig(endpoint_name="budget-alerts"))
         handler._websocket = mock_websocket
         handler._user = AuthUser(id="test-user", username="testuser")
         handler.subscribed_entities = {"org:123", "project:456"}
@@ -162,9 +154,7 @@ class TestBudgetAlertsMessageHandling:
             BudgetAlertsHandler,
         )
 
-        handler = BudgetAlertsHandler(
-            config=WebSocketConfig(endpoint_name="budget-alerts")
-        )
+        handler = BudgetAlertsHandler(config=WebSocketConfig(endpoint_name="budget-alerts"))
 
         message = MessageEnvelope(
             type="subscribe_entities",
@@ -191,9 +181,7 @@ class TestBudgetAlertsMessageHandling:
             BudgetAlertsHandler,
         )
 
-        handler = BudgetAlertsHandler(
-            config=WebSocketConfig(endpoint_name="budget-alerts")
-        )
+        handler = BudgetAlertsHandler(config=WebSocketConfig(endpoint_name="budget-alerts"))
 
         message = MessageEnvelope(
             type="subscribe_all",
@@ -219,9 +207,7 @@ class TestBudgetAlertsMessageHandling:
             BudgetAlertsHandler,
         )
 
-        handler = BudgetAlertsHandler(
-            config=WebSocketConfig(endpoint_name="budget-alerts")
-        )
+        handler = BudgetAlertsHandler(config=WebSocketConfig(endpoint_name="budget-alerts"))
         handler.subscribed_entities = {"org:123"}
         handler.subscribe_all = True
 
@@ -250,9 +236,7 @@ class TestBudgetAlertsMessageHandling:
             BudgetAlertsHandler,
         )
 
-        handler = BudgetAlertsHandler(
-            config=WebSocketConfig(endpoint_name="budget-alerts")
-        )
+        handler = BudgetAlertsHandler(config=WebSocketConfig(endpoint_name="budget-alerts"))
 
         message = MessageEnvelope(
             type="unknown_type",

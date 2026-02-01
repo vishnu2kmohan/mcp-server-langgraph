@@ -2125,10 +2125,7 @@ class TestMarketplaceClientFactory:
         mock_flags.skills_marketplace_retry_base_delay = 0.25
 
         # Patch at the source where it's imported (inside the function)
-        with patch(
-            "mcp_server_langgraph.core.feature_flags.feature_flags",
-            mock_flags
-        ):
+        with patch("mcp_server_langgraph.core.feature_flags.feature_flags", mock_flags):
             client = create_marketplace_client()
 
             assert client.rate_limit_requests_per_second == 5
@@ -2211,11 +2208,7 @@ class TestMarketplaceBoundedConcurrency:
         max_concurrent_observed = 0
 
         mock_list_response = MagicMock()
-        mock_list_response.json = MagicMock(
-            return_value=[
-                {"name": f"skill-{i}", "type": "dir"} for i in range(5)
-            ]
-        )
+        mock_list_response.json = MagicMock(return_value=[{"name": f"skill-{i}", "type": "dir"} for i in range(5)])
         mock_list_response.status_code = 200
 
         async def mock_get(url: str, **kwargs) -> MagicMock:
@@ -2260,9 +2253,7 @@ Instructions
             assert len(skills) == 5
 
             # Max concurrent should be limited to 2
-            assert max_concurrent_observed <= 2, (
-                f"Expected max 2 concurrent, but observed {max_concurrent_observed}"
-            )
+            assert max_concurrent_observed <= 2, f"Expected max 2 concurrent, but observed {max_concurrent_observed}"
 
     def test_factory_uses_max_concurrent_fetches_flag(self):
         """GIVEN the factory function
@@ -2280,10 +2271,7 @@ Instructions
         mock_flags.skills_marketplace_retry_base_delay = 0.1
         mock_flags.skills_marketplace_max_concurrent_fetches = 8
 
-        with patch(
-            "mcp_server_langgraph.core.feature_flags.feature_flags",
-            mock_flags
-        ):
+        with patch("mcp_server_langgraph.core.feature_flags.feature_flags", mock_flags):
             client = create_marketplace_client()
 
             assert client.max_concurrent_fetches == 8

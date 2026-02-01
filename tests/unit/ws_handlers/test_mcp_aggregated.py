@@ -92,9 +92,7 @@ class TestMCPAggregatedHandlerConstruction:
 
         assert issubclass(MCPAggregatedHandler, BroadcasterMixin)
 
-    def test_handler_has_handle_message_method(
-        self, mock_broadcaster: MagicMock
-    ) -> None:
+    def test_handler_has_handle_message_method(self, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN the MCPAggregatedHandler class
         WHEN inspecting its methods
@@ -109,7 +107,7 @@ class TestMCPAggregatedHandlerConstruction:
             broadcaster=mock_broadcaster,
         )
         assert hasattr(handler, "handle_message")
-        assert callable(getattr(handler, "handle_message"))
+        assert callable(handler.handle_message)
 
 
 @pytest.mark.xdist_group(name="mcp_aggregated_ws")
@@ -121,9 +119,7 @@ class TestMCPAggregatedLifecycle:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_on_connect_receives_auth_user(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_connect_receives_auth_user(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN an MCPAggregatedHandler
         WHEN on_connect is called
@@ -150,9 +146,7 @@ class TestMCPAggregatedLifecycle:
         mock_broadcaster.subscribe.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_on_disconnect_clears_subscription(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_disconnect_clears_subscription(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN an MCPAggregatedHandler with subscription
         WHEN on_disconnect is called

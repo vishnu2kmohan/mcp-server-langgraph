@@ -320,7 +320,18 @@ class TestOrchestratorStatusMessageFormats:
 
     def test_all_task_categories_have_valid_values(self) -> None:
         """Test that all TaskCategory enum values are valid strings."""
-        expected_categories = {"ux", "session", "conversation", "canvas", "diagram", "trace", "hitl", "command", "alert", "workflow"}
+        expected_categories = {
+            "ux",
+            "session",
+            "conversation",
+            "canvas",
+            "diagram",
+            "trace",
+            "hitl",
+            "command",
+            "alert",
+            "workflow",
+        }
         actual_categories = {c.value for c in TaskCategory}
 
         assert actual_categories == expected_categories

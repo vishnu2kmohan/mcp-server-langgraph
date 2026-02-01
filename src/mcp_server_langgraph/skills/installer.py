@@ -76,7 +76,7 @@ class SkillInstaller:
     def __init__(
         self,
         install_path: Path | str | None = None,
-        skill_search_tool: "SkillSearchTool | None" = None,
+        skill_search_tool: SkillSearchTool | None = None,
     ) -> None:
         """Initialize skill installer.
 

@@ -267,10 +267,7 @@ class TestSemanticIndexManagerFlow:
         )
 
         # Create multiple entries
-        entries = [
-            create_tool_entry(f"tool-{i}", f"tool_{i}", f"Tool {i} description")
-            for i in range(3)
-        ]
+        entries = [create_tool_entry(f"tool-{i}", f"tool_{i}", f"Tool {i} description") for i in range(3)]
 
         # Index batch
         await manager.index_tools_batch(entries)
@@ -325,9 +322,7 @@ class TestSemanticSearchFlow:
             "category": "search",
             "ref_type": "tool",
         }
-        mock_qdrant_client.query_points = AsyncMock(
-            return_value=MagicMock(points=[mock_point])
-        )
+        mock_qdrant_client.query_points = AsyncMock(return_value=MagicMock(points=[mock_point]))
 
         manager = SemanticIndexManager(
             embedder=mock_embeddings,
@@ -336,9 +331,7 @@ class TestSemanticSearchFlow:
         )
 
         # Mock authorization check (async method)
-        with patch.object(
-            manager, "_check_authorization", new_callable=AsyncMock, return_value=True
-        ):
+        with patch.object(manager, "_check_authorization", new_callable=AsyncMock, return_value=True):
             results = await manager.search_tools(
                 query="I need to search the web",
                 user_id=unique_user_id,
@@ -370,9 +363,7 @@ class TestSemanticSearchFlow:
         )
 
         # Setup mock to return empty (simulating filter effect)
-        mock_qdrant_client.query_points = AsyncMock(
-            return_value=MagicMock(points=[])
-        )
+        mock_qdrant_client.query_points = AsyncMock(return_value=MagicMock(points=[]))
 
         manager = SemanticIndexManager(
             embedder=mock_embeddings,
@@ -380,9 +371,7 @@ class TestSemanticSearchFlow:
             collection_name="test_collection",
         )
 
-        with patch.object(
-            manager, "_check_authorization", new_callable=AsyncMock, return_value=True
-        ):
+        with patch.object(manager, "_check_authorization", new_callable=AsyncMock, return_value=True):
             results = await manager.search_tools(
                 query="execute code",
                 user_id=unique_user_id,
@@ -432,9 +421,7 @@ class TestSearchResultCaching:
             SemanticIndexManager,
         )
 
-        mock_qdrant_client.query_points = AsyncMock(
-            return_value=MagicMock(points=[])
-        )
+        mock_qdrant_client.query_points = AsyncMock(return_value=MagicMock(points=[]))
 
         manager = SemanticIndexManager(
             embedder=mock_embeddings,
@@ -443,9 +430,7 @@ class TestSearchResultCaching:
             query_cache_ttl_seconds=300.0,  # Enable caching
         )
 
-        with patch.object(
-            manager, "_check_authorization", new_callable=AsyncMock, return_value=True
-        ):
+        with patch.object(manager, "_check_authorization", new_callable=AsyncMock, return_value=True):
             # First search
             await manager.search_tools(
                 query="web search query",
@@ -501,9 +486,7 @@ class TestMultiTenantIsolation:
             SemanticIndexManager,
         )
 
-        mock_qdrant_client.query_points = AsyncMock(
-            return_value=MagicMock(points=[])
-        )
+        mock_qdrant_client.query_points = AsyncMock(return_value=MagicMock(points=[]))
 
         manager = SemanticIndexManager(
             embedder=mock_embeddings,

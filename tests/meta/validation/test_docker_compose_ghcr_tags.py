@@ -63,9 +63,7 @@ def compose_config() -> dict[str, Any]:
 class TestGHCRTagConsistency:
     """Tests for GHCR tag configuration in docker-compose.test.yml."""
 
-    def test_all_custom_services_have_build_section(
-        self, compose_config: dict[str, Any]
-    ) -> None:
+    def test_all_custom_services_have_build_section(self, compose_config: dict[str, Any]) -> None:
         """
         GIVEN docker-compose.test.yml
         WHEN checking custom-built services
@@ -80,13 +78,10 @@ class TestGHCRTagConsistency:
                 missing_build.append(service_name)
 
         assert not missing_build, (
-            f"Services missing build section: {missing_build}. "
-            "All custom-built services must have a build configuration."
+            f"Services missing build section: {missing_build}. All custom-built services must have a build configuration."
         )
 
-    def test_all_custom_services_use_ghcr_prefix(
-        self, compose_config: dict[str, Any]
-    ) -> None:
+    def test_all_custom_services_use_ghcr_prefix(self, compose_config: dict[str, Any]) -> None:
         """
         GIVEN docker-compose.test.yml
         WHEN checking custom-built services
@@ -110,13 +105,10 @@ class TestGHCRTagConsistency:
                     incorrect_prefix.append((service_name, tag))
 
         assert not incorrect_prefix, (
-            f"Services with incorrect GHCR prefix: {incorrect_prefix}. "
-            f"All tags must use '{GHCR_REGISTRY}/' prefix."
+            f"Services with incorrect GHCR prefix: {incorrect_prefix}. All tags must use '{GHCR_REGISTRY}/' prefix."
         )
 
-    def test_all_custom_services_have_required_tags(
-        self, compose_config: dict[str, Any]
-    ) -> None:
+    def test_all_custom_services_have_required_tags(self, compose_config: dict[str, Any]) -> None:
         """
         GIVEN docker-compose.test.yml
         WHEN checking custom-built services
@@ -139,12 +131,8 @@ class TestGHCRTagConsistency:
             for expected_tag in expected["expected_tags"]:
                 full_expected = f"{expected_image}:{expected_tag}"
                 if full_expected not in tags:
-                    if (service_name, [expected_tag]) not in [
-                        (s, t) for s, t in missing_tags
-                    ]:
-                        existing = [
-                            t for s, t in missing_tags if s == service_name
-                        ]
+                    if (service_name, [expected_tag]) not in [(s, t) for s, t in missing_tags]:
+                        existing = [t for s, t in missing_tags if s == service_name]
                         if existing:
                             existing[0].append(expected_tag)
                         else:
@@ -156,9 +144,7 @@ class TestGHCRTagConsistency:
             "(or :test-latest and :test-local for mcp-server-test)."
         )
 
-    def test_image_names_match_expected_pattern(
-        self, compose_config: dict[str, Any]
-    ) -> None:
+    def test_image_names_match_expected_pattern(self, compose_config: dict[str, Any]) -> None:
         """
         GIVEN docker-compose.test.yml
         WHEN checking custom-built services
@@ -188,8 +174,7 @@ class TestGHCRTagConsistency:
                     incorrect_names.append((service_name, tag, expected_image))
 
         assert not incorrect_names, (
-            f"Services with incorrect image names: {incorrect_names}. "
-            "Image names should match expected pattern."
+            f"Services with incorrect image names: {incorrect_names}. Image names should match expected pattern."
         )
 
 
@@ -220,9 +205,7 @@ class TestBuildContextIntegrity:
             if not context_path.exists():
                 missing_contexts.append((service_name, context))
 
-        assert not missing_contexts, (
-            f"Services with missing build contexts: {missing_contexts}"
-        )
+        assert not missing_contexts, f"Services with missing build contexts: {missing_contexts}"
 
     def test_all_dockerfiles_exist(self, compose_config: dict[str, Any]) -> None:
         """
@@ -251,17 +234,13 @@ class TestBuildContextIntegrity:
                     if not dockerfile_path.exists():
                         missing_dockerfiles.append((service_name, dockerfile))
 
-        assert not missing_dockerfiles, (
-            f"Services with missing Dockerfiles: {missing_dockerfiles}"
-        )
+        assert not missing_dockerfiles, f"Services with missing Dockerfiles: {missing_dockerfiles}"
 
 
 class TestOIDCWaitInitContainer:
     """Tests for the OIDC wait init container used by OpenFGA."""
 
-    def test_oidc_wait_init_container_exists(
-        self, compose_config: dict[str, Any]
-    ) -> None:
+    def test_oidc_wait_init_container_exists(self, compose_config: dict[str, Any]) -> None:
         """
         GIVEN docker-compose.test.yml
         WHEN checking for openfga-oidc-wait service
@@ -283,13 +262,9 @@ class TestOIDCWaitInitContainer:
         oidc_wait = services.get("openfga-oidc-wait", {})
 
         image = oidc_wait.get("image", "")
-        assert "alpine" in image.lower(), (
-            "openfga-oidc-wait should use Alpine image for shell access"
-        )
+        assert "alpine" in image.lower(), "openfga-oidc-wait should use Alpine image for shell access"
 
-    def test_openfga_depends_on_oidc_wait(
-        self, compose_config: dict[str, Any]
-    ) -> None:
+    def test_openfga_depends_on_oidc_wait(self, compose_config: dict[str, Any]) -> None:
         """
         GIVEN docker-compose.test.yml
         WHEN checking openfga-test service
@@ -299,9 +274,7 @@ class TestOIDCWaitInitContainer:
         openfga_service = services.get("openfga-test", {})
 
         depends_on = openfga_service.get("depends_on", {})
-        assert "openfga-oidc-wait" in depends_on, (
-            "openfga-test must depend on openfga-oidc-wait init container"
-        )
+        assert "openfga-oidc-wait" in depends_on, "openfga-test must depend on openfga-oidc-wait init container"
 
         oidc_wait_condition = depends_on.get("openfga-oidc-wait", {})
         condition = oidc_wait_condition.get("condition", "")
@@ -324,9 +297,7 @@ class TestInfrastructureMakefileTargets:
 
         return mk_path.read_text()
 
-    def test_cleanup_images_target_exists(
-        self, infrastructure_mk_content: str
-    ) -> None:
+    def test_cleanup_images_target_exists(self, infrastructure_mk_content: str) -> None:
         """
         GIVEN make/infrastructure.mk
         WHEN checking for test-infra-cleanup-images target
@@ -344,8 +315,7 @@ class TestInfrastructureMakefileTargets:
         THEN it should define GHCR_REGISTRY variable
         """
         assert "GHCR_REGISTRY" in infrastructure_mk_content, (
-            "Missing GHCR_REGISTRY variable in infrastructure.mk. "
-            "This variable defines the registry prefix for image cleanup."
+            "Missing GHCR_REGISTRY variable in infrastructure.mk. This variable defines the registry prefix for image cleanup."
         )
 
     def test_test_images_list_defined(self, infrastructure_mk_content: str) -> None:
@@ -355,6 +325,5 @@ class TestInfrastructureMakefileTargets:
         THEN it should define TEST_IMAGES variable with all custom images
         """
         assert "TEST_IMAGES" in infrastructure_mk_content, (
-            "Missing TEST_IMAGES variable in infrastructure.mk. "
-            "This variable lists all custom-built images for cleanup."
+            "Missing TEST_IMAGES variable in infrastructure.mk. This variable lists all custom-built images for cleanup."
         )

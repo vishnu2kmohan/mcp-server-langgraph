@@ -753,9 +753,7 @@ class TestWebSocketBaseUserIdProperty:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_user_id_returns_user_id_when_authenticated(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_user_id_returns_user_id_when_authenticated(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a WebSocket with authenticated user
         WHEN user_id property is accessed
@@ -927,9 +925,7 @@ class TestWebSocketBaseSubscriptionHelpers:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_is_ready_to_send_returns_true_when_connected_and_subscribed(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_is_ready_to_send_returns_true_when_connected_and_subscribed(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a connected and subscribed WebSocket handler
         WHEN is_ready_to_send is checked
@@ -948,9 +944,7 @@ class TestWebSocketBaseSubscriptionHelpers:
         assert ws.is_ready_to_send is True
 
     @pytest.mark.asyncio
-    async def test_is_ready_to_send_returns_false_when_not_subscribed(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_is_ready_to_send_returns_false_when_not_subscribed(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a connected but not subscribed WebSocket handler
         WHEN is_ready_to_send is checked
@@ -987,9 +981,7 @@ class TestWebSocketBaseSubscriptionHelpers:
         assert ws.is_ready_to_send is False
 
     @pytest.mark.asyncio
-    async def test_send_if_subscribed_sends_when_ready(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_send_if_subscribed_sends_when_ready(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a connected and subscribed handler
         WHEN send_if_subscribed is called
@@ -1011,9 +1003,7 @@ class TestWebSocketBaseSubscriptionHelpers:
         mock_websocket.send_json.assert_called_once_with(message)
 
     @pytest.mark.asyncio
-    async def test_send_if_subscribed_skips_when_not_ready(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_send_if_subscribed_skips_when_not_ready(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a handler that is not subscribed
         WHEN send_if_subscribed is called
@@ -1035,9 +1025,7 @@ class TestWebSocketBaseSubscriptionHelpers:
         mock_websocket.send_json.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_send_if_subscribed_returns_true_when_sent(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_send_if_subscribed_returns_true_when_sent(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a connected and subscribed handler
         WHEN send_if_subscribed is called
@@ -1057,9 +1045,7 @@ class TestWebSocketBaseSubscriptionHelpers:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_send_if_subscribed_returns_false_when_not_sent(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_send_if_subscribed_returns_false_when_not_sent(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a handler that is not subscribed
         WHEN send_if_subscribed is called
@@ -1177,9 +1163,7 @@ class TestWebSocketBaseLoggingHelpers:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_log_connected_logs_with_endpoint_and_user(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_log_connected_logs_with_endpoint_and_user(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a connected WebSocket handler
         WHEN log_connected is called
@@ -1205,9 +1189,7 @@ class TestWebSocketBaseLoggingHelpers:
             assert call_args[1]["extra"]["endpoint"] == "test-endpoint"
 
     @pytest.mark.asyncio
-    async def test_log_connected_with_extra_fields(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_log_connected_with_extra_fields(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a connected WebSocket handler
         WHEN log_connected is called with extra fields
@@ -1231,9 +1213,7 @@ class TestWebSocketBaseLoggingHelpers:
             assert call_args[1]["extra"]["custom"] == "value"
 
     @pytest.mark.asyncio
-    async def test_log_disconnected_logs_with_endpoint_and_user(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_log_disconnected_logs_with_endpoint_and_user(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a WebSocket handler
         WHEN log_disconnected is called
@@ -1257,9 +1237,7 @@ class TestWebSocketBaseLoggingHelpers:
             assert call_args[1]["extra"]["user_id"] == "user-456"
 
     @pytest.mark.asyncio
-    async def test_log_disconnected_with_extra_fields(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_log_disconnected_with_extra_fields(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a WebSocket handler
         WHEN log_disconnected is called with extra fields
@@ -1470,9 +1448,7 @@ class TestWebSocketBaseBroadcasterMixin:
         assert handler.subscribed is True
 
     @pytest.mark.asyncio
-    async def test_broadcaster_mixin_subscribe_calls_broadcaster(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_broadcaster_mixin_subscribe_calls_broadcaster(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a handler with broadcaster
         WHEN subscribe is called
@@ -1496,9 +1472,7 @@ class TestWebSocketBaseBroadcasterMixin:
         assert handler.subscribed is True
 
     @pytest.mark.asyncio
-    async def test_broadcaster_mixin_unsubscribe_calls_broadcaster(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_broadcaster_mixin_unsubscribe_calls_broadcaster(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a subscribed handler with broadcaster
         WHEN unsubscribe is called
@@ -1546,9 +1520,7 @@ class TestWebSocketBaseBroadcasterMixin:
         mock_broadcaster.unsubscribe.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_broadcaster_mixin_subscribe_passes_user_id_kwarg(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_broadcaster_mixin_subscribe_passes_user_id_kwarg(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a handler using BroadcasterMixin
         WHEN subscribe is called with user_id kwarg
@@ -1568,15 +1540,11 @@ class TestWebSocketBaseBroadcasterMixin:
         handler = TestHandler()
         await handler.subscribe(user_id="user-123")
 
-        mock_broadcaster.subscribe.assert_called_once_with(
-            mock_websocket, user_id="user-123"
-        )
+        mock_broadcaster.subscribe.assert_called_once_with(mock_websocket, user_id="user-123")
         assert handler.subscribed is True
 
     @pytest.mark.asyncio
-    async def test_broadcaster_mixin_subscribe_passes_multiple_kwargs(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_broadcaster_mixin_subscribe_passes_multiple_kwargs(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a handler using BroadcasterMixin
         WHEN subscribe is called with multiple kwargs
@@ -1596,15 +1564,11 @@ class TestWebSocketBaseBroadcasterMixin:
         handler = TestHandler()
         await handler.subscribe(user_id="user-123", context_entity_id="ctx-456")
 
-        mock_broadcaster.subscribe.assert_called_once_with(
-            mock_websocket, user_id="user-123", context_entity_id="ctx-456"
-        )
+        mock_broadcaster.subscribe.assert_called_once_with(mock_websocket, user_id="user-123", context_entity_id="ctx-456")
         assert handler.subscribed is True
 
     @pytest.mark.asyncio
-    async def test_broadcaster_mixin_subscribe_passes_filter_kwarg(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_broadcaster_mixin_subscribe_passes_filter_kwarg(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a handler using BroadcasterMixin
         WHEN subscribe is called with a filter object
@@ -1625,15 +1589,11 @@ class TestWebSocketBaseBroadcasterMixin:
         handler = TestHandler()
         await handler.subscribe(filter_=test_filter)
 
-        mock_broadcaster.subscribe.assert_called_once_with(
-            mock_websocket, filter_=test_filter
-        )
+        mock_broadcaster.subscribe.assert_called_once_with(mock_websocket, filter_=test_filter)
         assert handler.subscribed is True
 
     @pytest.mark.asyncio
-    async def test_broadcaster_mixin_subscribe_no_kwargs_still_works(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_broadcaster_mixin_subscribe_no_kwargs_still_works(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a handler using BroadcasterMixin
         WHEN subscribe is called without kwargs (backwards compatible)

@@ -15,7 +15,7 @@ This test file validates:
 
 import gc
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -223,9 +223,7 @@ class TestContextvarStorageAdapter:
         )
 
         mock_service = AsyncMock(return_value=None)
-        mock_service.add_message = AsyncMock(
-            return_value={"message_id": "msg-123", "content": "test"}
-        )
+        mock_service.add_message = AsyncMock(return_value={"message_id": "msg-123", "content": "test"})
 
         adapter = ContextvarSessionStorageAdapter(session_service=mock_service)
         set_current_user_id("user-789")

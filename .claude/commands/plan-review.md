@@ -271,7 +271,6 @@ GEMINI_PLAN_PATH=$(basename "$PLAN_PATH")
 
 gemini \
   --model gemini-3-pro-preview \
-  --output-format json \
   --sandbox \
   --allowed-tools run_shell_command \
   --allowed-tools read_file \
@@ -370,7 +369,6 @@ export SANDBOX_FLAGS="-v $HOME/.config/gcloud/application_default_credentials.js
 gemini \
   --resume $GEMINI_PLAN_REVIEW_SESSION_ID \
   --model gemini-3-pro-preview \
-  --output-format json \
   --sandbox \
   --allowed-tools run_shell_command \
   --allowed-tools read_file \

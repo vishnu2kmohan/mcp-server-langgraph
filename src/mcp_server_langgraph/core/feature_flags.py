@@ -1824,8 +1824,7 @@ class FeatureFlags(BaseSettings):
     # Context Features
     checkpointing_enabled: bool = Field(
         default=True,
-        description="Enable conversation checkpointing for state persistence. "
-        "Set FF_CHECKPOINTING_ENABLED=false to disable.",
+        description="Enable conversation checkpointing for state persistence. Set FF_CHECKPOINTING_ENABLED=false to disable.",
     )
 
     context_compaction_enabled: bool = Field(
@@ -1849,14 +1848,12 @@ class FeatureFlags(BaseSettings):
 
     code_execution_enabled: bool = Field(
         default=False,
-        description="Enable sandboxed code execution (security-sensitive). "
-        "Set FF_CODE_EXECUTION_ENABLED=true to enable.",
+        description="Enable sandboxed code execution (security-sensitive). Set FF_CODE_EXECUTION_ENABLED=true to enable.",
     )
 
     sandbox_tools_enabled: bool = Field(
         default=False,
-        description="Enable sandbox tools for isolated execution. "
-        "Set FF_SANDBOX_TOOLS_ENABLED=true to enable.",
+        description="Enable sandbox tools for isolated execution. Set FF_SANDBOX_TOOLS_ENABLED=true to enable.",
     )
 
     # Model Features
@@ -1874,28 +1871,24 @@ class FeatureFlags(BaseSettings):
 
     llm_extraction_enabled: bool = Field(
         default=False,
-        description="Use LLM for structured note extraction. "
-        "Set FF_LLM_EXTRACTION_ENABLED=true to enable.",
+        description="Use LLM for structured note extraction. Set FF_LLM_EXTRACTION_ENABLED=true to enable.",
     )
 
     # Streaming Features
     streaming_enabled: bool = Field(
         default=True,
-        description="Enable streaming support globally. "
-        "Set FF_STREAMING_ENABLED=false to disable all streaming.",
+        description="Enable streaming support globally. Set FF_STREAMING_ENABLED=false to disable all streaming.",
     )
 
     # Artifacts Features
     artifacts_semantic_search_enabled: bool = Field(
         default=True,
-        description="Enable vector search for artifacts. "
-        "Set FF_ARTIFACTS_SEMANTIC_SEARCH_ENABLED=false to disable.",
+        description="Enable vector search for artifacts. Set FF_ARTIFACTS_SEMANTIC_SEARCH_ENABLED=false to disable.",
     )
 
     artifacts_cloud_storage_enabled: bool = Field(
         default=False,
-        description="Enable cloud storage for large artifacts. "
-        "Set FF_ARTIFACTS_CLOUD_STORAGE_ENABLED=true to enable.",
+        description="Enable cloud storage for large artifacts. Set FF_ARTIFACTS_CLOUD_STORAGE_ENABLED=true to enable.",
     )
 
     model_config = SettingsConfigDict(

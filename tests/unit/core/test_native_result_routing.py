@@ -6,7 +6,7 @@ content blocks directly, bypassing use_tools.
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
@@ -148,9 +148,7 @@ class TestNativeResultRouting:
             content=[
                 {"type": "text", "text": "I need to search"},
             ],
-            tool_calls=[
-                {"id": "call_123", "name": "web_search", "args": {"query": "test"}}
-            ],
+            tool_calls=[{"id": "call_123", "name": "web_search", "args": {"query": "test"}}],
         )
 
         mock_model = MagicMock()

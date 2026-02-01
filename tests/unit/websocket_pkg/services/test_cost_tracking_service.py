@@ -215,9 +215,7 @@ class TestCostTrackingDatabaseFallback:
 
         with (
             patch("mcp_server_langgraph.websocket.services.cost_tracking.get_feature_flags") as mock_flags,
-            patch(
-                "mcp_server_langgraph.websocket.services.cost_tracking.get_async_session_context"
-            ) as mock_get_session,
+            patch("mcp_server_langgraph.websocket.services.cost_tracking.get_async_session_context") as mock_get_session,
         ):
             mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=True)
             mock_get_session.return_value.__aenter__.return_value = mock_session
@@ -248,9 +246,7 @@ class TestCostTrackingDatabaseFallback:
 
         with (
             patch("mcp_server_langgraph.websocket.services.cost_tracking.get_feature_flags") as mock_flags,
-            patch(
-                "mcp_server_langgraph.websocket.services.cost_tracking.get_async_session_context"
-            ) as mock_get_session,
+            patch("mcp_server_langgraph.websocket.services.cost_tracking.get_async_session_context") as mock_get_session,
         ):
             mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=True)
             mock_get_session.return_value.__aenter__.return_value = mock_session
@@ -272,9 +268,7 @@ class TestCostTrackingDatabaseFallback:
 
         with (
             patch("mcp_server_langgraph.websocket.services.cost_tracking.get_feature_flags") as mock_flags,
-            patch(
-                "mcp_server_langgraph.websocket.services.cost_tracking.get_async_session_context"
-            ) as mock_get_session,
+            patch("mcp_server_langgraph.websocket.services.cost_tracking.get_async_session_context") as mock_get_session,
         ):
             mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=True)
             mock_get_session.side_effect = Exception("Database connection failed")

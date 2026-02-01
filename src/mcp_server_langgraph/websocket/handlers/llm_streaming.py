@@ -36,7 +36,7 @@ from mcp_server_langgraph.websocket.types import (
 )
 
 if TYPE_CHECKING:
-    from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
+    pass
 
 logger = logging.getLogger(__name__)
 

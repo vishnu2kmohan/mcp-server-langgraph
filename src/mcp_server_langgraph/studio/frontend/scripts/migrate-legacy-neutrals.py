@@ -18,7 +18,6 @@ Usage: python scripts/migrate-legacy-neutrals.py [--dry-run]
 Memory-efficient: Processes files one at a time, compiles regex once.
 """
 
-import os
 import re
 import sys
 from pathlib import Path
@@ -31,39 +30,62 @@ DRY_RUN = "--dry-run" in sys.argv
 
 # Text colors: high numbers → high Radix steps
 TEXT_MAP = {
-    "900": "12", "800": "12",  # High contrast
-    "700": "11", "600": "11",  # Secondary
-    "500": "10", "400": "9",   # Muted
-    "300": "9", "200": "9", "100": "9",  # Very muted
+    "900": "12",
+    "800": "12",  # High contrast
+    "700": "11",
+    "600": "11",  # Secondary
+    "500": "10",
+    "400": "9",  # Muted
+    "300": "9",
+    "200": "9",
+    "100": "9",  # Very muted
 }
 
 # Background colors: high numbers → low Radix steps (inverted for surfaces)
 BG_MAP = {
-    "950": "2", "900": "2",    # Darkest surfaces
-    "800": "3", "700": "4",    # Dark surfaces
-    "600": "5", "500": "5",    # Medium
-    "400": "4", "300": "3",    # Light (in context of dark theme)
-    "200": "3", "100": "2", "50": "1",  # Lightest
+    "950": "2",
+    "900": "2",  # Darkest surfaces
+    "800": "3",
+    "700": "4",  # Dark surfaces
+    "600": "5",
+    "500": "5",  # Medium
+    "400": "4",
+    "300": "3",  # Light (in context of dark theme)
+    "200": "3",
+    "100": "2",
+    "50": "1",  # Lightest
 }
 
 # Border colors: map to 5-7 range
 BORDER_MAP = {
-    "800": "7", "700": "7",    # Strong
-    "600": "6", "500": "6",    # Default
-    "400": "6", "300": "5",    # Subtle
-    "200": "5", "100": "5",    # Very subtle
+    "800": "7",
+    "700": "7",  # Strong
+    "600": "6",
+    "500": "6",  # Default
+    "400": "6",
+    "300": "5",  # Subtle
+    "200": "5",
+    "100": "5",  # Very subtle
 }
 
 # Hover backgrounds: interactive states
 HOVER_BG_MAP = {
-    "900": "3", "800": "4", "700": "5",
-    "600": "5", "500": "5", "400": "4",
-    "300": "4", "200": "4", "100": "3", "50": "3",
+    "900": "3",
+    "800": "4",
+    "700": "5",
+    "600": "5",
+    "500": "5",
+    "400": "4",
+    "300": "4",
+    "200": "4",
+    "100": "3",
+    "50": "3",
 }
 
 # =============================================================================
 # BUILD COMPILED REGEX PATTERNS (done once at startup)
 # =============================================================================
+
 
 def build_replacements() -> dict[str, str]:
     """Build list of (compiled_pattern, replacement) tuples."""
@@ -71,60 +93,66 @@ def build_replacements() -> dict[str, str]:
 
     # Text colors
     for old, new in TEXT_MAP.items():
-        pattern = re.compile(rf'\btext-neutral-{old}\b')
-        replacements.append((pattern, f'text-neutral-{new}'))
+        pattern = re.compile(rf"\btext-neutral-{old}\b")
+        replacements.append((pattern, f"text-neutral-{new}"))
 
     # Background colors
     for old, new in BG_MAP.items():
-        pattern = re.compile(rf'\bbg-neutral-{old}\b')
-        replacements.append((pattern, f'bg-neutral-{new}'))
+        pattern = re.compile(rf"\bbg-neutral-{old}\b")
+        replacements.append((pattern, f"bg-neutral-{new}"))
 
     # Border colors
     for old, new in BORDER_MAP.items():
-        pattern = re.compile(rf'\bborder-neutral-{old}\b')
-        replacements.append((pattern, f'border-neutral-{new}'))
+        pattern = re.compile(rf"\bborder-neutral-{old}\b")
+        replacements.append((pattern, f"border-neutral-{new}"))
 
     # Hover backgrounds
     for old, new in HOVER_BG_MAP.items():
-        pattern = re.compile(rf'\bhover:bg-neutral-{old}\b')
-        replacements.append((pattern, f'hover:bg-neutral-{new}'))
+        pattern = re.compile(rf"\bhover:bg-neutral-{old}\b")
+        replacements.append((pattern, f"hover:bg-neutral-{new}"))
 
     # Focus states
-    replacements.extend([
-        (re.compile(r'\bfocus:bg-neutral-700\b'), 'focus:bg-neutral-4'),
-        (re.compile(r'\bfocus:bg-neutral-100\b'), 'focus:bg-neutral-3'),
-        (re.compile(r'\bfocus:bg-neutral-50\b'), 'focus:bg-neutral-3'),
-        (re.compile(r'\bfocus:border-neutral-500\b'), 'focus:border-neutral-8'),
-        (re.compile(r'\bfocus:border-neutral-400\b'), 'focus:border-neutral-7'),
-    ])
+    replacements.extend(
+        [
+            (re.compile(r"\bfocus:bg-neutral-700\b"), "focus:bg-neutral-4"),
+            (re.compile(r"\bfocus:bg-neutral-100\b"), "focus:bg-neutral-3"),
+            (re.compile(r"\bfocus:bg-neutral-50\b"), "focus:bg-neutral-3"),
+            (re.compile(r"\bfocus:border-neutral-500\b"), "focus:border-neutral-8"),
+            (re.compile(r"\bfocus:border-neutral-400\b"), "focus:border-neutral-7"),
+        ]
+    )
 
     # Placeholder colors
-    replacements.extend([
-        (re.compile(r'\bplaceholder-neutral-500\b'), 'placeholder-neutral-9'),
-        (re.compile(r'\bplaceholder-neutral-400\b'), 'placeholder-neutral-9'),
-        (re.compile(r'\bplaceholder:text-neutral-500\b'), 'placeholder:text-neutral-9'),
-        (re.compile(r'\bplaceholder:text-neutral-400\b'), 'placeholder:text-neutral-9'),
-    ])
+    replacements.extend(
+        [
+            (re.compile(r"\bplaceholder-neutral-500\b"), "placeholder-neutral-9"),
+            (re.compile(r"\bplaceholder-neutral-400\b"), "placeholder-neutral-9"),
+            (re.compile(r"\bplaceholder:text-neutral-500\b"), "placeholder:text-neutral-9"),
+            (re.compile(r"\bplaceholder:text-neutral-400\b"), "placeholder:text-neutral-9"),
+        ]
+    )
 
     # Divide colors
-    replacements.extend([
-        (re.compile(r'\bdivide-neutral-200\b'), 'divide-neutral-5'),
-        (re.compile(r'\bdivide-neutral-300\b'), 'divide-neutral-6'),
-        (re.compile(r'\bdivide-neutral-700\b'), 'divide-neutral-6'),
-    ])
+    replacements.extend(
+        [
+            (re.compile(r"\bdivide-neutral-200\b"), "divide-neutral-5"),
+            (re.compile(r"\bdivide-neutral-300\b"), "divide-neutral-6"),
+            (re.compile(r"\bdivide-neutral-700\b"), "divide-neutral-6"),
+        ]
+    )
 
     # Ring colors
-    replacements.extend([
-        (re.compile(r'\bring-neutral-500\b'), 'ring-neutral-8'),
-        (re.compile(r'\bring-neutral-400\b'), 'ring-neutral-7'),
-        (re.compile(r'\bring-neutral-300\b'), 'ring-neutral-6'),
-        (re.compile(r'\bring-neutral-200\b'), 'ring-neutral-5'),
-    ])
+    replacements.extend(
+        [
+            (re.compile(r"\bring-neutral-500\b"), "ring-neutral-8"),
+            (re.compile(r"\bring-neutral-400\b"), "ring-neutral-7"),
+            (re.compile(r"\bring-neutral-300\b"), "ring-neutral-6"),
+            (re.compile(r"\bring-neutral-200\b"), "ring-neutral-5"),
+        ]
+    )
 
     # bg-white → bg-neutral-1 (only when not part of another word)
-    replacements.append(
-        (re.compile(r'\bbg-white\b'), 'bg-neutral-1')
-    )
+    replacements.append((re.compile(r"\bbg-white\b"), "bg-neutral-1"))
 
     return replacements
 
@@ -138,7 +166,7 @@ def process_file(filepath: Path) -> tuple[int, bool]:
     Returns (replacement_count, was_modified).
     """
     try:
-        content = filepath.read_text(encoding='utf-8')
+        content = filepath.read_text(encoding="utf-8")
     except Exception as e:
         print(f"  Error reading {filepath}: {e}")
         return 0, False
@@ -153,7 +181,7 @@ def process_file(filepath: Path) -> tuple[int, bool]:
 
     if content != original:
         if not DRY_RUN:
-            filepath.write_text(content, encoding='utf-8')
+            filepath.write_text(content, encoding="utf-8")
         return total_count, True
 
     return 0, False
@@ -174,10 +202,9 @@ def main() -> None:
 
     # Find TSX files, excluding tests and stories
     files = [
-        f for f in src_dir.rglob("*.tsx")
-        if "node_modules" not in str(f)
-        and ".test." not in f.name
-        and ".stories." not in f.name
+        f
+        for f in src_dir.rglob("*.tsx")
+        if "node_modules" not in str(f) and ".test." not in f.name and ".stories." not in f.name
     ]
 
     print(f"Files to process: {len(files)}")
@@ -194,7 +221,7 @@ def main() -> None:
 
     print()
     print("=" * 60)
-    print(f"Migration complete!")
+    print("Migration complete!")
     print(f"  Files modified: {modified_files}")
     print(f"  Total replacements: {total_replacements}")
     print("=" * 60)

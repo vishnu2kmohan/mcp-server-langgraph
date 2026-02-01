@@ -23,7 +23,6 @@ Exit Codes:
 
 import argparse
 import re
-from typing import Any, Pattern, Match
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -78,6 +77,7 @@ BUTTON_TEXT_TO_VARIANT: dict[str, str] = {
 # Pattern[str] Matching
 # =============================================================================
 
+
 def should_skip(path: Path) -> bool:
     """Check if path should be skipped."""
     if any(skip in path.parts for skip in SKIP_DIRS):
@@ -103,10 +103,7 @@ def fix_button_variants(content: str, dry_run: bool = False) -> tuple[str, dict[
     for text, variant in BUTTON_TEXT_TO_VARIANT.items():
         # Pattern[str]: <Button (without variant=) ... >Text</Button>
         # Captures: $1 = opening tag content, $2 = text
-        pattern = re.compile(
-            rf'(<Button\b)(?![^>]*\bvariant=)([^>]*>)\s*{re.escape(text)}\s*(</Button>)',
-            re.IGNORECASE
-        )
+        pattern = re.compile(rf"(<Button\b)(?![^>]*\bvariant=)([^>]*>)\s*{re.escape(text)}\s*(</Button>)", re.IGNORECASE)
 
         def replacer(match: re.Match[str]) -> str:
             fixes[f"{text} → {variant}"] += 1
@@ -147,15 +144,16 @@ def fix_classname_color_overrides(content: str, dry_run: bool = False) -> tuple[
 
         def make_replacer(var: str, col: str):
             def replacer(match: re.Match[str]) -> str:
-                fixes[f"bg-{col}-* → variant=\"{var}\""] += 1
+                fixes[f'bg-{col}-* → variant="{var}"'] += 1
                 # Preserve other classes, remove the bg-color class
-                other_classes = match.group(3) + match.group(4).rstrip('"\'>')
+                other_classes = match.group(3) + match.group(4).rstrip("\"'>")
                 # Clean up the className
-                other_classes = re.sub(rf'\s*bg-{col}-\d+\s*', ' ', other_classes).strip()
+                other_classes = re.sub(rf"\s*bg-{col}-\d+\s*", " ", other_classes).strip()
                 if other_classes:
                     return f'{match.group(1)} variant="{var}" className="{other_classes}">'
                 else:
                     return f'{match.group(1)} variant="{var}">'
+
             return replacer
 
         content = pattern.sub(make_replacer(variant, color), content)
@@ -194,6 +192,7 @@ def process_file(file_path: Path, dry_run: bool = False, verbose: bool = False) 
 # =============================================================================
 # Main Entry Point
 # =============================================================================
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(
@@ -251,7 +250,7 @@ def main() -> int:
             print(f"    {fix_type}: {count}")
 
     if args.dry_run and files_modified > 0:
-        print(f"\nRun without --dry-run to apply changes.")
+        print("\nRun without --dry-run to apply changes.")
 
     return 0
 

@@ -16,31 +16,32 @@ VECTORS_PAGE = Path(__file__).parent.parent / "src" / "pages" / "VectorsPage.tsx
 
 # Text color fixes - step 10 to step 11
 TEXT_FIXES = [
-    (r'\btext-neutral-10\b', 'text-neutral-11'),
+    (r"\btext-neutral-10\b", "text-neutral-11"),
 ]
 
 # Button background fixes - step 10 to step 9
 BG_FIXES = [
-    (r'\bbg-primary-10\b', 'bg-primary-9'),
-    (r'\bhover:bg-primary-11\b', 'hover:bg-primary-10'),
-    (r'\bbg-success-10\b', 'bg-success-9'),
-    (r'\bhover:bg-success-11\b', 'hover:bg-success-10'),
-    (r'\bbg-insight-10\b', 'bg-insight-9'),
-    (r'\bhover:bg-insight-11\b', 'hover:bg-insight-10'),
+    (r"\bbg-primary-10\b", "bg-primary-9"),
+    (r"\bhover:bg-primary-11\b", "hover:bg-primary-10"),
+    (r"\bbg-success-10\b", "bg-success-9"),
+    (r"\bhover:bg-success-11\b", "hover:bg-success-10"),
+    (r"\bbg-insight-10\b", "bg-insight-9"),
+    (r"\bhover:bg-insight-11\b", "hover:bg-insight-10"),
 ]
 
 # Dark mode text fixes - consolidate to step 11
 DARK_TEXT_FIXES = [
-    (r'\bdark:text-error-7\b', 'dark:text-error-11'),
-    (r'\bdark:text-success-7\b', 'dark:text-success-11'),
-    (r'\bdark:text-insight-9\b', 'dark:text-insight-11'),
+    (r"\bdark:text-error-7\b", "dark:text-error-11"),
+    (r"\bdark:text-success-7\b", "dark:text-success-11"),
+    (r"\bdark:text-insight-9\b", "dark:text-insight-11"),
 ]
 
 # Dark mode border fixes - step 11 to step 7
 DARK_BORDER_FIXES = [
-    (r'\bdark:border-error-11\b', 'dark:border-error-7'),
-    (r'\bdark:border-success-11\b', 'dark:border-success-7'),
+    (r"\bdark:border-error-11\b", "dark:border-error-7"),
+    (r"\bdark:border-success-11\b", "dark:border-success-7"),
 ]
+
 
 def fix_file(filepath: Path, dry_run: bool = False) -> int:
     """Fix a single file. Returns number of replacements made."""
@@ -60,8 +61,10 @@ def fix_file(filepath: Path, dry_run: bool = False) -> int:
 
     return changes
 
+
 def main() -> int:
     import sys
+
     dry_run = "--dry-run" in sys.argv
 
     if dry_run:
@@ -79,6 +82,8 @@ def main() -> int:
 
     return 0
 
+
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

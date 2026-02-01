@@ -11,7 +11,7 @@ ADR Reference: ADR-0092, ADR-0099
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 

@@ -236,9 +236,7 @@ class TestSkillSearchQdrantIntegration:
         assert count.count == 1
 
     @pytest.mark.asyncio
-    async def test_skill_search_with_real_qdrant(
-        self, qdrant_client, collection_name: str, cleanup_collection: None
-    ) -> None:
+    async def test_skill_search_with_real_qdrant(self, qdrant_client, collection_name: str, cleanup_collection: None) -> None:
         """Test searching skills in real Qdrant collection."""
         from qdrant_client.models import Distance, VectorParams
 
@@ -386,9 +384,7 @@ class TestVectorProviderAdapterQdrant:
     """Tests for VectorProviderAdapter with real Qdrant operations."""
 
     @pytest.mark.asyncio
-    async def test_search_returns_dict_format(
-        self, qdrant_client, collection_name: str, cleanup_collection: None
-    ) -> None:
+    async def test_search_returns_dict_format(self, qdrant_client, collection_name: str, cleanup_collection: None) -> None:
         """Test adapter search returns list of dicts (not VectorSearchResult)."""
         from qdrant_client.models import Distance, VectorParams
 

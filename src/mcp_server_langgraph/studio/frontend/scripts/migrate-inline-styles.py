@@ -18,17 +18,16 @@ Patterns handled:
 """
 
 import argparse
-import os
 import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Pattern, Match, Optional
 
 
 @dataclass
 class Violation:
     """Represents a single inline style violation."""
+
     file_path: str
     line_number: int
     line_content: str
@@ -41,6 +40,7 @@ class Violation:
 @dataclass
 class MigrationReport:
     """Summary of migration results."""
+
     files_scanned: int = 0
     files_with_violations: int = 0
     total_violations: int = 0
@@ -69,26 +69,26 @@ PATTERNS = {
     "static_height_px": {
         "regex": r'style=\{\{\s*height:\s*[\'"](\d+)px[\'"]\s*\}\}',
         "description": "Static height in pixels",
-        "fix_template": "className=\"h-[{value}px]\"",
+        "fix_template": 'className="h-[{value}px]"',
         "can_auto_fix": True,
     },
     # Static width in px
     "static_width_px": {
         "regex": r'style=\{\{\s*width:\s*[\'"](\d+)px[\'"]\s*\}\}',
         "description": "Static width in pixels",
-        "fix_template": "className=\"w-[{value}px]\"",
+        "fix_template": 'className="w-[{value}px]"',
         "can_auto_fix": True,
     },
     # Static padding
     "static_padding": {
         "regex": r'style=\{\{\s*padding:\s*[\'"](\d+)px[\'"]\s*\}\}',
         "description": "Static padding",
-        "fix_template": "className=\"p-[{value}px]\"",
+        "fix_template": 'className="p-[{value}px]"',
         "can_auto_fix": True,
     },
     # Multiple properties in style object
     "multi_property_style": {
-        "regex": r'style=\{\{[^}]*,[^}]*\}\}',
+        "regex": r"style=\{\{[^}]*,[^}]*\}\}",
         "description": "Multiple properties in style object",
         "fix_template": "Split into className and minimal style",
         "can_auto_fix": False,
@@ -142,7 +142,7 @@ PX_TO_TAILWIND = {
 }
 
 
-def get_tailwind_spacing(px_value: str) -> Optional[str]:
+def get_tailwind_spacing(px_value: str) -> str | None:
     """Convert pixel value to Tailwind spacing token if available."""
     return PX_TO_TAILWIND.get(px_value)
 
@@ -181,15 +181,17 @@ def scan_file(file_path: Path) -> list[Violation]:
                 else:
                     suggested = pattern_info["fix_template"]
 
-                violations.append(Violation(
-                    file_path=str(file_path),
-                    line_number=line_num,
-                    line_content=line.strip(),
-                    pattern_type=pattern_name,
-                    original=match.group(0),
-                    suggested_fix=suggested,
-                    can_auto_fix=pattern_info["can_auto_fix"],
-                ))
+                violations.append(
+                    Violation(
+                        file_path=str(file_path),
+                        line_number=line_num,
+                        line_content=line.strip(),
+                        pattern_type=pattern_name,
+                        original=match.group(0),
+                        suggested_fix=suggested,
+                        can_auto_fix=pattern_info["can_auto_fix"],
+                    )
+                )
 
     return violations
 
@@ -217,36 +219,44 @@ def apply_fix(file_path: Path, violations: list[Violation]) -> int:
         if violation.pattern_type == "padding_left_dynamic":
             # Replace paddingLeft pattern with getIndentClass
             pattern = r'style=\{\{\s*paddingLeft:\s*[`\'"]?\$\{([^}]+)\}px[`\'"]?\s*\}\}'
+
             def replace_indent(m: re.Match[str]) -> str:
                 expr = m.group(1)
                 return f"className={{getIndentClass({expr})}}"
+
             modified = re.sub(pattern, replace_indent, modified)
             fixes_applied += 1
 
         elif violation.pattern_type == "static_height_px":
             pattern = r'style=\{\{\s*height:\s*[\'"](\d+)px[\'"]\s*\}\}'
+
             def replace_height(m: re.Match[str]) -> str:
                 value = m.group(1)
                 tw = get_tailwind_spacing(value)
                 return f'className="h-{tw}"' if tw else f'className="h-[{value}px]"'
+
             modified = re.sub(pattern, replace_height, modified)
             fixes_applied += 1
 
         elif violation.pattern_type == "static_width_px":
             pattern = r'style=\{\{\s*width:\s*[\'"](\d+)px[\'"]\s*\}\}'
+
             def replace_width(m: re.Match[str]) -> str:
                 value = m.group(1)
                 tw = get_tailwind_spacing(value)
                 return f'className="w-{tw}"' if tw else f'className="w-[{value}px]"'
+
             modified = re.sub(pattern, replace_width, modified)
             fixes_applied += 1
 
         elif violation.pattern_type == "static_padding":
             pattern = r'style=\{\{\s*padding:\s*[\'"](\d+)px[\'"]\s*\}\}'
+
             def replace_padding(m: re.Match[str]) -> str:
                 value = m.group(1)
                 tw = get_tailwind_spacing(value)
                 return f'className="p-{tw}"' if tw else f'className="p-[{value}px]"'
+
             modified = re.sub(pattern, replace_padding, modified)
             fixes_applied += 1
 
@@ -265,7 +275,7 @@ def apply_fix(file_path: Path, violations: list[Violation]) -> int:
                 last_import_end = modified.rfind("import ", 0, end_of_imports + 100)
                 if last_import_end != -1:
                     line_end = modified.find("\n", last_import_end)
-                    modified = modified[:line_end + 1] + import_line + modified[line_end + 1:]
+                    modified = modified[: line_end + 1] + import_line + modified[line_end + 1 :]
 
         try:
             file_path.write_text(modified, encoding="utf-8")
@@ -339,9 +349,7 @@ def print_report(report: MigrationReport, verbose: bool = False) -> None:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Migrate inline styles to design system patterns"
-    )
+    parser = argparse.ArgumentParser(description="Migrate inline styles to design system patterns")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -358,7 +366,8 @@ def main() -> int:
         help="Generate detailed report only",
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Show detailed violations",
     )

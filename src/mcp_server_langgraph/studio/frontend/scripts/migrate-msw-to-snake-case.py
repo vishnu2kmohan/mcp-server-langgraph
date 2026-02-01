@@ -11,7 +11,6 @@ Usage: python scripts/migrate-msw-to-snake-case.py [--dry-run]
 """
 
 import re
-from typing import Any, Pattern, Match
 import sys
 from pathlib import Path
 
@@ -28,7 +27,7 @@ API_RESPONSE_IMPORT = 'import { apiJsonResponse, apiErrorResponse } from "../uti
 def migrate_file(filepath: Path, dry_run: bool = False) -> tuple[int, list[str]]:
     """Migrate a single file. Returns (changes_count, change_descriptions)."""
     if not filepath.exists():
-        return 0, [f"  Skipped: file not found"]
+        return 0, ["  Skipped: file not found"]
 
     content = filepath.read_text()
     original = content
@@ -44,7 +43,7 @@ def migrate_file(filepath: Path, dry_run: bool = False) -> tuple[int, list[str]]
         # Add our import after the msw import
         content = re.sub(
             msw_import_pattern,
-            r'\1\n' + API_RESPONSE_IMPORT,
+            r"\1\n" + API_RESPONSE_IMPORT,
             content,
             count=1,
         )
@@ -73,34 +72,34 @@ def migrate_file(filepath: Path, dry_run: bool = False) -> tuple[int, list[str]]
     # and let developers fix edge cases
 
     # Replace simple cases: HttpResponse.json(expr)
-    simple_pattern = r'HttpResponse\.json\('
-    content, count = re.subn(simple_pattern, 'apiJsonResponse(', content)
+    simple_pattern = r"HttpResponse\.json\("
+    content, count = re.subn(simple_pattern, "apiJsonResponse(", content)
 
     if count > 0:
         changes.append(f"  + Replaced {count} HttpResponse.json() calls")
 
     # Now we need to handle error responses specially
     # Find lines with status: 4xx or 5xx and revert them
-    lines = content.split('\n')
+    lines = content.split("\n")
     reverted = 0
     for i, line in enumerate(lines):
-        if 'apiJsonResponse(' in line and ('status: 4' in line or 'status: 5' in line):
-            lines[i] = line.replace('apiJsonResponse(', 'apiErrorResponse(')
+        if "apiJsonResponse(" in line and ("status: 4" in line or "status: 5" in line):
+            lines[i] = line.replace("apiJsonResponse(", "apiErrorResponse(")
             reverted += 1
 
     if reverted > 0:
-        content = '\n'.join(lines)
+        content = "\n".join(lines)
         changes.append(f"  + Converted {reverted} error responses to apiErrorResponse()")
 
     # Remove HttpResponse from import if no longer used
     if "HttpResponse" in content:
         # Check if HttpResponse is still used anywhere (besides the import)
-        uses = len(re.findall(r'HttpResponse\s*\.', content))
+        uses = len(re.findall(r"HttpResponse\s*\.", content))
         if uses == 0:
             # Remove HttpResponse from import
-            content = re.sub(r',?\s*HttpResponse\s*,?', '', content)
-            content = re.sub(r'\{\s*,', '{', content)  # Clean up {, ...
-            content = re.sub(r',\s*\}', '}', content)  # Clean up ..., }
+            content = re.sub(r",?\s*HttpResponse\s*,?", "", content)
+            content = re.sub(r"\{\s*,", "{", content)  # Clean up {, ...
+            content = re.sub(r",\s*\}", "}", content)  # Clean up ..., }
             changes.append("  - Removed unused HttpResponse import")
 
     if content != original:

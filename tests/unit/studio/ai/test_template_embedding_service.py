@@ -69,9 +69,7 @@ class TestTemplateRecommenderEmbeddingService:
         embedding_service = InMemoryEmbeddingService(dimensions=768)
         recommender = TemplateRecommender(embedding_service=embedding_service)
 
-        result = await recommender.recommend(
-            description="I want to build a data processing pipeline"
-        )
+        result = await recommender.recommend(description="I want to build a data processing pipeline")
 
         assert isinstance(result, list)
         assert len(result) > 0
@@ -111,9 +109,7 @@ class TestTemplateRecommenderEmbeddingService:
         embedding_service = InMemoryEmbeddingService(dimensions=768)
         recommender = TemplateRecommender(embedding_service=embedding_service)
 
-        result = await recommender.recommend(
-            description="multi-agent collaboration system"
-        )
+        result = await recommender.recommend(description="multi-agent collaboration system")
 
         # All similarity scores should be in valid range
         for r in result:
@@ -242,9 +238,7 @@ class TestTemplateRecommenderFactory:
         from mcp_server_langgraph.studio.ai.templates import get_template_recommender
 
         # Patch at the import location inside the function
-        with patch(
-            "mcp_server_langgraph.llm.embeddings.get_embedding_service"
-        ) as mock_get:
+        with patch("mcp_server_langgraph.llm.embeddings.get_embedding_service") as mock_get:
             mock_service = MagicMock()
             mock_get.return_value = mock_service
 

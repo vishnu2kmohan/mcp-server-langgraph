@@ -9,7 +9,6 @@ Usage: python scripts/fix-msw-snake-case.py
 """
 
 import re
-from typing import Any, Match
 import sys
 from pathlib import Path
 
@@ -66,7 +65,7 @@ def fix_file(filepath: Path) -> tuple[int, list[str]]:
         # but NOT in comments or strings describing the property
         patterns = [
             # Object property: nodeId: value
-            (rf'(\s+)({camel})(\s*:\s*)', rf'\1{snake}\3'),
+            (rf"(\s+)({camel})(\s*:\s*)", rf"\1{snake}\3"),
             # Quoted property in object: "nodeId": value
             (rf'(["\'])({camel})\1(\s*:\s*)', rf'"{snake}"\3'),
         ]

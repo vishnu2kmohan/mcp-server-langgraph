@@ -397,10 +397,7 @@ class TestMonotonicChainInvariants:
         assert system_type is not None
 
         is_computed = relation_is_computed_from(system_type, "developer", "admin")
-        assert is_computed, (
-            "system.developer MUST be computed from admin. "
-            "This is the first level of the monotonic chain."
-        )
+        assert is_computed, "system.developer MUST be computed from admin. This is the first level of the monotonic chain."
 
     def test_system_user_computed_from_developer(self) -> None:
         """
@@ -474,8 +471,7 @@ class TestMonotonicChainInvariants:
             sources = get_computed_sources(viewer_relation)
             # Viewer should inherit from author OR admin (acceptable patterns)
             assert "author" in sources or "admin" in sources, (
-                "skill.viewer MUST be computed from author (or admin) "
-                "to form a proper privilege chain."
+                "skill.viewer MUST be computed from author (or admin) to form a proper privilege chain."
             )
 
     def test_ai_chain_user_from_admin(self) -> None:
@@ -517,9 +513,7 @@ class TestMonotonicChainInvariants:
         top_relation = chain[0]
         for lower_relation in chain[1:]:
             is_reachable = relation_is_computed_from(type_def, lower_relation, top_relation)
-            assert is_reachable, (
-                f"{type_name}.{lower_relation} should be transitively reachable from {top_relation}"
-            )
+            assert is_reachable, f"{type_name}.{lower_relation} should be transitively reachable from {top_relation}"
 
 
 class TestRoleTypeRemoval:

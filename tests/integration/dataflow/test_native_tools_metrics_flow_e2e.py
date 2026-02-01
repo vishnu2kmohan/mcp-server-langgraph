@@ -258,9 +258,7 @@ class TestMetricsAggregatorComparison:
         """
         # Record data for both native and builtin
         fresh_aggregator.record_selection(unique_tool_name, "native", "anthropic")
-        fresh_aggregator.record_execution(
-            unique_tool_name, "native", 100.0, True, "anthropic"
-        )
+        fresh_aggregator.record_execution(unique_tool_name, "native", 100.0, True, "anthropic")
         fresh_aggregator.record_selection(unique_tool_name, "builtin", None)
         fresh_aggregator.record_execution(unique_tool_name, "builtin", 200.0, True, None)
 
@@ -304,9 +302,7 @@ class TestMetricsAggregatorComparison:
         # Record multiple executions with varying latencies
         latencies = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]
         for latency in latencies:
-            fresh_aggregator.record_execution(
-                unique_tool_name, "native", latency, True, "anthropic"
-            )
+            fresh_aggregator.record_execution(unique_tool_name, "native", latency, True, "anthropic")
 
         data = fresh_aggregator.get_comparison_data()
         tool_data = next(
@@ -390,9 +386,7 @@ class TestMetricsAggregatorReset:
         """
         # Record some metrics
         fresh_aggregator.record_selection(unique_tool_name, "native", "anthropic")
-        fresh_aggregator.record_execution(
-            unique_tool_name, "native", 100.0, True, "anthropic"
-        )
+        fresh_aggregator.record_execution(unique_tool_name, "native", 100.0, True, "anthropic")
 
         # Verify data exists
         data = fresh_aggregator.get_comparison_data()

@@ -29,7 +29,6 @@ Radix scale mapping (1-12):
 """
 
 import re
-from typing import Any, Pattern, Match
 import sys
 from pathlib import Path
 
@@ -131,6 +130,7 @@ def process_file(file_path: Path, dry_run: bool = False) -> tuple[int, list[str]
     )
 
     changes = []
+
     def replace_and_track(match: re.Match[str]) -> str:
         new_value = migrate_color(match)
         if new_value != match.group(0):

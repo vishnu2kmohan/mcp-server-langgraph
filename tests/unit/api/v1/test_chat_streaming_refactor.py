@@ -240,8 +240,7 @@ class TestChatStreamingBackwardCompatibility:
 
         # _stream_via_litellm should be removed (legacy method deleted)
         assert not hasattr(service, "_stream_via_litellm"), (
-            "_stream_via_litellm should be removed. "
-            "All streaming should now use LLMFactory.astream()"
+            "_stream_via_litellm should be removed. All streaming should now use LLMFactory.astream()"
         )
 
     def test_chat_completion_service_has_stream_via_llm_factory_method(self) -> None:

@@ -80,9 +80,7 @@ class TestDevToolsHandlerConstruction:
 
         assert issubclass(DevToolsHandler, BroadcasterMixin)
 
-    def test_handler_has_handle_message_method(
-        self, mock_broadcaster: MagicMock
-    ) -> None:
+    def test_handler_has_handle_message_method(self, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN the DevToolsHandler class
         WHEN inspecting its methods
@@ -95,7 +93,7 @@ class TestDevToolsHandlerConstruction:
             broadcaster=mock_broadcaster,
         )
         assert hasattr(handler, "handle_message")
-        assert callable(getattr(handler, "handle_message"))
+        assert callable(handler.handle_message)
 
 
 @pytest.mark.xdist_group(name="devtools_ws")
@@ -107,9 +105,7 @@ class TestDevToolsLifecycle:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_on_connect_receives_auth_user(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_connect_receives_auth_user(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a DevToolsHandler
         WHEN on_connect is called
@@ -134,9 +130,7 @@ class TestDevToolsLifecycle:
         mock_broadcaster.subscribe.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_on_disconnect_clears_subscription(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_disconnect_clears_subscription(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a DevToolsHandler with subscription
         WHEN on_disconnect is called
@@ -193,9 +187,7 @@ class TestDevToolsMessageHandling:
         assert response.type == "subscribed"
 
     @pytest.mark.asyncio
-    async def test_handle_subscribe_with_context(
-        self, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_handle_subscribe_with_context(self, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a subscribe message with contextEntityId
         WHEN handle_message is called
@@ -248,9 +240,7 @@ class TestDevToolsMessageHandling:
         assert response.type == "unsubscribed"
 
     @pytest.mark.asyncio
-    async def test_handle_set_context(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_handle_set_context(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a set_context message
         WHEN handle_message is called
@@ -295,9 +285,7 @@ class TestDevToolsContextIdFromQueryParams:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_on_connect_extracts_context_id_from_query_params(
-        self, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_connect_extracts_context_id_from_query_params(self, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a WebSocket connection with context_id in query params
         WHEN on_connect is called
@@ -327,9 +315,7 @@ class TestDevToolsContextIdFromQueryParams:
         assert handler._context_entity_id == "session-abc-123"
 
     @pytest.mark.asyncio
-    async def test_on_connect_passes_context_id_to_broadcaster_subscribe(
-        self, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_connect_passes_context_id_to_broadcaster_subscribe(self, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a WebSocket connection with context_id in query params
         WHEN on_connect subscribes to the broadcaster
@@ -387,9 +373,7 @@ class TestDevToolsContextIdFromQueryParams:
         mock_broadcaster.subscribe.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_subscribe_message_overrides_query_param_context(
-        self, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_subscribe_message_overrides_query_param_context(self, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a handler with context_id from query params
         WHEN a subscribe message provides a different contextEntityId

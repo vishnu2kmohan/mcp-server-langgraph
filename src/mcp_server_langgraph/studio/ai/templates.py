@@ -287,9 +287,7 @@ class TemplateRecommender:
         results = []
 
         for template in self._templates:
-            similarity = await self._compute_similarity(
-                description, template, query_embedding=query_embedding
-            )
+            similarity = await self._compute_similarity(description, template, query_embedding=query_embedding)
             results.append(
                 {
                     "template": template,
@@ -330,22 +328,16 @@ class TemplateRecommender:
         # Priority 1: Use injected EmbeddingService with pre-computed query
         if self._embedding_service is not None and query_embedding is not None:
             try:
-                return await self._compute_embedding_service_similarity(
-                    template, query_embedding
-                )
+                return await self._compute_embedding_service_similarity(template, query_embedding)
             except Exception as e:
-                logger.debug(
-                    "EmbeddingService similarity failed, falling back: %s", e
-                )
+                logger.debug("EmbeddingService similarity failed, falling back: %s", e)
 
         # Priority 2: Use legacy sentence-transformers
         if self._enable_embeddings and _embeddings_available and _embedding_model is not None:
             try:
                 return self._compute_embedding_similarity(description, template)
             except Exception as e:
-                logger.debug(
-                    "Embedding similarity failed, falling back to keywords: %s", e
-                )
+                logger.debug("Embedding similarity failed, falling back to keywords: %s", e)
 
         # Priority 3: Keyword-based similarity
         return self._compute_keyword_similarity(description, template)

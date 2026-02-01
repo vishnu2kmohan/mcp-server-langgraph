@@ -104,6 +104,7 @@ class AgentRequestHandler(WebSocketBase):
         self._broadcaster = broadcaster
         self._session_id = session_id or "global"
         self._subscribed: bool = False
+
     async def on_connect(self, user: AuthUser) -> None:
         """
         Handle connection establishment.

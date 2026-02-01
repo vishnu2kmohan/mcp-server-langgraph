@@ -30,7 +30,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from opentelemetry import metrics, trace
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.repositories.plan_template import PlanTemplateRepository
@@ -108,16 +108,36 @@ class RouterOutput(BaseModel):
     complexity: Literal["simple", "complicated", "complex"]
     risk: Literal["low", "medium", "high"]
     task_type: Literal["chat", "code", "analysis", "data", "ops", "other"]
-    tools_needed: list[str]
+    # v35.0: Nullable - None means "use router suggestion" (sentinel value)
+    tools_needed: list[str] | None = None
     suggested_orchestrator: Literal["standard", "swarm", "studio", "ux", "alert"]
     critique_rounds: int = Field(ge=0, le=3)
     thinking_budget: Literal["none", "light", "medium", "deep"]
     confidence: float = Field(ge=0.0, le=1.0)
 
     # ADR-0092: New fields for Hierarchical Capability Architecture
-    skills_needed: list[str] = Field(default_factory=list)
+    # v35.0: Nullable - None means "use router suggestion" (sentinel value)
+    skills_needed: list[str] | None = None
     execution_mode: Literal["pure_llm", "tool_calling", "react", "programmatic", "orchestrator"] = "tool_calling"
     routing_rationale: str = ""
+
+    # v35.0 Phase 2e: Tool preference fields for fine-grained control
+    tool_preference: str | None = None
+    tool_selection_mode: Literal["auto", "manual", "hybrid"] | None = None
+
+    @model_validator(mode="after")
+    def normalize_empty_lists_to_none(self) -> RouterOutput:
+        """Normalize empty lists to None for consistent NULL semantics.
+
+        v35.0: Empty lists are normalized to None to ensure consistent
+        database persistence and JSON serialization. None is the sentinel
+        value meaning "use router suggestion".
+        """
+        if self.tools_needed is not None and len(self.tools_needed) == 0:
+            object.__setattr__(self, "tools_needed", None)
+        if self.skills_needed is not None and len(self.skills_needed) == 0:
+            object.__setattr__(self, "skills_needed", None)
+        return self
 
 
 class TemplateSuggestion(BaseModel):
@@ -166,19 +186,23 @@ class RouterOutputWithDiscovery(RouterOutput):
 
 
 # Default fallback for parse errors or low confidence
+# v35.0: Use None for tools_needed/skills_needed (sentinel: defer to router)
 DEFAULT_ROUTER_OUTPUT = RouterOutput(
     complexity="complicated",
     risk="medium",
     task_type="other",
-    tools_needed=[],
+    tools_needed=None,  # v35.0: Sentinel - defer to router suggestion
     suggested_orchestrator="standard",
     critique_rounds=1,
     thinking_budget="light",
     confidence=0.5,
     # ADR-0092: New fields with backward-compatible defaults
-    skills_needed=[],
+    skills_needed=None,  # v35.0: Sentinel - defer to router suggestion
     execution_mode="tool_calling",
     routing_rationale="",
+    # v35.0 Phase 2e: Tool preference defaults
+    tool_preference=None,
+    tool_selection_mode=None,
 )
 
 

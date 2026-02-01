@@ -65,9 +65,7 @@ class SkillMetadata(BaseModel):
     source: str | None = Field(default=None, description="Source marketplace")
     # AgentSkills.io compliance fields (Appendix B)
     license: str = Field(default="", description="License identifier (e.g., MIT, Apache-2.0)")
-    allowed_tools: list[str] = Field(
-        default_factory=list, description="Pre-approved tools this skill can use"
-    )
+    allowed_tools: list[str] = Field(default_factory=list, description="Pre-approved tools this skill can use")
     category: str = Field(default="", description="Skill category")
 
 
@@ -423,7 +421,7 @@ class SemanticSkillSearchResponse(BaseModel):
 # =============================================================================
 
 
-def get_vector_provider() -> "VectorProviderProtocol":
+def get_vector_provider() -> VectorProviderProtocol:
     """Get the vector provider for semantic search.
 
     Returns:
@@ -451,7 +449,7 @@ def get_vector_provider() -> "VectorProviderProtocol":
         ) from e
 
 
-def get_embedding_service() -> "EmbeddingServiceProtocol":
+def get_embedding_service() -> EmbeddingServiceProtocol:
     """Get the embedding service for generating query vectors.
 
     Returns:

@@ -23,7 +23,6 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Callable
 
 from sqlalchemy import delete, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 # Type alias for session factory
 SessionFactory = Callable[[], Any]  # Returns context manager yielding AsyncSession
@@ -81,9 +80,7 @@ class DecisionTraceRepositoryBase(ABC):
         ...
 
     @abstractmethod
-    async def get_by_session(
-        self, session_id: str, limit: int = 100, offset: int = 0
-    ) -> list[DecisionTraceSummary]:
+    async def get_by_session(self, session_id: str, limit: int = 100, offset: int = 0) -> list[DecisionTraceSummary]:
         """Get traces for a session with pagination.
 
         Args:
@@ -174,15 +171,11 @@ class PostgresDecisionTraceRepository(DecisionTraceRepositoryBase):
     async def get_by_id(self, trace_id: str) -> DecisionTraceRead | None:
         """Get trace by ID."""
         async with self._session_factory() as session:
-            result = await session.execute(
-                select(DecisionTrace).where(DecisionTrace.trace_id == trace_id)
-            )
+            result = await session.execute(select(DecisionTrace).where(DecisionTrace.trace_id == trace_id))
             trace = result.scalar_one_or_none()
             return DecisionTraceRead.model_validate(trace) if trace else None
 
-    async def get_by_session(
-        self, session_id: str, limit: int = 100, offset: int = 0
-    ) -> list[DecisionTraceSummary]:
+    async def get_by_session(self, session_id: str, limit: int = 100, offset: int = 0) -> list[DecisionTraceSummary]:
         """Get traces for session with pagination."""
         async with self._session_factory() as session:
             result = await session.execute(
@@ -207,17 +200,13 @@ class PostgresDecisionTraceRepository(DecisionTraceRepositoryBase):
     async def get_by_user(self, user_id: str) -> list[dict[str, Any]]:
         """Get all user traces for GDPR export."""
         async with self._session_factory() as session:
-            result = await session.execute(
-                select(DecisionTrace).where(DecisionTrace.user_id == user_id)
-            )
+            result = await session.execute(select(DecisionTrace).where(DecisionTrace.user_id == user_id))
             return [t.to_dict() for t in result.scalars().all()]
 
     async def delete_by_user(self, user_id: str) -> int:
         """Delete all user traces for GDPR (edges deleted by CASCADE)."""
         async with self._session_factory() as session:
-            result = await session.execute(
-                delete(DecisionTrace).where(DecisionTrace.user_id == user_id)
-            )
+            result = await session.execute(delete(DecisionTrace).where(DecisionTrace.user_id == user_id))
             await session.commit()
             return int(result.rowcount or 0)
 
@@ -225,8 +214,6 @@ class PostgresDecisionTraceRepository(DecisionTraceRepositoryBase):
         """Delete traces older than retention period (edges deleted by CASCADE)."""
         cutoff = datetime.now(UTC) - timedelta(days=retention_days)
         async with self._session_factory() as session:
-            result = await session.execute(
-                delete(DecisionTrace).where(DecisionTrace.timestamp < cutoff)
-            )
+            result = await session.execute(delete(DecisionTrace).where(DecisionTrace.timestamp < cutoff))
             await session.commit()
             return int(result.rowcount or 0)

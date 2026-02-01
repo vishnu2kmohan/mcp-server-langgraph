@@ -15,7 +15,6 @@ This script handles the coordination between style and className attributes.
 """
 
 import re
-from typing import Any, Pattern, Match
 import sys
 from pathlib import Path
 
@@ -56,7 +55,7 @@ def fix_progress_bar_pattern(content: str) -> tuple[str, int]:
 
     # Pattern[str] 1: Simple width percentage
     # style={{ width: `${percentage}%` }}
-    pattern1 = r'style=\{\{\s*width:\s*`\$\{([^}]+)\}%`\s*\}\}'
+    pattern1 = r"style=\{\{\s*width:\s*`\$\{([^}]+)\}%`\s*\}\}"
 
     def replace_simple(m: re.Match[str]) -> str:
         expr = m.group(1)
@@ -68,7 +67,7 @@ def fix_progress_bar_pattern(content: str) -> tuple[str, int]:
 
     # Pattern[str] 2: Width with Math operations
     # style={{ width: `${Math.min(x, 100)}%` }}
-    pattern2 = r'style=\{\{\s*width:\s*`\$\{(Math\.[^}]+)\}%`\s*\}\}'
+    pattern2 = r"style=\{\{\s*width:\s*`\$\{(Math\.[^}]+)\}%`\s*\}\}"
 
     new_content, count2 = re.subn(pattern2, replace_simple, content)
     content = new_content
@@ -76,7 +75,7 @@ def fix_progress_bar_pattern(content: str) -> tuple[str, int]:
 
     # Pattern[str] 3: Width with calculation
     # style={{ width: `${(a / b) * 100}%` }}
-    pattern3 = r'style=\{\{\s*width:\s*`\$\{\(([^}]+)\)\s*\*\s*100\}%`\s*\}\}'
+    pattern3 = r"style=\{\{\s*width:\s*`\$\{\(([^}]+)\)\s*\*\s*100\}%`\s*\}\}"
 
     def replace_calc(m: re.Match[str]) -> str:
         expr = m.group(1)
@@ -88,7 +87,7 @@ def fix_progress_bar_pattern(content: str) -> tuple[str, int]:
 
     # Pattern[str] 4: Width with property access multiplication
     # style={{ width: `${healthScore * 100}%` }}
-    pattern4 = r'style=\{\{\s*width:\s*`\$\{([a-zA-Z_.]+)\s*\*\s*100\}%`\s*\}\}'
+    pattern4 = r"style=\{\{\s*width:\s*`\$\{([a-zA-Z_.]+)\s*\*\s*100\}%`\s*\}\}"
 
     def replace_mult(m: re.Match[str]) -> str:
         expr = m.group(1)
@@ -127,7 +126,7 @@ def add_progress_bar_class(content: str) -> tuple[str, int]:
         class_end = m.group(4)
 
         if "progress-bar" not in existing_classes:
-            return f'{style} {class_start}progress-bar-fill {existing_classes}{class_end}'
+            return f"{style} {class_start}progress-bar-fill {existing_classes}{class_end}"
         return m.group(0)
 
     new_content, count = re.subn(pattern, add_class, content)

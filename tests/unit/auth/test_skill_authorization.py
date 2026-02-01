@@ -13,7 +13,7 @@ Reference: ADR-0002 OpenFGA Authorization, ADR-0068 Gateway-Level Authentication
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -557,9 +557,9 @@ class TestSkillsAPIAuthorizationMatrix:
     @pytest.mark.parametrize(
         "user,expected",
         [
-            ("user:admin", True),   # admin -> author -> viewer
-            ("user:alice", True),   # author -> viewer
-            ("user:bob", True),     # viewer
+            ("user:admin", True),  # admin -> author -> viewer
+            ("user:alice", True),  # author -> viewer
+            ("user:bob", True),  # viewer
         ],
     )
     async def test_list_skills_authorization(self, user: str, expected: bool):
@@ -581,9 +581,9 @@ class TestSkillsAPIAuthorizationMatrix:
     @pytest.mark.parametrize(
         "user,expected",
         [
-            ("user:admin", True),   # admin -> author
-            ("user:alice", True),   # author
-            ("user:bob", False),    # viewer only - cannot install
+            ("user:admin", True),  # admin -> author
+            ("user:alice", True),  # author
+            ("user:bob", False),  # viewer only - cannot install
         ],
     )
     async def test_install_skill_authorization(self, user: str, expected: bool):
@@ -605,9 +605,9 @@ class TestSkillsAPIAuthorizationMatrix:
     @pytest.mark.parametrize(
         "user,expected",
         [
-            ("user:admin", True),   # admin -> author
-            ("user:alice", True),   # author
-            ("user:bob", False),    # viewer only - cannot uninstall
+            ("user:admin", True),  # admin -> author
+            ("user:alice", True),  # author
+            ("user:bob", False),  # viewer only - cannot uninstall
         ],
     )
     async def test_uninstall_skill_authorization(self, user: str, expected: bool):
@@ -629,9 +629,9 @@ class TestSkillsAPIAuthorizationMatrix:
     @pytest.mark.parametrize(
         "user,expected",
         [
-            ("user:admin", True),   # marketplace:admin
+            ("user:admin", True),  # marketplace:admin
             ("user:alice", False),  # no marketplace admin
-            ("user:bob", False),    # no marketplace admin
+            ("user:bob", False),  # no marketplace admin
         ],
     )
     async def test_register_marketplace_authorization(self, user: str, expected: bool):

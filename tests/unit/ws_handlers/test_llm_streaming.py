@@ -57,9 +57,7 @@ class TestLLMStreamingHandlerConstruction:
             LLMStreamingHandler,
         )
 
-        handler = LLMStreamingHandler(
-            config=WebSocketConfig(endpoint_name="llm-streaming")
-        )
+        handler = LLMStreamingHandler(config=WebSocketConfig(endpoint_name="llm-streaming"))
         assert isinstance(handler, WebSocketBase)
 
     def test_handler_has_abstract_method_handle_message(self) -> None:
@@ -72,13 +70,11 @@ class TestLLMStreamingHandlerConstruction:
             LLMStreamingHandler,
         )
 
-        handler = LLMStreamingHandler(
-            config=WebSocketConfig(endpoint_name="llm-streaming")
-        )
+        handler = LLMStreamingHandler(config=WebSocketConfig(endpoint_name="llm-streaming"))
 
         # Should have handle_message method, not on_message
         assert hasattr(handler, "handle_message")
-        assert callable(getattr(handler, "handle_message"))
+        assert callable(handler.handle_message)
 
 
 @pytest.mark.xdist_group(name="llm_streaming_ws")
@@ -101,9 +97,7 @@ class TestLLMStreamingLifecycle:
         )
         from mcp_server_langgraph.websocket.types import AuthUser
 
-        handler = LLMStreamingHandler(
-            config=WebSocketConfig(endpoint_name="llm-streaming")
-        )
+        handler = LLMStreamingHandler(config=WebSocketConfig(endpoint_name="llm-streaming"))
         handler._websocket = mock_websocket
 
         user = AuthUser(id="test-user", username="testuser")
@@ -123,9 +117,7 @@ class TestLLMStreamingLifecycle:
         )
         from mcp_server_langgraph.websocket.types import AuthUser
 
-        handler = LLMStreamingHandler(
-            config=WebSocketConfig(endpoint_name="llm-streaming")
-        )
+        handler = LLMStreamingHandler(config=WebSocketConfig(endpoint_name="llm-streaming"))
         handler._websocket = mock_websocket
         handler._user = AuthUser(id="test-user", username="testuser")
 
@@ -152,9 +144,7 @@ class TestLLMStreamingMessageHandling:
             LLMStreamingHandler,
         )
 
-        handler = LLMStreamingHandler(
-            config=WebSocketConfig(endpoint_name="llm-streaming")
-        )
+        handler = LLMStreamingHandler(config=WebSocketConfig(endpoint_name="llm-streaming"))
 
         message = MessageEnvelope(
             type="subscribe_stream",
@@ -182,9 +172,7 @@ class TestLLMStreamingMessageHandling:
             LLMStreamingHandler,
         )
 
-        handler = LLMStreamingHandler(
-            config=WebSocketConfig(endpoint_name="llm-streaming")
-        )
+        handler = LLMStreamingHandler(config=WebSocketConfig(endpoint_name="llm-streaming"))
         # First subscribe
         handler._subscribed_streams.add("stream-123")
 
@@ -212,9 +200,7 @@ class TestLLMStreamingMessageHandling:
             LLMStreamingHandler,
         )
 
-        handler = LLMStreamingHandler(
-            config=WebSocketConfig(endpoint_name="llm-streaming")
-        )
+        handler = LLMStreamingHandler(config=WebSocketConfig(endpoint_name="llm-streaming"))
         handler._subscribed_streams.add("stream-456")
 
         message = MessageEnvelope(
@@ -243,9 +229,7 @@ class TestLLMStreamingMessageHandling:
             LLMStreamingHandler,
         )
 
-        handler = LLMStreamingHandler(
-            config=WebSocketConfig(endpoint_name="llm-streaming")
-        )
+        handler = LLMStreamingHandler(config=WebSocketConfig(endpoint_name="llm-streaming"))
 
         message = MessageEnvelope(
             type="ping",
@@ -271,9 +255,7 @@ class TestLLMStreamingMessageHandling:
             LLMStreamingHandler,
         )
 
-        handler = LLMStreamingHandler(
-            config=WebSocketConfig(endpoint_name="llm-streaming")
-        )
+        handler = LLMStreamingHandler(config=WebSocketConfig(endpoint_name="llm-streaming"))
 
         message = MessageEnvelope(
             type="unknown_type",
@@ -309,9 +291,7 @@ class TestLLMStreamingSubscriptionErrors:
             LLMStreamingHandler,
         )
 
-        handler = LLMStreamingHandler(
-            config=WebSocketConfig(endpoint_name="llm-streaming")
-        )
+        handler = LLMStreamingHandler(config=WebSocketConfig(endpoint_name="llm-streaming"))
 
         message = MessageEnvelope(
             type="subscribe_stream",
@@ -338,9 +318,7 @@ class TestLLMStreamingSubscriptionErrors:
             LLMStreamingHandler,
         )
 
-        handler = LLMStreamingHandler(
-            config=WebSocketConfig(endpoint_name="llm-streaming")
-        )
+        handler = LLMStreamingHandler(config=WebSocketConfig(endpoint_name="llm-streaming"))
 
         message = MessageEnvelope(
             type="cancel_stream",

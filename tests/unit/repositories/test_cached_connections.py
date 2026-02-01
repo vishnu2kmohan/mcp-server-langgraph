@@ -547,9 +547,7 @@ class TestCachedConnectionGetByServerName:
         # Verify
         assert result is not None
         assert result.id == "conn-123"
-        mock_delegate.get_by_server_name.assert_called_once_with(
-            "test-server", "user-456"
-        )
+        mock_delegate.get_by_server_name.assert_called_once_with("test-server", "user-456")
         mock_cache.set.assert_called_once()
 
     @pytest.mark.asyncio
@@ -613,9 +611,7 @@ class TestCachedConnectionServerNameInvalidation:
 
         # Should clear server_name lookup cache for this owner
         clear_calls = [str(call) for call in mock_cache.clear.call_args_list]
-        any_server_name_clear = any(
-            "connection_by_name" in str(call) for call in clear_calls
-        )
+        any_server_name_clear = any("connection_by_name" in str(call) for call in clear_calls)
         assert any_server_name_clear or mock_cache.clear.call_count >= 2
 
     @pytest.mark.asyncio
@@ -635,9 +631,7 @@ class TestCachedConnectionServerNameInvalidation:
 
         # Should clear server_name lookup cache for this owner
         clear_calls = [str(call) for call in mock_cache.clear.call_args_list]
-        any_server_name_clear = any(
-            "connection_by_name" in str(call) for call in clear_calls
-        )
+        any_server_name_clear = any("connection_by_name" in str(call) for call in clear_calls)
         assert any_server_name_clear or mock_cache.clear.call_count >= 2
 
     @pytest.mark.asyncio

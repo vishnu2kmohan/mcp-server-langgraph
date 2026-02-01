@@ -35,7 +35,7 @@ class MarketplaceRegistryAdapter:
     expected by the marketplace_admin router factory.
     """
 
-    def __init__(self, registry: "MarketplaceRegistry") -> None:
+    def __init__(self, registry: MarketplaceRegistry) -> None:
         """Initialize the adapter.
 
         Args:
@@ -48,6 +48,7 @@ class MarketplaceRegistryAdapter:
         """Get or create the MarketplaceClient with feature flag configuration."""
         if self._client is None:
             from mcp_server_langgraph.skills.marketplace import create_marketplace_client
+
             self._client = create_marketplace_client()
         return self._client
 
@@ -169,7 +170,7 @@ class SkillsState:
                 logger.warning(f"Error stopping AutoUpdateScheduler: {e}")
 
 
-async def init_skills(settings: "Settings") -> SkillsState:
+async def init_skills(settings: Settings) -> SkillsState:
     """Initialize the skills system.
 
     This function:

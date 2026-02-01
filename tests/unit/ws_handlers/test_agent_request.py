@@ -265,9 +265,7 @@ class TestAgentRequestSessionIdFromQueryParams:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_on_connect_extracts_session_id_from_query_params(
-        self, mock_hitl_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_connect_extracts_session_id_from_query_params(self, mock_hitl_broadcaster: MagicMock) -> None:
         """
         GIVEN a WebSocket connection with session_id in query params
         WHEN on_connect is called
@@ -300,9 +298,7 @@ class TestAgentRequestSessionIdFromQueryParams:
         assert handler._session_id == "session-from-url"
 
     @pytest.mark.asyncio
-    async def test_on_connect_passes_session_id_to_broadcaster(
-        self, mock_hitl_broadcaster: MagicMock
-    ) -> None:
+    async def test_on_connect_passes_session_id_to_broadcaster(self, mock_hitl_broadcaster: MagicMock) -> None:
         """
         GIVEN a WebSocket connection with session_id in query params
         WHEN on_connect calls broadcaster.connect
@@ -337,9 +333,7 @@ class TestAgentRequestSessionIdFromQueryParams:
         assert call_args[0][1] == "session-xyz-789"  # session_id is second positional arg
 
     @pytest.mark.asyncio
-    async def test_constructor_session_id_takes_precedence(
-        self, mock_hitl_broadcaster: MagicMock
-    ) -> None:
+    async def test_constructor_session_id_takes_precedence(self, mock_hitl_broadcaster: MagicMock) -> None:
         """
         GIVEN a handler with session_id from constructor and query params
         WHEN on_connect is called

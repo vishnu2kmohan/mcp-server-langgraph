@@ -9,7 +9,6 @@ GREEN Phase: Implementation in tools/native_metrics.py will make them pass.
 """
 
 import gc
-from unittest.mock import MagicMock, patch
 
 import pytest
 

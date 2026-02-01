@@ -133,9 +133,7 @@ class TestServicePrincipalDirectPermissions:
         User Journey: Batch ETL job can call MCP tools for data processing
         API Endpoint: POST /api/v1/chat/invoke-tool
         """
-        allowed = _check_permission(
-            "service_principal:batch-etl-job", "executor", "tool:chat"
-        )
+        allowed = _check_permission("service_principal:batch-etl-job", "executor", "tool:chat")
         assert allowed, "Service principal should have executor access to tool:chat"
 
     def test_sp_owns_execution(self):
@@ -147,9 +145,7 @@ class TestServicePrincipalDirectPermissions:
         User Journey: Batch ETL job owns its workflow executions
         API Endpoint: GET /api/v1/workflow_executions/{id}
         """
-        allowed = _check_permission(
-            "service_principal:batch-etl-job", "owner", "execution:default"
-        )
+        allowed = _check_permission("service_principal:batch-etl-job", "owner", "execution:default")
         assert allowed, "Service principal should own execution:default"
 
     def test_sp_inherits_viewer_from_owner(self):
@@ -161,9 +157,7 @@ class TestServicePrincipalDirectPermissions:
         User Journey: Batch ETL job can view its own executions
         API Endpoint: GET /api/v1/workflow_executions
         """
-        allowed = _check_permission(
-            "service_principal:batch-etl-job", "viewer", "execution:default"
-        )
+        allowed = _check_permission("service_principal:batch-etl-job", "viewer", "execution:default")
         assert allowed, "SP should inherit viewer access via owner relation"
 
 
@@ -189,9 +183,7 @@ class TestServicePrincipalActsAs:
         User Journey: Verify admin controls the batch-etl-job SP
         Security: Enables audit trail linking SP actions to controlling user
         """
-        allowed = _check_permission(
-            "user:admin", "acts_as", "service_principal:batch-etl-job"
-        )
+        allowed = _check_permission("user:admin", "acts_as", "service_principal:batch-etl-job")
         assert allowed, "user:admin should have acts_as on service_principal:batch-etl-job"
 
 
@@ -217,9 +209,7 @@ class TestServicePrincipalNegativeCases:
         User Journey: SP should not have implicit access to all resources
         Security: Verify least-privilege principle for SPs
         """
-        allowed = _check_permission(
-            "service_principal:batch-etl-job", "admin", "skill:default"
-        )
+        allowed = _check_permission("service_principal:batch-etl-job", "admin", "skill:default")
         assert not allowed, "SP should NOT have access to ungratned resources"
 
     def test_nonexistent_sp_has_no_access(self):
@@ -230,7 +220,5 @@ class TestServicePrincipalNegativeCases:
 
         Security: Non-existent service principals have no permissions
         """
-        allowed = _check_permission(
-            "service_principal:fake-sp", "executor", "tool:chat"
-        )
+        allowed = _check_permission("service_principal:fake-sp", "executor", "tool:chat")
         assert not allowed, "Non-existent SP should have no access"

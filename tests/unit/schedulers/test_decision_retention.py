@@ -12,7 +12,7 @@ Tests:
 
 import asyncio
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -94,9 +94,7 @@ class TestRetentionLoop:
         mock_repo.delete_expired = AsyncMock(return_value=0)
 
         with (
-            patch(
-                "mcp_server_langgraph.schedulers.decision_retention.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.schedulers.decision_retention.feature_flags") as mock_flags,
             patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
         ):
             mock_flags.context_graph_retention_days = 90
@@ -129,9 +127,7 @@ class TestRetentionLoop:
         mock_repo.delete_expired = AsyncMock(return_value=10)
 
         with (
-            patch(
-                "mcp_server_langgraph.schedulers.decision_retention.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.schedulers.decision_retention.feature_flags") as mock_flags,
             patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
         ):
             # Use custom retention days
@@ -161,14 +157,10 @@ class TestRetentionLoop:
 
         mock_repo = AsyncMock(return_value=None)
         # First call raises, second succeeds
-        mock_repo.delete_expired = AsyncMock(
-            side_effect=[Exception("DB error"), 5]
-        )
+        mock_repo.delete_expired = AsyncMock(side_effect=[Exception("DB error"), 5])
 
         with (
-            patch(
-                "mcp_server_langgraph.schedulers.decision_retention.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.schedulers.decision_retention.feature_flags") as mock_flags,
             patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
         ):
             mock_flags.context_graph_retention_days = 90

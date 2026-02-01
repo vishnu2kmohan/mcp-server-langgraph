@@ -84,12 +84,10 @@ class AuthorizationService:
 
             # Phase 3: Check org context enforcement settings
             org_context_enforcement = (
-                getattr(self.settings, "openfga_org_context_enforcement", False)
-                if self.settings else False
+                getattr(self.settings, "openfga_org_context_enforcement", False) if self.settings else False
             )
             org_context_fail_closed = (
-                getattr(self.settings, "openfga_org_context_fail_closed", True)
-                if self.settings else True
+                getattr(self.settings, "openfga_org_context_fail_closed", True) if self.settings else True
             )
 
             # Extract org_context from context dict
@@ -167,9 +165,7 @@ class AuthorizationService:
                             "resource": resource,
                             "authorized": authorized,
                             "org_context": org_context,
-                            "has_contextual_tuples": bool(
-                                enhanced_context and enhanced_context.get("contextual_tuples")
-                            ),
+                            "has_contextual_tuples": bool(enhanced_context and enhanced_context.get("contextual_tuples")),
                         },
                     )
 
@@ -223,11 +219,13 @@ class AuthorizationService:
 
         # Add org context tuple if enforcement is enabled and context is provided
         if org_context_enforcement and org_context:
-            contextual_tuples.append({
-                "user": user_id,
-                "relation": "user_in_context",
-                "object": f"organization:{org_context}",
-            })
+            contextual_tuples.append(
+                {
+                    "user": user_id,
+                    "relation": "user_in_context",
+                    "object": f"organization:{org_context}",
+                }
+            )
             logger.debug(
                 "Added org context tuple for authorization",
                 extra={

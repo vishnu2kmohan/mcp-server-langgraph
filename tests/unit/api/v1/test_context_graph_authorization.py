@@ -259,11 +259,12 @@ class TestContextGraphPrecedentSearchAuthorization:
         request_body = PrecedentSearchRequest(query="test query", limit=10)
 
         # WHEN searching for precedents
-        with patch(
-            "mcp_server_langgraph.api.v1.context_graph.feature_flags", mock_flags
-        ), patch(
-            "mcp_server_langgraph.core.dependencies.get_semantic_index_manager",
-            return_value=mock_manager,
+        with (
+            patch("mcp_server_langgraph.api.v1.context_graph.feature_flags", mock_flags),
+            patch(
+                "mcp_server_langgraph.core.dependencies.get_semantic_index_manager",
+                return_value=mock_manager,
+            ),
         ):
             await search_precedents(
                 body=request_body,
@@ -297,9 +298,7 @@ class TestContextGraphPrecedentSearchAuthorization:
         request_body = PrecedentSearchRequest(query="test query", limit=10)
 
         # WHEN searching for precedents
-        with patch(
-            "mcp_server_langgraph.api.v1.context_graph.feature_flags", mock_flags
-        ):
+        with patch("mcp_server_langgraph.api.v1.context_graph.feature_flags", mock_flags):
             # THEN should raise 503
             with pytest.raises(HTTPException) as exc_info:
                 await search_precedents(
@@ -343,9 +342,7 @@ class TestContextGraphAuthorizationMetrics:
         mock_request = _create_mock_request(mock_auth_service)
 
         # WHEN authorization is denied
-        with patch(
-            "mcp_server_langgraph.api.v1.context_graph.log_authorization_denied"
-        ) as mock_log:
+        with patch("mcp_server_langgraph.api.v1.context_graph.log_authorization_denied") as mock_log:
             with pytest.raises(HTTPException):
                 await get_trace(
                     trace_id="trace-001",

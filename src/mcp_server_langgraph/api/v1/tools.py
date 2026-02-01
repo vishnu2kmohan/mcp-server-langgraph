@@ -43,10 +43,8 @@ from mcp_server_langgraph.observability.telemetry import logger
 from mcp_server_langgraph.tools import get_all_tools
 from mcp_server_langgraph.tools.constants import (
     SANDBOX_REQUIRED_TOOLS,
-    TOOL_CATEGORY_MAP,
     get_display_name as _get_display_name,
     get_tool_category as _get_tool_category,
-    tool_requires_sandbox,
 )
 
 if TYPE_CHECKING:
@@ -653,9 +651,7 @@ class NativeToolCapability(BaseModel):
 
     tool_name: str = Field(..., description="Tool name (e.g., web_search, code_execution)")
     supported: bool = Field(..., description="Whether the model supports this tool")
-    provider_type: str | None = Field(
-        None, description="Provider-specific type (e.g., web_search_20250305)"
-    )
+    provider_type: str | None = Field(None, description="Provider-specific type (e.g., web_search_20250305)")
     enabled: bool = Field(..., description="Whether the feature flag is enabled")
 
 
@@ -663,12 +659,8 @@ class NativeCapabilitiesResponse(BaseModel):
     """Response for native tool capabilities detection."""
 
     model_id: str = Field(..., description="The model ID queried")
-    native_provider: str | None = Field(
-        None, description="Native tool provider (anthropic, google, openai)"
-    )
-    capabilities: list[NativeToolCapability] = Field(
-        default_factory=list, description="Available native tool capabilities"
-    )
+    native_provider: str | None = Field(None, description="Native tool provider (anthropic, google, openai)")
+    capabilities: list[NativeToolCapability] = Field(default_factory=list, description="Available native tool capabilities")
     master_enabled: bool = Field(..., description="Whether native tools are enabled globally")
 
 
@@ -715,10 +707,7 @@ async def get_native_capabilities(
             web_search_enabled = feature_flags.google_native_search_enabled
             web_search_type = "googleSearch"
         elif caps.native_provider == "openai":
-            web_search_enabled = (
-                feature_flags.openai_native_web_search_enabled
-                and feature_flags.use_responses_api_for_openai
-            )
+            web_search_enabled = feature_flags.openai_native_web_search_enabled and feature_flags.use_responses_api_for_openai
             web_search_type = "web_search_preview"
 
     capabilities.append(
@@ -741,8 +730,7 @@ async def get_native_capabilities(
             code_exec_type = "code_execution_20250825"
         elif caps.native_provider == "openai":
             code_exec_enabled = (
-                feature_flags.openai_native_code_interpreter_enabled
-                and feature_flags.use_responses_api_for_openai
+                feature_flags.openai_native_code_interpreter_enabled and feature_flags.use_responses_api_for_openai
             )
             code_exec_type = "code_interpreter"
 

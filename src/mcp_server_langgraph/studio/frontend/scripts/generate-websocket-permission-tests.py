@@ -30,7 +30,7 @@ HOOKS = [
     ("useMCPTaskWebSocket", "mcp_tasks", "/api/v1/ws/mcp/tasks"),
 ]
 
-TEMPLATE = '''/**
+TEMPLATE = """/**
  * Permission-based Connection Control Tests for {hook_name}
  *
  * Security requirement: WebSocket connections must only be established when:
@@ -181,7 +181,8 @@ describe("{hook_name} permission-based connection control", () => {{
     expect(capturedUrl).toBe("");
   }});
 }});
-'''
+"""
+
 
 def main() -> None:
     hooks_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -203,6 +204,7 @@ def main() -> None:
         print(f"Created: {test_filename}")
 
     print(f"\nGenerated {len(HOOKS)} permission test files")
+
 
 if __name__ == "__main__":
     main()

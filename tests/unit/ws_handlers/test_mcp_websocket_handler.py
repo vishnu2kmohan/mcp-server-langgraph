@@ -265,6 +265,7 @@ class TestMCPAuthenticationContext:
         # Use public user_id property from base class
         assert handler.user_id == "test-user"
 
+
 class TestMCPSessionManagement:
     """Test session ID handling for MCP WebSocket."""
 

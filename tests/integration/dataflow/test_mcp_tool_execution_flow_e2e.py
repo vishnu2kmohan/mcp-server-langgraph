@@ -11,7 +11,7 @@ Following memory safety patterns for pytest-xdist (see CLAUDE.md).
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -74,9 +74,7 @@ def mock_mcp_session():
     """Create mock MCP client session."""
     session = MagicMock()
     session.is_connected = True
-    session.call_tool = AsyncMock(
-        return_value={"result": "Tool executed successfully", "data": [1, 2, 3]}
-    )
+    session.call_tool = AsyncMock(return_value={"result": "Tool executed successfully", "data": [1, 2, 3]})
     session.list_tools = AsyncMock(return_value=[])
     session.connect = AsyncMock(return_value=None)
     session.disconnect = AsyncMock(return_value=None)
@@ -426,9 +424,7 @@ class TestMCPToolResultFlow:
         )
 
         mock_executor = MagicMock()
-        mock_executor.call_tool = AsyncMock(
-            return_value={"status": "success", "data": [1, 2, 3]}
-        )
+        mock_executor.call_tool = AsyncMock(return_value={"status": "success", "data": [1, 2, 3]})
 
         proxy = MCPToolProxy.from_definition(defn, executor=mock_executor)
         result = await proxy._arun(query="test")
@@ -485,9 +481,7 @@ class TestMCPToolResultFlow:
         )
 
         mock_executor = MagicMock()
-        mock_executor.call_tool = AsyncMock(
-            side_effect=RuntimeError("Tool execution failed")
-        )
+        mock_executor.call_tool = AsyncMock(side_effect=RuntimeError("Tool execution failed"))
 
         proxy = MCPToolProxy.from_definition(defn, executor=mock_executor)
         result = await proxy._arun(query="test")

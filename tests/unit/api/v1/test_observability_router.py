@@ -73,7 +73,9 @@ class TestTracesListEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.list_traces.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -89,7 +91,9 @@ class TestTracesListEndpoint:
         THEN response should contain array of traces
         """
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.list_traces.return_value = (
                 [{"trace_id": "abc123", "name": "Test Trace"}],
                 None,
@@ -120,7 +124,9 @@ class TestTraceGetEndpoint:
         """
         trace_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.get_trace.return_value = {
                 "trace_id": trace_id,
                 "name": "Test Trace",
@@ -141,7 +147,9 @@ class TestTraceGetEndpoint:
         """
         trace_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.get_trace.return_value = None
             mock_get_service.return_value = mock_service
 
@@ -166,7 +174,9 @@ class TestMetricsEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.get_metrics.return_value = {
                 "requests_total": 1000,
                 "errors_total": 10,
@@ -187,7 +197,9 @@ class TestMetricsEndpoint:
         THEN response should contain metrics data
         """
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.get_metrics.return_value = {
                 "requests_total": 1000,
                 "errors_total": 10,
@@ -222,7 +234,9 @@ class TestTracesListSorting:
         THEN service should receive sorting parameters
         """
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.list_traces.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -238,7 +252,9 @@ class TestTracesListSorting:
         THEN service should receive sorting parameters
         """
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.list_traces.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -254,7 +270,9 @@ class TestTracesListSorting:
         THEN service should receive sorting parameters
         """
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.list_traces.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -284,7 +302,9 @@ class TestTracesListSearch:
         THEN service should receive search query
         """
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.list_traces.return_value = (
                 [{"trace_id": "1", "name": "LLM Request"}],
                 None,
@@ -303,7 +323,9 @@ class TestTracesListSearch:
         THEN service should handle case-insensitive search
         """
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.list_traces.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -319,7 +341,9 @@ class TestTracesListSearch:
         THEN should return empty list
         """
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.list_traces.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -351,7 +375,9 @@ class TestTracesListCombined:
         THEN service should handle both
         """
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.list_traces.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -368,7 +394,9 @@ class TestTracesListCombined:
         """
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.list_traces.return_value = ([], None)
             mock_get_service.return_value = mock_service
 
@@ -385,7 +413,9 @@ class TestTracesListCombined:
         """
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.observability.get_observability_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.list_traces.return_value = ([], None)
             mock_get_service.return_value = mock_service
 

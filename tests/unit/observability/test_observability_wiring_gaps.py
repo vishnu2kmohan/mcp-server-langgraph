@@ -124,13 +124,10 @@ class TestPrometheusMetricQueryWiring:
         source = inspect.getsource(obs_module)
 
         assert "agent_active_sessions" in source, (
-            "Metrics query should use 'agent_active_sessions' (from health/checks.py), "
-            "not 'active_sessions' or other variants"
+            "Metrics query should use 'agent_active_sessions' (from health/checks.py), not 'active_sessions' or other variants"
         )
 
-        assert "sum(agent_active_sessions)" in source, (
-            "agent_active_sessions query should use sum() aggregation"
-        )
+        assert "sum(agent_active_sessions)" in source, "agent_active_sessions query should use sum() aggregation"
 
     def test_get_metrics_queries_llm_tokens_total(self) -> None:
         """
@@ -144,13 +141,9 @@ class TestPrometheusMetricQueryWiring:
 
         source = inspect.getsource(obs_module)
 
-        assert "llm_tokens_total" in source, (
-            "Metrics query should use 'llm_tokens_total' (from llm/metrics.py)"
-        )
+        assert "llm_tokens_total" in source, "Metrics query should use 'llm_tokens_total' (from llm/metrics.py)"
 
-        assert "sum(llm_tokens_total)" in source, (
-            "llm_tokens_total query should use sum() aggregation"
-        )
+        assert "sum(llm_tokens_total)" in source, "llm_tokens_total query should use sum() aggregation"
 
     def test_error_query_filters_5xx_status_codes(self) -> None:
         """
@@ -165,9 +158,7 @@ class TestPrometheusMetricQueryWiring:
         source = inspect.getsource(obs_module)
 
         # Error query should use regex to match 5xx status codes
-        assert 'status=~"5.."' in source, (
-            "Error query should filter for 5xx status codes using status=~'5..' regex"
-        )
+        assert 'status=~"5.."' in source, "Error query should filter for 5xx status codes using status=~'5..' regex"
 
 
 class TestLokiLogQueryWiring:
@@ -201,18 +192,10 @@ class TestLokiLogQueryWiring:
         source = inspect.getsource(obs_module)
 
         # Log queries should use underscore notation
-        assert 'attribute="session_id"' in source, (
-            "Log query should use 'session_id' (underscore) for Loki labels"
-        )
-        assert 'attribute="user_id"' in source, (
-            "Log query should use 'user_id' (underscore) for Loki labels"
-        )
-        assert 'attribute="workflow_id"' in source, (
-            "Log query should use 'workflow_id' (underscore) for Loki labels"
-        )
-        assert 'attribute="project_id"' in source, (
-            "Log query should use 'project_id' (underscore) for Loki labels"
-        )
+        assert 'attribute="session_id"' in source, "Log query should use 'session_id' (underscore) for Loki labels"
+        assert 'attribute="user_id"' in source, "Log query should use 'user_id' (underscore) for Loki labels"
+        assert 'attribute="workflow_id"' in source, "Log query should use 'workflow_id' (underscore) for Loki labels"
+        assert 'attribute="project_id"' in source, "Log query should use 'project_id' (underscore) for Loki labels"
 
 
 class TestTempoTraceQueryWiring:
@@ -246,12 +229,8 @@ class TestTempoTraceQueryWiring:
 
         # Trace queries should use dot notation
         # These appear in search_by_attribute calls and tags dict construction
-        assert '"session.id"' in source or "session.id" in source, (
-            "Trace query should use 'session.id' (OTEL dot notation)"
-        )
-        assert '"user.id"' in source or "user.id" in source, (
-            "Trace query should use 'user.id' (OTEL dot notation)"
-        )
+        assert '"session.id"' in source or "session.id" in source, "Trace query should use 'session.id' (OTEL dot notation)"
+        assert '"user.id"' in source or "user.id" in source, "Trace query should use 'user.id' (OTEL dot notation)"
 
 
 class TestNamingConventionConsistency:
@@ -289,9 +268,7 @@ class TestNamingConventionConsistency:
         assert "underscore" in source.lower() or "session_id" in source, (
             "Source should document underscore notation usage for Loki"
         )
-        assert "dot" in source.lower() or "session.id" in source, (
-            "Source should document dot notation usage for Tempo/OTEL"
-        )
+        assert "dot" in source.lower() or "session.id" in source, "Source should document dot notation usage for Tempo/OTEL"
 
 
 class TestTestingGapDocumentation:
@@ -344,12 +321,6 @@ class TestTestingGapDocumentation:
 
         docstring = this_module.__doc__
 
-        assert "ROOT CAUSE ANALYSIS" in docstring, (
-            "Module docstring should contain root cause analysis"
-        )
-        assert "MOCKED backends" in docstring, (
-            "Module docstring should explain mock-based testing gap"
-        )
-        assert "WIRING TESTS" in docstring, (
-            "Module docstring should explain the solution"
-        )
+        assert "ROOT CAUSE ANALYSIS" in docstring, "Module docstring should contain root cause analysis"
+        assert "MOCKED backends" in docstring, "Module docstring should explain mock-based testing gap"
+        assert "WIRING TESTS" in docstring, "Module docstring should explain the solution"

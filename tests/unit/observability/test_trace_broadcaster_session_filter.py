@@ -54,13 +54,15 @@ class TestTraceBroadcasterSessionFilter:
         )
 
         # Broadcast span with matching session_id
-        await broadcaster.broadcast_span({
-            "trace_id": "trace-abc",
-            "span_id": "span-def",
-            "service_name": "my-service",
-            "operation_name": "process",
-            "session_id": "session-123",
-        })
+        await broadcaster.broadcast_span(
+            {
+                "trace_id": "trace-abc",
+                "span_id": "span-def",
+                "service_name": "my-service",
+                "operation_name": "process",
+                "session_id": "session-123",
+            }
+        )
 
         mock_ws.send_json.assert_called_once()
         call_args = mock_ws.send_json.call_args[0][0]
@@ -90,13 +92,15 @@ class TestTraceBroadcasterSessionFilter:
         )
 
         # Broadcast span with different session_id
-        await broadcaster.broadcast_span({
-            "trace_id": "trace-abc",
-            "span_id": "span-def",
-            "service_name": "my-service",
-            "operation_name": "process",
-            "session_id": "session-456",  # Different session
-        })
+        await broadcaster.broadcast_span(
+            {
+                "trace_id": "trace-abc",
+                "span_id": "span-def",
+                "service_name": "my-service",
+                "operation_name": "process",
+                "session_id": "session-456",  # Different session
+            }
+        )
 
         mock_ws.send_json.assert_not_called()
 
@@ -123,15 +127,19 @@ class TestTraceBroadcasterSessionFilter:
         )
 
         # Broadcast span with session_id
-        await broadcaster.broadcast_span({
-            "trace_id": "trace-abc",
-            "session_id": "session-123",
-        })
+        await broadcaster.broadcast_span(
+            {
+                "trace_id": "trace-abc",
+                "session_id": "session-123",
+            }
+        )
 
         # Broadcast span without session_id
-        await broadcaster.broadcast_span({
-            "trace_id": "trace-def",
-        })
+        await broadcaster.broadcast_span(
+            {
+                "trace_id": "trace-def",
+            }
+        )
 
         assert mock_ws.send_json.call_count == 2
 
@@ -161,25 +169,31 @@ class TestTraceBroadcasterSessionFilter:
         )
 
         # Matches both
-        await broadcaster.broadcast_span({
-            "trace_id": "trace-1",
-            "session_id": "session-123",
-            "service_name": "my-service",
-        })
+        await broadcaster.broadcast_span(
+            {
+                "trace_id": "trace-1",
+                "session_id": "session-123",
+                "service_name": "my-service",
+            }
+        )
 
         # Wrong session_id
-        await broadcaster.broadcast_span({
-            "trace_id": "trace-2",
-            "session_id": "session-456",
-            "service_name": "my-service",
-        })
+        await broadcaster.broadcast_span(
+            {
+                "trace_id": "trace-2",
+                "session_id": "session-456",
+                "service_name": "my-service",
+            }
+        )
 
         # Wrong service_name
-        await broadcaster.broadcast_span({
-            "trace_id": "trace-3",
-            "session_id": "session-123",
-            "service_name": "other-service",
-        })
+        await broadcaster.broadcast_span(
+            {
+                "trace_id": "trace-3",
+                "session_id": "session-123",
+                "service_name": "other-service",
+            }
+        )
 
         # Only first span should be received
         assert mock_ws.send_json.call_count == 1

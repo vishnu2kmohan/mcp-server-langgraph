@@ -298,9 +298,7 @@ class TestNativeCapabilitiesAPI:
         app = create_app()
 
         async with AsyncClient(app=app, base_url="http://test") as client:
-            response = await client.get(
-                "/api/v1/tools/native-capabilities/claude-sonnet-4-20250514"
-            )
+            response = await client.get("/api/v1/tools/native-capabilities/claude-sonnet-4-20250514")
 
             assert response.status_code == 200
             data = response.json()
@@ -334,9 +332,7 @@ class TestNativeCapabilitiesAPI:
         app = create_app()
 
         async with AsyncClient(app=app, base_url="http://test") as client:
-            response = await client.get(
-                "/api/v1/tools/native-capabilities/gemini-2.0-flash"
-            )
+            response = await client.get("/api/v1/tools/native-capabilities/gemini-2.0-flash")
 
             assert response.status_code == 200
             data = response.json()
@@ -355,9 +351,7 @@ class TestNativeCapabilitiesAPI:
         app = create_app()
 
         async with AsyncClient(app=app, base_url="http://test") as client:
-            response = await client.get(
-                "/api/v1/tools/native-capabilities/unknown-model-xyz"
-            )
+            response = await client.get("/api/v1/tools/native-capabilities/unknown-model-xyz")
 
             assert response.status_code == 200
             data = response.json()
@@ -612,9 +606,7 @@ class TestSourceCitationsE2E:
 
     @pytest.mark.skipif(not has_anthropic_key, reason="ANTHROPIC_API_KEY not set")
     @pytest.mark.asyncio
-    async def test_anthropic_web_search_extracts_source_citations(
-        self, anthropic_settings
-    ):
+    async def test_anthropic_web_search_extracts_source_citations(self, anthropic_settings):
         """Source citations should be extracted from Anthropic native web search."""
         from langchain_anthropic import ChatAnthropic
         from langchain_core.messages import HumanMessage
@@ -688,9 +680,7 @@ class TestSourceCitationsE2E:
 
     @pytest.mark.skipif(not has_google_key, reason="GOOGLE_API_KEY not set")
     @pytest.mark.asyncio
-    async def test_google_grounded_search_extracts_source_citations(
-        self, google_settings
-    ):
+    async def test_google_grounded_search_extracts_source_citations(self, google_settings):
         """Source citations should be extracted from Google grounded search."""
         from langchain_google_genai import ChatGoogleGenerativeAI
         from langchain_core.messages import HumanMessage
@@ -745,9 +735,7 @@ class TestSourceCitationsE2E:
 
     @pytest.mark.skipif(not has_anthropic_key, reason="ANTHROPIC_API_KEY not set")
     @pytest.mark.asyncio
-    async def test_source_citations_persisted_in_message_storage(
-        self, anthropic_settings
-    ):
+    async def test_source_citations_persisted_in_message_storage(self, anthropic_settings):
         """Source citations should be persisted when messages are stored."""
         from mcp_server_langgraph.storage.session.models import Message
         from mcp_server_langgraph.tools.source_citation import SourceCitation

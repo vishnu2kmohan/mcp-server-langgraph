@@ -145,7 +145,9 @@ class TestWorkflowBootstrapEndpoint:
         """
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.workflow_bootstrap.get_workflow_bootstrapper") as mock_get_bootstrapper:
-            mock_bootstrapper = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_bootstrapper = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_bootstrapper.bootstrap_workflow.return_value = {
                 "id": str(uuid4()),
                 "name": "Test Workflow",
@@ -173,7 +175,9 @@ class TestWorkflowBootstrapEndpoint:
         """
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.workflow_bootstrap.get_workflow_bootstrapper") as mock_get_bootstrapper:
-            mock_bootstrapper = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_bootstrapper = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_bootstrapper.bootstrap_workflow.side_effect = ValueError(f"Session {session_id} not found")
             mock_get_bootstrapper.return_value = mock_bootstrapper
 
@@ -196,7 +200,9 @@ class TestWorkflowBootstrapEndpoint:
         """
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.workflow_bootstrap.get_workflow_bootstrapper") as mock_get_bootstrapper:
-            mock_bootstrapper = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_bootstrapper = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_bootstrapper.bootstrap_workflow.side_effect = ValueError("Cannot bootstrap workflow from empty session")
             mock_get_bootstrapper.return_value = mock_bootstrapper
 
@@ -219,7 +225,9 @@ class TestWorkflowBootstrapEndpoint:
         """
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.workflow_bootstrap.get_workflow_bootstrapper") as mock_get_bootstrapper:
-            mock_bootstrapper = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_bootstrapper = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_bootstrapper.bootstrap_workflow.return_value = expected_workflow
             mock_get_bootstrapper.return_value = mock_bootstrapper
 
@@ -251,7 +259,9 @@ class TestWorkflowBootstrapEndpoint:
         selected_indices = [0, 1, 3]
 
         with patch("mcp_server_langgraph.api.v1.workflow_bootstrap.get_workflow_bootstrapper") as mock_get_bootstrapper:
-            mock_bootstrapper = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_bootstrapper = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_bootstrapper.bootstrap_workflow.return_value = {
                 "id": str(uuid4()),
                 "name": "Selective Workflow",
@@ -298,7 +308,9 @@ class TestWorkflowBootstrapperClass:
 
         # Mock the session service
         with patch("mcp_server_langgraph.api.v1.workflow_bootstrap.get_session_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.get_session.return_value = sample_session_with_messages
             mock_get_service.return_value = mock_service
 
@@ -334,7 +346,9 @@ class TestWorkflowBootstrapperClass:
 
         # Mock the session service
         with patch("mcp_server_langgraph.api.v1.workflow_bootstrap.get_session_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)  # async-mock-configured (return_value set below)  # noqa: async-mock-config
+            mock_service = AsyncMock(
+                return_value=None
+            )  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.get_session.return_value = sample_session_with_messages
             mock_get_service.return_value = mock_service
 

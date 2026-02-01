@@ -171,9 +171,7 @@ class CostTrackingServiceAdapter:
             if session_cost:
                 # Cache the result in Redis for future requests
                 try:
-                    await self.cache.aset(
-                        cache_key, session_cost, ttl=SESSION_COST_CACHE_TTL
-                    )
+                    await self.cache.aset(cache_key, session_cost, ttl=SESSION_COST_CACHE_TTL)
                     logger.debug(
                         f"Cached session cost from database for {session_id}",
                         extra={"session_id": session_id},
@@ -201,9 +199,7 @@ class CostTrackingServiceAdapter:
             "token_count": 0,
         }
 
-    async def _query_session_cost_from_database(
-        self, session_id: str
-    ) -> dict[str, Any] | None:
+    async def _query_session_cost_from_database(self, session_id: str) -> dict[str, Any] | None:
         """
         Query TokenUsageRecord to aggregate costs by session_id.
 

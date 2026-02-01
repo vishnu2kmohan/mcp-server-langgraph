@@ -152,9 +152,7 @@ class TestQdrantVectorProviderUpsertIdConversion:
 
         provider = QdrantVectorProvider(client=mock_client, vector_size=768)
 
-        with patch(
-            "qdrant_client.models.PointStruct"
-        ) as mock_point_struct:
+        with patch("qdrant_client.models.PointStruct") as mock_point_struct:
             mock_point_struct.return_value = MagicMock()
 
             await provider.upsert(
@@ -188,9 +186,7 @@ class TestQdrantVectorProviderUpsertIdConversion:
 
         original_uuid = str(uuid.uuid4())
 
-        with patch(
-            "qdrant_client.models.PointStruct"
-        ) as mock_point_struct:
+        with patch("qdrant_client.models.PointStruct") as mock_point_struct:
             mock_point_struct.return_value = MagicMock()
 
             await provider.upsert(
@@ -228,9 +224,7 @@ class TestQdrantVectorProviderDeleteIdConversion:
         mock_client = AsyncMock(return_value=None)
         provider = QdrantVectorProvider(client=mock_client, vector_size=768)
 
-        with patch(
-            "qdrant_client.models.PointIdsList"
-        ) as mock_points_list:
+        with patch("qdrant_client.models.PointIdsList") as mock_points_list:
             mock_points_list.return_value = MagicMock()
 
             await provider.delete(

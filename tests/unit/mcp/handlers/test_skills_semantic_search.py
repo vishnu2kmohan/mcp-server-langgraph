@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from mcp_server_langgraph.mcp.handlers.skills import SkillsToolHandler
-from mcp_server_langgraph.skills import Skill, SkillDiscovery, SkillRegistry
+from mcp_server_langgraph.skills import Skill, SkillRegistry
 from mcp_server_langgraph.skills.search import SkillSearchResult, SkillSearchTool
 
 pytestmark = [pytest.mark.unit, pytest.mark.skills, pytest.mark.mcp]
@@ -106,9 +106,7 @@ class TestSkillsSemanticSearch:
             skill_search_tool=mock_skill_search_tool,
         )
 
-        with patch(
-            "mcp_server_langgraph.mcp.handlers.skills.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.handlers.skills.feature_flags") as mock_flags:
             mock_flags.enable_semantic_skill_search = True
 
             result = await handler.handle_search_skills(
@@ -148,9 +146,7 @@ class TestSkillsSemanticSearch:
             skill_search_tool=mock_skill_search_tool,
         )
 
-        with patch(
-            "mcp_server_langgraph.mcp.handlers.skills.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.handlers.skills.feature_flags") as mock_flags:
             mock_flags.enable_semantic_skill_search = False
 
             result = await handler.handle_search_skills(
@@ -184,9 +180,7 @@ class TestSkillsSemanticSearch:
             skill_search_tool=None,  # No semantic search available
         )
 
-        with patch(
-            "mcp_server_langgraph.mcp.handlers.skills.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.handlers.skills.feature_flags") as mock_flags:
             mock_flags.enable_semantic_skill_search = True
 
             result = await handler.handle_search_skills(
@@ -219,9 +213,7 @@ class TestSkillsSemanticSearch:
             skill_search_tool=mock_skill_search_tool,
         )
 
-        with patch(
-            "mcp_server_langgraph.mcp.handlers.skills.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.handlers.skills.feature_flags") as mock_flags:
             mock_flags.enable_semantic_skill_search = True
 
             await handler.handle_search_skills(
@@ -253,9 +245,7 @@ class TestSkillsSemanticSearch:
         WHEN: Calling handle_search_skills
         THEN: Should gracefully fall back to SkillDiscovery.search
         """
-        mock_skill_search_tool.search = AsyncMock(
-            side_effect=Exception("Embedding service unavailable")
-        )
+        mock_skill_search_tool.search = AsyncMock(side_effect=Exception("Embedding service unavailable"))
 
         handler = SkillsToolHandler(
             auth=mock_auth,
@@ -264,9 +254,7 @@ class TestSkillsSemanticSearch:
             skill_search_tool=mock_skill_search_tool,
         )
 
-        with patch(
-            "mcp_server_langgraph.mcp.handlers.skills.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.handlers.skills.feature_flags") as mock_flags:
             mock_flags.enable_semantic_skill_search = True
 
             result = await handler.handle_search_skills(
