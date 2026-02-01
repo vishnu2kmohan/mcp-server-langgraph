@@ -1,5 +1,12 @@
 # GitHub Copilot Instructions
 
+Read: AGENTS.md, .ai/CORE.md
+
+Key points:
+- Python: Always use .venv (uv run --frozen)
+- TDD: Write tests first
+- Stack: React 18 + Tailwind 4 + Radix + Motion.dev
+
 **Shared instructions**: `.ai/CORE.md` (Python env, commands, TDD, style)
 
 ---
