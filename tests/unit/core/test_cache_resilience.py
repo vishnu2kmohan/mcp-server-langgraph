@@ -330,12 +330,8 @@ class TestCacheServiceTimeout:
 
         User Journey: Prevent hanging on slow Redis
         """
-        import time
-
-        def slow_get(key):
-            time.sleep(5)  # Longer than socket_timeout
-            return None
-
+        # Note: We use redis.exceptions.TimeoutError directly rather than slow_get
+        # as it's more reliable for testing timeout behavior
         with patch("redis.from_url") as mock_from_url:
             mock_redis = MagicMock()
             mock_redis.ping.return_value = True

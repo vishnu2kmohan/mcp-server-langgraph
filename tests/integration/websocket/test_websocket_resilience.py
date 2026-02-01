@@ -497,7 +497,7 @@ class TestWebSocketTimeout:
         """GIVEN slow operation WHEN timeout exceeded THEN TimeoutError raised."""
 
         async def slow_operation():
-            await asyncio.sleep(10)  # Way too slow
+            await asyncio.sleep(10)  # noqa: sleep-duration - Testing async timeout pattern
             return "never reached"
 
         with pytest.raises(asyncio.TimeoutError):
@@ -507,7 +507,7 @@ class TestWebSocketTimeout:
         """GIVEN timeout WHEN fallback provided THEN fallback used."""
 
         async def slow_operation():
-            await asyncio.sleep(10)
+            await asyncio.sleep(10)  # noqa: sleep-duration - Testing timeout fallback
             return "slow result"
 
         fallback_value = "timeout fallback"

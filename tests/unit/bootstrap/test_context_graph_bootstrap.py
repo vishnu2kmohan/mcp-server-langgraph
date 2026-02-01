@@ -104,7 +104,7 @@ class TestInitContextGraph:
                 "mcp_server_langgraph.schedulers.decision_retention.start_retention_scheduler",
                 new_callable=AsyncMock,
             ) as mock_scheduler,
-            patch("mcp_server_langgraph.core.dependencies.get_async_session") as mock_session,
+            patch("mcp_server_langgraph.core.dependencies.get_async_session") as _mock_session,
         ):
             mock_flags.enable_context_graph = True
 
@@ -168,7 +168,7 @@ class TestContextGraphStateCleanup:
 
         async def long_running():
             try:
-                await asyncio.sleep(3600)  # Long wait that will be cancelled
+                await asyncio.sleep(3600)  # noqa: sleep-duration - Testing task cancellation
             except asyncio.CancelledError:
                 cancel_event.set()
                 raise

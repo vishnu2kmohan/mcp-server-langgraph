@@ -102,7 +102,7 @@ class TestMCPExecutor:
         ]
 
         async def slow_call(name, args):
-            await asyncio.sleep(10)  # Will timeout
+            await asyncio.sleep(10)  # noqa: sleep-duration - Testing MCP timeout
             return {"result": "done"}
 
         mock_session.call_tool.side_effect = slow_call

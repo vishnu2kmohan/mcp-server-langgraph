@@ -352,7 +352,7 @@ sandbox_config:
         script = skill_dir / "slow.py"
         script.write_text("""
 import time
-time.sleep(10)  # Sleep longer than timeout
+time.sleep(10)  # noqa: sleep-duration - Intentionally slow to test sandbox timeout
 print("Done")
 """)
 

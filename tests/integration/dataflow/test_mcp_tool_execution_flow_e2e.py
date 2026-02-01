@@ -297,8 +297,8 @@ class TestMCPExecutorFlow:
 
         executor = MCPExecutor(registry=mock_registry)
 
-        # Execute tool call
-        result = await executor.call_tool(
+        # Execute tool call (result not used - testing registry interaction)
+        _result = await executor.call_tool(
             server=unique_server_name,
             tool="test_tool",
             arguments={"key": "value"},
@@ -331,7 +331,7 @@ class TestMCPExecutorFlow:
         slow_session.is_connected = True
 
         async def slow_call(tool, arguments):
-            await asyncio.sleep(10)  # Longer than timeout
+            await asyncio.sleep(10)  # noqa: sleep-duration - Testing tool timeout
             return {"result": "too late"}
 
         slow_session.call_tool = slow_call
